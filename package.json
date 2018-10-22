@@ -1,0 +1,22 @@
+{
+  "name": "gdmn",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "compile": "lerna run compile",
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "rebuild": "lerna run rebuild",
+    "lint": "lerna run lint",
+    "test": "lerna run test",
+    "bootstrap": "lerna bootstrap",
+    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint"
+  },
+  "devDependencies": {
+    "lerna": "^3.4.3"
+  }
+}

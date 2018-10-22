@@ -1,0 +1,27 @@
+import {Factory} from "gdmn-db";
+import {resolve} from "path";
+import {IDBDetail} from "../export/dbdetail";
+
+export const exportTestDBDetail: IDBDetail = {
+  alias: "exportTestDB",
+  driver: Factory.FBDriver,
+  options: {
+    host: "localhost",
+    port: 3050,
+    username: "SYSDBA",
+    password: "masterkey",
+    path: "path"
+  }
+};
+
+export const importTestDBDetail: IDBDetail = {
+  alias: "importTestDB",
+  driver: Factory.FBDriver,
+  options: {
+    host: "localhost",
+    port: 3050,
+    username: "SYSDBA",
+    password: "masterkey",
+    path: resolve("./TEST.FDB")
+  }
+};
