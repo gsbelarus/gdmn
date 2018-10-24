@@ -21,7 +21,7 @@
   "license": "MPL-2.0",
   "dependencies": {
     "gdmn-db": "^1.0.0",
-    "gdmn-orm": "git://github.com/gsbelarus/gdmn-orm.git",
+    "gdmn-orm": "^1.0.0",
     "moment": "^2.22.2"
   },
   "devDependencies": {
