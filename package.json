@@ -16,7 +16,8 @@
     "lint": "lerna run lint",
     "test": "lerna run test",
     "bootstrap": "lerna bootstrap",
-    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint"
+    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
+    "watch": "lerna run watch"
   },
   "devDependencies": {
     "lerna": "^3.4.3"

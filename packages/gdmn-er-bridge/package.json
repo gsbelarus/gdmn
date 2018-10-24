@@ -8,6 +8,7 @@
     "clean": "rimraf ./dist",
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
+    "watch": "tsc -w",
     "test": "tsc && jest"
   },
   "repository": {

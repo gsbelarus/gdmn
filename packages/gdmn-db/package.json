@@ -5,10 +5,10 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "start": "yarn tslint && yarn build && node ./dist/src/index.js",
     "clean": "rimraf ./dist",
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
+    "watch": "tsc -w",
     "tslint": "tslint --project .",
     "test": "yarn build && yarn tslint && jest"
   },
