@@ -1,0 +1,86 @@
+{
+  "appenders": {
+    "out": {
+      "type": "stdout"
+    },
+    "all": {
+      "type": "file",
+      "filename": "./logs/all.log",
+      "maxLogSize": 100E6
+    },
+    "errors": {
+      "type": "file",
+      "filename": "./logs/errors.log"
+    },
+    "errorsFilter": {
+      "type": "logLevelFilter",
+      "appender": "errors",
+      "level": "error"
+    },
+    "warns": {
+      "type": "file",
+      "filename": "./logs/warns.log"
+    },
+    "warnsFilter": {
+      "type": "logLevelFilter",
+      "appender": "warns",
+      "level": "warn"
+    }
+  },
+  "categories": {
+    "default": {
+      "appenders": [
+        "out",
+        "all",
+        "errorsFilter",
+        "warnsFilter"
+      ],
+      "level": "trace"
+    },
+    "stomp": {
+      "appenders": [
+        "out",
+        "all",
+        "errorsFilter",
+        "warnsFilter"
+      ],
+      "level": "trace"
+    },
+    "session": {
+      "appenders": [
+        "out",
+        "all",
+        "errorsFilter",
+        "warnsFilter"
+      ],
+      "level": "trace"
+    },
+    "task": {
+      "appenders": [
+        "out",
+        "all",
+        "errorsFilter",
+        "warnsFilter"
+      ],
+      "level": "trace"
+    },
+    "mainApp": {
+      "appenders": [
+        "out",
+        "all",
+        "errorsFilter",
+        "warnsFilter"
+      ],
+      "level": "trace"
+    },
+    "gdmnApp": {
+      "appenders": [
+        "out",
+        "all",
+        "errorsFilter",
+        "warnsFilter"
+      ],
+      "level": "trace"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "name": "gdmn-back",
+  "version": "1.0.0",
+  "description": "gdmn-back",
+  "main": "dist/src/index.js",
+  "types": "./dist/definitions/index.d.ts",
+  "scripts": {
+    "start": "tsc && nodemon",
+    "debug": "tsc && nodemon --inspect --inspect-port=9229",
+    "clean": "rimraf ./dist",
+    "build": "tsc",
+    "rebuild": "yarn clean && yarn build",
+    "tslint": "tslint --project .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
+  },
+  "keywords": [
+    "gdmn"
+  ],
+  "author": "Golden Software of Belarus, Ltd",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
+  "dependencies": {
+    "config": "^2.0.1",
+    "gdmn-er-bridge": "^1.0.0",
+    "jsonwebtoken": "^8.3.0",
+    "koa": "^2.5.3",
+    "koa-body": "^4.0.4",
+    "koa-error": "^3.2.0",
+    "koa-logger": "^3.2.0",
+    "koa-passport": "^4.1.1",
+    "koa-router": "^7.4.0",
+    "koa-send": "^5.0.0",
+    "koa-static": "^5.0.0",
+    "koa2-cors": "^2.0.6",
+    "log4js": "^3.0.6",
+    "stomp-protocol": "^0.4.5",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
+    "strict-event-emitter-types": "^2.0.0",
+    "uuid": "^3.3.2",
+    "ws": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/config": "^0.0.34",
+    "@types/jsonwebtoken": "^7.2.8",
+    "@types/koa": "^2.0.46",
+    "@types/koa-logger": "^3.1.1",
+    "@types/koa-passport": "^4.0.2",
+    "@types/koa-router": "^7.0.32",
+    "@types/koa-send": "^4.1.1",
+    "@types/koa-static": "^4.0.0",
+    "@types/koa2-cors": "^2.0.1",
+    "@types/passport-jwt": "^3.0.1",
+    "@types/passport-local": "^1.0.33",
+    "@types/uuid": "^3.4.4",
+    "@types/ws": "^6.0.1",
+    "nodemon": "^1.18.4",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.3"
+  }
+}

@@ -4,9 +4,11 @@
   "private": true,
   "license": "MIT",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "src/*"
   ],
   "scripts": {
+    "start": "cd ./src/gdmn-back && yarn start",
     "compile": "lerna run compile",
     "clean": "lerna run clean",
     "build": "lerna run build",

@@ -12,19 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsbelarus/gdmn-er-bridge.git"
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
   },
   "keywords": [
     "gdmn"
   ],
   "author": "Golden Software of Belarus, Ltd",
   "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/gsbelarus/gdmn-er-bridge/issues"
-  },
-  "homepage": "https://github.com/gsbelarus/gdmn-er-bridge#readme",
   "dependencies": {
-    "gdmn-db": "^2.0.0",
+    "gdmn-db": "^1.0.0",
     "gdmn-orm": "git://github.com/gsbelarus/gdmn-orm.git",
     "moment": "^2.22.2"
   },

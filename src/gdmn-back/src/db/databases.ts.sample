@@ -1,0 +1,28 @@
+import {Factory} from "gdmn-db";
+import {IDBDetail} from "./Database";
+
+const test: IDBDetail = {
+  alias: "test",
+  driver: Factory.FBDriver,
+  poolOptions: {
+    max: 3,
+    acquireTimeoutMillis: 60000
+  },
+  connectionOptions: {
+    host: "localhost",
+    port: 3050,
+    username: "SYSDBA",
+    password: "masterkey",
+    path: "c:\\...enter_path_to_db...\\test.fdb"
+  }
+};
+
+export interface IDBs {
+  [alias: string]: IDBDetail;
+}
+
+const databases: IDBs = {
+  test
+};
+
+export default databases;

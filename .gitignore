@@ -1,4 +1,8 @@
+# Custom
 dist
+packages/*/dist
+src/*/dist
+databases.ts
 testDB.ts
 .lib
 *.js.map

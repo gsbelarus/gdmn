@@ -1,0 +1,30 @@
+{
+  "server": {
+    "http": {
+      "enabled": true,
+      "host": "192.168.0.56",
+      "port": 4000
+    },
+    "stomp": {
+      "heartbeat": {
+        "incoming": 60000,
+        "outgoing": 60000
+      }
+    },
+    "publicDir": "./public",
+    "session": {
+      "timeout": 8.64E7
+    },
+    "task": {
+      "timeout": 8.64E7
+    },
+    "jwtSecret": "DefaultJWTSecret"
+  },
+  "db": {
+    "host": "localhost",
+    "port": 3050,
+    "user": "SYSDBA",
+    "password": "masterkey",
+    "dir": "./databases"
+  }
+}

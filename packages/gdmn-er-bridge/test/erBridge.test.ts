@@ -42,6 +42,8 @@ import {DataSource} from "../src/source/DataSource";
 import {importTestDBDetail} from "./testDB";
 
 describe("ERBridge", () => {
+  jest.setTimeout(60 * 1000);
+
   const {driver, options} = importTestDBDetail;
   const connection = driver.newConnection();
   const erBridge = new ERBridge(connection);

@@ -1,20 +1,30 @@
 {
   "name": "gdmn-db",
-  "version": "2.0.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "gdmn-db",
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
+    "start": "yarn tslint && yarn build && node ./dist/src/index.js",
     "clean": "rimraf ./dist",
-    "start": "yarn tslint && yarn build && node ./dist/index.js",
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "tslint": "tslint --project .",
     "test": "yarn build && yarn tslint && jest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
+  },
+  "keywords": [
+    "gdmn"
+  ],
+  "author": "Golden Software of Belarus, Ltd",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
     "generic-pool": "^3.4.2",
     "node-firebird-native-api": "^0.1.0"

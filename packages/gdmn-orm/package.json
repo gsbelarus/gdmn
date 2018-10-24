@@ -1,0 +1,40 @@
+{
+  "name": "gdmn-orm",
+  "version": "1.0.0",
+  "description": "gdmn-orm",
+  "main": "dist/src/index.js",
+  "types": "./dist/definitions/index.d.ts",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "rebuild": "npm run clean && npm run build",
+    "tslint": "tslint --project .",
+    "debug": "node --nolazy --inspect-brk=9229 ./dist/debug/debug.js",
+    "test": "tsc && jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
+  "dependencies": {
+    "@types/clone": "^0.1.30",
+    "clone": "^2.1.2",
+    "gdmn-nlp": "git+https://github.com/gsbelarus/gdmn-nlp.git"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.5",
+    "@types/node": "^10.12.0",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.4",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.3"
+  }
+}
