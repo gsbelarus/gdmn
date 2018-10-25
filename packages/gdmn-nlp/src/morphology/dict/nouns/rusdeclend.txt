@@ -1,0 +1,1372 @@
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '1a',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1a',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '2a',
+    singular: ['ь', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '2a',
+    singular: ['ь', 'я', 'ю', 'ь', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3a',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3a',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '4a',
+    singular: ['', 'а', 'у', 'а', 'ем', 'е'],
+    plural: ['и', 'ей', 'ам', 'ей', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '4a',
+    singular: ['', 'а', 'у', '', 'ем', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '5a',
+    singular: ['', 'а', 'у', 'а', 'ем', 'е'],
+    plural: ['ы', 'ев', 'ам', 'ев', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '5a',
+    singular: ['', 'а', 'у', '', 'ем', 'е'],
+    plural: ['ы', 'ев', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '6a',
+    singular: ['й', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'ев', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '6a',
+    singular: ['й', 'я', 'ю', 'й', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '7a',
+    singular: ['й', 'я', 'ю', 'я', 'ем', 'и'],
+    plural: ['и', 'ев', 'ям', 'ев', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '7a',
+    singular: ['й', 'я', 'ю', 'й', 'ем', 'и'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '1b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1b',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '2b',
+    singular: ['ь', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '2b',
+    singular: ['ь', 'я', 'ю', 'ь', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3b',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '4b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ей', 'ам', 'ей', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '4b',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '5b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '5b',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '6b',
+    singular: ['й', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'ев', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '6b',
+    singular: ['й', 'я', 'ю', 'й', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '7b',
+    singular: ['й', 'я', 'ю', 'й', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1c',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3c',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '4c',
+    singular: ['', 'а', 'у', '', 'ем', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '6c',
+    singular: ['й', 'я', 'ю', 'й', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1d^',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3d',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1e',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '2e',
+    singular: ['ь', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3e',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3e',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '4e',
+    singular: ['', 'а', 'у', '', 'ем', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '2f',
+    singular: ['ь', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1*a',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '1*a',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1*b',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1*e',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '2*a',
+    singular: ['ь', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '2*a',
+    singular: ['ь', 'я', 'ю', 'ь', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '2*b',
+    singular: ['ь', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '2*b',
+    singular: ['ь', 'я', 'ю', 'ь', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '2*e',
+    singular: ['ь', 'я', 'ю', 'ь', 'ем', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3*a',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3*b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3*b',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '5*a',
+    singular: ['', 'а', 'у', 'а', 'ем', 'е'],
+    plural: ['ы', 'ев', 'ам', 'ев', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '5*a',
+    singular: ['', 'а', 'у', '', 'ем', 'е'],
+    plural: ['ы', 'ев', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '5*b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '5*b',
+    singular: ['ец', 'а', 'у', 'ец', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '6*a',
+    singular: ['', 'я', 'ю', '', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '6*b',
+    singular: ['й', 'я', 'ю', 'я', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'ев', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '6*b',
+    singular: ['', 'я', 'ю', '', 'ем', 'е'],
+    plural: ['и', 'ев', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '1°a',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['е', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '1°c(1)',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['а', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3°a',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['а', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '3°b',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'ов', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Masc,
+    declensionZ: '1a(2)',
+    singular: ['', 'а', 'у', 'а', 'ом', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1a(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1c(1)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['а', 'ов', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1c(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1c(1)(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3c(1)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['а', 'ов', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '1e(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3b(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '5a(2)',
+    singular: ['', 'а', 'у', '', 'ем', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3*a(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3*b(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Masc,
+    declensionZ: '3*d(2)',
+    singular: ['', 'а', 'у', '', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '1a',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1a',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '2a',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ь', 'ям', 'ь', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2a',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ь', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '3a',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3a',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '4a',
+    singular: ['а', 'и', 'е', 'у', 'ей', 'е'],
+    plural: ['и', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '4a',
+    singular: ['а', 'и', 'е', 'у', 'ей', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '5a',
+    singular: ['а', 'ы', 'е', 'у', 'ей', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '5a',
+    singular: ['а', 'ы', 'е', 'у', 'ей', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '6a',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', '', 'ям', '', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '6a',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'й', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '7a',
+    singular: ['я', 'и', 'и', 'ю', 'ей', 'и'],
+    plural: ['и', 'й', 'ям', 'й', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '7a',
+    singular: ['я', 'и', 'и', 'ю', 'ей', 'и'],
+    plural: ['и', 'й', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '1b',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1b',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '2b',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2b',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '3b',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3b',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '4b',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', 'ей', 'ам', 'ей', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '4b',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '5b',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '6b',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'й', 'ям', 'й', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '6b',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'й', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '7b',
+    singular: ['я', 'и', 'и', 'ю', 'ей', 'и'],
+    plural: ['и', 'й', 'ям', 'й', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '7b',
+    singular: ['я', 'и', 'и', 'ю', 'ей', 'и'],
+    plural: ['и', 'й', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '1d',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1d',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2d',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ь', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '3d',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3d',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '4d',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '6d',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'й', 'ям', 'й', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1d\'',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3d\'',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '4d\'',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2e',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1f',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2f',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3f',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '4f',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1f\'',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3f\'',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '8a',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8a',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '8e',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ям', 'ей', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8e',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8a-ш',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '8e-ш',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ам', 'ей', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8e-ш',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8f"',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '1*a',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1*a',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '1*b',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1*b',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '1*d',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1*d',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1*e',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1*f',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '2*a',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ь', 'ям', 'ь', 'ями', 'ях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '2*a-ня',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', '', 'ям', '', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2*a',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ь', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2*b',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', '', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '2*d',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', 'ь', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3*a',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '3*a',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3*b',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Femn,
+    declensionZ: '3*b',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3*d',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3*f',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '3*f\'',
+    singular: ['а', 'и', 'е', 'у', 'ой', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '5*a',
+    singular: ['а', 'ы', 'е', 'у', 'ей', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8*b\'',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '8*b\'ш',
+    singular: ['ь', 'и', 'и', 'ь', 'ью', 'и'],
+    plural: ['и', 'ей', 'ам', 'ей', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Neut,
+    declensionZ: '1a',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1a',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '2a',
+    singular: ['е', 'я', 'ю', 'е', 'ем', 'е'],
+    plural: []
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3a',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: true,
+    gender: RusGender.Neut,
+    declensionZ: '4a',
+    singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
+    plural: ['а', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '4a',
+    singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5a',
+    singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '7a',
+    singular: ['ие', 'ия', 'ию', 'ие', 'ием', 'ии'],
+    plural: ['ия', 'ий', 'иям', 'ия', 'иями', 'иях']
+  },
+  {
+    animate: true,
+    gender: RusGender.Neut,
+    declensionZ: '1b',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1b',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5b',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '7b',
+    singular: ['ие', 'ия', 'ию', 'ие', 'ием', 'ии'],
+    plural: ['ия', '', 'иям', 'ия', 'иями', 'иях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '7b(2)',
+    singular: ['е', 'я', 'ю', 'е', 'ем', 'е'],
+    plural: ['я', 'ев', 'ям', 'я', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '7b^',
+    singular: ['е', 'я', 'ю', 'е', 'ем', 'и'],
+    plural: ['я', 'й', 'ям', 'я', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1c',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '2c',
+    singular: ['е', 'я', 'ю', 'е', 'ем', 'е'],
+    plural: ['я', 'ей', 'ям', 'я', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3c',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1d',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5d',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', '', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3e^',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', 'ей', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1f',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1*a',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1*b',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1*c^',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '1*d',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5*a',
+    singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5*b',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5*c',
+    singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5*d',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5*f',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', '', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '6*a',
+    singular: ['ье', 'ья', 'ью', 'ье', 'ьем', 'ье'],
+    plural: ['ья', 'ий', 'ьям', 'ья', 'ьями', 'ьях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '6*b',
+    singular: ['ье', 'ья', 'ью', 'ье', 'ьем', 'ье'],
+    plural: ['ья', 'ей', 'ьям', 'ья', 'ьями', 'ьях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '6*d',
+    singular: ['е', 'я', 'ю', 'е', 'ем', 'е'],
+    plural: ['я', '', 'ям', 'я', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '8°a',
+    singular: ['я', 'ени', 'ени', 'я', 'енем', 'ени'],
+    plural: ['ена', 'ен', 'енам', 'ена', 'енами', 'енах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '8°c',
+    singular: ['я', 'ени', 'ени', 'я', 'енем', 'ени'],
+    plural: ['ена', '', 'енам', 'ена', 'енами', 'енах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3a(1)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3d(1)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: []
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '4f(1)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3*a(1)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', '', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3c(2)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', 'ов', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3*c(2)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['а', 'ов', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '5*a(2)',
+    singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
+    plural: ['а', 'ев', 'ам', 'а', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '6*a(2)',
+    singular: ['ье', 'ья', 'ью', 'ье', 'ьем', 'ье'],
+    plural: ['ья', 'ьев', 'ьям', 'ья', 'ьями', 'ьях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '6*d(2)',
+    singular: ['е', 'я', 'ю', 'е', 'ем', 'е'],
+    plural: ['я', 'ев', 'ям', 'я', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3a(1)(2)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3*a(1)(2)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
+  {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '3*b(1)(2)',
+    singular: ['о', 'а', 'у', 'о', 'ом', 'е'],
+    plural: ['и', 'ов', 'ам', 'и', 'ами', 'ах']
+  },
