@@ -2,6 +2,7 @@
   "name": "gdmn-er-bridge",
   "version": "1.0.0",
   "description": "gdmn-er-bridge",
+  "private": true,
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {

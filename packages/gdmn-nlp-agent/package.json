@@ -2,6 +2,7 @@
   "name": "gdmn-nlp-agent",
   "version": "1.0.0",
   "description": "gdmn-nlp-agent",
+  "private": true,
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {

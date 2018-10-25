@@ -2,6 +2,7 @@
   "name": "gdmn-nlp",
   "version": "1.0.0",
   "description": "gdmn-nlp",
+  "private": true,
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
