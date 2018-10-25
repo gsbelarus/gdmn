@@ -1,0 +1,21 @@
+import {ADriver, Factory, IConnectionOptions} from "gdmn-db";
+
+export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConnectionOptions> {
+  alias: string;
+  driver: ADriver;
+  options: ConnectionOptions;
+}
+
+export const testDB: IDBDetail[] = [
+  {
+    alias: "alias",
+    driver: Factory.FBDriver,
+    options: {
+      host: "localhost",
+      port: 3050,
+      username: "SYSDBA",
+      password: "********",
+      path: "path"
+    }
+  }
+];

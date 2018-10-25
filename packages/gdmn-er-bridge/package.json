@@ -9,7 +9,7 @@
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
-    "test": "tsc && jest"
+    "test": "yarn build && jest"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,10 @@
   ],
   "author": "Golden Software of Belarus, Ltd",
   "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
     "gdmn-db": "^1.0.0",
     "gdmn-orm": "^1.0.0",
