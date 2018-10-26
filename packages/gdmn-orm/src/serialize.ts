@@ -88,13 +88,13 @@ export interface ISetAttribute extends IEntityAttribute {
   presLen: number;
 }
 
-// TODO unique
 export interface IEntity {
   parent?: string;
   name: string;
   lName: ILName;
   isAbstract: boolean;
   semCategories: string;
+  unique: IAttribute[][];
   attributes: IAttribute[];
 }
 
@@ -243,8 +243,14 @@ export function deserializeERModel(serialized: IERModel): ERModel {
     e.attributes.forEach((_attr) => entity.add(createAttribute(_attr)));
   };
 
+  const createUnique = (e: IEntity): void => {
+    const entity = erModel.entity(e.name);
+    e.unique.forEach((values) => entity.addUnique(values.map((_attr) => createAttribute(_attr))));
+  };
+
   serialized.entities.forEach((e) => createEntity(e));
   serialized.entities.forEach((e) => createAttributes(e));
+  serialized.entities.forEach((e) => createUnique(e));
 
   return erModel;
 }

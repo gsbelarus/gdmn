@@ -16,7 +16,7 @@ describe("ERModel", async () => {
       const testAttr = await entity.create(new StringAttribute({
         name: "TEST_FIELD", lName: {en: {name: "Test field"}}
       }), transaction);
-      // await entity.addAttrUnique([testAttr], transaction);
+      await entity.addAttrUnique([testAttr], transaction);
     } finally {
       if (!transaction.finished) {
         await transaction.commit();
@@ -34,7 +34,11 @@ describe("ERModel", async () => {
   it("serialize/deserialize (old)", async () => {
     const erModel = new ERModel();
 
-    erModel.add(new Entity({name: "Test", lName: {en: {name: "Test"}}}));
+    const entity = erModel.add(new Entity({name: "Test", lName: {en: {name: "Test"}}}));
+    const testAttr = entity.add(new StringAttribute({
+      name: "TEST_FIELD", lName: {en: {name: "Test field"}}
+    }));
+    await entity.addUnique([testAttr]);
 
     const serialized = erModel.serialize();
 
@@ -42,5 +46,5 @@ describe("ERModel", async () => {
 
     expect(erModel).toEqual(erModel2);
     expect(erModel2.entities.Test.isTree).toBeFalsy();
-  }, 40000);
+  });
 });

@@ -169,6 +169,10 @@ export class Entity {
   public async addAttrUnique(attrs: Attribute[], transaction?: ITransaction): Promise<void> {
     this._checkTransaction(transaction);
 
+    if (this._parent) {
+      throw new Error("Can't add unique attributes to an inherited entity");
+    }
+
     if (this._source) {
       await this._source.addUnique(this, attrs, transaction);
     }
@@ -229,6 +233,7 @@ export class Entity {
       lName: this._lName,
       isAbstract: this._isAbstract,
       semCategories: semCategories2Str(this._semCategories),
+      unique: this._unique.map((values) => values.map((attr) => attr.serialize())),
       attributes: Object.values(this.attributes).map((attr) => attr.serialize())
     };
   }
