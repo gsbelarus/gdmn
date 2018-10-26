@@ -67,7 +67,15 @@ export class Entity {
   }
 
   get unique(): Attribute[][] {
-    return this._unique;
+    if (this._parent) {
+      return [...this._parent.unique, ...this.ownUnique];
+    } else {
+      return this.ownUnique;
+    }
+  }
+
+  get ownUnique(): Attribute[][] {
+    return [...this._unique.map((values) => values.slice())];
   }
 
   get attributes(): IAttributes {
@@ -159,19 +167,20 @@ export class Entity {
   }
 
   public addUnique(value: Attribute[]): void {
+    value.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
+
     this._unique.push(value);
   }
 
   public removeUnique(value: Attribute[]): void {
+    value.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
     this._unique.splice(this._unique.indexOf(value), 1);
   }
 
   public async addAttrUnique(attrs: Attribute[], transaction?: ITransaction): Promise<void> {
     this._checkTransaction(transaction);
 
-    if (this._parent) {
-      throw new Error("Can't add unique attributes to an inherited entity");
-    }
+    attrs.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
 
     if (this._source) {
       await this._source.addUnique(this, attrs, transaction);
@@ -181,6 +190,8 @@ export class Entity {
 
   public async removeAttrUnique(attrs: Attribute[], transaction?: ITransaction): Promise<void> {
     this._checkTransaction(transaction);
+
+    attrs.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
 
     if (this._source) {
       await this._source.removeUnique(this, attrs, transaction);
@@ -233,8 +244,8 @@ export class Entity {
       lName: this._lName,
       isAbstract: this._isAbstract,
       semCategories: semCategories2Str(this._semCategories),
-      unique: this._unique.map((values) => values.map((attr) => attr.serialize())),
-      attributes: Object.values(this.attributes).map((attr) => attr.serialize())
+      unique: this.ownUnique.map((values) => values.map((attr) => attr.name)),
+      attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize())
     };
   }
 

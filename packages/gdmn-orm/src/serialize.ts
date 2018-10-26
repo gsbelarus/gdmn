@@ -94,7 +94,7 @@ export interface IEntity {
   lName: ILName;
   isAbstract: boolean;
   semCategories: string;
-  unique: IAttribute[][];
+  unique: string[][];
   attributes: IAttribute[];
 }
 
@@ -245,7 +245,8 @@ export function deserializeERModel(serialized: IERModel): ERModel {
 
   const createUnique = (e: IEntity): void => {
     const entity = erModel.entity(e.name);
-    e.unique.forEach((values) => entity.addUnique(values.map((_attr) => createAttribute(_attr))));
+    const values = e.unique.map((_values) => _values.map((_attr) => entity.ownAttribute(_attr)));
+    values.forEach((attrs) => entity.addUnique(attrs));
   };
 
   serialized.entities.forEach((e) => createEntity(e));

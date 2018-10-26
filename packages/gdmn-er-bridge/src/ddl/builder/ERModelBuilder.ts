@@ -88,7 +88,7 @@ export class ERModelBuilder extends Builder {
       }
     }
 
-    for (const unique of entity.unique) {
+    for (const unique of entity.ownUnique) {
       await this.entityBuilder.addUnique(entity, unique);
     }
 
