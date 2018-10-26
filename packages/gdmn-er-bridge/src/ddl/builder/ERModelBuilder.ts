@@ -8,8 +8,9 @@ import {
   SequenceAttribute,
   SetAttribute
 } from "gdmn-orm";
+import {IFieldProps} from "../DDLHelper";
+import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
-import {DDLHelper, IFieldProps} from "./DDLHelper";
 import {DomainResolver} from "./DomainResolver";
 import {EntityBuilder} from "./EntityBuilder";
 
@@ -27,12 +28,16 @@ export class ERModelBuilder extends Builder {
   public async prepare(connection: AConnection, transaction: ATransaction): Promise<void> {
     await super.prepare(connection, transaction);
 
-    this._entityBuilder = new EntityBuilder(this._getDDLHelper(), this._getATHelper());
+    this._entityBuilder = new EntityBuilder({
+      ddlUniqueGen: this.ddlUniqueGen,
+      atHelper: this.atHelper,
+      ddlHelper: this.ddlHelper
+    });
   }
 
   public async addSequence(sequence: Sequence): Promise<Sequence> {
     // TODO custom adapter name
-    await this._getDDLHelper().addSequence(sequence.name);
+    await this.ddlHelper.addSequence(sequence.name);
     return sequence;
   }
 
@@ -46,7 +51,8 @@ export class ERModelBuilder extends Builder {
     const fields: IFieldProps[] = [];
     for (const pkAttr of entity.pk) {
       const fieldName = Builder._getFieldName(pkAttr);
-      const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(pkAttr));
+      const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
       await this._insertATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
       fields.push({
         name: fieldName,
@@ -54,15 +60,17 @@ export class ERModelBuilder extends Builder {
       });
     }
 
-    await this._getDDLHelper().addTable(tableName, fields);
-    await this._getDDLHelper().addPrimaryKey(tableName, fields.map((i) => i.name));
+    const pkConstName = Prefix.pkConstraint(await this.ddlUniqueGen.next());
+    await this.ddlHelper.addTable(tableName, fields);
+    await this.ddlHelper.addPrimaryKey(pkConstName, tableName, fields.map((i) => i.name));
     await this._insertATEntity(entity, {relationName: tableName});
 
     for (const pkAttr of entity.pk) {
       if (SequenceAttribute.isType(pkAttr)) {
         const fieldName = Builder._getFieldName(pkAttr);
         const seqAdapter = pkAttr.sequence.adapter;
-        await this._getDDLHelper().addAutoIncrementTrigger(tableName, fieldName,
+        const triggerName = Prefix.triggerBeforeInsert(await this.ddlUniqueGen.next());
+        await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName,
           seqAdapter ? seqAdapter.sequence : pkAttr.sequence.name);
       } else if (DetailAttribute.isType(pkAttr)) {
         // ignore
@@ -71,8 +79,9 @@ export class ERModelBuilder extends Builder {
       } else if (SetAttribute.isType(pkAttr)) {
         // ignore
       } else if (EntityAttribute.isType(pkAttr)) { // for inheritance
+        const fkConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
         const fieldName = Builder._getFieldName(pkAttr);
-        await this._getDDLHelper().addForeignKey(DDLHelper.DEFAULT_FK_OPTIONS, {
+        await this.ddlHelper.addForeignKey(fkConstName, {
           tableName,
           fieldName
         }, {

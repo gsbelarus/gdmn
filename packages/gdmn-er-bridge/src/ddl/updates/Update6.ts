@@ -1,4 +1,4 @@
-import {DDLHelper} from "../builder/DDLHelper";
+import {DDLHelper} from "../DDLHelper";
 import {BaseSimpleUpdate} from "./BaseSimpleUpdate";
 
 export class Update6 extends BaseSimpleUpdate {
@@ -11,6 +11,7 @@ export class Update6 extends BaseSimpleUpdate {
       {name: "UPGRADED", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"}
     ]);
 
-    await ddlHelper.addUnique("AT_DATABASE", ["VERSION"]);
+    // TODO change constraint name
+    await ddlHelper.addUnique("UQ_1", "AT_DATABASE", ["VERSION"]);
   }
 }

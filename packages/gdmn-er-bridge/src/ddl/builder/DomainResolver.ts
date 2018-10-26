@@ -25,7 +25,7 @@ import {
 } from "gdmn-orm";
 import moment from "moment";
 import {Constants} from "../Constants";
-import {IDomainProps} from "./DDLHelper";
+import {IDomainProps} from "../DDLHelper";
 
 export class DomainResolver {
 

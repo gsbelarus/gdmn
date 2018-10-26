@@ -9,15 +9,17 @@ import {
   SetAttribute
 } from "gdmn-orm";
 import {Constants} from "../Constants";
+import {IFieldProps} from "../DDLHelper";
+import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
-import {DDLHelper, IFieldProps} from "./DDLHelper";
 import {DomainResolver} from "./DomainResolver";
 
 export class EntityBuilder extends Builder {
 
   public async addUnique(entity: Entity, attrs: Attribute[]): Promise<void> {
     const tableName = Builder._getOwnRelationName(entity);
-    await this._getDDLHelper().addUnique(tableName, attrs.map((attr) => Builder._getFieldName(attr)));
+    const constraintName = Prefix.uniqueConstraint(await this.ddlUniqueGen.next());
+    await this.ddlHelper.addUnique(constraintName, tableName, attrs.map((attr) => Builder._getFieldName(attr)));
   }
 
   public async addAttribute(entity: Entity, attr: Attribute): Promise<Attribute> {
@@ -25,12 +27,14 @@ export class EntityBuilder extends Builder {
 
     if (ScalarAttribute.isType(attr)) {
       const fieldName = Builder._getFieldName(attr);
-      const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(attr));
-      await this._getDDLHelper().addColumns(tableName, [{name: fieldName, domain: domainName}]);
+      const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attr));
+      await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
       await this._insertATAttr(attr, {relationName: tableName, fieldName, domainName});
       if (SequenceAttribute.isType(attr)) {
         const seqName = attr.sequence.adapter ? attr.sequence.adapter.sequence : attr.sequence.name;
-        await this._getDDLHelper().addAutoIncrementTrigger(tableName, fieldName, seqName);
+        const triggerName = Prefix.triggerBeforeInsert(await this.ddlUniqueGen.next());
+        await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName, seqName);
       }
 
     } else if (DetailAttribute.isType(attr)) {
@@ -45,9 +49,11 @@ export class EntityBuilder extends Builder {
         detailLinkFieldName = Constants.DEFAULT_MASTER_KEY_NAME;
       }
 
-      const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(attr));
-      await this._getDDLHelper().addColumns(detailTableName, [{name: detailLinkFieldName, domain: domainName}]);
-      await this._getDDLHelper().addForeignKey(DDLHelper.DEFAULT_FK_OPTIONS, {
+      const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attr));
+      await this.ddlHelper.addColumns(detailTableName, [{name: detailLinkFieldName, domain: domainName}]);
+      const fkConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addForeignKey(fkConstName, {
         tableName: detailTableName,
         fieldName: detailLinkFieldName
       }, {
@@ -65,7 +71,8 @@ export class EntityBuilder extends Builder {
       const fields: Array<IFieldProps & { attr?: Attribute }> = [];
       const pkFields: IFieldProps[] = [];
 
-      const ownPKDomainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(entity.pk[0]));
+      const ownPKDomainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(ownPKDomainName, DomainResolver.resolve(entity.pk[0]));
       const ownPK = {
         name: Constants.DEFAULT_CROSS_PK_OWN_NAME,
         domain: ownPKDomainName
@@ -73,7 +80,8 @@ export class EntityBuilder extends Builder {
       fields.push(ownPK);
       pkFields.push(ownPK);
 
-      const refPKDomainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(attr.entities[0].pk[0]));
+      const refPKDomainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(refPKDomainName, DomainResolver.resolve(attr.entities[0].pk[0]));
       const refPK = {
         name: Constants.DEFAULT_CROSS_PK_REF_NAME,
         domain: refPKDomainName
@@ -83,7 +91,8 @@ export class EntityBuilder extends Builder {
 
       for (const crossAttr of Object.values(attr.attributes).filter((attr) => ScalarAttribute.isType(attr))) {
         const fieldName = Builder._getFieldName(crossAttr);
-        const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(crossAttr));
+        const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+        await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(crossAttr));
         fields.push({
           attr: crossAttr,
           name: fieldName,
@@ -93,11 +102,14 @@ export class EntityBuilder extends Builder {
 
       let crossTableName: string;
       if (attr.adapter) {
-        crossTableName = await this._getDDLHelper().addTable(attr.adapter.crossRelation, fields);
+        crossTableName = await this.ddlHelper.addTable(attr.adapter.crossRelation, fields);
       } else {
-        crossTableName = await this._getDDLHelper().addTable(fields);
+        crossTableName = Prefix.table(await this.ddlUniqueGen.next());
+        await this.ddlHelper.addTable(crossTableName, fields);
       }
-      await this._getDDLHelper().addPrimaryKey(crossTableName, pkFields.map((i) => i.name));
+
+      const crossPKConstName = Prefix.pkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addPrimaryKey(crossPKConstName, crossTableName, pkFields.map((i) => i.name));
       for (const field of fields) {
         if (field.attr) {
           await this._insertATAttr(field.attr, {
@@ -110,7 +122,7 @@ export class EntityBuilder extends Builder {
         }
       }
 
-      const crossTableKey = await this._getATHelper().insertATRelations({
+      const crossTableKey = await this.atHelper.insertATRelations({
         relationName: crossTableName,
         relationType: "T",
         lName: crossTableName,
@@ -121,8 +133,9 @@ export class EntityBuilder extends Builder {
 
       // create own table column
       const fieldName = Builder._getFieldName(attr);
-      const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(attr));
-      await this._getDDLHelper().addColumns(tableName, [{name: fieldName, domain: domainName}]);
+      const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attr));
+      await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
       await this._insertATAttr(attr, {
         relationName: tableName,
         fieldName,
@@ -132,14 +145,16 @@ export class EntityBuilder extends Builder {
       });
 
       // add foreign keys for cross table
-      await this._getDDLHelper().addForeignKey(DDLHelper.DEFAULT_FK_OPTIONS, {
+      const crossFKOwnConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addForeignKey(crossFKOwnConstName, {
         tableName: crossTableName,
         fieldName: Constants.DEFAULT_CROSS_PK_OWN_NAME
       }, {
         tableName: Builder._getOwnRelationName(entity),
         fieldName: Builder._getFieldName(entity.pk[0])
       });
-      await this._getDDLHelper().addForeignKey(DDLHelper.DEFAULT_FK_OPTIONS, {
+      const crossFKRefConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addForeignKey(crossFKRefConstName, {
         tableName: crossTableName,
         fieldName: Constants.DEFAULT_CROSS_PK_REF_NAME
       }, {
@@ -149,35 +164,39 @@ export class EntityBuilder extends Builder {
 
     } else if (ParentAttribute.isType(attr)) {
       const fieldName = Builder._getFieldName(attr);
-      const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(attr));
-      await this._getDDLHelper().addColumns(tableName, [{name: fieldName, domain: domainName}]);
+      const domainName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attr));
+      await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
       await this._insertATAttr(attr, {relationName: tableName, fieldName, domainName});
       /*
       const lbField = attr.adapter ? attr.adapter.lbField : Constants.DEFAULT_LB_NAME;
       const rbField = attr.adapter ? attr.adapter.rbField : Constants.DEFAULT_RB_NAME;
-      await this._getDDLHelper().addColumns(tableName, [{name: lbField, domain: "DLB"}]);
-      await this._getDDLHelper().addColumns(tableName, [{name: rbField, domain: "DRB"}]);
-      await this._getDDLHelper().createIndex(tableName, "ASC", [lbField]);
-      await this._getDDLHelper().createIndex(tableName, "DESC", [rbField]);
-      await this._getDDLHelper().addTableCheck(tableName, [`${lbField} <= ${rbField}`]);
+      await this.ddlHelper.addColumns(tableName, [{name: lbField, domain: "DLB"}]);
+      await this.ddlHelper.addColumns(tableName, [{name: rbField, domain: "DRB"}]);
+      await this.ddlHelper.createIndex(tableName, "ASC", [lbField]);
+      await this.ddlHelper.createIndex(tableName, "DESC", [rbField]);
+      await this.ddlHelper.addTableCheck(tableName, [`${lbField} <= ${rbField}`]);
       */
-      await this._getDDLHelper().addForeignKey({
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE"
-      }, {
+      const fkConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addForeignKey(fkConstName, {
         tableName,
         fieldName
       }, {
         tableName: Builder._getOwnRelationName(attr.entities[0]),
         fieldName: Builder._getFieldName(attr.entities[0].pk[0])
+      }, {
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE"
       });
 
     } else if (EntityAttribute.isType(attr)) {
       const fieldName = Builder._getFieldName(attr);
-      const domainName = await this._getDDLHelper().addDomain(DomainResolver.resolve(attr));
-      await this._getDDLHelper().addColumns(tableName, [{name: fieldName, domain: domainName}]);
+      const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attr));
+      await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
       await this._insertATAttr(attr, {relationName: tableName, fieldName, domainName});
-      await this._getDDLHelper().addForeignKey(DDLHelper.DEFAULT_FK_OPTIONS, {
+      const fkConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+      await this.ddlHelper.addForeignKey(fkConstName, {
         tableName,
         fieldName
       }, {

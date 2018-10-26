@@ -7,8 +7,6 @@ import {Update4} from "./Update4";
 import {Update5} from "./Update5";
 import {Update6} from "./Update6";
 
-const CURRENT_DATABASE_VERSION = 6;
-
 const UPDATES_LIST: UpdateConstructor[] = [
   Update6,
   Update5,
@@ -22,18 +20,26 @@ export type UpdateConstructor = new (connection: AConnection) => BaseUpdate;
 
 export class DBSchemaUpdater extends BaseUpdate {
 
-  protected readonly _version: number = CURRENT_DATABASE_VERSION;
+  protected readonly _version: number;
   protected readonly _description: string = "Обновление структуры базы данных";
+  protected readonly _updates: BaseUpdate[];
+
+  constructor(connection: AConnection) {
+    super(connection);
+
+    this._updates = UPDATES_LIST.map((UpdateConstructor) => new UpdateConstructor(this._connection));
+    this._updates.sort((a, b) => {
+      if (a.version === b.version) throw new Error("Two identical versions of BaseUpdate");
+      return a.version < b.version ? -1 : 1;
+    });
+    this._version = this._updates[this._updates.length - 1].version;
+    this._verifyAmount();
+  }
 
   public async run(): Promise<void> {
-    const updates = UPDATES_LIST.map((UpdateConstructor) => new UpdateConstructor(this._connection));
-
-    this._sort(updates);
-    this._verifyAmount(updates);
-
     const version = await this._executeTransaction((transaction) => this._getDatabaseVersion(transaction));
 
-    const newUpdates = updates.filter((item) => item.version > version);
+    const newUpdates = this._updates.filter((item) => item.version > version);
     console.log(this._description + "...");
     console.time(this._description);
     for (const update of newUpdates) {
@@ -45,15 +51,8 @@ export class DBSchemaUpdater extends BaseUpdate {
     console.timeEnd(this._description);
   }
 
-  private _sort(updates: BaseUpdate[]): void {
-    updates.sort((a, b) => {
-      if (a.version === b.version) throw new Error("Two identical versions of BaseUpdate");
-      return a.version < b.version ? -1 : 1;
-    });
-  }
-
-  private _verifyAmount(updates: BaseUpdate[]): void {
-    const lastVersion = updates.reduce((prev, cur) => {
+  private _verifyAmount(): void {
+    const lastVersion = this._updates.reduce((prev, cur) => {
       if (cur.version - prev !== 1) {
         throw new Error("missing update");
       }

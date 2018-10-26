@@ -38,17 +38,9 @@ export interface IInputATFields {
 
 export class ATHelper {
 
-  private readonly _connection: AConnection;
-  private readonly _transaction: ATransaction;
-
   private _createATField: AStatement | undefined;
   private _createATRelation: AStatement | undefined;
   private _createATRelationField: AStatement | undefined;
-
-  constructor(connection: AConnection, transaction: ATransaction) {
-    this._connection = connection;
-    this._transaction = transaction;
-  }
 
   get prepared(): boolean {
     return !!this._createATField && !this._createATField.disposed &&
@@ -56,20 +48,20 @@ export class ATHelper {
       !!this._createATRelationField && !this._createATRelationField.disposed;
   }
 
-  public async prepare(): Promise<void> {
-    this._createATField = await this._connection.prepare(this._transaction, `
+  public async prepare(connection: AConnection, transaction: ATransaction): Promise<void> {
+    this._createATField = await connection.prepare(transaction, `
       INSERT INTO AT_FIELDS (FIELDNAME, LNAME, DESCRIPTION, REFTABLE, REFCONDITION, SETTABLE, SETLISTFIELD,
         SETCONDITION, NUMERATION)
       VALUES (:fieldName, :lName, :description, :refTable, :refCondition, :setTable, :setListField,
         :setCondition, :numeration)
       RETURNING ID
     `);
-    this._createATRelation = await this._connection.prepare(this._transaction, `
+    this._createATRelation = await connection.prepare(transaction, `
       INSERT INTO AT_RELATIONS (RELATIONNAME, RELATIONTYPE, LNAME, DESCRIPTION, SEMCATEGORY, ENTITYNAME)
       VALUES (:relationName, :relationType, :lName, :description, :semCategory, :entityName)
       RETURNING ID
     `);
-    this._createATRelationField = await this._connection.prepare(this._transaction, `
+    this._createATRelationField = await connection.prepare(transaction, `
       INSERT INTO AT_RELATION_FIELDS (FIELDNAME, RELATIONNAME, FIELDSOURCE, FIELDSOURCEKEY, LNAME, DESCRIPTION,
         SEMCATEGORY, CROSSTABLE, CROSSTABLEKEY, CROSSFIELD, ATTRNAME, MASTERENTITYNAME)
       VALUES (:fieldName, :relationName, :fieldSource, :fieldSourceKey, :lName, :description,
@@ -81,12 +73,15 @@ export class ATHelper {
   public async dispose(): Promise<void> {
     if (this._createATField) {
       await this._createATField.dispose();
+      this._createATField = undefined;
     }
     if (this._createATRelation) {
       await this._createATRelation.dispose();
+      this._createATRelation = undefined;
     }
     if (this._createATRelationField) {
       await this._createATRelationField.dispose();
+      this._createATRelationField = undefined;
     }
   }
 

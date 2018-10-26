@@ -1,15 +1,9 @@
 import {AConnection, ATransaction, TExecutor} from "gdmn-db";
 import {semCategories2Str} from "gdmn-nlp";
-import {
-  Attribute,
-  Entity,
-  EntityAttribute,
-  EnumAttribute,
-  ScalarAttribute,
-  SetAttribute
-} from "gdmn-orm";
+import {Attribute, Entity, EntityAttribute, EnumAttribute, ScalarAttribute, SetAttribute} from "gdmn-orm";
+import {DDLHelper} from "../DDLHelper";
 import {ATHelper} from "./ATHelper";
-import {DDLHelper} from "./DDLHelper";
+import {DDLUniqueGenerator} from "./DDLUniqueGenerator";
 
 interface IATEntityOptions {
   relationName: string;
@@ -25,23 +19,46 @@ interface IATAttrOptions {
   crossField?: string;
 }
 
+export interface IBuilderOptions {
+  ddlHelper: DDLHelper;
+  atHelper: ATHelper;
+  ddlUniqueGen: DDLUniqueGenerator;
+}
+
 export abstract class Builder {
 
+  private readonly _ddlUniqueGen: DDLUniqueGenerator;
+  private readonly _atHelper: ATHelper;
   private _ddlHelper: DDLHelper | undefined;
-  private _atHelper: ATHelper | undefined;
 
-  constructor();
-  constructor(ddlHelper: DDLHelper, atHelper: ATHelper);
-  constructor(ddlHelper?: DDLHelper, atHelper?: ATHelper) {
-    this._ddlHelper = ddlHelper;
-    this._atHelper = atHelper;
-    if ((ddlHelper || atHelper) && !this.prepared) {
-      throw new Error("ddlHelper or atHelper are not prepared");
+  constructor(options?: IBuilderOptions) {
+    if (options) {
+      this._ddlUniqueGen = options.ddlUniqueGen;
+      this._atHelper = options.atHelper;
+      this._ddlHelper = options.ddlHelper;
+    } else {
+      this._ddlUniqueGen = new DDLUniqueGenerator();
+      this._atHelper = new ATHelper();
     }
   }
 
+  get ddlUniqueGen(): DDLUniqueGenerator {
+    return this._ddlUniqueGen;
+  }
+
+  get atHelper(): ATHelper {
+    return this._atHelper;
+  }
+
+  get ddlHelper(): DDLHelper {
+    if (this._ddlHelper) {
+      return this._ddlHelper;
+    }
+    throw new Error("Need call prepare");
+  }
+
   get prepared(): boolean {
-    return !!this._ddlHelper && this._ddlHelper.prepared && !!this._atHelper && this._atHelper.prepared;
+    return this._ddlUniqueGen.prepared && this._atHelper.prepared;
   }
 
   public static async executeSelf<T extends Builder, R>(connection: AConnection,
@@ -81,35 +98,19 @@ export abstract class Builder {
 
   public async prepare(connection: AConnection, transaction: ATransaction): Promise<void> {
     this._ddlHelper = new DDLHelper(connection, transaction);
-    this._atHelper = new ATHelper(connection, transaction);
-    await this._getDDLHelper().prepare();
-    await this._getATHelper().prepare();
+    await this._ddlUniqueGen.prepare(connection, transaction);
+    await this._atHelper.prepare(connection, transaction);
   }
 
   public async dispose(): Promise<void> {
-    console.debug(this._getDDLHelper().logs.join("\n"));
-    await this._getDDLHelper().dispose();
-    await this._getATHelper().dispose();
+    console.debug(this.ddlHelper.logs.join("\n"));
+    await this._ddlUniqueGen.dispose();
+    await this._atHelper.dispose();
     this._ddlHelper = undefined;
-    this._atHelper = undefined;
-  }
-
-  protected _getDDLHelper(): DDLHelper {
-    if (this._ddlHelper) {
-      return this._ddlHelper;
-    }
-    throw new Error("Need call prepare");
-  }
-
-  protected _getATHelper(): ATHelper {
-    if (this._atHelper) {
-      return this._atHelper;
-    }
-    throw new Error("Need call prepare");
   }
 
   protected async _insertATEntity(entity: Entity, options: IATEntityOptions): Promise<number> {
-    return await this._getATHelper().insertATRelations({
+    return await this._atHelper.insertATRelations({
       relationName: options.relationName,
       relationType: "T",
       lName: entity.lName.ru ? entity.lName.ru.name : entity.name,
@@ -124,7 +125,7 @@ export abstract class Builder {
       ? attr.values.map(({value, lName}) => `${value}=${lName && lName.ru ? lName.ru.name : ""}`).join("#13#10")
       : undefined;
 
-    const fieldSourceKey = await this._getATHelper().insertATFields({
+    const fieldSourceKey = await this._atHelper.insertATFields({
       fieldName: options.domainName,
       lName: attr.lName.ru ? attr.lName.ru.name : attr.name,
       description: attr.lName.ru ? attr.lName.ru.fullName : attr.name,
@@ -136,7 +137,7 @@ export abstract class Builder {
       numeration: numeration ? Buffer.from(numeration) : undefined
     });
 
-    await this._getATHelper().insertATRelationFields({
+    await this._atHelper.insertATRelationFields({
       fieldName: options.fieldName,
       relationName: options.relationName,
       lName: attr.lName.ru ? attr.lName.ru.name : attr.name,
