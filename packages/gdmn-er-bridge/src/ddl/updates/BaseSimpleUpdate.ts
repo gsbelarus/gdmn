@@ -5,11 +5,12 @@ export abstract class BaseSimpleUpdate extends BaseUpdate {
 
   public async run(): Promise<void> {
     await this._executeTransaction(async (transaction) => {
-      const ddlHelper = new DDLHelper(this._connection, transaction, true);
-      await DDLHelper.executePrepare({
-        ddlHelper,
+      await DDLHelper.executeSelf({
+        connection: this._connection,
+        transaction,
+        defaultIgnoreExisting: true,
         callback: async (ddlHelper) => {
-          const flag = await ddlHelper.isTableExists("AT_DATABASE");
+          const flag = await ddlHelper.cachedStatements.isTableExists("AT_DATABASE");
 
           await this.internalRun(ddlHelper);
 

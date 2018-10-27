@@ -1,5 +1,5 @@
-import {AConnection, ATransaction} from "gdmn-db";
-import {TExecutor} from "gdmn-db/src/types";
+import {AConnection, ATransaction, TExecutor} from "gdmn-db";
+import {CachedStatements} from "../CachedStatements";
 
 export abstract class BaseUpdate {
 
@@ -40,11 +40,16 @@ export abstract class BaseUpdate {
   }
 
   protected async _getDatabaseVersion(transaction: ATransaction): Promise<number> {
-    if (!await this._isTableExists(transaction, "AT_FIELDS")) {
-      return 0;
-    }
-    if (!await this._isTableExists(transaction, "AT_DATABASE")) {
-      return 1;
+    const cachedStatements = new CachedStatements(this._connection, transaction);
+    try {
+      if (!await cachedStatements.isTableExists("AT_FIELDS")) {
+        return 0;
+      }
+      if (!await cachedStatements.isTableExists("AT_DATABASE")) {
+        return 1;
+      }
+    } finally {
+      await cachedStatements.dispose();
     }
     const result = await this._connection.executeReturning(transaction, `
       SELECT 
@@ -52,19 +57,5 @@ export abstract class BaseUpdate {
       FROM AT_DATABASE
     `);
     return await result.getNumber("VERSION");
-  }
-
-  private async _isTableExists(transaction: ATransaction, tableName: string): Promise<boolean> {
-    return await AConnection.executeQueryResultSet({
-      connection: this._connection,
-      transaction,
-      sql: `
-        SELECT 1
-        FROM RDB$RELATIONS
-        WHERE RDB$RELATION_NAME = :tableName
-      `,
-      params: {tableName},
-      callback: (resultSet) => resultSet.next()
-    });
   }
 }

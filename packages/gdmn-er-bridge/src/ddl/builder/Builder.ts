@@ -3,7 +3,6 @@ import {semCategories2Str} from "gdmn-nlp";
 import {Attribute, Entity, EntityAttribute, EnumAttribute, ScalarAttribute, SetAttribute} from "gdmn-orm";
 import {DDLHelper} from "../DDLHelper";
 import {ATHelper} from "./ATHelper";
-import {DDLUniqueGenerator} from "./DDLUniqueGenerator";
 
 interface IATEntityOptions {
   relationName: string;
@@ -22,28 +21,20 @@ interface IATAttrOptions {
 export interface IBuilderOptions {
   ddlHelper: DDLHelper;
   atHelper: ATHelper;
-  ddlUniqueGen: DDLUniqueGenerator;
 }
 
 export abstract class Builder {
 
-  private readonly _ddlUniqueGen: DDLUniqueGenerator;
   private readonly _atHelper: ATHelper;
   private _ddlHelper: DDLHelper | undefined;
 
   constructor(options?: IBuilderOptions) {
     if (options) {
-      this._ddlUniqueGen = options.ddlUniqueGen;
       this._atHelper = options.atHelper;
       this._ddlHelper = options.ddlHelper;
     } else {
-      this._ddlUniqueGen = new DDLUniqueGenerator();
       this._atHelper = new ATHelper();
     }
-  }
-
-  get ddlUniqueGen(): DDLUniqueGenerator {
-    return this._ddlUniqueGen;
   }
 
   get atHelper(): ATHelper {
@@ -58,7 +49,7 @@ export abstract class Builder {
   }
 
   get prepared(): boolean {
-    return this._ddlUniqueGen.prepared && this._atHelper.prepared;
+    return this._atHelper.prepared;
   }
 
   public static async executeSelf<T extends Builder, R>(connection: AConnection,
@@ -98,15 +89,17 @@ export abstract class Builder {
 
   public async prepare(connection: AConnection, transaction: ATransaction): Promise<void> {
     this._ddlHelper = new DDLHelper(connection, transaction);
-    await this._ddlUniqueGen.prepare(connection, transaction);
     await this._atHelper.prepare(connection, transaction);
   }
 
   public async dispose(): Promise<void> {
     console.debug(this.ddlHelper.logs.join("\n"));
-    await this._ddlUniqueGen.dispose();
+    await this.ddlHelper.dispose();
     await this._atHelper.dispose();
-    this._ddlHelper = undefined;
+  }
+
+  protected async nextDDLUnique(): Promise<number> {
+    return await this.ddlHelper.cachedStatements.nextDDLUnique();
   }
 
   protected async _insertATEntity(entity: Entity, options: IATEntityOptions): Promise<number> {

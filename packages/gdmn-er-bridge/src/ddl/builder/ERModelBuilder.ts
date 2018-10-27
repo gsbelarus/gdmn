@@ -29,7 +29,6 @@ export class ERModelBuilder extends Builder {
     await super.prepare(connection, transaction);
 
     this._entityBuilder = new EntityBuilder({
-      ddlUniqueGen: this.ddlUniqueGen,
       atHelper: this.atHelper,
       ddlHelper: this.ddlHelper
     });
@@ -51,7 +50,7 @@ export class ERModelBuilder extends Builder {
     const fields: IFieldProps[] = [];
     for (const pkAttr of entity.pk) {
       const fieldName = Builder._getFieldName(pkAttr);
-      const domainName = Prefix.domain(await this.ddlUniqueGen.next());
+      const domainName = Prefix.domain(await this.nextDDLUnique());
       await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
       await this._insertATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
       fields.push({
@@ -60,7 +59,7 @@ export class ERModelBuilder extends Builder {
       });
     }
 
-    const pkConstName = Prefix.pkConstraint(await this.ddlUniqueGen.next());
+    const pkConstName = Prefix.pkConstraint(await this.nextDDLUnique());
     await this.ddlHelper.addTable(tableName, fields);
     await this.ddlHelper.addPrimaryKey(pkConstName, tableName, fields.map((i) => i.name));
     await this._insertATEntity(entity, {relationName: tableName});
@@ -69,7 +68,7 @@ export class ERModelBuilder extends Builder {
       if (SequenceAttribute.isType(pkAttr)) {
         const fieldName = Builder._getFieldName(pkAttr);
         const seqAdapter = pkAttr.sequence.adapter;
-        const triggerName = Prefix.triggerBeforeInsert(await this.ddlUniqueGen.next());
+        const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
         await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName,
           seqAdapter ? seqAdapter.sequence : pkAttr.sequence.name);
       } else if (DetailAttribute.isType(pkAttr)) {
@@ -79,7 +78,7 @@ export class ERModelBuilder extends Builder {
       } else if (SetAttribute.isType(pkAttr)) {
         // ignore
       } else if (EntityAttribute.isType(pkAttr)) { // for inheritance
-        const fkConstName = Prefix.fkConstraint(await this.ddlUniqueGen.next());
+        const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
         const fieldName = Builder._getFieldName(pkAttr);
         await this.ddlHelper.addForeignKey(fkConstName, {
           tableName,

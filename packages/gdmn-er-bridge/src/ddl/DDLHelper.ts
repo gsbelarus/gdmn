@@ -1,4 +1,5 @@
-import {AConnection, AStatement, ATransaction, DeleteRule, IBaseExecuteOptions, UpdateRule} from "gdmn-db";
+import {AConnection, ATransaction, DeleteRule, IBaseExecuteOptions, UpdateRule} from "gdmn-db";
+import {CachedStatements} from "./CachedStatements";
 
 export interface IColumnsProps {
   notNull?: boolean;
@@ -28,17 +29,9 @@ export interface IFKOptions {
 export type Sorting = "ASC" | "DESC";
 
 export interface IExecuteDDlOptions<R> extends IBaseExecuteOptions<DDLHelper, R> {
-  ddlHelper: DDLHelper;
-}
-
-interface IStatements {
-  sequenceExists: AStatement;
-  tableExists: AStatement;
-  columnsExists: AStatement;
-  constraintExists: AStatement;
-  indexExists: AStatement;
-  domainExists: AStatement;
-  triggerExists: AStatement;
+  connection: AConnection;
+  transaction: ATransaction;
+  defaultIgnoreExisting?: boolean;
 }
 
 export class DDLHelper {
@@ -50,14 +43,15 @@ export class DDLHelper {
 
   private readonly _connection: AConnection;
   private readonly _transaction: ATransaction;
+  private readonly _cachedStatements: CachedStatements;
   private readonly _defaultIgnoreExisting: boolean;
 
-  private _statements?: IStatements;
   private _logs: string[] = [];
 
   constructor(connection: AConnection, transaction: ATransaction, defaultIgnoreExisting: boolean = false) {
     this._connection = connection;
     this._transaction = transaction;
+    this._cachedStatements = new CachedStatements(connection, transaction);
     this._defaultIgnoreExisting = defaultIgnoreExisting;
   }
 
@@ -69,17 +63,23 @@ export class DDLHelper {
     return this._transaction;
   }
 
+  get cachedStatements(): CachedStatements {
+    return this._cachedStatements;
+  }
+
   get logs(): string[] {
     return this._logs;
   }
 
   get disposed(): boolean {
-    return !this._statements;
+    return this._cachedStatements.disposed;
   }
 
-  public static async executePrepare<R>({ddlHelper, callback}: IExecuteDDlOptions<R>): Promise<R> {
+  public static async executeSelf<R>(
+    {connection, transaction, defaultIgnoreExisting, callback}: IExecuteDDlOptions<R>
+  ): Promise<R> {
+    const ddlHelper = new DDLHelper(connection, transaction, defaultIgnoreExisting);
     try {
-      await ddlHelper.prepare();
       return await callback(ddlHelper);
     } finally {
       console.debug(ddlHelper.logs.join("\n"));
@@ -97,65 +97,12 @@ export class DDLHelper {
     );
   }
 
-  public async prepare(): Promise<void> {
-    if (this._statements) {
-      throw new Error("Already prepared");
-    }
-    this._statements = {
-      sequenceExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
-        FROM RDB$GENERATORS
-        WHERE RDB$GENERATOR_NAME = :sequenceName
-      `),
-      tableExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
-        FROM RDB$RELATIONS
-        WHERE RDB$RELATION_NAME = :tableName
-      `),
-      columnsExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
-        FROM RDB$RELATION_FIELDS rf
-        WHERE rf.RDB$RELATION_NAME = :tableName and rf.RDB$FIELD_NAME = :fieldName
-      `),
-      constraintExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0 
-        FROM RDB$RELATION_CONSTRAINTS
-        where RDB$CONSTRAINT_NAME = :constraintName
-      `),
-      indexExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
-        FROM RDB$INDICES
-        WHERE RDB$INDEX_NAME = :indexName
-      `),
-      domainExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
-        FROM RDB$FIELDS
-        WHERE RDB$FIELD_NAME = :domainName
-      `),
-      triggerExists: await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
-        FROM RDB$TRIGGERS
-        WHERE RDB$TRIGGER_NAME = :triggerName
-      `)
-    };
-  }
-
   public async dispose(): Promise<void> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    await this._statements.sequenceExists.dispose();
-    await this._statements.tableExists.dispose();
-    await this._statements.columnsExists.dispose();
-    await this._statements.constraintExists.dispose();
-    await this._statements.indexExists.dispose();
-    await this._statements.domainExists.dispose();
-    await this._statements.triggerExists.dispose();
-    this._statements = undefined;
+    await this._cachedStatements.dispose();
   }
 
   public async addSequence(sequenceName: string, ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<void> {
-    if (ignoreExisting && await this.isSequenceExists(sequenceName)) {
+    if (ignoreExisting && await this._cachedStatements.isSequenceExists(sequenceName)) {
       return;
     }
     await this._loggedExecute(`CREATE SEQUENCE ${sequenceName}`);
@@ -165,7 +112,7 @@ export class DDLHelper {
   public async addTable(tableName: string,
                         scalarFields: IFieldProps[],
                         ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isTableExists(tableName)) {
+    if (ignoreExisting && await this._cachedStatements.isTableExists(tableName)) {
       return tableName;
     }
     const fields = scalarFields.map((item) => (
@@ -179,7 +126,7 @@ export class DDLHelper {
                              tableName: string,
                              check: string,
                              ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<void> {
-    if (ignoreExisting && await this.isTableExists(constraintName)) {
+    if (ignoreExisting && await this._cachedStatements.isTableExists(constraintName)) {
       return;
     }
     await this._loggedExecute(`ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} CHECK (${check})`);
@@ -189,7 +136,7 @@ export class DDLHelper {
                           fields: IFieldProps[],
                           ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<void> {
     for (const field of fields) {
-      if (ignoreExisting && await this.isColumnExists(tableName, field.name)) {
+      if (ignoreExisting && await this._cachedStatements.isColumnExists(tableName, field.name)) {
         continue;
       }
       const column = field.name.padEnd(31) + " " + field.domain.padEnd(31);
@@ -202,7 +149,7 @@ export class DDLHelper {
                            type: Sorting,
                            fieldNames: string[],
                            ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isIndexExists(indexName)) {
+    if (ignoreExisting && await this._cachedStatements.isIndexExists(indexName)) {
       return indexName;
     }
     await this._loggedExecute(`CREATE ${type} INDEX ${indexName} ON ${tableName} (${fieldNames.join(", ")})`);
@@ -213,7 +160,7 @@ export class DDLHelper {
                          tableName: string,
                          fieldNames: string[],
                          ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isConstraintExists(constraintName)) {
+    if (ignoreExisting && await this._cachedStatements.isConstraintExists(constraintName)) {
       return constraintName;
     }
     const f = fieldNames.join(", ");
@@ -225,7 +172,7 @@ export class DDLHelper {
                              tableName: string,
                              fieldNames: string[],
                              ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isConstraintExists(constraintName)) {
+    if (ignoreExisting && await this._cachedStatements.isConstraintExists(constraintName)) {
       return constraintName;
     }
     const pk = fieldNames.join(", ");
@@ -238,7 +185,7 @@ export class DDLHelper {
                              to: IRelation,
                              options: IFKOptions = DDLHelper.DEFAULT_FK_OPTIONS,
                              ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isConstraintExists(constraintName)) {
+    if (ignoreExisting && await this._cachedStatements.isConstraintExists(constraintName)) {
       return constraintName;
     }
     await this._loggedExecute(
@@ -253,7 +200,7 @@ export class DDLHelper {
   public async addDomain(domainName: string,
                          props: IDomainProps,
                          ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isDomainExists(domainName)) {
+    if (ignoreExisting && await this._cachedStatements.isDomainExists(domainName)) {
       return domainName;
     }
     await this._loggedExecute(`CREATE DOMAIN ${domainName.padEnd(31)} AS ${props.type.padEnd(31)}` +
@@ -266,7 +213,7 @@ export class DDLHelper {
                                        fieldName: string,
                                        sequenceName: string,
                                        ignoreExisting: boolean = this._defaultIgnoreExisting): Promise<string> {
-    if (ignoreExisting && await this.isTriggerExists(triggerName)) {
+    if (ignoreExisting && await this._cachedStatements.isTriggerExists(triggerName)) {
       return triggerName;
     }
     await this._loggedExecute(`
@@ -278,86 +225,6 @@ export class DDLHelper {
       END
     `);
     return triggerName;
-  }
-
-  public async isSequenceExists(sequenceName: string): Promise<boolean> {
-    return await AConnection.executeQueryResultSet({
-      connection: this._connection,
-      transaction: this._transaction,
-      sql: `
-        SELECT FIRST 1 0
-        FROM RDB$GENERATORS
-        WHERE RDB$GENERATOR_NAME = :sequenceName
-      `,
-      params: {sequenceName},
-      callback: (resultSet) => resultSet.next()
-    });
-  }
-
-  public async isTableExists(tableName: string): Promise<boolean> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    return await AStatement.executeQueryResultSet({
-      statement: this._statements.tableExists,
-      params: {tableName},
-      callback: (resultSet) => resultSet.next()
-    });
-  }
-
-  public async isColumnExists(tableName: string, fieldName: string): Promise<boolean> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    return await AStatement.executeQueryResultSet({
-      statement: this._statements.columnsExists,
-      params: {tableName, fieldName},
-      callback: (resultSet) => resultSet.next()
-    });
-  }
-
-  public async isConstraintExists(constraintName: string): Promise<boolean> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    return await AStatement.executeQueryResultSet({
-      statement: this._statements.constraintExists,
-      params: {constraintName},
-      callback: (resultSet) => resultSet.next()
-    });
-  }
-
-  public async isIndexExists(indexName: string): Promise<boolean> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    return await AStatement.executeQueryResultSet({
-      statement: this._statements.indexExists,
-      params: {indexName},
-      callback: (resultSet) => resultSet.next()
-    });
-  }
-
-  public async isDomainExists(domainName: string): Promise<boolean> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    return await AStatement.executeQueryResultSet({
-      statement: this._statements.domainExists,
-      params: {domainName},
-      callback: (resultSet) => resultSet.next()
-    });
-  }
-
-  public async isTriggerExists(triggerName: string): Promise<boolean> {
-    if (!this._statements) {
-      throw new Error("Should call prepare");
-    }
-    return await AStatement.executeQueryResultSet({
-      statement: this._statements.triggerExists,
-      params: {triggerName},
-      callback: (resultSet) => resultSet.next()
-    });
   }
 
   private async _loggedExecute(sql: string): Promise<void> {
