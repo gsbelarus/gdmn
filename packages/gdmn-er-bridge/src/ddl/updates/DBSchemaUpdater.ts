@@ -2,16 +2,8 @@ import {AConnection} from "gdmn-db";
 import {BaseUpdate} from "./BaseUpdate";
 import {Update1} from "./Update1";
 import {Update2} from "./Update2";
-import {Update3} from "./Update3";
-import {Update4} from "./Update4";
-import {Update5} from "./Update5";
-import {Update6} from "./Update6";
 
 const UPDATES_LIST: UpdateConstructor[] = [
-  Update6,
-  Update5,
-  Update4,
-  Update3,
   Update2,
   Update1
 ];

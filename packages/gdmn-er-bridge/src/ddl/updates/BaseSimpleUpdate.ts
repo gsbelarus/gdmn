@@ -9,8 +9,13 @@ export abstract class BaseSimpleUpdate extends BaseUpdate {
       await DDLHelper.executePrepare({
         ddlHelper,
         callback: async (ddlHelper) => {
+          const flag = await ddlHelper.isTableExists("AT_DATABASE");
+
           await this.internalRun(ddlHelper);
-          await this._updateDatabaseVersion(transaction);
+
+          if (flag) {
+            await this._updateDatabaseVersion(transaction);
+          }
         }
       });
     });

@@ -55,17 +55,16 @@ export abstract class BaseUpdate {
   }
 
   private async _isTableExists(transaction: ATransaction, tableName: string): Promise<boolean> {
-    const resultSet = await this._connection.executeQuery(transaction, `
-      SELECT 1
-      FROM RDB$RELATIONS
-      WHERE RDB$RELATION_NAME = :tableName
-    `, {tableName});
-    try {
-      return await resultSet.next();
-    } finally {
-      if (!resultSet.closed) {
-        await resultSet.close();
-      }
-    }
+    return await AConnection.executeQueryResultSet({
+      connection: this._connection,
+      transaction,
+      sql: `
+        SELECT 1
+        FROM RDB$RELATIONS
+        WHERE RDB$RELATION_NAME = :tableName
+      `,
+      params: {tableName},
+      callback: (resultSet) => resultSet.next()
+    });
   }
 }
