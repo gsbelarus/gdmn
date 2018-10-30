@@ -12,26 +12,22 @@ export class EntityAttribute<Adapter = IAttributeAdapter> extends Attribute<Adap
 
   public type: AttributeTypes = "Entity";
 
-  private readonly _entities: Entity[];
+  public readonly entities: Entity[];
 
   constructor(options: IEntityAttributeOptions<Adapter>) {
     super(options);
-    this._entities = options.entities;
-  }
-
-  get entities(): Entity[] {
-    return this._entities;
+    this.entities = options.entities;
   }
 
   public serialize(): IEntityAttribute {
     return {
       ...super.serialize(),
-      references: this._entities.map((ent) => ent.name)
+      references: this.entities.map((ent) => ent.name)
     };
   }
 
   public inspectDataType(): string {
     return super.inspectDataType() + " [" +
-      this._entities.reduce((p, e, idx) => p + (idx ? ", " : "") + e.name, "") + "]";
+      this.entities.reduce((p, e, idx) => p + (idx ? ", " : "") + e.name, "") + "]";
   }
 }

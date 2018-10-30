@@ -12,32 +12,24 @@ export class NumericAttribute extends NumberAttribute<number> {
 
   public type: AttributeTypes = "Numeric";
 
-  private readonly _precision: number;
-  private readonly _scale: number;
+  public readonly precision: number;
+  public readonly scale: number;
 
   constructor(options: INumericAttributeOptions<IAttributeAdapter>) {
     super(options);
-    this._precision = options.precision;
-    this._scale = options.scale;
-  }
-
-  get precision(): number {
-    return this._precision;
-  }
-
-  get scale(): number {
-    return this._scale;
+    this.precision = options.precision;
+    this.scale = options.scale;
   }
 
   public inspectDataType(): string {
-    return `${super.inspectDataType()}(${this._precision}, ${Math.abs(this._scale)})`;
+    return `${super.inspectDataType()}(${this.precision}, ${Math.abs(this.scale)})`;
   }
 
   public serialize(): INumericAttribute {
     return {
       ...super.serialize(),
-      precision: this._precision,
-      scale: this._scale
+      precision: this.precision,
+      scale: this.scale
     };
   }
 }

@@ -12,21 +12,17 @@ export class BooleanAttribute extends ScalarAttribute {
 
   public type: AttributeTypes = "Boolean";
 
-  private readonly _defaultValue: boolean;
+  public readonly defaultValue: boolean;
 
   constructor(options: IBooleanAttributeOptions) {
     super(options);
-    this._defaultValue = options.defaultValue || false;
-  }
-
-  get defaultValue(): boolean {
-    return this._defaultValue;
+    this.defaultValue = options.defaultValue || false;
   }
 
   public serialize(): IBooleanAttribute {
     return {
       ...super.serialize(),
-      defaultValue: this._defaultValue
+      defaultValue: this.defaultValue
     };
   }
 }

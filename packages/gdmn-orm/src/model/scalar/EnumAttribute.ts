@@ -13,32 +13,24 @@ export class EnumAttribute extends ScalarAttribute {
 
   public type: AttributeTypes = "Enum";
 
-  private readonly _values: IEnumValue[];
-  private readonly _defaultValue?: string | number;
+  public readonly values: IEnumValue[];
+  public readonly defaultValue?: string | number;
 
   constructor(options: IEnumAttributeOptions) {
     super(options);
-    this._values = options.values;
-    this._defaultValue = options.defaultValue;
-  }
-
-  get values(): IEnumValue[] {
-    return this._values;
-  }
-
-  get defaultValue(): string | number | undefined {
-    return this._defaultValue;
+    this.values = options.values;
+    this.defaultValue = options.defaultValue;
   }
 
   public inspectDataType(): string {
-    return super.inspectDataType() + " " + JSON.stringify(this._values);
+    return super.inspectDataType() + " " + JSON.stringify(this.values);
   }
 
   public serialize(): IEnumAttribute {
     return {
       ...super.serialize(),
-      values: this._values,
-      defaultValue: this._defaultValue
+      values: this.values,
+      defaultValue: this.defaultValue
     };
   }
 }

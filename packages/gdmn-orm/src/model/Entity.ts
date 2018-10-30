@@ -15,59 +15,43 @@ export interface IEntityOptions extends IBaseSemOptions<IEntityAdapter> {
 
 export class Entity {
 
+  public readonly parent?: Entity;
+  public readonly name: string;
+  public readonly lName: ILName;
+  public readonly isAbstract: boolean;
+  public readonly semCategories: SemCategory[];
+
   private _source?: IEntitySource;
 
-  private readonly _parent?: Entity;
-  private readonly _name: string;
-  private readonly _lName: ILName;
-  private readonly _isAbstract: boolean;
-  private readonly _semCategories: SemCategory[];
   private readonly _adapter?: IEntityAdapter;
-
   private readonly _pk: Attribute[] = [];
   private readonly _attributes: IAttributes = {};
   private readonly _unique: Attribute[][] = [];
 
   constructor(options: IEntityOptions) {
-    this._parent = options.parent || undefined;
-    this._name = options.name;
-    this._lName = options.lName;
-    this._isAbstract = options.isAbstract || false;
-    this._semCategories = options.semCategories || [];
+    this.parent = options.parent || undefined;
+    this.name = options.name;
+    this.lName = options.lName;
+    this.isAbstract = options.isAbstract || false;
+    this.semCategories = options.semCategories || [];
     this._adapter = options.adapter;
   }
 
   get pk(): Attribute[] {
-    return this._pk;
-  }
-
-  get parent(): Entity | undefined {
-    return this._parent;
-  }
-
-  get lName(): ILName {
-    return this._lName;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get isAbstract(): boolean {
-    return this._isAbstract;
+    return this._pk.slice();
   }
 
   get adapter(): IEntityAdapter {
     if (this._adapter) {
       return this._adapter;
     } else {
-      return relationName2Adapter(this._name);
+      return relationName2Adapter(this.name);
     }
   }
 
   get unique(): Attribute[][] {
-    if (this._parent) {
-      return [...this._parent.unique, ...this.ownUnique];
+    if (this.parent) {
+      return [...this.parent.unique, ...this.ownUnique];
     } else {
       return this.ownUnique;
     }
@@ -78,8 +62,8 @@ export class Entity {
   }
 
   get attributes(): IAttributes {
-    if (this._parent) {
-      return {...this._parent.attributes, ...this.ownAttributes};
+    if (this.parent) {
+      return {...this.parent.attributes, ...this.ownAttributes};
     } else {
       return this.ownAttributes;
     }
@@ -87,10 +71,6 @@ export class Entity {
 
   get ownAttributes(): IAttributes {
     return this._attributes;
-  }
-
-  get semCategories(): SemCategory[] {
-    return this._semCategories;
   }
 
   get isTree(): boolean {
@@ -116,7 +96,7 @@ export class Entity {
   public attribute(name: string): Attribute | never {
     const attribute = this.attributes[name];
     if (!attribute) {
-      throw new Error(`Unknown attribute ${name} of entity ${this._name}`);
+      throw new Error(`Unknown attribute ${name} of entity ${this.name}`);
     }
     return attribute;
   }
@@ -124,7 +104,7 @@ export class Entity {
   public ownAttribute(name: string): Attribute | never {
     const attribute = this.ownAttributes[name];
     if (!attribute) {
-      throw new Error(`Unknown attribute ${name} of entity ${this._name}`);
+      throw new Error(`Unknown attribute ${name} of entity ${this.name}`);
     }
     return attribute;
   }
@@ -138,12 +118,12 @@ export class Entity {
   }
 
   public hasAncestor(a: Entity): boolean {
-    return this._parent ? (this._parent === a ? true : this._parent.hasAncestor(a)) : false;
+    return this.parent ? (this.parent === a ? true : this.parent.hasAncestor(a)) : false;
   }
 
   public add<T extends Attribute>(attribute: T): T | never {
     if (this.hasOwnAttribute(attribute.name)) {
-      throw new Error(`Attribute ${attribute.name} of entity ${this._name} already exists`);
+      throw new Error(`Attribute ${attribute.name} of entity ${this.name} already exists`);
     }
 
     if (!this._pk.length) {
@@ -155,7 +135,7 @@ export class Entity {
 
   public remove(attribute: Attribute): void {
     if (!this.hasOwnAttribute(attribute.name)) {
-      throw new Error(`Attribute ${attribute.name} of entity ${this._name} not found`);
+      throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
     }
 
     if (this._pk.length) {
@@ -238,28 +218,28 @@ export class Entity {
 
   public serialize(): IEntity {
     return {
-      parent: this._parent ? this._parent._name : undefined,
-      name: this._name,
-      lName: this._lName,
-      isAbstract: this._isAbstract,
-      semCategories: semCategories2Str(this._semCategories),
+      parent: this.parent ? this.parent.name : undefined,
+      name: this.name,
+      lName: this.lName,
+      isAbstract: this.isAbstract,
+      semCategories: semCategories2Str(this.semCategories),
       unique: this.ownUnique.map((values) => values.map((attr) => attr.name)),
       attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize())
     };
   }
 
   public inspect(): string[] {
-    const lName = this._lName.ru ? " - " + this._lName.ru.name : "";
+    const lName = this.lName.ru ? " - " + this.lName.ru.name : "";
     const result = [
-      `${this._isAbstract ? "!" : ""}${this._name}${this._parent ? "(" + this._parent._name + ")" : ""}${lName}:`,
+      `${this.isAbstract ? "!" : ""}${this.name}${this.parent ? "(" + this.parent.name + ")" : ""}${lName}:`,
       `  adapter: ${JSON.stringify(this.adapter)}`,
       "  IAttributes:",
       ...Object.values(this.attributes).reduce((p, attr) => {
         return [...p, ...attr.inspect()];
       }, [] as string[])
     ];
-    if (this._semCategories.length) {
-      result.splice(1, 0, `  categories: ${semCategories2Str(this._semCategories)}`);
+    if (this.semCategories.length) {
+      result.splice(1, 0, `  categories: ${semCategories2Str(this.semCategories)}`);
     }
     return result;
   }

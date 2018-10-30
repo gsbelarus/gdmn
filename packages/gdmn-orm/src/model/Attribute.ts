@@ -10,40 +10,20 @@ export abstract class Attribute<Adapter = any> {
 
   public abstract type: AttributeTypes;
 
-  protected _source?: IAttributeSource;
-  protected _adapter?: Adapter;
+  public readonly name: string;
+  public readonly lName: ILName;
+  public readonly required: boolean;
+  public readonly semCategories: SemCategory[];
+  public readonly adapter?: Adapter;
 
-  private readonly _name: string;
-  private readonly _lName: ILName;
-  private readonly _required: boolean;
-  private readonly _semCategories: SemCategory[];
+  protected _source?: IAttributeSource;
 
   protected constructor(options: IAttributeOptions<Adapter>) {
-    this._name = options.name;
-    this._lName = options.lName;
-    this._required = options.required || false;
-    this._semCategories = options.semCategories || [];
-    this._adapter = options.adapter;
-  }
-
-  get adapter(): Adapter | undefined {
-    return this._adapter;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get lName(): ILName {
-    return this._lName;
-  }
-
-  get required(): boolean {
-    return this._required;
-  }
-
-  get semCategories(): SemCategory[] {
-    return this._semCategories;
+    this.name = options.name;
+    this.lName = options.lName;
+    this.required = options.required || false;
+    this.semCategories = options.semCategories || [];
+    this.adapter = options.adapter;
   }
 
   public async initDataSource(source?: IAttributeSource): Promise<void> {
@@ -55,11 +35,11 @@ export abstract class Attribute<Adapter = any> {
 
   public serialize(): IAttribute {
     return {
-      name: this._name,
+      name: this.name,
       type: this.type,
-      lName: this._lName,
-      required: this._required,
-      semCategories: semCategories2Str(this._semCategories)
+      lName: this.lName,
+      required: this.required,
+      semCategories: semCategories2Str(this.semCategories)
     };
   }
 
@@ -87,10 +67,10 @@ export abstract class Attribute<Adapter = any> {
   public inspect(indent: string = "    "): string[] {
     const adapter = this.adapter ? ", " + JSON.stringify(this.adapter) : "";
     const lName = this.lName.ru ? " - " + this.lName.ru.name : "";
-    const cat = this._semCategories.length ? `, categories: ${semCategories2Str(this._semCategories)}` : "";
+    const cat = this.semCategories.length ? `, categories: ${semCategories2Str(this.semCategories)}` : "";
 
     return [
-      `${indent}${this._name}${this.required ? "*" : ""}${lName}: ${this.inspectDataType()}${cat}${adapter}`
+      `${indent}${this.name}${this.required ? "*" : ""}${lName}: ${this.inspectDataType()}${cat}${adapter}`
     ];
   }
 }

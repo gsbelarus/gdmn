@@ -12,21 +12,17 @@ export class SequenceAttribute extends ScalarAttribute<IAttributeAdapter> {
 
   public type: AttributeTypes = "Sequence";
 
-  private readonly _sequence: Sequence;
+  public readonly sequence: Sequence;
 
   constructor(options: ISequenceAttributeOptions<IAttributeAdapter>) {
     super({...options, required: true});
-    this._sequence = options.sequence;
-  }
-
-  get sequence(): Sequence {
-    return this._sequence;
+    this.sequence = options.sequence;
   }
 
   public serialize(): ISequenceAttribute {
     return {
       ...super.serialize(),
-      sequence: this._sequence.name
+      sequence: this.sequence.name
     };
   }
 }
