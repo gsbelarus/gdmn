@@ -175,10 +175,10 @@ export function deserializeERModel(serialized: IERModel): ERModel {
       }
 
       case "SetAttribute": {
-        const attr = _attr as ISetAttribute;
-        const entities = attr.references.map((e) => erModel.entities[e]);
-        const setAttribute = new SetAttribute({name, lName, required, entities, semCategories});
-        attr.attributes.forEach((a) => setAttribute.add(createAttribute(a)));
+        const {presLen, attributes, references} = _attr as ISetAttribute;
+        const entities = references.map((e) => erModel.entities[e]);
+        const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories});
+        attributes.forEach((a) => setAttribute.add(createAttribute(a)));
         return setAttribute;
       }
 
