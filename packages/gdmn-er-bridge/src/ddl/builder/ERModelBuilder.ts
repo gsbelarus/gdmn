@@ -1,4 +1,3 @@
-import {AConnection, ATransaction} from "gdmn-db";
 import {
   DetailAttribute,
   Entity,
@@ -8,7 +7,7 @@ import {
   SequenceAttribute,
   SetAttribute
 } from "gdmn-orm";
-import {IFieldProps} from "../DDLHelper";
+import {DDLHelper, IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
@@ -16,22 +15,15 @@ import {EntityBuilder} from "./EntityBuilder";
 
 export class ERModelBuilder extends Builder {
 
-  private _entityBuilder: EntityBuilder | undefined;
+  private _entityBuilder: EntityBuilder;
 
-  get entityBuilder(): EntityBuilder {
-    if (!this._entityBuilder || !this._entityBuilder.prepared) {
-      throw new Error("Need call prepare");
-    }
-    return this._entityBuilder;
+  constructor(ddlHelper: DDLHelper) {
+    super(ddlHelper);
+    this._entityBuilder = new EntityBuilder(ddlHelper);
   }
 
-  public async prepare(connection: AConnection, transaction: ATransaction): Promise<void> {
-    await super.prepare(connection, transaction);
-
-    this._entityBuilder = new EntityBuilder({
-      atHelper: this.atHelper,
-      ddlHelper: this.ddlHelper
-    });
+  get entityBuilder(): EntityBuilder {
+    return this._entityBuilder;
   }
 
   public async addSequence(sequence: Sequence): Promise<Sequence> {
@@ -52,7 +44,7 @@ export class ERModelBuilder extends Builder {
       const fieldName = Builder._getFieldName(pkAttr);
       const domainName = Prefix.domain(await this.nextDDLUnique());
       await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
-      await this._insertATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
+      await this._addATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
       fields.push({
         name: fieldName,
         domain: domainName
@@ -62,7 +54,13 @@ export class ERModelBuilder extends Builder {
     const pkConstName = Prefix.pkConstraint(await this.nextDDLUnique());
     await this.ddlHelper.addTable(tableName, fields);
     await this.ddlHelper.addPrimaryKey(pkConstName, tableName, fields.map((i) => i.name));
-    await this._insertATEntity(entity, {relationName: tableName});
+    await this.ddlHelper.cachedStatements.addToATRelations({
+      relationName: tableName,
+      lName: entity.lName.ru && entity.lName.ru.name,
+      description: entity.lName.ru && entity.lName.ru.fullName,
+      entityName: entity.name,
+      semCategory: entity.semCategories
+    });
 
     for (const pkAttr of entity.pk) {
       if (SequenceAttribute.isType(pkAttr)) {
@@ -92,12 +90,12 @@ export class ERModelBuilder extends Builder {
 
     for (const attr of Object.values(entity.ownAttributes)) {
       if (!entity.pk.includes(attr)) {
-        await this.entityBuilder.addAttribute(entity, attr);
+        await this._entityBuilder.addAttribute(entity, attr);
       }
     }
 
     for (const unique of entity.ownUnique) {
-      await this.entityBuilder.addUnique(entity, unique);
+      await this._entityBuilder.addUnique(entity, unique);
     }
 
     return entity;

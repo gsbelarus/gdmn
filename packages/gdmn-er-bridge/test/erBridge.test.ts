@@ -52,7 +52,9 @@ describe("ERBridge", () => {
     connection,
     callback: async (transaction) => {
       const dbStructure = await driver.readDBStructure(connection, transaction);
-      return await erBridge.exportFromDatabase(dbStructure, transaction, new ERModel());
+      const erModel = await erBridge.exportFromDatabase(dbStructure, transaction, new ERModel());
+      await erModel.initDataSource();
+      return erModel;
     }
   });
 
@@ -65,7 +67,7 @@ describe("ERBridge", () => {
       if (!transaction.finished) {
         await transaction.commit();
       }
-      await erModel.initDataSource(undefined);
+      await erModel.initDataSource();
     }
   };
 

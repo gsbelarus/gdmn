@@ -1,16 +1,17 @@
 import {AConnection, ATransaction} from "gdmn-db";
 import {ITransaction} from "gdmn-orm";
-import {ERModelBuilder} from "../ddl/builder/ERModelBuilder";
+import {DDLHelper} from "../ddl/DDLHelper";
 
 export class Transaction implements ITransaction {
 
   private readonly _connection: AConnection;
   private readonly _transaction: ATransaction;
-  private readonly _builder: ERModelBuilder = new ERModelBuilder();
+  private readonly _ddlHelper: DDLHelper;
 
   constructor(connection: AConnection, transaction: ATransaction) {
     this._connection = connection;
     this._transaction = transaction;
+    this._ddlHelper = new DDLHelper(connection, transaction);
   }
 
   get finished(): boolean {
@@ -21,23 +22,20 @@ export class Transaction implements ITransaction {
     return this._transaction;
   }
 
-  public async getBuilder(): Promise<ERModelBuilder> {
-    if (!this._builder.prepared) {
-      await this._builder.prepare(this._connection, this._transaction);
-    }
-    return this._builder;
+  get ddlHelper(): DDLHelper {
+    return this._ddlHelper;
   }
 
   public async commit(): Promise<void> {
-    if (this._builder.prepared) {
-      await this._builder.dispose();
+    if (!this._ddlHelper.disposed) {
+      await this._ddlHelper.dispose();
     }
     return await this._transaction.commit();
   }
 
   public async rollback(): Promise<void> {
-    if (this._builder.prepared) {
-      await this._builder.dispose();
+    if (!this._ddlHelper.disposed) {
+      await this._ddlHelper.dispose();
     }
     return await this._transaction.rollback();
   }

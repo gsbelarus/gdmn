@@ -8,6 +8,7 @@ import {
   SequenceAttribute
 } from "gdmn-orm";
 import {Builder} from "../ddl/builder/Builder";
+import {ERModelBuilder} from "../ddl/builder/ERModelBuilder";
 import {Constants} from "../ddl/Constants";
 import {AttributeSource} from "./AttributeSource";
 import {DataSource} from "./DataSource";
@@ -46,21 +47,21 @@ export class EntitySource implements IEntitySource {
 
   public async create<T extends Entity>(_: ERModel, obj: T, transaction?: Transaction): Promise<T> {
     return await this._dataSource.withTransaction(transaction, async (trans) => {
-      const builder = await trans.getBuilder();
+      const builder = new ERModelBuilder(trans.ddlHelper);
       return (await builder.addEntity(obj)) as T;
     });
   }
 
   public async delete(_: ERModel, obj: Entity, transaction?: Transaction): Promise<void> {
     return await this._dataSource.withTransaction(transaction, async (trans) => {
-      const builder = await trans.getBuilder();
+      const builder = new ERModelBuilder(trans.ddlHelper);
       await builder.removeEntity(obj);
     });
   }
 
   public async addUnique(entity: Entity, attrs: Attribute[], transaction?: Transaction): Promise<void> {
     return await this._dataSource.withTransaction(transaction, async (trans) => {
-      const builder = await trans.getBuilder();
+      const builder = new ERModelBuilder(trans.ddlHelper);
       return await builder.entityBuilder.addUnique(entity, attrs);
     });
   }

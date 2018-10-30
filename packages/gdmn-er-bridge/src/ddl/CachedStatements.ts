@@ -1,5 +1,42 @@
 import {AConnection, AStatement, ATransaction} from "gdmn-db";
+import {semCategories2Str, SemCategory} from "gdmn-nlp";
 import {Constants} from "./Constants";
+
+export interface IAddATFields {
+  fieldName: string;
+  lName?: string;
+  description?: string;
+  refTable?: string;
+  refCondition?: string;
+  setTable?: string;
+  setListField?: string;
+  setCondition?: string;
+  numeration?: Array<{ key: string | number, value: string }>;
+}
+
+export interface IAddATRelations {
+  relationName: string;
+  relationType?: "T" | "V";
+  lName?: string;
+  description?: string;
+  entityName?: string;
+  semCategory?: SemCategory[];
+}
+
+export interface IAddATRelationFields {
+  fieldName: string;
+  relationName: string;
+  lName?: string;
+  description?: string;
+  fieldSource: string;
+  fieldSourceKey: number;
+  attrName?: string;
+  masterEntityName?: string;
+  semCategory?: SemCategory[];
+  crossTable?: string;
+  crossTableKey?: number;
+  crossField?: string;
+}
 
 interface IStatements {
   sequenceExists?: AStatement;
@@ -11,6 +48,10 @@ interface IStatements {
   triggerExists?: AStatement;
 
   ddlUniqueSequence?: AStatement;
+
+  addToATFields?: AStatement;
+  addToATRelations?: AStatement;
+  addToATRelationField?: AStatement;
 }
 
 export class CachedStatements {
@@ -45,7 +86,6 @@ export class CachedStatements {
       if (statement && !statement.disposed) {
         await statement.dispose();
       }
-
     }
   }
 
@@ -178,6 +218,83 @@ export class CachedStatements {
     }
     const result = await this._statements.ddlUniqueSequence.executeReturning();
     return (await result.getAll())[0];
+  }
+
+  public async addToATFields(input: IAddATFields): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.addToATFields) {
+      this._statements.addToATFields = await this._connection.prepare(this._transaction, `
+        INSERT INTO AT_FIELDS (FIELDNAME, LNAME, DESCRIPTION, REFTABLE, REFCONDITION, SETTABLE, SETLISTFIELD,
+          SETCONDITION, NUMERATION)
+        VALUES (:fieldName, :lName, :description, :refTable, :refCondition, :setTable, :setListField,
+          :setCondition, :numeration)
+        RETURNING ID
+      `);
+    }
+    const numeration = (input.numeration || []).map(({key, value}) => `${key}=${value}`).join("#13#10");
+    const result = await this._statements.addToATFields.executeReturning({
+      fieldName: input.fieldName,
+      lName: input.lName || input.fieldName,
+      description: input.description,
+      refTable: input.refTable,
+      refCondition: input.refCondition,
+      setTable: input.setTable,
+      setListField: input.setListField,
+      setCondition: input.setCondition,
+      numeration: numeration.length ? Buffer.from(numeration) : undefined
+    });
+    return result.getNumber("ID");
+  }
+
+  public async addToATRelations(input: IAddATRelations): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.addToATRelations) {
+      this._statements.addToATRelations = await this.connection.prepare(this._transaction, `
+        INSERT INTO AT_RELATIONS (RELATIONNAME, RELATIONTYPE, LNAME, DESCRIPTION, SEMCATEGORY, ENTITYNAME)
+        VALUES (:relationName, :relationType, :lName, :description, :semCategory, :entityName)
+        RETURNING ID
+      `);
+    }
+    const result = await this._statements.addToATRelations.executeReturning({
+      relationName: input.relationName,
+      relationType: input.relationType || "T",
+      lName: input.lName || input.relationName,
+      description: input.description,
+      semCategory: semCategories2Str(input.semCategory || []),
+      entityName: input.relationName !== input.entityName ? input.entityName : undefined
+    });
+    return result.getNumber("ID");
+  }
+
+  public async addToATRelationField(input: IAddATRelationFields): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.addToATRelationField) {
+      this._statements.addToATRelationField = await this.connection.prepare(this._transaction, `
+        INSERT INTO AT_RELATION_FIELDS (FIELDNAME, RELATIONNAME, LNAME, DESCRIPTION, FIELDSOURCE, FIELDSOURCEKEY,
+          ATTRNAME, MASTERENTITYNAME, SEMCATEGORY, CROSSTABLE, CROSSTABLEKEY, CROSSFIELD)
+        VALUES (:fieldName, :relationName, :lName, :description, :fieldSource, :fieldSourceKey,
+          :attrName, :masterEntityName, :semCategory, :crossTable, :crossTableKey, :crossField)
+        RETURNING ID
+      `);
+    }
+    const result = await this._statements.addToATRelationField.executeReturning({
+      fieldName: input.fieldName,
+      relationName: input.relationName,
+      lName: input.lName || input.fieldName,
+      description: input.description,
+      fieldSource: input.fieldSource,
+      fieldSourceKey: input.fieldSourceKey,
+      attrName: input.fieldName !== input.attrName ? input.attrName : undefined,
+      masterEntityName: input.masterEntityName,
+      semCategory: semCategories2Str(input.semCategory || []),
+      crossTable: input.crossTable,
+      crossTableKey: input.crossTableKey,
+      crossField: input.crossField
+    });
+    return result.getNumber("ID");
   }
 
   private _checkDisposed(): void | never {

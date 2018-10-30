@@ -1,4 +1,5 @@
 import {ERModel, ISequenceSource, Sequence} from "gdmn-orm";
+import {ERModelBuilder} from "../ddl/builder/ERModelBuilder";
 import {DataSource} from "./DataSource";
 import {Transaction} from "./Transaction";
 
@@ -16,14 +17,14 @@ export class SequenceSource implements ISequenceSource {
 
   public async create<T extends Sequence>(_: ERModel, obj: T, transaction?: Transaction): Promise<T> {
     return await this._dataSource.withTransaction(transaction, async (trans) => {
-      const builder = await trans.getBuilder();
+      const builder = new ERModelBuilder(trans.ddlHelper);
       return (await builder.addSequence(obj)) as T;
     });
   }
 
   public async delete(_: ERModel, obj: Sequence, transaction?: Transaction): Promise<void> {
     return await this._dataSource.withTransaction(transaction, async (trans) => {
-      const builder = await trans.getBuilder();
+      const builder = new ERModelBuilder(trans.ddlHelper);
       await builder.removeSequence(obj);
     });
 
