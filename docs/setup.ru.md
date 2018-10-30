@@ -1,17 +1,27 @@
-## Установка
+## Предварительно устанавливаем
 
-Предварительные требования: [Node](https://nodejs.org/en/download/), [Yarn](https://yarnpkg.com/en/docs/install), [Firebird](https://www.firebirdsql.org/en/server-packages/) >= v3.0
+1. [Node](https://nodejs.org/en/download/). Мы рекомендуем версию 10. У нас возникали проблемы с компиляцией библиотек на C++ при использовании версии 11.0. 
+2. [Yarn](https://yarnpkg.com/en/docs/install).
+3. [Firebird 3](https://www.firebirdsql.org/en/server-packages/). Проект не будет работать с версией Firebird ниже 3.0.
+4. [Git](https://git-scm.com/downloads).
 
-1. Требуется выполнить некоторые действия. Если уже было проделано - пропускаем
+Дополнительная настройка в зависимости от используемой операционной системы:
 
-    * **Windows**
+### Windows
+
+Выполняем из командной строки:
+
         ```
         $ yarn global add windows-build-tools
         $ yarn global add node-gyp
         ```
-        Добавить в переменную окружения PATH путь к папке с библиотекой `<fb_dir>/fbclient.dll`
+
+Добавить в переменную окружения **PATH** путь к папке с библиотекой `fbclient.dll` (по умолчанию, располагается в папке, куда был установлен сервер Firebird).
         
-    * **Mac OS**
+### Mac OS
+
+Выполняем из командной строки:
+
         ```
         $ firebirdHome='export FIREBIRD_HOME="/Library/Frameworks/Firebird.framework/Resources"'
         $ grep -q -F "$firebirdHome" ~/.bash_profile || echo "$firebirdHome" >> ~/.bash_profile
@@ -22,16 +32,26 @@
         $ mkdir -p /usr/local/lib 
         $ ln -s /Library/Frameworks/Firebird.framework/Versions/A/Firebird /usr/local/lib/libfbclient.dylib
         ```
-        Выдать пользователю `Firebird Database` права на директорию где локально лежат базы данных Firebird
-    * **Linux**
-        ...
 
-2. Клонирование проекта
+Выдать пользователю `Firebird Database` права на директорию где локально лежат базы данных Firebird.
+
+### Linux
+        
+*Будет написано...*
+
+## Получаем исходный код
+
+Из командной строки:
+
     ```
     $ git clone https://github.com/gsbelarus/gdmn.git
     $ cd gdmn
     ```
-5. Установка зависимостей
+
+## Устанавливаем зависимости
+
+Из командной строки:
+
     ```
     $ yarn
     $ yarn bootstrap
