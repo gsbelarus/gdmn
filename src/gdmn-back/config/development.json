@@ -2,7 +2,7 @@
   "server": {
     "http": {
       "enabled": true,
-      "host": "192.168.0.56",
+      "host": "127.0.0.1",
       "port": 4000
     },
     "stomp": {

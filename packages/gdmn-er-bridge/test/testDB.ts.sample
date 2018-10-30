@@ -1,6 +1,6 @@
 import {Factory} from "gdmn-db";
 import {resolve} from "path";
-import {IDBDetail} from "../export/dbdetail";
+import {IDBDetail} from "../src/ddl/export/dbdetail";
 
 export const exportTestDBDetail: IDBDetail = {
   alias: "exportTestDB",
