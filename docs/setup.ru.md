@@ -1,6 +1,6 @@
 ## Установка
 
-Предворительные требования: [Node](https://nodejs.org/en/download/), [Yarn](https://yarnpkg.com/en/docs/install), [Firebird](https://www.firebirdsql.org/en/server-packages/) >= v3.0
+Предварительные требования: [Node](https://nodejs.org/en/download/), [Yarn](https://yarnpkg.com/en/docs/install), [Firebird](https://www.firebirdsql.org/en/server-packages/) >= v3.0
 
 1. Требуется выполнить некоторые действия. Если уже было проделано - пропускаем
 
