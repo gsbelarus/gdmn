@@ -1,7 +1,6 @@
 import {IAttributeAdapter} from "../../../rdbadapter";
 import {INumberAttribute} from "../../../serialize";
 import {IBaseSemOptions} from "../../../types";
-import {Attribute} from "../../Attribute";
 import {ScalarAttribute} from "../ScalarAttribute";
 
 export interface INumberAttributeOptions<T, DF = undefined, Adapter = IAttributeAdapter>
@@ -35,10 +34,6 @@ export abstract class NumberAttribute<T, DF = undefined, Adapter = IAttributeAda
 
   get defaultValue(): T | DF | undefined {
     return this._defaultValue;
-  }
-
-  public static isType(type: Attribute): type is NumberAttribute<any> {
-    return type instanceof NumberAttribute;
   }
 
   public serialize(): INumberAttribute<T, DF> {

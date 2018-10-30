@@ -49,19 +49,25 @@ export class SelectBuilder {
     let relationName = entity.adapter.relation[0].relationName;
     let fieldName = attribute.name;
     if (attribute.adapter) {
-      if (SetAttribute.isType(attribute)) {
-        if (attribute.adapter) {
-          relationName = attribute.adapter.crossRelation;
-          fieldName = attribute.adapter.presentationField || "";
+      switch (attribute.type) {
+        case "Set": {
+          const attr = attribute as SetAttribute;
+          if (attr.adapter) {
+            relationName = attr.adapter.crossRelation;
+            fieldName = attr.adapter.presentationField || "";
+          }
+          break;
         }
-
-      } else if (DetailAttribute.isType(attribute)) {
-        if (attribute.adapter) {
-          relationName = attribute.adapter.masterLinks[0].detailRelation;
-          fieldName = attribute.adapter.masterLinks[0].link2masterField;
+        case "Detail": {
+          const attr = attribute as DetailAttribute;
+          if (attr.adapter) {
+            relationName = attr.adapter.masterLinks[0].detailRelation;
+            fieldName = attr.adapter.masterLinks[0].link2masterField;
+          }
+          break;
         }
-
-      } else if (ScalarAttribute.isType(attribute)) {
+      }
+      if (attribute instanceof ScalarAttribute) {
         if (attribute.adapter) {
           relationName = attribute.adapter.relation;
           fieldName = attribute.adapter.field;
@@ -122,7 +128,8 @@ export class SelectBuilder {
 
     link.fields.forEach((field) => {
       if (field.link) {
-        if (SetAttribute.isType(field.attribute)) {
+        if (field.attribute.type === "Set") {
+          const setAttr = field.attribute as SetAttribute;
           if (field.setAttributes) {
             const fieldAlias = field.setAttributes.reduce((alias, attr) => {
               alias[attr.name] = `F$${this._fieldAliases.size + 1}_${Object.keys(alias).length + 1}`;
@@ -130,8 +137,8 @@ export class SelectBuilder {
             }, {} as IEntityQueryFieldAlias);
             this._fieldAliases.set(field, fieldAlias);
           }
-          if (field.attribute.adapter) {
-            const setAdapter = SelectBuilder._getAttrAdapter(field.link.entity, field.attribute);
+          if (setAttr.adapter) {
+            const setAdapter = SelectBuilder._getAttrAdapter(field.link.entity, setAttr);
             const alias = this._linkAliases.get(link);
             if (alias) {
               alias[setAdapter.relationName] = `E$${aliasNumber}_${Object.keys(alias).length + 1}$S`;
@@ -254,45 +261,52 @@ export class SelectBuilder {
         const nestedPrimaryAttrAdapter = SelectBuilder._getAttrAdapter(field.link.entity, nestedPrimaryAttr);
 
         const mainRelation = field.link.entity.adapter.relation[0];
-        if (SetAttribute.isType(field.attribute)) {
-          joins.push(
-            SQLTemplates.join(
-              attrAdapter.relationName,
-              this._getTableAlias(link, attrAdapter.relationName),
-              this._getPrimaryName(attrAdapter.relationName),
-              this._getTableAlias(link),
-              primaryAttrAdapter.fieldName
-            )
-          );
-          joins.push(
-            SQLTemplates.join(
-              mainRelation.relationName,
-              this._getTableAlias(field.link, mainRelation.relationName),
-              nestedPrimaryAttrAdapter.fieldName,
-              this._getTableAlias(link, attrAdapter.relationName),
-              this._getPrimaryName(attrAdapter.relationName, 1)
-            )
-          );
-        } else if (DetailAttribute.isType(field.attribute)) {
-          joins.push(
-            SQLTemplates.join(
-              mainRelation.relationName,
-              this._getTableAlias(field.link, mainRelation.relationName),
-              attrAdapter.fieldName,
-              this._getTableAlias(link, attrAdapter.relationName),
-              nestedPrimaryAttrAdapter.fieldName
-            )
-          );
-        } else {
-          joins.push(
-            SQLTemplates.join(
-              mainRelation.relationName,
-              this._getTableAlias(field.link, mainRelation.relationName),
-              nestedPrimaryAttrAdapter.fieldName,
-              this._getTableAlias(link, attrAdapter.relationName),
-              attrAdapter.fieldName
-            )
-          );
+        switch (field.attribute.type) {
+          case "Set": {
+            joins.push(
+              SQLTemplates.join(
+                attrAdapter.relationName,
+                this._getTableAlias(link, attrAdapter.relationName),
+                this._getPrimaryName(attrAdapter.relationName),
+                this._getTableAlias(link),
+                primaryAttrAdapter.fieldName
+              )
+            );
+            joins.push(
+              SQLTemplates.join(
+                mainRelation.relationName,
+                this._getTableAlias(field.link, mainRelation.relationName),
+                nestedPrimaryAttrAdapter.fieldName,
+                this._getTableAlias(link, attrAdapter.relationName),
+                this._getPrimaryName(attrAdapter.relationName, 1)
+              )
+            );
+            break;
+          }
+          case "Detail": {
+            joins.push(
+              SQLTemplates.join(
+                mainRelation.relationName,
+                this._getTableAlias(field.link, mainRelation.relationName),
+                attrAdapter.fieldName,
+                this._getTableAlias(link, attrAdapter.relationName),
+                nestedPrimaryAttrAdapter.fieldName
+              )
+            );
+            break;
+          }
+          default: {
+            joins.push(
+              SQLTemplates.join(
+                mainRelation.relationName,
+                this._getTableAlias(field.link, mainRelation.relationName),
+                nestedPrimaryAttrAdapter.fieldName,
+                this._getTableAlias(link, attrAdapter.relationName),
+                attrAdapter.fieldName
+              )
+            );
+            break;
+          }
         }
         field.link.entity.adapter.relation.reduce((relJoins, rel, index) => {
           if (index && field.link) {

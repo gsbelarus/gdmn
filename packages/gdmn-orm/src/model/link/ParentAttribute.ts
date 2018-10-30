@@ -1,6 +1,5 @@
 import {IParentAttributeAdapter} from "../../rdbadapter";
-import {IBaseSemOptions} from "../../types";
-import {Attribute} from "../Attribute";
+import {AttributeTypes, IBaseSemOptions} from "../../types";
 import {Entity} from "../Entity";
 import {EntityAttribute} from "./EntityAttribute";
 
@@ -10,11 +9,9 @@ export interface IParentAttributeOptions extends IBaseSemOptions<IParentAttribut
 
 export class ParentAttribute extends EntityAttribute<IParentAttributeAdapter> {
 
+  public type: AttributeTypes = "Parent";
+
   constructor(options: IParentAttributeOptions) {
     super(options);
-  }
-
-  public static isType(type: Attribute): type is ParentAttribute {
-    return type instanceof ParentAttribute;
   }
 }

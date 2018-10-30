@@ -1,5 +1,6 @@
 import {ISetAttributeAdapter} from "../../rdbadapter";
 import {ISetAttribute} from "../../serialize";
+import {AttributeTypes} from "../../types";
 import {Attribute} from "../Attribute";
 import {IAttributes} from "../Entity";
 import {EntityAttribute, IEntityAttributeOptions} from "./EntityAttribute";
@@ -9,6 +10,8 @@ export interface ISetAttributeOptions extends IEntityAttributeOptions<ISetAttrib
 }
 
 export class SetAttribute extends EntityAttribute<ISetAttributeAdapter> {
+
+  public type: AttributeTypes = "Set";
 
   private readonly _attributes: IAttributes = {};
   private readonly _presLen: number;
@@ -24,10 +27,6 @@ export class SetAttribute extends EntityAttribute<ISetAttributeAdapter> {
 
   get presLen(): number {
     return this._presLen;
-  }
-
-  public static isType(type: Attribute): type is SetAttribute {
-    return type instanceof SetAttribute;
   }
 
   public attribute(name: string): Attribute | never {

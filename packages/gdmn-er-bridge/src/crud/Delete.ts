@@ -1,8 +1,9 @@
-import { Step, IDelete } from "./Crud";
-import { SetAttribute, DetailAttribute } from "gdmn-orm"; import { Constants } from "../ddl/Constants";
+import {DetailAttribute, SetAttribute} from "gdmn-orm";
+import {Constants} from "../ddl/Constants";
+import {IDelete, Step} from "./Crud";
 
 export function buildDeleteSteps(input: IDelete): Step[] {
-  const { pk, entity } = input;
+  const {pk, entity} = input;
 
   const pkNames = entity.pk.map(key => key.adapter.field);
   const pkValues = pk;
@@ -13,14 +14,14 @@ export function buildDeleteSteps(input: IDelete): Step[] {
     };
   }, {});
 
-  const wherePart = pkNames.map(name => `${name} = :${name}`).join(" AND ");
+  const wherePart = pkNames.map((name) => `${name} = :${name}`).join(" AND ");
   const sql = `DELETE FROM ${entity.name} WHERE ${wherePart}`;
-  const mainStep = { sql, params };
+  const mainStep = {sql, params};
 
   const attributesNames = Object.keys(entity.attributes);
-  const attributes = attributesNames.map(name => entity.attribute(name));
+  const attributes = attributesNames.map((name) => entity.attribute(name));
 
-  const setAttrs = attributes.filter(attr => SetAttribute.isType(attr));
+  const setAttrs = attributes.filter((attr) => attr.type === "Set")as SetAttribute[];
   const cascadeSetSteps = setAttrs.map((currSetAttr) => {
 
     const crossTableName = currSetAttr.adapter ? currSetAttr.adapter!.crossRelation : currSetAttr.name;
@@ -31,10 +32,10 @@ export function buildDeleteSteps(input: IDelete): Step[] {
     const params = {
       [Constants.DEFAULT_CROSS_PK_OWN_NAME]: pkOwnValue
     };
-    return { sql, params };
+    return {sql, params};
   });
 
-  const detailAttrs = attributes.filter(attr => DetailAttribute.isType(attr)) as DetailAttribute[];
+  const detailAttrs = attributes.filter((attr) => attr.type === "Detail") as DetailAttribute[];
   const cascadeDetailSteps = detailAttrs.map((currDetailAttr: DetailAttribute) => {
 
     const [detailEntity] = currDetailAttr.entities;
@@ -55,9 +56,8 @@ export function buildDeleteSteps(input: IDelete): Step[] {
       [link2masterField]: masterID
     };
 
-    return { sql, params };
+    return {sql, params};
   });
 
-  const steps = [...cascadeSetSteps, ...cascadeDetailSteps, mainStep];
-  return steps;
+  return [...cascadeSetSteps, ...cascadeDetailSteps, mainStep];
 }

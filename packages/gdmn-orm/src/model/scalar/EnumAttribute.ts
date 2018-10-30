@@ -1,7 +1,7 @@
 import {IAttributeAdapter} from "../../rdbadapter";
 import {IEnumAttribute} from "../../serialize";
-import {IEnumValue} from "../../types";
-import {Attribute, IAttributeOptions} from "../Attribute";
+import {AttributeTypes, IEnumValue} from "../../types";
+import {IAttributeOptions} from "../Attribute";
 import {ScalarAttribute} from "./ScalarAttribute";
 
 export interface IEnumAttributeOptions extends IAttributeOptions<IAttributeAdapter> {
@@ -10,6 +10,8 @@ export interface IEnumAttributeOptions extends IAttributeOptions<IAttributeAdapt
 }
 
 export class EnumAttribute extends ScalarAttribute {
+
+  public type: AttributeTypes = "Enum";
 
   private readonly _values: IEnumValue[];
   private readonly _defaultValue?: string | number;
@@ -26,10 +28,6 @@ export class EnumAttribute extends ScalarAttribute {
 
   get defaultValue(): string | number | undefined {
     return this._defaultValue;
-  }
-
-  public static isType(type: Attribute): type is EnumAttribute {
-    return type instanceof EnumAttribute;
   }
 
   public inspectDataType(): string {

@@ -1,12 +1,7 @@
 import {
   Attribute,
-  BlobAttribute,
-  BooleanAttribute,
   ContextVariables,
-  DateAttribute,
-  EntityAttribute,
   EnumAttribute,
-  FloatAttribute,
   IntegerAttribute,
   MAX_16BIT_INT,
   MAX_32BIT_INT,
@@ -17,11 +12,8 @@ import {
   NumberAttribute,
   NumericAttribute,
   ScalarAttribute,
-  SequenceAttribute,
   SetAttribute,
-  StringAttribute,
-  TimeAttribute,
-  TimeStampAttribute
+  StringAttribute
 } from "gdmn-orm";
 import moment from "moment";
 import {Constants} from "../Constants";
@@ -39,67 +31,87 @@ export class DomainResolver {
   }
 
   private static _getType(attr: Attribute): string {
-    let expr = "";
-    // TODO TimeIntervalAttribute
-    if (SetAttribute.isType(attr)) {
-      expr = `VARCHAR(${attr.presLen})`;
-    } else if (EntityAttribute.isType(attr)) {
-      expr = `INTEGER`;
-    } else if (EnumAttribute.isType(attr)) {
-      expr = `VARCHAR(1)`;
-    } else if (DateAttribute.isType(attr)) {
-      expr = `DATE`;
-    } else if (TimeAttribute.isType(attr)) {
-      expr = `TIME`;
-    } else if (TimeStampAttribute.isType(attr)) {
-      expr = `TIMESTAMP`;
-    } else if (SequenceAttribute.isType(attr)) {
-      expr = `INTEGER`;
-    } else if (IntegerAttribute.isType(attr)) {
-      expr = DomainResolver._getIntTypeByRange(attr.minValue, attr.maxValue);
-    } else if (NumericAttribute.isType(attr)) {
-      expr = `NUMERIC(${attr.precision}, ${attr.scale})`;
-    } else if (FloatAttribute.isType(attr)) {
-      expr = `FLOAT`;
-    } else if (BooleanAttribute.isType(attr)) {
-      expr = `SMALLINT`;
-    } else if (StringAttribute.isType(attr)) {
-      if (attr.maxLength === undefined) {
-        expr = `BLOB SUB_TYPE TEXT`;
-      } else {
-        expr = `VARCHAR(${attr.maxLength})`;
+    switch (attr.type) {
+      case "String": {
+        const _attr = attr as StringAttribute;
+        if (_attr.maxLength === undefined) {
+          return `BLOB SUB_TYPE TEXT`;
+        } else {
+          return `VARCHAR(${_attr.maxLength})`;
+        }
       }
-    } else if (BlobAttribute.isType(attr)) {
-      expr = `BLOB`;
-    } else {
-      expr = `BLOB SUB_TYPE TEXT`;
+      case "Set": {
+        const _attr = attr as SetAttribute;
+        return `VARCHAR(${_attr.presLen})`;
+      }
+      case "Integer": {
+        const _attr = attr as IntegerAttribute;
+        return DomainResolver._getIntTypeByRange(_attr.minValue, _attr.maxValue);
+      }
+      case "Numeric": {
+        const _attr = attr as NumericAttribute;
+        return `NUMERIC(${_attr.precision}, ${_attr.scale})`;
+      }
+      case "Sequence":
+      case "Entity":
+      case "Parent":
+      case "Detail":
+        return `INTEGER`;
+      case "Enum":
+        return `VARCHAR(1)`;
+      case "Date":
+        return `DATE`;
+      case "Time":
+        return `TIME`;
+      case "TimeStamp":
+        return `TIMESTAMP`;
+      case "Float":
+        return `FLOAT`;
+      case "Boolean":
+        return `SMALLINT`;
+      case "Blob":
+        return `BLOB`;
+      default:
+        return `BLOB SUB_TYPE TEXT`;
     }
-    return expr;
   }
 
   private static _getChecker(attr: Attribute): string {
-    let expr = "";
-    if (NumberAttribute.isType(attr)) {
-      const minCond = attr.minValue !== undefined ? DomainResolver._val2Str(attr, attr.minValue) : undefined;
-      const maxCond = attr.maxValue !== undefined ? DomainResolver._val2Str(attr, attr.maxValue) : undefined;
-      if (minCond && maxCond) {
-        expr = `CHECK(VALUE BETWEEN ${minCond} AND ${maxCond})`;
-      } else if (minCond) {
-        expr = `CHECK(VALUE >= ${minCond})`;
-      } else if (maxCond) {
-        expr = `CHECK(VALUE <= ${maxCond})`;
+    if (attr instanceof ScalarAttribute) {
+      switch (attr.type) {
+        case "String": {
+          const _attr = attr as StringAttribute;
+          const minCond = _attr.minLength !== undefined ? `CHAR_LENGTH(VALUE) >= ${_attr.minLength}` : undefined;
+          if (minCond) {
+            return `CHECK(${minCond})`;
+          }
+          return "";
+        }
+        case "Enum": {
+          const _attr = attr as EnumAttribute;
+          return `CHECK(VALUE IN (${_attr.values.map((item) => `'${item.value}'`).join(", ")}))`;
+        }
+        case "Boolean": {
+          return `CHECK(VALUE IN (0, 1))`;
+        }
+        default: {
+          if (attr instanceof NumberAttribute) {
+            const minCond = attr.minValue !== undefined ? DomainResolver._val2Str(attr, attr.minValue) : undefined;
+            const maxCond = attr.maxValue !== undefined ? DomainResolver._val2Str(attr, attr.maxValue) : undefined;
+            if (minCond && maxCond) {
+              return `CHECK(VALUE BETWEEN ${minCond} AND ${maxCond})`;
+            } else if (minCond) {
+              return `CHECK(VALUE >= ${minCond})`;
+            } else if (maxCond) {
+              return `CHECK(VALUE <= ${maxCond})`;
+            }
+          }
+          break;
+        }
       }
-    } else if (StringAttribute.isType(attr)) {
-      const minCond = attr.minLength !== undefined ? `CHAR_LENGTH(VALUE) >= ${attr.minLength}` : undefined;
-      if (minCond) {
-        expr = `CHECK(${minCond})`;
-      }
-    } else if (EnumAttribute.isType(attr)) {
-      expr = `CHECK(VALUE IN (${attr.values.map((item) => `'${item.value}'`).join(", ")}))`;
-    } else if (BooleanAttribute.isType(attr)) {
-      expr = `CHECK(VALUE IN (0, 1))`;
     }
-    return expr;
+
+    return "";
   }
 
   private static _getDefaultValue(attr: any): string {
@@ -111,20 +123,24 @@ export class DomainResolver {
   }
 
   private static _val2Str(attr: ScalarAttribute, value: any): string | undefined {
-    if (DateAttribute.isType(attr)) {
-      return DomainResolver._date2Str(value);
-    } else if (TimeAttribute.isType(attr)) {
-      return DomainResolver._time2Str(value);
-    } else if (TimeStampAttribute.isType(attr)) {
-      return DomainResolver._dateTime2Str(value);
-    } else if (NumberAttribute.isType(attr)) {
-      return `${value}`;
-    } else if (StringAttribute.isType(attr)) {
-      return `'${value}'`;
-    } else if (BooleanAttribute.isType(attr)) {
-      return `${+value}`;
-    } else if (EnumAttribute.isType(attr)) {
-      return `'${value}'`;
+    switch (attr.type) {
+      case "Date":
+        return DomainResolver._date2Str(value);
+      case "Time":
+        return DomainResolver._time2Str(value);
+      case "TimeStamp":
+        return DomainResolver._dateTime2Str(value);
+      case "String":
+        return `'${value}'`;
+      case "Boolean":
+        return `${+value}`;
+      case "Enum":
+        return `'${value}'`;
+      default:
+        if (attr instanceof NumberAttribute) {
+          return `${value}`;
+        }
+        break;
     }
   }
 

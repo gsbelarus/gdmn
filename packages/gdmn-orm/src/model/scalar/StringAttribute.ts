@@ -1,6 +1,7 @@
 import {IAttributeAdapter} from "../../rdbadapter";
 import {IStringAttribute} from "../../serialize";
-import {Attribute, IAttributeOptions} from "../Attribute";
+import {AttributeTypes} from "../../types";
+import {IAttributeOptions} from "../Attribute";
 import {ScalarAttribute} from "./ScalarAttribute";
 
 export interface IStringAttributeOptions extends IAttributeOptions<IAttributeAdapter> {
@@ -12,6 +13,8 @@ export interface IStringAttributeOptions extends IAttributeOptions<IAttributeAda
 }
 
 export class StringAttribute extends ScalarAttribute {
+
+  public type: AttributeTypes = "String";
 
   private readonly _minLength?: number;
   private readonly _maxLength?: number;
@@ -46,10 +49,6 @@ export class StringAttribute extends ScalarAttribute {
 
   get autoTrim(): boolean {
     return this._autoTrim;
-  }
-
-  public static isType(type: Attribute): type is StringAttribute {
-    return type instanceof StringAttribute;
   }
 
   public serialize(): IStringAttribute {

@@ -1,12 +1,4 @@
-import {
-  DetailAttribute,
-  Entity,
-  EntityAttribute,
-  ParentAttribute,
-  Sequence,
-  SequenceAttribute,
-  SetAttribute
-} from "gdmn-orm";
+import {Entity, EntityAttribute, Sequence, SequenceAttribute} from "gdmn-orm";
 import {DDLHelper, IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
@@ -15,7 +7,7 @@ import {EntityBuilder} from "./EntityBuilder";
 
 export class ERModelBuilder extends Builder {
 
-  private _entityBuilder: EntityBuilder;
+  private readonly _entityBuilder: EntityBuilder;
 
   constructor(ddlHelper: DDLHelper) {
     super(ddlHelper);
@@ -63,28 +55,29 @@ export class ERModelBuilder extends Builder {
     });
 
     for (const pkAttr of entity.pk) {
-      if (SequenceAttribute.isType(pkAttr)) {
-        const fieldName = Builder._getFieldName(pkAttr);
-        const seqAdapter = pkAttr.sequence.adapter;
-        const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
-        await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName,
-          seqAdapter ? seqAdapter.sequence : pkAttr.sequence.name);
-      } else if (DetailAttribute.isType(pkAttr)) {
-        // ignore
-      } else if (ParentAttribute.isType(pkAttr)) {
-        // ignore
-      } else if (SetAttribute.isType(pkAttr)) {
-        // ignore
-      } else if (EntityAttribute.isType(pkAttr)) { // for inheritance
-        const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
-        const fieldName = Builder._getFieldName(pkAttr);
-        await this.ddlHelper.addForeignKey(fkConstName, {
-          tableName,
-          fieldName
-        }, {
-          tableName: Builder._getOwnRelationName(pkAttr.entities[0]),
-          fieldName: Builder._getFieldName(pkAttr.entities[0].pk[0])
-        });
+      switch (pkAttr.type) {
+        case "Sequence": {
+          const _attr = pkAttr as SequenceAttribute;
+          const fieldName = Builder._getFieldName(pkAttr);
+          const seqAdapter = _attr.sequence.adapter;
+          const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
+          await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName,
+            seqAdapter ? seqAdapter.sequence : _attr.sequence.name);
+          break;
+        }
+        case "Entity": {
+          const _attr = pkAttr as EntityAttribute;
+          const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
+          const fieldName = Builder._getFieldName(_attr);
+          await this.ddlHelper.addForeignKey(fkConstName, {
+            tableName,
+            fieldName
+          }, {
+            tableName: Builder._getOwnRelationName(_attr.entities[0]),
+            fieldName: Builder._getFieldName(_attr.entities[0].pk[0])
+          });
+          break;
+        }
       }
     }
 

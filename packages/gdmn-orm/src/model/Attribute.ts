@@ -1,6 +1,6 @@
 import {semCategories2Str, SemCategory} from "gdmn-nlp";
-import {AttributeClasses, IAttribute} from "../serialize";
-import {IAttributeSource, IBaseSemOptions, ILName} from "../types";
+import {IAttribute} from "../serialize";
+import {AttributeTypes, IAttributeSource, IBaseSemOptions, ILName} from "../types";
 
 export interface IAttributeOptions<Adapter> extends IBaseSemOptions<Adapter> {
   required?: boolean;
@@ -8,8 +8,9 @@ export interface IAttributeOptions<Adapter> extends IBaseSemOptions<Adapter> {
 
 export abstract class Attribute<Adapter = any> {
 
-  protected _source?: IAttributeSource;
+  public abstract type: AttributeTypes;
 
+  protected _source?: IAttributeSource;
   protected _adapter?: Adapter;
 
   private readonly _name: string;
@@ -54,8 +55,8 @@ export abstract class Attribute<Adapter = any> {
 
   public serialize(): IAttribute {
     return {
-      name: this.name,
-      type: this.constructor.name as AttributeClasses,
+      name: this._name,
+      type: this.type,
       lName: this._lName,
       required: this._required,
       semCategories: semCategories2Str(this._semCategories)
@@ -63,23 +64,24 @@ export abstract class Attribute<Adapter = any> {
   }
 
   public inspectDataType(): string {
-    const sn = {
-      EntityAttribute: "->",
-      StringAttribute: "S",
-      SetAttribute: "<->",
-      ParentAttribute: "-^",
-      SequenceAttribute: "PK",
-      IntegerAttribute: "I",
-      NumericAttribute: "N",
-      FloatAttribute: "F",
-      BooleanAttribute: "B",
-      DateAttribute: "DT",
-      TimeStampAttribute: "TS",
-      TimeAttribute: "TM",
-      BlobAttribute: "BLOB",
-      EnumAttribute: "E"
-    } as { [name: string]: string };
-    return sn[this.constructor.name] ? sn[this.constructor.name] : this.constructor.name;
+    const sn = new Map<AttributeTypes, string>();
+    sn.set("Entity", "->");
+    sn.set("String", "S");
+    sn.set("Set", "<->");
+    sn.set("Parent", "-^");
+    sn.set("Sequence", "PK");
+    sn.set("Integer", "I");
+    sn.set("Numeric", "N");
+    sn.set("Float", "F");
+    sn.set("Boolean", "B");
+    sn.set("Date", "DT");
+    sn.set("TimeStamp", "TS");
+    sn.set("Time", "TM");
+    sn.set("Blob", "BLOB");
+    sn.set("Enum", "E");
+
+    const i = sn.get(this.type);
+    return i ? i : this.constructor.name;
   }
 
   public inspect(indent: string = "    "): string[] {

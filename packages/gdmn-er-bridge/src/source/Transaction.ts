@@ -29,6 +29,7 @@ export class Transaction implements ITransaction {
   public async commit(): Promise<void> {
     if (!this._ddlHelper.disposed) {
       await this._ddlHelper.dispose();
+      console.debug(this._ddlHelper.logs.join("\n"));
     }
     return await this._transaction.commit();
   }
@@ -36,6 +37,7 @@ export class Transaction implements ITransaction {
   public async rollback(): Promise<void> {
     if (!this._ddlHelper.disposed) {
       await this._ddlHelper.dispose();
+      console.debug(this._ddlHelper.logs.join("\n"));
     }
     return await this._transaction.rollback();
   }

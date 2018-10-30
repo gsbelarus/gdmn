@@ -3,7 +3,6 @@ import {IEntityAdapter, relationName2Adapter} from "../rdbadapter";
 import {IEntity} from "../serialize";
 import {IAttributeSource, IBaseSemOptions, IEntitySource, ILName, ITransaction} from "../types";
 import {Attribute} from "./Attribute";
-import {ParentAttribute} from "./link/ParentAttribute";
 
 export interface IAttributes {
   [name: string]: Attribute;
@@ -95,7 +94,7 @@ export class Entity {
   }
 
   get isTree(): boolean {
-    return Object.values(this.attributes).some((attr) => ParentAttribute.isType(attr));
+    return Object.values(this.attributes).some((attr) => attr.type === "Parent");
   }
 
   public async initDataSource(source?: IEntitySource): Promise<void> {

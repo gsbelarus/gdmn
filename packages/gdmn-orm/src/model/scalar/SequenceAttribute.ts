@@ -1,7 +1,6 @@
 import {IAttributeAdapter} from "../../rdbadapter";
 import {ISequenceAttribute} from "../../serialize";
-import {IBaseSemOptions} from "../../types";
-import {Attribute} from "../Attribute";
+import {AttributeTypes, IBaseSemOptions} from "../../types";
 import {Sequence} from "../Sequence";
 import {ScalarAttribute} from "./ScalarAttribute";
 
@@ -10,6 +9,8 @@ export interface ISequenceAttributeOptions<Adapter> extends IBaseSemOptions<Adap
 }
 
 export class SequenceAttribute extends ScalarAttribute<IAttributeAdapter> {
+
+  public type: AttributeTypes = "Sequence";
 
   private readonly _sequence: Sequence;
 
@@ -20,10 +21,6 @@ export class SequenceAttribute extends ScalarAttribute<IAttributeAdapter> {
 
   get sequence(): Sequence {
     return this._sequence;
-  }
-
-  public static isType(type: Attribute): type is SequenceAttribute {
-    return type instanceof SequenceAttribute;
   }
 
   public serialize(): ISequenceAttribute {

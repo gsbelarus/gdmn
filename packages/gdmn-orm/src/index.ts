@@ -6,7 +6,6 @@ export * from "./model/link/SetAttribute";
 export * from "./model/link/EntityAttribute";
 export * from "./model/link/ParentAttribute";
 export * from "./model/link/DetailAttribute";
-export * from "./model/scalar/TimeIntervalAttribute";
 export * from "./model/scalar/SequenceAttribute";
 export * from "./model/scalar/ScalarAttribute";
 export * from "./model/scalar/StringAttribute";

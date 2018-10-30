@@ -6,8 +6,4 @@ export abstract class ScalarAttribute<Adapter = IAttributeAdapter> extends Attri
   protected constructor(options: IAttributeOptions<Adapter>) {
     super(options);
   }
-
-  public static isType(type: Attribute): type is ScalarAttribute {
-    return type instanceof ScalarAttribute;
-  }
 }

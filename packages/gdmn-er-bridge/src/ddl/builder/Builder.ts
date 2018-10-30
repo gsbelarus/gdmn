@@ -13,7 +13,7 @@ interface IATAttrOptions {
 
 export abstract class Builder {
 
-  private _ddlHelper: DDLHelper;
+  private readonly _ddlHelper: DDLHelper;
 
   constructor(ddlHelper: DDLHelper) {
     this._ddlHelper = ddlHelper;
@@ -34,9 +34,12 @@ export abstract class Builder {
   }
 
   public static _getFieldName(attr: Attribute): string {
-    if (SetAttribute.isType(attr)) {
-      if (attr.adapter && attr.adapter.presentationField) return attr.adapter.presentationField;
-    } else if (EntityAttribute.isType(attr) || ScalarAttribute.isType(attr)) {
+    if (attr.type === "Set") {
+      const setAttr = attr as SetAttribute;
+      if (setAttr.adapter && setAttr.adapter.presentationField) {
+        return setAttr.adapter.presentationField;
+      }
+    } else if (attr instanceof EntityAttribute || attr instanceof ScalarAttribute) {
       if (attr.adapter) return attr.adapter.field;
     }
     return attr.name;
@@ -51,8 +54,8 @@ export abstract class Builder {
       fieldName: options.domainName,
       lName: attr.lName.ru && attr.lName.ru.name,
       description: attr.lName.ru && attr.lName.ru.fullName,
-      numeration: EnumAttribute.isType(attr)
-        ? attr.values.map(({value, lName}) => ({
+      numeration: attr.type === "Enum"
+        ? (attr as EnumAttribute).values.map(({value, lName}) => ({
           key: value,
           value: lName && lName.ru ? lName.ru.name : ""
         }))
