@@ -50,9 +50,9 @@
 
 ## Прописываем пути подключения к базам данных
 
-1. gdmn-nlp-agent
-2. gdmn-back
-3. gdmn-er-bridge
+1. gdmn-nlp-agent. Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
+2. gdmn-back. Копируем файл /src/db/databases.ts.sample в /src/db/databases.ts.
+3. gdmn-er-bridge. Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
 
 ## Устанавливаем зависимости
 
@@ -65,4 +65,15 @@
     ```
 ## Запускаем gdmn-back
 
-*Прописать адрес сервера в config...*
+Прописываем в файле /src/config/development.json путь к серверу. Как правило, указываем 127.0.0.1, если сервер запускается на этом же компьютере:
+
+```ts
+{
+  "server": {
+    "http": {
+      "enabled": true,
+      "host": "127.0.0.1",
+      "port": 4000
+    },
+  ...
+```    
