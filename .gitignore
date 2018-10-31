@@ -2,6 +2,7 @@
 dist
 packages/*/dist
 src/*/dist
+src/*/build
 databases.ts
 testDB.ts
 .lib
