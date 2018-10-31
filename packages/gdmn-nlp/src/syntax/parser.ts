@@ -1,6 +1,6 @@
 import { combinatorialMorph } from './lexer';
 import { RusNP, RusPP, RusANP, ParsedText, Phrase, RusImperativeVP, AnyWord } from '..';
-import { VPParser } from './grammar/RUBE/vp';
+import { VPParser } from './grammar/rube/vp';
 
 const vpParser = new VPParser();
 
