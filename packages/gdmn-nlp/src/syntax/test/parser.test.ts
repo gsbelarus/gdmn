@@ -22,6 +22,7 @@ describe("parser", () => {
     expect((pp!.items[1] as RusWord).word).toEqual('минска');
   });
 
+  /*
   test("vp1", () => {
     const result = parsePhrase('отсортируй по названиям');
     const vp = result.phrase;
@@ -36,6 +37,7 @@ describe("parser", () => {
     expect((pp!.items[0] as RusWord).word).toEqual('по');
     expect((pp!.items[1] as RusWord).word).toEqual('названиям');
   });
+  */
 
   test("vp2", () => {
     const result = parsePhrase('покажи минские организации');
