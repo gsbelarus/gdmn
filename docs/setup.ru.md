@@ -50,9 +50,9 @@
 
 ## Прописываем пути подключения к базам данных
 
-1. gdmn-nlp-agent. Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
-2. gdmn-back. Копируем файл /src/db/databases.ts.sample в /src/db/databases.ts.
-3. gdmn-er-bridge. Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
+1. gdmn-nlp-agent (находится в папке /packages/gdmn-nlp-agent). Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
+2. gdmn-back (находится в папке /src/gdmn-back). Копируем файл /src/db/databases.ts.sample в /src/db/databases.ts.
+3. gdmn-er-bridge (находится в папке /packages/gdmn-er-bridge). Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
 
 ## Устанавливаем зависимости
 

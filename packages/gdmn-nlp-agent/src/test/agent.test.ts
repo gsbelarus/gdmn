@@ -3,7 +3,8 @@ import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
 import {deserializeERModel, ERModel} from "gdmn-orm";
-import {Determiner, ERTranslatorRU} from "../agent";
+import {ERTranslatorRU} from "../agent";
+import { Determiner } from "../command";
 import {IDBDetail, testDB} from "./testDB";
 
 async function loadERModel(dbDetail: IDBDetail) {

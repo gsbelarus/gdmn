@@ -1,30 +1,6 @@
-import {morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, RusPrepositionLexeme, PrepositionType, SemCategory, RusNounLexeme, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP} from "gdmn-nlp";
-import {Attribute, Entity, ERModel, EntityAttribute} from "gdmn-orm";
-
-export type Action = 'SHOW' | 'DELETE';
-
-export enum Determiner {
-  All = 0
-};
-
-export type Operator = 'EQ' | 'HASROOT';
-
-export interface IAttrCondition {
-  attr: Attribute;
-  op: Operator;
-  value: string;
-}
-
-export interface ICommandObject {
-  determiner: Determiner;
-  entity: Entity;
-  conditions: IAttrCondition[];
-}
-
-export interface ICommand {
-  action: Action;
-  objects?: ICommandObject[]
-}
+import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, RusPrepositionLexeme, PrepositionType, SemCategory, RusNounLexeme, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP } from "gdmn-nlp";
+import { Entity, ERModel, EntityAttribute } from "gdmn-orm";
+import { ICommand, Determiner, Operator } from "./command";
 
 export class ERTranslatorRU {
 
