@@ -5,7 +5,7 @@ import { RusNP, RusPP, RusANP } from "../rusSyntax";
 import { RusWord } from "../../morphology/rusMorphology";
 
 describe("parser", () => {
-  
+
   test("vp", () => {
     const result = parsePhrase('покажи все организации из минска');
     const vp = result.phrase;
@@ -21,9 +21,9 @@ describe("parser", () => {
     expect((pp!.items[0] as RusWord).word).toEqual('из');
     expect((pp!.items[1] as RusWord).word).toEqual('минска');
   });
-/*
+
   test("vp1", () => {
-    const result = parsePhrase('отсортируй из названиям');
+    const result = parsePhrase('отсортируй по названиям');
     const vp = result.phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
@@ -33,10 +33,10 @@ describe("parser", () => {
     const pp = np!.items[0] as RusPP;
     const pp1 = np!.items[1] as RusPP;
     expect(pp1).toBeUndefined();
-    expect((pp!.items[0] as RusWord).word).toEqual('из');
+    expect((pp!.items[0] as RusWord).word).toEqual('по');
     expect((pp!.items[1] as RusWord).word).toEqual('названиям');
   });
-*/
+
   test("vp2", () => {
     const result = parsePhrase('покажи минские организации');
     const vp = result.phrase;
