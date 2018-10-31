@@ -1,0 +1,8 @@
+.MenuPanel {
+  float: left;
+  padding-left: 40px;
+}
+
+.GDMNGridPanel input[type="number"] {
+  max-width: 48px;
+}

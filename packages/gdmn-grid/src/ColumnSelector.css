@@ -1,0 +1,14 @@
+.ColumnSelector {
+  padding: 0 4px 4px 4px;
+  display: inline-block;
+}
+
+.SelectRows .ColumnSelector {
+  float: left;
+}
+
+.SelectRows {
+  float: left;
+  width: 100%;
+  padding: 6px 0;
+}

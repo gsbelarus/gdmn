@@ -1,0 +1,56 @@
+{
+  "name": "gdmn-grid",
+  "version": "1.0.0",
+  "description": "gdmn-grid",
+  "private": true,
+  "main": "./dist/src/index.js",
+  "types": "./dist/definitions/index.d.ts",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc && yarn static",
+    "rebuild": "yarn clean && yarn build",
+    "watch": "tsc -w",
+    "tslint": "tslint --project .",
+    "test": "yarn build && jest",
+    "static": "xcopy src\\*.css dist\\src /e"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
+  "dependencies": {
+    "@material-ui/core": "^3.3.2",
+    "@types/classnames": "^2.2.6",
+    "@types/react-redux": "^6.0.9",
+    "@types/react-virtualized": "^9.18.7",
+    "@types/redux-thunk": "^2.1.0",
+    "classnames": "^2.2.6",
+    "immutable": "^3.8.2",
+    "react": "^16.6.0",
+    "react-dom": "^16.6.0",
+    "react-draggable": "^3.0.5",
+    "react-redux": "^5.1.0",
+    "react-virtualized": "^9.21.0",
+    "redux": "^4.0.1",
+    "redux-thunk": "^2.3.0",
+    "typesafe-actions": "^2.0.4",
+    "typescript": "^3.1.4",
+    "gdmn-recordset": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.8",
+    "@types/node": "^10.12.1",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.4",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.4"
+  }
+}

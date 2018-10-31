@@ -1,0 +1,29 @@
+.GDMNSortDialogContainer {
+  display: flex;
+  flex-direction: column;
+  padding-top: 6px;
+}
+
+.GDMNSortDialogRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  transition: background-color 0.2s ease-out;
+  padding: 6px 0;
+}
+
+.GDMNAttnSortDialogRow {
+  background-color: darksalmon;
+  transition: background-color 0.2s ease-out;
+}
+
+.GDMNSortDialogCloseButton:hover {
+  background-color: red;
+  transition: background-color 0.2s ease-out;
+  padding: -4px;
+  color: white;
+}
+
+.GDMNSortDialogLabel {
+  margin-bottom: 4px;
+}

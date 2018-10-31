@@ -1,0 +1,273 @@
+.GridContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+.SideContainer {
+  flex: 0 0 initial;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.SideHeader {
+  flex: 0 0 initial;
+  width: 100%;
+}
+
+.SideRows {
+  width: 100%;
+  flex: auto;
+}
+
+.SideFooter {
+  width: 100%;
+  flex: 0 0 initial;
+}
+
+.BodyContainer {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.BodyHeader {
+  width: 100%;
+  flex: 0 0 initial;
+  color: black;
+}
+
+.BodyRows {
+  width: 100%;
+  flex: auto;
+}
+
+.BodyGrid {
+  width: 100%;
+  background-color: rgb(247, 243, 231);
+}
+
+.BodyGridNoVScroll {
+  overflow-y: hidden !important;
+}
+
+.BodyGridNoHScroll {
+  overflow-x: hidden !important;
+}
+
+.BodyGridVScroll {
+  overflow-y: scroll;
+}
+
+.BodyGridHScroll {
+  overflow-x: scroll;
+}
+
+.BodyFooter {
+  width: 100%;
+  flex: 0 0 initial;
+  background-color: lightgray;
+  color: black;
+}
+
+.CurrentRow {
+  background-color: cadetblue;
+}
+
+.CurrentCell {
+  background-color: aquamarine;
+}
+
+.OuterCell {
+  display: flex;
+  flex-direction: row;
+  flex-flow: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.CellMarkArea {
+  padding-left: .5em;
+  min-width: 1.5em;
+  width: 1.5em;
+  font-size: 1.5em;
+  line-height: 1.5em;
+  text-align: left;
+}
+
+.HeaderCell > .CellMarkArea {
+  padding-left: calc(.5em - 1px);
+}
+
+.Cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 .5em 0 .5em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.DataCell {
+  border-right: 1px solid darkgray;
+  border-bottom: 1px solid darkgray;
+  text-align: left;
+}
+
+.LeftSideCell {
+  font-weight: bold;
+  text-align: left;
+  align-items: left;
+  border-top: whitesmoke 1px solid;
+  border-left: whitesmoke 1px solid;
+  border-bottom: gray 1px solid;
+  border-right: gray 1px solid;
+  background-color: lightgray;
+}
+
+.HeaderCell {
+  align-items: center;
+  border-top: whitesmoke 1px solid;
+  border-left: whitesmoke 1px solid;
+  border-bottom: gray 1px solid;
+  border-right: gray 1px solid;
+  background-color: lightgray;
+}
+
+.CellCaption {
+  width: 100%;
+  z-index: 2;
+  margin: 0 auto;
+  font-weight: bold;
+  text-align: center;
+}
+
+.RightSideCellFooter {
+  font-weight: bold;
+  text-align: center;
+  align-items: center;
+  border-top: whitesmoke 1px solid;
+  background-color: lightgray;
+}
+
+.LeftSideCellFooter {
+  border-right: none;
+}
+
+.FooterCell {
+  background-color: blue;
+  color: white;
+  border-right: lightblue 1px solid;
+}
+
+.EvenRow {
+  background-color: rgb(247, 243, 231);
+}
+
+.OddRow {
+  background-color: rgb(231, 231, 214);
+}
+
+.SelectedRow {
+  background-color: rgba(255, 200, 200);
+  transition: background 0.4s;
+}
+
+.HeaderGrid {
+  width: 100%;
+  overflow: hidden !important;
+  background-color: rgb(247, 243, 231);
+}
+
+.SideFooterGrid {
+  width: 100%;
+  overflow: hidden !important;
+  background-color: lightgray;
+  color: black;
+}
+
+.BodyFooterGrid {
+  width: 100%;
+  overflow-y: hidden !important;
+  overflow-x: scroll !important;
+}
+
+.LeftSideGrid {
+  overflow: hidden !important;
+}
+
+.RightSideGrid {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+}
+
+.DragHandleIcon {
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  width: 4px;
+  z-index: 4;
+  opacity: 0;
+  color: cadetblue;
+}
+
+.DragHandleIcon:hover {
+  cursor: col-resize;
+}
+
+.GridColumnDragging {
+  opacity: 0.5;
+  z-index: 100;
+  background-color: darkred;
+}
+
+.ResizingColumn {
+  cursor: col-resize;
+}
+
+.DisplayNone {
+  display: none;
+}
+
+.FlexContainer .ColumnSelector {
+  min-width: 160px;
+}
+
+.GridColumnSortAsc::before {
+  content: '\002193';
+  position: absolute;
+  left: 2px;
+  top: -1px;
+  font-size: 1.4em;
+  color: #202020;
+}
+
+.GridColumnSortDesc::before {
+  content: '\002191';
+  position: absolute;
+  left: 2px;
+  top: -1px;
+  font-size: 1.4em;
+  color: #202020;
+}
+
+.FilterMatchedHighlight {
+  border: 1px solid orangered;
+  padding: 1px;
+}
+
