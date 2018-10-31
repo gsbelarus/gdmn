@@ -12,7 +12,7 @@
     "watch": "tsc -w",
     "tslint": "tslint --project .",
     "test": "yarn build && jest",
-    "static": "xcopy src\\*.css dist\\src /e"
+    "static": "xcopy src\\*.css dist\\src /e /y"
   },
   "repository": {
     "type": "git",
