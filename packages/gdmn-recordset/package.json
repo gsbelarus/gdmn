@@ -1,0 +1,40 @@
+{
+  "name": "gdmn-recordset",
+  "version": "1.0.0",
+  "description": "gdmn-recordset",
+  "private": true,
+  "main": "./dist/src/index.js",
+  "types": "./dist/definitions/index.d.ts",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "rebuild": "yarn clean && yarn build",
+    "watch": "tsc -w",
+    "tslint": "tslint --project .",
+    "test": "yarn build && jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
+  "dependencies": {
+    "typesafe-actions": "^2.0.4",
+    "immutable": "^3.8.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.8",
+    "@types/node": "^10.12.1",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.4",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.4"
+  }
+}
