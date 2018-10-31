@@ -1,8 +1,9 @@
 import { morphAnalyzer } from "../morphAnalyzer";
 import { RusAdjective, RusAdjectiveLexeme } from "../rusAdjective";
-import { RusCase, RusMood, Involvement, AdverbType } from "../types";
+import { RusCase, RusMood, Involvement, AdverbType, PrepositionType } from "../types";
 import { RusVerb } from "../rusVerb";
 import { RusAdverb } from "../rusAdverb";
+import { RusPreposition } from "../rusPreposition";
 
 describe("существительные", () => {
   test("минск", () => {
@@ -104,5 +105,18 @@ describe('наречия', () => {
     expect(result[0] instanceof RusAdverb).toBeTruthy();
     const v = result[0] as RusAdverb;
     expect(v.lexeme.adverbType).toEqual(AdverbType.Goal);
+  });
+});
+
+describe('предлоги', () => {
+  test("по", () => {
+    const result = morphAnalyzer('по');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusPreposition).toBeTruthy();
+    const v1 = result[0] as RusPreposition;
+    expect(v1.lexeme.prepositionType).toEqual(PrepositionType.Reason);
+    expect(result[1] instanceof RusPreposition).toBeTruthy();
+    const v2 = result[1] as RusPreposition;
+    expect(v2.lexeme.prepositionType).toEqual(PrepositionType.Object);
   });
 });
