@@ -149,9 +149,9 @@ export interface RusAdjectiveMorphSigns {
   animate?: boolean;
   short?: boolean;
 }
-export enum PrepositionType {Place = 0, Time, Reason, Goal, Comparative, Object}
-export const RusPrepositionTypeNames = ['пространственный', 'временной', 'причинный', 'целевой', 'сравнительный', 'объектный'];
-export const ShortPrepositionTypeNames = ['Plce', 'Time', 'Rson', 'Goal', 'Comp', 'Objt'];
+export enum PrepositionType {Place = 0, Object, Time, Reason, Goal, Comparative}
+export const RusPrepositionTypeNames = ['пространственный', 'объектный', 'временной', 'причинный', 'целевой', 'сравнительный'];
+export const ShortPrepositionTypeNames = ['Plce', 'Objt', 'Time', 'Rson', 'Goal', 'Comp'];
 export enum PronounType {Personal = 0, Reflexive, Possesive, Demonstrative, Interrogative, Relative, Definitive, Negative, Vague}
 export const RusPronounTypeNames = ['личное', 'возвратное', 'притяжательное', 'указательное', 'вопросительное', 'относительное',
   'определительное', 'отрицательное', 'неопределенное'];

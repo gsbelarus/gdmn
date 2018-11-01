@@ -7,6 +7,10 @@ export const rusPrepositions = [
     words: ['от', 'до', 'из', 'на', 'около', 'вблизи', 'за', 'из-под']
   },
   {
+    prepositionType: PrepositionType.Object,
+    words: ['о', 'по', 'про', 'за', 'в', 'на', 'с', 'насчет']
+  },
+  {
     prepositionType: PrepositionType.Time,
     words: ['с', 'от', 'до', 'в']  // в течение, в продолжение
   },
@@ -21,10 +25,6 @@ export const rusPrepositions = [
   {
     prepositionType: PrepositionType.Comparative,
     words: ['с', 'вроде', 'наподобие']
-  },
-  {
-    prepositionType: PrepositionType.Object,
-    words: ['о', 'по', 'про', 'за', 'в', 'на', 'с', 'насчет']
   }
 ];
 
@@ -65,8 +65,11 @@ export class RusPreposition extends Preposition<RusPrepositionLexeme> {
       RusPrepositionTypeNames[this.lexeme.prepositionType];
   }
 
+  static getSignature(prepositionType: PrepositionType): string {
+    return `PREP${ShortPrepositionTypeNames[prepositionType]}`;
+  }
+
   getSignature (): string {
-    return 'PREP' +
-      ShortPrepositionTypeNames[this.lexeme.prepositionType];
+    return RusPreposition.getSignature(this.lexeme.prepositionType);
   }
 }

@@ -12,8 +12,13 @@ describe("существительные", () => {
   });
 
   test("кий", () => {
-    const minsk = morphAnalyzer('кий');
-    expect(minsk.length).toEqual(2);
+    const kij = morphAnalyzer('кий');
+    expect(kij.length).toEqual(2);
+  });
+
+  test("название", () => {
+    const nazvanie = morphAnalyzer('название');
+    expect(nazvanie.length).toEqual(2);
   });
 });
 
@@ -88,6 +93,20 @@ describe('глаголы', () => {
     expect(v.involvement).toEqual(Involvement.Excl);
   });
 
+  test("отсортируй", () => {
+    const result = morphAnalyzer('отсортируй');
+    expect(result.length).toEqual(1);
+    expect(result[0] instanceof RusVerb).toBeTruthy();
+    const v = result[0] as RusVerb;
+    expect(v.infn).toEqual(false);
+    expect(v.tense).toBeUndefined();
+    expect(v.singular).toEqual(true);
+    expect(v.person).toBeUndefined();
+    expect(v.gender).toBeUndefined();
+    expect(v.mood).toEqual(RusMood.Impr);
+    expect(v.involvement).toEqual(Involvement.Excl);
+  });
+
   test("уничтожить", () => {
     const result = morphAnalyzer('уничтожить');
     expect(result.length).toEqual(1);
@@ -114,9 +133,9 @@ describe('предлоги', () => {
     expect(result.length).toEqual(2);
     expect(result[0] instanceof RusPreposition).toBeTruthy();
     const v1 = result[0] as RusPreposition;
-    expect(v1.lexeme.prepositionType).toEqual(PrepositionType.Reason);
+    expect(v1.lexeme.prepositionType).toEqual(PrepositionType.Object);
     expect(result[1] instanceof RusPreposition).toBeTruthy();
     const v2 = result[1] as RusPreposition;
-    expect(v2.lexeme.prepositionType).toEqual(PrepositionType.Object);
+    expect(v2.lexeme.prepositionType).toEqual(PrepositionType.Reason);
   });
 });
