@@ -1,20 +1,24 @@
-import {AccessMode, AConnection, DBStructure, Factory} from "gdmn-db";
-import {EntityQuery, ERModel, IDataSource, IQueryResponse, ISequenceSource, Sequence} from "gdmn-orm";
+import {AccessMode, AConnection, AConnectionPool, DBStructure, Factory, ICommonConnectionPoolOptions} from "gdmn-db";
+import {EntityQuery, ERModel, IConnection, IDataSource, IQueryResponse, ISequenceSource, Sequence} from "gdmn-orm";
 import {SelectBuilder} from "../crud/query/SelectBuilder";
 import {Constants} from "../ddl/Constants";
+import {ERExport} from "../ddl/export/ERExport";
 import {DBSchemaUpdater} from "../ddl/updates/DBSchemaUpdater";
+import {Connection} from "./Connection";
 import {EntitySource} from "./EntitySource";
 import {SequenceSource} from "./SequenceSource";
 import {Transaction} from "./Transaction";
 
 export class DataSource implements IDataSource {
 
-  private readonly _connection: AConnection;
-  private _dbStructure: DBStructure | undefined;
+  public readonly connectionPool: AConnectionPool<ICommonConnectionPoolOptions>;
+
+  public dbStructure: DBStructure | undefined;
+
   private _globalSequence: Sequence | undefined;
 
-  constructor(connection: AConnection) {
-    this._connection = connection;
+  constructor(connectionPool: AConnectionPool<ICommonConnectionPoolOptions>) {
+    this.connectionPool = connectionPool;
   }
 
   get globalSequence(): Sequence {
@@ -25,34 +29,43 @@ export class DataSource implements IDataSource {
   }
 
   public async init(obj: ERModel): Promise<ERModel> {
-    await new DBSchemaUpdater(this._connection).run();
+    return await AConnectionPool.executeConnection({
+      connectionPool: this.connectionPool,
+      callback: async (connection) => {
+        await new DBSchemaUpdater(connection).run();
 
-    // TODO tmp
-    this._dbStructure = await AConnection.executeTransaction({
-      connection: this._connection,
-      options: {accessMode: AccessMode.READ_ONLY},
-      callback: (transaction) => Factory.FBDriver.readDBStructure(this._connection, transaction)
+        obj = await AConnection.executeTransaction({
+          connection: connection,
+          options: {accessMode: AccessMode.READ_ONLY},
+          callback: async (transaction) => {
+            this.dbStructure = await Factory.FBDriver.readDBStructure(connection, transaction);
+            return await new ERExport(connection, transaction, this.dbStructure, obj).execute();
+          }
+        });
+
+        this._globalSequence = obj.sequence(Constants.GLOBAL_GENERATOR);
+        return obj;
+      }
     });
-
-    if (!Object.values(obj.sequencies).some((seq) => seq.name == Constants.GLOBAL_GENERATOR)) {
-      obj.addSequence(new Sequence({name: Constants.GLOBAL_GENERATOR}));
-    }
-    this._globalSequence = obj.sequence(Constants.GLOBAL_GENERATOR);
-    return obj;
   }
 
-  public async startTransaction(): Promise<Transaction> {
-    const dbTransaction = await this._connection.startTransaction();
-    return new Transaction(this._connection, dbTransaction);
+  public async connect(): Promise<IConnection> {
+    const connection = await this.connectionPool.get();
+    return new Connection(connection);
   }
 
-  public async query(query: EntityQuery, transaction?: Transaction): Promise<IQueryResponse> {
-    return await this.withTransaction(transaction, async (trans) => {
-      const {sql, params, fieldAliases} = new SelectBuilder(this._dbStructure!, query).build();
+  public async startTransaction(connection: Connection): Promise<Transaction> {
+    const dbTransaction = await connection.connection.startTransaction();
+    return new Transaction(connection, dbTransaction);
+  }
+
+  public async query(query: EntityQuery, connection: Connection, transaction?: Transaction): Promise<IQueryResponse> {
+    return await this.withTransaction(connection, transaction, async (trans) => {
+      const {sql, params, fieldAliases} = new SelectBuilder(this.dbStructure!, query).build();
 
       const data = await AConnection.executeQueryResultSet({
-        connection: this._connection,
-        transaction: trans.dbTransaction,
+        connection: connection.connection,
+        transaction: trans.transaction,
         sql,
         params,
         callback: async (resultSet) => {
@@ -104,12 +117,13 @@ export class DataSource implements IDataSource {
     return new SequenceSource(this);
   }
 
-  public async withTransaction<R>(transaction: Transaction | undefined,
+  public async withTransaction<R>(connection: Connection,
+                                  transaction: Transaction | undefined,
                                   callback: (transaction: Transaction) => Promise<R>): Promise<R> {
     if (transaction) {
       return await callback(transaction);
     } else {
-      const trans = await this.startTransaction();
+      const trans = await this.startTransaction(connection);
       try {
         const result = await callback(trans);
         await trans.commit();

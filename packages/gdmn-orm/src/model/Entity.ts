@@ -1,7 +1,7 @@
 import {semCategories2Str, SemCategory} from "gdmn-nlp";
 import {IEntityAdapter, relationName2Adapter} from "../rdbadapter";
 import {IEntity} from "../serialize";
-import {IAttributeSource, IBaseSemOptions, IEntitySource, ILName, ITransaction} from "../types";
+import {IAttributeSource, IBaseSemOptions, IConnection, IEntitySource, ILName, ITransaction} from "../types";
 import {Attribute} from "./Attribute";
 
 export interface IAttributes {
@@ -156,30 +156,34 @@ export class Entity {
     this._unique.splice(this._unique.indexOf(value), 1);
   }
 
-  public async addAttrUnique(attrs: Attribute[], transaction?: ITransaction): Promise<void> {
+  public async addAttrUnique(attrs: Attribute[], connection: IConnection, transaction?: ITransaction): Promise<void> {
     this._checkTransaction(transaction);
 
     attrs.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
 
     if (this._source) {
-      await this._source.addUnique(this, attrs, transaction);
+      await this._source.addUnique(this, attrs, connection, transaction);
     }
     this.addUnique(attrs);
   }
 
-  public async removeAttrUnique(attrs: Attribute[], transaction?: ITransaction): Promise<void> {
+  public async removeAttrUnique(attrs: Attribute[],
+                                connection: IConnection,
+                                transaction?: ITransaction): Promise<void> {
     this._checkTransaction(transaction);
 
     attrs.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
 
     if (this._source) {
-      await this._source.removeUnique(this, attrs, transaction);
+      await this._source.removeUnique(this, attrs, connection, transaction);
     }
     this.removeUnique(attrs);
   }
 
-  public async create<T extends Attribute>(attribute: T, transaction?: ITransaction): Promise<T>;
-  public async create(source: any, transaction?: ITransaction): Promise<any> {
+  public async create<T extends Attribute>(attribute: T,
+                                           connection: IConnection,
+                                           transaction?: ITransaction): Promise<T>;
+  public async create(source: any, connection: IConnection, transaction?: ITransaction): Promise<any> {
     this._checkTransaction(transaction);
 
     if (source instanceof Attribute) {
@@ -188,7 +192,7 @@ export class Entity {
         const attributeSource = this._source.getAttributeSource();
         await attribute.initDataSource(attributeSource);
         if (attributeSource) {
-          return await attributeSource.create(this, attribute, transaction);
+          return await attributeSource.create(this, attribute, connection, transaction);
         }
       }
       return attribute;
@@ -197,8 +201,8 @@ export class Entity {
     }
   }
 
-  public async delete(attribute: Attribute, transaction: ITransaction): Promise<void>;
-  public async delete(source: any, transaction: ITransaction): Promise<any> {
+  public async delete(attribute: Attribute, connection: IConnection, transaction: ITransaction): Promise<void>;
+  public async delete(source: any, connection: IConnection, transaction: ITransaction): Promise<any> {
     this._checkTransaction(transaction);
 
     if (source instanceof Attribute) {
@@ -206,7 +210,7 @@ export class Entity {
       if (this._source) {
         const attributeSource = this._source.getAttributeSource();
         if (attributeSource) {
-          await attributeSource.delete(this, attribute, transaction);
+          await attributeSource.delete(this, attribute, connection, transaction);
         }
         await attribute.initDataSource(undefined);
       }

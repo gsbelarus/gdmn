@@ -11,6 +11,7 @@ import {Builder} from "../ddl/builder/Builder";
 import {ERModelBuilder} from "../ddl/builder/ERModelBuilder";
 import {Constants} from "../ddl/Constants";
 import {AttributeSource} from "./AttributeSource";
+import {Connection} from "./Connection";
 import {DataSource} from "./DataSource";
 import {Transaction} from "./Transaction";
 
@@ -23,13 +24,15 @@ export class EntitySource implements IEntitySource {
   }
 
   public async init(obj: Entity): Promise<Entity> {
-    if (obj.parent && !obj.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME)) {
-      obj.add(new EntityAttribute({
-        name: Constants.DEFAULT_INHERITED_KEY_NAME,
-        required: true,
-        lName: {ru: {name: "Родитель"}},
-        entities: [obj.parent]
-      }));
+    if (obj.parent) {
+      if (!obj.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME)) {
+        obj.add(new EntityAttribute({
+          name: Constants.DEFAULT_INHERITED_KEY_NAME,
+          required: true,
+          lName: {ru: {name: "Родитель"}},
+          entities: [obj.parent]
+        }));
+      }
 
     } else if (!obj.hasOwnAttribute(Constants.DEFAULT_ID_NAME)) {
       obj.add(new SequenceAttribute({
@@ -45,29 +48,41 @@ export class EntitySource implements IEntitySource {
     return obj;
   }
 
-  public async create<T extends Entity>(_: ERModel, obj: T, transaction?: Transaction): Promise<T> {
-    return await this._dataSource.withTransaction(transaction, async (trans) => {
+  public async create<T extends Entity>(_: ERModel,
+                                        obj: T,
+                                        connection: Connection,
+                                        transaction?: Transaction): Promise<T> {
+    return await this._dataSource.withTransaction(connection, transaction, async (trans) => {
       const builder = new ERModelBuilder(trans.ddlHelper);
       return (await builder.addEntity(obj)) as T;
     });
   }
 
-  public async delete(_: ERModel, obj: Entity, transaction?: Transaction): Promise<void> {
-    return await this._dataSource.withTransaction(transaction, async (trans) => {
+  public async delete(_: ERModel, obj: Entity, connection: Connection, transaction?: Transaction): Promise<void> {
+    return await this._dataSource.withTransaction(connection, transaction, async (trans) => {
       const builder = new ERModelBuilder(trans.ddlHelper);
       await builder.removeEntity(obj);
     });
   }
 
-  public async addUnique(entity: Entity, attrs: Attribute[], transaction?: Transaction): Promise<void> {
-    return await this._dataSource.withTransaction(transaction, async (trans) => {
+  public async addUnique(entity: Entity,
+                         attrs: Attribute[],
+                         connection: Connection,
+                         transaction?: Transaction): Promise<void> {
+    return await this._dataSource.withTransaction(connection, transaction, async (trans) => {
       const builder = new ERModelBuilder(trans.ddlHelper);
       return await builder.entityBuilder.addUnique(entity, attrs);
     });
   }
 
-  public async removeUnique(): Promise<void> {
-    throw new Error("Unsupported yet");
+  public async removeUnique(entity: Entity,
+                            attrs: Attribute[],
+                            connection: Connection,
+                            transaction?: Transaction): Promise<void> {
+    return await this._dataSource.withTransaction(connection, transaction, async (trans) => {
+      const builder = new ERModelBuilder(trans.ddlHelper);
+      return await builder.entityBuilder.removeUnique(entity, attrs);
+    });
   }
 
   public getAttributeSource(): IAttributeSource {

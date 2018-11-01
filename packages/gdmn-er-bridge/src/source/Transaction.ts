@@ -1,44 +1,37 @@
-import {AConnection, ATransaction} from "gdmn-db";
+import {ATransaction} from "gdmn-db";
 import {ITransaction} from "gdmn-orm";
 import {DDLHelper} from "../ddl/DDLHelper";
+import {Connection} from "./Connection";
 
 export class Transaction implements ITransaction {
 
-  private readonly _connection: AConnection;
-  private readonly _transaction: ATransaction;
-  private readonly _ddlHelper: DDLHelper;
+  public readonly connection: Connection;
+  public readonly transaction: ATransaction;
+  public readonly ddlHelper: DDLHelper;
 
-  constructor(connection: AConnection, transaction: ATransaction) {
-    this._connection = connection;
-    this._transaction = transaction;
-    this._ddlHelper = new DDLHelper(connection, transaction);
+  constructor(connection: Connection, transaction: ATransaction) {
+    this.connection = connection;
+    this.transaction = transaction;
+    this.ddlHelper = new DDLHelper(connection.connection, transaction);
   }
 
   get finished(): boolean {
-    return this._transaction.finished;
-  }
-
-  get dbTransaction(): ATransaction {
-    return this._transaction;
-  }
-
-  get ddlHelper(): DDLHelper {
-    return this._ddlHelper;
+    return this.transaction.finished;
   }
 
   public async commit(): Promise<void> {
-    if (!this._ddlHelper.disposed) {
-      await this._ddlHelper.dispose();
-      console.debug(this._ddlHelper.logs.join("\n"));
+    if (!this.ddlHelper.disposed) {
+      await this.ddlHelper.dispose();
+      console.debug(this.ddlHelper.logs.join("\n"));
     }
-    return await this._transaction.commit();
+    return await this.transaction.commit();
   }
 
   public async rollback(): Promise<void> {
-    if (!this._ddlHelper.disposed) {
-      await this._ddlHelper.dispose();
-      console.debug(this._ddlHelper.logs.join("\n"));
+    if (!this.ddlHelper.disposed) {
+      await this.ddlHelper.dispose();
+      console.debug(this.ddlHelper.logs.join("\n"));
     }
-    return await this._transaction.rollback();
+    return await this.transaction.rollback();
   }
 }

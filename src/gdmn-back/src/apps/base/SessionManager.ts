@@ -1,5 +1,5 @@
 import {EventEmitter} from "events";
-import {AConnectionPool, ICommonConnectionPoolOptions} from "gdmn-db";
+import {ERModel} from "gdmn-orm";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
@@ -14,12 +14,12 @@ export class SessionManager {
 
   public readonly emitter: StrictEventEmitter<EventEmitter, ISessionManagerEvents> = new EventEmitter();
 
-  private readonly _connectionPool: AConnectionPool<ICommonConnectionPoolOptions>;
+  private readonly _erModel: ERModel;
   private readonly _logger?: Logger;
   private readonly _sessions: Session[] = [];
 
-  constructor(connectionPool: AConnectionPool<ICommonConnectionPoolOptions>, logger?: Logger) {
-    this._connectionPool = connectionPool;
+  constructor(erModel: ERModel, logger?: Logger) {
+    this._erModel = erModel;
     this._logger = logger;
   }
 
@@ -36,7 +36,7 @@ export class SessionManager {
     const session = new Session({
       id: uid,
       userKey,
-      connection: await this._connectionPool.get(),
+      connection: await this._erModel.createConnection(),
       logger: this._logger
     });
     session.emitter.once("close", (s) => {

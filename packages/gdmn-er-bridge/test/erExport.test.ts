@@ -1,51 +1,32 @@
 import * as fs from "fs";
-import {AConnection} from "gdmn-db";
 import {deserializeERModel, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
+import {DataSource} from "../src";
 import {IDBDetail} from "../src/ddl/export/dbdetail";
-import {ERBridge} from "../src/ERBridge";
 
-async function loadERModel(dbDetail: IDBDetail) {
-  const {driver, options}: IDBDetail = dbDetail;
-
-  console.log(JSON.stringify(options, undefined, 2));
-  console.time("Total load time");
-  return await AConnection.executeConnection({
-    connection: driver.newConnection(),
-    options,
-    callback: async (connection) => {
-      const erBridge = new ERBridge(connection);
-      return await AConnection.executeTransaction({
-        connection,
-        callback: async (transaction) => {
-          console.time("DBStructure load time");
-          const dbStructure = await driver.readDBStructure(connection, transaction);
-          console.log(`DBStructure: ${Object.entries(dbStructure.relations).length} relations loaded...`);
-          console.timeEnd("DBStructure load time");
-          console.time("erModel load time");
-          const erModel = await erBridge.exportFromDatabase(dbStructure, transaction, new ERModel());
-          console.log(`erModel: loaded ${Object.entries(erModel.entities).length} entities`);
-          console.timeEnd("erModel load time");
-          return {
-            dbStructure,
-            erModel
-          };
-        }
-      });
-    }
-  });
-}
+jest.setTimeout(120000);
 
 describe("ERExport", () => {
 
+  const dbDetail = require("./testDB").exportTestDBDetail as IDBDetail;
+  const connectionPool = dbDetail.driver.newCommonConnectionPool();
+  const erModel = new ERModel(new DataSource(connectionPool));
+
+  beforeAll(async () => {
+    await connectionPool.create(dbDetail.options, {max: 1, acquireTimeoutMillis: 10000});
+    await erModel.init();
+  });
+
+  afterAll(async () => {
+    await connectionPool.destroy();
+  });
+
   it("erExport", async () => {
-    const dbDetail = require("./testDB").exportTestDBDetail as IDBDetail;
-    const result = await loadERModel(dbDetail);
-    const serialized = result.erModel.serialize();
+    const serialized = erModel.serialize();
     const deserialized = deserializeERModel(serialized);
 
     if (fs.existsSync("c:/temp/test")) {
       fs.writeFileSync("c:/temp/test/ermodel.json",
-        result.erModel.inspect().reduce((p, s) => `${p}${s}\n`, "")
+        erModel.inspect().reduce((p, s) => `${p}${s}\n`, "")
       );
       console.log("ERModel has been written to c:/temp/test/ermodel.json");
 
@@ -65,14 +46,14 @@ describe("ERExport", () => {
     /**
      * Проверка на то, что GD_PLACE древовидная таблица
      */
-    const gdPlace = result.erModel.entities["GD_PLACE"];
+    const gdPlace = erModel.entity("GD_PLACE");
     expect(gdPlace).toBeDefined();
     expect(gdPlace.isTree).toBeTruthy();
-    expect(gdPlace.attributes["PARENT"]).toBeDefined();
-    expect(gdPlace.attributes["PARENT"]).toBeInstanceOf(ParentAttribute);
-    expect(gdPlace.attributes["LB"]).toBeDefined();
-    expect(gdPlace.attributes["LB"]).toBeInstanceOf(IntegerAttribute);
-    expect(gdPlace.attributes["RB"]).toBeDefined();
-    expect(gdPlace.attributes["RB"]).toBeInstanceOf(IntegerAttribute);
-  }, 120000);
+    expect(gdPlace.attribute("PARENT")).toBeDefined();
+    expect(gdPlace.attribute("PARENT")).toBeInstanceOf(ParentAttribute);
+    expect(gdPlace.attribute("LB")).toBeDefined();
+    expect(gdPlace.attribute("LB")).toBeInstanceOf(IntegerAttribute);
+    expect(gdPlace.attribute("RB")).toBeDefined();
+    expect(gdPlace.attribute("RB")).toBeInstanceOf(IntegerAttribute);
+  });
 });

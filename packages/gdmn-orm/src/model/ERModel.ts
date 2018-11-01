@@ -1,6 +1,7 @@
 import {EntityQuery, IEntityQueryInspector, IQueryResponse} from "../query-models/EntityQuery";
 import {IERModel} from "../serialize";
-import {IDataSource, IEntitySource, ISequenceSource, ITransaction} from "../types";
+import {IConnection, IDataSource, IEntitySource, ISequenceSource, ITransaction} from "../types";
+import {DefaultConnection} from "./DefaultConnection";
 import {DefaultTransaction} from "./DefaultTransaction";
 import {Entity} from "./Entity";
 import {Sequence} from "./Sequence";
@@ -15,10 +16,18 @@ export interface ISequencies {
 
 export class ERModel {
 
-  private _source?: IDataSource;
+  private _dataSource?: IDataSource;
 
   private _entities: IEntities = {};
   private _sequencies: ISequencies = {};
+
+  constructor(dataSource?: IDataSource) {
+    this._dataSource = dataSource;
+  }
+
+  get dataSource(): IDataSource | undefined {
+    return this._dataSource;
+  }
 
   get sequencies(): ISequencies {
     return this._sequencies;
@@ -28,14 +37,13 @@ export class ERModel {
     return this._entities;
   }
 
-  public async initDataSource(source?: IDataSource): Promise<void> {
-    this._source = source;
+  public async init(): Promise<void> {
     let entitySource: IEntitySource | undefined;
     let sequenceSource: ISequenceSource | undefined;
-    if (this._source) {
-      await this._source.init(this);
-      entitySource = this._source.getEntitySource();
-      sequenceSource = this._source.getSequenceSource();
+    if (this._dataSource) {
+      await this._dataSource.init(this);
+      entitySource = this._dataSource.getEntitySource();
+      sequenceSource = this._dataSource.getSequenceSource();
     }
     for (const entity of Object.values(this._entities)) {
       await entity.initDataSource(entitySource);
@@ -110,28 +118,28 @@ export class ERModel {
     }
   }
 
-  public async create(sequence: Sequence, transaction?: ITransaction): Promise<Sequence>;
-  public async create(entity: Entity, transaction?: ITransaction): Promise<Entity>;
-  public async create(source: any, transaction?: ITransaction): Promise<any> {
+  public async create(sequence: Sequence, connection: IConnection, transaction?: ITransaction): Promise<Sequence>;
+  public async create(entity: Entity, connection: IConnection, transaction?: ITransaction): Promise<Entity>;
+  public async create(source: any, connection: IConnection, transaction?: ITransaction): Promise<any> {
     this._checkTransaction(transaction);
 
     if (source instanceof Entity) {
       const entity = this.add(source);
-      if (this._source) {
-        const entitySource = this._source.getEntitySource();
+      if (this._dataSource) {
+        const entitySource = this._dataSource.getEntitySource();
         await entity.initDataSource(entitySource);
         if (entitySource) {
-          return await entitySource.create(this, entity, transaction);
+          return await entitySource.create(this, entity, connection, transaction);
         }
       }
       return entity;
 
     } else if (source instanceof Sequence) {
       const sequence = this.addSequence(source);
-      if (this._source) {
-        const sequenceSource = this._source.getSequenceSource();
+      if (this._dataSource) {
+        const sequenceSource = this._dataSource.getSequenceSource();
         if (sequenceSource) {
-          return await sequenceSource.create(this, sequence, transaction);
+          return await sequenceSource.create(this, sequence, connection, transaction);
         }
         await sequence.initDataSource(undefined);
       }
@@ -141,17 +149,17 @@ export class ERModel {
     }
   }
 
-  public async delete(sequence: Sequence, transaction?: ITransaction): Promise<void>;
-  public async delete(entity: Entity, transaction?: ITransaction): Promise<void>;
-  public async delete(source: any, transaction?: ITransaction): Promise<void> {
+  public async delete(sequence: Sequence, connection: IConnection, transaction?: ITransaction): Promise<void>;
+  public async delete(entity: Entity, connection: IConnection, transaction?: ITransaction): Promise<void>;
+  public async delete(source: any, connection: IConnection, transaction?: ITransaction): Promise<void> {
     this._checkTransaction(transaction);
 
     if (source instanceof Entity) {
       const entity = source;
-      if (this._source) {
-        const entitySource = this._source.getEntitySource();
+      if (this._dataSource) {
+        const entitySource = this._dataSource.getEntitySource();
         if (entitySource) {
-          await entitySource.delete(this, entity, transaction);
+          await entitySource.delete(this, entity, connection, transaction);
         }
         await entity.initDataSource(undefined);
       }
@@ -159,10 +167,10 @@ export class ERModel {
 
     } else if (source instanceof Sequence) {
       const sequence = source;
-      if (this._source) {
-        const sequenceSource = this._source.getSequenceSource();
+      if (this._dataSource) {
+        const sequenceSource = this._dataSource.getSequenceSource();
         if (sequenceSource) {
-          await sequenceSource.delete(this, sequence, transaction);
+          await sequenceSource.delete(this, sequence, connection, transaction);
         }
       }
       this.removeSequence(sequence);
@@ -171,20 +179,34 @@ export class ERModel {
     }
   }
 
-  public async query(query: IEntityQueryInspector, transaction?: ITransaction): Promise<IQueryResponse> {
+  public async query(query: IEntityQueryInspector,
+                     connection: IConnection,
+                     transaction?: ITransaction): Promise<IQueryResponse> {
     this._checkTransaction(transaction);
 
-    if (!this._source) {
+    if (!this._dataSource) {
       throw new Error("Need DataSource");
     }
-    return await this._source.query(EntityQuery.inspectorToObject(this, query), transaction);
+    return await this._dataSource.query(EntityQuery.inspectorToObject(this, query), connection, transaction);
   }
 
-  public async startTransaction(): Promise<ITransaction> {
-    if (this._source) {
-      return await this._source.startTransaction();
+  public async createConnection(): Promise<IConnection> {
+    if (this._dataSource) {
+      return await this._dataSource.connect();
+    }
+    return new DefaultConnection();
+  }
+
+  public async startTransaction(connection: IConnection): Promise<ITransaction> {
+    if (this._dataSource) {
+      return await this._dataSource.startTransaction(connection);
     }
     return new DefaultTransaction();
+  }
+
+  public async clearDataSource(): Promise<void> {
+    this._dataSource = undefined;
+    await this.init();
   }
 
   public serialize(): IERModel {

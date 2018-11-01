@@ -51,8 +51,14 @@ export interface IBaseSemOptions<Adapter = any> extends IBaseOptions<Adapter> {
   semCategories?: SemCategory[];
 }
 
+export interface IConnection {
+  readonly connected: boolean;
+
+  disconnect(): Promise<void>;
+}
+
 export interface ITransaction {
-  finished: boolean;
+  readonly finished: boolean;
 
   commit(): Promise<void>;
 
@@ -64,15 +70,20 @@ export interface IBaseSource<CurType> {
 }
 
 export interface IBaseCreatableSource<ParentType, CurType> extends IBaseSource<CurType> {
-  create<T extends CurType>(parent: ParentType, obj: T, transaction?: ITransaction): Promise<T>;
+  create<T extends CurType>(parent: ParentType,
+                            obj: T,
+                            connection: IConnection,
+                            transaction?: ITransaction): Promise<T>;
 
-  delete(parent: ParentType, obj: CurType, transaction?: ITransaction): Promise<void>;
+  delete(parent: ParentType, obj: CurType, connection: IConnection, transaction?: ITransaction): Promise<void>;
 }
 
 export interface IDataSource extends IBaseSource<ERModel> {
-  startTransaction(): Promise<ITransaction>;
+  connect(): Promise<IConnection>;
 
-  query(query: EntityQuery, transaction?: ITransaction): Promise<IQueryResponse>;
+  startTransaction(connection: IConnection): Promise<ITransaction>;
+
+  query(query: EntityQuery, connection: IConnection, transaction?: ITransaction): Promise<IQueryResponse>;
 
   getEntitySource(): IEntitySource | undefined;
 
@@ -86,9 +97,9 @@ export interface ISequenceSource extends IBaseCreatableSource<ERModel, Sequence<
 export interface IEntitySource extends IBaseCreatableSource<ERModel, Entity> {
   getAttributeSource(): IAttributeSource | undefined;
 
-  addUnique(entity: Entity, attrs: Attribute[], transaction?: ITransaction): Promise<void>;
+  addUnique(entity: Entity, attrs: Attribute[], connection: IConnection, transaction?: ITransaction): Promise<void>;
 
-  removeUnique(entity: Entity, attrs: Attribute[], transaction?: ITransaction): Promise<void>;
+  removeUnique(entity: Entity, attrs: Attribute[], connection: IConnection, transaction?: ITransaction): Promise<void>;
 }
 
 export interface IAttributeSource extends IBaseCreatableSource<Entity, Attribute> {

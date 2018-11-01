@@ -5,21 +5,28 @@ describe("ERModel", async () => {
 
   it("serialize/deserialize", async () => {
     const erModel = new ERModel();
-    await erModel.initDataSource();
+    await erModel.init();
 
-    const transaction = await erModel.startTransaction();
-
+    const connection = await erModel.createConnection();
     try {
-      const entity = await erModel.create(new Entity({
-        name: "TEST", lName: {en: {name: "Test"}}
-      }), transaction);
-      const testAttr = await entity.create(new StringAttribute({
-        name: "TEST_FIELD", lName: {en: {name: "Test field"}}
-      }), transaction);
-      await entity.addAttrUnique([testAttr], transaction);
+      const transaction = await erModel.startTransaction(connection);
+
+      try {
+        const entity = await erModel.create(new Entity({
+          name: "TEST", lName: {en: {name: "Test"}}
+        }), connection, transaction);
+        const testAttr = await entity.create(new StringAttribute({
+          name: "TEST_FIELD", lName: {en: {name: "Test field"}}
+        }), connection, transaction);
+        await entity.addAttrUnique([testAttr], connection, transaction);
+      } finally {
+        if (!transaction.finished) {
+          await transaction.commit();
+        }
+      }
     } finally {
-      if (!transaction.finished) {
-        await transaction.commit();
+      if (connection.connected) {
+        await connection.disconnect();
       }
     }
 

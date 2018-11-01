@@ -1,6 +1,6 @@
 import fs from "fs";
-import {AConnection, ADriver, IConnectionOptions} from "gdmn-db";
-import {ERBridge} from "gdmn-er-bridge";
+import {ADriver, IConnectionOptions} from "gdmn-db";
+import {DataSource} from "gdmn-er-bridge";
 import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
 import {deserializeERModel, ERModel} from "gdmn-orm";
 import {ERTranslatorRU} from "../agent";
@@ -12,36 +12,6 @@ export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConne
   options: ConnectionOptions;
 }
 
-async function loadERModel(dbDetail: IDBDetail) {
-  const {driver, options}: IDBDetail = dbDetail;
-
-  console.log(JSON.stringify(options, undefined, 2));
-  console.time("Total load time");
-  const result = await AConnection.executeConnection({
-    connection: driver.newConnection(),
-    options,
-    callback: (connection) => AConnection.executeTransaction({
-      connection,
-      callback: async (transaction) => {
-        console.time("DBStructure load time");
-        const dbStructure = await driver.readDBStructure(connection, transaction);
-        // console.log(`DBStructure: ${Object.entries(dbStructure.relations).length} relations loaded...`);
-        console.timeEnd("DBStructure load time");
-        console.time("erModel load time");
-        const erModel = await new ERBridge(connection).exportFromDatabase(dbStructure, transaction, new ERModel());
-        // console.log(`erModel: loaded ${Object.entries(erModel.entities).length} entities`);
-        console.timeEnd("erModel load time");
-        return {
-          dbStructure,
-          erModel
-        };
-      }
-    })
-  });
-
-  return result;
-}
-
 jest.setTimeout(100 * 1000);
 
 describe("erModel", () => {
@@ -49,19 +19,24 @@ describe("erModel", () => {
   let erModel: ERModel;
   let translator: ERTranslatorRU;
 
-  beforeAll(async () => {
-    const dbDetail = require("./testDB").testDB[0] as IDBDetail;
+  const dbDetail = require("./testDB").testDB[0] as IDBDetail;
+  const {driver, options}: IDBDetail = dbDetail;
+  const connectionPool = driver.newCommonConnectionPool();
 
-    const loaded = await loadERModel(dbDetail);
-    expect(loaded.erModel).toBeDefined();
-    const serialized = loaded.erModel.serialize();
+  beforeAll(async () => {
+    await connectionPool.create(options, {max: 1, acquireTimeoutMillis: 10000});
+
+    const erModel2 = new ERModel(new DataSource(connectionPool));
+    await erModel2.init();
+    expect(erModel2).toBeDefined();
+    const serialized = erModel2.serialize();
     erModel = deserializeERModel(serialized);
     translator = new ERTranslatorRU(erModel);
     expect(translator).toBeDefined();
 
     if (fs.existsSync("c:/temp/test")) {
       fs.writeFileSync("c:/temp/test/ermodel.json",
-        loaded.erModel.inspect().reduce((p, s) => `${p}${s}\n`, "")
+        erModel2.inspect().reduce((p, s) => `${p}${s}\n`, "")
       );
       console.log("ERModel has been written to c:/temp/test/ermodel.json");
 
@@ -70,6 +45,10 @@ describe("erModel", () => {
       );
       console.log("Serialized ERModel has been written to c:/temp/test/ermodel.serialized.json");
     }
+  });
+
+  afterAll(async () => {
+    await connectionPool.destroy();
   });
 
   it("phrase", () => {

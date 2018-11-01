@@ -1,5 +1,6 @@
 import {Attribute, Entity, IAttributeSource} from "gdmn-orm";
 import {EntityBuilder} from "../ddl/builder/EntityBuilder";
+import {Connection} from "./Connection";
 import {DataSource} from "./DataSource";
 import {Transaction} from "./Transaction";
 
@@ -15,15 +16,15 @@ export class AttributeSource implements IAttributeSource {
     return obj;
   }
 
-  public async create<T extends Attribute>(parent: Entity, obj: T, transaction?: Transaction): Promise<T> {
-    return await this._dataSource.withTransaction(transaction, async (trans) => {
+  public async create<T extends Attribute>(parent: Entity, obj: T, connection: Connection, transaction?: Transaction): Promise<T> {
+    return await this._dataSource.withTransaction(connection, transaction, async (trans) => {
       const builder = new EntityBuilder(trans.ddlHelper);
       return (await builder.addAttribute(parent, obj)) as T;
     });
   }
 
-  public async delete(parent: Entity, obj: Attribute, transaction?: Transaction): Promise<void> {
-    return await this._dataSource.withTransaction(transaction, async (trans) => {
+  public async delete(parent: Entity, obj: Attribute, connection: Connection, transaction?: Transaction): Promise<void> {
+    return await this._dataSource.withTransaction(connection, transaction, async (trans) => {
       const builder = new EntityBuilder(trans.ddlHelper);
       await builder.removeAttribute(parent, obj);
     });

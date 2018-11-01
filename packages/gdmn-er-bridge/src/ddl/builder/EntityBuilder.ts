@@ -22,6 +22,11 @@ export class EntityBuilder extends Builder {
     await this.ddlHelper.addUnique(constraintName, tableName, attrs.map((attr) => Builder._getFieldName(attr)));
   }
 
+  public async removeUnique(entity: Entity, attrs: Attribute[]): Promise<void> {
+    // TODO
+    throw new Error("Unsupported yet");
+  }
+
   public async addAttribute(entity: Entity, attr: Attribute): Promise<Attribute> {
     const tableName = Builder._getOwnRelationName(entity);
 

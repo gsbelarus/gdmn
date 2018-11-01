@@ -1,7 +1,6 @@
 import config from "config";
 import {EventEmitter} from "events";
-import {AConnection} from "gdmn-db";
-import {ITransaction} from "gdmn-orm";
+import {IConnection, ITransaction} from "gdmn-orm";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
@@ -11,7 +10,7 @@ import {TaskManager} from "./task/TaskManager";
 export interface IOptions {
   readonly id: string;
   readonly userKey: number;
-  readonly connection: AConnection;
+  readonly connection: IConnection;
   readonly logger?: Logger;
 }
 
@@ -50,7 +49,7 @@ export class Session {
     return this._options.userKey;
   }
 
-  get connection(): AConnection {
+  get connection(): IConnection {
     return this._options.connection;
   }
 

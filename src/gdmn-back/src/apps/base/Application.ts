@@ -1,5 +1,5 @@
-import {AccessMode, AConnection, DBStructure} from "gdmn-db";
-import {DataSource, ERBridge} from "gdmn-er-bridge";
+import {AConnection} from "gdmn-db";
+import {DataSource} from "gdmn-er-bridge";
 import {ERModel, IEntityQueryInspector, IERModel, IQueryResponse} from "gdmn-orm";
 import log4js, {Logger} from "log4js";
 import {ADatabase, IDBDetail} from "../../db/ADatabase";
@@ -29,17 +29,12 @@ export abstract class Application extends ADatabase {
   protected _sessionLogger = log4js.getLogger("Session");
   protected _taskLogger = log4js.getLogger("Task");
 
-  private readonly _sessionManager = new SessionManager(this.connectionPool, this._sessionLogger);
+  private _erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
 
-  private _dbStructure: DBStructure = new DBStructure();
-  private _erModel: ERModel = new ERModel();
+  private readonly _sessionManager = new SessionManager(this._erModel, this._sessionLogger);
 
   protected constructor(dbDetail: IDBDetail, logger: Logger) {
     super(dbDetail, logger);
-  }
-
-  get dbStructure(): DBStructure {
-    return this._dbStructure;
   }
 
   get erModel(): ERModel {
@@ -60,7 +55,7 @@ export abstract class Application extends ADatabase {
       level: Level.SESSION,
       logger: this._taskLogger,
       worker: async (context) => {
-        const transaction = await this._erModel.startTransaction();
+        const transaction = await this._erModel.startTransaction(context.session.connection);
         return context.session.addTransaction(transaction);
       }
     });
@@ -179,7 +174,7 @@ export abstract class Application extends ADatabase {
         const {transactionKey} = context.command.payload;
 
         const transaction = context.session.getTransaction(transactionKey || "");
-        const result = await this._erModel.query(context.command.payload, transaction);
+        const result = await this._erModel.query(context.command.payload, context.session.connection, transaction);
         await context.checkStatus();
         return result;
       }
@@ -187,12 +182,6 @@ export abstract class Application extends ADatabase {
     session.taskManager.add(task);
     this.sessionManager.syncTasks();
     return task;
-  }
-
-  public async reload(): Promise<void> {
-    this._checkBusy();
-
-    await this._reload();
   }
 
   protected _checkSession(session: Session): void | never {
@@ -206,35 +195,16 @@ export abstract class Application extends ADatabase {
     }
   }
 
-  protected async _reload(): Promise<void> {
-    await this._executeConnection(async (connection) => {
-      await new ERModel().initDataSource(new DataSource(connection));
-
-      await AConnection.executeTransaction({
-        connection,
-        options: {accessMode: AccessMode.READ_ONLY},
-        callback: async (transaction) => {
-          this._dbStructure = await this.dbDetail.driver.readDBStructure(connection, transaction);
-          this._logger.info("DBStructure: loaded %s relations", Object.entries(this._dbStructure.relations).length);
-
-          const erBridge = new ERBridge(connection);
-          await erBridge.exportFromDatabase(this._dbStructure, transaction, this._erModel = new ERModel());
-          this._logger.info("ERModel: loaded %s entities", Object.entries(this._erModel.entities).length);
-        }
-      });
-    });
-  }
-
   protected async _onCreate(_connection: AConnection): Promise<void> {
     await super._onCreate(_connection);
 
-    await this._erModel.initDataSource(new DataSource(_connection));
+    await this._erModel.init();
   }
 
   protected async _onConnect(): Promise<void> {
     await super._onConnect();
 
-    await this._reload();
+    await this._erModel.init();
   }
 
   protected async _onDisconnect(): Promise<void> {
