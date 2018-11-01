@@ -2,7 +2,7 @@ import {AccessMode, AConnection, DBStructure} from "gdmn-db";
 import {DataSource, ERBridge} from "gdmn-er-bridge";
 import {ERModel, IEntityQueryInspector, IERModel, IQueryResponse} from "gdmn-orm";
 import log4js, {Logger} from "log4js";
-import {Database, IDBDetail} from "../../db/Database";
+import {ADatabase, IDBDetail} from "../../db/ADatabase";
 import {Session} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICommand, Level, Task} from "./task/Task";
@@ -24,7 +24,7 @@ export type PingCommand = AppCommand<"PING", { steps: number; delay: number; } &
 export type GetSchemaCommand = AppCommand<"GET_SCHEMA">;
 export type QueryCommand = AppCommand<"QUERY", IEntityQueryInspector & ITPayload>;
 
-export abstract class Application extends Database {
+export abstract class Application extends ADatabase {
 
   protected _sessionLogger = log4js.getLogger("Session");
   protected _taskLogger = log4js.getLogger("Task");

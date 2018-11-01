@@ -1,10 +1,5 @@
 import {ADriver, Factory, IConnectionOptions} from "gdmn-db";
-
-export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConnectionOptions> {
-  alias: string;
-  driver: ADriver;
-  options: ConnectionOptions;
-}
+import {IDBDetail} from "./agent.test";
 
 export const testDB: IDBDetail[] = [
   {

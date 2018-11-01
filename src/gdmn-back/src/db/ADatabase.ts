@@ -15,7 +15,7 @@ export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConne
   poolOptions: ICommonConnectionPoolOptions;
 }
 
-export abstract class Database {
+export abstract class ADatabase {
 
   protected readonly _logger: Logger;
 

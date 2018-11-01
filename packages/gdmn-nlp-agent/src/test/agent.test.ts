@@ -1,11 +1,16 @@
 import fs from "fs";
-import {AConnection} from "gdmn-db";
+import {AConnection, ADriver, IConnectionOptions} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
 import {deserializeERModel, ERModel} from "gdmn-orm";
 import {ERTranslatorRU} from "../agent";
-import { Determiner } from "../command";
-import {IDBDetail, testDB} from "./testDB";
+import {Determiner} from "../command";
+
+export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConnectionOptions> {
+  alias: string;
+  driver: ADriver;
+  options: ConnectionOptions;
+}
 
 async function loadERModel(dbDetail: IDBDetail) {
   const {driver, options}: IDBDetail = dbDetail;
@@ -45,7 +50,9 @@ describe("erModel", () => {
   let translator: ERTranslatorRU;
 
   beforeAll(async () => {
-    const loaded = await loadERModel(testDB[0]);
+    const dbDetail = require("./testDB").testDB[0] as IDBDetail;
+
+    const loaded = await loadERModel(dbDetail);
     expect(loaded.erModel).toBeDefined();
     const serialized = loaded.erModel.serialize();
     erModel = deserializeERModel(serialized);

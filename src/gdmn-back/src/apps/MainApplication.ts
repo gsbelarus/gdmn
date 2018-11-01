@@ -16,8 +16,7 @@ import {
 import log4js from "log4js";
 import path from "path";
 import {v1 as uuidV1} from "uuid";
-import {IDBDetail} from "../db/Database";
-import databases from "../db/databases";
+import {IDBDetail} from "../db/ADatabase";
 import {Application} from "./base/Application";
 import {Session} from "./base/Session";
 import {ICommand, Level, Task} from "./base/task/Task";
@@ -530,23 +529,30 @@ export class MainApplication extends Application {
     }
 
     const admin = await this._addUser(connection, {login: "Administrator", password: "Administrator", admin: true});
+
     // TODO tmp
-    for (const dbDetail of Object.values(databases)) {
-      await AConnection.executeTransaction({
-        connection,
-        callback: async (trans) => {
-          const appInfo = await this._addApplicationInfo(connection, trans, {
-            ...dbDetail.connectionOptions,
-            ownerKey: admin.id,
-            external: true
-          });
-          await this._addUserApplicationInfo(connection, trans, {
-            alias: dbDetail.alias,
-            appKey: appInfo.id,
-            userKey: admin.id
-          });
-        }
-      });
+    try {
+      const databases = require("../db/database");
+      for (const db of Object.values(databases)) {
+        const dbDetail = db as IDBDetail;
+        await AConnection.executeTransaction({
+          connection,
+          callback: async (trans) => {
+            const appInfo = await this._addApplicationInfo(connection, trans, {
+              ...dbDetail.connectionOptions,
+              ownerKey: admin.id,
+              external: true
+            });
+            await this._addUserApplicationInfo(connection, trans, {
+              alias: dbDetail.alias as any,
+              appKey: appInfo.id,
+              userKey: admin.id
+            });
+          }
+        });
+      }
+    } catch (error) {
+      this._logger.warn(error);
     }
   }
 

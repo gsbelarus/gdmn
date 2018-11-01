@@ -37,14 +37,15 @@ import {
   IUpdateOrInsert
 } from "../src/crud/Crud";
 import {Constants} from "../src/ddl/Constants";
+import {IDBDetail} from "../src/ddl/export/dbdetail";
 import {ERBridge} from "../src/ERBridge";
 import {DataSource} from "../src/source/DataSource";
-import {importTestDBDetail} from "./testDB";
 
 describe("ERBridge", () => {
   jest.setTimeout(60 * 1000);
 
-  const {driver, options} = importTestDBDetail;
+  const {driver, options} = require("./testDB").importTestDBDetail as IDBDetail;
+
   const connection = driver.newConnection();
   const erBridge = new ERBridge(connection);
 
