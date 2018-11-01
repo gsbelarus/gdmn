@@ -1,7 +1,7 @@
 import { Lexer, createToken, IToken, TokenType } from "chevrotain";
 import { AnyWord } from "../morphology/morphology";
-import { RusGender, RusCase, RusAdjectiveCategory } from "../morphology/types";
-import { RusNoun, RusAdjective } from "..";
+import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType } from "../morphology/types";
+import { RusNoun, RusAdjective, RusPreposition } from "..";
 
 export interface IMorphToken extends IToken {
   word: AnyWord;
@@ -13,7 +13,6 @@ export interface ITokenTypes {
 
 const signatures = [
   'VERBTranPerfSingImpr',
-  'PREPPlce',
   'CONJ'
 ];
 
@@ -46,6 +45,20 @@ export const morphTokens = (() => {
     [RusCase.Nomn, RusCase.Gent, RusCase.Datv, RusCase.Accs, RusCase.Ablt, RusCase.Loct].forEach( grammCase => {
       signatures.push(RusAdjective.getSignature(false, category, undefined, false, grammCase));
     })
+  );
+
+  /**
+   * Предлоги
+   */
+  [
+    PrepositionType.Place, 
+    PrepositionType.Object, 
+    PrepositionType.Time, 
+    PrepositionType.Reason, 
+    PrepositionType.Goal, 
+    PrepositionType.Comparative
+  ].forEach( prepositionType =>
+    signatures.push(RusPreposition.getSignature(prepositionType))
   );
 
   return signatures.reduce(
