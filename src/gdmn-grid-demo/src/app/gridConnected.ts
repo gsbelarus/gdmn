@@ -131,7 +131,13 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
       onToggleHideHeader:
         () => dispatch(toggleHideHeader({name})),
       onSetFilter:
-        (filter: string) => dispatch(setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } })),
+        (filter: string) => {
+          if (filter) {
+            dispatch(setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } }))
+          } else {
+            dispatch(setFilter({name: rs.name, filter: undefined }))
+          }
+        },
     })
   )(GDMNGridPanel);
 };
