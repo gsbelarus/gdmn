@@ -31,6 +31,10 @@ export class DBSchemaUpdater extends BaseUpdate {
   public async run(): Promise<void> {
     const version = await this._executeTransaction((transaction) => this._getDatabaseVersion(transaction));
 
+    if (this._version < version) {
+      throw new Error(`Missing updates; app:v.${this._version} < db:v.${version}`);
+    }
+
     const newUpdates = this._updates.filter((item) => item.version > version);
     console.log(this._description + "...");
     console.time(this._description);
