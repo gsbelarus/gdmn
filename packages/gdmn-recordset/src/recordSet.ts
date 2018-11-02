@@ -1,6 +1,7 @@
 import { List } from "immutable";
 import { IDataRow, FieldDefs, SortFields, INamedField } from "./types";
 import { IFilter } from "./filter";
+import equal from "fast-deep-equal";
 
 export type Data<R extends IDataRow = IDataRow> = List<R>;
 
@@ -15,6 +16,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _allRowsSelected: boolean;
   private _selectedRows: boolean[];
   private _filter: IFilter | undefined;
+  private _savedData: Data<R> | undefined;
 
   constructor (
     name: string,
@@ -24,24 +26,26 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     sortFields: SortFields = [],
     allRowsSelected: boolean = false,
     selectedRows: boolean[] = [],
-    filter: IFilter | undefined = undefined)
+    filter: IFilter | undefined = undefined,
+    savedData: Data<R> | undefined = undefined)
   {
     if (!data.size && currentRow) {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
 
-    if (currentRow < 0 || (data.size && currentRow >= data.size)) {
+    if (data.size && currentRow >= data.size) {
       throw new Error('Invalid currentRow value');
     }
 
     this.name = name;
     this._fieldDefs = fieldDefs;
     this._data = data;
-    this._currentRow = currentRow;
+    this._currentRow = currentRow < 0 ? 0 : currentRow;
     this._sortFields = sortFields;
     this._allRowsSelected = allRowsSelected;
     this._selectedRows = selectedRows;
     this._filter = filter;
+    this._savedData = savedData;
   }
 
   get fieldDefs() {
@@ -88,7 +92,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     const currentRowData = this._data.get(this._currentRow);
-    const selectedRowsData = this._selectedRows.map( (sr, idx) => sr ? this._data.get(idx) : undefined );
+    const selectedRowsData = this._selectedRows.reduce( (p, sr, idx) => { if (sr) { p.push(this._data.get(idx)); } return p; }, [] as R[] );
     const sorted = this._data.sort(
       (a, b) => sortFields.reduce(
         (p, f) => p ? p : (a[f.fieldName]! < b[f.fieldName]! ? (f.asc ? -1 : 1) : (a[f.fieldName]! > b[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
@@ -110,7 +114,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           return p;
         }, [] as boolean[]
       ),
-      this._filter
+      this._filter,
+      this._savedData
     );
   }
 
@@ -143,7 +148,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._sortFields,
       this._allRowsSelected,
       this._selectedRows,
-      this._filter
+      this._filter,
+      this._savedData
     );
   }
 
@@ -160,7 +166,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._sortFields,
       value,
       value ? [] : this._selectedRows,
-      this._filter
+      this._filter,
+      this._savedData
     );
   }
 
@@ -186,20 +193,59 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._sortFields,
       allRowsSelected,
       allRowsSelected ? [] : selectedRows,
-      this._filter
+      this._filter,
+      this._savedData
     );
   }
 
-  public setFilter(f: IFilter | undefined) {
+  public setFilter(filter: IFilter | undefined): RecordSet<R> {
+    if (equal(this._filter, filter)) {
+      return this;
+    }
+
+    const isFilter = filter && filter.conditions.length;
+    const currentRowData = this._data.get(this._currentRow);
+    const selectedRowsData = this._allRowsSelected ? this._data.toArray()
+    : this._selectedRows.reduce( (p, sr, idx) =>
+      {
+        if (sr) { p.push(this._data.get(idx)); }
+        return p;
+      }, [] as R[]);
+
+    let newData: Data<R>;
+
+    if (isFilter) {
+      const re = new RegExp(filter!.conditions[0].value, 'i');
+      newData = (this._savedData || this._data).filter(
+        row => row ? Object.entries(row).some( ([_, value]) => value !== null && re.test(value.toString())) : false
+      ).toList();
+    } else {
+      if (!this._savedData) {
+        throw new Error('No saved data for RecordSet');
+      }
+      newData = this._savedData;
+    }
+
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
-      this._data,
-      this._currentRow,
-      this._sortFields,
-      this._allRowsSelected,
-      this._selectedRows,
-      f
+      newData,
+      newData.findIndex( v => v === currentRowData ),
+      [],
+      false,
+      selectedRowsData.reduce(
+        (p, srd) => {
+          if (srd) {
+            const newIndex = newData.findIndex( v => v === srd );
+            if (newIndex >= 0) {
+              p[newIndex] = true;
+            }
+          }
+          return p;
+        }, [] as boolean[]
+      ),
+      isFilter ? filter : undefined,
+      isFilter ? this._savedData || this._data : undefined,
     );
   }
 };

@@ -25,8 +25,9 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "typesafe-actions": "^2.0.4",
-    "immutable": "^3.8.2"
+    "fast-deep-equal": "^2.0.1",
+    "immutable": "^3.8.2",
+    "typesafe-actions": "^2.0.4"
   },
   "devDependencies": {
     "@types/jest": "^23.3.9",
