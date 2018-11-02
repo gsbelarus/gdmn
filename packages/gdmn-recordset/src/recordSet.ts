@@ -1,5 +1,6 @@
 import { List } from "immutable";
 import { IDataRow, FieldDefs, SortFields, INamedField } from "./types";
+import { IFilter } from "./filter";
 
 export type Data<R extends IDataRow = IDataRow> = List<R>;
 
@@ -13,6 +14,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _sortFields: SortFields;
   private _allRowsSelected: boolean;
   private _selectedRows: boolean[];
+  private _filter: IFilter | undefined;
 
   constructor (
     name: string,
@@ -21,13 +23,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     currentRow: number = 0,
     sortFields: SortFields = [],
     allRowsSelected: boolean = false,
-    selectedRows: boolean[] = [])
+    selectedRows: boolean[] = [],
+    filter: IFilter | undefined = undefined)
   {
-    if (!data.size && !currentRow) {
-      throw new Error('For an empty record set currentRow must be 0');
+    if (!data.size && currentRow) {
+      throw new Error(`For an empty record set currentRow must be 0`);
     }
 
-    if (currentRow < 0 || currentRow >= data.size) {
+    if (currentRow < 0 || (data.size && currentRow >= data.size)) {
       throw new Error('Invalid currentRow value');
     }
 
@@ -38,6 +41,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._sortFields = sortFields;
     this._allRowsSelected = allRowsSelected;
     this._selectedRows = selectedRows;
+    this._filter = filter;
   }
 
   get fieldDefs() {
@@ -62,6 +66,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get selectedRows() {
     return this._selectedRows;
+  }
+
+  get filter() {
+    return this._filter;
   }
 
   private checkFields(fields: INamedField[]) {
@@ -93,7 +101,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       sorted,
       sorted.findIndex( v => v === currentRowData ),
       sortFields,
-      this.allRowsSelected,
+      this._allRowsSelected,
       selectedRowsData.reduce(
         (p, srd) => {
           if (srd) {
@@ -101,7 +109,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
           return p;
         }, [] as boolean[]
-      )
+      ),
+      this._filter
     );
   }
 
@@ -132,8 +141,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._data,
       currentRow,
       this._sortFields,
-      this.allRowsSelected,
-      this.selectedRows
+      this._allRowsSelected,
+      this._selectedRows,
+      this._filter
     );
   }
 
@@ -146,10 +156,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this.name,
       this._fieldDefs,
       this._data,
-      this.currentRow,
+      this._currentRow,
       this._sortFields,
       value,
-      value ? [] : this.selectedRows
+      value ? [] : this._selectedRows,
+      this._filter
     );
   }
 
@@ -171,15 +182,25 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this.name,
       this._fieldDefs,
       this._data,
-      this.currentRow,
+      this._currentRow,
       this._sortFields,
       allRowsSelected,
-      allRowsSelected ? [] : selectedRows
+      allRowsSelected ? [] : selectedRows,
+      this._filter
     );
   }
 
-  public filter(filterFunc: FilterFunc) {
-    return this;
+  public setFilter(f: IFilter | undefined) {
+    return new RecordSet<R>(
+      this.name,
+      this._fieldDefs,
+      this._data,
+      this._currentRow,
+      this._sortFields,
+      this._allRowsSelected,
+      this._selectedRows,
+      f
+    );
   }
 };
 

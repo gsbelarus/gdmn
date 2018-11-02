@@ -13,7 +13,6 @@ export interface GridComponentState {
   hideHeader: boolean;
   hideFooter: boolean;
   sortDialog: boolean;
-  filter: string;
 };
 
 export interface GridReducerState {
@@ -44,7 +43,6 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         hideHeader: false,
         hideFooter: false,
         sortDialog: false,
-        filter: ''
       }
     };
   }
@@ -229,11 +227,6 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
     case getType(actions.setSelectRows): {
       const { value } = action.payload;
       return {...state, [componentName]: {...componentState, selectRows: value}};
-    }
-
-    case getType(actions.applyFilter): {
-      const { filter } = action.payload;
-      return {...state, [componentName]: {...componentState, filter}};
     }
 
     default:

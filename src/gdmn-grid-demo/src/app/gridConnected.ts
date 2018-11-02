@@ -19,9 +19,8 @@ import {
   showSortDialog,
   cancelSortDialog,
   applySortDialog,
-  applyFilter
 } from "gdmn-grid";
-import { RecordSet } from "gdmn-recordset";
+import { RecordSet, setFilter } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -132,7 +131,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
       onToggleHideHeader:
         () => dispatch(toggleHideHeader({name})),
       onSetFilter:
-        (filter: string) => dispatch(applyFilter({name, filter})),
+        (filter: string) => dispatch(setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } })),
     })
   )(GDMNGridPanel);
 };

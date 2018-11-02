@@ -1,8 +1,22 @@
+import { RecordSet } from '../src';
+import { List } from 'immutable';
 
 describe('recordset', () => {
 
   it('test', () => {
-    expect(0).toBeFalsy();
+
+    const rs = new RecordSet(
+      'test',
+      [],
+      List([]),
+      0,
+      [],
+      false,
+      [],
+      undefined
+    );
+
+    expect(rs.data.size).toEqual(0);
   });
 
 });

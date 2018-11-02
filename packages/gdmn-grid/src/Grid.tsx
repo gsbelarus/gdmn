@@ -30,7 +30,6 @@ export interface IGridProps {
   hideHeader?: boolean;
   hideFooter?: boolean;
   sortDialog: boolean;
-  filter: string;
   onCancelSortDialog: () => void,
   onApplySortDialog: (sortFields: SortFields) => void,
   onColumnResize: (columnIndex: number, newWidth: number) => void;
@@ -955,7 +954,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _getRowsCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) =>
     ({columnIndex, key, rowIndex, style}: GridCellProps) => {
-      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, filter } = this.props;
+      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow } = this.props;
+      const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
       const currentRow = rs.currentRow;
       const adjustedColumnIndex = adjustFunc(columnIndex);
       const rowClass = fixed ? ''

@@ -1,6 +1,7 @@
 import { createAction } from "typesafe-actions";
 import { RecordSet } from "./recordSet";
 import { SortFields } from "./types";
+import { IFilter } from "./filter";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
 
@@ -39,3 +40,9 @@ export const selectRow = createAction('RECORDSET/SELECT_ROW', resolve => {
 });
 
 export type SelectRow = typeof selectRow;
+
+export const setFilter = createAction('RECORDSET/SET_FILTER', resolve => {
+  return (params: WithComponentName<{ filter: IFilter | undefined }>) => resolve(params);
+});
+
+export type SetFilter = typeof setFilter;

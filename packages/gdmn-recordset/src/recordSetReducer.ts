@@ -63,6 +63,11 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
       return newState(rs.selectRow(idx, selected));
     }
 
+    case getType(actions.setFilter): {
+      const { filter } = action.payload;
+      return newState(rs.setFilter(filter));
+    }
+
     default:
       return state;
   }

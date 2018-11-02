@@ -94,10 +94,5 @@ export const applySortDialog = createAction('GRID/APPLY_SORT_DIALOG', resolve =>
 
 export type ApplySortDialog = typeof applySortDialog;
 
-export const applyFilter = createAction('GRID/APPLY_FILTER', resolve => {
-  return (params: WithComponentName<{ filter: string }>) => resolve(params);
-});
-
-export type ApplyFilter = typeof applyFilter;
 
 

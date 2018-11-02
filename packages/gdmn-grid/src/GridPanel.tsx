@@ -17,7 +17,6 @@ export interface IGDMNGridPanelProps {
   hideFooter: boolean,
   hideHeader: boolean,
   sortDialog: boolean,
-  filter: string,
   onSortDialog: () => void,
   onScrollIntoView: () => void,
   onSetFixedColumns: (fixedColumns: number) => void,
@@ -42,7 +41,8 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
       rightSideColumns, onSetFixedTailColumns, rs, currentCol,
       selectRows, onSetSelectRows, hideFooter, hideHeader,
       onToggleHideFooter, onToggleHideHeader, onSortDialog,
-      onScrollIntoView, onGoToRow, filter } = this.props;
+      onScrollIntoView, onGoToRow } = this.props;
+    const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     const currentRow = rs.currentRow;
     return (
       <div className="GDMNGridPanel">
