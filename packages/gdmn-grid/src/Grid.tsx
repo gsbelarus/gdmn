@@ -141,7 +141,7 @@ function highlightFiltered(s: string, filter: RegExp): JSXElementOrString | stri
       </span>
     );
     l = l + m[0].length;
-    m = filter.exec(m.input.substr(m.index + m[0].length + 1));
+    m = filter.exec(m.input.substr(m.index + m[0].length));
   }
   if (res.length) {
     if (l < s.length) {
