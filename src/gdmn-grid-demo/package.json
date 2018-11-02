@@ -33,7 +33,7 @@
     "redux": "^4.0.1",
     "redux-thunk": "^2.3.0",
     "typesafe-actions": "^2.0.4",
-    "typescript": "^3.1.4",
+    "typescript": "^3",
     "gdmn-grid": "^1.0.0",
     "gdmn-recordset": "^1.0.0"
   },
