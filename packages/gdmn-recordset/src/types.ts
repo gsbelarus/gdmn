@@ -39,3 +39,9 @@ export type TDataType = string | number | boolean | Date | null;
 export interface IDataRow {
   [fieldName: string]: TDataType;
 };
+
+export interface IMatchedSubString {
+  str: string;
+  matchFilter?: boolean;
+  matchIndex?: number;
+};

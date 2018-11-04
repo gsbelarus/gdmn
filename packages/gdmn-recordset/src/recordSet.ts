@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { IDataRow, FieldDefs, SortFields, INamedField } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString } from "./types";
 import { IFilter } from "./filter";
 import equal from "fast-deep-equal";
 
@@ -29,7 +29,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     filter: IFilter | undefined = undefined,
     savedData: Data<R> | undefined = undefined)
   {
-    if (!data.size && currentRow) {
+    if (!data.size && (currentRow >= 0)) {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
 
@@ -247,6 +247,46 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       isFilter ? filter : undefined,
       isFilter ? this._savedData || this._data : undefined,
     );
+  }
+
+  public isFiltered = (): boolean => (
+    !!this._filter && !!this._filter.conditions.length && !!this._filter.conditions[0].value
+  )
+
+  public splitMatched(row: number, fieldName: string): IMatchedSubString[] {
+
+    if (row < 0 || row >= this._data.size) {
+      throw new Error(`Invalid row index ${row}`);
+    }
+
+    const rowData = this._data.get(row);
+    const s = rowData[fieldName] ? rowData[fieldName]!.toString() : '';
+
+    if (this.isFiltered()) {
+      const re = new RegExp(this._filter!.conditions[0].value, 'i');
+      const res: IMatchedSubString[] = [];
+      let l = 0;
+      let m = re.exec(s);
+
+      while(m !== null) {
+        if (m.index) {
+          res.push({ str: m.input.substr(0, m.index) });
+          l = l + m.index;
+        }
+        res.push({ str: m.input.substr(m.index, m[0].length), matchFilter: true });
+        l = l + m[0].length;
+        m = re.exec(m.input.substr(m.index + m[0].length));
+      }
+
+      if (res.length) {
+        if (l < s.length) {
+          res.push({ str: s.substr(l) });
+        }
+        return res;
+      }
+    }
+
+    return [{ str: s }];
   }
 };
 

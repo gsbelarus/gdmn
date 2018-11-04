@@ -4,7 +4,7 @@ import { nbrbCurrencies, INBRBCurrency } from './nbrbcurrencies';
 
 describe('recordset', () => {
 
-  it('test', () => {
+  it('creation', () => {
 
     const fieldDefs = [
       {
