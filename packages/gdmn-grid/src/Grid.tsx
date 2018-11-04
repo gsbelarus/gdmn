@@ -869,17 +869,19 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const rowClass = fixed ? ''
         : currentRow === rowIndex && adjustedColumnIndex === currentCol ? styles.CurrentCell
         : currentRow === rowIndex ? styles.CurrentRow
-        : rs.allRowsSelected || rs.selectedRows[rowIndex] ? styles.SelectedRow
+        : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex]) ? styles.SelectedRow
         : rowIndex % 2 === 0 ? styles.EvenRow
         : styles.OddRow;
 
       const cellText = rs.isFiltered() ?
-        rs.splitMatched(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName).map(
-          (s, idx) => (s.matchFilter ?
-            <span key={idx} className="FilterMatchedHighlight">{s.str}</span>
-            :
-            s.str)
-        )
+        <span>
+          {rs.splitMatched(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName).map(
+            (s, idx) => (s.matchFilter ?
+              <span key={idx} className="FilterMatchedHighlight">{s.str}</span>
+              :
+              s.str)
+          )}
+        </span>
         :
         rs.data.get(rowIndex)[columns[adjustedColumnIndex].fields[0].fieldName];
 
