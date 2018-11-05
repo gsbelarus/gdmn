@@ -7,8 +7,7 @@
     "declarationDir": "./dist/definitions",
     "jsx": "react",
     "preserveConstEnums": true,
-    "resolveJsonModule": true,
-    "lib": ["es2015", "es2018", "dom"]
+    "resolveJsonModule": true
   },
   "exclude": [
     "./dist",
