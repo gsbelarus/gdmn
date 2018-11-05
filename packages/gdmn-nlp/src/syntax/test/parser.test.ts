@@ -22,22 +22,19 @@ describe("parser", () => {
     expect((pp!.items[1] as RusWord).word).toEqual('минска');
   });
 
-  /*
+
   test("vp1", () => {
-    const result = parsePhrase('отсортируй по названиям');
+    const result = parsePhrase('отсортируй по названию');
     const vp = result.phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
     expect(verb.word).toEqual('отсортируй');
-    const np = vp!.items[1] as RusNP;
-    const pp = np!.items[0] as RusPP;
-    const pp1 = np!.items[1] as RusPP;
-    expect(pp1).toBeUndefined();
-    expect((pp!.items[0] as RusWord).word).toEqual('по');
-    expect((pp!.items[1] as RusWord).word).toEqual('названиям');
+    const pp = vp!.items[1] as RusPP;
+    expect((pp.items[0] as RusWord).word).toEqual('по');
+    expect((pp!.items[1] as RusWord).word).toEqual('названию');
   });
-  */
+
 
   test("vp2", () => {
     const result = parsePhrase('покажи минские организации');

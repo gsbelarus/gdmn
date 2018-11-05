@@ -1,7 +1,9 @@
 import { Lexer, createToken, IToken, TokenType } from "chevrotain";
 import { AnyWord } from "../morphology/morphology";
 import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType } from "../morphology/types";
-import { RusNoun, RusAdjective, RusPreposition } from "..";
+import { RusNoun } from "../morphology/rusNoun";
+import { RusAdjective } from "../morphology/rusAdjective";
+import { RusPreposition } from "../morphology/rusPreposition";
 
 export interface IMorphToken extends IToken {
   word: AnyWord;
@@ -51,11 +53,11 @@ export const morphTokens = (() => {
    * Предлоги
    */
   [
-    PrepositionType.Place, 
-    PrepositionType.Object, 
-    PrepositionType.Time, 
-    PrepositionType.Reason, 
-    PrepositionType.Goal, 
+    PrepositionType.Place,
+    PrepositionType.Object,
+    PrepositionType.Time,
+    PrepositionType.Reason,
+    PrepositionType.Goal,
     PrepositionType.Comparative
   ].forEach( prepositionType =>
     signatures.push(RusPreposition.getSignature(prepositionType))

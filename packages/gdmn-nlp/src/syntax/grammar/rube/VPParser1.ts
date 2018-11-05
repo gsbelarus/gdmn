@@ -4,7 +4,7 @@ import { morphTokens } from "../../rusMorphTokens";
 /**
  * Грамматика для фразы типа "Покажи все организации из Минска"
  */
-export class VPParser extends Parser {
+export class VPParser1 extends Parser {
   constructor() {
     super(morphTokens);
     Parser.performSelfAnalysis(this);
