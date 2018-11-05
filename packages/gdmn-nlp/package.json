@@ -6,7 +6,7 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "rimraf ./dist",
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",

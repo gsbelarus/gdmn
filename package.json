@@ -8,9 +8,11 @@
     "src/*"
   ],
   "scripts": {
-    "start": "cd ./src/gdmn-back && yarn start",
+    "start:back": "cd ./src/gdmn-back && yarn start",
+    "start:grid-demo": "cd ./src/gdmn-grid-demo && yarn start",
+    "start": "lerna run start --parallel",
     "compile": "lerna run compile",
-    "clean": "lerna run clean",
+    "clean": "lerna run clean --parallel",
     "build": "lerna run build",
     "rebuild": "lerna run rebuild",
     "lint": "lerna run lint",

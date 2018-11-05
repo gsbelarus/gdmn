@@ -3,15 +3,13 @@
   "version": "1.0.0",
   "description": "gdmn-grid-demo",
   "private": true,
-  "main": "dist/src/index.js",
+  "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "yarn run build && node server.js",
+    "start": "yarn run build && node ./server.js",
     "build": "tsc && ./node_modules/.bin/webpack",
     "clean": "rimraf ./dist",
-    "rebuild": "yarn clean && yarn build",
-    "watch": "echo \"Just run yarn start and webpack will do increment compilation\" && exit 0"
+    "rebuild": "yarn clean && yarn build"
   },
   "keywords": [],
   "author": "",
