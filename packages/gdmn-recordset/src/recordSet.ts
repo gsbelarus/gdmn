@@ -83,6 +83,21 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._foundRows;
   }
 
+  get foundNodes(): FoundNodes | undefined {
+    return !this._foundRows ? undefined : this._foundRows.reduce(
+      (c, r) => {
+        if (r) {
+          r.forEach( n => c.push(n) );
+        }
+        return c;
+      }, []
+    );
+  }
+
+  get foundNodesCount() {
+    return this._foundRows ? this._foundRows.reduce( (c, r) => r ? c + r.length : c, 0 ) : 0;
+  }
+
   private checkFields(fields: INamedField[]) {
     fields.forEach( f => {
       if (!this._fieldDefs.find( fd => fd.fieldName === f.fieldName )) {
@@ -283,7 +298,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     this._data.forEach(
       (v, rowIdx) => {
-        if (v) {
+        if (v && typeof rowIdx === 'number') {
           const foundNodes: FoundNodes = [];
           Object.entries(v).forEach( ([fieldName, fieldValue]) => {
             if (!fieldValue) return;
@@ -294,6 +309,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
             while(m !== null) {
               foundNodes.push({
+                rowIdx,
                 fieldName,
                 matchStart: m.index + b,
                 matchLen: m[0].length,
@@ -303,7 +319,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
               m = re.exec(m.input.substr(b));
             }
           });
-          if (foundNodes.length && typeof rowIdx === 'number') {
+          if (foundNodes.length) {
             foundRows[rowIdx] = foundNodes;
           }
         }

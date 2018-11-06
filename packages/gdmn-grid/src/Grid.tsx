@@ -103,7 +103,7 @@ export function visibleToIndex(columns: Columns, visibleIndex: number) {
 
 type AdjustColumnIndexFunc = (gridColumnIndex: number) => number;
 
-export type ScrollIntoView = (recordIndex: number) => void;
+export type ScrollIntoView = (recordIndex: number, columnIndex?: number) => void;
 
 export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _leftSideHeaderGrid: Grid | undefined;
@@ -183,9 +183,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     this._scrollIntoView = undefined;
   }
 
-  public scrollIntoView: ScrollIntoView = (recordIndex: number = -1) => {
+  public scrollIntoView: ScrollIntoView = (recordIndex: number = -1, columnIndex?: number) => {
     if (this._scrollIntoView) {
-      this._scrollIntoView(recordIndex);
+      this._scrollIntoView(recordIndex, columnIndex);
     }
   }
 
@@ -240,32 +240,54 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const bodyCountRows = Math.floor(bodyHeight / rowHeight);
       const bodyBottomRow =  Math.floor((scrollTop + bodyHeight) / rowHeight);
 
-      this._scrollIntoView = (recordIndex: number) => {
-        const ri = recordIndex < 0 ? currentRow : recordIndex;
-        const rTop = ri * rowHeight;
-
-        let newScrollTop: number;
-
+      this._scrollIntoView = (recordIndex: number, columnIndex?: number) => {
         if (!bodyHeight) {
           return;
         }
 
+        let newScrollTop: number;
+
+        const ri = recordIndex < 0 ? currentRow : recordIndex;
+        const rTop = ri * rowHeight;
+
         if (rTop >= scrollTop && rTop <= scrollTop + bodyHeight - rowHeight) {
-          return;
+          newScrollTop = scrollTop;
+        } else {
+          if (rTop <= bodyHeight - rowHeight) {
+            newScrollTop = 0;
+          }
+          else if (scrollHeight - rTop <= bodyHeight) {
+            newScrollTop = scrollHeight - bodyHeight;
+          }
+          else {
+            newScrollTop = rTop - Math.floor((bodyHeight - rowHeight) / 2);
+          }
         }
 
-        if (rTop <= bodyHeight - rowHeight) {
-          newScrollTop = 0;
-        }
-        else if (scrollHeight - rTop <= bodyHeight) {
-          newScrollTop = scrollHeight - bodyHeight;
-        }
-        else {
-          newScrollTop = rTop - Math.floor((bodyHeight - rowHeight) / 2);
+        let newScrollLeft = scrollLeft;
+
+        if (typeof columnIndex === 'number') {
+          const bodyColumnIndex = columnIndex - leftSideColumns;
+
+          if (bodyColumnIndex >= 0 && bodyColumnIndex < bodyColumns) {
+            const cellWidth = getBodyColumnWidth({index: bodyColumnIndex});
+
+            let cellLeft = 0;
+            for (let index = 0; index <= bodyColumnIndex; index++) {
+              cellLeft += getBodyColumnWidth({index});
+            }
+
+            if (cellLeft < scrollLeft) {
+              newScrollLeft = cellLeft;
+            }
+            else if (cellLeft >= scrollLeft + bodyWidth - cellWidth) {
+              newScrollLeft = cellLeft - bodyWidth + cellWidth;
+            }
+          }
         }
 
         onScroll({
-          scrollLeft,
+          scrollLeft: newScrollLeft,
           scrollTop: newScrollTop
         });
       };
@@ -343,6 +365,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         }
 
         onSetCursorPos(newCol, newRow);
+
+        console.log(`${offsetTop} - ${offsetLeft}`);
 
         if (offsetTop || offsetLeft) {
           onScroll({

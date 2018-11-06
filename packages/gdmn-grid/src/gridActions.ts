@@ -100,5 +100,11 @@ export const setSearchText = createAction('GRID/SET_SEARCH_TEXT', resolve => {
 
 export type SetSearchText = typeof setSearchText;
 
+export const setSearchIdx = createAction('GRID/SET_SEARCH_IDX', resolve => {
+  return (params: WithComponentName<{ searchIdx: number }>) => resolve(params);
+});
+
+export type SetSearchIdx = typeof setSearchIdx;
+
 
 

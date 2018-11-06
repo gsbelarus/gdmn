@@ -14,6 +14,7 @@ export interface GridComponentState {
   hideFooter: boolean;
   sortDialog: boolean;
   searchText: string;
+  searchIdx: number;
 };
 
 export interface GridReducerState {
@@ -44,7 +45,8 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         hideHeader: false,
         hideFooter: false,
         sortDialog: false,
-        searchText: ''
+        searchText: '',
+        searchIdx: 0
       }
     };
   }
@@ -233,7 +235,12 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
 
     case getType(actions.setSearchText): {
       const { searchText } = action.payload;
-      return {...state, [componentName]: {...componentState, searchText}};
+      return {...state, [componentName]: {...componentState, searchText, searchIdx: 0}};
+    }
+
+    case getType(actions.setSearchIdx): {
+      const { searchIdx } = action.payload;
+      return {...state, [componentName]: {...componentState, searchIdx}};
     }
 
     default:

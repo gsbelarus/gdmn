@@ -18,6 +18,7 @@ export interface IGDMNGridPanelProps {
   hideHeader: boolean,
   sortDialog: boolean,
   searchText: string,
+  searchIdx: number,
   onSortDialog: () => void,
   onScrollIntoView: () => void,
   onSetFixedColumns: (fixedColumns: number) => void,
@@ -28,7 +29,8 @@ export interface IGDMNGridPanelProps {
   onToggleHideFooter: () => void,
   onToggleHideHeader: () => void,
   onSetFilter: (filter: string) => void,
-  onSearch: (searchText: string) => void
+  onSearch: (searchText: string) => void,
+  onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => void
 };
 
 export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
@@ -47,7 +49,7 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
       rightSideColumns, onSetFixedTailColumns, rs, currentCol,
       selectRows, onSetSelectRows, hideFooter, hideHeader,
       onToggleHideFooter, onToggleHideHeader, onSortDialog,
-      onScrollIntoView, onGoToRow, searchText } = this.props;
+      onScrollIntoView, onGoToRow, searchText, searchIdx, onJumpToSearch } = this.props;
     const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     const currentRow = rs.currentRow;
     return (
@@ -89,13 +91,13 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
             name="search"
             size={40}
           />
-          <button>
+          <button onClick={ () => onJumpToSearch(searchIdx, 1, rs, columns) }>
             ▽
           </button>
-          <button>
+          <button onClick={ () => onJumpToSearch(searchIdx, -1, rs, columns) }>
             △
           </button>
-          {rs.foundRows ? `${rs.foundRows.reduce( (c, r) => r ? c + 1 : c, 0 )} matches` : ''}
+          {rs.foundRows ? `${searchIdx + 1} of ${rs.foundNodesCount} matches` : ''}
         </div>
       </div>
     );

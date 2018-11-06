@@ -275,5 +275,6 @@
 .SearchMatchedHighlight {
   background-color: limegreen;
   color: white;
+  padding: 1px;
 }
 

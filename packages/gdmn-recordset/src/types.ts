@@ -47,6 +47,7 @@ export interface IMatchedSubString {
 };
 
 export interface IFoundNode {
+  rowIdx: number;
   fieldName: string;
   matchStart: number;
   matchLen: number;
@@ -56,3 +57,4 @@ export interface IFoundNode {
 export type FoundNodes = IFoundNode[];
 
 export type FoundRows = FoundNodes[];
+
