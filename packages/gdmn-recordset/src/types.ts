@@ -43,5 +43,16 @@ export interface IDataRow {
 export interface IMatchedSubString {
   str: string;
   matchFilter?: boolean;
-  matchIndex?: number;
+  foundIdx?: number;
 };
+
+export interface IFoundNode {
+  fieldName: string;
+  matchStart: number;
+  matchLen: number;
+  foundIdx: number;
+};
+
+export type FoundNodes = IFoundNode[];
+
+export type FoundRows = FoundNodes[];

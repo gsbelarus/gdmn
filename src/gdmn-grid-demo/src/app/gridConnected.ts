@@ -1,4 +1,4 @@
-import { GDMNGrid, IColumn } from "gdmn-grid";
+import { GDMNGrid, IColumn, setSearchText } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
 import { GridAction } from "gdmn-grid";
@@ -20,7 +20,7 @@ import {
   cancelSortDialog,
   applySortDialog,
 } from "gdmn-grid";
-import { RecordSet, setFilter } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -138,6 +138,11 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
             dispatch(setFilter({name: rs.name, filter: undefined }))
           }
         },
+      onSearch:
+        (searchText: string) => {
+          dispatch(setSearchText({ name, searchText }));
+          dispatch(doSearch({ name: rs.name, re: searchText ? new RegExp(searchText, 'i') : undefined }))
+        }
     })
   )(GDMNGridPanel);
 };

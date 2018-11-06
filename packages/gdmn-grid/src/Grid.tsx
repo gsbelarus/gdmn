@@ -873,11 +873,16 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         : rowIndex % 2 === 0 ? styles.EvenRow
         : styles.OddRow;
 
-      const cellText = rs.isFiltered() ?
+      const cellText = rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
         <span>
           {rs.splitMatched(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName).map(
-            (s, idx) => (s.matchFilter ?
-              <span key={idx} className="FilterMatchedHighlight">{s.str}</span>
+            (s, idx) => (s.matchFilter || s.foundIdx ?
+              <span
+                key={idx}
+                className={cn({'FilterMatchedHighlight': s.matchFilter, 'SearchMatchedHighlight': s.foundIdx})}
+              >
+                {s.str}
+              </span>
               :
               s.str)
           )}

@@ -272,3 +272,8 @@
   padding: 1px;
 }
 
+.SearchMatchedHighlight {
+  background-color: limegreen;
+  color: white;
+}
+

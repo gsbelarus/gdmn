@@ -94,5 +94,11 @@ export const applySortDialog = createAction('GRID/APPLY_SORT_DIALOG', resolve =>
 
 export type ApplySortDialog = typeof applySortDialog;
 
+export const setSearchText = createAction('GRID/SET_SEARCH_TEXT', resolve => {
+  return (params: WithComponentName<{ searchText: string }>) => resolve(params);
+});
+
+export type SetSearchText = typeof setSearchText;
+
 
 

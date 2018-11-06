@@ -68,6 +68,11 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
       return newState(rs.setFilter(filter));
     }
 
+    case getType(actions.doSearch): {
+      const { re } = action.payload;
+      return newState(rs.search(re));
+    }
+
     default:
       return state;
   }

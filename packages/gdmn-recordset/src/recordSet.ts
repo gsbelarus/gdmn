@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, IFoundNode, FoundRows, FoundNodes } from "./types";
 import { IFilter } from "./filter";
 import equal from "fast-deep-equal";
 
@@ -17,6 +17,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _selectedRows: boolean[];
   private _filter: IFilter | undefined;
   private _savedData: Data<R> | undefined;
+  private _foundRows: FoundRows | undefined;
 
   constructor (
     name: string,
@@ -27,7 +28,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     allRowsSelected: boolean = false,
     selectedRows: boolean[] = [],
     filter: IFilter | undefined = undefined,
-    savedData: Data<R> | undefined = undefined)
+    savedData: Data<R> | undefined = undefined,
+    foundRows: FoundRows | undefined = undefined)
   {
     if (!data.size && (currentRow >= 0)) {
       throw new Error(`For an empty record set currentRow must be 0`);
@@ -46,6 +48,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._selectedRows = selectedRows;
     this._filter = filter;
     this._savedData = savedData;
+    this._foundRows = foundRows;
   }
 
   get fieldDefs() {
@@ -74,6 +77,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get filter() {
     return this._filter;
+  }
+
+  get foundRows() {
+    return this._foundRows;
   }
 
   private checkFields(fields: INamedField[]) {
@@ -149,11 +156,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._allRowsSelected,
       this._selectedRows,
       this._filter,
-      this._savedData
+      this._savedData,
+      this._foundRows
     );
   }
 
-  public setAllRowsSelected(value: boolean) {
+  public setAllRowsSelected(value: boolean): RecordSet<R> {
     if (value === this.allRowsSelected) {
       return this;
     }
@@ -167,7 +175,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       value,
       value ? [] : this._selectedRows,
       this._filter,
-      this._savedData
+      this._savedData,
+      this._foundRows
     );
   }
 
@@ -194,7 +203,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       allRowsSelected,
       allRowsSelected ? [] : selectedRows,
       this._filter,
-      this._savedData
+      this._savedData,
+      this._foundRows
     );
   }
 
@@ -253,6 +263,80 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     !!this._filter && !!this._filter.conditions.length && !!this._filter.conditions[0].value
   )
 
+  public search(re: RegExp | undefined): RecordSet<R> {
+    if (!re) {
+      return new RecordSet<R>(
+        this.name,
+        this._fieldDefs,
+        this._data,
+        this._currentRow,
+        this._sortFields,
+        this._allRowsSelected,
+        this._selectedRows,
+        this._filter,
+        this._savedData
+      );
+    }
+
+    const foundRows: FoundRows = [];
+    let foundIdx = 1;
+
+    this._data.forEach(
+      (v, rowIdx) => {
+        if (v) {
+          const foundNodes: FoundNodes = [];
+          Object.entries(v).forEach( ([fieldName, fieldValue]) => {
+            if (!fieldValue) return;
+
+            const s = fieldValue.toString();
+            let b = 0;
+            let m = re.exec(s);
+
+            while(m !== null) {
+              foundNodes.push({
+                fieldName,
+                matchStart: m.index + b,
+                matchLen: m[0].length,
+                foundIdx: foundIdx++
+              });
+              b = m.index + m[0].length;
+              m = re.exec(m.input.substr(b));
+            }
+          });
+          if (foundNodes.length && typeof rowIdx === 'number') {
+            foundRows[rowIdx] = foundNodes;
+          }
+        }
+      }
+    );
+
+    /*
+    let nearestRow = this._currentRow;
+    let minDistance = this._data.size;
+
+    foundNodes.forEach( fn => {
+      const distance = Math.abs(fn.rowIdx - this._currentRow);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestRow = fn.rowIdx;
+      }
+    });
+    */
+
+    return new RecordSet<R>(
+      this.name,
+      this._fieldDefs,
+      this._data,
+      this._currentRow,
+      this._sortFields,
+      this._allRowsSelected,
+      this._selectedRows,
+      this._filter,
+      this._savedData,
+      foundRows.length ? foundRows : undefined
+    );
+  }
+
   public splitMatched(row: number, fieldName: string): IMatchedSubString[] {
 
     if (row < 0 || row >= this._data.size) {
@@ -261,6 +345,35 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const rowData = this._data.get(row);
     const s = rowData[fieldName] ? rowData[fieldName]!.toString() : '';
+
+    if (this._foundRows && this._foundRows[row]) {
+      const foundNodes = this._foundRows[row].filter( fn => fn.fieldName === fieldName );
+
+      if (foundNodes.length) {
+        const res: IMatchedSubString[] = [];
+        let b = 0;
+        foundNodes.forEach(
+          fn => {
+            if (b < fn.matchStart) {
+              res.push({
+                str: s.substr(b, fn.matchStart - b),
+              });
+            }
+            res.push({
+              str: s.substr(fn.matchStart, fn.matchLen),
+              foundIdx: fn.foundIdx
+            });
+            b = fn.matchStart + fn.matchLen;
+          }
+        );
+        if (b < s.length) {
+          res.push({
+            str: s.substr(b),
+          });
+        }
+        return res;
+      }
+    }
 
     if (this.isFiltered()) {
       const re = new RegExp(this._filter!.conditions[0].value, 'i');

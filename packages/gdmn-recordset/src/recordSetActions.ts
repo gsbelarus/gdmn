@@ -46,3 +46,9 @@ export const setFilter = createAction('RECORDSET/SET_FILTER', resolve => {
 });
 
 export type SetFilter = typeof setFilter;
+
+export const doSearch = createAction('RECORDSET/SEARCH', resolve => {
+  return (params: WithComponentName<{ re: RegExp | undefined }>) => resolve(params);
+});
+
+export type DoSearch = typeof doSearch;

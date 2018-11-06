@@ -17,6 +17,7 @@ export interface IGDMNGridPanelProps {
   hideFooter: boolean,
   hideHeader: boolean,
   sortDialog: boolean,
+  searchText: string,
   onSortDialog: () => void,
   onScrollIntoView: () => void,
   onSetFixedColumns: (fixedColumns: number) => void,
@@ -26,7 +27,8 @@ export interface IGDMNGridPanelProps {
   onSetSelectRows: (value: boolean) => void,
   onToggleHideFooter: () => void,
   onToggleHideHeader: () => void,
-  onSetFilter: (filter: string) => void
+  onSetFilter: (filter: string) => void,
+  onSearch: (searchText: string) => void
 };
 
 export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
@@ -35,13 +37,17 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
     this.props.onSetFilter(e.target.value);
   }
 
+  private handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.props.onSearch(e.target.value);
+  }
+
   render() {
     const {
       columns, onToggle, leftSideColumns, onSetFixedColumns,
       rightSideColumns, onSetFixedTailColumns, rs, currentCol,
       selectRows, onSetSelectRows, hideFooter, hideHeader,
       onToggleHideFooter, onToggleHideHeader, onSortDialog,
-      onScrollIntoView, onGoToRow } = this.props;
+      onScrollIntoView, onGoToRow, searchText } = this.props;
     const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     const currentRow = rs.currentRow;
     return (
@@ -71,6 +77,25 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
             name="filter"
             size={40}
           />
+        </div>
+        <div>
+          <label htmlFor="search">
+            Search:
+          </label>
+          <input
+            type="text"
+            onChange={this.handleSearch}
+            value={searchText}
+            name="search"
+            size={40}
+          />
+          <button>
+            ▽
+          </button>
+          <button>
+            △
+          </button>
+          {rs.foundRows ? `${rs.foundRows.reduce( (c, r) => r ? c + 1 : c, 0 )} matches` : ''}
         </div>
       </div>
     );
