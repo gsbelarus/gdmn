@@ -15,11 +15,21 @@
     "gdmn-orm": "1.0.0",
     "@stomp/stompjs": "5.0.0",
     "es6-error": "4.1.1",
+    "i18next": "11.6.0",
+    "i18next-browser-languagedetector": "2.2.3",
+    "i18next-fetch-backend": "0.1.0",
+    "i18next-localstorage-cache": "1.1.1",
+    "intl": "1.2.5",
+    "intl-format-cache": "2.1.0",
     "jwt-decode": "2.2.0",
+    "react-i18next": "7.10.1",
     "rxjs": "6.3.3"
   },
   "devDependencies": {
+    "@types/i18next-browser-languagedetector": "2.0.1",
+    "@types/intl": "1.2.0",
     "@types/jwt-decode": "2.2.1",
+    "@types/react-i18next": "7.8.1",
     "rimraf": "2.6.2",
     "tslint": "5.11.0",
     "typescript": "^3"
