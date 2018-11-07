@@ -11,13 +11,14 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "gdmn-nlp-agent": "^1.0.0",
-    "gdmn-orm": "^1.0.0"
+    "gdmn-nlp-agent": "1.0.0",
+    "gdmn-orm": "1.0.0",
+    "es6-error": "4.1.1"
   },
   "devDependencies": {
     "rimraf": "2.6.2",
     "tslint": "5.11.0",
-    "typescript": "^3"
+    "typescript": "latest"
   },
   "private": true,
   "version": "1.0.0"
