@@ -13,6 +13,8 @@ interface IAccountLoginResponse {
   token_type: string;
 }
 
+type TAccountRefreshTokenResponse = IAccountLoginResponse;
+
 type TAccountCreateResponse = IAccountLoginResponse;
 
 interface IAppCreateRequest {
@@ -56,6 +58,7 @@ export {
   IAccountLoginRequest,
   IAccountCreateRequest,
   IAccountLoginResponse,
+  TAccountRefreshTokenResponse,
   TAccountCreateResponse,
   IAppCreateRequest,
   IAppCreateResponse,
