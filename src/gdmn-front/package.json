@@ -11,6 +11,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
+    "gdmn-nlp-agent": "^1.0.0",
     "gdmn-orm": "^1.0.0"
   },
   "devDependencies": {
