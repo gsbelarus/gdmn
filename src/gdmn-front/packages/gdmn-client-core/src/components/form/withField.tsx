@@ -11,7 +11,6 @@ function withField(mapFieldProps: any, WrappedComponent: any) {
     };
   }
 
-  // @ts-ignore // fixme
     if (process.env.NODE_ENV !== 'production') {
     // TODO
     const displayName = wrapDisplayName(WrappedComponent, 'withField');

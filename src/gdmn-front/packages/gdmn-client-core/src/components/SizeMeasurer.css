@@ -1,0 +1,41 @@
+.root {
+  position: relative;
+}
+
+.triggers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  z-index: -1;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.expand {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+
+.contract {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  overflow: auto
+}
+
+.contract-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+}

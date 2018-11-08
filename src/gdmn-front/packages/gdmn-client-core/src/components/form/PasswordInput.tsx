@@ -4,7 +4,6 @@ import { TextFieldProps } from '@material-ui/core/TextField/TextField';
 import { Visibility, VisibilityOff } from '@material-ui/icons';
 import CSSModules from 'react-css-modules';
 
-// @ts-ignore // fixme
 const styles = require('./PasswordInput.css');
 
 interface IPasswordInputProps extends TextFieldProps {
