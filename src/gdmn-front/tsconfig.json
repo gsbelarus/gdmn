@@ -15,7 +15,10 @@
     "noImplicitThis": true,
     "noImplicitAny": true,
     "paths": {
-      "@core/*": ["src/app/core/*"],
+      "@gdmn/client-core": ["packages/gdmn-client-core/src/index.ts"],
+      "@gdmn/server-api": ["packages/gdmn-server-api/src/index.ts"],
+      "@gdmn/data-grid-core": ["packages/data-grid-core/src/index.ts"],
+      "@gdmn/data-grid-mui": ["packages/data-grid-mui/src/index.ts"],
       "@src/*": ["src/*"]
     },
     "rootDir": "src"
