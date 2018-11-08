@@ -1,5 +1,5 @@
 import jwtDecode from 'jwt-decode';
-import {IAccessToken, IRefreshToken, IJwtToken} from '@gdmn/server-api';
+import { IAccessToken, IRefreshToken, IJwtToken } from '@gdmn/server-api';
 
 import { WebStorage } from './WebStorage';
 

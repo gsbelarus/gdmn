@@ -25,10 +25,13 @@ function withSelection<P extends IInjectedSelectionProps>(WrappedComponent: Comp
   }
 
   const enhanced = compose(
-    setDisplayName(wrapDisplayName(
+    setDisplayName(
+      wrapDisplayName(
         // @ts-ignore // fixme
         WrappedComponent,
-        'withSelection')),
+        'withSelection'
+      )
+    ),
     setStatic('WrappedComponent', WrappedComponent),
     defaultProps({ selectable: true })
   )(WithSelection as any);

@@ -28,17 +28,16 @@ function withSelectorSelection<P extends IInjectedSelectorSelectionProps>(Wrappe
 
       return (
         <WrappedSelectableComponent {...selectableProps as any}>
-          {SelectorCell &&
-            children && (
-              <SelectorCell
-                selectorDisabled={!selectable}
-                selectorChecked={selected}
-                onSelectorToggle={() => {
-                  // console.log('SelectorCell-onSelectorToggle');
-                  // onSelectionToggle();
-                }}
-              />
-            )}
+          {SelectorCell && children && (
+            <SelectorCell
+              selectorDisabled={!selectable}
+              selectorChecked={selected}
+              onSelectorToggle={() => {
+                // console.log('SelectorCell-onSelectorToggle');
+                // onSelectionToggle();
+              }}
+            />
+          )}
           {children}
         </WrappedSelectableComponent>
       );

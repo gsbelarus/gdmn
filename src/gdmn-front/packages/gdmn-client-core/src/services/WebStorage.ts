@@ -1,4 +1,4 @@
-import {bytesToMb} from '../utils/helpers';
+import { bytesToMb } from '../utils/helpers';
 
 interface IWebStorage {
   get(key: string): Promise<any>;
@@ -58,7 +58,7 @@ class WebStorage implements IWebStorage {
       /*
        * FIXME localStorage.hasOwnProperty doesn't exist in IE8 and is outright broken in Opera.
        * Source: https://shanetomlinson.com/2012/localstorage-bugs-inconsistent-removeitem-delete/
-      */
+       */
       if (this.storage.hasOwnProperty(`${this.options.namespace}${key}`)) {
         this.storage.removeItem(`${this.options.namespace}${key}`);
       }

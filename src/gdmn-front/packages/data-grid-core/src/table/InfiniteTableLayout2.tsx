@@ -1,14 +1,8 @@
 import React, { Component, Fragment } from 'react';
 import { AutoSizer, List } from 'react-virtualized';
 
-import {
-  ITableColumn,
-  TableLayout as CoreTableLayout
-} from './TableLayout';
-import {
-    IInfiniteTableLayoutProps,
-    InfiniteTableLayout
-} from './InfiniteTableLayout';
+import { ITableColumn, TableLayout as CoreTableLayout } from './TableLayout';
+import { IInfiniteTableLayoutProps, InfiniteTableLayout } from './InfiniteTableLayout';
 
 type IInfiniteTableLayoutProps2 = IInfiniteTableLayoutProps & { heavyWeightRow?: boolean };
 
@@ -101,26 +95,23 @@ class InfiniteTableLayout2 extends Component<IInfiniteTableLayoutProps2, any> {
 
     return (
       <ScrollContainer style={{ overflow: 'auto' }}>
-        {!!headRows.length &&
-          HeadTable &&
-          Head &&
-          HeadCell && (
-            <HeadTable style={{ minWidth }}>
-              {/*{ColGroup && (*/}
-              {/*<ColGroup>*/}
-              {/*{columns.map(column => <Col key={column.id} style={{ width: column.widthPx }} column={column} />)}*/}
-              {/*</ColGroup>*/}
-              {/*)}*/}
-              <Head>
-                {!!headRows &&
-                  headRows.map(row => (
-                    <Row key={row.id}>
-                      {HeadCell && columns.map(column => <HeadCell key={column.id} column={column} rowData={row} />)}
-                    </Row>
-                  ))}
-              </Head>
-            </HeadTable>
-          )}
+        {!!headRows.length && HeadTable && Head && HeadCell && (
+          <HeadTable style={{ minWidth }}>
+            {/*{ColGroup && (*/}
+            {/*<ColGroup>*/}
+            {/*{columns.map(column => <Col key={column.id} style={{ width: column.widthPx }} column={column} />)}*/}
+            {/*</ColGroup>*/}
+            {/*)}*/}
+            <Head>
+              {!!headRows &&
+                headRows.map(row => (
+                  <Row key={row.id}>
+                    {HeadCell && columns.map(column => <HeadCell key={column.id} column={column} rowData={row} />)}
+                  </Row>
+                ))}
+            </Head>
+          </HeadTable>
+        )}
         <BodyTable style={{ minWidth }}>
           {/*{ColGroup && (*/}
           {/*<ColGroup>*/}

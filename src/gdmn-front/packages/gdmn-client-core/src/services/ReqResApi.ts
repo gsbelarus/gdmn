@@ -1,13 +1,14 @@
 import {
-    IAccountLoginResponse,
-    IResponseError,
-    TAccountCreateResponse, TAccountRefreshTokenResponse
+  IAccountLoginResponse,
+  IResponseError,
+  TAccountCreateResponse,
+  TAccountRefreshTokenResponse
 } from '@gdmn/server-api';
 
 import { HttpError, httpErrorFactory } from '../errors/httpErrors';
 import { FetchError } from '../errors/FetchError';
 import { HttpStatusError } from '../errors/HttpStatusError';
-import {Auth} from './Auth';
+import { Auth } from './Auth';
 
 const enum THttpMethod {
   POST = 'POST',

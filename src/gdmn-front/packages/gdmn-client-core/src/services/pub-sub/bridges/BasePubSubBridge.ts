@@ -25,7 +25,7 @@ abstract class BasePubSubBridge<
   TConnectMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
   TDisconnectMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
   TSubcribeMeta extends IPubSubMessageMeta = IPubSubMessageMeta
-  > {
+> {
   // connect status
   public connectionStatusObservable: BehaviorSubject<TPubSubConnectStatus> = new BehaviorSubject<TPubSubConnectStatus>(
     TPubSubConnectStatus.DISCONNECTED

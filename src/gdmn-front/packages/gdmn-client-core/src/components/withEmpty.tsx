@@ -7,11 +7,14 @@ interface IWithEmptyProps {
 }
 
 function withEmpty<P>(WrappedComponent: ComponentType<P>) {
-    return compose<P, P & IWithEmptyProps>(
-    setDisplayName(wrapDisplayName(
+  return compose<P, P & IWithEmptyProps>(
+    setDisplayName(
+      wrapDisplayName(
         // @ts-ignore // fixme
         WrappedComponent,
-        'withEmpty')),
+        'withEmpty'
+      )
+    ),
     setStatic('WrappedComponent', WrappedComponent),
     branch<P & IWithEmptyProps>(({ empty }) => !!empty, renderComponent<IWithEmptyProps>(({ emptySlot }) => emptySlot))
   )(WrappedComponent); // todo hoistStatics

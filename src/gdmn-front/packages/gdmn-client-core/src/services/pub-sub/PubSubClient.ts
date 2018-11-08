@@ -8,7 +8,6 @@ import {
   TPubSubMsgPublishStatus
 } from './bridges/BasePubSubBridge';
 
-
 interface IPubSubMessageMeta {
   [key: string]: string | undefined;
 }

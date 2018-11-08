@@ -1,6 +1,6 @@
 import React, { Fragment, Key, PureComponent, ReactType } from 'react';
 import { findDOMNode } from 'react-dom';
-import {RefWrapper, SizeMeasurer} from "@gdmn/client-core";
+import { RefWrapper, SizeMeasurer } from '@gdmn/client-core';
 
 import { ITableColumn, ITableLayoutProps, ITableRow, TableLayout } from './TableLayout';
 

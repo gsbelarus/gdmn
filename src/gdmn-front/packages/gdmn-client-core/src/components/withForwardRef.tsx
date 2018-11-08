@@ -16,11 +16,12 @@ function withForwardRef(WrappedComponent: ComponentType<any>) {
     setStatic('WrappedComponent', WrappedComponent)
   )(WithForwardRef as any);
 
-
-    return hoistNonReactStatics(forwardRef(enhanced as any),
-      // @ts-ignore // fixme
-      WrappedComponent,
-      { $$typeof: true, render: true }); // TODO hoistStatics(forwardRef(enhanced), { $$typeof: true, render: true })(WrappedComponent);
+  return hoistNonReactStatics(
+    forwardRef(enhanced as any),
+    // @ts-ignore // fixme
+    WrappedComponent,
+    { $$typeof: true, render: true }
+  ); // TODO hoistStatics(forwardRef(enhanced), { $$typeof: true, render: true })(WrappedComponent);
 }
 
 // const hasForwardRef = WrappedComponent => WrappedComponent.$$typeof && typeof WrappedComponent.render === 'function';

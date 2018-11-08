@@ -4,11 +4,7 @@ import MuiTableCell, { TableCellProps as MuiTableCellProps } from '@material-ui/
 import { StyleRulesCallback } from '@material-ui/core/styles/withStyles';
 import { WithStyles } from '@material-ui/core/styles';
 import { withStyles, TextSkeleton } from '@gdmn/client-core';
-import {
-  ITableCellProps as ICoreTableCellProps,
-  ITableColumn,
-  TableCell as CoreTableCell
-} from '@gdmn/data-grid-core';
+import { ITableCellProps as ICoreTableCellProps, ITableColumn, TableCell as CoreTableCell } from '@gdmn/data-grid-core';
 
 type TTableCellClassKey = 'cell' | 'cellRightAlign' | 'cellCenterAlign' | 'cellNoWrap';
 const styles: StyleRulesCallback<TTableCellClassKey> = theme => ({

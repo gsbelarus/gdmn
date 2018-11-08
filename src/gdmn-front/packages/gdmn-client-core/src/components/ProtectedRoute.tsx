@@ -1,8 +1,7 @@
 import React, { SFC } from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';
 
-import {UserRoleType} from '../services/Auth';
-
+import { UserRoleType } from '../services/Auth';
 
 const enum RouteAccessLevelType {
   PUBLIC,

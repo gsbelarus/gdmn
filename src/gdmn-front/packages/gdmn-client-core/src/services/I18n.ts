@@ -6,8 +6,8 @@ import { reactI18nextModule } from 'react-i18next';
 // @ts-ignore
 import i18nextLocalstorageCache from 'i18next-localstorage-cache';
 
-import {L10n} from './L10n';
-import {promisify} from '../utils/helpers';
+import { L10n } from './L10n';
+import { promisify } from '../utils/helpers';
 
 const DEFAULT_LANG_CODE = 'en';
 const DEFAULT_CURRENCY = 'USD';

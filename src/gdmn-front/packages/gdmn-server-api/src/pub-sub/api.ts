@@ -1,6 +1,6 @@
 import { IEntityQueryInspector, IERModel, IQueryResponse } from 'gdmn-orm';
 
-import {IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta} from './protocol';
+import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 
 enum TGdmnTopic {
   TASK = '/task',

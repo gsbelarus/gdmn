@@ -35,26 +35,26 @@ function formatDateToLocalLong(date: Date, locale: string = 'ru-RU') {
 }
 
 function generateGuid() {
-    return (
-        generateS4() +
-        generateS4() +
-        '-' +
-        generateS4() +
-        '-' +
-        generateS4() +
-        '-' +
-        generateS4() +
-        '-' +
-        generateS4() +
-        generateS4() +
-        generateS4()
-    );
+  return (
+    generateS4() +
+    generateS4() +
+    '-' +
+    generateS4() +
+    '-' +
+    generateS4() +
+    '-' +
+    generateS4() +
+    '-' +
+    generateS4() +
+    generateS4() +
+    generateS4()
+  );
 }
 
 function generateS4() {
-    return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1);
+  return Math.floor((1 + Math.random()) * 0x10000)
+    .toString(16)
+    .substring(1);
 }
 
 export { promisify, isDevMode, Subtract, bytesToMb, formatDateToLocalLong, generateGuid };

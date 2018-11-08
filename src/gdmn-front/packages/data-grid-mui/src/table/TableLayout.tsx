@@ -3,10 +3,7 @@ import classNames from 'classnames';
 import { StyleRulesCallback } from '@material-ui/core/styles/withStyles';
 import { Paper } from '@material-ui/core';
 import { IWithStyles } from '@gdmn/client-core';
-import {
-  ITableLayoutProps as ICoreTableLayoutProps,
-  TableLayout as CoreTableLayout
-} from '@gdmn/data-grid-core';
+import { ITableLayoutProps as ICoreTableLayoutProps, TableLayout as CoreTableLayout } from '@gdmn/data-grid-core';
 
 import { Table } from './Table';
 import { TableBody } from './_/TableBody';

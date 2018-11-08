@@ -6,7 +6,8 @@ import {
   Versions,
   messageCallbackType,
   frameCallbackType,
-  debugFnType, closeEventCallbackType
+  debugFnType,
+  closeEventCallbackType
 } from '@stomp/stompjs';
 import { Observable, Subject, Subscription, Subscriber } from 'rxjs';
 import { share } from 'rxjs/operators';
@@ -24,7 +25,7 @@ import {
   TPubSubMsgPublishStatus
 } from './BasePubSubBridge';
 import { IPubSubMessage } from '../PubSubClient';
-import {generateGuid} from '../../../utils/helpers';
+import { generateGuid } from '../../../utils/helpers';
 
 interface IStompServiceConfig {
   /**
@@ -105,7 +106,8 @@ class WebStomp extends BasePubSubBridge<
       // this.client!.debug(`Stomp not initialized, no need to disconnect.`);
       return;
     }
-    if (!this.client.connected) { // todo || DISCONNECTING
+    if (!this.client.connected) {
+      // todo || DISCONNECTING
       this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
       return;
     }
@@ -209,7 +211,8 @@ class WebStomp extends BasePubSubBridge<
   }
 
   private onWebSocketClose: closeEventCallbackType = (evt: CloseEvent) => {
-    if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) { // todo
+    if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) {
+      // todo
       this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting
     }
   };

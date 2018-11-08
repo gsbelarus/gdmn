@@ -1,6 +1,6 @@
 import ExtendableError from 'es6-error';
 
-import {IResponseError, TResponseErrorCode} from '@gdmn/server-api';
+import { IResponseError, TResponseErrorCode } from '@gdmn/server-api';
 
 class HttpError extends ExtendableError {
   readonly statusCode: number;

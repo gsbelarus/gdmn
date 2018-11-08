@@ -16,10 +16,13 @@ import { TableSelectorCell } from './TableSelectorCell';
 
 function withLayoutSelection<P extends ITableLayoutProps>(LayoutComponent: ComponentType<P>) {
   const enhanced = compose<P, P>(
-    setDisplayName(wrapDisplayName(
+    setDisplayName(
+      wrapDisplayName(
         // @ts-ignore // fixme
         LayoutComponent,
-        'withLayoutSelection')),
+        'withLayoutSelection'
+      )
+    ),
     setStatic('WrappedComponent', LayoutComponent),
     defaultProps({
       // TODO -> static
