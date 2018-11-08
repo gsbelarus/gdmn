@@ -30,6 +30,7 @@
     "react-dom": "16.4.2",
     "react-i18next": "7.10.1",
     "react-router-dom": "4.3.1",
+    "react-virtualized": "9.20.1",
     "recompose": "0.27.0",
     "rxjs": "6.3.3"
   },
@@ -44,6 +45,7 @@
     "@types/react-dom": "16.0.7",
     "@types/react-i18next": "7.8.1",
     "@types/react-router-dom": "4.3.0",
+    "@types/react-virtualized": "9.18.5",
     "@types/recompose": "0.27.0",
     "rimraf": "2.6.2",
     "tslint": "5.11.0",
