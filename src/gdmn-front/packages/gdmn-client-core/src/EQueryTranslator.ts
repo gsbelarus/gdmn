@@ -1,5 +1,5 @@
 import { EntityAttribute, EntityLink, EntityQuery, EntityQueryField, EntityQueryOptions } from 'gdmn-orm';
-import {Determiner, ICommand, ICommandObject} from 'gdmn-nlp-agent/src/command'; // fixme: gdmn-nlp-agent
+import { Determiner, ICommand, ICommandObject } from 'gdmn-nlp-agent';
 
 class EQueryTranslator {
   public static process(command: ICommand): EntityQuery[] {
@@ -9,8 +9,7 @@ class EQueryTranslator {
           return command.objects.map(commandObject => {
             const fields = Object.values(commandObject.entity.attributes).reduce(
               (eFields, attribute) => {
-                // @ts-ignore
-                if (!EntityAttribute.isType(attribute)) { // fixme: EntityAttribute.isType
+                if (!(attribute instanceof EntityAttribute)) {
                   eFields.push(new EntityQueryField(attribute));
                 }
                 return eFields;
