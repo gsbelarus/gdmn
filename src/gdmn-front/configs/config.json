@@ -1,0 +1,16 @@
+{
+  "webpack": {
+    "appMountNodeId": "app",
+    "buildPath": "/dist"
+  },
+  "server": {
+    "http": {
+      "host": "http://localhost",
+      "port": 4000
+    },
+    "paths": {
+      "clientRoot": "/spa"
+    },
+    "authScheme": "Bearer"
+  }
+}
