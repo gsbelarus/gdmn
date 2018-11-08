@@ -1,0 +1,38 @@
+# Build
+packages/*/dist
+/dist
+/build
+
+# Dependency directories
+node_modules
+
+# Logs
+logs
+*.log
+lerna-debug.log
+yarn-debug.log*
+yarn-error.log*
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# IntelliJ IDE
+.idea
+
+# Visual Studio Code
+.vscode
+.history
+
+Thumbs.db
+Desktop.ini
+.DS_Store*
+ehthumbs.db
+
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+.awcache/
+mock-data.json
