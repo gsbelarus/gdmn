@@ -1,8 +1,6 @@
 import jwtDecode from 'jwt-decode';
+import {IAccessToken, IRefreshToken, IJwtToken} from '@gdmn/server-api';
 
-import {IAccessToken} from '../../../gdmn-server-api/src/IAccessToken'; // todo: @
-import {IRefreshToken} from '../../../gdmn-server-api/src/IRefreshToken';
-import {IJwtToken} from '../../../gdmn-server-api/src/IJwtToken';
 import { WebStorage } from './WebStorage';
 
 const enum UserRoleType {

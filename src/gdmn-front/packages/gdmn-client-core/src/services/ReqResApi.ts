@@ -1,11 +1,12 @@
-import { HttpError, httpErrorFactory } from '../errors/httpErrors'; // todo: @
-import { FetchError } from '../errors/FetchError';
-import { HttpStatusError } from '../errors/HttpStatusError';
 import {
     IAccountLoginResponse,
     IResponseError,
     TAccountCreateResponse, TAccountRefreshTokenResponse
-} from '../../../gdmn-server-api/src/request-response/api';
+} from '@gdmn/server-api';
+
+import { HttpError, httpErrorFactory } from '../errors/httpErrors';
+import { FetchError } from '../errors/FetchError';
+import { HttpStatusError } from '../errors/HttpStatusError';
 import {Auth} from './Auth';
 
 const enum THttpMethod {
