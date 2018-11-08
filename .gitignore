@@ -1,4 +1,5 @@
 # Custom
+build
 dist
 packages/*/dist
 src/*/dist
