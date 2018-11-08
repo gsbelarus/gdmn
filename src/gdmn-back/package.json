@@ -6,7 +6,7 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "start": "yarn build && ./dist/src/index.js",
+    "start": "yarn build && node ./dist/src/index.js",
     "nodemon": "nodemon",
     "clean": "rimraf ./dist",
     "build": "tsc",
