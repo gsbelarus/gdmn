@@ -1,17 +1,30 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist/src",
-    "declaration": true,
-    "declarationMap": true,
-    "declarationDir": "./dist/definitions",
-    "typeRoots": [
-      "node_modules/@types",
-      "./typings"
-    ]
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "outDir": "./build",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "paths": {
+      "@core/*": ["src/app/core/*"],
+      "@src/*": ["src/*"]
+    },
+    "rootDir": "src"
   },
   "exclude": [
-    "./dist",
-    "./test"
+    "build",
+    "configs",
+    "dist",
+    "node_modules",
+    "scripts"
   ]
 }
