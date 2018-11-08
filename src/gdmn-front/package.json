@@ -5,7 +5,6 @@
     "start": "tsc",
     "test": "yarn build && jest",
     "clean": "rimraf dist",
-    "rebuild": "yarn clean && yarn build",
     "tslint": "tslint --project .",
     "watch": "tsc -w"
   },

@@ -6,8 +6,8 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "start": "yarn build && nodemon",
-    "debug": "yarn build && nodemon --inspect --inspect-port=9229",
+    "start": "yarn build && ./dist/src/index.js",
+    "nodemon": "nodemon",
     "clean": "rimraf ./dist",
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",

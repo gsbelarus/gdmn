@@ -8,17 +8,16 @@
     "src/*"
   ],
   "scripts": {
-    "start:back": "cd ./src/gdmn-back && yarn start",
-    "start:grid-demo": "cd ./src/gdmn-grid-demo && yarn start",
     "start": "lerna run start --parallel",
-    "compile": "lerna run compile",
+    "start:back": "cd ./src/gdmn-back && yarn start",
+    "start:front": "cd ./src/gdmn-front && yarn start",
+    "start:grid-demo": "cd ./src/gdmn-grid-demo && yarn start",
     "clean": "lerna run clean --parallel",
     "build": "lerna run build",
     "rebuild": "lerna run rebuild",
     "lint": "lerna run lint",
     "test": "lerna run test",
     "bootstrap": "lerna bootstrap",
-    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
     "watch": "lerna run watch"
   },
   "devDependencies": {
