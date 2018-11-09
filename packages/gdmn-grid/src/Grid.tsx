@@ -68,17 +68,18 @@ export const styles = {
   BodyFooter: 'BodyFooter',
   SideFooterGrid: 'SideFooterGrid',
   BodyFooterGrid: 'BodyFooterGrid',
-  CurrentCell: 'CurrentCell',
-  CurrentRow: 'CurrentRow',
-  EvenRow: 'EvenRow',
-  OddRow: 'OddRow',
-  SelectedRow: 'SelectedRow',
-  Cell: 'Cell',
-  OuterCell: 'OuterCell',
+  CurrentCellBackground: 'CurrentCellBackground',
+  CurrentRowBackground: 'CurrentRowBackground',
+  EvenRowBackground: 'EvenRowBackground',
+  OddRowBackground: 'OddRowBackground',
+  SelectedBackground: 'SelectedBackground',
+  CellColumn: 'CellColumn',
+  CellRow: 'CellRow',
   CellMarkArea: 'CellMarkArea',
   HeaderCell: 'HeaderCell',
   FooterCell: 'FooterCell',
-  LeftSideCell: 'LeftSideCell',
+  FixedCell: 'FixedCell',
+  FixedBackground: 'FixedBackground',
   CellCaption: 'CellCaption',
   DataCell: 'DataCell',
   LeftSideGrid: 'LeftSideGrid',
@@ -90,7 +91,10 @@ export const styles = {
   GridColumnSortDesc: 'GridColumnSortDesc',
   GridColumnDragging: 'GridColumnDragging',
   DragHandleIcon: 'DragHandleIcon',
-  GroupHeaderExpanded: 'GroupHeaderExpanded'
+  GroupHeaderBackground: 'GroupHeaderBackground',
+  BorderBottom: 'BorderBottom',
+  BorderRightBottom: 'BorderRightBottom',
+  FixedBorder: 'FixedBorder'
 };
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -471,7 +475,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               height: sbSize
             }}
           >
-            <div className={cn(styles.Cell, styles.RightSideCellFooter, styles.LeftSideCellFooter)}></div>
+            <div className={cn(styles.CellColumn, styles.RightSideCellFooter, styles.LeftSideCellFooter)}></div>
           </div>
         :
           <div className={styles.SideFooter}>
@@ -524,7 +528,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                   height: headerHeight
                 }}
               >
-                <div className={cn(styles.Cell, styles.HeaderCell)}></div>
+                <div className={cn(styles.CellColumn, styles.HeaderCell)}></div>
               </div>
             }
           </div>;
@@ -639,7 +643,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               height: sbSize
             }}
           >
-            <div className={cn(styles.Cell, styles.RightSideCellFooter)}></div>
+            <div className={cn(styles.CellColumn, styles.RightSideCellFooter)}></div>
           </div>
         </div>
         :
@@ -755,7 +759,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       if (selectRows && !adjustedColumnIndex) {
         const classNames = cn(
-          styles.OuterCell,
+          styles.CellRow,
           styles.HeaderCell,
           sortOrder === 'ASC' ? styles.GridColumnSortAsc
             : sortOrder === 'DESC' ? styles.GridColumnSortDesc
@@ -786,7 +790,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 : '☐'
               }
             </div>
-            <div className={styles.Cell}>
+            <div className={styles.CellColumn}>
               <div
                 className={styles.CellCaption}
                 onClick={
@@ -804,7 +808,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           </div>;
       } else {
         const classNames = cn(
-          styles.Cell,
+          styles.CellColumn,
           styles.HeaderCell,
           sortOrder === 'ASC' ? styles.GridColumnSortAsc
             : sortOrder === 'DESC' ? styles.GridColumnSortDesc
@@ -899,12 +903,32 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const currentRow = rs.currentRow;
       const adjustedColumnIndex = adjustFunc(columnIndex);
       const rowData = rs.get(rowIndex);
-      const rowClass = fixed ? ''
-        : currentRow === rowIndex ? (adjustedColumnIndex === currentCol ? styles.CurrentCell : styles.CurrentRow)
-        : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex]) ? styles.SelectedRow
-        : rowData.type === TRowType.HeaderExpanded ? styles.GroupHeaderExpanded
-        : rowIndex % 2 === 0 ? styles.EvenRow
-        : styles.OddRow;
+      const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
+
+      const backgroundClass = fixed ? (groupHeader ? styles.GroupHeaderBackground : styles.FixedBackground)
+        : currentRow === rowIndex ? (adjustedColumnIndex === currentCol ? styles.CurrentCellBackground : styles.CurrentRowBackground)
+        : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex]) ? styles.SelectedBackground
+        : groupHeader ? styles.GroupHeaderBackground
+        : rowIndex % 2 === 0 ? styles.EvenRowBackground
+        : styles.OddRowBackground;
+
+      const borderClass = groupHeader ? styles.BorderBottom
+        : fixed ? styles.FixedBorder
+        : styles.BorderRightBottom;
+
+      const cellClass = fixed ? styles.FixedCell
+        : styles.DataCell;
+
+      if (groupHeader && adjustedColumnIndex) {
+        return (
+          <div
+            className={cn(backgroundClass, borderClass)}
+            key={key}
+            style={style}
+            onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
+          />
+        );
+      }
 
       const cellText = rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
         <span>
@@ -938,7 +962,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-      const groupTriangle = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed ?
+      const groupTriangle = (rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed) ?
         <div
           className={styles.CellMarkArea}
           onClick={
@@ -953,36 +977,39 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-      const cellFilling = (checkMark || groupTriangle) ?
-        <div className={styles.Cell}>
-          {cellText}
-        </div>
-        :
-        cellText;
 
-      const classNames = cn(
-        rowClass,
-        checkMark || groupTriangle ? styles.OuterCell : styles.Cell,
-        fixed ? styles.LeftSideCell : styles.DataCell,
-      );
-
-      return (
-        <div
-          className={classNames}
-          key={key}
-          style={style}
-          onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
-        >
-          {checkMark}
-          {groupTriangle}
-          {cellFilling}
-        </div>
-      );
+      if (checkMark || groupTriangle) {
+        return (
+          <div
+            className={cn(backgroundClass, borderClass, styles.CellRow)}
+            key={key}
+            style={style}
+            onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
+          >
+            {checkMark}
+            {groupTriangle}
+            <div className={cn(styles.CellColumn, cellClass)}>
+              {cellText}
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div
+            className={cn(backgroundClass, borderClass, styles.CellColumn, cellClass)}
+            key={key}
+            style={style}
+            onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
+          >
+            {cellText}
+          </div>
+        );
+      }
     };
 
   private _getFooterCellRenderer = (adjustFunc: AdjustColumnIndexFunc, _fixed: boolean) =>
     ({columnIndex, key, style}: GridCellProps) => {
-      const classNames = cn(styles.Cell, styles.FooterCell);
+      const classNames = cn(styles.CellColumn, styles.FooterCell);
 
       return (
         <div

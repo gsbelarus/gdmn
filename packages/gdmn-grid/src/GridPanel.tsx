@@ -30,7 +30,9 @@ export interface IGDMNGridPanelProps {
   onToggleHideHeader: () => void,
   onSetFilter: (filter: string) => void,
   onSearch: (searchText: string) => void,
-  onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => void
+  onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => void,
+  onCollapseAll: () => void,
+  onExpandAll: () => void
 };
 
 export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
@@ -49,7 +51,8 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
       rightSideColumns, onSetFixedTailColumns, rs, currentCol,
       selectRows, onSetSelectRows, hideFooter, hideHeader,
       onToggleHideFooter, onToggleHideHeader, onSortDialog,
-      onScrollIntoView, onGoToRow, searchText, searchIdx, onJumpToSearch } = this.props;
+      onScrollIntoView, onGoToRow, searchText, searchIdx, onJumpToSearch,
+      onCollapseAll, onExpandAll } = this.props;
     const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     const currentRow = rs.currentRow;
     return (
@@ -67,6 +70,12 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
         </button>
         <button onClick={onScrollIntoView}>
           Scroll into view...
+        </button>
+        <button onClick={onCollapseAll}>
+          Collapse
+        </button>
+        <button onClick={onExpandAll}>
+          Expand
         </button>
         <div>
           <label htmlFor="filter">

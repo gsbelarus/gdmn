@@ -37,10 +37,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
 
-    if (data.size && currentRow >= data.size) {
-      throw new Error('Invalid currentRow value');
-    }
-
     this.name = name;
     this._fieldDefs = fieldDefs;
     this._data = data;
@@ -52,6 +48,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._savedData = savedData;
     this._foundRows = foundRows;
     this._groups = groups;
+
+    if (this.size && currentRow >= this.size) {
+      throw new Error('Invalid currentRow value');
+    }
   }
 
   get fieldDefs() {
@@ -125,7 +125,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const lastGroup = groups[groupsCount - 1];
 
     if (rowIdx < 0 || rowIdx >= lastGroup.rowIdx + lastGroup.rowCount + 2) {
-      throw new Error(`Invalid row index ${rowIdx}`);
+      throw new Error(`findGroup: invalid row index ${rowIdx}`);
     }
 
     let approxGroupIdx = Math.floor(groupsCount * rowIdx / (lastGroup.rowIdx + (lastGroup.collapsed ? 0 : lastGroup.rowCount) + 2));
@@ -167,11 +167,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     if (group.footer) {
       return {
         data: group.footer,
-        type: group.collapsed ? TRowType.HeaderCollapsed : TRowType.Footer
+        type: TRowType.Footer
       };
     }
 
-    throw new Error(`Invalid row index ${rowIdx}`);
+    throw new Error(`get: invalid row index ${rowIdx}`);
   }
 
   public toArray(): IRow<R>[] {
@@ -283,7 +283,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             bufferEndIdx++;
           }
 
-          const rowCount = bufferEndIdx - bufferBeginIdx - 1;
+          const rowCount = bufferEndIdx - bufferBeginIdx;
 
           if (rowCount > 0) {
             res.push(
@@ -354,6 +354,38 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     );
 
     return res;
+  }
+
+  public collapseExpandGroups(collapse: boolean): RecordSet<R> {
+    if (!this._groups) {
+      throw new Error(`Not in grouping mode`);
+    }
+
+    const newGroups = [...this._groups];
+    let delta = 0;
+
+    for (let i = 0; i < newGroups.length - 1; i++) {
+      newGroups[i] = {
+        ...newGroups[i],
+        rowIdx: newGroups[i].rowIdx + (collapse ? -delta : delta),
+        collapsed: collapse
+      };
+      delta += newGroups[i].rowCount;
+    }
+
+    return new RecordSet<R>(
+      this.name,
+      this._fieldDefs,
+      this._data,
+      0,
+      this._sortFields,
+      this._allRowsSelected,
+      [],
+      this._filter,
+      this._savedData,
+      undefined,
+      newGroups
+    );
   }
 
   public moveBy(delta: number): RecordSet<R> {
@@ -573,7 +605,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   public splitMatched(row: number, fieldName: string): IMatchedSubString[] {
 
     if (row < 0 || row >= this.size) {
-      throw new Error(`Invalid row index ${row}`);
+      throw new Error(`splitMatched: invalid row index ${row}`);
     }
 
     const rowData = this.get(row).data;

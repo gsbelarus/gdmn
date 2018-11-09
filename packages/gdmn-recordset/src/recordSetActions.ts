@@ -58,3 +58,9 @@ export const toggleGroup = createAction('RECORDSET/TOGGLE_GROUP', resolve => {
 });
 
 export type ToggleGroup = typeof toggleGroup;
+
+export const collapseExpandGroups = createAction('RECORDSET/COLLAPSE_EXPAND_GROUPS', resolve => {
+  return (params: WithComponentName<{ collapse: boolean }>) => resolve(params);
+});
+
+export type CollapseExpandGroups = typeof collapseExpandGroups;

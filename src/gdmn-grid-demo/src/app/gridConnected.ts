@@ -20,7 +20,7 @@ import {
   cancelSortDialog,
   applySortDialog,
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -132,6 +132,10 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         () => dispatch(toggleHideFooter({name})),
       onToggleHideHeader:
         () => dispatch(toggleHideHeader({name})),
+      onCollapseAll:
+        () => dispatch(collapseExpandGroups({ name: rs.name, collapse: true })),
+      onExpandAll:
+        () => dispatch(collapseExpandGroups({ name: rs.name, collapse: false })),
       onSetFilter:
         (filter: string) => {
           if (filter) {

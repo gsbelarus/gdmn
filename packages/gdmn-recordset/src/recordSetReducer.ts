@@ -78,6 +78,11 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
       return newState(rs.toggleGroup(rowIdx));
     }
 
+    case getType(actions.collapseExpandGroups): {
+      const { collapse } = action.payload;
+      return newState(rs.collapseExpandGroups(collapse));
+    }
+
     default:
       return state;
   }

@@ -83,15 +83,15 @@
   color: black;
 }
 
-.CurrentRow {
+.CurrentRowBackground {
   background-color: cadetblue;
 }
 
-.CurrentCell {
+.CurrentCellBackground {
   background-color: aquamarine;
 }
 
-.OuterCell {
+.CellRow {
   display: flex;
   flex-direction: row;
   flex-flow: nowrap;
@@ -113,7 +113,7 @@
   padding-left: calc(.5em - 1px);
 }
 
-.Cell {
+.CellColumn {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -123,19 +123,32 @@
 }
 
 .DataCell {
-  border-right: 1px solid darkgray;
-  border-bottom: 1px solid darkgray;
   text-align: left;
 }
 
-.LeftSideCell {
+.BorderRightBottom {
+  border-right: 1px solid darkgray;
+  border-bottom: 1px solid darkgray;
+}
+
+.BorderBottom {
+  border-bottom: 1px solid darkgray;
+}
+
+.FixedCell {
   font-weight: bold;
   text-align: left;
   align-items: left;
+}
+
+.FixedBorder {
   border-top: whitesmoke 1px solid;
   border-left: whitesmoke 1px solid;
   border-bottom: gray 1px solid;
   border-right: gray 1px solid;
+}
+
+.FixedBackground {
   background-color: lightgray;
 }
 
@@ -174,17 +187,21 @@
   border-right: lightblue 1px solid;
 }
 
-.EvenRow {
+.EvenRowBackground {
   background-color: rgb(247, 243, 231);
 }
 
-.OddRow {
+.OddRowBackground {
   background-color: rgb(231, 231, 214);
 }
 
-.SelectedRow {
+.SelectedBackground {
   background-color: rgba(255, 200, 200);
   transition: background 0.4s;
+}
+
+.GroupHeaderBackground {
+  background-color: palegoldenrod;
 }
 
 .HeaderGrid {
@@ -278,7 +295,5 @@
   padding: 1px;
 }
 
-.GroupHeaderExpanded {
-  background-color: palegoldenrod;
-}
+
 
