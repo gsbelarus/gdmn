@@ -1,5 +1,5 @@
-import React, { Fragment } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, MenuItem, Select, FormControl, InputLabel, createMuiTheme, MuiThemeProvider, NativeSelect, withStyles } from '@material-ui/core';
+import React from 'react';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, MenuItem, Select, FormControl, createMuiTheme, MuiThemeProvider, withStyles } from '@material-ui/core';
 import cn from 'classnames';
 import './SortDialog.css';
 import { FieldDefs, SortFields } from 'gdmn-recordset';
@@ -107,6 +107,16 @@ const smallButtonStyles = {
 
 const SmallButton = withStyles(smallButtonStyles)(Button);
 
+const smallButtonNoBorderStyles = {
+  root: {
+    maxWidth: '21px',
+    minWidth: '21px',
+    marginRight: '4px'
+  }
+};
+
+const SmallButtonNoBorder = withStyles(smallButtonNoBorderStyles)(Button);
+
 export interface IGDMNSortDialogProps {
   fieldDefs: FieldDefs,
   sortFields: SortFields,
@@ -177,6 +187,22 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
     this.setState({ sortFields });
   }
 
+  onGroupBy = (idx: number) => {
+    const sortFields = [...this.state.sortFields];
+
+    if (sortFields[idx].groupBy) {
+      for (let i=idx; i < sortFields.length; i++) {
+        sortFields[i].groupBy = undefined;
+      }
+    } else {
+      for (let i=0; i <= idx; i++) {
+        sortFields[i].groupBy = true;
+      }
+    }
+
+    this.setState({ sortFields });
+  }
+
   render() {
     const { onCancel, onApply, fieldDefs } = this.props;
     const { sortFields, attnFieldIdx } = this.state;
@@ -188,8 +214,16 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
           </MenuItem>
       );
 
-    const makeRow = (idx: number, fieldName: string, sortOrder: boolean) => (
+    const makeRow = (idx: number, fieldName: string, sortOrder: boolean, groupBy: boolean) => (
       <div key={`row-${fieldName}`} className={cn('GDMNSortDialogRow', { GDMNAttnSortDialogRow: idx >= 0 && idx === attnFieldIdx })}>
+        <SmallButtonNoBorder
+          variant="text"
+          disabled={false}
+          color="primary"
+          onClick={() => this.onGroupBy(idx)}
+        >
+          {groupBy ? '☑' : '☐'}
+        </SmallButtonNoBorder>
         <FormControl>
           <div className="GDMNSortDialogLabel">Поле:</div>
           <Select
@@ -268,7 +302,7 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
           disableTypography={true}
         >
           <div>
-            Сортировка
+            Сортировка и группировка
           </div>
           <div className="GDMNSortDialogCloseButton" onClick={onCancel}>
             ✕
@@ -276,10 +310,10 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="sort-dialog-description">
-            Выберите поле или несколько полей и порядок сортировки.
+            Выберите поле или несколько полей и порядок сортировки. Отметьте галочками поля для группировки.
           </DialogContentText>
             <div className="GDMNSortDialogContainer">
-              {sortFields.map( (sf, idx) => makeRow(idx, sf.fieldName, !!sf.asc) )}
+              {sortFields.map( (sf, idx) => makeRow(idx, sf.fieldName, !!sf.asc, !!sf.groupBy) )}
             </div>
         </DialogContent>
         <DialogActions>
