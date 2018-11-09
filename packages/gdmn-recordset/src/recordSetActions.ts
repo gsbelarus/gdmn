@@ -52,3 +52,9 @@ export const doSearch = createAction('RECORDSET/SEARCH', resolve => {
 });
 
 export type DoSearch = typeof doSearch;
+
+export const toggleGroup = createAction('RECORDSET/TOGGLE_GROUP', resolve => {
+  return (params: WithComponentName<{ rowIdx: number }>) => resolve(params);
+});
+
+export type ToggleGroup = typeof toggleGroup;

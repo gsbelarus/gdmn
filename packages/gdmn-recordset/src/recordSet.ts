@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, IFoundNode, FoundRows, FoundNodes } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, IFoundNode, FoundRows, FoundNodes, IDataGroup, TRowType, TFieldType, TDataType, IRow } from "./types";
 import { IFilter } from "./filter";
 import equal from "fast-deep-equal";
 
@@ -18,6 +18,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _filter: IFilter | undefined;
   private _savedData: Data<R> | undefined;
   private _foundRows: FoundRows | undefined;
+  private _groups?: IDataGroup<R>[];
 
   constructor (
     name: string,
@@ -27,9 +28,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     sortFields: SortFields = [],
     allRowsSelected: boolean = false,
     selectedRows: boolean[] = [],
-    filter: IFilter | undefined = undefined,
-    savedData: Data<R> | undefined = undefined,
-    foundRows: FoundRows | undefined = undefined)
+    filter?: IFilter,
+    savedData?: Data<R>,
+    foundRows?: FoundRows,
+    groups?: IDataGroup<R>[])
   {
     if (!data.size && (currentRow >= 0)) {
       throw new Error(`For an empty record set currentRow must be 0`);
@@ -49,14 +51,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._filter = filter;
     this._savedData = savedData;
     this._foundRows = foundRows;
+    this._groups = groups;
   }
 
   get fieldDefs() {
     return this._fieldDefs;
   }
 
-  get data() {
-    return this._data;
+  get size() {
+    if (this._groups && this._groups.length) {
+      const lg = this._groups[this._groups.length - 1];
+      return lg.rowIdx + 1 + (lg.collapsed ? 0 : lg.rowCount) + (lg.footer ? 1 : 0);
+    } else {
+      return this._data.size;
+    }
   }
 
   get sortFields() {
@@ -106,6 +114,124 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
+  private findGroup(rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
+    const groups = this._groups;
+
+    if (!groups || !groups.length) {
+      throw new Error(`Data is not grouped`);
+    }
+
+    const groupsCount = groups.length;
+    const lastGroup = groups[groupsCount - 1];
+
+    if (rowIdx < 0 || rowIdx >= lastGroup.rowIdx + lastGroup.rowCount + 2) {
+      throw new Error(`Invalid row index ${rowIdx}`);
+    }
+
+    let approxGroupIdx = Math.floor(groupsCount * rowIdx / (lastGroup.rowIdx + (lastGroup.collapsed ? 0 : lastGroup.rowCount) + 2));
+
+    while (approxGroupIdx > 0 && rowIdx < groups[approxGroupIdx].rowIdx) {
+      approxGroupIdx--;
+    }
+
+    while (approxGroupIdx < groupsCount - 1 && rowIdx >= groups[approxGroupIdx + 1].rowIdx) {
+      approxGroupIdx++;
+    }
+
+    return { groupIdx: approxGroupIdx, group: groups[approxGroupIdx] };
+  }
+
+  public get(rowIdx: number): IRow<R> {
+    const groups = this._groups;
+
+    if (!groups || !groups.length) {
+      return { data: this._data.get(rowIdx), type: TRowType.Data };
+    }
+
+    const group = this.findGroup(rowIdx).group;
+
+    if (rowIdx === group.rowIdx) {
+      return {
+        data: group.header,
+        type: group.collapsed ? TRowType.HeaderCollapsed : TRowType.HeaderExpanded
+      };
+    }
+
+    if (rowIdx <= group.rowIdx + group.rowCount ) {
+      return {
+        data: this._data.get(group.bufferIdx + rowIdx - group.rowIdx - 1),
+        type: TRowType.Data
+      };
+    }
+
+    if (group.footer) {
+      return {
+        data: group.footer,
+        type: group.collapsed ? TRowType.HeaderCollapsed : TRowType.Footer
+      };
+    }
+
+    throw new Error(`Invalid row index ${rowIdx}`);
+  }
+
+  public toArray(): IRow<R>[] {
+    const res: IRow<R>[] = [];
+    const size = this.size;
+
+    for (let i = 0; i < size; i++) {
+      res.push(this.get(i));
+    }
+
+    return res;
+  }
+
+  public indexOf(row: IRow<R>): number {
+    const size = this.size;
+    for (let i = 0; i < size; i++) {
+      if (this.get(i) === row) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  public toggleGroup(rowIdx: number): RecordSet<R> {
+    const groups = this._groups;
+
+    if (!groups || !groups.length) {
+      throw new Error(`Data is not grouped`);
+    }
+
+    const fg = this.findGroup(rowIdx);
+    const newGroups = [...groups];
+
+    for (let i = fg.groupIdx + 1; i < groups.length; i++) {
+      newGroups[i] = {
+        ...groups[i],
+        rowIdx: groups[i].rowIdx + (fg.group.collapsed ? fg.group.rowCount : -fg.group.rowCount)
+      };
+    }
+
+    newGroups[fg.groupIdx] = {
+      ...fg.group,
+      collapsed: !fg.group.collapsed
+    };
+
+    return new RecordSet<R>(
+      this.name,
+      this._fieldDefs,
+      this._data,
+      this._currentRow,
+      this._sortFields,
+      this._allRowsSelected,
+      this._selectedRows,
+      this._filter,
+      this._savedData,
+      this._foundRows,
+      newGroups
+    );
+  }
+
   public sort(sortFields: SortFields): RecordSet<R> {
     this.checkFields(sortFields);
 
@@ -113,52 +239,141 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return this;
     }
 
-    const currentRowData = this._data.get(this._currentRow);
-    const selectedRowsData = this._selectedRows.reduce( (p, sr, idx) => { if (sr) { p.push(this._data.get(idx)); } return p; }, [] as R[] );
+    if (!sortFields.length) {
+      return new RecordSet<R>(
+        this.name,
+        this._fieldDefs,
+        this._data,
+        this._currentRow,
+        [],
+        this._allRowsSelected,
+        this._selectedRows,
+        this._filter,
+        this._savedData
+      );
+    }
+
+    const currentRowData = this.get(this._currentRow);
+    const selectedRowsData = this._selectedRows.reduce(
+      (p, sr, idx) => {
+        if (sr) {
+          p.push(this.get(idx));
+        }
+        return p;
+      }, [] as IRow<R>[]
+    );
+
     const sorted = this._data.sort(
       (a, b) => sortFields.reduce(
         (p, f) => p ? p : (a[f.fieldName]! < b[f.fieldName]! ? (f.asc ? -1 : 1) : (a[f.fieldName]! > b[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
       0)
     ).toList();
 
-    return new RecordSet<R>(
+    if (sortFields[0].groupBy) {
+      const groupData = (fieldName: string, level: number, initialRowIdx: number, bufferIdx: number) => {
+        const res: IDataGroup<R>[] = [];
+        let rowIdx = initialRowIdx;
+        let bufferBeginIdx = bufferIdx;
+
+        while (bufferBeginIdx < sorted.size) {
+          let bufferEndIdx = bufferBeginIdx;
+          let value = sorted.get(bufferBeginIdx)[fieldName];
+
+          while (bufferEndIdx < sorted.size && sorted.get(bufferEndIdx)[fieldName] === value) {
+            bufferEndIdx++;
+          }
+
+          const rowCount = bufferEndIdx - bufferBeginIdx - 1;
+
+          if (rowCount > 0) {
+            res.push(
+              {
+                header: sorted.get(bufferBeginIdx),
+                level,
+                collapsed: false,
+                subGroups: [],
+                rowIdx: rowIdx,
+                bufferIdx: bufferBeginIdx,
+                rowCount
+              }
+            );
+            rowIdx += rowCount + 1;
+          }
+
+          bufferBeginIdx = bufferEndIdx;
+        }
+
+        return res;
+      };
+
+      const fieldName = sortFields[0].fieldName;
+      const groups = groupData(fieldName, 0, 0, 0);
+
+      return new RecordSet<R>(
+        this.name,
+        this._fieldDefs,
+        sorted,
+        0,
+        sortFields,
+        false,
+        [],
+        this._filter,
+        this._savedData,
+        undefined,
+        groups
+      );
+    }
+
+    const res = new RecordSet<R>(
       this.name,
       this._fieldDefs,
       sorted,
-      sorted.findIndex( v => v === currentRowData ),
+      0,
       sortFields,
       this._allRowsSelected,
-      selectedRowsData.reduce(
-        (p, srd) => {
-          if (srd) {
-            p[sorted.findIndex( v => v === srd )] = true;
-          }
-          return p;
-        }, [] as boolean[]
-      ),
+      [],
       this._filter,
       this._savedData
     );
+
+    const foundIdx = res.indexOf(currentRowData);
+    if (foundIdx >= 0) {
+      res._currentRow = foundIdx;
+    }
+
+    res._selectedRows = selectedRowsData.reduce(
+      (p, srd) => {
+        if (srd) {
+          const fi = res.indexOf(srd);
+          if (fi >= 0) {
+            p[fi] = true;
+          }
+        }
+        return p;
+      }, [] as boolean[]
+    );
+
+    return res;
   }
 
   public moveBy(delta: number): RecordSet<R> {
-    if (!this._data.size) {
+    if (!this.size) {
       return this;
     }
 
     let newCurrentRow = this._currentRow + delta;
-    if (newCurrentRow >= this._data.size) newCurrentRow = this._data.size - 1;
+    if (newCurrentRow >= this.size) newCurrentRow = this.size - 1;
     if (newCurrentRow < 0) newCurrentRow = 0;
 
     return this.setCurrentRow(newCurrentRow);
   }
 
   public setCurrentRow(currentRow: number): RecordSet<R> {
-    if (!this._data.size || this._currentRow === currentRow) {
+    if (!this.size || this._currentRow === currentRow) {
       return this;
     }
 
-    if (currentRow < 0 || currentRow >= this._data.size) {
+    if (currentRow < 0 || currentRow >= this.size) {
       throw new Error(`Invalid row index`);
     }
 
@@ -172,7 +387,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._selectedRows,
       this._filter,
       this._savedData,
-      this._foundRows
+      this._foundRows,
+      this._groups
     );
   }
 
@@ -191,12 +407,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       value ? [] : this._selectedRows,
       this._filter,
       this._savedData,
-      this._foundRows
+      this._foundRows,
+      this._groups
     );
   }
 
-  public selectRow(idx: number, selected: boolean) {
-    if (idx < 0 || idx >= this._data.size) {
+  public selectRow(idx: number, selected: boolean): RecordSet<R> {
+    if (idx < 0 || idx >= this.size) {
       throw new Error(`Invalid row index`);
     }
 
@@ -204,10 +421,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return this;
     }
 
-    const selectedRows = this.allRowsSelected ? Array(this._data.size).fill(true) : [...this._selectedRows];
+    const selectedRows = this.allRowsSelected ? Array(this.size).fill(true) : [...this._selectedRows];
 
     selectedRows[idx] = selected || undefined;
-    const allRowsSelected = this._data.size === selectedRows.reduce( (p, sr) => sr ? p + 1 : p, 0 );
+    const allRowsSelected = this.size === selectedRows.reduce( (p, sr) => sr ? p + 1 : p, 0 );
 
     return new RecordSet<R>(
       this.name,
@@ -219,7 +436,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       allRowsSelected ? [] : selectedRows,
       this._filter,
       this._savedData,
-      this._foundRows
+      this._foundRows,
+      this._groups
     );
   }
 
@@ -229,13 +447,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     const isFilter = filter && filter.conditions.length;
-    const currentRowData = this._data.get(this._currentRow);
-    const selectedRowsData = this._allRowsSelected ? this._data.toArray()
+    const currentRowData = this.get(this.currentRow);
+    const selectedRowsData = this._allRowsSelected ? this.toArray()
     : this._selectedRows.reduce( (p, sr, idx) =>
       {
-        if (sr) { p.push(this._data.get(idx)); }
+        if (sr) {
+          p.push(this.get(idx));
+        }
         return p;
-      }, [] as R[]);
+      }, [] as IRow<R>[]
+    );
 
     let newData: Data<R>;
 
@@ -251,27 +472,36 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       newData = this._savedData;
     }
 
-    return new RecordSet<R>(
+    const res = new RecordSet<R>(
       this.name,
       this._fieldDefs,
       newData,
-      newData.findIndex( v => v === currentRowData ),
+      0,
       [],
       false,
-      selectedRowsData.reduce(
-        (p, srd) => {
-          if (srd) {
-            const newIndex = newData.findIndex( v => v === srd );
-            if (newIndex >= 0) {
-              p[newIndex] = true;
-            }
-          }
-          return p;
-        }, [] as boolean[]
-      ),
+      [],
       isFilter ? filter : undefined,
-      isFilter ? this._savedData || this._data : undefined,
+      isFilter ? this._savedData || this._data : undefined
     );
+
+    const foundIdx = this.indexOf(currentRowData);
+    if (foundIdx >= 0) {
+      res._currentRow = foundIdx;
+    }
+
+    res._selectedRows = selectedRowsData.reduce(
+      (p, srd) => {
+        if (srd) {
+          const fi = this.indexOf(srd);
+          if (fi >= 0) {
+            p[fi] = true;
+          }
+        }
+        return p;
+      }, [] as boolean[]
+    );
+
+    return res;
   }
 
   public isFiltered = (): boolean => (
@@ -289,16 +519,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         this._allRowsSelected,
         this._selectedRows,
         this._filter,
-        this._savedData
+        this._savedData,
+        undefined,
+        this._groups
       );
     }
 
     const foundRows: FoundRows = [];
     let foundIdx = 1;
 
-    this._data.forEach(
-      (v, rowIdx) => {
-        if (v && typeof rowIdx === 'number') {
+    for(let rowIdx = 0; rowIdx < this.size; rowIdx++) {
+      const v = this.get(rowIdx).data;
           const foundNodes: FoundNodes = [];
           Object.entries(v).forEach( ([fieldName, fieldValue]) => {
             if (!fieldValue) return;
@@ -323,21 +554,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             foundRows[rowIdx] = foundNodes;
           }
         }
-      }
-    );
-
-    /*
-    let nearestRow = this._currentRow;
-    let minDistance = this._data.size;
-
-    foundNodes.forEach( fn => {
-      const distance = Math.abs(fn.rowIdx - this._currentRow);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestRow = fn.rowIdx;
-      }
-    });
-    */
 
     return new RecordSet<R>(
       this.name,
@@ -349,17 +565,18 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._selectedRows,
       this._filter,
       this._savedData,
-      foundRows.length ? foundRows : undefined
+      foundRows.length ? foundRows : undefined,
+      this._groups
     );
   }
 
   public splitMatched(row: number, fieldName: string): IMatchedSubString[] {
 
-    if (row < 0 || row >= this._data.size) {
+    if (row < 0 || row >= this.size) {
       throw new Error(`Invalid row index ${row}`);
     }
 
-    const rowData = this._data.get(row);
+    const rowData = this.get(row).data;
     const s = rowData[fieldName] ? rowData[fieldName]!.toString() : '';
 
     if (this._foundRows && this._foundRows[row]) {

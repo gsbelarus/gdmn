@@ -30,14 +30,38 @@ export type FieldDefs = IFieldDef[];
 
 export interface ISortField extends INamedField {
   asc?: boolean;
+  groupBy?: boolean;
 };
 
 export type SortFields = ISortField[];
 
 export type TDataType = string | number | boolean | Date | null;
 
+export enum TRowType {
+  Data = 0,
+  HeaderCollapsed,
+  HeaderExpanded,
+  Footer
+};
+
 export interface IDataRow {
   [fieldName: string]: TDataType;
+};
+
+export interface IRow<R extends IDataRow = IDataRow> {
+  data: R,
+  type: TRowType
+};
+
+export interface IDataGroup<R extends IDataRow = IDataRow> {
+  header: R;
+  level: number;
+  collapsed: boolean;
+  subGroups: IDataGroup<R>[];
+  footer?: R;
+  rowIdx: number;
+  bufferIdx: number;
+  rowCount: number;
 };
 
 export interface IMatchedSubString {

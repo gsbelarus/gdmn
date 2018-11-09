@@ -73,6 +73,11 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
       return newState(rs.search(re));
     }
 
+    case getType(actions.toggleGroup): {
+      const { rowIdx } = action.payload;
+      return newState(rs.toggleGroup(rowIdx));
+    }
+
     default:
       return state;
   }
