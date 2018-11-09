@@ -4,7 +4,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from "react-draggable";
-import { RecordSet } from 'gdmn-recordset';
+import { RecordSet, TRowType } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { SortFields, TSortOrder, FieldDefs } from 'gdmn-recordset';
 import { SyncScroll, OnScroll } from './SyncScroll';
@@ -39,6 +39,7 @@ export interface IGridProps {
   onSort: (rs: RecordSet, sortFields: SortFields) => void;
   onSelectRow: (idx: number, selected: boolean) => void;
   onSelectAllRows: (value: boolean) => void;
+  onToggleGroup: (rowIdx: number) => void;
 };
 
 export interface IGridState {
@@ -88,7 +89,8 @@ export const styles = {
   GridColumnSortAsc: 'GridColumnSortAsc',
   GridColumnSortDesc: 'GridColumnSortDesc',
   GridColumnDragging: 'GridColumnDragging',
-  DragHandleIcon: 'DragHandleIcon'
+  DragHandleIcon: 'DragHandleIcon',
+  GroupHeaderExpanded: 'GroupHeaderExpanded'
 };
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -145,7 +147,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       //||
       //nextProps.selectedRows !== this.props.selectedRows
       //||
-      //nextProps.rs.data.size < this.props.rs.data.size
+      //nextProps.rs.size < this.props.rs.size
       //||
       (
         !!this.props.columns.find(
@@ -220,7 +222,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       const bodyColumns = columnCount - leftSideColumns - rightSideColumns;
 
-      const rowCount = rs.data.size;
+      const rowCount = rs.size;
       const scrollHeight = rowCount * rowHeight;
       const currentRow = rs.currentRow;
 
@@ -298,7 +300,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
         switch (e.key) {
           case 'ArrowDown':
-            if (currentRow < (rs.data.size - 1)) newRow = currentRow + 1;
+            if (currentRow < rowCount - 1) newRow = currentRow + 1;
             break;
 
           case 'ArrowUp':
@@ -310,17 +312,21 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             break;
 
           case 'ArrowRight':
-            if (currentCol < (columns.length - rightSideColumns - 1)) newCol = currentCol + 1;
+            if (currentCol < columns.length - rightSideColumns - 1) newCol = currentCol + 1;
             break;
 
           case 'PageDown':
-            if (currentRow < (rs.data.size - 1))
-              newRow = currentRow > rs.data.size - 1 - bodyCountRows ? rs.data.size - 1  : bodyBottomRow + (currentRow == bodyBottomRow ? bodyCountRows : 0)
+            if (currentRow < rowCount - 1)
+              newRow = currentRow > rowCount - 1 - bodyCountRows ? rowCount - 1
+              : bodyBottomRow + (currentRow === bodyBottomRow ? bodyCountRows : 0)
             break;
 
           case 'PageUp':
             if (currentRow > 0)
-              newRow = currentRow == rs.data.size ? rs.data.size - 1 : currentRow < bodyCountRows ? 1 : scrollTop == rowHeight*currentRow  ? currentRow - bodyCountRows : Math.floor(scrollTop/rowHeight);
+              newRow = currentRow === rowCount ? rowCount - 1
+              : currentRow < bodyCountRows ? 1
+              : scrollTop === rowHeight * currentRow  ? currentRow - bodyCountRows
+              : Math.floor(scrollTop / rowHeight);
             break;
 
           case 'Home':
@@ -387,11 +393,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
         if (e.altKey) {
           if (e.deltaY > 0) {
-            if (currentRow < rs.data.size - 1)
+            if (currentRow < rowCount - 1)
               newRow = currentRow + 1
-          } else
-          if  (currentRow > 0)
-            newRow = currentRow - 1;
+          } else {
+            if  (currentRow > 0) {
+              newRow = currentRow - 1;
+            }
+          }
 
           const newCellTop = newRow * rowHeight;
           const newCellBottom = newCellTop + rowHeight - 1;
@@ -773,7 +781,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               }
             >
               {
-                rs.allRowsSelected || selectedRowsCount === rs.data.size ? '☑'
+                rs.allRowsSelected || selectedRowsCount === rs.size ? '☑'
                 : selectedRowsCount ? '☒'
                 : '☐'
               }
@@ -887,13 +895,14 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _getRowsCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) =>
     ({columnIndex, key, rowIndex, style}: GridCellProps) => {
-      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow } = this.props;
+      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup } = this.props;
       const currentRow = rs.currentRow;
       const adjustedColumnIndex = adjustFunc(columnIndex);
+      const rowData = rs.get(rowIndex);
       const rowClass = fixed ? ''
-        : currentRow === rowIndex && adjustedColumnIndex === currentCol ? styles.CurrentCell
-        : currentRow === rowIndex ? styles.CurrentRow
+        : currentRow === rowIndex ? (adjustedColumnIndex === currentCol ? styles.CurrentCell : styles.CurrentRow)
         : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex]) ? styles.SelectedRow
+        : rowData.type === TRowType.HeaderExpanded ? styles.GroupHeaderExpanded
         : rowIndex % 2 === 0 ? styles.EvenRow
         : styles.OddRow;
 
@@ -912,56 +921,63 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           )}
         </span>
         :
-        rs.data.get(rowIndex)[columns[adjustedColumnIndex].fields[0].fieldName];
+        rowData.data[columns[adjustedColumnIndex].fields[0].fieldName];
 
-      if (selectRows && !adjustedColumnIndex) {
-        const classNames = cn(
-          rowClass,
-          styles.OuterCell,
-          fixed ? styles.LeftSideCell : styles.DataCell,
-        );
+      const checkMark = selectRows && !adjustedColumnIndex ?
+        <div
+          className={styles.CellMarkArea}
+          onClick={
+            e => {
+              e.stopPropagation();
+              onSelectRow(rowIndex, rs.allRowsSelected ? false : !rs.selectedRows[rowIndex]);
+            }
+          }
+        >
+          {rs.allRowsSelected || rs.selectedRows[rowIndex] ? '☑' : '☐'}
+        </div>
+        :
+        undefined;
 
-        return (
-          <div
-            className={classNames}
-            key={key}
-            style={style}
-            onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
-          >
-            <div
-              className={styles.CellMarkArea}
-              onClick={
-                (e: React.MouseEvent<HTMLDivElement>) => {
-                  e.stopPropagation();
-                  onSelectRow(rowIndex, rs.allRowsSelected ? false : !rs.selectedRows[rowIndex]);
-                }
-              }
-            >
-              {rs.allRowsSelected || rs.selectedRows[rowIndex] ? '☑' : '☐'}
-            </div>
-            <div className={styles.Cell}>
-              {cellText}
-            </div>
-          </div>
-        );
-      } else {
-        const classNames = cn(
-          rowClass,
-          styles.Cell,
-          fixed ? styles.LeftSideCell : styles.DataCell
-        );
+      const groupTriangle = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed ?
+        <div
+          className={styles.CellMarkArea}
+          onClick={
+            e => {
+              e.stopPropagation();
+              onToggleGroup(rowIndex);
+            }
+          }
+        >
+          {rowData.type === TRowType.HeaderCollapsed ? '▷' : '▽'}
+        </div>
+        :
+        undefined;
 
-        return (
-          <div
-            className={classNames}
-            key={key}
-            style={style}
-            onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
-          >
-            {cellText}
-          </div>
-        );
-      }
+      const cellFilling = (checkMark || groupTriangle) ?
+        <div className={styles.Cell}>
+          {cellText}
+        </div>
+        :
+        cellText;
+
+      const classNames = cn(
+        rowClass,
+        checkMark || groupTriangle ? styles.OuterCell : styles.Cell,
+        fixed ? styles.LeftSideCell : styles.DataCell,
+      );
+
+      return (
+        <div
+          className={classNames}
+          key={key}
+          style={style}
+          onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
+        >
+          {checkMark}
+          {groupTriangle}
+          {cellFilling}
+        </div>
+      );
     };
 
   private _getFooterCellRenderer = (adjustFunc: AdjustColumnIndexFunc, _fixed: boolean) =>

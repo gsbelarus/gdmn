@@ -20,7 +20,7 @@ import {
   cancelSortDialog,
   applySortDialog,
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -86,6 +86,8 @@ export function connectGrid(name: string, rs: RecordSet, getGridRef: GetGridRef)
             getGridRef().scrollIntoView(getState().recordSet[rs.name].currentRow);
           }
         ),
+      onToggleGroup:
+        (rowIdx: number) => dispatch(toggleGroup({ name: rs.name, rowIdx }))
     }),
     null,
     { withRef: true }
