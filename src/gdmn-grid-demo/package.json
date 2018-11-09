@@ -7,7 +7,7 @@
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
     "start": "yarn run build && node ./server.js",
-    "build": "tsc && ./node_modules/.bin/webpack",
+    "build": "tsc && webpack",
     "clean": "shx rm -rf ./dist",
     "rebuild": "yarn clean && yarn build"
   },
