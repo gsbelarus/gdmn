@@ -6,7 +6,7 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "clean": "rimraf ./dist",
+    "clean": "shx rm -rf ./dist",
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
@@ -36,6 +36,7 @@
     "@types/node": "^10.12.1",
     "gdmn-er-bridge": "^1.0.0",
     "jest": "^23.6.0",
+    "shx": "^0.3.2",
     "ts-jest": "^23.10.4",
     "ts-node": "^7.0.1",
     "typescript": "^3"

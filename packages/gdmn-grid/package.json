@@ -6,13 +6,13 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "clean": "rimraf ./dist",
+    "clean": "shx rm -rf ./dist",
     "build": "tsc && yarn static",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
     "tslint": "tslint --project .",
     "test": "yarn build && jest",
-    "static": "copyfiles \"./src/*.css\" \"./dist\""
+    "static": "shx mkdir -p ./dist/src && shx cp -r ./src/*.css ./dist/src"
   },
   "repository": {
     "type": "git",
@@ -46,8 +46,8 @@
   "devDependencies": {
     "@types/jest": "^23.3.8",
     "@types/node": "^10.12.1",
-    "copyfiles": "^2.1.0",
     "jest": "^23.6.0",
+    "shx": "^0.3.2",
     "ts-jest": "^23.10.4",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",

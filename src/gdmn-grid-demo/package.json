@@ -8,7 +8,7 @@
   "scripts": {
     "start": "yarn run build && node ./server.js",
     "build": "tsc && ./node_modules/.bin/webpack",
-    "clean": "rimraf ./dist",
+    "clean": "shx rm -rf ./dist",
     "rebuild": "yarn clean && yarn build"
   },
   "keywords": [],
@@ -22,6 +22,8 @@
     "@types/redux-thunk": "^2.1.0",
     "classnames": "^2.2.6",
     "express": "^4.16.4",
+    "gdmn-grid": "^1.0.0",
+    "gdmn-recordset": "^1.0.0",
     "immutable": "^3.8.2",
     "react": "^16",
     "react-dom": "^16",
@@ -31,9 +33,7 @@
     "redux": "^4.0.1",
     "redux-thunk": "^2.3.0",
     "typesafe-actions": "^2.0.4",
-    "typescript": "^3",
-    "gdmn-grid": "^1.0.0",
-    "gdmn-recordset": "^1.0.0"
+    "typescript": "^3"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.1.2",
@@ -43,6 +43,7 @@
     "html-webpack-plugin": "^3.2.0",
     "node-fetch": "^2.2.0",
     "redux-devtools-extension": "^2.13.5",
+    "shx": "^0.3.2",
     "source-map-loader": "^0.2.3",
     "style-loader": "^0.23.1",
     "ts-loader": "^5.2.2",
