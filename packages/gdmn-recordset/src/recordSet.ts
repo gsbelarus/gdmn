@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, IFoundNode, FoundRows, FoundNodes, IDataGroup, TRowType, TFieldType, TDataType, IRow } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc } from "./types";
 import { IFilter } from "./filter";
 import equal from "fast-deep-equal";
 
@@ -10,6 +10,7 @@ export type FilterFunc<R extends IDataRow = IDataRow> = (row: R, idx: number) =>
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
   private _fieldDefs: FieldDefs;
+  private _calcFields: TRowCalcFunc<R> | undefined;
   private _data: Data<R>;
   private _currentRow: number;
   private _sortFields: SortFields;
@@ -21,9 +22,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _foundRows?: FoundRows;
   private _groups?: IDataGroup<R>[];
 
-  constructor (
+  private constructor (
     name: string,
     fieldDefs: FieldDefs,
+    calcFields: TRowCalcFunc<R> | undefined,
     data: Data<R>,
     currentRow: number = 0,
     sortFields: SortFields = [],
@@ -41,6 +43,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     this.name = name;
     this._fieldDefs = fieldDefs;
+    this._calcFields = calcFields;
     this._data = data;
     this._currentRow = currentRow < 0 ? 0 : currentRow;
     this._sortFields = sortFields;
@@ -54,6 +57,33 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     if (this.size && currentRow >= this.size) {
       throw new Error('Invalid currentRow value');
+    }
+  }
+
+  public static createWithData<R extends IDataRow = IDataRow>(
+    name: string,
+    fieldDefs: FieldDefs,
+    data: Data<R>): RecordSet<R>
+  {
+    const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
+
+    if (withCalcFunc.length) {
+      return new RecordSet<R>(
+        name,
+        fieldDefs,
+        (row: R): R => {
+          const res = Object.assign({} as R, row);
+
+          withCalcFunc.forEach(
+            fd => res[fd.fieldName] = fd.calcFunc!(res)
+          );
+
+          return res;
+        },
+        data
+      );
+    } else {
+      return new RecordSet<R>(name, fieldDefs, undefined, data);
     }
   }
 
@@ -148,11 +178,19 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return { groupIdx: approxGroupIdx, group: groups[approxGroupIdx] };
   }
 
-  public get(rowIdx: number): IRow<R> {
+  private _getData(data: List<R>, rowIdx: number): R {
+    if (this._calcFields) {
+      return this._calcFields(data.get(rowIdx));
+    } else {
+      return data.get(rowIdx);
+    }
+  }
+
+  private _get(data: List<R>, rowIdx: number): IRow<R> {
     const groups = this._groups;
 
     if (!groups || !groups.length) {
-      return { data: this._data.get(rowIdx), type: TRowType.Data };
+      return { data: this._getData(data, rowIdx), type: TRowType.Data };
     }
 
     const group = this.findGroup(rowIdx).group;
@@ -167,7 +205,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     if (rowIdx <= group.rowIdx + group.rowCount ) {
       return {
-        data: this._data.get(group.bufferIdx + rowIdx - group.rowIdx - 1),
+        data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1),
         type: TRowType.Data,
         group
       };
@@ -182,6 +220,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     throw new Error(`get: invalid row index ${rowIdx}`);
+  }
+
+  public get(rowIdx: number): IRow<R> {
+    return this._get(this._data, rowIdx);
+  }
+
+  public getString(rowIdx: number, fieldName: string): string {
+    const f = this.get(rowIdx).data[fieldName];
+    return f ? f.toString() : '';
   }
 
   public toArray(): IRow<R>[] {
@@ -230,6 +277,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       this._data,
       this._currentRow,
       this._sortFields,
@@ -254,6 +302,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return new RecordSet<R>(
         this.name,
         this._fieldDefs,
+        this._calcFields,
         this._data,
         this._currentRow,
         [],
@@ -274,7 +323,18 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       }, [] as IRow<R>[]
     );
 
-    const sorted = this._data.sort(
+    // TODO: не оптимально!
+    const sorted = this._calcFields ? this._data.sort(
+      (a, b) => {
+        const calcA = this._calcFields!(a);
+        const calcB = this._calcFields!(b);
+        return sortFields.reduce(
+          (p, f) => p ? p : (calcA[f.fieldName]! < calcB[f.fieldName]! ? (f.asc ? -1 : 1) : (calcA[f.fieldName]! > calcB[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
+        0);
+      }
+    ).toList()
+    :
+    this._data.sort(
       (a, b) => sortFields.reduce(
         (p, f) => p ? p : (a[f.fieldName]! < b[f.fieldName]! ? (f.asc ? -1 : 1) : (a[f.fieldName]! > b[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
       0)
@@ -288,16 +348,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
         while (bufferBeginIdx < sorted.size) {
           let bufferEndIdx = bufferBeginIdx;
-          let value = sorted.get(bufferBeginIdx)[fieldName];
+          let value = this._getData(sorted, bufferBeginIdx)[fieldName];
 
-          while (bufferEndIdx < sorted.size && sorted.get(bufferEndIdx)[fieldName] === value) {
+          while (bufferEndIdx < sorted.size && this._getData(sorted, bufferEndIdx)[fieldName] === value) {
             bufferEndIdx++;
           }
 
           const rowCount = bufferEndIdx - bufferBeginIdx;
 
           if (rowCount > 0) {
-            const headerData = sorted.get(bufferBeginIdx);
+            const headerData = this._getData(sorted, bufferBeginIdx);
             const header: R = {[fieldName]: headerData[fieldName]} as R;
 
             res.push(
@@ -326,6 +386,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return new RecordSet<R>(
         this.name,
         this._fieldDefs,
+        this._calcFields,
         sorted,
         0,
         sortFields,
@@ -342,6 +403,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const res = new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       sorted,
       0,
       sortFields,
@@ -395,6 +457,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       this._data,
       0,
       this._sortFields,
@@ -432,6 +495,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       this._data,
       currentRow,
       this._sortFields,
@@ -453,6 +517,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       this._data,
       this._currentRow,
       this._sortFields,
@@ -483,6 +548,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       this._data,
       this._currentRow,
       this._sortFields,
@@ -530,6 +596,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const res = new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       newData,
       0,
       [],
@@ -568,6 +635,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return new RecordSet<R>(
         this.name,
         this._fieldDefs,
+        this._calcFields,
         this._data,
         this._currentRow,
         this._sortFields,
@@ -615,6 +683,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
+      this._calcFields,
       this._data,
       this._currentRow,
       this._sortFields,

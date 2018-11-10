@@ -954,11 +954,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         </span>
         : groupRecCount ?
         <span>
-          {rowData.data[columns[adjustedColumnIndex].fields[0].fieldName]}
+          {rs.getString(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName)}
           {groupRecCount}
         </span>
         :
-        rowData.data[columns[adjustedColumnIndex].fields[0].fieldName];
+        rs.getString(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName);
 
       const checkMark = selectRows && !adjustedColumnIndex ?
         <div

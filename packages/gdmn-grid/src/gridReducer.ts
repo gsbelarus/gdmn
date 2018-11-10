@@ -68,8 +68,34 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
     case getType(actions.cancelSortDialog):
       return {...state, [componentName]: {...componentState, sortDialog: false}};
 
-    case getType(actions.applySortDialog):
-      return {...state, [componentName]: {...componentState, sortDialog: false}};
+    case getType(actions.applySortDialog): {
+      const { sortFields } = action.payload;
+      const groupFields = sortFields.filter( sf => sf.groupBy );
+
+      if (groupFields.length) {
+        let newColumns = [...componentState.columns];
+        let newCurrentCol = componentState.currentCol;
+        let insertIdx = 0;
+        groupFields.forEach( gf => {
+          const found = newColumns.findIndex( c => c.fields[0].fieldName === gf.fieldName );
+          if (found >= 0) {
+            if (found !== insertIdx) {
+              newColumns.splice(insertIdx, 0, newColumns.splice(found, 1)[0]);
+              if (newCurrentCol === found) {
+                newCurrentCol = insertIdx;
+              }
+              else if (newCurrentCol < found) {
+                newCurrentCol++;
+              }
+            }
+            insertIdx++;
+          }
+        });
+        return {...state, [componentName]: {...componentState, columns: newColumns, currentCol: newCurrentCol, sortDialog: false}};
+      } else {
+        return {...state, [componentName]: {...componentState, sortDialog: false}};
+      }
+    }
 
     case getType(actions.setColumns): {
       const { columns, leftSideColumns, rightSideColumns } = action.payload;

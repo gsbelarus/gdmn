@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './Demo.css';
 import { INBRBCurrency, INBRBRate } from '../types';
-import { RecordSet, Data } from 'gdmn-recordset';
+import { RecordSet, Data, IDataRow } from 'gdmn-recordset';
 import nbrbCurrencies from '../../util/nbrbcurrencies.json';
 import nbrbRates from '../../util/nbrbrates.json';
 import { List } from 'immutable';
@@ -211,7 +211,7 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
   loadRates = () => {
     const { createRecordSet } = this.props;
 
-    const fieldDefs = [
+    const fieldDefs: FieldDefs = [
       {
         fieldName: 'Cur_ID',
         dataType: TFieldType.Integer,
@@ -249,10 +249,24 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
         dataType: TFieldType.Currency,
         caption: 'Курс',
         required: true
+      },
+      {
+        fieldName: 'Year',
+        dataType: TFieldType.Integer,
+        caption: 'Год',
+        calcFunc: (row: IDataRow) => (row['Date'] as Date).getFullYear()
+      },
+      {
+        fieldName: 'Month',
+        dataType: TFieldType.Integer,
+        caption: 'Месяц',
+        calcFunc: (row: IDataRow) => (row['Date'] as Date).getMonth() + 1
       }
     ];
 
-    const data = List<INBRBRate>(nbrbRates as any);
+    const typedRates: INBRBRate[] = (nbrbRates as any).map( (r: any): INBRBRate => ({...r, ['Date']: new Date(r['Date'])}) );
+
+    const data = List<INBRBRate>(typedRates);
 
     createRecordSet('rate', fieldDefs, data);
   }

@@ -13,6 +13,8 @@ export interface INamedField {
   fieldName: string;
 };
 
+export type TFieldCalcFunc = (row: IDataRow) => TDataType;
+
 export interface IFieldDef extends INamedField {
   dataType: TFieldType;
   size?: number;
@@ -20,6 +22,7 @@ export interface IFieldDef extends INamedField {
   required?: boolean;
   readOnly?: boolean;
   calculated?: boolean;
+  calcFunc?: TFieldCalcFunc;
   mask?: RegExp;
   caption?: string;
   shortCaption?: string;
@@ -35,17 +38,20 @@ export interface ISortField extends INamedField {
 
 export type SortFields = ISortField[];
 
+
 export type TDataType = string | number | boolean | Date | null;
+
+export interface IDataRow {
+  [fieldName: string]: TDataType;
+};
+
+export type TRowCalcFunc<R extends IDataRow> = (row: R) => R;
 
 export enum TRowType {
   Data = 0,
   HeaderCollapsed,
   HeaderExpanded,
   Footer
-};
-
-export interface IDataRow {
-  [fieldName: string]: TDataType;
 };
 
 export interface IRow<R extends IDataRow = IDataRow> {
