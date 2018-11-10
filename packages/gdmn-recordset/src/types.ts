@@ -50,7 +50,8 @@ export interface IDataRow {
 
 export interface IRow<R extends IDataRow = IDataRow> {
   data: R,
-  type: TRowType
+  type: TRowType,
+  group?: IDataGroup<R>
 };
 
 export interface IDataGroup<R extends IDataRow = IDataRow> {

@@ -64,7 +64,7 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
         <ColumnSelector isChecked={selectRows} name="Select rows" onToggle={() => onSetSelectRows(!selectRows)} />
         <ColumnSelector isChecked={!hideFooter} name="Show footer" onToggle={onToggleHideFooter} />
         <ColumnSelector isChecked={!hideHeader} name="Show header" onToggle={onToggleHideHeader} />
-        <span>Col: {currentCol};</span><span>Row: {currentRow}</span>
+        <span>Col: {currentCol};</span><span>Row: {currentRow}</span><span>Total: {rs.size}</span>
         <button onClick={onSortDialog}>
           Sort...
         </button>

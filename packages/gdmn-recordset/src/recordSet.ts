@@ -153,21 +153,24 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     if (rowIdx === group.rowIdx) {
       return {
         data: group.header,
-        type: group.collapsed ? TRowType.HeaderCollapsed : TRowType.HeaderExpanded
+        type: group.collapsed ? TRowType.HeaderCollapsed : TRowType.HeaderExpanded,
+        group
       };
     }
 
     if (rowIdx <= group.rowIdx + group.rowCount ) {
       return {
         data: this._data.get(group.bufferIdx + rowIdx - group.rowIdx - 1),
-        type: TRowType.Data
+        type: TRowType.Data,
+        group
       };
     }
 
     if (group.footer) {
       return {
         data: group.footer,
-        type: TRowType.Footer
+        type: TRowType.Footer,
+        group
       };
     }
 
@@ -361,16 +364,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Not in grouping mode`);
     }
 
-    const newGroups = [...this._groups];
+    const groups = this._groups;
+    const newGroups: IDataGroup<R>[] = [];
     let delta = 0;
 
-    for (let i = 0; i < newGroups.length - 1; i++) {
-      newGroups[i] = {
-        ...newGroups[i],
-        rowIdx: newGroups[i].rowIdx + (collapse ? -delta : delta),
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i];
+      newGroups.push({
+        ...group,
+        rowIdx: group.rowIdx + delta,
         collapsed: collapse
-      };
-      delta += newGroups[i].rowCount;
+      });
+      if (group.collapsed !== collapse) {
+        delta += (collapse ? -1 : 1) * group.rowCount;
+      }
     }
 
     return new RecordSet<R>(

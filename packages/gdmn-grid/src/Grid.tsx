@@ -930,6 +930,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         );
       }
 
+      const groupRecCount = groupHeader && rowData.group ?
+        <sup>
+          {rowData.group.rowCount}
+        </sup>
+        :
+        undefined;
+
       const cellText = rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
         <span>
           {rs.splitMatched(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName).map(
@@ -943,6 +950,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               :
               s.str)
           )}
+          {groupRecCount}
+        </span>
+        : groupRecCount ?
+        <span>
+          {rowData.data[columns[adjustedColumnIndex].fields[0].fieldName]}
+          {groupRecCount}
         </span>
         :
         rowData.data[columns[adjustedColumnIndex].fields[0].fieldName];
@@ -962,7 +975,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-      const groupTriangle = (rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed) ?
+      const groupTriangle = groupHeader ?
         <div
           className={styles.CellMarkArea}
           onClick={
@@ -977,7 +990,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-
       if (checkMark || groupTriangle) {
         return (
           <div
@@ -986,8 +998,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             style={style}
             onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
           >
-            {checkMark}
             {groupTriangle}
+            {checkMark}
             <div className={cn(styles.CellColumn, cellClass)}>
               {cellText}
             </div>
