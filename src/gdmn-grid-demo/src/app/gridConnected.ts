@@ -1,4 +1,4 @@
-import { GDMNGrid, IColumn, setSearchText, Columns, setSearchIdx } from "gdmn-grid";
+import { GDMNGrid, IColumn, Columns, setSearchIdx } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
 import { GridAction } from "gdmn-grid";
@@ -146,8 +146,8 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         },
       onSearch:
         (searchText: string) => {
-          dispatch(setSearchText({ name, searchText }));
-          dispatch(doSearch({ name: rs.name, re: searchText ? new RegExp(searchText, 'i') : undefined }))
+          dispatch(doSearch({ name: rs.name, searchStr: searchText ? searchText : undefined }))
+          dispatch(setSearchIdx({ name, searchIdx: 0 }));
         },
       onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => {
         const foundNodesCount = rs.foundNodesCount;

@@ -69,8 +69,8 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
     }
 
     case getType(actions.doSearch): {
-      const { re } = action.payload;
-      return newState(rs.search(re));
+      const { searchStr } = action.payload;
+      return newState(rs.search(searchStr));
     }
 
     case getType(actions.toggleGroup): {

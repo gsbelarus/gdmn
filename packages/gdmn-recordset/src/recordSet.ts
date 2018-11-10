@@ -15,9 +15,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _sortFields: SortFields;
   private _allRowsSelected: boolean;
   private _selectedRows: boolean[];
-  private _filter: IFilter | undefined;
-  private _savedData: Data<R> | undefined;
-  private _foundRows: FoundRows | undefined;
+  private _filter?: IFilter;
+  private _savedData?: Data<R>;
+  private _searchStr?: string;
+  private _foundRows?: FoundRows;
   private _groups?: IDataGroup<R>[];
 
   constructor (
@@ -30,6 +31,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     selectedRows: boolean[] = [],
     filter?: IFilter,
     savedData?: Data<R>,
+    searchStr?: string,
     foundRows?: FoundRows,
     groups?: IDataGroup<R>[])
   {
@@ -46,6 +48,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._selectedRows = selectedRows;
     this._filter = filter;
     this._savedData = savedData;
+    this._searchStr = searchStr;
     this._foundRows = foundRows;
     this._groups = groups;
 
@@ -104,6 +107,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get foundNodesCount() {
     return this._foundRows ? this._foundRows.reduce( (c, r) => r ? c + r.length : c, 0 ) : 0;
+  }
+
+  get searchStr() {
+    return this._searchStr;
   }
 
   private checkFields(fields: INamedField[]) {
@@ -230,6 +237,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._selectedRows,
       this._filter,
       this._savedData,
+      this._searchStr,
       this._foundRows,
       newGroups
     );
@@ -289,9 +297,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           const rowCount = bufferEndIdx - bufferBeginIdx;
 
           if (rowCount > 0) {
+            const headerData = sorted.get(bufferBeginIdx);
+            const header: R = {[fieldName]: headerData[fieldName]} as R;
+
             res.push(
               {
-                header: sorted.get(bufferBeginIdx),
+                header,
                 level,
                 collapsed: false,
                 subGroups: [],
@@ -322,6 +333,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         [],
         this._filter,
         this._savedData,
+        undefined,
         undefined,
         groups
       );
@@ -391,6 +403,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._filter,
       this._savedData,
       undefined,
+      undefined,
       newGroups
     );
   }
@@ -426,6 +439,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._selectedRows,
       this._filter,
       this._savedData,
+      this._searchStr,
       this._foundRows,
       this._groups
     );
@@ -446,6 +460,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       value ? [] : this._selectedRows,
       this._filter,
       this._savedData,
+      this._searchStr,
       this._foundRows,
       this._groups
     );
@@ -475,6 +490,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       allRowsSelected ? [] : selectedRows,
       this._filter,
       this._savedData,
+      this._searchStr,
       this._foundRows,
       this._groups
     );
@@ -547,8 +563,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     !!this._filter && !!this._filter.conditions.length && !!this._filter.conditions[0].value
   )
 
-  public search(re: RegExp | undefined): RecordSet<R> {
-    if (!re) {
+  public search(searchStr: string | undefined): RecordSet<R> {
+    if (!searchStr) {
       return new RecordSet<R>(
         this.name,
         this._fieldDefs,
@@ -560,10 +576,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         this._filter,
         this._savedData,
         undefined,
+        undefined,
         this._groups
       );
     }
 
+    const re = RegExp(searchStr, 'i');
     const foundRows: FoundRows = [];
     let foundIdx = 1;
 
@@ -585,8 +603,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                 matchLen: m[0].length,
                 foundIdx: foundIdx++
               });
-              b = m.index + m[0].length;
-              m = re.exec(m.input.substr(b));
+              b += m.index + m[0].length;
+              m = re.exec(s.substr(b));
             }
           });
           if (foundNodes.length) {
@@ -604,6 +622,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._selectedRows,
       this._filter,
       this._savedData,
+      searchStr,
       foundRows.length ? foundRows : undefined,
       this._groups
     );
