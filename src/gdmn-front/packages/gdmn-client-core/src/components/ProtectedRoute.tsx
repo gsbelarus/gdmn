@@ -1,7 +1,6 @@
 import React, { SFC } from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';
-
-import { UserRoleType } from '../services/Auth';
+import { TUserRoleType } from '@gdmn/server-api';
 
 const enum RouteAccessLevelType {
   PUBLIC,
@@ -17,19 +16,24 @@ const enum RouteAccessLevelType {
  * PRIVATE: role =
  */
 const routeAccessLevels = {
-  [RouteAccessLevelType.PUBLIC]: [UserRoleType.ANONYM, UserRoleType.USER, UserRoleType.ADMIN, UserRoleType.DEVELOPER],
-  [RouteAccessLevelType.PRIVATE_ANONYM]: [UserRoleType.ANONYM],
-  [RouteAccessLevelType.PROTECTED_USER]: [UserRoleType.USER, UserRoleType.ADMIN, UserRoleType.DEVELOPER],
-  [RouteAccessLevelType.PROTECTED_ADMIN]: [UserRoleType.ADMIN, UserRoleType.DEVELOPER],
-  [RouteAccessLevelType.PROTECTED_DEVELOPER]: [UserRoleType.DEVELOPER]
+  [RouteAccessLevelType.PUBLIC]: [
+    TUserRoleType.ANONYM,
+    TUserRoleType.USER,
+    TUserRoleType.ADMIN,
+    TUserRoleType.DEVELOPER
+  ],
+  [RouteAccessLevelType.PRIVATE_ANONYM]: [TUserRoleType.ANONYM],
+  [RouteAccessLevelType.PROTECTED_USER]: [TUserRoleType.USER, TUserRoleType.ADMIN, TUserRoleType.DEVELOPER],
+  [RouteAccessLevelType.PROTECTED_ADMIN]: [TUserRoleType.ADMIN, TUserRoleType.DEVELOPER],
+  [RouteAccessLevelType.PROTECTED_DEVELOPER]: [TUserRoleType.DEVELOPER]
 }; // TODO: bitMask
 
-function checkAccess(routeAccessLevel: RouteAccessLevelType, userRole: UserRoleType) {
+function checkAccess(routeAccessLevel: RouteAccessLevelType, userRole: TUserRoleType) {
   return routeAccessLevels[routeAccessLevel].includes(userRole);
 }
 
 interface IProtectedRouteStateProps {
-  userRole?: UserRoleType;
+  userRole?: TUserRoleType;
   authenticated?: boolean;
   defaultAnonymPath?: string;
   defaultUserPath?: string;
@@ -74,7 +78,7 @@ const ProtectedRoute: SFC<IProtectedRouteProps> = ({
               />
             );
           }
-          // onAccessDenied(props.location.pathname);
+          // onAccessDenied(props.location.pathname); // dispatch({ type:'ON_ERROR', payload: new Error('Нет прав доступа'), error: true });
           return (
             <Redirect
               to={{

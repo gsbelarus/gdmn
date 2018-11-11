@@ -1,14 +1,7 @@
 import jwtDecode from 'jwt-decode';
-import { IAccessToken, IRefreshToken, IJwtToken } from '@gdmn/server-api';
+import { IAccessTokenPayload, IRefreshTokenPayload, IJwtTokenPayload } from '@gdmn/server-api';
 
 import { WebStorage } from './WebStorage';
-
-const enum UserRoleType {
-  ANONYM,
-  USER,
-  ADMIN,
-  DEVELOPER
-}
 
 class Auth {
   public static ACCESS_TOKEN_MIN_EXPIRES_PT = 0.2;
@@ -41,11 +34,11 @@ class Auth {
     return this.webStorage.get(Auth.REFRESH_TOKEN_STORAGE_KEY);
   }
 
-  public async getDecodedAccessToken(): Promise<IAccessToken> {
+  public async getDecodedAccessToken(): Promise<IAccessTokenPayload> {
     return Auth.decodeToken(await this.getAccessToken());
   }
 
-  public async getDecodedRefreshToken(): Promise<IRefreshToken> {
+  public async getDecodedRefreshToken(): Promise<IRefreshTokenPayload> {
     return Auth.decodeToken(await this.getRefreshToken());
   }
 
@@ -63,18 +56,18 @@ class Auth {
     return Auth.isFreshToken(accessToken);
   }
 
-  public static decodeToken(token: string): IJwtToken {
-    return jwtDecode<IJwtToken>(token);
+  public static decodeToken<Token extends IJwtTokenPayload>(token: string): Token {
+    return jwtDecode<Token>(token);
   }
 
-  public static isExpiredToken(token: IJwtToken): boolean {
+  public static isExpiredToken(token: IJwtTokenPayload): boolean {
     return Auth.getExpiredTokenTime(token) > token.exp;
   }
 
   /**
    * no need refresh token
    */
-  public static isFreshToken(token: IJwtToken): boolean {
+  public static isFreshToken(token: IJwtTokenPayload): boolean {
     if (Auth.isExpiredToken(token)) return false; // session has expired - login in again
 
     console.log(
@@ -92,7 +85,7 @@ class Auth {
     );
   }
 
-  private static getExpiredTokenTime(token: IJwtToken): number {
+  private static getExpiredTokenTime(token: IJwtTokenPayload): number {
     const timeNow = +new Date() / 1000; // now in seconds
     // return timeNow - token.iat;
 
@@ -100,4 +93,4 @@ class Auth {
   }
 }
 
-export { Auth, UserRoleType };
+export { Auth };
