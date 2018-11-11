@@ -1,0 +1,21 @@
+.centered {
+  width: 100%;
+  text-align: center;
+}
+
+.icon {
+  color: rgb(181, 181, 181);
+  font-size: 72px  !important;
+}
+
+.avatar {
+  margin: auto;
+  height: 120px !important;
+  width: 120px !important;
+  padding: 24px !important;
+  background-color: rgb(241, 243, 244) !important;
+}
+
+.text {
+  margin-top: 16px !important;
+}
