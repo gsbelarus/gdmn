@@ -932,7 +932,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       const groupRecCount = groupHeader && rowData.group ?
         <sup>
-          {rowData.group.rowCount}
+          {rowData.group.bufferCount}
         </sup>
         :
         undefined;

@@ -94,7 +94,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   get size() {
     if (this._groups && this._groups.length) {
       const lg = this._groups[this._groups.length - 1];
-      return lg.rowIdx + 1 + (lg.collapsed ? 0 : lg.rowCount) + (lg.footer ? 1 : 0);
+      return lg.rowIdx + 1 + (lg.collapsed ? 0 : lg.bufferCount) + (lg.footer ? 1 : 0);
     } else {
       return this._data.size;
     }
@@ -143,7 +143,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._searchStr;
   }
 
-  private checkFields(fields: INamedField[]) {
+  private _checkFields(fields: INamedField[]) {
     fields.forEach( f => {
       if (!this._fieldDefs.find( fd => fd.fieldName === f.fieldName )) {
         throw new Error(`Unknown field ${f.fieldName}`);
@@ -151,7 +151,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  private findGroup(rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
+  private _findGroup(rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
     const groups = this._groups;
 
     if (!groups || !groups.length) {
@@ -161,11 +161,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const groupsCount = groups.length;
     const lastGroup = groups[groupsCount - 1];
 
-    if (rowIdx < 0 || rowIdx >= lastGroup.rowIdx + lastGroup.rowCount + 2) {
+    if (rowIdx < 0 || rowIdx >= lastGroup.rowIdx + lastGroup.bufferCount + 2) {
       throw new Error(`findGroup: invalid row index ${rowIdx}`);
     }
 
-    let approxGroupIdx = Math.floor(groupsCount * rowIdx / (lastGroup.rowIdx + (lastGroup.collapsed ? 0 : lastGroup.rowCount) + 2));
+    let approxGroupIdx = Math.floor(groupsCount * rowIdx / (lastGroup.rowIdx + (lastGroup.collapsed ? 0 : lastGroup.bufferCount) + 2));
 
     while (approxGroupIdx > 0 && rowIdx < groups[approxGroupIdx].rowIdx) {
       approxGroupIdx--;
@@ -193,7 +193,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return { data: this._getData(data, rowIdx), type: TRowType.Data };
     }
 
-    const group = this.findGroup(rowIdx).group;
+    const group = this._findGroup(rowIdx).group;
 
     if (rowIdx === group.rowIdx) {
       return {
@@ -203,7 +203,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       };
     }
 
-    if (rowIdx <= group.rowIdx + group.rowCount ) {
+    if (rowIdx <= group.rowIdx + group.bufferCount ) {
       return {
         data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1),
         type: TRowType.Data,
@@ -259,13 +259,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Data is not grouped`);
     }
 
-    const fg = this.findGroup(rowIdx);
+    const fg = this._findGroup(rowIdx);
     const newGroups = [...groups];
 
     for (let i = fg.groupIdx + 1; i < groups.length; i++) {
       newGroups[i] = {
         ...groups[i],
-        rowIdx: groups[i].rowIdx + (fg.group.collapsed ? fg.group.rowCount : -fg.group.rowCount)
+        rowIdx: groups[i].rowIdx + (fg.group.collapsed ? fg.group.bufferCount : -fg.group.bufferCount)
       };
     }
 
@@ -292,7 +292,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public sort(sortFields: SortFields): RecordSet<R> {
-    this.checkFields(sortFields);
+    this._checkFields(sortFields);
 
     if (!this._data.size) {
       return this;
@@ -354,9 +354,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             bufferEndIdx++;
           }
 
-          const rowCount = bufferEndIdx - bufferBeginIdx;
+          const bufferCount = bufferEndIdx - bufferBeginIdx;
 
-          if (rowCount > 0) {
+          if (bufferCount > 0) {
             const headerData = this._getData(sorted, bufferBeginIdx);
             const header: R = {[fieldName]: headerData[fieldName]} as R;
 
@@ -368,10 +368,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                 subGroups: [],
                 rowIdx: rowIdx,
                 bufferIdx: bufferBeginIdx,
-                rowCount
+                bufferCount
               }
             );
-            rowIdx += rowCount + 1;
+            rowIdx += bufferCount + 1;
           }
 
           bufferBeginIdx = bufferEndIdx;
@@ -450,7 +450,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         collapsed: collapse
       });
       if (group.collapsed !== collapse) {
-        delta += (collapse ? -1 : 1) * group.rowCount;
+        delta += (collapse ? -1 : 1) * group.bufferCount;
       }
     }
 

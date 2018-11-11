@@ -68,7 +68,7 @@ export interface IDataGroup<R extends IDataRow = IDataRow> {
   footer?: R;
   rowIdx: number;
   bufferIdx: number;
-  rowCount: number;
+  bufferCount: number;
 };
 
 export interface IMatchedSubString {
