@@ -12,9 +12,7 @@ const OUTPUT_FILENAME = 'scripts/[name].bundle.js';
 const OUTPUT_CHUNK_FILENAME = 'scripts/[name].chunk.js';
 const STYLES_PATH = getRootRelativePath('src/styles');
 
-const config: Configuration = merge(
-  // @ts-ignore // fixme: type
-  getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT_CHUNK_FILENAME), {
+const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT_CHUNK_FILENAME), {
   devtool: 'cheap-module-source-map',
   mode: 'development',
   devServer: {
@@ -30,7 +28,7 @@ const config: Configuration = merge(
       children: false,
       colors: true,
       modules: false
-    } as any // FIXME type
+    }
     // overlay: false,
     // overlay: {
     //   warnings: true,
@@ -52,19 +50,8 @@ const config: Configuration = merge(
     rules: [
       {
         test: /\.(ts|tsx)$/,
-        include: getRootRelativePath('src'),
+        include: [getRootRelativePath('src'), getRootRelativePath('packages')],
         use: [
-          // { loader: 'cache-loader' },
-          // {
-          //   loader: 'thread-loader',
-          //   options: {
-          //     // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-          //     // workers: require('os').cpus().length - 1,
-          //
-          //     workers: 4,
-          //     poolTimeout: Number.POSITIVE_INFINITY
-          //   }
-          // },
           {
             loader: 'awesome-typescript-loader', // 'ts-loader',
             options: {
@@ -72,7 +59,8 @@ const config: Configuration = merge(
               useBabel: true,
               babelOptions: {
                 babelrc: false,
-                plugins: ['react-hot-loader/babel',
+                plugins: [
+                  'react-hot-loader/babel'
                   // '@babel/plugin-syntax-dynamic-import'
                 ]
               },
@@ -93,7 +81,7 @@ const config: Configuration = merge(
       // css modules
       {
         test: /\.css$/,
-        include: getRootRelativePath('src'),
+        include: [getRootRelativePath('src'), getRootRelativePath('packages')],
         exclude: STYLES_PATH,
         use: ['style-loader', cssModulesLoader]
       }
@@ -103,9 +91,6 @@ const config: Configuration = merge(
     new ErrorOverlayPlugin(),
     // TODO
     new CheckerPlugin(),
-    // new ForkTsCheckerWebpackPlugin({
-    //   checkSyntacticErrors: true, // HappyPack
-    // }),
     new EnvironmentPlugin({
       NODE_ENV: 'development'
     }),
@@ -119,10 +104,8 @@ const config: Configuration = merge(
 // tslint:disable-next-line no-default-export
 export default config;
 
-
 // tslint:disable no-submodule-imports
 // @ts-ignore
 // import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 // @ts-ignore
 // import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
-// import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';

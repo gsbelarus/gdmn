@@ -20,8 +20,7 @@
       "@gdmn/data-grid-core": ["packages/data-grid-core/src/index.ts"],
       "@gdmn/data-grid-mui": ["packages/data-grid-mui/src/index.ts"],
       "@src/*": ["src/*"]
-    },
-    "rootDir": "src"
+    }
   },
   "exclude": [
     "build",

@@ -20,13 +20,14 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     rules: [
       {
         test: /\.(ts|tsx)$/,
+        include: [getRootRelativePath('src'), getRootRelativePath('packages')],
         use: [
           // {
           //   loader: 'babel-loader',
           //   options: {
           //     babelrc: false,
           //     // cacheDirectory: true,
-          //     plugins: ['@babel/plugin-syntax-dynamic-import']
+          //     // plugins: ['@babel/plugin-syntax-dynamic-import']
           //   }
           // },
           {
@@ -41,7 +42,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
       },
       {
         test: /\.css$/,
-        include: getRootRelativePath('src'),
+        include: [getRootRelativePath('src'), getRootRelativePath('packages')],
         exclude: STYLES_PATH,
         use: [MiniCssExtractPlugin.loader, cssModulesLoader]
       }
