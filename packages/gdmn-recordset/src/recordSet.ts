@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup } from "./types";
 import { IFilter } from "./filter";
 import equal from "fast-deep-equal";
 
@@ -94,7 +94,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   get size() {
     if (this._groups && this._groups.length) {
       const lg = this._groups[this._groups.length - 1];
-      return lg.rowIdx + 1 + (lg.collapsed ? 0 : lg.bufferCount) + (lg.footer ? 1 : 0);
+      return lg.rowIdx + this._getGroupRowCount(lg);
     } else {
       return this._data.size;
     }
@@ -151,21 +151,28 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  private _findGroup(rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
-    const groups = this._groups;
+  private _getGroupRowCount(group: IDataGroup<R>): number {
+    const t = group.collapsed ? 0
+    : group.subGroups.length ? group.subGroups.reduce( (p, s) => p + this._getGroupRowCount(s), 0 )
+    : group.bufferCount;
+    return 1 + t + (group.footer ? 1 : 0);
+  }
 
-    if (!groups || !groups.length) {
+  private _findGroup(groups: IDataGroup<R>[], rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
+    const groupsCount = groups.length;
+
+    if (!groupsCount) {
       throw new Error(`Data is not grouped`);
     }
 
-    const groupsCount = groups.length;
-    const lastGroup = groups[groupsCount - 1];
+    const fg = groups[0];
+    const lg = groups[groupsCount - 1];
 
-    if (rowIdx < 0 || rowIdx >= lastGroup.rowIdx + lastGroup.bufferCount + 2) {
-      throw new Error(`findGroup: invalid row index ${rowIdx}`);
+    if (rowIdx < fg.rowIdx || rowIdx >= lg.rowIdx + this._getGroupRowCount(lg)) {
+      throw new Error(`findGroup: invalid row index ${rowIdx} (${fg.rowIdx}-${lg.rowIdx + this._getGroupRowCount(lg)})`);
     }
 
-    let approxGroupIdx = Math.floor(groupsCount * rowIdx / (lastGroup.rowIdx + (lastGroup.collapsed ? 0 : lastGroup.bufferCount) + 2));
+    let approxGroupIdx = Math.floor(groupsCount * (rowIdx - fg.rowIdx) / (lg.rowIdx + this._getGroupRowCount(lg) - fg.rowIdx));
 
     while (approxGroupIdx > 0 && rowIdx < groups[approxGroupIdx].rowIdx) {
       approxGroupIdx--;
@@ -175,7 +182,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       approxGroupIdx++;
     }
 
-    return { groupIdx: approxGroupIdx, group: groups[approxGroupIdx] };
+    const group = groups[approxGroupIdx];
+
+    if (rowIdx > group.rowIdx && group.subGroups.length) {
+      return this._findGroup(group.subGroups, rowIdx);
+    } else {
+      return { groupIdx: approxGroupIdx, group };
+    }
   }
 
   private _getData(data: List<R>, rowIdx: number): R {
@@ -193,7 +206,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return { data: this._getData(data, rowIdx), type: TRowType.Data };
     }
 
-    const group = this._findGroup(rowIdx).group;
+    const group = this._findGroup(groups, rowIdx).group;
 
     if (rowIdx === group.rowIdx) {
       return {
@@ -203,15 +216,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       };
     }
 
-    if (rowIdx <= group.rowIdx + group.bufferCount ) {
-      return {
-        data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1),
-        type: TRowType.Data,
-        group
-      };
-    }
-
-    if (group.footer) {
+    if (group.footer && rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1) {
       return {
         data: group.footer,
         type: TRowType.Footer,
@@ -219,7 +224,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       };
     }
 
-    throw new Error(`get: invalid row index ${rowIdx}`);
+    return {
+      data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1),
+      type: TRowType.Data,
+      group
+    };
   }
 
   public get(rowIdx: number): IRow<R> {
@@ -252,6 +261,24 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return -1;
   }
 
+  private _cloneGroups(
+    parent: IDataGroup<R> | undefined,
+    groups: IDataGroup<R>[],
+    cloneGroup: CloneGroup<R>): IDataGroup<R>[]
+  {
+    const res: IDataGroup<R>[] = [];
+    let prev: IDataGroup<R> | undefined = undefined;
+    groups.forEach( g => {
+      const cloned = cloneGroup(parent, prev, g);
+      if (cloned.subGroups.length) {
+        cloned.subGroups = this._cloneGroups(cloned, g.subGroups, cloneGroup);
+      }
+      res.push(cloned);
+      prev = cloned;
+    });
+    return res;
+  }
+
   public toggleGroup(rowIdx: number): RecordSet<R> {
     const groups = this._groups;
 
@@ -259,35 +286,28 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Data is not grouped`);
     }
 
-    const fg = this._findGroup(rowIdx);
-    const newGroups = [...groups];
-
-    for (let i = fg.groupIdx + 1; i < groups.length; i++) {
-      newGroups[i] = {
-        ...groups[i],
-        rowIdx: groups[i].rowIdx + (fg.group.collapsed ? fg.group.bufferCount : -fg.group.bufferCount)
-      };
-    }
-
-    newGroups[fg.groupIdx] = {
-      ...fg.group,
-      collapsed: !fg.group.collapsed
-    };
+    const fg = this._findGroup(groups, rowIdx);
 
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
       this._calcFields,
       this._data,
-      this._currentRow,
+      fg.group.rowIdx,
       this._sortFields,
       this._allRowsSelected,
-      this._selectedRows,
+      [],
       this._filter,
       this._savedData,
       this._searchStr,
       this._foundRows,
-      newGroups
+      this._cloneGroups(undefined, groups,
+        (parent, prev, g) => {
+          return g.rowIdx < fg.group.rowIdx ? g
+          : g.rowIdx === fg.group.rowIdx ? {...g, collapsed: !g.collapsed}
+          : {...g, rowIdx: prev ? prev.rowIdx + this._getGroupRowCount(prev) : parent ? parent.rowIdx + 1 : 0}
+        }
+      )
     );
   }
 
@@ -323,8 +343,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       }, [] as IRow<R>[]
     );
 
-    // TODO: не оптимально!
-    const sorted = this._calcFields ? this._data.sort(
+    const sortOnCalcFields = sortFields.some( sf => !!this._fieldDefs.find( fd => fd.fieldName === sf.fieldName && !!fd.calcFunc ));
+
+    const sorted = (sortOnCalcFields ? this._data.sort(
       (a, b) => {
         const calcA = this._calcFields!(a);
         const calcB = this._calcFields!(b);
@@ -332,25 +353,26 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           (p, f) => p ? p : (calcA[f.fieldName]! < calcB[f.fieldName]! ? (f.asc ? -1 : 1) : (calcA[f.fieldName]! > calcB[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
         0);
       }
-    ).toList()
+    )
     :
     this._data.sort(
       (a, b) => sortFields.reduce(
         (p, f) => p ? p : (a[f.fieldName]! < b[f.fieldName]! ? (f.asc ? -1 : 1) : (a[f.fieldName]! > b[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
       0)
-    ).toList();
+    )).toList();
 
     if (sortFields[0].groupBy) {
-      const groupData = (fieldName: string, level: number, initialRowIdx: number, bufferIdx: number) => {
+      const groupData = (level: number, initialRowIdx: number, bufferIdx: number, bufferSize: number) => {
         const res: IDataGroup<R>[] = [];
+        const fieldName = sortFields[level].fieldName;
         let rowIdx = initialRowIdx;
         let bufferBeginIdx = bufferIdx;
 
-        while (bufferBeginIdx < sorted.size) {
+        while (bufferBeginIdx < bufferIdx + bufferSize) {
           let bufferEndIdx = bufferBeginIdx;
           let value = this._getData(sorted, bufferBeginIdx)[fieldName];
 
-          while (bufferEndIdx < sorted.size && this._getData(sorted, bufferEndIdx)[fieldName] === value) {
+          while (bufferEndIdx < bufferIdx + bufferSize && this._getData(sorted, bufferEndIdx)[fieldName] === value) {
             bufferEndIdx++;
           }
 
@@ -359,19 +381,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           if (bufferCount > 0) {
             const headerData = this._getData(sorted, bufferBeginIdx);
             const header: R = {[fieldName]: headerData[fieldName]} as R;
-
-            res.push(
-              {
-                header,
-                level,
-                collapsed: false,
-                subGroups: [],
-                rowIdx: rowIdx,
-                bufferIdx: bufferBeginIdx,
-                bufferCount
-              }
-            );
-            rowIdx += bufferCount + 1;
+            const group = {
+              header,
+              level,
+              collapsed: false,
+              subGroups: sortFields.length > level + 1 && sortFields[level + 1].groupBy ? groupData(level + 1, rowIdx + 1, bufferBeginIdx, bufferCount) : [],
+              rowIdx: rowIdx,
+              bufferIdx: bufferBeginIdx,
+              bufferCount
+            };
+            res.push(group);
+            rowIdx += this._getGroupRowCount(group);
           }
 
           bufferBeginIdx = bufferEndIdx;
@@ -380,8 +400,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         return res;
       };
 
-      const fieldName = sortFields[0].fieldName;
-      const groups = groupData(fieldName, 0, 0, 0);
+      const groups = groupData(0, 0, 0, sorted.size);
 
       return new RecordSet<R>(
         this.name,
@@ -438,22 +457,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Not in grouping mode`);
     }
 
-    const groups = this._groups;
-    const newGroups: IDataGroup<R>[] = [];
-    let delta = 0;
-
-    for (let i = 0; i < groups.length; i++) {
-      const group = groups[i];
-      newGroups.push({
-        ...group,
-        rowIdx: group.rowIdx + delta,
-        collapsed: collapse
-      });
-      if (group.collapsed !== collapse) {
-        delta += (collapse ? -1 : 1) * group.bufferCount;
-      }
-    }
-
     return new RecordSet<R>(
       this.name,
       this._fieldDefs,
@@ -467,7 +470,19 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._savedData,
       undefined,
       undefined,
-      newGroups
+      this._cloneGroups(undefined, this._groups,
+        (parent, prev, g) => {
+          if (prev) {
+            return {...g, rowIdx: prev.rowIdx + this._getGroupRowCount(prev), collapsed: collapse};
+          }
+          else if (parent) {
+            return {...g, rowIdx: parent.rowIdx + 1, collapsed: collapse};
+          }
+          else {
+            return {...g, rowIdx: 0, collapsed: collapse};
+          }
+        }
+      )
     );
   }
 

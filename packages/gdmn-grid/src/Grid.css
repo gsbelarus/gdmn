@@ -295,5 +295,12 @@
   padding: 1px;
 }
 
+.BlackText {
+  color: black;
+}
+
+.GrayText {
+  color: darkgray;
+}
 
 

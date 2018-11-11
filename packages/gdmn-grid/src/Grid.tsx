@@ -94,7 +94,9 @@ export const styles = {
   GroupHeaderBackground: 'GroupHeaderBackground',
   BorderBottom: 'BorderBottom',
   BorderRightBottom: 'BorderRightBottom',
-  FixedBorder: 'FixedBorder'
+  FixedBorder: 'FixedBorder',
+  BlackText: 'BlackText',
+  GrayText: 'GrayText'
 };
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -905,21 +907,24 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const rowData = rs.get(rowIndex);
       const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
 
-      const backgroundClass = fixed ? (groupHeader ? styles.GroupHeaderBackground : styles.FixedBackground)
+      const backgroundClass = fixed ? styles.FixedBackground
         : currentRow === rowIndex ? (adjustedColumnIndex === currentCol ? styles.CurrentCellBackground : styles.CurrentRowBackground)
         : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex]) ? styles.SelectedBackground
         : groupHeader ? styles.GroupHeaderBackground
         : rowIndex % 2 === 0 ? styles.EvenRowBackground
         : styles.OddRowBackground;
 
-      const borderClass = groupHeader ? styles.BorderBottom
-        : fixed ? styles.FixedBorder
+      const borderClass = fixed ? styles.FixedBorder
+        : groupHeader ? styles.BorderBottom
         : styles.BorderRightBottom;
 
       const cellClass = fixed ? styles.FixedCell
         : styles.DataCell;
 
-      if (groupHeader && adjustedColumnIndex) {
+      const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText
+        : styles.BlackText;
+
+      if (groupHeader && rowData.group && adjustedColumnIndex > rowData.group.level) {
         return (
           <div
             className={cn(backgroundClass, borderClass)}
@@ -930,7 +935,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         );
       }
 
-      const groupRecCount = groupHeader && rowData.group ?
+      const groupRecCount = groupHeader && rowData.group && adjustedColumnIndex === rowData.group.level ?
         <sup>
           {rowData.group.bufferCount}
         </sup>
@@ -975,7 +980,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-      const groupTriangle = groupHeader ?
+      const groupTriangle = groupHeader && rowData.group && adjustedColumnIndex === rowData.group.level ?
         <div
           className={styles.CellMarkArea}
           onClick={
@@ -998,9 +1003,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             style={style}
             onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
           >
-            {groupTriangle}
             {checkMark}
-            <div className={cn(styles.CellColumn, cellClass)}>
+            {groupTriangle}
+            <div className={cn(styles.CellColumn, cellClass, textClass)}>
               {cellText}
             </div>
           </div>
@@ -1008,7 +1013,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       } else {
         return (
           <div
-            className={cn(backgroundClass, borderClass, styles.CellColumn, cellClass)}
+            className={cn(backgroundClass, borderClass, styles.CellColumn, cellClass, textClass)}
             key={key}
             style={style}
             onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }

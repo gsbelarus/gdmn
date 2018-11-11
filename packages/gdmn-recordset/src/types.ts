@@ -89,3 +89,8 @@ export type FoundNodes = IFoundNode[];
 
 export type FoundRows = FoundNodes[];
 
+export type CloneGroup<R extends IDataRow = IDataRow> = (
+  parent: IDataGroup<R> | undefined,
+  prev: IDataGroup<R> | undefined,
+  g: IDataGroup<R>) => IDataGroup<R>;
+
