@@ -116,13 +116,13 @@ describe('recordset', () => {
       },
     ];
 
-    const rs = new RecordSet(
+    const rs = RecordSet.createWithData(
       'test',
       fieldDefs,
       List<INBRBCurrency>(nbrbCurrencies as any)
     );
 
-    expect(rs.data.size).toEqual(224);
+    expect(rs.size).toEqual(224);
   });
 
 });
