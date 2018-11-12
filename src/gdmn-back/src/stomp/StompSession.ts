@@ -36,7 +36,7 @@ export interface IConnectHeaders {
   access_token?: string;
   authorization?: string;
   "app-uid"?: string;
-  "create-user"?: number;
+  "create-user"?: string;
 }
 
 export class StompSession implements StompClientCommandListener {
@@ -183,7 +183,7 @@ export class StompSession implements StompClientCommandListener {
 
       // authorization
       let result: { userKey: number, newTokens?: ITokens };
-      if (login && passcode && isCreateUser === 1) {
+      if (login && passcode && isCreateUser === "1") {
         result = await Utils.createUser(this.mainApplication, login, passcode);
       } else if (login && passcode) {
         result = await Utils.login(this.mainApplication, login, passcode);
