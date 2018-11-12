@@ -7,6 +7,10 @@ import { RusPronounLexemes } from './rusPronoun';
 import { RusConjunctionLexemes } from './rusConjunction';
 import { RusAdverbLexemes } from './rusAdverb';
 
+/**
+ * Возвращает все возможные словоформы для заданного слова.
+ * @param word заданное слово
+ */
 export function morphAnalyzer(word: string): AnyWords {
   const res: AnyWords = [];
   const resFunc = function (w: AnyWord): void { res.push(w); };

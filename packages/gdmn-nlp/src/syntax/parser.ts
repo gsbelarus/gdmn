@@ -14,13 +14,15 @@ function internalParsePhrase(text: string, parser: any, visitor: any): ParsedTex
   let phrase: Phrase<AnyWord> | undefined = undefined;
 
   combinatorialMorph(text).some( t => {
+    console.log(`parser input: ${t.map( tok => tok.image ).join(' ')} -- ${t.map( tok => tok.tokenType!.name ).join('-')}`);
     parser.input = t;
     const value = parser.sentence();
-    wordsSignatures = t.map( y => y.word.getSignature() );
+    wordsSignatures = t.map( y => y.tokenType!.name );
     if (value && !parser.errors.length) {
       phrase = visitor.visit(value);
       return true;
     } else {
+      console.log(JSON.stringify(parser.errors.map( (e: any) => e.message ), undefined, 2));
       return false;
     }
   })

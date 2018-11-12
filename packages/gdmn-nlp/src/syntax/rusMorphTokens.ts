@@ -13,6 +13,7 @@ export const morphTokens = (() => {
   const signatures = [
     'VERBTranPerfSingImpr',
     'ADVBGoal',
+    'Comma',
     'CONJ'
   ];
 

@@ -18,7 +18,7 @@ import { IToken } from 'chevrotain';
  *
  * @param text слово, словосочетание или предложение.
  */
-export function combinatorialMorph(text: string): IMorphToken[][]
+export function combinatorialMorph(text: string): IToken[][]
 {
   function createTokenInstance(w: AnyWord): IMorphToken {
     const tokType = morphTokens[w.getSignature()];
@@ -34,33 +34,31 @@ export function combinatorialMorph(text: string): IMorphToken[][]
       tokenTypeIdx: (<any>tokType).tokenTypeIdx,
       tokenType: tokType
     }
-  }
+  };
 
-  const words = tokenize(text).reduce(
+  const parts = tokenize(text).reduce(
     (p, t) => {
       if (t.tokenType === CyrillicWord) {
-        p.push(morphAnalyzer(t.image));
+        p.push(morphAnalyzer(t.image).map( w => createTokenInstance(w) ));
       }
-      /*
       else if (t.tokenType === Comma) {
-        p.push(t);
+        p.push([t]);
       }
-      */
       return p;
     },
-    [] as AnyWord[][]);
+    [] as IToken[][]);
 
-  const cmbn: IMorphToken[][] = [];
+  const cmbn: IToken[][] = [];
 
-  function recurs(curr: IMorphToken[]): void {
-    if (curr.length >= words.length - 1) {
-      words[words.length - 1].forEach( w => cmbn.push([...curr, createTokenInstance(w)]) );
+  function recurs(curr: IToken[]): void {
+    if (curr.length >= parts.length - 1) {
+      parts[parts.length - 1].forEach( p => cmbn.push([...curr, p]) );
     } else {
-      words[curr.length].forEach( w => recurs([...curr, createTokenInstance(w)]) );
+      parts[curr.length].forEach( p => recurs([...curr, p]) );
     }
   }
 
-  if (words.length) {
+  if (parts.length) {
     recurs([]);
   }
 
