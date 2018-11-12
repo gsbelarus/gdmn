@@ -1,25 +1,21 @@
-import { Lexer, createToken, IToken, TokenType } from "chevrotain";
-import { AnyWord } from "../morphology/morphology";
+import { Lexer, createToken, TokenType } from "chevrotain";
 import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType } from "../morphology/types";
 import { RusNoun } from "../morphology/rusNoun";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
 
-export interface IMorphToken extends IToken {
-  word: AnyWord;
-};
-
 export interface ITokenTypes {
   [name: string]: TokenType
 };
 
-const signatures = [
-  'VERBTranPerfSingImpr',
-  'ADVBGoal',
-  'CONJ'
-];
-
 export const morphTokens = (() => {
+
+  const signatures = [
+    'VERBTranPerfSingImpr',
+    'ADVBGoal',
+    'CONJ'
+  ];
+
   [true, false].forEach( an =>
     [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender =>
       [true, false].forEach( singular =>

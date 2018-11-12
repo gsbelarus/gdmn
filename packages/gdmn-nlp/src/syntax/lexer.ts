@@ -1,7 +1,9 @@
 import { AnyWord } from '../morphology/morphology';
 import { CyrillicWord, tokenize, Comma } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
-import { IMorphToken, morphTokens } from './rusMorphTokens';
+import { morphTokens } from './rusMorphTokens';
+import { IMorphToken } from './types';
+import { IToken } from 'chevrotain';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -39,9 +41,11 @@ export function combinatorialMorph(text: string): IMorphToken[][]
       if (t.tokenType === CyrillicWord) {
         p.push(morphAnalyzer(t.image));
       }
-      if (t.tokenType === Comma) {
-        p.push(morphAnalyzer(t.image));
+      /*
+      else if (t.tokenType === Comma) {
+        p.push(t);
       }
+      */
       return p;
     },
     [] as AnyWord[][]);

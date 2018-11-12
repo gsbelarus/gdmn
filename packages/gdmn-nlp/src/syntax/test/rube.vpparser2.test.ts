@@ -16,6 +16,7 @@ describe("vpparser2", () => {
     expect((pp!.items[1] as RusWord).word).toEqual('названию');
   });
 
+  /*
   test("отсортируй по названию по убыванию", () => {
     const result = parsePhrase('отсортируй по названию по убыванию');
     const vp = result.phrase;
@@ -27,4 +28,5 @@ describe("vpparser2", () => {
     expect((pp.items[0] as RusWord).word).toEqual('по');
     expect((pp!.items[1] as RusWord).word).toEqual('названию');
   });
+  */
 });
