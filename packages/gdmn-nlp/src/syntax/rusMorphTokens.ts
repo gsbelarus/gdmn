@@ -15,6 +15,7 @@ export interface ITokenTypes {
 
 const signatures = [
   'VERBTranPerfSingImpr',
+  'ADVBGoal',
   'CONJ'
 ];
 

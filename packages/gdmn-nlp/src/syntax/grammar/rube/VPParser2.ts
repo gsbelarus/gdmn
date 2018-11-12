@@ -14,6 +14,16 @@ export class VPParser2 extends Parser {
   public imperativeVP = this.RULE('imperativeVP', () => {
     this.SUBRULE(this.imperativeVerb);
     this.SUBRULE(this.pp);
+    this.OPTION(
+      () => {
+        this.MANY(
+          () => {
+            this.CONSUME(morphTokens.Comma);
+            this.SUBRULE(this.pp);
+          }
+        );
+      }
+    );
   });
 
   public imperativeVerb = this.RULE('imperativeVerb', () => this.CONSUME(morphTokens.VERBTranPerfSingImpr) );

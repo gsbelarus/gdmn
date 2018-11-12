@@ -1,5 +1,5 @@
 import { AnyWord } from '../morphology/morphology';
-import { CyrillicWord, tokenize } from '../syntax/tokenizer';
+import { CyrillicWord, tokenize, Comma } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
 import { IMorphToken, morphTokens } from './rusMorphTokens';
 
@@ -37,6 +37,9 @@ export function combinatorialMorph(text: string): IMorphToken[][]
   const words = tokenize(text).reduce(
     (p, t) => {
       if (t.tokenType === CyrillicWord) {
+        p.push(morphAnalyzer(t.image));
+      }
+      if (t.tokenType === Comma) {
         p.push(morphAnalyzer(t.image));
       }
       return p;

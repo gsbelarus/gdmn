@@ -12,9 +12,14 @@ export const LineBreak: TokenType = createToken({
   line_breaks: true
 });
 
+export const Comma: TokenType = createToken({
+  name: 'Comma',
+  pattern: /,/
+});
+
 export const PunctuationMark: TokenType = createToken({
   name: 'PunctuationMark',
-  pattern: /[.,?!]{1}/
+  pattern: /[.?!]{1}/
 });
 
 export const CyrillicWord: TokenType = createToken({
@@ -31,6 +36,7 @@ const allTokens: TokenType[] = [
   LineBreak,
   WhiteSpace,
   PunctuationMark,
+  Comma,
   CyrillicWord,
   Other
 ];
