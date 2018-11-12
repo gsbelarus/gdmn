@@ -542,7 +542,7 @@ export class MainApplication extends Application {
 
     // TODO tmp
     try {
-      const databases = require("../db/database");
+      const {default: databases} = require("../db/databases");
       for (const db of Object.values(databases)) {
         const dbDetail = db as IDBDetail;
         await AConnection.executeTransaction({
@@ -553,8 +553,9 @@ export class MainApplication extends Application {
               ownerKey: admin.id,
               external: true
             });
+            console.log(dbDetail);
             await this._addUserApplicationInfo(_connection, trans, {
-              alias: dbDetail.alias as any,
+              alias: dbDetail.alias,
               appKey: appInfo.id,
               userKey: admin.id
             });

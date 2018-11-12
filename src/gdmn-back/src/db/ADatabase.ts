@@ -66,17 +66,17 @@ export abstract class ADatabase {
         this._logger.error("Database already created");
         throw new Error("Database already created");
       }
-      const {driver, connectionOptions}: IDBDetail = this._dbDetail;
+      const {driver, connectionOptions, poolOptions}: IDBDetail = this._dbDetail;
       this._logger.info("Creating '%s:%s/%s'", connectionOptions.host, connectionOptions.port, connectionOptions.path);
       const connection = driver.newConnection();
       await connection.createDatabase(connectionOptions);
+      await this._connectionPool.create(connectionOptions, poolOptions);
       await this._onCreate(connection);
       await connection.disconnect();
       this._logger.info("Created '%s:%s/%s'", connectionOptions.host, connectionOptions.port, connectionOptions.path);
     } finally {
       this._isBusy = false;
     }
-    await this.connect();
   }
 
   public async delete(): Promise<void> {

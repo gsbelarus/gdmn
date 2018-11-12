@@ -29,8 +29,7 @@ export abstract class Application extends ADatabase {
   protected _sessionLogger = log4js.getLogger("Session");
   protected _taskLogger = log4js.getLogger("Task");
 
-  private _erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
-
+  private readonly _erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
   private readonly _sessionManager = new SessionManager(this._erModel, this._sessionLogger);
 
   protected constructor(dbDetail: IDBDetail, logger: Logger) {

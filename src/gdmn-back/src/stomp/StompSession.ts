@@ -15,6 +15,7 @@ import {Session} from "../apps/base/Session";
 import {Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
 import {CreateAppCommand, DeleteAppCommand, GetAppsCommand, MainAction, MainApplication} from "../apps/MainApplication";
+import {Constants} from "../Constants";
 import {ErrorCode, ServerError} from "./ServerError";
 import {ITokens, Utils} from "./Utils";
 
@@ -177,17 +178,17 @@ export class StompSession implements StompClientCommandListener {
 
   public connect(headers: StompHeaders): void {
     this._try(async () => {
-      const {session, login, passcode, access_token, authorization, "app-uid": appUid, "create-user": isCreateUser}
+      const {session, login, passcode, authorization, "app-uid": appUid, "create-user": isCreateUser}
         = headers as IConnectHeaders;
 
       // authorization
       let result: { userKey: number, newTokens?: ITokens };
-      if (login && passcode && isCreateUser) {
+      if (login && passcode && isCreateUser === 1) {
         result = await Utils.createUser(this.mainApplication, login, passcode);
       } else if (login && passcode) {
         result = await Utils.login(this.mainApplication, login, passcode);
-      } else if (authorization || access_token) { // TODO remove access_token
-        result = await Utils.authorize(this.mainApplication, authorization || access_token!);
+      } else if (authorization) {
+        result = await Utils.authorize(this.mainApplication, authorization);
       } else {
         throw new ServerError(ErrorCode.UNAUTHORIZED, "Incorrect headers");
       }
@@ -468,9 +469,8 @@ export class StompSession implements StompClientCommandListener {
   }
 
   protected _sendConnected(headers: StompHeaders): void {
-    const pack = require("../../package.json");
     this._stomp.connected({
-      server: `${pack.name}/${pack.version}`,
+      server: `${Constants.NAME}/${Constants.VERSION}`,
       session: this.session.id,
       ...headers
     }).catch(this.logger.warn);
