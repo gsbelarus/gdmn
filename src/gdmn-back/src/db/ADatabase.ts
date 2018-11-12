@@ -52,8 +52,8 @@ export abstract class ADatabase {
     } catch (error) {
       if (error.message.includes("File exists")) {
         this._logger.info("Already created");
+        await this.connect();
       }
-      await this.connect();
     }
   }
 

@@ -553,7 +553,6 @@ export class MainApplication extends Application {
               ownerKey: admin.id,
               external: true
             });
-            console.log(dbDetail);
             await this._addUserApplicationInfo(_connection, trans, {
               alias: dbDetail.alias,
               appKey: appInfo.id,
