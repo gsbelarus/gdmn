@@ -1,0 +1,101 @@
+.MorphBox {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.MorphBox > * {
+  padding-top: 8px;
+}
+
+.MorphInput {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.MorphInput > * {
+  margin-right: 12px;
+}
+
+.MorphVocabulary {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.MorphVocabulary > * {
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.MorphOutput {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+  cursor: default;
+}
+
+.MorphOutput > span {
+  border: 1px gray solid;
+  margin-right: 8px;
+  background-color: mistyrose;
+}
+
+.MorphOutputDisplayText {
+  color: white;
+}
+
+.MorphOutputDisplayText > *:first-child {
+  background-color: darkmagenta;
+  padding-bottom: 2px;
+  border-bottom: 1px solid dimgray;
+}
+
+.MorphOutputDisplayText > * {
+  padding-left: 4px;
+  background-color: darkgoldenrod;
+}
+
+.MorphOutputDisplayText > *:last-child {
+  padding-bottom: 2px;
+  border-bottom: 1px solid dimgray;
+}
+
+.MorphOutputSignature {
+  padding: 4px;
+  background-color: olivedrab;
+  color: white;
+  border-bottom: 1px solid dimgray;
+}
+
+.MorphOutputFlex {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding: 8px;
+}
+
+.MorphOutputFlex > span {
+  padding: 8px;
+  text-align: left;
+}
+
+.MorphOutputFlex > table {
+  border: none;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.MorphOutputFlex th, .MorphOutputFlex td {
+  border: 1px gray solid;
+}

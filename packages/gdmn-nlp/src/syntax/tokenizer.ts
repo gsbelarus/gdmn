@@ -30,7 +30,7 @@ export const CyrillicWord: TokenType = createToken({
 export const Other: TokenType = createToken({
   name: 'Other',
   pattern: /[A-Za-z0-9]+/
-})
+});
 
 const allTokens: TokenType[] = [
   LineBreak,

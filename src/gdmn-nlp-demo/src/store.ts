@@ -1,10 +1,10 @@
 import { combineReducers, createStore, AnyAction, applyMiddleware } from "redux";
-import { State as MorphologyState, reducer as morphologyReducer } from './morphology/reducer';
+import { reducer as morphologyReducer, IMorphologyState } from './morphology/reducer';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import thunk from 'redux-thunk';
 
 export interface State {
-  morphology: MorphologyState;
+  morphology: IMorphologyState;
 };
 
 const rootReducer = combineReducers<State>(

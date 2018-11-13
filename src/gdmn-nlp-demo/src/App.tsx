@@ -1,28 +1,36 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Route, Link, HashRouter } from 'react-router-dom';
-import Morphology from './morphology/Morphology';
+import { Route, BrowserRouter } from 'react-router-dom';
+import { MorphBoxContainer } from './morphology/MorphBoxContainer';
+import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
 class App extends Component {
   render() {
     return (
-      <div className="App">
-        <HashRouter>
+      <div>
+        <BrowserRouter>
           <div>
-            <ul>
-              <li>
-                <Link to="/morphology">Morphology</Link>
-              </li>
-            </ul>
-
-            <hr />
-
-            <Route path="/morphology" component={Morphology} />
+            <CommandBar
+              items={this.getItems()}
+            />
+            <div className="WorkArea">
+              <Route path="/morphology" component={MorphBoxContainer} />
+            </div>
           </div>
-        </HashRouter>
+        </BrowserRouter>
       </div>
     );
   }
-}
+
+  private getItems = (): ICommandBarItemProps[] => {
+    return [
+      {
+        key: 'morphology',
+        text: 'Morphology',
+        href: '/morphology'
+      }
+    ];
+  };
+};
 
 export default App;
