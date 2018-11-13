@@ -49,6 +49,7 @@ type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTy
 
 interface IReceivedErrorMeta<TErrorCodes extends number> {
   code: TErrorCodes;
+  message: string; // todo: tmp
 }
 
 // todo reconnect (session)
