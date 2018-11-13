@@ -557,7 +557,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const selectedRows = this.allRowsSelected ? Array(this.size).fill(true) : [...this._selectedRows];
 
+    const row = this.get(idx);
     selectedRows[idx] = selected || undefined;
+
+    if (row.type === TRowType.HeaderExpanded) {
+      selectedRows[idx] = selected || undefined;
+
+      for (let i = 1; i <= row.group!.bufferCount; i++) {
+        selectedRows[idx + i] = selectedRows[idx];
+      }
+    }
+
     const allRowsSelected = this.size === selectedRows.reduce( (p, sr) => sr ? p + 1 : p, 0 );
 
     return new RecordSet<R>(
