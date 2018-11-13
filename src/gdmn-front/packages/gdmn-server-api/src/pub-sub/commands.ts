@@ -53,6 +53,12 @@ type TSignInCmd = ICmd<ISignInRequestMeta>;
 
 type TSignInCmdResult = ICmdResult<TSignInResponseMeta, null>; // only protocol errors
 
+// sign out
+
+type TSignOutCmd = ICmd<null>;
+
+type TSignOutCmdResult = ICmdResult<null, null>; // only protocol errors
+
 // access token auth
 
 type TAuthCmd = ICmd<TAccessAuthRequestMeta>;
@@ -108,6 +114,8 @@ export {
   TSignUpCmdResult,
   TSignInCmd,
   TSignInCmdResult,
+  TSignOutCmd,
+  TSignOutCmdResult,
   TAuthCmd,
   TAuthCmdResult,
   TRefreshAuthCmd,
