@@ -13,8 +13,6 @@ import log4js from "log4js";
 import path from "path";
 import WebSocket from "ws";
 import {checkHandledError, ErrorCodes, throwCtx} from "./ErrorCodes";
-import passport from "./passport";
-import account from "./router/account";
 import {StompManager} from "./stomp/StompManager";
 
 interface IServer {
@@ -36,7 +34,6 @@ async function create(): Promise<IServer> {
     .use(logger())
     .use(serve(config.get("server.publicDir")))
     .use(koaBody({multipart: true}))
-    .use(passport.initialize())
     .use(cors())
     .use(errorHandler())
     .use(async (ctx, next) => {
@@ -56,8 +53,6 @@ async function create(): Promise<IServer> {
   });
 
   const router = new Router()
-    .use("/account", account.routes(), account.allowedMethods())
-
     // TODO temp
     .get("/", (ctx) => ctx.redirect("/spa"))
     .get(/\/spa(\/*)?/g, async (ctx) => {

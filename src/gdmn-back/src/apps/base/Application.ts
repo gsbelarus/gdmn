@@ -5,24 +5,24 @@ import log4js, {Logger} from "log4js";
 import {ADatabase, IDBDetail} from "../../db/ADatabase";
 import {Session} from "./Session";
 import {SessionManager} from "./SessionManager";
-import {ICommand, Level, Task} from "./task/Task";
+import {ICmd, Level, Task} from "./task/Task";
 
 export type AppAction = "BEGIN_TRANSACTION" | "COMMIT_TRANSACTION" | "ROLLBACK_TRANSACTION" |
   "PING" | "GET_SCHEMA" | "QUERY";
 
-export type AppCommand<A extends AppAction, P = undefined> = ICommand<A, P>;
+export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
 export interface ITPayload {
   transactionKey?: string;
 }
 
-export type BeginTransCommand = AppCommand<"BEGIN_TRANSACTION">;
-export type CommitTransCommand = AppCommand<"COMMIT_TRANSACTION", { transactionKey: string; }>;
-export type RollbackTransCommand = AppCommand<"ROLLBACK_TRANSACTION", { transactionKey: string; }>;
+export type BeginTransCmd = AppCmd<"BEGIN_TRANSACTION">;
+export type CommitTransCmd = AppCmd<"COMMIT_TRANSACTION", { transactionKey: string; }>;
+export type RollbackTransCmd = AppCmd<"ROLLBACK_TRANSACTION", { transactionKey: string; }>;
 
-export type PingCommand = AppCommand<"PING", { steps: number; delay: number; } & ITPayload>;
-export type GetSchemaCommand = AppCommand<"GET_SCHEMA">;
-export type QueryCommand = AppCommand<"QUERY", IEntityQueryInspector & ITPayload>;
+export type PingCmd = AppCmd<"PING", { steps: number; delay: number; } & ITPayload>;
+export type GetSchemaCmd = AppCmd<"GET_SCHEMA">;
+export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector & ITPayload>;
 
 export abstract class Application extends ADatabase {
 
@@ -44,7 +44,7 @@ export abstract class Application extends ADatabase {
     return this._sessionManager;
   }
 
-  public pushBeginTransCommand(session: Session, command: BeginTransCommand): Task<BeginTransCommand, string> {
+  public pushBeginTransCmd(session: Session, command: BeginTransCmd): Task<BeginTransCmd, string> {
     this._checkSession(session);
     this._checkBusy();
 
@@ -63,7 +63,7 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  public pushCommitTransCommand(session: Session, command: CommitTransCommand): Task<CommitTransCommand, void> {
+  public pushCommitTransCmd(session: Session, command: CommitTransCmd): Task<CommitTransCmd, void> {
     this._checkSession(session);
     this._checkBusy();
 
@@ -88,7 +88,7 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  public pushRollbackTransCommand(session: Session, command: RollbackTransCommand): Task<RollbackTransCommand, void> {
+  public pushRollbackTransCmd(session: Session, command: RollbackTransCmd): Task<RollbackTransCmd, void> {
     this._checkSession(session);
     this._checkBusy();
 
@@ -113,7 +113,7 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  public pushPingCommand(session: Session, command: PingCommand): Task<PingCommand, void> {
+  public pushPingCmd(session: Session, command: PingCmd): Task<PingCmd, void> {
     this._checkSession(session);
     this._checkBusy();
 
@@ -144,7 +144,7 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  public pushGetSchemaCommand(session: Session, command: GetSchemaCommand): Task<GetSchemaCommand, IERModel> {
+  public pushGetSchemaCmd(session: Session, command: GetSchemaCmd): Task<GetSchemaCmd, IERModel> {
     this._checkSession(session);
     this._checkBusy();
 
@@ -160,7 +160,7 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  public pushQueryCommand(session: Session, command: QueryCommand): Task<QueryCommand, IQueryResponse> {
+  public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IQueryResponse> {
     this._checkSession(session);
     this._checkBusy();
 

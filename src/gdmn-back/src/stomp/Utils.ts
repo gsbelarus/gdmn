@@ -1,7 +1,8 @@
+import config from "config";
+import jwt from "jsonwebtoken";
 import {StompHeaders} from "stomp-protocol";
 import {Application} from "../apps/base/Application";
-import {MainApplication} from "../apps/MainApplication";
-import {createAccessJwtToken, createRefreshJwtToken, getPayloadFromJwtToken} from "../passport";
+import {IUser, MainApplication} from "../apps/MainApplication";
 import {ErrorCode, ServerError} from "./ServerError";
 
 export interface ITokens extends StompHeaders {
@@ -10,6 +11,40 @@ export interface ITokens extends StompHeaders {
 }
 
 export class Utils {
+
+  public static readonly JWT_SECRET: string = config.get("server.jwtSecret");
+
+  public static createAccessJwtToken(user: IUser): string {
+    return jwt.sign({
+      id: user.id
+    }, Utils.JWT_SECRET, {
+      expiresIn: "3h"
+    });
+  }
+
+  public static createRefreshJwtToken(user: IUser): string {
+    return jwt.sign({
+      id: user.id,
+      isRefresh: true
+    }, Utils.JWT_SECRET, {
+      expiresIn: "7d"
+    });
+  }
+
+  public static getPayloadFromJwtToken(token: string): any {
+    const verified = jwt.verify(token, Utils.JWT_SECRET);
+
+    if (verified) {
+      const payload = jwt.decode(token);
+      if (!payload) {
+        throw new Error("No payload");
+      }
+
+      return payload;
+    }
+
+    throw new Error("Token not valid");
+  }
 
   public static checkContentType(headers?: StompHeaders): void | never {
     const contentType = headers!["content-type"];
@@ -38,7 +73,7 @@ export class Utils {
 
   public static async authorize(mainApplication: MainApplication,
                                 token: string): Promise<{ userKey: number, newTokens?: ITokens }> {
-    const payload = getPayloadFromJwtToken(token);
+    const payload = Utils.getPayloadFromJwtToken(token);
     const user = await mainApplication.findUser({id: payload.id});
     if (!user) {
       throw new ServerError(ErrorCode.NOT_FOUND, "No users for token");
@@ -46,8 +81,8 @@ export class Utils {
     const result: { userKey: number, newTokens?: ITokens } = {userKey: user.id};
     if (payload.isRefresh) {
       result.newTokens = {
-        "access-token": createAccessJwtToken(user),
-        "refresh-token": createRefreshJwtToken(user)
+        "access-token": Utils.createAccessJwtToken(user),
+        "refresh-token": Utils.createRefreshJwtToken(user)
       };
     }
     return result;
@@ -63,8 +98,8 @@ export class Utils {
     return {
       userKey: user.id,
       newTokens: {
-        "access-token": createAccessJwtToken(user),
-        "refresh-token": createRefreshJwtToken(user)
+        "access-token": Utils.createAccessJwtToken(user),
+        "refresh-token": Utils.createRefreshJwtToken(user)
       }
     };
   }
@@ -87,8 +122,8 @@ export class Utils {
     return {
       userKey: user.id,
       newTokens: {
-        "access-token": createAccessJwtToken(user),
-        "refresh-token": createRefreshJwtToken(user)
+        "access-token": Utils.createAccessJwtToken(user),
+        "refresh-token": Utils.createRefreshJwtToken(user)
       }
     };
   }

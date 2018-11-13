@@ -23,28 +23,27 @@ export enum Level {
 
 export type StatusChecker = () => Promise<void | never>;
 
-export interface IContext<Command extends ICommand<any>> {
-  command: Command;
+export interface IContext<Cmd extends ICmd<any>> {
+  command: Cmd;
   session: Session;
   checkStatus: StatusChecker;
   progress: Progress;
 }
 
-export type TaskWorker<Command extends ICommand<any>, Result>
-  = (context: IContext<Command>) => Result | Promise<Result>;
+export type TaskWorker<Cmd extends ICmd<any>, Result> = (context: IContext<Cmd>) => Result | Promise<Result>;
 
-export interface ICommand<A, P = any> {
+export interface ICmd<A, P = any> {
   readonly action: A;
   readonly payload: P;
 }
 
-export interface IOptions<Command extends ICommand<any>, Result> {
-  readonly command: Command;
+export interface IOptions<Cmd extends ICmd<any>, Result> {
+  readonly command: Cmd;
   readonly session: Session;
   readonly level: Level;
   readonly logger?: Logger;
   readonly progress?: IProgressOptions;
-  readonly worker: TaskWorker<Command, Result>;
+  readonly worker: TaskWorker<Cmd, Result>;
 }
 
 export interface ITaskLog {
@@ -52,12 +51,12 @@ export interface ITaskLog {
   status: TaskStatus;
 }
 
-export interface ITaskEvents<Command extends ICommand<any>, Result> {
-  change: (task: Task<Command, Result>) => void;
-  progress: (task: Task<Command, Result>) => void;
+export interface ITaskEvents<Cmd extends ICmd<any>, Result> {
+  change: (task: Task<Cmd, Result>) => void;
+  progress: (task: Task<Cmd, Result>) => void;
 }
 
-export class Task<Command extends ICommand<any>, Result> {
+export class Task<Cmd extends ICmd<any>, Result> {
 
   public static readonly STATUSES = [
     TaskStatus.IDLE,
@@ -75,12 +74,12 @@ export class Task<Command extends ICommand<any>, Result> {
 
   private static DEFAULT_TIMEOUT: number = config.get("server.task.timeout");
 
-  public readonly emitter: StrictEventEmitter<EventEmitter, ITaskEvents<Command, Result>> = new EventEmitter();
+  public readonly emitter: StrictEventEmitter<EventEmitter, ITaskEvents<Cmd, Result>> = new EventEmitter();
 
   protected readonly _logger: Logger | Console;
 
   private readonly _id: string;
-  private readonly _options: IOptions<Command, Result>;
+  private readonly _options: IOptions<Cmd, Result>;
   private readonly _progress: Progress;
   private readonly _log: ITaskLog[] = [];
 
@@ -89,7 +88,7 @@ export class Task<Command extends ICommand<any>, Result> {
   private _error?: ServerError;
   private _timer?: NodeJS.Timer;
 
-  constructor(options: IOptions<Command, Result>) {
+  constructor(options: IOptions<Cmd, Result>) {
     this._id = uuidV1().toUpperCase();
     this._options = options;
     this._logger = options.logger || console;
@@ -108,7 +107,7 @@ export class Task<Command extends ICommand<any>, Result> {
     return this._id;
   }
 
-  get options(): IOptions<Command, Result> {
+  get options(): IOptions<Cmd, Result> {
     return this._options;
   }
 

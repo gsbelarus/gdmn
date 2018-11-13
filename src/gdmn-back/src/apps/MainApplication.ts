@@ -19,7 +19,7 @@ import {v1 as uuidV1} from "uuid";
 import {IDBDetail} from "../db/ADatabase";
 import {Application} from "./base/Application";
 import {Session} from "./base/Session";
-import {ICommand, Level, Task} from "./base/task/Task";
+import {ICmd, Level, Task} from "./base/task/Task";
 import {GDMNApplication} from "./GDMNApplication";
 
 export interface ICreateUser {
@@ -69,15 +69,15 @@ export interface IUserApplicationInfo extends IApplicationInfo {
 
 export type MainAction = "DELETE_APP" | "CREATE_APP" | "GET_APPS";
 
-export type MainCommand<A extends MainAction, P = undefined> = ICommand<A, P>;
+export type MainCmd<A extends MainAction, P = undefined> = ICmd<A, P>;
 
-export type CreateAppCommand = MainCommand<"CREATE_APP", {
+export type CreateAppCmd = MainCmd<"CREATE_APP", {
   alias: string;
   external: boolean;
   connectionOptions?: IOptConOptions;
 } & { transactionKey?: string; }>;
-export type DeleteAppCommand = MainCommand<"DELETE_APP", { uid: string; }>;
-export type GetAppsCommand = MainCommand<"GET_APPS">;
+export type DeleteAppCmd = MainCmd<"DELETE_APP", { uid: string; }>;
+export type GetAppsCmd = MainCmd<"GET_APPS">;
 
 export class MainApplication extends Application {
 
@@ -136,8 +136,7 @@ export class MainApplication extends Application {
   }
 
   // TODO tmp
-  public pushCreateAppCommand(session: Session,
-                              command: CreateAppCommand): Task<CreateAppCommand, IUserApplicationInfo> {
+  public pushCreateAppCmd(session: Session, command: CreateAppCmd): Task<CreateAppCmd, IUserApplicationInfo> {
     this._checkSession(session);
 
     const task = new Task({
@@ -184,7 +183,7 @@ export class MainApplication extends Application {
   }
 
   // TODO tmp
-  public pushDeleteAppCommand(session: Session, command: DeleteAppCommand): Task<DeleteAppCommand, void> {
+  public pushDeleteAppCmd(session: Session, command: DeleteAppCmd): Task<DeleteAppCmd, void> {
     this._checkSession(session);
 
     const task = new Task({
@@ -221,8 +220,7 @@ export class MainApplication extends Application {
   }
 
   // TODO tmp
-  public pushGetAppsCommand(session: Session,
-                            command: GetAppsCommand): Task<GetAppsCommand, IUserApplicationInfo[]> {
+  public pushGetAppsCmd(session: Session, command: GetAppsCmd): Task<GetAppsCmd, IUserApplicationInfo[]> {
     this._checkSession(session);
 
     const task = new Task({

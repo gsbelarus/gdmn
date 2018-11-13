@@ -4,17 +4,17 @@ import {v1 as uuidV1} from "uuid";
 import {
   AppAction,
   Application,
-  BeginTransCommand,
-  CommitTransCommand,
-  GetSchemaCommand,
-  PingCommand,
-  QueryCommand,
-  RollbackTransCommand
+  BeginTransCmd,
+  CommitTransCmd,
+  GetSchemaCmd,
+  PingCmd,
+  QueryCmd,
+  RollbackTransCmd
 } from "../apps/base/Application";
 import {Session} from "../apps/base/Session";
 import {Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
-import {CreateAppCommand, DeleteAppCommand, GetAppsCommand, MainAction, MainApplication} from "../apps/MainApplication";
+import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, MainAction, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
 import {ErrorCode, ServerError} from "./ServerError";
 import {ITokens, Utils} from "./Utils";
@@ -322,8 +322,8 @@ export class StompSession implements StompClientCommandListener {
               if (!bodyObj.payload || !bodyObj.payload.uid) {
                 throw new ServerError(ErrorCode.INVALID, "Payload must contains 'uid'");
               }
-              const command: DeleteAppCommand = {action, ...bodyObj};
-              const task = this.mainApplication.pushDeleteAppCommand(this.session, command);
+              const command: DeleteAppCmd = {action, ...bodyObj};
+              const task = this.mainApplication.pushDeleteAppCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
@@ -336,8 +336,8 @@ export class StompSession implements StompClientCommandListener {
               if (!bodyObj.payload || !bodyObj.payload.alias || !bodyObj.payload.external) {
                 throw new ServerError(ErrorCode.INVALID, "Payload must contains 'alias' and 'external'");
               }
-              const command: CreateAppCommand = {action, ...bodyObj};
-              const task = this.mainApplication.pushCreateAppCommand(this.session, command);
+              const command: CreateAppCmd = {action, ...bodyObj};
+              const task = this.mainApplication.pushCreateAppCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
@@ -347,8 +347,8 @@ export class StompSession implements StompClientCommandListener {
               if (this.mainApplication !== this.application) {
                 throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported action");
               }
-              const command: GetAppsCommand = {action, payload: undefined};
-              const task = this.mainApplication.pushGetAppsCommand(this.session, command);
+              const command: GetAppsCmd = {action, payload: undefined};
+              const task = this.mainApplication.pushGetAppsCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
@@ -356,31 +356,31 @@ export class StompSession implements StompClientCommandListener {
             }
             // ------------------------------For all applications
             case "BEGIN_TRANSACTION": {
-              const command: BeginTransCommand = {action, ...bodyObj};
-              const task = this.application.pushBeginTransCommand(this.session, command);
+              const command: BeginTransCmd = {action, ...bodyObj};
+              const task = this.application.pushBeginTransCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
               break;
             }
             case "COMMIT_TRANSACTION": {
-              const command: CommitTransCommand = {action, ...bodyObj};
-              const task = this.application.pushCommitTransCommand(this.session, command);
+              const command: CommitTransCmd = {action, ...bodyObj};
+              const task = this.application.pushCommitTransCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
               break;
             }
             case "ROLLBACK_TRANSACTION": {
-              const command: RollbackTransCommand = {action, ...bodyObj};
-              const task = this.application.pushRollbackTransCommand(this.session, command);
+              const command: RollbackTransCmd = {action, ...bodyObj};
+              const task = this.application.pushRollbackTransCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
               break;
             }
             case "PING": {
-              const command: PingCommand = {
+              const command: PingCmd = {
                 action,
                 payload: {
                   ...bodyObj.payload,
@@ -388,23 +388,23 @@ export class StompSession implements StompClientCommandListener {
                   delay: bodyObj.payload && bodyObj.payload.delay || 0
                 }
               };
-              const task = this.application.pushPingCommand(this.session, command);
+              const task = this.application.pushPingCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
               break;
             }
             case "GET_SCHEMA": {
-              const command: GetSchemaCommand = {action, payload: undefined};
-              const task = this.application.pushGetSchemaCommand(this.session, command);
+              const command: GetSchemaCmd = {action, payload: undefined};
+              const task = this.application.pushGetSchemaCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);
               break;
             }
             case "QUERY": {
-              const command: QueryCommand = {action, ...bodyObj};
-              const task = this.application.pushQueryCommand(this.session, command);
+              const command: QueryCmd = {action, ...bodyObj};
+              const task = this.application.pushQueryCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
               task.execute().catch(this.logger.error);

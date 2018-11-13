@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
-import {ICommand, ITaskEvents, Task, TaskStatus} from "./Task";
+import {ICmd, ITaskEvents, Task, TaskStatus} from "./Task";
 
 export interface ITaskManagerEvents extends ITaskEvents<any, any> {
   add: (task: Task<any, any>) => void;
@@ -25,7 +25,7 @@ export class TaskManager {
     return this._tasks.has(task);
   }
 
-  public add<Command extends ICommand<any>, Result>(task: Task<Command, Result>): Task<Command, Result> {
+  public add<Cmd extends ICmd<any>, Result>(task: Task<Cmd, Result>): Task<Cmd, Result> {
     if (this._tasks.has(task)) {
       this.remove(task);
     }
@@ -46,8 +46,8 @@ export class TaskManager {
     this._tasks.delete(task);
   }
 
-  public find<Command extends ICommand<any>, Result>(uid: string): Task<Command, Result> | undefined;
-  public find<Command extends ICommand<any>, Result>(...status: TaskStatus[]): Array<Task<Command, Result>>;
+  public find<Cmd extends ICmd<any>, Result>(uid: string): Task<Cmd, Result> | undefined;
+  public find<Cmd extends ICmd<any>, Result>(...status: TaskStatus[]): Array<Task<Cmd, Result>>;
   public find(...source: any[]): any {
     if (typeof source[0] === "string") {
       for (const task of this._tasks) {

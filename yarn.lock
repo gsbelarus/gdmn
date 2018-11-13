@@ -1822,17 +1822,10 @@
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-23.3.9.tgz#c16b55186ee73ae65e001fbee69d392c51337ad1"
   integrity sha512-wNMwXSUcwyYajtbayfPp55tSayuDVU6PfY5gzvRSj80UvxdXEJOVPnUVajaOp7NgXLm+1e2ZDLULmpsU9vDvQw==
 
-"@types/jsonwebtoken@*":
+"@types/jsonwebtoken@^8.3.0":
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-8.3.0.tgz#1fe79489df97b49273401ac3c8019cbf1dae4578"
   integrity sha512-YKnUTR4VxwljbPORPrRon9E3uel1aD8nUdvzqArCCdMTWPvo0gnI2UZkwIHN2QATdj6HYXV/Iq3/KcecAO42Ww==
-  dependencies:
-    "@types/node" "*"
-
-"@types/jsonwebtoken@^7.2.8":
-  version "7.2.8"
-  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-7.2.8.tgz#8d199dab4ddb5bba3234f8311b804d2027af2b3a"
-  integrity sha512-XENN3YzEB8D6TiUww0O8SRznzy1v+77lH7UmuN54xq/IHIsyWjWOzZuFFTtoiRuaE782uAoRwBe/wwow+vQXZw==
   dependencies:
     "@types/node" "*"
 
@@ -1866,15 +1859,7 @@
   dependencies:
     "@types/koa" "*"
 
-"@types/koa-passport@^4.0.2":
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/@types/koa-passport/-/koa-passport-4.0.2.tgz#a0277352538f12e7bef2b9991475861eb6938ae9"
-  integrity sha512-WDQhhOW+coTCe//wTaPViim9oodEuAscXiwDUSRlcNH2j7MYa4bqlLq3UdkUp5rY/b0wE4blkBxI90jpwEc1Mg==
-  dependencies:
-    "@types/koa" "*"
-    "@types/passport" "*"
-
-"@types/koa-router@^7.0.32":
+"@types/koa-router@^7.0.33":
   version "7.0.33"
   resolved "https://registry.yarnpkg.com/@types/koa-router/-/koa-router-7.0.33.tgz#68d6ab67b71cc88cd5147a1fa23cde765f5bfad1"
   integrity sha512-X/h7/zM7nyBlsa9L74u0fZQ53bmDrWzaZQlAEJQJq7F60RuTAyIVahe7id2mYCbIkXAiYxaIQeTOQlCql15WNA==
@@ -1944,39 +1929,6 @@
   version "8.10.37"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.37.tgz#d2db49dc6a4e087c3245f22b92061f22494771e5"
   integrity sha512-Jp39foY8Euv/PG4OGPyzxis82mnjcUtXLEMA8oFMCE4ilmuJgZPdV2nZNV1moz+99EJTtcpOSgDCgATUwABKig==
-
-"@types/passport-jwt@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@types/passport-jwt/-/passport-jwt-3.0.1.tgz#bc4c2610815565de977ea1a580c047d71c646084"
-  integrity sha512-JwF9U/Rmr6YicHSu/MITmHNDy2KeiedxKW2bhz6wZts3y4cq48NiN0UD98zO56TyM5Vm6BpyjFxcs6jh68ni/A==
-  dependencies:
-    "@types/express" "*"
-    "@types/jsonwebtoken" "*"
-    "@types/passport-strategy" "*"
-
-"@types/passport-local@^1.0.33":
-  version "1.0.33"
-  resolved "https://registry.yarnpkg.com/@types/passport-local/-/passport-local-1.0.33.tgz#d245b60c5b801cb3aeca1ffab557d5fe1534260d"
-  integrity sha512-+rn6ZIxje0jZ2+DAiWFI8vGG7ZFKB0hXx2cUdMmudSWsigSq6ES7Emso46r4HJk0qCgrZVfI8sJiM7HIYf4SbA==
-  dependencies:
-    "@types/express" "*"
-    "@types/passport" "*"
-    "@types/passport-strategy" "*"
-
-"@types/passport-strategy@*":
-  version "0.2.35"
-  resolved "https://registry.yarnpkg.com/@types/passport-strategy/-/passport-strategy-0.2.35.tgz#e52f5212279ea73f02d9b06af67efe9cefce2d0c"
-  integrity sha512-o5D19Jy2XPFoX2rKApykY15et3Apgax00RRLf0RUotPDUsYrQa7x4howLYr9El2mlUApHmCMv5CZ1IXqKFQ2+g==
-  dependencies:
-    "@types/express" "*"
-    "@types/passport" "*"
-
-"@types/passport@*":
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@types/passport/-/passport-0.4.7.tgz#2b7f29bf61df91cf77023b3777e940b613d4b4d8"
-  integrity sha512-EePlxNYx5tf3n0yjdPXX0/zDOv0UCwjMyQo4UkWGlhHteNDItAj7TfDdLttSThVMKQz3uCW7lsGzMuml0f8g9Q==
-  dependencies:
-    "@types/express" "*"
 
 "@types/prop-types@*":
   version "15.5.6"
@@ -8199,7 +8151,7 @@ jsonparse@^1.2.0:
   resolved "https://registry.yarnpkg.com/jsonparse/-/jsonparse-1.3.1.tgz#3f4dae4a91fac315f71062f8521cc239f1366280"
   integrity sha1-P02uSpH6wxX3EGL4UhzCOfE2YoA=
 
-jsonwebtoken@^8.2.0, jsonwebtoken@^8.3.0:
+jsonwebtoken@^8.3.0:
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-8.3.0.tgz#056c90eee9a65ed6e6c72ddb0a1d325109aaf643"
   integrity sha512-oge/hvlmeJCH+iIz1DwcO7vKPkNGJHhgkspk8OH3VKlw+mbi42WtD4ig1+VXRln765vxptAv+xT26Fd3cteqag==
@@ -8443,13 +8395,6 @@ koa-logger@^3.2.0:
     humanize-number "0.0.2"
     passthrough-counter "^1.0.0"
 
-koa-passport@^4.1.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/koa-passport/-/koa-passport-4.1.1.tgz#4ad1f5296c933244a7a2591b60c724c5f8bf842a"
-  integrity sha512-SJrAAWabeXzQC78ABUTCGM5OpxPKFl+R41q75wMpcl+tpmo+UFGXaId966cN5cBK/lAbpGsTGimhyefOKL3bbg==
-  dependencies:
-    passport "^0.4.0"
-
 koa-router@^7.4.0:
   version "7.4.0"
   resolved "https://registry.yarnpkg.com/koa-router/-/koa-router-7.4.0.tgz#aee1f7adc02d5cb31d7d67465c9eacc825e8c5e0"
@@ -8485,7 +8430,7 @@ koa2-cors@^2.0.6:
   resolved "https://registry.yarnpkg.com/koa2-cors/-/koa2-cors-2.0.6.tgz#9ad23df3a0b9bb84530b46f5944f3fb576086554"
   integrity sha512-JRCcSM4lamM+8kvKGDKlesYk2ASrmSTczDtGUnIadqMgnHU4Ct5Gw7Bxt3w3m6d6dy3WN0PU4oMP43HbddDEWg==
 
-koa@^2.6.1:
+koa@^2.6.2:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/koa/-/koa-2.6.2.tgz#57ba4d049b0a99cae0d594e6144e2931949a7ce1"
   integrity sha512-KdnBFhTgh9ysMMoYe4J4fLvaKjT7mF3nRYV8MjxLzx6qywFNeptqi4xevyUltg1fZl2CFJ+HeLXuCGx07Yvl/A==
@@ -9512,7 +9457,7 @@ node-releases@^1.0.0-alpha.11, node-releases@^1.0.1:
   dependencies:
     semver "^5.3.0"
 
-nodemon@^1.18.5:
+nodemon@^1.18.6:
   version "1.18.6"
   resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-1.18.6.tgz#89b1136634d6c0afc7de24cc932a760e999e2c76"
   integrity sha512-4pHQNYEZun+IkIC2jCaXEhkZnfA7rQe73i8RkdRyDJls/K+WxR7IpI5uNUsAvQ0zWvYcCDNGD+XVtw2ZG86/uQ==
@@ -10120,34 +10065,6 @@ pascalcase@^0.1.1:
   resolved "https://registry.yarnpkg.com/pascalcase/-/pascalcase-0.1.1.tgz#b363e55e8006ca6fe21784d2db22bd15d7917f14"
   integrity sha1-s2PlXoAGym/iF4TS2yK9FdeRfxQ=
 
-passport-jwt@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/passport-jwt/-/passport-jwt-4.0.0.tgz#7f0be7ba942e28b9f5d22c2ebbb8ce96ef7cf065"
-  integrity sha512-BwC0n2GP/1hMVjR4QpnvqA61TxenUMlmfNjYNgK0ZAs0HK4SOQkHcSv4L328blNTLtHq7DbmvyNJiH+bn6C5Mg==
-  dependencies:
-    jsonwebtoken "^8.2.0"
-    passport-strategy "^1.0.0"
-
-passport-local@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/passport-local/-/passport-local-1.0.0.tgz#1fe63268c92e75606626437e3b906662c15ba6ee"
-  integrity sha1-H+YyaMkudWBmJkN+O5BmYsFbpu4=
-  dependencies:
-    passport-strategy "1.x.x"
-
-passport-strategy@1.x.x, passport-strategy@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/passport-strategy/-/passport-strategy-1.0.0.tgz#b5539aa8fc225a3d1ad179476ddf236b440f52e4"
-  integrity sha1-tVOaqPwiWj0a0XlHbd8ja0QPUuQ=
-
-passport@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/passport/-/passport-0.4.0.tgz#c5095691347bd5ad3b5e180238c3914d16f05811"
-  integrity sha1-xQlWkTR71a07XhgCOMORTRbwWBE=
-  dependencies:
-    passport-strategy "1.x.x"
-    pause "0.0.1"
-
 passthrough-counter@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/passthrough-counter/-/passthrough-counter-1.0.0.tgz#1967d9e66da572b5c023c787db112a387ab166fa"
@@ -10236,11 +10153,6 @@ pause-stream@^0.0.11:
   integrity sha1-/lo0sMvOErWqaitAPuLnO2AvFEU=
   dependencies:
     through "~2.3"
-
-pause@0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
-  integrity sha1-HUCLP9t2kjuVQ9lvtMnf1TXZy10=
 
 pbkdf2@^3.0.3:
   version "3.0.17"
