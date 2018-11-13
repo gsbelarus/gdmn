@@ -50,9 +50,11 @@ export abstract class ADatabase {
     try {
       await this.create();
     } catch (error) {
-      if (error.message.includes("File exists")) {
+      if (error.message.includes("File exists") || error.message.includes("DATABASE is in use")) {  // TODO
         this._logger.info("Already created");
         await this.connect();
+      } else {
+        throw error;
       }
     }
   }
