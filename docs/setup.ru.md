@@ -1,6 +1,6 @@
 ## Предварительно устанавливаем
 
-1. [Node](https://nodejs.org/en/download/). Мы рекомендуем версию 10. У нас возникали проблемы с компиляцией библиотек на C++ при использовании версии 11.0. 
+1. [Node](https://nodejs.org/en/download/).
 2. [Yarn](https://yarnpkg.com/en/docs/install).
 3. [Firebird 3](https://www.firebirdsql.org/en/server-packages/). Проект не будет работать с версией Firebird ниже 3.0.
 4. [Git](https://git-scm.com/downloads).
@@ -48,11 +48,11 @@
     $ cd gdmn
     ```
 
-## Прописываем пути подключения к базам данных
+## Прописываем пути подключения к базам данных (опционально)
 
-1. gdmn-nlp-agent (находится в папке /packages/gdmn-nlp-agent). Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
-2. gdmn-back (находится в папке /src/gdmn-back). Копируем файл /src/db/databases.ts.sample в /src/db/databases.ts.
-3. gdmn-er-bridge (находится в папке /packages/gdmn-er-bridge). Копируем файл /src/test/testDB.ts.sample в /src/test/testDB.ts.
+1. gdmn-back (требуется для подключения тестовой БД) Копируем файл /src/gdmn-back/src/db/databases.ts.sample в /src/gdmn-back/src/db/databases.ts.
+2. gdmn-nlp-agent (требуется для запуска тестов). Копируем файл /packages/gdmn-nlp-agent/src/test/testDB.ts.sample в /packages/gdmn-nlp-agent/src/test/testDB.ts.
+3. gdmn-er-bridge (требуется для запуска тестов). Копируем файл /packages/gdmn-er-bridge/src/test/testDB.ts.sample в /packages/gdmn-er-bridge/src/test/testDB.ts.
 
 ## Устанавливаем зависимости
 
