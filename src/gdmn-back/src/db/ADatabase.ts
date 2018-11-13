@@ -47,14 +47,19 @@ export abstract class ADatabase {
   }
 
   public async createOrConnect(): Promise<void> {
+    const testConnection = this._dbDetail.driver.newConnection();
     try {
-      await this.create();
+      await testConnection.connect(this._dbDetail.connectionOptions);
+      await this.connect();
     } catch (error) {
-      if (error.message.includes("File exists") || error.message.includes("DATABASE is in use")) {  // TODO
-        this._logger.info("Already created");
-        await this.connect();
+      if (error.message.includes("No such file or directory")) {
+        await this.create();
       } else {
         throw error;
+      }
+    } finally {
+      if (testConnection.connected) {
+        await testConnection.disconnect();
       }
     }
   }
