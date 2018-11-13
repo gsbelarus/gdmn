@@ -5,7 +5,7 @@
   },
   "server": {
     "http": {
-      "host": "http://localhost",
+      "host": "ws://localhost",
       "port": 4000
     },
     "paths": {
