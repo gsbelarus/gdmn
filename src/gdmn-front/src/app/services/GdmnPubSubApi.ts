@@ -28,6 +28,8 @@ import {
   TRefreshAuthCmdResult,
   TSignInCmd,
   TSignInCmdResult,
+  TSignOutCmd,
+  TSignOutCmdResult,
   TSignUpCmd,
   TSignUpCmdResult,
   TTaskActionNames,
@@ -40,6 +42,7 @@ import {
   IPubSubMessage,
   IPubSubMsgPublishState,
   PubSubClient,
+  TPubSubConnectStatus,
   TPubSubMsgPublishStatus,
   TStandardHeaderKey,
   WebStomp
@@ -100,7 +103,19 @@ class GdmnPubSubApi {
       .toPromise();
   }
 
-  // todo signout (disconnect)
+  public async signOut(cmd: TSignOutCmd): Promise<TSignOutCmdResult> {
+    this.pubSubClient.disconnect();
+
+    return await this.pubSubClient.connectionDisconnectedObservable
+      .pipe(
+        map<TPubSubConnectStatus, TSignOutCmdResult>(connectStatus => ({
+          payload: null
+        })),
+        first()
+      )
+      .toPromise();
+  }
+
   // todo stop sub
 
   public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {

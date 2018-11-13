@@ -3,6 +3,7 @@ import { Middleware } from 'redux';
 import { startSubmit, stopSubmit } from 'redux-form';
 
 import { authActions } from '@src/app/scenes/auth/actions';
+import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 
 const getSignInUpMiddleware = (reduxFormKey: string): Middleware => ({ dispatch, getState }) => next => action => {
   switch (action.type) {
@@ -41,6 +42,20 @@ const signInMiddleware: Middleware = getSignInUpMiddleware('SignInForm');
 
 const signUpMiddleware: Middleware = getSignInUpMiddleware('SignUpForm');
 
-const authMiddlewares: Middleware[] = [signInMiddleware, signUpMiddleware];
+const getSignOutMiddleware = (apiService: GdmnPubSubApi): Middleware => ({ dispatch, getState }) => next => async (
+  action: any
+) => {
+  if (action.type === getType(authActions.signOut)) {
+    await apiService.signOut({ payload: null });
+  }
 
-export { authMiddlewares };
+  return next(action);
+};
+
+const getAuthMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
+  signUpMiddleware,
+  signInMiddleware,
+  getSignOutMiddleware(apiService)
+];
+
+export { getAuthMiddlewares };

@@ -4735,7 +4735,7 @@ decamelize-keys@^1.0.0:
     decamelize "^1.1.0"
     map-obj "^1.0.0"
 
-decamelize@^1.1.0, decamelize@^1.1.1, decamelize@^1.1.2:
+decamelize@^1.0.0, decamelize@^1.1.0, decamelize@^1.1.1, decamelize@^1.1.2:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/decamelize/-/decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290"
   integrity sha1-9lNNFRSCabIDUue+4m9QH5oZEpA=
@@ -6859,6 +6859,13 @@ humanize-number@0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/humanize-number/-/humanize-number-0.0.2.tgz#11c0af6a471643633588588048f1799541489c18"
   integrity sha1-EcCvakcWQ2M1iFiASPF5lUFInBg=
+
+humanize-string@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/humanize-string/-/humanize-string-1.0.2.tgz#fef0a8bc9b1b857ca4013bbfaea75071736988f6"
+  integrity sha512-PH5GBkXqFxw5+4eKaKRIkD23y6vRd/IXSl7IldyJxEXpDH9SEIXRORkBtkGni/ae2P7RVOw6Wxypd2tGXhha1w==
+  dependencies:
+    decamelize "^1.0.0"
 
 hyphenate-style-name@^1.0.2:
   version "1.0.2"
@@ -11419,6 +11426,13 @@ react-redux@5.1.1, react-redux@^5.1.0, react-redux@^5.1.1:
     prop-types "^15.6.1"
     react-is "^16.6.0"
     react-lifecycles-compat "^3.0.0"
+
+react-router-breadcrumbs-hoc@2.1.5:
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/react-router-breadcrumbs-hoc/-/react-router-breadcrumbs-hoc-2.1.5.tgz#88195770304aac8f5c244c6bce69423bfae14f3f"
+  integrity sha512-goqHMD5Wwo6fxfjWZSY34s6ckxJvFG0wrJ6dEKAhDNp8K3jw+I2YTB2gFJNAcUbM+zDkqeM3TcKdii3ovvxEmA==
+  dependencies:
+    humanize-string "^1.0.2"
 
 react-router-dom@4.3.1, react-router-dom@^4.3.1:
   version "4.3.1"

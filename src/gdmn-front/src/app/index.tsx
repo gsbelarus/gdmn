@@ -10,7 +10,7 @@ import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
 import { getAuthContainer } from '@src/app/scenes/auth/container';
 import { RootContainer } from '@src/app/scenes/root/container';
-// import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
+import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
 
 import config from 'config.json';
 
@@ -22,12 +22,12 @@ const domContainerNode = config.webpack.appMountNodeId;
 // const webStorageService = new WebStorage(WebStorageType.local, { namespace: 'gdmn::' });
 // const authService = new Auth(webStorageService);
 const apiService = new GdmnPubSubApi(apiUrl); // todo: config.server.authScheme
-const i18nService = I18n.getInstance();
+// const i18nService = I18n.getInstance();
 
-const { store, persistor } = getStore();
+const { store, persistor } = getStore(apiService);
 
 const AuthContainer = getAuthContainer(apiService);
-const GdmnContainer = () => <h2>GDMN</h2>; // todo: getGdmnContainer(apiService);
+const GdmnContainer = getGdmnContainer(apiService);
 const NotFoundView = () => <h2>404!</h2>;
 const rootRoutes = (
   <Switch>
