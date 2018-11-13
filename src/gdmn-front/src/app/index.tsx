@@ -1,13 +1,11 @@
 import React, { ReactType } from 'react';
 import ReactDOM from 'react-dom';
 import { Redirect, Route, Switch } from 'react-router-dom';
-import { Store } from 'redux';
 
 import { RouteAccessLevelType, I18n, Auth, WebStorage, WebStorageType } from '@gdmn/client-core';
 
 import theme from '@src/styles/muiTheme';
 import { getStore } from '@src/app/store/store';
-import { IState } from '@src/app/store/reducer';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
 import { getAuthContainer } from '@src/app/scenes/auth/container';
@@ -26,7 +24,7 @@ const domContainerNode = config.webpack.appMountNodeId;
 const apiService = new GdmnPubSubApi(apiUrl); // todo: config.server.authScheme
 const i18nService = I18n.getInstance();
 
-const store: Store<IState> = getStore();
+const { store, persistor } = getStore();
 
 const AuthContainer = getAuthContainer(apiService);
 const GdmnContainer = () => <h2>GDMN</h2>; // todo: getGdmnContainer(apiService);
@@ -76,7 +74,7 @@ async function start() {
 }
 
 function render(Root: ReactType) {
-  const rootComponent = <Root store={store} routes={rootRoutes} theme={theme} />;
+  const rootComponent = <Root store={store} persistor={persistor} routes={rootRoutes} theme={theme} />;
 
   ReactDOM.render(rootComponent, document.getElementById(domContainerNode));
 }

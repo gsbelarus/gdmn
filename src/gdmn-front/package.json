@@ -47,6 +47,7 @@
     "recompose": "0.30.0",
     "redux": "4.0.1",
     "redux-form": "7.4.2",
+    "redux-persist": "5.10.0",
     "rxjs": "6.3.3",
     "typesafe-actions": "2.0.4"
   },

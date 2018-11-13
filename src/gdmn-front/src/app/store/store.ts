@@ -1,3 +1,6 @@
+import { persistStore, persistReducer } from 'redux-persist';
+import persistLocalStorage from 'redux-persist/lib/storage';
+
 import { configureStore } from '@src/app/store/configureStore';
 import getReducer from '@src/app/store/reducer';
 import { getMiddlewares } from '@src/app/store/middlewares';
@@ -15,13 +18,22 @@ const getStore = () =>
     );
 
     const enhacedReducer = (state: any, action: any) => reducer(action.type === 'SIGN_OUT' ? undefined : state, action);
+    const persistConfig = {
+      key: 'gdmn::authState',
+      storage: persistLocalStorage,
+      whitelist: ['authState']
+    };
+    const persistedReducer = persistReducer(persistConfig, enhacedReducer);
+
     store = configureStore(
-      enhacedReducer,
+      persistedReducer,
       getMiddlewares()
       // authStore, apiService
     );
 
-    return store;
+    const persistor = persistStore(store);
+
+    return { store, persistor };
   };
 
 export { getStore };
