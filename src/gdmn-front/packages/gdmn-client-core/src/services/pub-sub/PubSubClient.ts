@@ -25,7 +25,7 @@ interface IQueuedPublishMessage {
 
 class PubSubClient {
   private readonly bridge: BasePubSubBridge;
-  private connectionDisconnectedObservable: Observable<TPubSubConnectStatus>;
+  public connectionDisconnectedObservable: Observable<TPubSubConnectStatus>;
   /* locally queued messages when broker is not connected or message not receipted*/
   private queuedPublishMessages: IQueuedPublishMessage[] = [];
 
