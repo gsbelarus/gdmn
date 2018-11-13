@@ -1,0 +1,41 @@
+.auth-card {
+  max-width: 600px;
+  width: 100%;
+  margin: 30px auto auto;
+  flex-wrap: nowrap;
+}
+
+.auth-card-content {
+  padding: 48px 40px 36px;
+}
+
+.auth-card-description-box {
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: column;
+  background-size: cover;
+  background: var(--palette-grey-50) url('https://avatars2.githubusercontent.com/u/11398387?s=200&v=4') no-repeat center;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.row-flex {
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+}
+
+.row-flex .col {
+  flex: 1 50%;
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .auth-card {
+    flex-wrap: nowrap;
+  }
+}
