@@ -6,22 +6,26 @@ import { ParsedText, Phrase, AnyWord } from "gdmn-nlp";
 import { Edge as DagreEdge, graphlib, layout } from 'dagre';
 import { Rect } from "./Rect";
 import { Edge } from "./Edge";
+import { predefinedPhrases } from "./phrases";
 
 export interface ISyntaxBoxProps {
   text: string,
   coombinations: IToken[][],
   errorMsg?: string,
   parsedText?: ParsedText,
+  parserDebug?: ParsedText[],
   onSetText: (text: string) => void
 };
 
 export interface ISyntaxBoxState {
-  editedText: string
+  editedText: string,
+  showPhrases: boolean
 }
 
 export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   state: ISyntaxBoxState = {
-    editedText: this.props.text
+    editedText: this.props.text,
+    showPhrases: false
   }
 
   private _getColor(t: IToken): string {
@@ -141,6 +145,9 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     return (
       <div className="CommandAndGraph">
         <div>
+          Parser: {parsedText.parser.constructor.name}
+        </div>
+        <div>
           {g.graph() ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -175,8 +182,21 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   render() {
-    const { editedText } = this.state;
-    const { onSetText, errorMsg } = this.props;
+    const { editedText, showPhrases } = this.state;
+    const { onSetText, errorMsg, parserDebug } = this.props;
+
+    const getCircularReplacer = () => {
+      const seen = new WeakSet();
+      return (key, value) => {
+        if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) {
+            return;
+          }
+          seen.add(value);
+        }
+        return value;
+      };
+    };
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -186,13 +206,40 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           onChange={ (e: React.ChangeEvent<HTMLInputElement>) => this.setState({ editedText: e.target.value }) }
         />
         <DefaultButton
+          text="..."
+          style={{ maxWidth: '48px' }}
+          onClick={ () => this.setState({ showPhrases: true }) }
+        />
+        <DefaultButton
           text="Analyze"
           onClick={ () => onSetText(editedText) }
         />
       </div>
-      {errorMsg ? <div>{errorMsg}</div> : undefined}
+      {errorMsg && <div className="SyntaxError">{errorMsg}</div>}
+      {showPhrases ?
+        <div>
+          {predefinedPhrases.map( (p, idx) => <DefaultButton key={idx} text={p} onClick={ () => this.setState({ editedText: p, showPhrases: false }) }/> )}
+        </div>
+      : undefined}
       {this._getCoombinations()}
       {this._renderPhrase()}
+      {parserDebug ?
+         <div className="ParserDebug">
+           {parserDebug.map( (pd, idx) =>
+              <div key={idx}>
+                <div>
+                  Parser: {pd.parser.constructor.name}
+                </div>
+                <div className="DebugWordSignatures">
+                  {pd.wordsSignatures.map( (ws, wi) => <div key={wi}>{ws}</div> )}
+                </div>
+                <div>
+                  {pd.errors[0] && pd.errors[0].message}
+                </div>
+              </div>
+           )}
+         </div>
+      :undefined}
     </div>);
   }
 };

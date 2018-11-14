@@ -13,6 +13,7 @@
 
 .SyntaxBoxInput > *:last-child {
   width: 120px;
+  margin-left: 4px;
 }
 
 .SyntaxCoombinations {
@@ -116,4 +117,45 @@
 .CommandAndGraph {
   display: flex;
   flex-direction: row;
+}
+
+.SyntaxError {
+  color: red;
+  font-style: italic;
+}
+
+.ParserDebug {
+  display: flex;
+  flex-direction: column;
+}
+
+.ParserDebug > div {
+  margin-bottom: 8px;
+  border: 1px solid gray;
+  border-radius: 4px;
+}
+
+.ParserDebug > div > div:first-child {
+  background-color: silver;
+}
+
+.ParserDebug > div > div:nth-child(2) {
+  padding-top: 12px;
+}
+
+.ParserDebug > div > div {
+  padding: 4px;
+}
+
+.DebugWordSignatures {
+  display: flex;
+  flex-direction: row;
+}
+
+.DebugWordSignatures > div {
+  border: 1px solid dimgray;
+  border-radius: 4px;
+  padding: 4px;
+  margin-right: 8px;
+  background-color: lightcoral;
 }

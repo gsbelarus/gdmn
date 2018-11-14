@@ -18,7 +18,6 @@ function internalParsePhrase(text: string, parser: any, visitor: any): ParsedTex
   let errors: any = undefined;
 
   combinatorialMorph(text).some( t => {
-    console.log(`parser input: ${t.map( tok => tok.image ).join(' ')} -- ${t.map( tok => tok.tokenType!.name ).join('-')}`);
     parser.input = t;
     const value = parser.sentence();
     wordsSignatures = t.map( y => y.tokenType!.name );
@@ -62,5 +61,34 @@ export function parsePhrase(text: string): ParsedText {
       return {...res, parser: parsers[i].parser};
     }
   }
-  throw new Error(`Unknown grammar of phrase ${text}`);
+  throw new Error(`Unknown grammar of phrase "${text}"`);
+};
+
+export function debugPhrase(text: string): ParsedText[] {
+  const res: ParsedText[] = [];
+
+  for (let i = 0; i < parsers.length; i++) {
+    const parser = parsers[i].parser;
+    const visitor = parsers[i].visitor;
+    combinatorialMorph(text).forEach( t => {
+      parser.input = t;
+      const value = parser.sentence();
+      const wordsSignatures = t.map( y => y.tokenType!.name );
+      if (value && !parser.errors.length) {
+        res.push({
+          wordsSignatures,
+          phrase: visitor.visit(value),
+          parser
+        });
+      } else {
+        res.push({
+          wordsSignatures,
+          parser,
+          errors: parser.errors
+        });
+      }
+    });
+  }
+
+  return res;
 };
