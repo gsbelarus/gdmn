@@ -1,14 +1,15 @@
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { State } from '../store';
-import { MorphologyActions, morphologyActions } from './actions';
+import * as actions from './actions';
 import { MorphBox } from './MorphBox';
+import { MorphologyAction } from './reducer';
 
 export const MorphBoxContainer = connect(
   (state: State) => ({
     ...state.morphology
   }),
-  (dispatch: Dispatch<MorphologyActions>) => ({
-    onSetText: (text: string) => dispatch(morphologyActions.setMorphText(text))
+  (dispatch: Dispatch<MorphologyAction>) => ({
+    onSetText: (text: string) => dispatch(actions.setMorphText(text))
   })
 )(MorphBox);

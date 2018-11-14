@@ -1,7 +1,9 @@
 import { IToken } from 'chevrotain';
 import { morphAnalyzer, tokenize, AnyWord, CyrillicWord } from 'gdmn-nlp';
-import { getType } from 'typesafe-actions';
-import { MorphologyActions, morphologyActions } from './actions';
+import { getType, ActionType } from 'typesafe-actions';
+import * as actions from './actions';
+
+export type MorphologyAction = ActionType<typeof actions>;
 
 export interface IMorphologyState {
   readonly text: string;
@@ -16,9 +18,9 @@ const initialState: IMorphologyState = {
   words: []
 };
 
-export function reducer(state: IMorphologyState = initialState, action: MorphologyActions): IMorphologyState {
+export function reducer(state: IMorphologyState = initialState, action: MorphologyAction): IMorphologyState {
   switch (action.type) {
-    case getType(morphologyActions.setMorphText): {
+    case getType(actions.setMorphText): {
       const text = action.payload;
       const tokens = tokenize(text);
 

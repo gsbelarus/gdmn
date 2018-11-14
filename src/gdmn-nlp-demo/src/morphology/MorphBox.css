@@ -1,15 +1,3 @@
-.MorphBox {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: center;
-  width: 100%;
-}
-
-.MorphBox > * {
-  padding-top: 8px;
-}
-
 .MorphInput {
   display: flex;
   flex-direction: row;

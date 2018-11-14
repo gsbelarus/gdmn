@@ -74,7 +74,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
     const { vocabulary } = this.state;
 
     return (
-      <div className="MorphBox">
+      <div className="ContentBox">
         <div className="MorphInput">
           <TextField
             label="Word"

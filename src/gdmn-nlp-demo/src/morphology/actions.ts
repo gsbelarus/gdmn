@@ -1,10 +1,8 @@
-import { ActionType, createAction } from 'typesafe-actions';
+import { createAction } from 'typesafe-actions';
 
-export const morphologyActions = {
-  setMorphText: createAction('demos/morphology/SET_MORPH_TEXT', resolve => {
+export const setMorphText = createAction('MORPHOLOGY/SET_MORPH_TEXT', resolve => {
     return (text: string) => resolve(text);
-  })
-};
+  });
 
-export type MorphologyActions = ActionType<typeof morphologyActions>;
+export type SetMorphText = typeof setMorphText;
 
