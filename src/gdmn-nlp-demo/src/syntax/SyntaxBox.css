@@ -14,3 +14,56 @@
 .SyntaxBoxInput > *:last-child {
   width: 120px;
 }
+
+.SyntaxCoombinations {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.SyntaxCoombinations > div {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.SyntaxCoombinations > div > div:first-child {
+  color: white;
+  border-radius: 4px;
+  border: none;
+}
+
+.SyntaxCoombinations > div > div {
+  padding-left: 6px;
+  padding-bottom: 4px;
+  padding-top: 2px;
+  padding-right: 6px;
+  border-radius: 4px;
+  border: 1px solid gray;
+  margin-bottom: 2px;
+}
+
+.VERBColor {
+  background-color: blueviolet;
+}
+
+.ADJFColor {
+  background-color: brown;
+}
+
+.NOUNColor {
+  background-color: darkolivegreen;
+}
+
+.PREPColor {
+  background-color: hotpink;
+}
+
+.CONJColor {
+  background-color: aqua;
+}
+
+.ADVBColor {
+  background-color: red;
+}

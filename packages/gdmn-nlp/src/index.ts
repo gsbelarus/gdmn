@@ -19,6 +19,7 @@ export * from './syntax/tokenizer';
 export * from './morphology/types';
 export * from './morphology/utility';
 export * from './syntax/syntax';
+export * from './syntax/lexer';
 export * from './syntax/parser';
 export * from './syntax/rusSyntax';
 export * from './semantics/types';
