@@ -3,15 +3,19 @@ import { AnyWord } from "../morphology/morphology";
 import { combinatorialMorph } from "./lexer";
 import { vpParser1, vpVisitor1 } from "./grammar/rube/VPParser1Visitor";
 import { vpParser2, vpVisitor2 } from "./grammar/rube/VPParser2Visitor";
+import { Parser } from "chevrotain";
 
 export type ParsedText = {
   readonly wordsSignatures: string[];
   readonly phrase?: Phrase<AnyWord>;
+  readonly parser?: Parser;
+  readonly errors?: any;
 };
 
 function internalParsePhrase(text: string, parser: any, visitor: any): ParsedText {
   let wordsSignatures: string[] = [];
   let phrase: Phrase<AnyWord> | undefined = undefined;
+  let errors: any = undefined;
 
   combinatorialMorph(text).some( t => {
     console.log(`parser input: ${t.map( tok => tok.image ).join(' ')} -- ${t.map( tok => tok.tokenType!.name ).join('-')}`);
@@ -22,7 +26,7 @@ function internalParsePhrase(text: string, parser: any, visitor: any): ParsedTex
       phrase = visitor.visit(value);
       return true;
     } else {
-      console.log(JSON.stringify(parser.errors.map( (e: any) => e.message ), undefined, 2));
+      errors = parser.errors;
       return false;
     }
   })
@@ -34,7 +38,8 @@ function internalParsePhrase(text: string, parser: any, visitor: any): ParsedTex
     }
   } else {
     return {
-      wordsSignatures
+      wordsSignatures,
+      errors
     }
   }
 };
@@ -54,7 +59,7 @@ export function parsePhrase(text: string): ParsedText {
   for (let i = 0; i < parsers.length; i++) {
     const res = internalParsePhrase(text, parsers[i].parser, parsers[i].visitor);
     if (res.phrase) {
-      return res;
+      return {...res, parser: parsers[i].parser};
     }
   }
   throw new Error(`Unknown grammar of phrase ${text}`);

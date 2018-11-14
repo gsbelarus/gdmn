@@ -67,3 +67,53 @@
 .ADVBColor {
   background-color: red;
 }
+
+.ACTIVEColor {
+  background-color: lightskyblue;
+}
+
+.CommandAndGraph svg {
+  display: block;
+  margin: auto;
+  padding-top: 16px;
+}
+
+.CommandAndGraph svg rect.outerRect {
+  stroke: none;
+  fill: gray;
+}
+
+.CommandAndGraph svg rect.phrase {
+  stroke: none;
+  fill: white;
+}
+
+.CommandAndGraph svg rect.word {
+  stroke: none;
+  fill: aquamarine;
+}
+
+.CommandAndGraph svg text {
+  fill: black;
+  font-size: 14px;
+}
+
+.CommandAndGraph svg path {
+  fill: none;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.CommandAndGraph svg marker#arrow path {
+  fill: gray;
+}
+
+.CommandAndGraph pre {
+  text-align: left;
+  border: 1px lightgray solid;
+}
+
+.CommandAndGraph {
+  display: flex;
+  flex-direction: row;
+}
