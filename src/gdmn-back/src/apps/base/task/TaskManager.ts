@@ -1,5 +1,6 @@
 import {EventEmitter} from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
+import {Session} from "../Session";
 import {ICmd, ITaskEvents, Task, TaskStatus} from "./Task";
 
 export interface ITaskManagerEvents extends ITaskEvents<any, any> {
@@ -47,9 +48,18 @@ export class TaskManager {
   }
 
   public find<Cmd extends ICmd<any>, Result>(uid: string): Task<Cmd, Result> | undefined;
+  public find<Cmd extends ICmd<any>, Result>(session: Session): Array<Task<Cmd, Result>>;
   public find<Cmd extends ICmd<any>, Result>(...status: TaskStatus[]): Array<Task<Cmd, Result>>;
   public find(...source: any[]): any {
-    if (typeof source[0] === "string") {
+    if (source[0] instanceof Session) {
+      const filter = [];
+      for (const task of this._tasks) {
+        if (source[0] === task.options.session) {
+          filter.push(task);
+        }
+      }
+      return filter;
+    } else if (typeof source[0] === "string") {
       for (const task of this._tasks) {
         if (task.id === source[0]) {
           return task;

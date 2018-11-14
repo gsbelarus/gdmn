@@ -83,6 +83,7 @@ export class StompSession implements StompClientCommandListener {
     this._onChangeTask = (task) => {
       const subscription = this._subscriptions
         .find((sub) => sub.destination === StompSession.DESTINATION_TASK_STATUS);
+
       if (subscription) {
         const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
 
@@ -95,6 +96,7 @@ export class StompSession implements StompClientCommandListener {
     this._onProgressTask = (task) => {
       const subscription = this._subscriptions
         .find((sub) => sub.destination === StompSession.DESTINATION_TASK_PROGRESS);
+
       if (subscription) {
         const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
 
@@ -310,6 +312,15 @@ export class StompSession implements StompClientCommandListener {
         case StompSession.DESTINATION_TASK:
           Utils.checkContentType(headers);
 
+          const id: string | undefined = headers["receipt-id"];
+          // protection against re-sending messages (https://github.com/gsbelarus/gdmn/issues/23)
+          if (id) {
+            const selfTasks = this.session.taskManager.find(this.session);
+            const task = selfTasks.find((t) => t.options.command.id === id);
+            if (task) {
+              return this._sendReceipt(headers, {"task-id": task.id});
+            }
+          }
           const action = headers.action as Actions;
           const bodyObj = JSON.parse(body || "{}");
 
@@ -322,7 +333,7 @@ export class StompSession implements StompClientCommandListener {
               if (!bodyObj.payload || !bodyObj.payload.uid) {
                 throw new ServerError(ErrorCode.INVALID, "Payload must contains 'uid'");
               }
-              const command: DeleteAppCmd = {action, ...bodyObj};
+              const command: DeleteAppCmd = {id, action, ...bodyObj};
               const task = this.mainApplication.pushDeleteAppCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -336,7 +347,7 @@ export class StompSession implements StompClientCommandListener {
               if (!bodyObj.payload || !bodyObj.payload.alias || !bodyObj.payload.external) {
                 throw new ServerError(ErrorCode.INVALID, "Payload must contains 'alias' and 'external'");
               }
-              const command: CreateAppCmd = {action, ...bodyObj};
+              const command: CreateAppCmd = {id, action, ...bodyObj};
               const task = this.mainApplication.pushCreateAppCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -347,7 +358,7 @@ export class StompSession implements StompClientCommandListener {
               if (this.mainApplication !== this.application) {
                 throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported action");
               }
-              const command: GetAppsCmd = {action, payload: undefined};
+              const command: GetAppsCmd = {id, action, payload: undefined};
               const task = this.mainApplication.pushGetAppsCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -356,7 +367,7 @@ export class StompSession implements StompClientCommandListener {
             }
             // ------------------------------For all applications
             case "BEGIN_TRANSACTION": {
-              const command: BeginTransCmd = {action, ...bodyObj};
+              const command: BeginTransCmd = {id, action, ...bodyObj};
               const task = this.application.pushBeginTransCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -364,7 +375,7 @@ export class StompSession implements StompClientCommandListener {
               break;
             }
             case "COMMIT_TRANSACTION": {
-              const command: CommitTransCmd = {action, ...bodyObj};
+              const command: CommitTransCmd = {id, action, ...bodyObj};
               const task = this.application.pushCommitTransCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -372,7 +383,7 @@ export class StompSession implements StompClientCommandListener {
               break;
             }
             case "ROLLBACK_TRANSACTION": {
-              const command: RollbackTransCmd = {action, ...bodyObj};
+              const command: RollbackTransCmd = {id, action, ...bodyObj};
               const task = this.application.pushRollbackTransCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -381,6 +392,7 @@ export class StompSession implements StompClientCommandListener {
             }
             case "PING": {
               const command: PingCmd = {
+                id,
                 action,
                 payload: {
                   ...bodyObj.payload,
@@ -395,7 +407,7 @@ export class StompSession implements StompClientCommandListener {
               break;
             }
             case "GET_SCHEMA": {
-              const command: GetSchemaCmd = {action, payload: undefined};
+              const command: GetSchemaCmd = {id, action, payload: undefined};
               const task = this.application.pushGetSchemaCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
@@ -403,7 +415,7 @@ export class StompSession implements StompClientCommandListener {
               break;
             }
             case "QUERY": {
-              const command: QueryCmd = {action, ...bodyObj};
+              const command: QueryCmd = {id, action, ...bodyObj};
               const task = this.application.pushQueryCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 

@@ -33,6 +33,7 @@ export interface IContext<Cmd extends ICmd<any>> {
 export type TaskWorker<Cmd extends ICmd<any>, Result> = (context: IContext<Cmd>) => Result | Promise<Result>;
 
 export interface ICmd<A, P = any> {
+  readonly id?: string;
   readonly action: A;
   readonly payload: P;
 }
