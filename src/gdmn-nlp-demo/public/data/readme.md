@@ -1,0 +1,1 @@
+Serialized ER model should be saved in this folder in a file named **ermodel.serialized.json**.
