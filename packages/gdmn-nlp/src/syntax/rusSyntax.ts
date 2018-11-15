@@ -3,11 +3,18 @@ import { RusNoun } from '../morphology/rusNoun';
 import { RusAdjective } from '../morphology/rusAdjective';
 import { RusPreposition } from '../morphology/rusPreposition';
 import { RusWord } from '../morphology/rusMorphology';
-import { Phrase } from './syntax';
+import { Phrase, PhraseName } from './syntax';
 
 export class RusPhrase extends Phrase<RusWord> {};
 
-export class RusVP extends RusPhrase {}
+export class RusVP extends RusPhrase {
+  getName(): PhraseName {
+    return {
+      label: 'RusVP',
+      description: 'Предложение с глаголом'
+    }
+  }
+}
 
 export class RusImperativeVP extends RusVP {
   constructor (imperativeVerb: RusVerb, imperativeNP?: RusNP) {
@@ -27,6 +34,13 @@ export class RusImperativeVP extends RusVP {
       return undefined;
     } else {
       return this.items[1] as RusNP;
+    }
+  }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusImperativeVP',
+      description: 'Предложение с глаголом в повелительном наклонении'
     }
   }
 }
@@ -55,6 +69,13 @@ export class RusNP extends RusPhrase {
       return undefined;
     }
   }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusNP',
+      description: 'Словосочетание с существительным'
+    }
+  }
 }
 
 export class RusANP extends RusPhrase {
@@ -69,6 +90,13 @@ export class RusANP extends RusPhrase {
   get noun(): RusNoun {
     return this.items[1] as RusNoun;
   }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusANP',
+      description: 'Словосочетание прилагательное-существительное'
+    }
+  }
 }
 
 export class RusPP extends RusPhrase {
@@ -82,5 +110,12 @@ export class RusPP extends RusPhrase {
 
   get noun(): RusNoun {
     return this.items[1] as RusNoun;
+  }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusPP',
+      description: 'Существительное с предлогом'
+    }
   }
 }

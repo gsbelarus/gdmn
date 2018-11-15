@@ -1,11 +1,19 @@
 import { Parser } from "chevrotain";
 import { morphTokens } from "../../rusMorphTokens";
+import { IDescribedParser, ParserName } from "../../types";
 
-export class VPParser2 extends Parser {
+export class VPParser2 extends Parser implements IDescribedParser {
   constructor() {
     super(morphTokens);
     Parser.performSelfAnalysis(this);
   };
+
+  public getName(): ParserName {
+    return {
+      label: 'VPParser2',
+      description: 'Глагольное предложение с императивным глаголом. Без сказуемого. С дополнениями ввиде существительного с предлогом. Пример: Сортируй по названию.'
+    }
+  }
 
   public sentence = this.RULE('sentence', () => this.SUBRULE(this.vp) );
 

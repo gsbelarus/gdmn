@@ -1,14 +1,14 @@
 import { Phrase } from "./syntax";
 import { AnyWord } from "../morphology/morphology";
 import { combinatorialMorph } from "./lexer";
-import { vpParser1, vpVisitor1 } from "./grammar/rube/VPParser1Visitor";
-import { vpParser2, vpVisitor2 } from "./grammar/rube/VPParser2Visitor";
 import { Parser } from "chevrotain";
+import { parsers } from "./grammar/rube/parsers";
+import { IDescribedParser } from "./types";
 
 export type ParsedText = {
   readonly wordsSignatures: string[];
   readonly phrase?: Phrase<AnyWord>;
-  readonly parser?: Parser;
+  readonly parser?: Parser & IDescribedParser;
   readonly errors?: any;
 };
 
@@ -42,17 +42,6 @@ function internalParsePhrase(text: string, parser: any, visitor: any): ParsedTex
     }
   }
 };
-
-const parsers = [
-  {
-    parser: vpParser1,
-    visitor: vpVisitor1
-  },
-  {
-    parser: vpParser2,
-    visitor: vpVisitor2
-  },
-];
 
 export function parsePhrase(text: string): ParsedText {
   for (let i = 0; i < parsers.length; i++) {

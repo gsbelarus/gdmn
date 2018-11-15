@@ -5,6 +5,11 @@ export class Sentence {}
 
 export type PhraseItem<W extends AnyWord> = W | Phrase<W>;
 
+export interface PhraseName {
+  label: string,
+  description: string
+};
+
 export abstract class Phrase<W extends AnyWord> {
   public items: PhraseItem<W>[];
   readonly id: number = getNextID();
@@ -15,6 +20,13 @@ export abstract class Phrase<W extends AnyWord> {
     }
 
     this.items = items;
+  }
+
+  getName(): PhraseName {
+    return {
+      label: this.constructor.name,
+      description: this.constructor.name
+    }
   }
 
   getText(): string {

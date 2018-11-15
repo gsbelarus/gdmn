@@ -1,14 +1,22 @@
 import { Parser } from "chevrotain";
 import { morphTokens } from "../../rusMorphTokens";
+import { IDescribedParser, ParserName } from "../../types";
 
 /**
  * Грамматика для фразы типа "Покажи все организации из Минска"
  */
-export class VPParser1 extends Parser {
+export class VPParser1 extends Parser implements IDescribedParser {
   constructor() {
     super(morphTokens);
     Parser.performSelfAnalysis(this);
   };
+
+  public getName(): ParserName {
+    return {
+      label: 'VPParser1',
+      description: 'Глагольное предложение с императивных глаголом и сказуемым, выраженным существительным с дополнением (дополнениями). Пример: Покажи [все] организации [из Минска [или Пинска]].'
+    };
+  }
 
   public sentence = this.RULE('sentence', () => this.SUBRULE(this.vp) );
 
