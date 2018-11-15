@@ -1,6 +1,6 @@
 import {AccessMode, AConnection, AConnectionPool, DBStructure, Factory, ICommonConnectionPoolOptions} from "gdmn-db";
 import {EntityQuery, ERModel, IConnection, IDataSource, IQueryResponse, ISequenceSource, Sequence} from "gdmn-orm";
-import {SelectBuilder} from "../crud/query/SelectBuilder";
+import {Select} from "../crud/query/Select";
 import {Constants} from "../ddl/Constants";
 import {ERExport} from "../ddl/export/ERExport";
 import {DBSchemaUpdater} from "../ddl/updates/DBSchemaUpdater";
@@ -61,7 +61,7 @@ export class DataSource implements IDataSource {
 
   public async query(query: EntityQuery, connection: Connection, transaction?: Transaction): Promise<IQueryResponse> {
     return await this.withTransaction(connection, transaction, async (trans) => {
-      const {sql, params, fieldAliases} = new SelectBuilder(this.dbStructure!, query).build();
+      const {sql, params, fieldAliases} = new Select(this.dbStructure!, query);
 
       const data = await AConnection.executeQueryResultSet({
         connection: connection.connection,

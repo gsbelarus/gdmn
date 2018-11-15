@@ -238,7 +238,7 @@ export class StompSession implements StompClientCommandListener {
           });
           this._sendReceipt(headers);
 
-          // notify about taskManager
+          // notify about tasks
           this.session.taskManager.find(...Task.DONE_STATUSES).forEach((task) => this._onEndTask(task));
           break;
         }
@@ -251,7 +251,7 @@ export class StompSession implements StompClientCommandListener {
           });
           this._sendReceipt(headers);
 
-          // notify about taskManager
+          // notify about tasks
           this.session.taskManager.find(...Task.STATUSES).forEach((task) => this._onChangeTask(task));
           break;
         }
@@ -318,6 +318,7 @@ export class StompSession implements StompClientCommandListener {
             const selfTasks = this.session.taskManager.find(this.session);
             const task = selfTasks.find((t) => t.options.command.id === id);
             if (task) {
+              this.logger.info("Duplicate received; Ignore it");
               return this._sendReceipt(headers, {"task-id": task.id});
             }
           }

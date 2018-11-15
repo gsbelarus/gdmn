@@ -2,13 +2,13 @@
   "server": {
     "http": {
       "enabled": true,
-      "host": "127.0.0.1",
+      "host": "localhost",
       "port": 4000
     },
     "stomp": {
       "heartbeat": {
-        "incoming": 60000,
-        "outgoing": 60000
+        "incoming": 10000,
+        "outgoing": 10000
       }
     },
     "publicDir": "./public",

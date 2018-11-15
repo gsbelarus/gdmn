@@ -4,4 +4,4 @@ export * from "./source/Transaction";
 export * from "./source/AttributeSource";
 export * from "./source/EntitySource";
 export * from "./source/SequenceSource";
-export * from "./crud/query/SelectBuilder";
+export * from "./crud/query/Select";
