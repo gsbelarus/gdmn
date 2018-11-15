@@ -22,7 +22,8 @@ export interface ISyntaxBoxProps {
 
 export interface ISyntaxBoxState {
   editedText: string,
-  showPhrases: boolean
+  showPhrases: boolean,
+  verboseErrors?: any;
 }
 
 export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
@@ -207,10 +208,9 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   render() {
-    const { editedText, showPhrases } = this.state;
+    const { editedText, showPhrases, verboseErrors } = this.state;
     const { onSetText, errorMsg, parserDebug, commandError, command } = this.props;
 
-    /*
     const getCircularReplacer = () => {
       const seen = new WeakSet();
       return (key, value) => {
@@ -223,7 +223,6 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         return value;
       };
     };
-    */
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -262,9 +261,27 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                 <div className="DebugWordSignatures">
                   {pd.wordsSignatures.map( (ws, wi) => <div key={wi}>{ws}</div> )}
                 </div>
-                <div>
-                  {pd.errors[0] && pd.errors[0].message}
-                </div>
+                {
+                  pd.errors[0] ?
+                  <div>
+                    <div>
+                      {pd.errors[0].message}
+                    </div>
+                    {
+                      verboseErrors === pd.errors ?
+                      <pre className="ParserError">
+                        {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
+                      </pre>
+                      :
+                      <DefaultButton
+                        text="Verbose..."
+                        onClick={ () => this.setState({ verboseErrors: pd.errors }) }
+                      />
+                    }
+                  </div>
+                  :
+                  undefined
+                }
               </div>
            )}
          </div>
