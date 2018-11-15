@@ -312,7 +312,7 @@ export class StompSession implements StompClientCommandListener {
         case StompSession.DESTINATION_TASK:
           Utils.checkContentType(headers);
 
-          const id: string | undefined = headers["receipt-id"];
+          const id: string | undefined = headers.receipt;
           // protection against re-sending messages (https://github.com/gsbelarus/gdmn/issues/23)
           if (id) {
             const selfTasks = this.session.taskManager.find(this.session);

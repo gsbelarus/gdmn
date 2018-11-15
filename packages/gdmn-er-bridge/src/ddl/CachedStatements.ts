@@ -147,7 +147,7 @@ export class CachedStatements {
       this._statements.constraintExists = await this._connection.prepare(this._transaction, `
         SELECT FIRST 1 0 
         FROM RDB$RELATION_CONSTRAINTS
-        where RDB$CONSTRAINT_NAME = :constraintName
+        WHERE RDB$CONSTRAINT_NAME = :constraintName
       `);
     }
     return await AStatement.executeQueryResultSet({
