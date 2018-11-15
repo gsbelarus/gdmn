@@ -19,3 +19,9 @@ export const processPhrase = createAction('ERMODEL/PROCESS_PHRASE', resolve => {
   });
 
 export type ProcessPhrase = typeof processPhrase;
+
+export const clearCommand = createAction('ERMODEL/CLEAR_COMMAND', resolve => {
+    return (clear: boolean) => resolve(clear);
+  });
+
+export type ClearCommand = typeof clearCommand;

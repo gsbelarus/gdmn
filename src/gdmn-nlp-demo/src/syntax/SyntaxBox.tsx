@@ -102,7 +102,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         phr: AnyWord | Phrase<AnyWord>
       ) => {
         if (phr instanceof Phrase) {
-          const label = phr.constructor.name;
+          const label = phr.getName().label;
           g.setNode(phr.id.toString(), {
             label,
             width: label.length * 9 + 8,
@@ -149,7 +149,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     return (
       <div className="CommandAndGraph">
         <div>
-          Parsed with {parsedText.parser.constructor.name}:
+          Parsed with {parsedText.parser.getName().label}:
         </div>
         <div>
           {g.graph() ? (
@@ -211,19 +211,6 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     const { editedText, showPhrases, verboseErrors } = this.state;
     const { onSetText, errorMsg, parserDebug, commandError, command } = this.props;
 
-    const getCircularReplacer = () => {
-      const seen = new WeakSet();
-      return (key, value) => {
-        if (typeof value === "object" && value !== null) {
-          if (seen.has(value)) {
-            return;
-          }
-          seen.add(value);
-        }
-        return value;
-      };
-    };
-
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
         <TextField
@@ -256,7 +243,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
            {parserDebug.map( (pd, idx) =>
               <div key={idx}>
                 <div>
-                  Parser: {pd.parser.constructor.name}
+                  Parser: {pd.parser.getName().label}
                 </div>
                 <div className="DebugWordSignatures">
                   {pd.wordsSignatures.map( (ws, wi) => <div key={wi}>{ws}</div> )}
@@ -269,9 +256,15 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                     </div>
                     {
                       verboseErrors === pd.errors ?
-                      <pre className="ParserError">
-                        {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
-                      </pre>
+                      <div>
+                        <pre className="ParserError">
+                          {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
+                        </pre>
+                        <DefaultButton
+                          text="Hide"
+                          onClick={ () => this.setState({ verboseErrors: undefined }) }
+                        />
+                      </div>
                       :
                       <DefaultButton
                         text="Verbose..."

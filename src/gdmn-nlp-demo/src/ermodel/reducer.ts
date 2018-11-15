@@ -37,6 +37,14 @@ export function reducer(state: IERModelState = initialState, action: ERModelActi
       }
     }
 
+    case getType(actions.clearCommand): {
+      return {
+        ...state,
+        command: undefined,
+        commandError: undefined
+      }
+    }
+
     case getType(actions.processPhrase): {
       const phrase = action.payload;
       const { erTranslatorRU } = state;

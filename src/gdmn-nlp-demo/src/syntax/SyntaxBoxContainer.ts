@@ -21,6 +21,8 @@ export const SyntaxBoxContainer = connect(
         const parsedText = getState().syntax.parsedText;
         if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
           dispatch(erModelActions.processPhrase(parsedText.phrase as RusPhrase));
+        } else {
+          dispatch(erModelActions.clearCommand(true));
         }
       }
     )
