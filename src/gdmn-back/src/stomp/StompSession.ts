@@ -391,15 +391,7 @@ export class StompSession implements StompClientCommandListener {
               break;
             }
             case "PING": {
-              const command: PingCmd = {
-                id,
-                action,
-                payload: {
-                  ...bodyObj.payload,
-                  steps: bodyObj.payload && bodyObj.payload.steps || 1,
-                  delay: bodyObj.payload && bodyObj.payload.delay || 0
-                }
-              };
+              const command: PingCmd = {id, action, ...bodyObj};
               const task = this.application.pushPingCmd(this.session, command);
               this._sendReceipt(headers, {"task-id": task.id});
 
