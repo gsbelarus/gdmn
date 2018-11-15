@@ -1,5 +1,6 @@
 import { createAction } from 'typesafe-actions';
 import { ERModel } from 'gdmn-orm';
+import { RusPhrase } from 'gdmn-nlp';
 
 export const setERModelLoading = createAction('ERMODEL/SET_LOADING', resolve => {
     return (loading: boolean) => resolve(loading);
@@ -12,3 +13,9 @@ export const loadERModel = createAction('ERMODEL/LOAD', resolve => {
   });
 
 export type LoadERModel = typeof loadERModel;
+
+export const processPhrase = createAction('ERMODEL/PROCESS_PHRASE', resolve => {
+    return (phrase: RusPhrase) => resolve(phrase);
+  });
+
+export type ProcessPhrase = typeof processPhrase;

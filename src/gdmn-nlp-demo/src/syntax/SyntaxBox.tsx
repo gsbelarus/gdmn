@@ -7,6 +7,7 @@ import { Edge as DagreEdge, graphlib, layout } from 'dagre';
 import { Rect } from "./Rect";
 import { Edge } from "./Edge";
 import { predefinedPhrases } from "./phrases";
+import { ICommand } from 'gdmn-nlp-agent';
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -14,6 +15,8 @@ export interface ISyntaxBoxProps {
   errorMsg?: string,
   parsedText?: ParsedText,
   parserDebug?: ParsedText[],
+  commandError?: string,
+  command?: ICommand,
   onSetText: (text: string) => void
 };
 
@@ -145,7 +148,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     return (
       <div className="CommandAndGraph">
         <div>
-          Parser: {parsedText.parser.constructor.name}
+          Parsed with {parsedText.parser.constructor.name}:
         </div>
         <div>
           {g.graph() ? (
@@ -181,10 +184,33 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     );
   }
 
+  private _renderCommand(command: ICommand) {
+    return (
+      <div className="command">
+        <div className={`action${command.action}`} />
+        {command.objects &&
+          command.objects.map((co, idx) => (
+            <div className="commandObject" key={idx}>
+              <div className="entityName">{co.entity.name}</div>
+              {co.conditions &&
+                co.conditions.map((cond, idx2) => (
+                  <div className="condition" key={idx2}>
+                    <div className="attr">{cond.attr.name}</div>
+                    <div className={`op${cond.op}`} />
+                    <div className="value">{cond.value}</div>
+                  </div>
+                ))}
+            </div>
+          ))}
+      </div>
+    );
+  }
+
   render() {
     const { editedText, showPhrases } = this.state;
-    const { onSetText, errorMsg, parserDebug } = this.props;
+    const { onSetText, errorMsg, parserDebug, commandError, command } = this.props;
 
+    /*
     const getCircularReplacer = () => {
       const seen = new WeakSet();
       return (key, value) => {
@@ -197,6 +223,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         return value;
       };
     };
+    */
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -223,6 +250,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
       : undefined}
       {this._getCoombinations()}
       {this._renderPhrase()}
+      {commandError && <div className="SyntaxError">{commandError}</div>}
+      {command && <div>Command:{this._renderCommand(command)}</div>}
       {parserDebug ?
          <div className="ParserDebug">
            {parserDebug.map( (pd, idx) =>

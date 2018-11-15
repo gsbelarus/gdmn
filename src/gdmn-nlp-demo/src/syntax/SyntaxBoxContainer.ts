@@ -1,15 +1,28 @@
 import { connect } from 'react-redux';
 import { State } from '../store';
 import { SyntaxBox } from './SyntaxBox';
-import { Dispatch } from 'redux';
 import { SyntaxAction } from './reducer';
-import * as actions from "./actions";
+import * as syntaxActions from "./actions";
+import * as erModelActions from "../ermodel/actions";
+import { ThunkDispatch } from 'redux-thunk';
+import { ERModelAction } from '../ermodel/reducer';
+import { RusPhrase } from 'gdmn-nlp';
 
 export const SyntaxBoxContainer = connect(
   (state: State) => ({
-    ...state.syntax
+    ...state.syntax,
+    commandError: state.ermodel.commandError,
+    command: state.ermodel.command
   }),
-  (dispatch: Dispatch<SyntaxAction>) => ({
-    onSetText: (text: string) => dispatch(actions.setSyntaxText(text))
+  (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>) => ({
+    onSetText: (text: string) => dispatch(
+      (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
+        dispatch(syntaxActions.setSyntaxText(text));
+        const parsedText = getState().syntax.parsedText;
+        if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
+          dispatch(erModelActions.processPhrase(parsedText.phrase as RusPhrase));
+        }
+      }
+    )
   })
 )(SyntaxBox);

@@ -21,7 +21,11 @@ const rootReducer = combineReducers<State, Actions>(
   }
 );
 
-const store: Store<State, Actions> = createStore<State, Actions, {}, {}>(rootReducer, {} as State, composeWithDevTools(applyMiddleware(thunk as ThunkMiddleware<State, Actions>)));
+const store: Store<State, Actions> = createStore<State, Actions, {}, {}>(
+  rootReducer,
+  {} as State,
+  composeWithDevTools(applyMiddleware(thunk as ThunkMiddleware<State, Actions>))
+);
 
 export type ThunkFunc = (dispatch: ThunkDispatch<State, never, Actions>, getState: () => State) => void;
 

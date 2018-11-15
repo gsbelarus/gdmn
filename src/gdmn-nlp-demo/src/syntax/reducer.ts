@@ -2,6 +2,7 @@ import { getType, ActionType } from 'typesafe-actions';
 import * as actions from './actions';
 import { IToken } from 'chevrotain';
 import { combinatorialMorph, ParsedText, parsePhrase, debugPhrase } from 'gdmn-nlp';
+import { predefinedPhrases } from './phrases';
 
 export type SyntaxAction = ActionType<typeof actions>;
 
@@ -13,7 +14,7 @@ export interface ISyntaxState {
   readonly parserDebug?: ParsedText[];
 };
 
-const initialText = 'покажи всех клиентов из минска';
+const initialText = predefinedPhrases[0];
 
 const initialState: ISyntaxState = {
   text: initialText,
