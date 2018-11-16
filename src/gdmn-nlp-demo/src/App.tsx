@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Route, BrowserRouter, Switch } from 'react-router-dom';
+import { Route, BrowserRouter, Switch, Link } from 'react-router-dom';
 import { MorphBoxContainer } from './morphology/MorphBoxContainer';
-import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
+import { IComponentAs, CommandBar, ICommandBarItemProps, IComponentAsProps, CommandBarButton, BaseComponent, IRenderFunction, IButtonProps } from 'office-ui-fabric-react';
 import { SyntaxBoxContainer } from './syntax/SyntaxBoxContainer';
 import { ERModelBoxContainer } from './ermodel/ERModelBoxContainer';
 import { Actions, State } from './store';
@@ -10,6 +10,25 @@ import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { connect } from 'react-redux';
+
+interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
+  link: string;
+  supText?: string;
+};
+
+class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
+  public render(): JSX.Element {
+    const { defaultRender: DefaultRender = CommandBarButton, link, supText, ...buttonProps } = this.props;
+
+    const onRenderText = supText ? (props: IButtonProps) => <>{props.text}<sup>{supText}</sup></> : undefined;
+
+    return (
+      <Link to={link}>
+        <DefaultRender {...buttonProps} onRenderText={onRenderText} />
+      </Link>
+    );
+  }
+};
 
 interface IAppProps {
   erModel?: ERModel;
@@ -47,23 +66,27 @@ class InternalApp extends Component<IAppProps, {}> {
   }
 
   private getItems = (): ICommandBarItemProps[] => {
-    const { loadingERModel } = this.props;
+    const { loadingERModel, erModel } = this.props;
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
 
     return [
       {
         key: 'morphology',
         text: 'Morphology',
-        href: `${process.env.PUBLIC_URL}/morphology`
+        commandBarButtonAs: btn('/morphology')
       },
       {
         key: 'syntax',
         text: 'Syntax',
-        href: `${process.env.PUBLIC_URL}/syntax`
+        commandBarButtonAs: btn('/syntax')
       },
       {
         key: 'ermodel',
+        disabled: !erModel,
         text: loadingERModel ? 'Loading ER Model...' : 'ERModel',
-        href: `${process.env.PUBLIC_URL}/ermodel`
+        commandBarButtonAs: btn('/ermodel', erModel ? Object.entries(erModel.entities).length.toString() : undefined)
       }
     ];
   };
