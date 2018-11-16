@@ -138,6 +138,7 @@ export class MainApplication extends Application {
   // TODO tmp
   public pushCreateAppCmd(session: Session, command: CreateAppCmd): Task<CreateAppCmd, IUserApplicationInfo> {
     this._checkSession(session);
+    this._checkBusy();
 
     const task = new Task({
       session,
@@ -185,6 +186,7 @@ export class MainApplication extends Application {
   // TODO tmp
   public pushDeleteAppCmd(session: Session, command: DeleteAppCmd): Task<DeleteAppCmd, void> {
     this._checkSession(session);
+    this._checkBusy();
 
     const task = new Task({
       session,
@@ -222,6 +224,7 @@ export class MainApplication extends Application {
   // TODO tmp
   public pushGetAppsCmd(session: Session, command: GetAppsCmd): Task<GetAppsCmd, IUserApplicationInfo[]> {
     this._checkSession(session);
+    this._checkBusy();
 
     const task = new Task({
       session,
@@ -286,7 +289,17 @@ export class MainApplication extends Application {
   }
 
   public async addUser(user: ICreateUser): Promise<IUser> {
-    return await this.executeConnection((connection) => this._addUser(connection, user));
+    return await this.executeConnection((connection) => AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => this._addUser(connection, transaction, user)
+    }));
+  }
+
+  public async deleteUser(id: number): Promise<void> {
+    return await this.executeConnection((connection) => AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => this._deleteUser(connection, transaction, id)
+    }));
   }
 
   public async checkUserPassword(login: string, password: string): Promise<IUser | undefined> {
@@ -305,77 +318,6 @@ export class MainApplication extends Application {
       callback: (transaction) => this._findUser(connection, transaction, user)
     }));
   }
-
-  // public async getAppKey(appUid: string): Promise<number> {
-  //   return await this.executeConnection((connection) => AConnection.executeTransaction({
-  //     connection,
-  //     callback: async (transaction) => {
-  //       const result = await connection.executeReturning(transaction, `
-  //           SELECT FIRST 1
-  //             app.ID
-  //           FROM APPLICATION app
-  //           WHERE app.UID = :appUid
-  //       `, {appUid});
-  //
-  //       return result.getNumber("ID");
-  //     }
-  //   }));
-  // }
-
-  // public async addBackupInfo(appKey: number, backupUid: string, alias?: string): Promise<void> {
-  //   return await this.executeConnection((connection) => AConnection.executeTransaction({
-  //     connection,
-  //     callback: async (transaction) => {
-  //       await connection.execute(transaction, `
-  //         INSERT INTO APPLICATION_BACKUPS (UID, APP, ALIAS)
-  //         VALUES (:backupUid, :appKey, :alias)
-  //       `, {backupUid, appKey, alias: alias || "Unknown"});
-  //     }
-  //   }));
-  // }
-
-  // public async deleteBackupInfo(uid: string): Promise<void> {
-  //   await this.executeConnection((connection) => AConnection.executeTransaction({
-  //     connection,
-  //     callback: async (transaction) => {
-  //       await connection.execute(transaction, `
-  //         DELETE FROM APPLICATION_BACKUPS
-  //         WHERE UID = :uid
-  //       `, {uid});
-  //     }
-  //   }));
-  // }
-
-  // public async getBackupsInfo(appUid: string): Promise<IAppBackupInfoOutput[]> {
-  //   return await this.executeConnection((connection) => AConnection.executeTransaction({
-  //     connection,
-  //     callback: (transaction) => AConnection.executeQueryResultSet({
-  //       connection,
-  //       transaction,
-  //       sql: `
-  //         SELECT
-  //           backup.UID,
-  //           backup.ALIAS,
-  //           backup.CREATIONDATE
-  //         FROM APPLICATION_BACKUPS backup
-  //           LEFT JOIN APPLICATION app ON app.ID = backup.APP
-  //         WHERE app.UID = :appUid
-  //       `,
-  //       params: {appUid},
-  //       callback: async (resultSet) => {
-  //         const result: IAppBackupInfoOutput[] = [];
-  //         while (await resultSet.next()) {
-  //           result.push({
-  //             uid: resultSet.getString("UID"),
-  //             alias: resultSet.getString("ALIAS"),
-  //             creationDate: resultSet.getDate("CREATIONDATE")!
-  //           });
-  //         }
-  //         return result;
-  //       }
-  //     })
-  //   }));
-  // }
 
   protected async _getUserApplicationInfo(connection: AConnection,
                                           transaction: ATransaction,
@@ -459,6 +401,9 @@ export class MainApplication extends Application {
         await userEntity.create(new BooleanAttribute({
           name: "IS_ADMIN", lName: {ru: {name: "Флаг администратора"}}
         }), connection, transaction);
+        await userEntity.create(new BooleanAttribute({
+          name: "DELETED", lName: {ru: {name: "Удален"}}
+        }), connection, transaction);
 
         // APPLICATION
         const appEntity = await this.erModel.create(new Entity({
@@ -536,7 +481,14 @@ export class MainApplication extends Application {
       }
     }
 
-    const admin = await this._addUser(_connection, {login: "Administrator", password: "Administrator", admin: true});
+    const admin = await AConnection.executeTransaction({
+      connection: _connection,
+      callback: (transaction) => this._addUser(_connection, transaction, {
+        login: "Administrator",
+        password: "Administrator",
+        admin: true
+      })
+    });
 
     // TODO tmp
     try {
@@ -636,32 +588,35 @@ export class MainApplication extends Application {
     });
   }
 
-  private async _addUser(connection: AConnection, user: ICreateUser): Promise<IUser> {
+  private async _addUser(connection: AConnection, transaction: ATransaction, user: ICreateUser): Promise<IUser> {
     const salt = crypto.randomBytes(128).toString("base64");
     const passwordHash = MainApplication._createPasswordHash(user.password, salt);
 
-    return await AConnection.executeTransaction({
-      connection,
-      callback: async (transaction) => {
-        const result = await connection.executeReturning(transaction, `
+    const result = await connection.executeReturning(transaction, `
           INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN)
           VALUES (:login, :passwordHash, :salt, :isAdmin)
           RETURNING ID, LOGIN, PASSWORD_HASH, SALT, IS_ADMIN
         `, {
-          login: user.login,
-          passwordHash: Buffer.from(passwordHash),
-          salt: Buffer.from(salt),
-          isAdmin: user.admin
-        });
-        return {
-          id: result.getNumber("ID"),
-          login: result.getString("LOGIN"),
-          passwordHash: await result.getBlob("PASSWORD_HASH").asString(),
-          salt: await result.getBlob("SALT").asString(),
-          admin: result.getBoolean("IS_ADMIN")
-        };
-      }
+      login: user.login,
+      passwordHash: Buffer.from(passwordHash),
+      salt: Buffer.from(salt),
+      isAdmin: user.admin
     });
+    return {
+      id: result.getNumber("ID"),
+      login: result.getString("LOGIN"),
+      passwordHash: await result.getBlob("PASSWORD_HASH").asString(),
+      salt: await result.getBlob("SALT").asString(),
+      admin: result.getBoolean("IS_ADMIN")
+    };
+  }
+
+  private async _deleteUser(connection: AConnection, transaction: ATransaction, id: number): Promise<void> {
+    await connection.execute(transaction, `
+      UPDATE APP_USER SET
+        DELETED = 1
+      VALUES ID = :id
+    `, {id});
   }
 
   private async _findUser(connection: AConnection,
@@ -684,7 +639,7 @@ export class MainApplication extends Application {
       sql: `
         SELECT FIRST 1 *
         FROM APP_USER usr
-        WHERE ${condition}
+        WHERE DELETED != 1 AND ${condition}
       `,
       params: {id, login},
       callback: async (resultSet) => {
