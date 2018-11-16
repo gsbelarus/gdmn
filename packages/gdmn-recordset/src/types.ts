@@ -15,6 +15,12 @@ export interface INamedField {
 
 export type TFieldCalcFunc = (row: IDataRow) => TDataType;
 
+export interface IFieldAggregator<Acc, Res = TDataType> {
+  init: () => Acc;
+  processRow: (row: IDataRow, fieldName: string, acc: Acc) => Acc;
+  getTotal: (acc: Acc) => Res | null;
+};
+
 export interface IFieldDef extends INamedField {
   dataType: TFieldType;
   size?: number;
@@ -27,6 +33,7 @@ export interface IFieldDef extends INamedField {
   caption?: string;
   shortCaption?: string;
   description?: string;
+  aggregator?: IFieldAggregator<any>;
 };
 
 export type FieldDefs = IFieldDef[];

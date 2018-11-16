@@ -1027,6 +1027,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _getFooterCellRenderer = (adjustFunc: AdjustColumnIndexFunc, _fixed: boolean) =>
     ({columnIndex, key, style}: GridCellProps) => {
       const classNames = cn(styles.CellColumn, styles.FooterCell);
+      const { rs, columns } = this.props;
+      const column = columns[adjustFunc(columnIndex)];
+      const fieldName = column.fields[0].fieldName;
+      const aggregates = rs.aggregates;
+      const cellText = aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined;
 
       return (
         <div
@@ -1034,7 +1039,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           key={key}
           style={style}
         >
-          {this._getColumnLabel(adjustFunc(columnIndex))}
+          {cellText}
         </div>
       );
     };

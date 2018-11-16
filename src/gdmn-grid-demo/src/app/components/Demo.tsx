@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './Demo.css';
 import { INBRBCurrency, INBRBRate } from '../types';
-import { RecordSet, Data, IDataRow } from 'gdmn-recordset';
+import { RecordSet, Data, IDataRow, getSumAggregator, getAvgAggregator } from 'gdmn-recordset';
 import nbrbCurrencies from '../../util/nbrbcurrencies.json';
 import nbrbRates from '../../util/nbrbrates.json';
 import { List } from 'immutable';
@@ -108,13 +108,15 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
         fieldName: 'Cur_ID',
         dataType: TFieldType.Integer,
         caption: 'Внутренний код',
-        required: true
+        required: true,
+        aggregator: getSumAggregator()
       },
       {
         fieldName: 'Cur_ParentID',
         dataType: TFieldType.Integer,
         caption: 'Внутренний код для связи',
-        required: true
+        required: true,
+        aggregator: getAvgAggregator()
       },
       {
         fieldName: 'Cur_Code',
@@ -248,7 +250,8 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
         fieldName: 'Cur_OfficialRate',
         dataType: TFieldType.Currency,
         caption: 'Курс',
-        required: true
+        required: true,
+        aggregator: getAvgAggregator()
       },
       {
         fieldName: 'Year',

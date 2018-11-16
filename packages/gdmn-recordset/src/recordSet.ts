@@ -21,6 +21,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _searchStr?: string;
   private _foundRows?: FoundRows;
   private _groups?: IDataGroup<R>[];
+  private _aggregates?: R;
 
   private constructor (
     name: string,
@@ -35,7 +36,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     savedData?: Data<R>,
     searchStr?: string,
     foundRows?: FoundRows,
-    groups?: IDataGroup<R>[])
+    groups?: IDataGroup<R>[],
+    aggregates?: R)
   {
     if (!data.size && (currentRow >= 0)) {
       throw new Error(`For an empty record set currentRow must be 0`);
@@ -54,6 +56,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._searchStr = searchStr;
     this._foundRows = foundRows;
     this._groups = groups;
+    this._aggregates = aggregates;
 
     if (this.size && currentRow >= this.size) {
       throw new Error('Invalid currentRow value');
@@ -141,6 +144,38 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get searchStr() {
     return this._searchStr;
+  }
+
+  get aggregates() {
+    if (this._aggregates) {
+      return this._aggregates;
+    }
+
+    const aggFields = this._fieldDefs.filter( fd => fd.aggregator );
+
+    if (aggFields.length) {
+      const accumulator = aggFields.map( fd => ({
+        fieldName: fd.fieldName,
+        value: fd.aggregator!.init(),
+        processRow: fd.aggregator!.processRow,
+        getTotal: fd.aggregator!.getTotal
+      }));
+
+      this._data.forEach(
+        r => accumulator.forEach(
+          acc => r && (acc.value = acc.processRow(r, acc.fieldName, acc.value))
+        )
+      );
+
+      this._aggregates = accumulator.reduce(
+        (prev, acc) => {
+          prev[acc.fieldName] = acc.getTotal(acc.value);
+          return prev;
+        }, {} as R
+      );
+    }
+
+    return this._aggregates;
   }
 
   private _checkFields(fields: INamedField[]) {
@@ -307,7 +342,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           : g.rowIdx === fg.group.rowIdx ? {...g, collapsed: !g.collapsed}
           : {...g, rowIdx: prev ? prev.rowIdx + this._getGroupRowCount(prev) : parent ? parent.rowIdx + 1 : 0}
         }
-      )
+      ),
+      this._aggregates
     );
   }
 
@@ -329,7 +365,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         this._allRowsSelected,
         this._selectedRows,
         this._filter,
-        this._savedData
+        this._savedData,
+        undefined,
+        undefined,
+        undefined,
+        this._aggregates
       );
     }
 
@@ -415,7 +455,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         this._savedData,
         undefined,
         undefined,
-        groups
+        groups,
+        this._aggregates
       );
     }
 
@@ -429,7 +470,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._allRowsSelected,
       [],
       this._filter,
-      this._savedData
+      this._savedData,
+      undefined,
+      undefined,
+      undefined,
+      this._aggregates
     );
 
     const foundIdx = res.indexOf(currentRowData);
@@ -482,7 +527,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             return {...g, rowIdx: 0, collapsed: collapse};
           }
         }
-      )
+      ),
+      this._aggregates
     );
   }
 
@@ -520,7 +566,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._savedData,
       this._searchStr,
       this._foundRows,
-      this._groups
+      this._groups,
+      this._aggregates
     );
   }
 
@@ -542,7 +589,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._savedData,
       this._searchStr,
       this._foundRows,
-      this._groups
+      this._groups,
+      this._aggregates
     );
   }
 
@@ -583,7 +631,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._savedData,
       this._searchStr,
       this._foundRows,
-      this._groups
+      this._groups,
+      this._aggregates
     );
   }
 
@@ -670,7 +719,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         this._savedData,
         undefined,
         undefined,
-        this._groups
+        this._groups,
+        this._aggregates
       );
     }
 
@@ -718,7 +768,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._savedData,
       searchStr,
       foundRows.length ? foundRows : undefined,
-      this._groups
+      this._groups,
+      this._aggregates
     );
   }
 
