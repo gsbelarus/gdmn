@@ -105,6 +105,16 @@ export class MainApplication extends Application {
     }
   }
 
+  get onlineApplications(): Application[] {
+    const applications: Application[] = [];
+    for (const application of this._applications.values()) {
+      if (application.connected) {
+        applications.push(application);
+      }
+    }
+    return applications;
+  }
+
   public static getAppPath(uid: string): string {
     return path.resolve(MainApplication.WORK_DIR, MainApplication._getAppName(uid));
   }
