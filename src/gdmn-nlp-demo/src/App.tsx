@@ -49,7 +49,7 @@ class InternalApp extends Component<IAppProps, {}> {
   render() {
     return (
       <BrowserRouter basename={process.env.PUBLIC_URL}>
-        <div>
+        <>
           <CommandBar
             items={this.getItems()}
           />
@@ -60,7 +60,7 @@ class InternalApp extends Component<IAppProps, {}> {
               <Route exact={false} path={`/ermodel`} component={ERModelBoxContainer} />
             </Switch>
           </div>
-        </div>
+        </>
       </BrowserRouter>
     );
   }

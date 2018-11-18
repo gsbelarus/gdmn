@@ -56,24 +56,29 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     }
 
     return (
-      <div className="SyntaxCoombinations">
-        {
-          stacks.map( (s, idx) => (
-            <div key={idx}>
-              <div className={this._getColor(s[0])}>
-                {s[0].image}
+      <>
+        <div>
+          Total combinatorial count: {coombinations.length}
+        </div>
+        <div className="SyntaxCoombinations">
+          {
+            stacks.map( (s, idx) => (
+              <div key={idx}>
+                <div className={this._getColor(s[0])}>
+                  {s[0].image}
+                </div>
+                {
+                  s.map( (w, wi) => (
+                    <div key={wi} className={getClassName(idx, w.tokenType.name)}>
+                      {w.tokenType.name}
+                    </div>
+                  ))
+                }
               </div>
-              {
-                s.map( (w, wi) => (
-                  <div key={wi} className={getClassName(idx, w.tokenType.name)}>
-                    {w.tokenType.name}
-                  </div>
-                ))
-              }
-            </div>
-          ))
-        }
-      </div>
+            ))
+          }
+        </div>
+      </>
     );
   }
 

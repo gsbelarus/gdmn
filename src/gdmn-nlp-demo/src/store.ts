@@ -1,23 +1,29 @@
-import { combineReducers, createStore, AnyAction, applyMiddleware, Store } from "redux";
+import { combineReducers, createStore, applyMiddleware, Store } from "redux";
 import { reducer as morphologyReducer, IMorphologyState, MorphologyAction } from './morphology/reducer';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import thunk, { ThunkMiddleware, ThunkDispatch } from 'redux-thunk';
 import { reducer as syntaxReducer, ISyntaxState, SyntaxAction } from "./syntax/reducer";
 import { reducer as ermodelReducer, IERModelState, ERModelAction } from "./ermodel/reducer";
+import { gridReducer, GridReducerState, GridAction } from 'gdmn-grid';
+import { RecordSetReducerState, recordSetReducer, RecordSetAction } from 'gdmn-recordset';
 
-export type Actions = ERModelAction | MorphologyAction | SyntaxAction;
+export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RecordSetAction | GridAction;
 
 export interface State {
   morphology: IMorphologyState;
   syntax: ISyntaxState;
   ermodel: IERModelState;
+  grid: GridReducerState;
+  recordSet: RecordSetReducerState;
 };
 
 const rootReducer = combineReducers<State, Actions>(
   {
     morphology: morphologyReducer,
     syntax: syntaxReducer,
-    ermodel: ermodelReducer
+    ermodel: ermodelReducer,
+    grid: gridReducer,
+    recordSet: recordSetReducer
   }
 );
 
