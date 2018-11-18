@@ -1,6 +1,7 @@
 import config from "config";
 import {EventEmitter} from "events";
 import {Logger} from "log4js";
+import ms from "ms";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
 import {ErrorCode, ServerError} from "../../../stomp/ServerError";
@@ -73,7 +74,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
     TaskStatus.SUCCESS
   ];
 
-  private static DEFAULT_TIMEOUT: number = config.get("server.task.timeout");
+  private static DEFAULT_TIMEOUT = ms(config.get("server.task.timeout") as string);
 
   public readonly emitter: StrictEventEmitter<EventEmitter, ITaskEvents<Cmd, Result>> = new EventEmitter();
 

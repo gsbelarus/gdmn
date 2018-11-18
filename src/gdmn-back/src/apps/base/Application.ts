@@ -3,7 +3,7 @@ import {DataSource} from "gdmn-er-bridge";
 import {ERModel, IEntityQueryInspector, IERModel, IQueryResponse} from "gdmn-orm";
 import log4js, {Logger} from "log4js";
 import {ADatabase, IDBDetail} from "../../db/ADatabase";
-import {Session} from "./Session";
+import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICmd, Level, Task} from "./task/Task";
 
@@ -184,13 +184,20 @@ export abstract class Application extends ADatabase {
   }
 
   protected _checkSession(session: Session): void | never {
-    if (session.closed || !session.active) {
-      this._logger.error("Session is closed");
-      throw new Error("Session is closed");
+    if (session.status !== SessionStatus.OPENED) {
+      const message = "Session is closed";
+      this._logger.warn(message);
+      throw new Error(message);
+    }
+    if (!session.active) {
+      const message = "Session is not active";
+      this._logger.warn(message);
+      throw new Error(message);
     }
     if (!this._sessionManager.includes(session)) {
-      this._logger.error("Session does not belong to the application");
-      throw new Error("Session does not belong to the application");
+      const message = "Session does not belong to the application";
+      this._logger.warn(message);
+      throw new Error(message);
     }
   }
 

@@ -1,5 +1,6 @@
 import config from "config";
 import log4js from "log4js";
+import ms from "ms";
 import {createStompServerSession, setLoggingListeners} from "stomp-protocol";
 import WebSocket from "ws";
 import {MainApplication} from "../apps/MainApplication";
@@ -7,8 +8,8 @@ import {StompSession} from "./StompSession";
 
 export class StompManager {
 
-  public static readonly DEFAULT_HEARTBEAT_INCOMING: number = config.get("server.stomp.heartbeat.incoming");
-  public static readonly DEFAULT_HEARTBEAT_OUTGOING: number = config.get("server.stomp.heartbeat.outgoing");
+  public static readonly DEFAULT_HEARTBEAT_INCOMING = ms(config.get("server.stomp.heartbeat.incoming") as string);
+  public static readonly DEFAULT_HEARTBEAT_OUTGOING = ms(config.get("server.stomp.heartbeat.outgoing") as string);
 
   private readonly _logger = log4js.getLogger("STOMP");
   private readonly _mainApplication = new MainApplication();

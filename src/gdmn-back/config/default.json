@@ -7,18 +7,28 @@
     },
     "stomp": {
       "heartbeat": {
-        "incoming": 10000,
-        "outgoing": 10000
+        "incoming": "10s",
+        "outgoing": "10s"
       }
     },
     "publicDir": "./public",
     "session": {
-      "timeout": 8.64E7
+      "timeout": "1d"
     },
     "task": {
-      "timeout": 8.64E7
+      "timeout": "1d"
     },
-    "jwtSecret": "DefaultJWTSecret"
+    "jwt": {
+      "secret": "DefaultJWTSecret",
+      "token": {
+        "access": {
+          "timeout": "3h"
+        },
+        "refresh": {
+          "timeout": "7d"
+        }
+      }
+    }
   },
   "db": {
     "host": "localhost",

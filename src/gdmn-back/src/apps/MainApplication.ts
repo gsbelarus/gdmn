@@ -18,7 +18,7 @@ import path from "path";
 import {v1 as uuidV1} from "uuid";
 import {IDBDetail} from "../db/ADatabase";
 import {Application} from "./base/Application";
-import {Session} from "./base/Session";
+import {Session, SessionStatus} from "./base/Session";
 import {ICmd, Level, Task} from "./base/task/Task";
 import {GDMNApplication} from "./GDMNApplication";
 
@@ -273,27 +273,28 @@ export class MainApplication extends Application {
       this._applications.set(uid, application);
 
       // TODO remake
-      const callback = async () => {
+      const callback = async (changedSession: Session) => {
         if (!application) {
           return;
         }
-        if (!application.sessionManager.size()) {
-          if (application.connected) {
-            try {
-              await application.disconnect();
+        if (changedSession.status === SessionStatus.FORCE_CLOSED) {
+          if (!application.sessionManager.size()) {
+            if (application.connected) {
+              try {
+                await application.disconnect();
+                this._applications.delete(uid);
+              } catch (error) {
+                this._logger.warn(error);
+              }
+            } else {
               this._applications.delete(uid);
-            } catch (error) {
-              this._logger.warn(error);
+              this._logger.error("Session lives without connection to application???");
             }
-          } else {
-            this._applications.delete(uid);
-            this._logger.error("Session lives without connection to application???");
+            application.sessionManager.emitter.removeListener("change", callback);
           }
-        } else {
-          application.sessionManager.emitter.once("forceClosed", callback);
         }
       };
-      application.sessionManager.emitter.once("forceClosed", callback);
+      application.sessionManager.emitter.on("change", callback);
     }
     return application;
   }

@@ -1,3 +1,5 @@
+import config from "config";
+import jwt from "jsonwebtoken";
 import {Logger} from "log4js";
 import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
 import {v1 as uuidV1} from "uuid";
@@ -11,13 +13,12 @@ import {
   QueryCmd,
   RollbackTransCmd
 } from "../apps/base/Application";
-import {Session} from "../apps/base/Session";
+import {Session, SessionStatus} from "../apps/base/Session";
 import {Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
-import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, MainAction, MainApplication} from "../apps/MainApplication";
+import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, IUser, MainAction, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
 import {ErrorCode, ServerError} from "./ServerError";
-import {ITokens, Utils} from "./Utils";
 
 type Actions = AppAction | MainAction;
 
@@ -29,17 +30,11 @@ export interface ISubscription {
   ack: Ack;
 }
 
-export interface IConnectHeaders {
-  session?: string;
-  login?: string;
-  passcode?: string;
-  access_token?: string;
-  authorization?: string;
-  "app-uid"?: string;
-  "create-user"?: string;
-}
-
 export class StompSession implements StompClientCommandListener {
+
+  public static readonly JWT_SECRET: string = config.get("server.jwt.secret");
+  public static readonly JWT_ACCESS_TOKEN_TIMEOUT: string = config.get("server.jwt.token.access.timeout");
+  public static readonly JWT_REFRESH_TOKEN_TIMEOUT: string = config.get("server.jwt.token.refresh.timeout");
 
   public static readonly DESTINATION_TASK = "/task";
   public static readonly DESTINATION_TASK_STATUS = `${StompSession.DESTINATION_TASK}/status`;
@@ -171,8 +166,8 @@ export class StompSession implements StompClientCommandListener {
       this._session.taskManager.emitter.removeListener("progress", this._onProgressTask);
       this._session.taskManager.emitter.removeListener("change", this._onChangeTask);
       this._session.taskManager.emitter.removeListener("change", this._onEndTask);
-      if (!this._session.closed) {
-        this._session.setCloseTimeout();
+      if (this._session.status === SessionStatus.OPENED) {
+        this._session.setCloseTimer();
       }
       this._session = undefined;
     }
@@ -180,23 +175,71 @@ export class StompSession implements StompClientCommandListener {
 
   public connect(headers: StompHeaders): void {
     this._try(async () => {
-      const {session, login, passcode, authorization, "app-uid": appUid, "create-user": isCreateUser}
-        = headers as IConnectHeaders;
+      const {session, login, passcode, authorization, "app-uid": appUid, "create-user": isCreateUser} = headers;
 
       // authorization
-      let result: { userKey: number, newTokens?: ITokens };
+      let result: {
+        userKey: number,
+        newTokens?: {
+          "access-token": string;
+          "refresh-token": string;
+        };
+      };
       if (login && passcode && isCreateUser === "1") {
-        result = await Utils.createUser(this.mainApplication, login, passcode);
+        const user = await this.mainApplication.addUser({
+          login,
+          password: passcode,
+          admin: false
+        });
+        result = {
+          userKey: user.id,
+          newTokens: {
+            "access-token": this._createAccessJwtToken(user),
+            "refresh-token": this._createRefreshJwtToken(user)
+          }
+        };
       } else if (login && passcode) {
-        result = await Utils.login(this.mainApplication, login, passcode);
+        const user = await this.mainApplication.checkUserPassword(login, passcode);
+        if (!user) {
+          throw new ServerError(ErrorCode.INVALID, "Incorrect login or password");
+        }
+        result = {
+          userKey: user.id,
+          newTokens: {
+            "access-token": this._createAccessJwtToken(user),
+            "refresh-token": this._createRefreshJwtToken(user)
+          }
+        };
       } else if (authorization) {
-        result = await Utils.authorize(this.mainApplication, authorization);
+        const payload = this._getPayloadFromJwtToken(authorization);
+        const user = await this.mainApplication.findUser({id: payload.id});
+        if (!user) {
+          throw new ServerError(ErrorCode.NOT_FOUND, "No users for token");
+        }
+        result = {userKey: user.id};
+        if (payload.isRefresh) {
+          result.newTokens = {
+            "access-token": this._createAccessJwtToken(user),
+            "refresh-token": this._createRefreshJwtToken(user)
+          };
+        }
       } else {
         throw new ServerError(ErrorCode.UNAUTHORIZED, "Incorrect headers");
       }
 
-      // get application from main
-      this._application = await Utils.getApplication(this.mainApplication, result.userKey, appUid);
+      if (appUid) {
+        // auth on main and get application
+        const mainSession = await this.mainApplication.sessionManager.open(result.userKey);
+        try {
+          this._application = await this.mainApplication.getApplication(mainSession, appUid);
+        } finally {
+          await mainSession.forceClose();
+        }
+      } else {
+        // use main as application
+        this._application = this.mainApplication;
+      }
+
       if (!this._application.connected) {
         await this._application.connect();
       }
@@ -207,7 +250,7 @@ export class StompSession implements StompClientCommandListener {
       } else {
         this._session = await this.application.sessionManager.open(result.userKey);
       }
-      this.session.clearCloseTimeout();
+      this.session.clearCloseTimer();
 
       this._sendConnected(result.newTokens || {});
     }, headers);
@@ -320,7 +363,7 @@ export class StompSession implements StompClientCommandListener {
 
       switch (destination) {
         case StompSession.DESTINATION_TASK:
-          Utils.checkContentType(headers);
+          this._checkContentType(headers);
 
           const id: string | undefined = headers.receipt;
           // protection against re-sending messages (https://github.com/gsbelarus/gdmn/issues/23)
@@ -492,7 +535,7 @@ export class StompSession implements StompClientCommandListener {
   }
 
   protected _sendError(error: ServerError, requestHeaders?: StompHeaders): void {
-    const errorHeaders: StompHeaders = {code: `${error.code || ErrorCode.INTERNAL}`, message: error.message};
+    const errorHeaders: StompHeaders = {code: `${error.code}`, message: error.message};
     if (requestHeaders && requestHeaders.receipt) {
       errorHeaders["receipt-id"] = requestHeaders.receipt;
     }
@@ -515,5 +558,45 @@ export class StompSession implements StompClientCommandListener {
         this._sendError(new ServerError(ErrorCode.INTERNAL, error.message), requestHeaders);
       }
     });
+  }
+
+  private _createAccessJwtToken(user: IUser): string {
+    return jwt.sign({
+      id: user.id
+    }, StompSession.JWT_SECRET, {
+      expiresIn: StompSession.JWT_ACCESS_TOKEN_TIMEOUT
+    });
+  }
+
+  private _createRefreshJwtToken(user: IUser): string {
+    return jwt.sign({
+      id: user.id,
+      isRefresh: true
+    }, StompSession.JWT_SECRET, {
+      expiresIn: StompSession.JWT_REFRESH_TOKEN_TIMEOUT
+    });
+  }
+
+  private _getPayloadFromJwtToken(token: string): any {
+    const verified = jwt.verify(token, StompSession.JWT_SECRET);
+
+    if (verified) {
+      const payload = jwt.decode(token);
+      if (!payload) {
+        throw new Error("No payload");
+      }
+
+      return payload;
+    }
+
+    throw new Error("Token not valid");
+  }
+
+  private _checkContentType(headers?: StompHeaders): void | never {
+    const contentType = headers!["content-type"];
+    if (contentType !== "application/json;charset=utf-8") {
+      throw new ServerError(ErrorCode.UNSUPPORTED,
+        `Unsupported content-type '${contentType}'; supported - 'application/json;charset=utf-8'`);
+    }
   }
 }

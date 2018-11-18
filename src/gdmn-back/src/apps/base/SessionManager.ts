@@ -3,11 +3,11 @@ import {ERModel} from "gdmn-orm";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
-import {ISessionEvents, Session} from "./Session";
+import {Session, SessionStatus} from "./Session";
 import {Level, TaskStatus} from "./task/Task";
 
-export interface ISessionManagerEvents extends ISessionEvents {
-  open: (session: Session) => void;
+export interface ISessionManagerEvents {
+  change: (session: Session) => void;
 }
 
 export class SessionManager {
@@ -39,17 +39,23 @@ export class SessionManager {
       connection: await this._erModel.createConnection(),
       logger: this._logger
     });
-    session.emitter.once("close", (s) => {
-      this.emitter.emit("close", s);
-      this._sessions.splice(this._sessions.indexOf(s), 1);
+    session.emitter.on("change", (s) => {
+      this.emitter.emit("change", s);
+      switch (s.status) {
+        case SessionStatus.CLOSED:
+          this._sessions.splice(this._sessions.indexOf(s), 1);
+          break;
+        case SessionStatus.FORCE_CLOSING:
+          this._sessions.splice(this._sessions.indexOf(s), 1);
+          break;
+        case SessionStatus.FORCE_CLOSED:
+          break;
+        default:
+          throw new Error("Unknown session status");
+      }
     });
-    session.emitter.once("forceClose", (s) => {
-      this.emitter.emit("forceClose", s);
-      this._sessions.splice(this._sessions.indexOf(s), 1);
-    });
-    session.emitter.once("forceClosed", (s) => this.emitter.emit("forceClosed", s));
     this._sessions.push(session);
-    this.emitter.emit("open", session);
+    this.emitter.emit("change", session);
 
     this.syncTasks();
     return session;
