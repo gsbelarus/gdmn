@@ -615,7 +615,7 @@ export class MainApplication extends Application {
     await connection.execute(transaction, `
       UPDATE APP_USER SET
         DELETED = 1
-      VALUES ID = :id
+      WHERE ID = :id
     `, {id});
   }
 
