@@ -16,7 +16,7 @@ import {
 import log4js from "log4js";
 import path from "path";
 import {v1 as uuidV1} from "uuid";
-import {IDBDetail} from "../db/ADatabase";
+import {DBStatus, IDBDetail} from "../db/ADatabase";
 import {Application} from "./base/Application";
 import {Session, SessionStatus} from "./base/Session";
 import {ICmd, Level, Task} from "./base/task/Task";
@@ -105,16 +105,6 @@ export class MainApplication extends Application {
     }
   }
 
-  get onlineApplications(): Application[] {
-    const applications: Application[] = [];
-    for (const application of this._applications.values()) {
-      if (application.connected) {
-        applications.push(application);
-      }
-    }
-    return applications;
-  }
-
   public static getAppPath(uid: string): string {
     return path.resolve(MainApplication.WORK_DIR, MainApplication._getAppName(uid));
   }
@@ -147,15 +137,15 @@ export class MainApplication extends Application {
 
   // TODO tmp
   public pushCreateAppCmd(session: Session, command: CreateAppCmd): Task<CreateAppCmd, IUserApplicationInfo> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.USER,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
         const connection = (context.session.connection as Connection).connection;
@@ -195,15 +185,15 @@ export class MainApplication extends Application {
 
   // TODO tmp
   public pushDeleteAppCmd(session: Session, command: DeleteAppCmd): Task<DeleteAppCmd, void> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.USER,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {uid} = context.command.payload;
         const {userKey} = context.session;
         const connection = (context.session.connection as Connection).connection;
@@ -233,15 +223,15 @@ export class MainApplication extends Application {
 
   // TODO tmp
   public pushGetAppsCmd(session: Session, command: GetAppsCmd): Task<GetAppsCmd, IUserApplicationInfo[]> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {userKey} = context.session;
         const connection = (context.session.connection as Connection).connection;
 
@@ -256,8 +246,21 @@ export class MainApplication extends Application {
     return task;
   }
 
+  public async getOnlineApplications(): Promise<Application[]> {
+    const applications: Application[] = [];
+    for (const application of this._applications.values()) {
+      await application.waitProcess();
+      if (application.status === DBStatus.CONNECTED) {
+        applications.push(application);
+      }
+    }
+    return applications;
+  }
+
   public async getApplication(session: Session, uid: string): Promise<Application> {
-    if (!this.connected) {
+    await this.waitProcess();
+
+    if (this.status !== DBStatus.CONNECTED) {
       throw new Error("MainApplication is not created");
     }
     let application = this._applications.get(uid);
@@ -279,7 +282,8 @@ export class MainApplication extends Application {
         }
         if (changedSession.status === SessionStatus.FORCE_CLOSED) {
           if (!application.sessionManager.size()) {
-            if (application.connected) {
+            await application.waitProcess();
+            if (application.status === DBStatus.CONNECTED) {
               try {
                 await application.disconnect();
                 this._applications.delete(uid);
@@ -288,7 +292,6 @@ export class MainApplication extends Application {
               }
             } else {
               this._applications.delete(uid);
-              this._logger.error("Session lives without connection to application???");
             }
             application.sessionManager.emitter.removeListener("change", callback);
           }
@@ -388,8 +391,8 @@ export class MainApplication extends Application {
     });
   }
 
-  protected async _onCreate(_connection: AConnection): Promise<void> {
-    await super._onCreate(_connection);
+  protected async _onCreate(): Promise<void> {
+    await super._onCreate();
 
     const connection = await this.erModel.createConnection();
     try {
@@ -492,39 +495,41 @@ export class MainApplication extends Application {
       }
     }
 
-    const admin = await AConnection.executeTransaction({
+    await this.executeConnection((_connection) => AConnection.executeTransaction({
       connection: _connection,
-      callback: (transaction) => this._addUser(_connection, transaction, {
-        login: "Administrator",
-        password: "Administrator",
-        admin: true
-      })
-    });
+      callback: async (transaction) => {
+        const admin = await this._addUser(_connection, transaction, {
+          login: "Administrator",
+          password: "Administrator",
+          admin: true
+        });
 
-    // TODO tmp
-    try {
-      const {default: databases} = require("../db/databases");
-      for (const db of Object.values(databases)) {
-        const dbDetail = db as IDBDetail;
-        await AConnection.executeTransaction({
-          connection: _connection,
-          callback: async (trans) => {
-            const appInfo = await this._addApplicationInfo(_connection, trans, {
-              ...dbDetail.connectionOptions,
-              ownerKey: admin.id,
-              external: true
-            });
-            await this._addUserApplicationInfo(_connection, trans, {
-              alias: dbDetail.alias,
-              appKey: appInfo.id,
-              userKey: admin.id
+        // TODO tmp
+        try {
+          const {default: databases} = require("../db/databases");
+          for (const db of Object.values(databases)) {
+            const dbDetail = db as IDBDetail;
+            await AConnection.executeTransaction({
+              connection: _connection,
+              callback: async (trans) => {
+                const appInfo = await this._addApplicationInfo(_connection, trans, {
+                  ...dbDetail.connectionOptions,
+                  ownerKey: admin.id,
+                  external: true
+                });
+                await this._addUserApplicationInfo(_connection, trans, {
+                  alias: dbDetail.alias,
+                  appKey: appInfo.id,
+                  userKey: admin.id
+                });
+              }
             });
           }
-        });
+        } catch (error) {
+          this._logger.warn(error);
+        }
       }
-    } catch (error) {
-      this._logger.warn(error);
-    }
+    }));
   }
 
   private async _addApplicationInfo(connection: AConnection,

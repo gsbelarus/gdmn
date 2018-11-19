@@ -18,6 +18,7 @@ import {Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
 import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, IUser, MainAction, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
+import {DBStatus} from "../db/ADatabase";
 import {ErrorCode, ServerError} from "./ServerError";
 
 type Actions = AppAction | MainAction;
@@ -240,7 +241,8 @@ export class StompSession implements StompClientCommandListener {
         this._application = this.mainApplication;
       }
 
-      if (!this._application.connected) {
+      await this._application.waitProcess();
+      if (this._application.status !== DBStatus.CONNECTED) {
         await this._application.connect();
       }
 
@@ -260,9 +262,10 @@ export class StompSession implements StompClientCommandListener {
     this._try(async () => {
       this.session.close();
       if (headers["delete-user"] === "1") {
+        const onlineApplications = await this.mainApplication.getOnlineApplications();
         const sessions = [
           ...this.mainApplication.sessionManager.find(this.session.userKey),
-          ...this.mainApplication.onlineApplications.reduce((s, application) => {
+          ...onlineApplications.reduce((s, application) => {
             return [...s, ...application.sessionManager.find(this.session.userKey)];
           }, [] as Session[])
         ];

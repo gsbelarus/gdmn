@@ -1,8 +1,7 @@
-import {AConnection} from "gdmn-db";
 import {DataSource} from "gdmn-er-bridge";
 import {ERModel, IEntityQueryInspector, IERModel, IQueryResponse} from "gdmn-orm";
 import log4js, {Logger} from "log4js";
-import {ADatabase, IDBDetail} from "../../db/ADatabase";
+import {ADatabase, DBStatus, IDBDetail} from "../../db/ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICmd, Level, Task} from "./task/Task";
@@ -45,15 +44,15 @@ export abstract class Application extends ADatabase {
   }
 
   public pushBeginTransCmd(session: Session, command: BeginTransCmd): Task<BeginTransCmd, string> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const transaction = await this._erModel.startTransaction(context.session.connection);
         return context.session.addTransaction(transaction);
       }
@@ -64,15 +63,15 @@ export abstract class Application extends ADatabase {
   }
 
   public pushCommitTransCmd(session: Session, command: CommitTransCmd): Task<CommitTransCmd, void> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {transactionKey} = context.command.payload;
 
         const transaction = context.session.getTransaction(transactionKey);
@@ -89,15 +88,15 @@ export abstract class Application extends ADatabase {
   }
 
   public pushRollbackTransCmd(session: Session, command: RollbackTransCmd): Task<RollbackTransCmd, void> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {transactionKey} = context.command.payload;
 
         const transaction = context.session.getTransaction(transactionKey);
@@ -114,15 +113,15 @@ export abstract class Application extends ADatabase {
   }
 
   public pushPingCmd(session: Session, command: PingCmd): Task<PingCmd, void> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.USER,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {steps, delay} = context.command.payload;
 
         const stepPercent = 100 / steps;
@@ -133,7 +132,8 @@ export abstract class Application extends ADatabase {
           await context.checkStatus();
         }
 
-        if (!this.connected) {
+        await this.waitProcess();
+        if (this.status !== DBStatus.CONNECTED) {
           this._logger.error("Application is not connected");
           throw new Error("Application is not connected");
         }
@@ -145,15 +145,17 @@ export abstract class Application extends ADatabase {
   }
 
   public pushGetSchemaCmd(session: Session, command: GetSchemaCmd): Task<GetSchemaCmd, IERModel> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
       logger: this._taskLogger,
-      worker: () => this.erModel.serialize()
+      worker: async () => {
+        await this.waitProcess();
+        this._checkSession(session);
+
+        return this.erModel.serialize();
+      }
     });
     session.taskManager.add(task);
     this.sessionManager.syncTasks();
@@ -161,15 +163,15 @@ export abstract class Application extends ADatabase {
   }
 
   public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IQueryResponse> {
-    this._checkSession(session);
-    this._checkBusy();
-
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
       logger: this._taskLogger,
       worker: async (context) => {
+        await this.waitProcess();
+        this._checkSession(session);
+
         const {transactionKey} = context.command.payload;
 
         const transaction = context.session.getTransaction(transactionKey || "");
@@ -201,8 +203,8 @@ export abstract class Application extends ADatabase {
     }
   }
 
-  protected async _onCreate(_connection: AConnection): Promise<void> {
-    await super._onCreate(_connection);
+  protected async _onCreate(): Promise<void> {
+    await super._onCreate();
 
     await this._erModel.init();
   }

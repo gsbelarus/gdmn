@@ -1,4 +1,3 @@
-import {AConnection} from "gdmn-db";
 import {Entity, StringAttribute} from "gdmn-orm";
 import log4js from "log4js";
 import {IDBDetail} from "../db/ADatabase";
@@ -10,8 +9,8 @@ export class GDMNApplication extends Application {
     super(dbDetail, log4js.getLogger("GDMNApp"));
   }
 
-  protected async _onCreate(_connection: AConnection): Promise<void> {
-    await super._onCreate(_connection);
+  protected async _onCreate(): Promise<void> {
+    await super._onCreate();
 
     const connection = await this.erModel.createConnection();
     try {
