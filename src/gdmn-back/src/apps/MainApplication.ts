@@ -246,7 +246,7 @@ export class MainApplication extends Application {
     return task;
   }
 
-  public async getOnlineApplications(): Promise<Application[]> {
+  public async getConnectedApplications(): Promise<Application[]> {
     const applications: Application[] = [];
     for (const application of this._applications.values()) {
       await application.waitProcess();
@@ -413,7 +413,7 @@ export class MainApplication extends Application {
           name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
         }), connection, transaction);
         await userEntity.create(new BooleanAttribute({
-          name: "IS_ADMIN", lName: {ru: {name: "Флаг администратора"}}
+          name: "IS_ADMIN", lName: {ru: {name: "Пользователь - администратор"}}
         }), connection, transaction);
         await userEntity.create(new BooleanAttribute({
           name: "DELETED", lName: {ru: {name: "Удален"}}
