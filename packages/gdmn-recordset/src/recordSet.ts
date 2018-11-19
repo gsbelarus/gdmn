@@ -1,11 +1,8 @@
-import { List } from "immutable";
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures } from "./types";
 import { IFilter } from "./filter";
+import { List } from "immutable";
 import equal from "fast-deep-equal";
-
-export type Data<R extends IDataRow = IDataRow> = List<R>;
-
-export type FilterFunc<R extends IDataRow = IDataRow> = (row: R, idx: number) => boolean;
+import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull } from "./utils";
 
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
@@ -226,19 +223,23 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  private _getData(data: List<R>, rowIdx: number): R {
-    if (this._calcFields) {
-      return this._calcFields(data.get(rowIdx));
+  private _getData(data: Data<R>, rowIdx: number, calcFields: TRowCalcFunc<R> | undefined): R {
+    if (rowIdx < 0 || rowIdx >= data.size) {
+      throw new Error(`Invalid row idx ${rowIdx}`);
+    }
+
+    if (calcFields) {
+      return calcFields(data.get(rowIdx));
     } else {
       return data.get(rowIdx);
     }
   }
 
-  private _get(data: List<R>, rowIdx: number): IRow<R> {
+  private _get(data: Data<R>, rowIdx: number, calcFields: TRowCalcFunc<R> | undefined): IRow<R> {
     const groups = this._groups;
 
     if (!groups || !groups.length) {
-      return { data: this._getData(data, rowIdx), type: TRowType.Data };
+      return { data: this._getData(data, rowIdx, calcFields), type: TRowType.Data };
     }
 
     const group = this._findGroup(groups, rowIdx).group;
@@ -260,19 +261,34 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return {
-      data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1),
+      data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1, calcFields),
       type: TRowType.Data,
       group
     };
   }
 
   public get(rowIdx: number): IRow<R> {
-    return this._get(this._data, rowIdx);
+    return this._get(this._data, rowIdx, this._calcFields);
   }
 
   public getString(rowIdx: number, fieldName: string): string {
-    const f = this.get(rowIdx).data[fieldName];
-    return f ? f.toString() : '';
+    return getAsString(this._getData(this._data, rowIdx, this._calcFields), fieldName);
+  }
+
+  public getNumber(rowIdx: number, fieldName: string): number {
+    return getAsNumber(this._getData(this._data, rowIdx, this._calcFields), fieldName);
+  }
+
+  public getBoolean(rowIdx: number, fieldName: string): boolean {
+    return getAsBoolean(this._getData(this._data, rowIdx, this._calcFields), fieldName);
+  }
+
+  public getDate(rowIdx: number, fieldName: string): Date {
+    return getAsDate(this._getData(this._data, rowIdx, this._calcFields), fieldName);
+  }
+
+  public isNull(rowIdx: number, fieldName: string): boolean {
+    return isNull(this._getData(this._data, rowIdx, this._calcFields), fieldName);
   }
 
   public toArray(): IRow<R>[] {
@@ -347,7 +363,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     );
   }
 
-  public sort(sortFields: SortFields): RecordSet<R> {
+  public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures<R>): RecordSet<R> {
     this._checkFields(sortFields);
 
     if (!this._data.size) {
@@ -383,23 +399,117 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       }, [] as IRow<R>[]
     );
 
-    const sortOnCalcFields = sortFields.some( sf => !!this._fieldDefs.find( fd => fd.fieldName === sf.fieldName && !!fd.calcFunc ));
+    const combinedSort = dimension ? sortFields.concat(dimension) : sortFields;
 
-    const sorted = (sortOnCalcFields ? this._data.sort(
+    const sortOnCalcFields = combinedSort.some( sf => !!this._fieldDefs.find( fd => fd.fieldName === sf.fieldName && !!fd.calcFunc ));
+
+    let fieldDefs = this._fieldDefs;
+    let calcFields = this._calcFields;
+    let sorted = (sortOnCalcFields ? this._data.sort(
       (a, b) => {
         const calcA = this._calcFields!(a);
         const calcB = this._calcFields!(b);
-        return sortFields.reduce(
+        return combinedSort.reduce(
           (p, f) => p ? p : (calcA[f.fieldName]! < calcB[f.fieldName]! ? (f.asc ? -1 : 1) : (calcA[f.fieldName]! > calcB[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
         0);
       }
     )
     :
     this._data.sort(
-      (a, b) => sortFields.reduce(
+      (a, b) => combinedSort.reduce(
         (p, f) => p ? p : (a[f.fieldName]! < b[f.fieldName]! ? (f.asc ? -1 : 1) : (a[f.fieldName]! > b[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
       0)
     )).toList();
+
+    if (dimension && measures) {
+      const newFieldDefs = sortFields.map( sf => this._fieldDefs.find( fd => fd.fieldName === sf.fieldName )! );
+      const newData: R[] = [];
+
+      const calcSlice = (level: number, initialRowIdx: number, size: number, newRow: R, upSuffix: string = ''): R => {
+        const fieldName = dimension[level].fieldName;
+        let rowIdx = initialRowIdx;
+        let left = size;
+
+        while (left > 0) {
+          let cnt = 0;
+          const row = this._getData(sorted, rowIdx + cnt, calcFields);
+          const value = row[fieldName];
+          const valueFieldDef = this._fieldDefs.find( fd => fd.fieldName === fieldName )!;
+          while (cnt < left && this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value) {
+            cnt++;
+          }
+          const fieldNameSuffix = `${upSuffix}[${value === null ? 'null' : value.toString()}]`;
+          measures.forEach( m => {
+            const measureFieldName = `[${m.fieldName}]${fieldNameSuffix}`;
+            if (!newFieldDefs.find( fd => fd.fieldName === measureFieldName )) {
+              newFieldDefs.push({
+                fieldName: measureFieldName,
+                dataType: valueFieldDef.dataType,
+                caption: value === null ? 'null' : value.toString()
+              });
+            }
+            newRow[measureFieldName] = m.measureCalcFunc( idx => this._getData(sorted, idx, calcFields), rowIdx, cnt);
+          });
+          if (level < dimension.length - 1) {
+            calcSlice(level + 1, rowIdx, cnt, newRow, fieldNameSuffix);
+          }
+          left -= cnt;
+          rowIdx += cnt;
+        }
+
+        return newRow;
+      };
+
+      const groupSlice = (level: number, initialRowIdx: number): number => {
+        const fieldName = sortFields[level].fieldName;
+        let rowIdx = initialRowIdx;
+
+        while (rowIdx < sorted.size) {
+          let cnt = 0;
+          let row = this._getData(sorted, rowIdx + cnt, calcFields);
+          let value = row[fieldName];
+          while (rowIdx + cnt < sorted.size && this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value) {
+            if (level < sortFields.length - 1) {
+              cnt += groupSlice(level + 1, rowIdx + cnt);
+            } else {
+              cnt++;
+            }
+          }
+          if (level === sortFields.length - 1) {
+            newData.push(calcSlice(0, rowIdx, cnt, sortFields.reduce( (r, sf) => { r[sf.fieldName] = row[sf.fieldName]; return r; }, {} as R ) ));
+          }
+          if (level) {
+            return cnt;
+          }
+          rowIdx += cnt;
+        }
+
+        return sorted.size;
+      }
+
+      groupSlice(0, 0);
+
+      sorted = List<R>(newData);
+      fieldDefs = newFieldDefs;
+
+      if (calcFields) {
+        const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
+
+        if (withCalcFunc.length) {
+          calcFields = (row: R): R => {
+            const res = Object.assign({} as R, row);
+
+            withCalcFunc.forEach(
+              fd => res[fd.fieldName] = fd.calcFunc!(res)
+            );
+
+            return res;
+          }
+        } else {
+          calcFields = undefined;
+        }
+      }
+    }
 
     if (sortFields[0].groupBy) {
       const groupData = (level: number, initialRowIdx: number, bufferIdx: number, bufferSize: number) => {
@@ -410,16 +520,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
         while (bufferBeginIdx < bufferIdx + bufferSize) {
           let bufferEndIdx = bufferBeginIdx;
-          let value = this._getData(sorted, bufferBeginIdx)[fieldName];
+          let value = this._getData(sorted, bufferBeginIdx, calcFields)[fieldName];
 
-          while (bufferEndIdx < bufferIdx + bufferSize && this._getData(sorted, bufferEndIdx)[fieldName] === value) {
+          while (bufferEndIdx < bufferIdx + bufferSize && this._getData(sorted, bufferEndIdx, calcFields)[fieldName] === value) {
             bufferEndIdx++;
           }
 
           const bufferCount = bufferEndIdx - bufferBeginIdx;
 
           if (bufferCount > 0) {
-            const headerData = this._getData(sorted, bufferBeginIdx);
+            const headerData = this._getData(sorted, bufferBeginIdx, calcFields);
             const header: R = {[fieldName]: headerData[fieldName]} as R;
             const group = {
               header,
@@ -444,8 +554,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
       return new RecordSet<R>(
         this.name,
-        this._fieldDefs,
-        this._calcFields,
+        fieldDefs,
+        calcFields,
         sorted,
         0,
         sortFields,
@@ -462,8 +572,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const res = new RecordSet<R>(
       this.name,
-      this._fieldDefs,
-      this._calcFields,
+      fieldDefs,
+      calcFields,
       sorted,
       0,
       sortFields,

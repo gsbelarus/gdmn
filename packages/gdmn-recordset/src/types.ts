@@ -1,3 +1,5 @@
+import { List } from "immutable";
+
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
 export enum TFieldType {
@@ -45,12 +47,17 @@ export interface ISortField extends INamedField {
 
 export type SortFields = ISortField[];
 
-
 export type TDataType = string | number | boolean | Date | null;
 
 export interface IDataRow {
   [fieldName: string]: TDataType;
 };
+
+export type Data<R extends IDataRow = IDataRow> = List<R>;
+
+export type GetRowDataFunc<R extends IDataRow = IDataRow> = (idx: number) => R;
+
+export type FilterFunc<R extends IDataRow = IDataRow> = (row: R, idx: number) => boolean;
 
 export type TRowCalcFunc<R extends IDataRow> = (row: R) => R;
 
@@ -100,4 +107,16 @@ export type CloneGroup<R extends IDataRow = IDataRow> = (
   parent: IDataGroup<R> | undefined,
   prev: IDataGroup<R> | undefined,
   g: IDataGroup<R>) => IDataGroup<R>;
+
+export type MeasureCalcFunc<R extends IDataRow> = (getRowDataFunc: GetRowDataFunc<R>, rowStart: number, count: number) => TDataType;
+
+export interface IMeasure<R extends IDataRow> {
+  fieldName: string;
+  measureCalcFunc: MeasureCalcFunc<R>;
+  caption?: string;
+  shortCaption?: string;
+  description?: string;
+};
+
+export type Measures<R extends IDataRow> = IMeasure<R>[];
 
