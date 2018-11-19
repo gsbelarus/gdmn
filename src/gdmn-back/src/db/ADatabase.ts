@@ -96,7 +96,7 @@ export abstract class ADatabase {
   public async create(): Promise<void> {
     await this.waitProcess();
 
-    if (this._status === DBStatus.IDLE) {
+    if (this._status === DBStatus.CONNECTED) {
       this._logger.error("Database already created");
       throw new Error("Database already created");
     }
