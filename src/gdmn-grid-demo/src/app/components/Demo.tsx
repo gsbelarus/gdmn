@@ -1,18 +1,14 @@
 import * as React from 'react';
 import './Demo.css';
-import { INBRBCurrency, INBRBRate } from '../types';
-import { RecordSet, Data, IDataRow, getSumAggregator, getAvgAggregator } from 'gdmn-recordset';
-import nbrbCurrencies from '../../util/nbrbcurrencies.json';
-import nbrbRates from '../../util/nbrbrates.json';
-import { List } from 'immutable';
-import { FieldDefs, TFieldType } from 'gdmn-recordset';
+import { RecordSet } from 'gdmn-recordset';
 import { GDMNGrid } from 'gdmn-grid';
 import { ConnectedGrid, ConnectedGridPanel, connectGrid, connectGridPanel } from '../gridConnected';
+import { demoRecordSets } from '../data/data';
 
 export interface IDemoProps {
   recordSetNames: string[],
   getRecordSet: (name: string) => RecordSet,
-  createRecordSet: (name: string, fieldDefs: FieldDefs, data: Data) => void,
+  createRecordSet: (rs: RecordSet) => void,
   deleteRecordSet: (name: string) => void,
   gridNames: string[],
   deleteGrid: (name: string) => void
@@ -86,216 +82,18 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
     this.setState({ showPanel: !this.state.showPanel })
   }
 
-  loadCurrencies = () => {
-    const { createRecordSet } = this.props;
-
-    const fieldDefs = [
-      {
-        fieldName: 'Cur_Abbreviation',
-        dataType: TFieldType.String,
-        caption: 'Буквенный код',
-        required: true,
-        size: 3
-      },
-      {
-        fieldName: 'Cur_Name',
-        dataType: TFieldType.String,
-        caption: 'Наименование',
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_ID',
-        dataType: TFieldType.Integer,
-        caption: 'Внутренний код',
-        required: true,
-        aggregator: getSumAggregator()
-      },
-      {
-        fieldName: 'Cur_ParentID',
-        dataType: TFieldType.Integer,
-        caption: 'Внутренний код для связи',
-        required: true,
-        aggregator: getAvgAggregator()
-      },
-      {
-        fieldName: 'Cur_Code',
-        dataType: TFieldType.String,
-        caption: 'Цифровой код',
-        required: true,
-        size: 3
-      },
-      {
-        fieldName: 'Cur_Name_Bel',
-        dataType: TFieldType.String,
-        caption: 'Назва',
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_Name_Eng',
-        dataType: TFieldType.String,
-        caption: 'Name',
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_QuotName',
-        dataType: TFieldType.String,
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_QuotName_Bel',
-        dataType: TFieldType.String,
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_QuotName_Eng',
-        dataType: TFieldType.String,
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_NameMulti',
-        dataType: TFieldType.String,
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_Name_BelMulti',
-        dataType: TFieldType.String,
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_Name_EngMulti',
-        dataType: TFieldType.String,
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_Scale',
-        dataType: TFieldType.Integer,
-        caption: 'Количество единиц',
-        required: true
-      },
-      {
-        fieldName: 'Cur_Periodicity',
-        dataType: TFieldType.Integer,
-        caption: 'Периодичность выставления курса',
-        required: true
-      },
-      {
-        fieldName: 'Cur_DateStart',
-        dataType: TFieldType.Date,
-        caption: 'Дата включения в перечень валют',
-        required: true
-      },
-      {
-        fieldName: 'Cur_DateEnd',
-        dataType: TFieldType.Date,
-        caption: 'Дата исключения из перечня валют',
-        required: true
-      },
-    ];
-
-    const data = List<INBRBCurrency>(nbrbCurrencies as any);
-
-    createRecordSet('currency', fieldDefs, data);
-  }
-
-  deleteCurrencies = () => {
-    this.props.deleteRecordSet('currency');
-  }
-
-  loadRates = () => {
-    const { createRecordSet } = this.props;
-
-    const fieldDefs: FieldDefs = [
-      {
-        fieldName: 'Cur_ID',
-        dataType: TFieldType.Integer,
-        caption: 'ИД',
-        required: true
-      },
-      {
-        fieldName: 'Date',
-        dataType: TFieldType.Date,
-        caption: 'Дата',
-        required: true
-      },
-      {
-        fieldName: 'Cur_Abbreviation',
-        dataType: TFieldType.String,
-        caption: 'Буквенный код',
-        required: true,
-        size: 3
-      },
-      {
-        fieldName: 'Cur_Scale',
-        dataType: TFieldType.Integer,
-        caption: 'Количество единиц',
-        required: true
-      },
-      {
-        fieldName: 'Cur_Name',
-        dataType: TFieldType.String,
-        caption: 'Наименование',
-        required: true,
-        size: 60
-      },
-      {
-        fieldName: 'Cur_OfficialRate',
-        dataType: TFieldType.Currency,
-        caption: 'Курс',
-        required: true,
-        aggregator: getAvgAggregator()
-      },
-      {
-        fieldName: 'Year',
-        dataType: TFieldType.Integer,
-        caption: 'Год',
-        calcFunc: (row: IDataRow) => (row['Date'] as Date).getFullYear()
-      },
-      {
-        fieldName: 'Month',
-        dataType: TFieldType.Integer,
-        caption: 'Месяц',
-        calcFunc: (row: IDataRow) => (row['Date'] as Date).getMonth() + 1
-      }
-    ];
-
-    const typedRates: INBRBRate[] = (nbrbRates as any).map( (r: any): INBRBRate => ({...r, ['Date']: new Date(r['Date'])}) );
-
-    const data = List<INBRBRate>(typedRates);
-
-    createRecordSet('rate', fieldDefs, data);
-  }
-
-  deleteRates = () => {
-    this.props.deleteRecordSet('rate');
-  }
-
   render() {
-    const { recordSetNames, getRecordSet } = this.props;
+    const { recordSetNames, getRecordSet, createRecordSet, deleteRecordSet } = this.props;
     const { grids, showPanel } = this.state;
     return (
       <div className="DemoContainer">
         <div>
-          <button onClick={this.loadCurrencies}>
-            Load currencies r/s
-          </button>
-          <button onClick={this.deleteCurrencies}>
-            Delete currencies r/s
-          </button>
-          <button onClick={this.loadRates}>
-            Load rates r/s
-          </button>
-          <button onClick={this.deleteRates}>
-            Delete rates r/s
-          </button>
+          {
+            demoRecordSets.map( drs => <button key={`c${drs.name}`} onClick={ () => drs.createFunc(drs.name, createRecordSet) }>Load {drs.name}...</button> )
+          }
+          {
+            demoRecordSets.map( drs => <button key={`d${drs.name}`} onClick={ () => deleteRecordSet(drs.name) }>Delete {drs.name}</button> )
+          }
         </div>
         <div className="Toolbar">
           {

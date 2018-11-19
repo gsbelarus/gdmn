@@ -22,7 +22,7 @@ const DemoConnected = connect(
   (dispatch: ThunkDispatch<State, never,
       ActionType<CreateRecordSet | DeleteRecordSet | DeleteGrid >>) => ({
     createRecordSet:
-      (name: string, fieldDefs: FieldDefs, data: Data) => dispatch(createRecordSet({ name, rs: RecordSet.createWithData(name, fieldDefs, data) })),
+      (rs: RecordSet) => dispatch(createRecordSet({ name: rs.name, rs })),
     deleteRecordSet:
       (name: string) => dispatch(deleteRecordSet({ name })),
     deleteGrid:
