@@ -495,7 +495,7 @@ export class MainApplication extends Application {
       }
     }
 
-    await this.executeConnection((_connection) => AConnection.executeTransaction({
+    await this._executeConnection((_connection) => AConnection.executeTransaction({
       connection: _connection,
       callback: async (transaction) => {
         const admin = await this._addUser(_connection, transaction, {
@@ -509,20 +509,15 @@ export class MainApplication extends Application {
           const {default: databases} = require("../db/databases");
           for (const db of Object.values(databases)) {
             const dbDetail = db as IDBDetail;
-            await AConnection.executeTransaction({
-              connection: _connection,
-              callback: async (trans) => {
-                const appInfo = await this._addApplicationInfo(_connection, trans, {
-                  ...dbDetail.connectionOptions,
-                  ownerKey: admin.id,
-                  external: true
-                });
-                await this._addUserApplicationInfo(_connection, trans, {
-                  alias: dbDetail.alias,
-                  appKey: appInfo.id,
-                  userKey: admin.id
-                });
-              }
+            const appInfo = await this._addApplicationInfo(_connection, transaction, {
+              ...dbDetail.connectionOptions,
+              ownerKey: admin.id,
+              external: true
+            });
+            await this._addUserApplicationInfo(_connection, transaction, {
+              alias: dbDetail.alias,
+              appKey: appInfo.id,
+              userKey: admin.id
             });
           }
         } catch (error) {
