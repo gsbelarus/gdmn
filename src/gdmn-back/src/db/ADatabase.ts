@@ -49,26 +49,17 @@ export abstract class ADatabase {
   ];
 
   public readonly emitter: StrictEventEmitter<EventEmitter, IDBEvents> = new EventEmitter();
+  public readonly dbDetail: IDBDetail;
+  public readonly connectionPool: AConnectionPool<ICommonConnectionPoolOptions>;
 
   protected readonly _logger: Logger;
-
-  private readonly _dbDetail: IDBDetail;
-  private readonly _connectionPool: AConnectionPool<ICommonConnectionPoolOptions>;
 
   private _status: DBStatus = DBStatus.IDLE;
 
   protected constructor(dbDetail: IDBDetail, logger: Logger) {
-    this._dbDetail = dbDetail;
+    this.dbDetail = dbDetail;
+    this.connectionPool = dbDetail.driver.newCommonConnectionPool();
     this._logger = logger;
-    this._connectionPool = dbDetail.driver.newCommonConnectionPool();
-  }
-
-  get dbDetail(): IDBDetail {
-    return this._dbDetail;
-  }
-
-  get connectionPool(): AConnectionPool<ICommonConnectionPoolOptions> {
-    return this._connectionPool;
   }
 
   get status(): DBStatus {
@@ -76,9 +67,9 @@ export abstract class ADatabase {
   }
 
   public async createOrConnect(): Promise<void> {
-    const testConnection = this._dbDetail.driver.newConnection();
+    const testConnection = this.dbDetail.driver.newConnection();
     try {
-      await testConnection.connect(this._dbDetail.connectionOptions);
+      await testConnection.connect(this.dbDetail.connectionOptions);
       await this.connect();
     } catch (error) {
       if (error.message.includes("No such file or directory")) {
@@ -104,7 +95,7 @@ export abstract class ADatabase {
     this._status = DBStatus.CREATING;
     this.emitter.emit("change", this);
 
-    const {driver, connectionOptions, poolOptions}: IDBDetail = this._dbDetail;
+    const {driver, connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
     const {host, port, path} = connectionOptions;
     this._logger.info("Creating '%s:%s/%s'", host, port, path);
 
@@ -112,7 +103,7 @@ export abstract class ADatabase {
       const connection = driver.newConnection();
       await connection.createDatabase(connectionOptions);
       await connection.disconnect();
-      await this._connectionPool.create(connectionOptions, poolOptions);
+      await this.connectionPool.create(connectionOptions, poolOptions);
       await this._onCreate();
 
       this._status = DBStatus.CONNECTED;
@@ -120,8 +111,8 @@ export abstract class ADatabase {
       this._logger.info("Created '%s:%s/%s'", host, port, path);
 
     } catch (error) {
-      if (this._connectionPool.created) {
-        await this._connectionPool.destroy();
+      if (this.connectionPool.created) {
+        await this.connectionPool.destroy();
       }
       this._status = DBStatus.IDLE;
       this.emitter.emit("change", this);
@@ -139,7 +130,7 @@ export abstract class ADatabase {
     this._status = DBStatus.DELETING;
     this.emitter.emit("change", this);
 
-    const {driver, connectionOptions}: IDBDetail = this._dbDetail;
+    const {driver, connectionOptions}: IDBDetail = this.dbDetail;
     const {host, port, path} = connectionOptions;
     this._logger.info("Deleting '%s:%s/%s'", host, port, path);
 
@@ -166,12 +157,12 @@ export abstract class ADatabase {
     this._status = DBStatus.CONNECTING;
     this.emitter.emit("change", this);
 
-    const {connectionOptions, poolOptions}: IDBDetail = this._dbDetail;
+    const {connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
     const {host, port, path} = connectionOptions;
     this._logger.info("Connecting '%s:%s/%s'", host, port, path);
 
     try {
-      await this._connectionPool.create(connectionOptions, poolOptions);
+      await this.connectionPool.create(connectionOptions, poolOptions);
       await this._onConnect();
 
       this._status = DBStatus.CONNECTED;
@@ -179,8 +170,8 @@ export abstract class ADatabase {
       this._logger.info("Connected '%s:%s/%s'", connectionOptions.host, connectionOptions.port, connectionOptions.path);
 
     } catch (error) {
-      if (this._connectionPool.created) {
-        await this._connectionPool.destroy();
+      if (this.connectionPool.created) {
+        await this.connectionPool.destroy();
       }
       this._status = DBStatus.IDLE;
       this.emitter.emit("change", this);
@@ -198,19 +189,19 @@ export abstract class ADatabase {
     this._status = DBStatus.DISCONNECTING;
     this.emitter.emit("change", this);
 
-    const {connectionOptions}: IDBDetail = this._dbDetail;
+    const {connectionOptions}: IDBDetail = this.dbDetail;
     const {host, port, path} = connectionOptions;
     this._logger.info("Disconnecting '%s:%s/%s'", host, port, path);
 
     try {
       await this._onDisconnect();
-      await this._connectionPool.destroy();
+      await this.connectionPool.destroy();
 
       this._logger.info("Disconnected '%s:%s/%s'", host, port, path);
 
     } finally {
-      if (this._connectionPool.created) {
-        await this._connectionPool.destroy();
+      if (this.connectionPool.created) {
+        await this.connectionPool.destroy();
       }
       this._status = DBStatus.IDLE;
       this.emitter.emit("change", this);
@@ -232,7 +223,7 @@ export abstract class ADatabase {
 
   protected async _executeConnection<R>(callback: TExecutor<AConnection, R>): Promise<R> {
     return await AConnectionPool.executeConnection({
-      connectionPool: this._connectionPool,
+      connectionPool: this.connectionPool,
       callback
     });
   }

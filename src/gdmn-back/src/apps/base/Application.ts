@@ -25,22 +25,14 @@ export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector & ITPayload>;
 
 export abstract class Application extends ADatabase {
 
-  protected _sessionLogger = log4js.getLogger("Session");
-  protected _taskLogger = log4js.getLogger("Task");
+  public sessionLogger = log4js.getLogger("Session");
+  public taskLogger = log4js.getLogger("Task");
 
-  private readonly _erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
-  private readonly _sessionManager = new SessionManager(this._erModel, this._sessionLogger);
+  public readonly erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
+  public readonly sessionManager = new SessionManager(this.erModel, this.sessionLogger);
 
   protected constructor(dbDetail: IDBDetail, logger: Logger) {
     super(dbDetail, logger);
-  }
-
-  get erModel(): ERModel {
-    return this._erModel;
-  }
-
-  get sessionManager(): SessionManager {
-    return this._sessionManager;
   }
 
   public pushBeginTransCmd(session: Session, command: BeginTransCmd): Task<BeginTransCmd, string> {
@@ -48,12 +40,12 @@ export abstract class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
 
-        const transaction = await this._erModel.startTransaction(context.session.connection);
+        const transaction = await this.erModel.startTransaction(context.session.connection);
         return context.session.addTransaction(transaction);
       }
     });
@@ -67,7 +59,7 @@ export abstract class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
@@ -92,7 +84,7 @@ export abstract class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
@@ -117,7 +109,7 @@ export abstract class Application extends ADatabase {
       session,
       command,
       level: Level.USER,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
@@ -149,7 +141,7 @@ export abstract class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async () => {
         await this.waitProcess();
         this._checkSession(session);
@@ -167,7 +159,7 @@ export abstract class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
@@ -175,7 +167,7 @@ export abstract class Application extends ADatabase {
         const {transactionKey} = context.command.payload;
 
         const transaction = context.session.getTransaction(transactionKey || "");
-        const result = await this._erModel.query(context.command.payload, context.session.connection, transaction);
+        const result = await this.erModel.query(context.command.payload, context.session.connection, transaction);
         await context.checkStatus();
         return result;
       }
@@ -196,7 +188,7 @@ export abstract class Application extends ADatabase {
       this._logger.warn(message);
       throw new Error(message);
     }
-    if (!this._sessionManager.includes(session)) {
+    if (!this.sessionManager.includes(session)) {
       const message = "Session does not belong to the application";
       this._logger.warn(message);
       throw new Error(message);
@@ -206,19 +198,19 @@ export abstract class Application extends ADatabase {
   protected async _onCreate(): Promise<void> {
     await super._onCreate();
 
-    await this._erModel.init();
+    await this.erModel.init();
   }
 
   protected async _onConnect(): Promise<void> {
     await super._onConnect();
 
-    await this._erModel.init();
+    await this.erModel.init();
   }
 
   protected async _onDisconnect(): Promise<void> {
     await super._onDisconnect();
 
-    await this._sessionManager.closeAll();
+    await this.sessionManager.closeAll();
     this._logger.info("All session are closed");
   }
 }

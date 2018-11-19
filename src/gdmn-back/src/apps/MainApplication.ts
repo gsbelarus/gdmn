@@ -141,7 +141,7 @@ export class MainApplication extends Application {
       session,
       command,
       level: Level.USER,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
@@ -189,7 +189,7 @@ export class MainApplication extends Application {
       session,
       command,
       level: Level.USER,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
@@ -227,7 +227,7 @@ export class MainApplication extends Application {
       session,
       command,
       level: Level.SESSION,
-      logger: this._taskLogger,
+      logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
         this._checkSession(session);
