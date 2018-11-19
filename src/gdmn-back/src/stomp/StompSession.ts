@@ -261,17 +261,18 @@ export class StompSession implements StompClientCommandListener {
   // TODO possible delivery failure confirmation
   public disconnect(headers: StompHeaders): void {
     this._try(async () => {
-      this.session.close();
+      const session = this.session;
+      session.close();
       if (headers["delete-user"] === "1") {
         const connectedApplications = await this.mainApplication.getConnectedApplications();
         const sessions = [
-          ...this.mainApplication.sessionManager.find(this.session.userKey),
+          ...this.mainApplication.sessionManager.find(session.userKey),
           ...connectedApplications.reduce((s, application) => {
-            return [...s, ...application.sessionManager.find(this.session.userKey)];
+            return [...s, ...application.sessionManager.find(session.userKey)];
           }, [] as Session[])
         ];
-        sessions.forEach((session) => session.close());
-        await this.mainApplication.deleteUser(this.session.userKey);
+        sessions.forEach((s) => s.close());
+        await this.mainApplication.deleteUser(session.userKey);
       }
       this._sendReceipt(headers);
     }, headers);
