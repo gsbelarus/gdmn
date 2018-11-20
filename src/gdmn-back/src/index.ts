@@ -54,14 +54,14 @@ async function create(): Promise<IServer> {
 
   const router = new Router()
     // TODO temp
-    .get("/", (ctx) => ctx.redirect("/spa"));
-    // .get(/\/spa(\/*)?/g, async (ctx) => {
-    //   await send(ctx, "/gs/ng/", {
-    //     root: path.resolve(process.cwd(), config.get("server.publicDir")),
-    //     index: "index",
-    //     extensions: ["html"]
-    //   });
-    // });
+    .get("/", (ctx) => ctx.redirect("/spa"))
+    .get(/\/spa(\/*)?/g, async (ctx) => {
+      await send(ctx, "/", { // send(ctx, "/gs/ng/", {
+        root: path.resolve(process.cwd(), config.get("server.publicDir")),
+        index: "index",
+        extensions: ["html"]
+      });
+    });
 
   serverApp
     .use(router.routes())
