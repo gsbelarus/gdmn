@@ -29,7 +29,7 @@ export function loadNBRBOLAP(name: string, rscf: RSCreateFunc) {
             for (let i = rowStart; i < rowStart + count; i++) {
               v += getRowData(i)['Cur_OfficialRate'] as number;
             }
-            return v / count;
+            return (v / count).toFixed(2);
           }
         }
       ])

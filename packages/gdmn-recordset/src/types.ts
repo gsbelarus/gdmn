@@ -23,6 +23,8 @@ export interface IFieldAggregator<Acc, Res = TDataType> {
   getTotal: (acc: Acc) => Res | null;
 };
 
+export type TDataType = string | number | boolean | Date | null;
+
 export interface IFieldDef extends INamedField {
   dataType: TFieldType;
   size?: number;
@@ -36,6 +38,7 @@ export interface IFieldDef extends INamedField {
   shortCaption?: string;
   description?: string;
   aggregator?: IFieldAggregator<any>;
+  olapValue?: TDataType[];
 };
 
 export type FieldDefs = IFieldDef[];
@@ -47,7 +50,6 @@ export interface ISortField extends INamedField {
 
 export type SortFields = ISortField[];
 
-export type TDataType = string | number | boolean | Date | null;
 
 export interface IDataRow {
   [fieldName: string]: TDataType;

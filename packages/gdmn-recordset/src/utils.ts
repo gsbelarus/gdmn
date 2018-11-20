@@ -1,17 +1,20 @@
 import { IDataRow, TDataType } from "./types";
 
-export function checkField<R extends IDataRow = IDataRow>(row: R, fieldName: string): TDataType {
+export function checkField<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: TDataType): TDataType {
   const value = row[fieldName];
 
   if (value === undefined) {
-    throw new Error(`Unknown field name ${fieldName}`);
+    if (defaultValue === undefined) {
+      throw new Error(`Unknown field name ${fieldName}`);
+    }
+    return defaultValue;
   }
 
   return value;
 };
 
-export function getAsString<R extends IDataRow = IDataRow>(row: R, fieldName: string): string {
-  const value = checkField(row, fieldName);
+export function getAsString<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: string): string {
+  const value = checkField(row, fieldName, defaultValue);
 
   if (value === null) {
     return '';
@@ -24,8 +27,8 @@ export function getAsString<R extends IDataRow = IDataRow>(row: R, fieldName: st
   return value.toString();
 };
 
-export function getAsNumber<R extends IDataRow = IDataRow>(row: R, fieldName: string): number {
-  const value = checkField(row, fieldName);
+export function getAsNumber<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: number): number {
+  const value = checkField(row, fieldName, defaultValue);
 
   if (value === null) {
     return 0;
@@ -42,8 +45,8 @@ export function getAsNumber<R extends IDataRow = IDataRow>(row: R, fieldName: st
   throw new Error(`Field ${fieldName} can't be converted to number`);
 };
 
-export function getAsBoolean<R extends IDataRow = IDataRow>(row: R, fieldName: string): boolean {
-  const value = checkField(row, fieldName);
+export function getAsBoolean<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: boolean): boolean {
+  const value = checkField(row, fieldName, defaultValue);
 
   if (value === null) {
     return false;
@@ -68,8 +71,8 @@ export function getAsBoolean<R extends IDataRow = IDataRow>(row: R, fieldName: s
   throw new Error(`Field ${fieldName} can't be converted to boolean`);
 };
 
-export function getAsDate<R extends IDataRow = IDataRow>(row: R, fieldName: string): Date {
-  const value = checkField(row, fieldName);
+export function getAsDate<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: Date): Date {
+  const value = checkField(row, fieldName, defaultValue);
 
   if (value instanceof Date) {
     return value;

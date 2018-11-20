@@ -7,11 +7,17 @@ export function loadDemoOLAP(name: string, rscf: RSCreateFunc) {
     rscf(rs.sort([
         {
           fieldName: 'company'
+        },
+        {
+          fieldName: 'good'
         }
       ],
       [
         {
           fieldName: 'year'
+        },
+        {
+          fieldName: 'month'
         }
       ],
       [
@@ -26,7 +32,7 @@ export function loadDemoOLAP(name: string, rscf: RSCreateFunc) {
             for (let i = rowStart; i < rowStart + count; i++) {
               v += getRowData(i)['cost'] as number;
             }
-            return v / count;
+            return v;
           }
         }
       ])

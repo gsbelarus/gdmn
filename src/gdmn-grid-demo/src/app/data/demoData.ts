@@ -9,7 +9,35 @@ const demoData = [
     date: new Date(2018, 1, 1),
     qty: 2,
     price: 1.5
-  }
+  },
+  {
+    company: 'Company A',
+    good: 'Good A',
+    date: new Date(2017, 1, 1),
+    qty: 4,
+    price: 3
+  },
+  {
+    company: 'Company B',
+    good: 'Good A',
+    date: new Date(2016, 6, 1),
+    qty: 0.1,
+    price: 200
+  },
+  {
+    company: 'Company A',
+    good: 'Good B',
+    date: new Date(2018, 5, 5),
+    qty: 11,
+    price: 12
+  },
+  {
+    company: 'Company A',
+    good: 'Good B',
+    date: new Date(2018, 10, 10),
+    qty: 5,
+    price: 5.5
+  },
 ];
 
 export function loadDemoData(name: string, rscf: RSCreateFunc) {
