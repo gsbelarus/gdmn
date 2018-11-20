@@ -176,9 +176,16 @@ export class StompSession implements StompClientCommandListener {
 
   public connect(headers: StompHeaders): void {
     this._try(async () => {
-      const {session, login, passcode, authorization, "app-uid": appUid, "create-user": isCreateUser} = headers;
+      const {
+        session,
+        login,
+        passcode,
+        authorization,
+        "app-uid": appUid,
+        "create-user": isCreateUser,
+        "delete-user": isDeleteUser
+      } = headers;
 
-      // authorization
       let result: {
         userKey: number,
         newTokens?: {
@@ -186,23 +193,19 @@ export class StompSession implements StompClientCommandListener {
           "refresh-token": string;
         };
       };
-      if (login && passcode && isCreateUser === "1") {
-        const user = await this.mainApplication.addUser({
-          login,
-          password: passcode,
-          admin: false
-        });
-        result = {
-          userKey: user.id,
-          newTokens: {
-            "access-token": this._createAccessJwtToken(user),
-            "refresh-token": this._createRefreshJwtToken(user)
+      if (login && passcode) {
+        let user;
+        if (isCreateUser === "1") {
+          user = await this.mainApplication.addUser({
+            login,
+            password: passcode,
+            admin: false
+          });
+        } else {
+          user = await this.mainApplication.checkUserPassword(login, passcode);
+          if (!user) {
+            throw new ServerError(ErrorCode.INVALID, "Incorrect login or password");
           }
-        };
-      } else if (login && passcode) {
-        const user = await this.mainApplication.checkUserPassword(login, passcode);
-        if (!user) {
-          throw new ServerError(ErrorCode.INVALID, "Incorrect login or password");
         }
         result = {
           userKey: user.id,
@@ -211,12 +214,27 @@ export class StompSession implements StompClientCommandListener {
             "refresh-token": this._createRefreshJwtToken(user)
           }
         };
+
       } else if (authorization) {
         const payload = this._getPayloadFromJwtToken(authorization);
         const user = await this.mainApplication.findUser({id: payload.id});
         if (!user) {
-          throw new ServerError(ErrorCode.NOT_FOUND, "No users for token");
+          throw new ServerError(ErrorCode.UNAUTHORIZED, "User is not found");
         }
+
+        if (isDeleteUser === "1") {
+          const connectedApplications = await this.mainApplication.getConnectedApplications();
+          const sessions = [
+            ...this.mainApplication.sessionManager.find(user.id),
+            ...connectedApplications.reduce((s, application) => {
+              return [...s, ...application.sessionManager.find(user.id)];
+            }, [] as Session[])
+          ];
+          sessions.forEach((s) => s.close());
+          await this.mainApplication.deleteUser(user.id);
+          throw new ServerError(ErrorCode.UNAUTHORIZED, "User is not found");
+        }
+
         result = {userKey: user.id};
         if (payload.isRefresh) {
           result.newTokens = {
@@ -224,6 +242,7 @@ export class StompSession implements StompClientCommandListener {
             "refresh-token": this._createRefreshJwtToken(user)
           };
         }
+
       } else {
         throw new ServerError(ErrorCode.UNAUTHORIZED, "Incorrect headers");
       }
@@ -258,22 +277,10 @@ export class StompSession implements StompClientCommandListener {
     }, headers);
   }
 
-  // TODO possible delivery failure confirmation
   public disconnect(headers: StompHeaders): void {
-    this._try(async () => {
-      const session = this.session;
-      session.close();
-      if (headers["delete-user"] === "1") {
-        const connectedApplications = await this.mainApplication.getConnectedApplications();
-        const sessions = [
-          ...this.mainApplication.sessionManager.find(session.userKey),
-          ...connectedApplications.reduce((s, application) => {
-            return [...s, ...application.sessionManager.find(session.userKey)];
-          }, [] as Session[])
-        ];
-        sessions.forEach((s) => s.close());
-        await this.mainApplication.deleteUser(session.userKey);
-      }
+    this._try(() => {
+      this.session.close();
+
       this._sendReceipt(headers);
     }, headers);
   }
