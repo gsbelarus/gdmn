@@ -1,0 +1,14 @@
+version: '3'
+services:
+  gdmn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+    - 4000:4000
+    restart: always
+    volumes:
+    - /node_modules
+    - .:/usr/app/gdmn
+    user: root
+    tty: true

@@ -1,0 +1,29 @@
+# Custom
+dist
+packages/*/dist
+src/*/dist
+databases.ts
+testDB.ts
+.lib
+*.js.map
+
+# Firebird
+*.fdb
+*.fbk
+
+# VS Code
+.vscode
+
+# IntelliJ IDEA
+.idea
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
