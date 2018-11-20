@@ -50,7 +50,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     ]
   },
   output: {
-    publicPath: '/gs/ng/' // TODO test
+    publicPath: '/'//'/gs/ng/' // TODO test
   },
   optimization: {
     // minimize: true,
