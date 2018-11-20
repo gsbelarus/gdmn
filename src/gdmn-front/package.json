@@ -5,6 +5,7 @@
     "--- gdmn ---": "",
     "build": "yarn pkg:build",
     "clean": "shx rm -rf ./dist ./build",
+    "rebuild": "yarn clean && yarn build",
     "start": "yarn pkg:start",
     "watch": "tsc -w",
     "------------": "",
