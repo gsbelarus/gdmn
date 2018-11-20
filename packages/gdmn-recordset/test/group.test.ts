@@ -1,4 +1,4 @@
-import { FieldDefs, TFieldType, IDataRow, GetRowDataFunc, getSumAggregator, RecordSet } from "../src";
+import { FieldDefs, TFieldType, IDataRow, getSumAggregator, RecordSet } from "../src";
 import { List } from "immutable";
 
 const fieldDefs: FieldDefs = [
