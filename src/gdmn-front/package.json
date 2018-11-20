@@ -11,6 +11,7 @@
     "------------": "",
     "pkg:start": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack-dev-server --config configs/webpack/webpack.config.dev.ts",
     "pkg:build": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack --progress --display-modules --config configs/webpack/webpack.config.prod.ts",
+    "pkg:deploy": "shx cp -r ./dist ../gdmn-back/public",
     "ci:compile": "yarn run clean && tsc -p ./tsconfig.json",
     "prettier:cli": "prettier \"**/*.@(ts|tsx|js|jsx)\"",
     "prettier:fix": "yarn run prettier:cli -- --write",

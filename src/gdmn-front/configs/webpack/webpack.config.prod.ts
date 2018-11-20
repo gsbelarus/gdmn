@@ -1,9 +1,10 @@
 import { Configuration, EnvironmentPlugin } from 'webpack';
 import merge from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+// @ts-ignore
 import TerserPlugin from 'terser-webpack-plugin';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+// import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 import { getWebpackConfigBase, cssLoader, cssModulesLoader } from './webpackConfigBase';
 import { getRootRelativePath } from './utils';
@@ -70,7 +71,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
       root: getRootRelativePath('')
     }),
     new MiniCssExtractPlugin({ filename: EXTRACT_CSS_FILENAME }),
-    new BundleAnalyzerPlugin(),
+    // new BundleAnalyzerPlugin(),
     new EnvironmentPlugin({
       NODE_ENV: process.env.NODE_ENV || 'production'
     })
