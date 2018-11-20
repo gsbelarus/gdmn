@@ -1,7 +1,7 @@
 import { Configuration, EnvironmentPlugin } from 'webpack';
 import merge from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import UglifyJsPlugin from 'uglifyjs-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
@@ -52,24 +52,15 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     publicPath: '/gs/ng/' // TODO test
   },
   optimization: {
+    // minimize: true,
     minimizer: [
-      // new UglifyJsPlugin({ // todo
-      //   cache: true,
-      //   parallel: true
+      new TerserPlugin({ // todo
+        cache: true,
+        parallel: true
       //   // sourceMap: true
-      // })
+      })
       // new OptimizeCSSAssetsPlugin({})
     ]
-    // splitChunks: {
-    //   cacheGroups: {
-    //     vendor: {
-    //       chunks: 'initial',
-    //       name: 'vendor',
-    //       test: 'vendor',
-    //       enforce: true
-    //     }
-    //   }
-    // }
   },
   // performance: {
   //   hints: false
