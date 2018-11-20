@@ -97,7 +97,7 @@ class WebStomp extends BasePubSubBridge<
     if (!this.client) throw new Error('Connect failed: stomp client not initialized!');
 
     if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
-      console.log('connect: DISCONNECTIN')
+      console.log('connect: DISCONNECTIN');
       this.connectionStatusObservable
         .pipe(
           filter(value => value === TPubSubConnectStatus.DISCONNECTED),
@@ -105,7 +105,7 @@ class WebStomp extends BasePubSubBridge<
         )
         .subscribe(() => {
           if (this.client) {
-            console.log('connect: DISCONNECTING. DISCONNECTED->CONNECTING->activate')
+            console.log('connect: DISCONNECTING. DISCONNECTED->CONNECTING->activate');
             this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
             this.client.connectHeaders = <any>meta || this.clientConfig.connectHeaders || {}; // fixme: type
             this.client.activate();
@@ -165,7 +165,7 @@ class WebStomp extends BasePubSubBridge<
       this.connectionConnectedObservable.pipe(first()).subscribe(() => {
         console.log('toPromise');
 
-        this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);  // fixme: side effect
+        this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING); // fixme: side effect
         this!.client!.deactivate();
 
         // this!.client!.disconnectHeaders = tmp2; // todo: wait
@@ -295,7 +295,7 @@ class WebStomp extends BasePubSubBridge<
     // }
 
     if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
-      console.log('onWebSocketClose: DISCONNECTING')
+      console.log('onWebSocketClose: DISCONNECTING');
       this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
     }
   };
@@ -308,7 +308,7 @@ class WebStomp extends BasePubSubBridge<
   };
 
   private onDisconnectReceiptFrame: frameCallbackType = receiptFrame => {
-    console.log('onDisconnectReceiptFrame')
+    console.log('onDisconnectReceiptFrame');
     this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
   };
 

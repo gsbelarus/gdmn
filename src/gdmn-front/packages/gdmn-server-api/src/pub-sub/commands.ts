@@ -13,7 +13,9 @@ import {
   IAccessAuthResponseMeta,
   ISignInRequestMeta,
   ISignUpRequestMeta,
-  TAccessAuthRequestMeta, TAccountDeleteRequestMeta,
+  TAccessAuthRequestMeta,
+  TAccountDeleteRequestMeta,
+  TAccountDeleteResponseMeta,
   TRefreshAuthRequestMeta,
   TRefreshAuthResponseMeta,
   TSignInResponseMeta,
@@ -75,7 +77,7 @@ type TRefreshAuthCmdResult = ICmdResult<TRefreshAuthResponseMeta, null>; // only
 
 type TDeleteAccountCmd = ICmd<TAccountDeleteRequestMeta>;
 
-type TDeleteAccountCmdResult = TSignOutCmdResult; // only protocol errors
+type TDeleteAccountCmdResult = ICmdResult<TAccountDeleteResponseMeta, null>; // only protocol errors
 
 // ping task
 

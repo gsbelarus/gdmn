@@ -35,7 +35,7 @@ const getGdmnContainer = (apiService: GdmnPubSubApi) =>
           dispatch(gdmnActions.apiPing(cmd));
         },
         apiDeleteAccount() {
-          dispatch(gdmnActions.apiDeleteAccount())
+          dispatch(gdmnActions.apiDeleteAccount());
         }
         // loadDataStores() {
         //   dispatch(dataStoresActions.loadDataStores());

@@ -25,18 +25,17 @@ const getReducer = () => (state: IAuthState = initialState, action: TAuthActions
         ...action.payload,
         accessTokenPayload:
           action.payload.accessTokenPayload || state.accessTokenPayload
-            ? <IAccessTokenPayload>({
+            ? <IAccessTokenPayload>{
                 ...state.accessTokenPayload,
                 ...action.payload.accessTokenPayload
-              })
-            : undefined
-        ,
+              }
+            : undefined,
         refreshTokenPayload:
           action.payload.refreshTokenPayload || state.refreshTokenPayload
-            ? <IRefreshTokenPayload>({
+            ? <IRefreshTokenPayload>{
                 ...state.refreshTokenPayload,
                 ...action.payload.refreshTokenPayload
-              })
+              }
             : undefined,
         authenticated: true
       };

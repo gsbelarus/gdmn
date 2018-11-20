@@ -41,9 +41,9 @@ class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewSta
           />
         </div>
         {/*<textarea*/}
-          {/*style={{ width: '100%', minHeight: 300, resize: 'vertical', marginTop: 20, marginBottom: 20 }}*/}
-          {/*disabled={true}*/}
-          {/*value={this.props.log}*/}
+        {/*style={{ width: '100%', minHeight: 300, resize: 'vertical', marginTop: 20, marginBottom: 20 }}*/}
+        {/*disabled={true}*/}
+        {/*value={this.props.log}*/}
         {/*/>*/}
       </div>
     );

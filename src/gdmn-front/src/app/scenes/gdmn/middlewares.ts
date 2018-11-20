@@ -12,12 +12,10 @@ import { TGdmnErrorCodes } from '@gdmn/server-api';
 
 const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
   return ({ dispatch, getState }) => next => async (action: any) => {
-
     let errorSubscription: Subscription | undefined;
 
     switch (action.type) {
       case getType(gdmnActions.apiConnect):
-
         // errorSubscription =  apiService.errorMessageObservable.subscribe(
         //   value => {
         //     // if (value.meta && value.meta.code && value.meta.code === TGdmnErrorCodes.UNAUTHORIZED) { // todo tmp
@@ -47,7 +45,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       case getType(gdmnActions.apiDisconnect):
-
         if (!!errorSubscription) errorSubscription.unsubscribe();
 
         apiService.signOut({ payload: null });
@@ -59,15 +56,48 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
         });
 
         break;
-      case getType(gdmnActions.apiDeleteAccount):
+      case getType(gdmnActions.apiDeleteAccount): {
         // try {
-          apiService.signOut({ payload: { 'delete-user': 1 } });
+
+        const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
+        const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
+        if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
+          const token = Auth.isFreshToken(accessTokenPayload)
+            ? selectAuthState(getState()).accessToken
+            : selectAuthState(getState()).refreshToken;
+
+          // await apiService.auth({
+          //   payload: {
+          //     authorization: token || ''
+          //   }
+          // });
+
+          try {
+            await apiService.deleteAccount({
+              payload: {
+                authorization: token || '',
+                'delete-user': 1
+              }
+            });
+          } catch (value) {
+            // todo tmp
+            if (value.meta && value.meta.code && value.meta.code === TGdmnErrorCodes.UNAUTHORIZED) {
+              // todo tmp
+              dispatch(authActions.signOut());
+            } else {
+              dispatch(rootActions.onError(value));
+            }
+          }
+        } else {
+          dispatch(authActions.signOut());
+        }
 
         // } catch(e) {
         //   console.log(e)
         // }
 
         break;
+      }
     }
 
     return next(action);

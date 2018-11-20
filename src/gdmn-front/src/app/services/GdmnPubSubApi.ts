@@ -10,6 +10,7 @@ import {
   TCreateAppTaskCmd,
   TCreateAppTaskCmdResult,
   TDeleteAccountCmd,
+  TDeleteAccountCmdResult,
   TDeleteAppTaskCmd,
   TDeleteAppTaskCmdResult,
   TGdmnPublishMessageMeta,
@@ -88,9 +89,15 @@ class GdmnPubSubApi {
     return this.sign(cmd);
   }
 
-  public async auth(cmd: TAuthCmd): Promise<TAuthCmdResult> {
-    // todo: tmp test
-    if (this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTED ||
+  public async deleteAccount(cmd: TDeleteAccountCmd): Promise<TAuthCmdResult> {
+    return this.auth(cmd);
+  }
+
+  public async auth(cmd: TAuthCmd | TDeleteAccountCmd): Promise<TAuthCmdResult> {
+    // todo: tmp
+    if (
+      ((<any>cmd).payload['delete-user'] !== 1 &&
+        this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTED) ||
       this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTING
     ) {
       console.log('AUTH');
@@ -176,36 +183,36 @@ class GdmnPubSubApi {
           TGdmnTopic.TASK_STATUS
         );
 
-
         // setTimeout(()=>{
 
-          console.log('SUBSCRIBE');
-          // todo: tmp
+        console.log('SUBSCRIBE');
+        // todo: tmp
 
         this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
           console.log('taskActionResult')
         );
 
-          this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
-            console.log('taskProgressResult')
-          );
-          this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
-            console.log('taskStatusResult')
-          );
+        this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
+          console.log('taskProgressResult')
+        );
+        this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
+          console.log('taskStatusResult')
+        );
         // }, 10000);
 
         return result;
       });
   }
 
-  public async signOut(cmd: TSignOutCmd | TDeleteAccountCmd): Promise<TSignOutCmdResult> {
+  public async signOut(cmd: TSignOutCmd): Promise<TSignOutCmdResult> {
     // todo tmp
     // this.taskActionResultSubscription!.unsubscribe();
     // this.taskProgressResultSubscription!.unsubscribe();
     // this.taskStatusResultSubscription!.unsubscribe();
 
     this.pubSubClient.connectionStatusObservable
-      .pipe(filter(value => value === TPubSubConnectStatus.DISCONNECTING),
+      .pipe(
+        filter(value => value === TPubSubConnectStatus.DISCONNECTING),
         first()
       )
       .subscribe(() => {
@@ -219,7 +226,7 @@ class GdmnPubSubApi {
       });
 
     console.log('cmd.payload', cmd.payload);
-    this.pubSubClient.disconnect(<any>(!!cmd.payload && cmd.payload['delete-user'] === 1 ? cmd.payload : undefined));
+    this.pubSubClient.disconnect();
 
     return await this.pubSubClient.connectionDisconnectedObservable
       .pipe(
@@ -268,7 +275,7 @@ class GdmnPubSubApi {
   }
 
   public get errorMessageObservable(): Subject<IPubSubMessage> {
-    return this.pubSubClient.errorMessageObservable
+    return this.pubSubClient.errorMessageObservable;
   }
 
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {

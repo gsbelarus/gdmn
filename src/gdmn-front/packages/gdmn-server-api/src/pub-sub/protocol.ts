@@ -42,9 +42,10 @@ type TRefreshAuthRequestMeta = _IAuthRequestMeta;
 type TRefreshAuthResponseMeta = _ISignResponseMeta;
 
 // delete account
-type TAccountDeleteRequestMeta = {
-  'delete-user': 1
-}
+type TAccountDeleteRequestMeta = TAccessAuthRequestMeta & {
+  'delete-user': 1;
+};
+type TAccountDeleteResponseMeta = IAccessAuthResponseMeta;
 
 // publish
 type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
@@ -69,6 +70,7 @@ export {
   TRefreshAuthRequestMeta,
   TRefreshAuthResponseMeta,
   TAccountDeleteRequestMeta,
+  TAccountDeleteResponseMeta,
   TPublishMessageMeta,
   TReceivedMessageMeta,
   IReceivedErrorMeta,
