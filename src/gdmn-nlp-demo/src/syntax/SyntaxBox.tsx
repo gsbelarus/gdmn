@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { TextField, DefaultButton } from "office-ui-fabric-react";
 import "./SyntaxBox.css";
 import { IToken } from "chevrotain";
-import { ParsedText, Phrase, AnyWord } from "gdmn-nlp";
+import { ParsedText, Phrase, AnyWord, tokenize, CyrillicWord, morphAnalyzer } from "gdmn-nlp";
 import { Edge as DagreEdge, graphlib, layout } from 'dagre';
 import { Rect } from "./Rect";
 import { Edge } from "./Edge";
@@ -23,13 +23,15 @@ export interface ISyntaxBoxProps {
 export interface ISyntaxBoxState {
   editedText: string,
   showPhrases: boolean,
-  verboseErrors?: any;
+  tokens: IToken[],
+  verboseErrors?: any
 }
 
 export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   state: ISyntaxBoxState = {
     editedText: this.props.text,
-    showPhrases: false
+    showPhrases: false,
+    tokens: tokenize(this.props.text)
   }
 
   private _getColor(t: IToken): string {
@@ -57,9 +59,13 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
     return (
       <>
-        <div>
-          Total combinatorial count: {coombinations.length}
-        </div>
+        {
+          coombinations.length ?
+            <div>
+              Total combinatorial count: {coombinations.length}
+            </div>
+          : undefined
+        }
         <div className="SyntaxCoombinations">
           {
             stacks.map( (s, idx) => (
@@ -213,7 +219,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   render() {
-    const { editedText, showPhrases, verboseErrors } = this.state;
+    const { editedText, showPhrases, verboseErrors, tokens } = this.state;
     const { onSetText, errorMsg, parserDebug, commandError, command } = this.props;
 
     return (<div className="ContentBox">
@@ -221,7 +227,23 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         <TextField
           label="Text"
           value={editedText}
-          onChange={ (e: React.ChangeEvent<HTMLInputElement>) => this.setState({ editedText: e.target.value }) }
+          onChange={
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+              try {
+                const tokens = tokenize(e.target.value);
+                this.setState({
+                  editedText: e.target.value,
+                  tokens
+                });
+              }
+              catch(err) {
+                this.setState({
+                  editedText: err.message,
+                  tokens: []
+                });
+              }
+            }
+          }
         />
         <DefaultButton
           text="..."
@@ -233,10 +255,35 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           onClick={ () => onSetText(editedText) }
         />
       </div>
+      <div className="SyntaxTokens">
+        {
+          tokens.map( t =>
+            <div>
+              <div className={`Token${t.tokenType.name}`}>
+                {t.image.split('').map( ch => ch === ' ' ? <span>&nbsp;</span> : ch)}
+              </div>
+              {
+                t.tokenType === CyrillicWord ? morphAnalyzer(t.image).map( w =>
+                  <div>
+                    {w.getSignature()}
+                  </div>)
+                :
+                undefined
+              }
+            </div>
+          )
+        }
+      </div>
       {errorMsg && <div className="SyntaxError">{errorMsg}</div>}
       {showPhrases ?
         <div>
-          {predefinedPhrases.map( (p, idx) => <DefaultButton key={idx} text={p} onClick={ () => this.setState({ editedText: p, showPhrases: false }) }/> )}
+          {predefinedPhrases.map( (p, idx) => <DefaultButton key={idx} text={p} onClick={
+            () => this.setState({
+              editedText: p,
+              tokens: tokenize(p),
+              showPhrases: false
+            })
+          }/> )}
         </div>
       : undefined}
       {this._getCoombinations()}

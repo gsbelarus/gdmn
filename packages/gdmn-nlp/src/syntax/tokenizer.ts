@@ -24,7 +24,7 @@ export const PunctuationMark: TokenType = createToken({
 
 export const CyrillicWord: TokenType = createToken({
   name: 'CyrillicWord',
-  pattern: /(?:[А-Яа-я]+-[А-Яа-я]+)|(?:[А-Яа-я]+)/
+  pattern: /(?:[А-ЯЎІа-яўі]+-[А-ЯЎІа-яўі]+)|(?:[А-ЯЎІа-яўі]+)/
 });
 
 export const Other: TokenType = createToken({

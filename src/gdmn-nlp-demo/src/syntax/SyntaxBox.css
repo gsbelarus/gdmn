@@ -16,6 +16,52 @@
   margin-left: 4px;
 }
 
+.SyntaxTokens {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.SyntaxTokens > div {
+  display: flex;
+  flex-direction: column;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.SyntaxTokens > div > div:first-child {
+  border: 1px solid gray;
+  margin-bottom: 4px;
+}
+
+.SyntaxTokens > div > div {
+  border: 1px dotted gray;
+  border-radius: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+  margin-bottom: 2px;
+}
+
+.TokenWhiteSpace {
+  background-color: aquamarine;
+}
+
+.TokenCyrillicWord {
+  background-color: darksalmon;
+}
+
+.TokenComma {
+  background-color: blue;
+  color: white;
+}
+
+.TokenPunctuationMark {
+  background-color: rebeccapurple;
+  color: white;
+}
+
 .SyntaxCoombinations {
   display: flex;
   flex-direction: row;
