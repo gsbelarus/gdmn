@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 import {
@@ -7,6 +7,7 @@ import {
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus
 } from './bridges/BasePubSubBridge';
+import { TStompFrameHeaders } from '@gdmn/client-core';
 
 interface IPubSubMessageMeta {
   [key: string]: string | undefined;
@@ -29,9 +30,7 @@ class PubSubClient {
   /* locally queued messages when broker is not connected or message not receipted*/
   private queuedPublishMessages: IQueuedPublishMessage[] = [];
 
-  public connectedMessageObservable: Subject<IPubSubMessage>;
-  public errorMessageObservable: Subject<IPubSubMessage>;
-  public readonly connect: (meta?: IPubSubMessageMeta) => void | never; // todo test
+  public readonly connect: (meta?: IPubSubMessageMeta) => void | never;
   public readonly disconnect: (meta?: IPubSubMessageMeta) => void;
   public readonly subscribe: <TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
@@ -41,37 +40,35 @@ class PubSubClient {
   constructor(bridge: BasePubSubBridge) {
     this.bridge = bridge;
 
+    this.bridge.connectionStatusObservable.subscribe(value => console.log('connectionStatusObservable: ' + value));
+
     this.connectionDisconnectedObservable = this.bridge.connectionStatusObservable.pipe(
       filter((currentState: TPubSubConnectStatus) => currentState === TPubSubConnectStatus.DISCONNECTED)
     );
-    this.connectedMessageObservable = this.bridge.connectedMessageObservable;
-    this.errorMessageObservable = this.bridge.errorMessageObservable;
     this.connect = this.bridge.connect.bind(this.bridge);
     this.disconnect = this.bridge.disconnect.bind(this.bridge);
     this.subscribe = this.bridge.subscribe.bind(this.bridge);
 
-    this.connectedMessageObservable.subscribe(() => {
-      this.queuePublish();
-    });
+    this.bridge.connectionConnectedObservable.subscribe(
+      // todo connectedMessage
+      () => {
+        console.log('connectedMessage');
+        this.queuePublish();
+      },
+      error => {
+        // todo: resubscribe ?
+        // console.log('connectedMessage error');
+      }
+    );
     this.connectionDisconnectedObservable.subscribe(() => {
       this.queuedPublishMessages = []; // todo complete
     });
 
-    // todo: tmp
-    this.bridge.connectionStatusObservable.subscribe(value => {
-      if (value === TPubSubConnectStatus.DISCONNECTING || value === TPubSubConnectStatus.DISCONNECTED) {
-        this.connectedMessageObservable = this.bridge.connectedMessageObservable;
-        // this.errorMessageObservable = this.bridge.errorMessageObservable;
-      }
-    });
-
     this.errorMessageObservable.subscribe((errorMessage: IPubSubMessage) => {
       if (!this.bridge.isConnected()) {
-        this.connectedMessageObservable.error(errorMessage); // todo
+        this.connectedMessageObservable.error(errorMessage);
+        this.connectedMessageObservable = new Subject();
       }
-
-      // todo: tmp
-      this.connectedMessageObservable = this.bridge.connectedMessageObservable;
     });
   }
 
@@ -88,18 +85,45 @@ class PubSubClient {
     return queuedMessage.publishStateObservable; // todo test
   }
 
+  public get connectedMessageObservable(): Subject<IPubSubMessage> {
+    return this.bridge.connectedMessageObservable;
+  }
+
+  public set connectedMessageObservable(v: Subject<IPubSubMessage>) {
+    this.bridge.connectedMessageObservable = v;
+  }
+
+  /// todo tmp test
+  public get connectionStatusObservable(): BehaviorSubject<TPubSubConnectStatus> {
+    return this.bridge.connectionStatusObservable;
+  }
+
+  public get errorMessageObservable(): Subject<IPubSubMessage> {
+    return this.bridge.errorMessageObservable;
+  }
+
+  public set reconnectMeta(meta: IPubSubMessageMeta) {
+    this.bridge.reconnectMeta = meta;
+  }
+
+  public get reconnectMeta(): IPubSubMessageMeta {
+    return this.bridge.reconnectMeta;
+  }
+
   private queuePublish(): void {
-    console.log(`Will try sending queued messages ${this.queuedPublishMessages}...`);
+    console.log(`Will try sending queued messages...`);
+    console.log(this.queuedPublishMessages);
 
     this.queuedPublishMessages.forEach(queuedMessage => {
-      console.log(`Attempting to send ${queuedMessage}...`);
+      console.log(`Attempting to send...`);
+      console.log(queuedMessage);
       this.queuedMessagePublish(queuedMessage);
     });
   }
 
   private queuedMessagePublish(queuedMessage: IQueuedPublishMessage): void {
     if (!this.bridge.isConnected()) {
-      console.log(`Not connected, queueing ${queuedMessage}...`);
+      console.log(`Not connected, queueing message...`);
       return;
     }
 

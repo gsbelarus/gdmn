@@ -4,6 +4,7 @@ import { startSubmit, stopSubmit } from 'redux-form';
 
 import { authActions } from '@src/app/scenes/auth/actions';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
+import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 
 const getSignInUpMiddleware = (reduxFormKey: string): Middleware => ({ dispatch, getState }) => next => action => {
   switch (action.type) {
@@ -23,8 +24,6 @@ const getSignInUpMiddleware = (reduxFormKey: string): Middleware => ({ dispatch,
       // dispatch(reset(reduxFormKey));
       dispatch(stopSubmit(reduxFormKey));
 
-      // todo: test error snackbar
-
       // if (action.payload && action.payload.fields) {
       //   throw new SubmissionError( { [action.payload.fieldName]:  action.payload.toString() } );
       //   action.payload.message = action.payload.toString();
@@ -42,11 +41,11 @@ const signInMiddleware: Middleware = getSignInUpMiddleware('SignInForm');
 
 const signUpMiddleware: Middleware = getSignInUpMiddleware('SignUpForm');
 
-const getSignOutMiddleware = (apiService: GdmnPubSubApi): Middleware => ({ dispatch, getState }) => next => async (
+const getSignOutMiddleware = (apiService: GdmnPubSubApi): Middleware => ({ dispatch, getState }) => next => (
   action: any
 ) => {
   if (action.type === getType(authActions.signOut)) {
-    await apiService.signOut({ payload: null });
+    dispatch(gdmnActions.apiDisconnect());
   }
 
   return next(action);

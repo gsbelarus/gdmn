@@ -1,14 +1,14 @@
 import { ActionType, createAction, createAsyncAction } from 'typesafe-actions';
-import { IAccessTokenPayload } from '@gdmn/server-api';
+import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 
 const authActions = {
   signUpAsync: createAsyncAction('auth/SIGN_UP_REQUEST', 'auth/SIGN_UP_REQUEST_OK', 'auth/SIGN_UP_REQUEST_ERROR')<
     void,
     {
       accessTokenPayload?: IAccessTokenPayload;
+      refreshTokenPayload?: IRefreshTokenPayload;
       accessToken?: string;
       refreshToken?: string;
-      // todo: sessionId
     },
     Error
   >(),
@@ -16,17 +16,15 @@ const authActions = {
     void,
     {
       accessTokenPayload?: IAccessTokenPayload;
+      refreshTokenPayload?: IRefreshTokenPayload;
       accessToken?: string;
       refreshToken?: string;
-      // todo: sessionId
     },
     Error
   >(),
   signOut: createAction('auth/SIGN_OUT', resolve => {
     return () => resolve();
   })
-  // todo: authAsync
-  // todo: refreshAuthAsync
 };
 
 type TAuthActions = ActionType<typeof authActions>;

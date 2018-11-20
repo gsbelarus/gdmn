@@ -37,6 +37,9 @@ abstract class BasePubSubBridge<
   public connectedMessageObservable: Subject<IPubSubMessage> = new Subject();
   public errorMessageObservable: Subject<IPubSubMessage> = new Subject(); // todo observable ?
 
+  public abstract set reconnectMeta(meta: IPubSubMessageMeta);
+  public abstract get reconnectMeta(): IPubSubMessageMeta;
+
   public abstract connect(meta?: TConnectMeta): void | never;
   public abstract disconnect(meta?: TDisconnectMeta): void;
   public abstract publish(topic: string, message: IPubSubMessage): Subject<IPubSubMsgPublishState> | never;

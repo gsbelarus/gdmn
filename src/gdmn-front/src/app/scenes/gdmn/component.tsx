@@ -20,12 +20,15 @@ import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
 import styles from './styles.css';
 // import { TDataStoresState } from '@src/app/scenes/datastores/reducer';
 import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
-// import { StompDemoView } from '@src/app/scenes/gdmn/StompDemoView';
+import { StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
+import { AccountView } from '@src/app/scenes/gdmn/components/AccountView';
 
 interface IDemosViewActionsProps {
   signOut: () => void;
-  // webSocketConnect: () => void;
-  // webSocketDisconnect: () => void;
+  apiConnect: () => void;
+  apiDisconnect: () => void;
+  apiPing: () => void;
+  apiDeleteAccount: () => void;
 }
 
 type TGdmnViewStateProps = any; // TDataStoresState;
@@ -82,55 +85,24 @@ class GdmnView extends PureComponent<IGdmnViewProps & RouteComponentProps<any> &
         <Drawer styleName="nav" variant="permanent" anchor="left">
           <div style={{ minHeight: 64 }} />
           <Divider />
-          {/*<List style={{ width: 240 }}>*/}
-          {/*<NavLink to={`${match.url}/datastores`} activeClassName={'gdmn-nav-item-selected'}>*/}
-          {/*<ListItem button={true}>*/}
-          {/*<ListItemIcon>*/}
-          {/*<Icon>dns</Icon>*/}
-          {/*</ListItemIcon>*/}
-          {/*<ListItemText primary="Datastores" />*/}
-          {/*/!*{true ? <Icon>expand_less</Icon> : <Icon>expand_more</Icon>}*!/*/}
-          {/*</ListItem>*/}
-          {/*</NavLink>*/}
-          {/*<Collapse in={true} timeout="auto" unmountOnExit={true}>*/}
-          {/*<List component="div" disablePadding={true}>*/}
-          {/*{dataStores &&*/}
-          {/*dataStores.map(app => (*/}
-          {/*<NavLink*/}
-          {/*key={app.uid}*/}
-          {/*to={`${match.url}/datastores/${app.uid}`}*/}
-          {/*activeClassName={'gdmn-nav-item-selected'}*/}
-          {/*>*/}
-          {/*<ListItem button={true} dense={true} styleName={'gdmn-nav-item-nested'}>*/}
-          {/*<ListItemIcon>*/}
-          {/*<Icon>storage</Icon>*/}
-          {/*</ListItemIcon>*/}
-          {/*<ListItemText inset={true} primary={app.alias} />*/}
-          {/*</ListItem>*/}
-          {/*</NavLink>*/}
-          {/*))}*/}
-          {/*</List>*/}
-          {/*</Collapse>*/}
-          {/*</List>*/}
-          {/*<Divider />*/}
-          {/*<List style={{ width: 240 }}>*/}
-          {/*<NavLink to={`${match.url}/demos`} activeClassName={'gdmn-nav-item-selected'}>*/}
-          {/*<ListItem button={true}>*/}
-          {/*<ListItemIcon>*/}
-          {/*<Icon>ac_unit</Icon>*/}
-          {/*</ListItemIcon>*/}
-          {/*<ListItemText inset={true} primary="NLP demos" />*/}
-          {/*</ListItem>*/}
-          {/*</NavLink>*/}
-          {/*<NavLink to={`${match.url}/stomp`} activeClassName={'gdmn-nav-item-selected'}>*/}
-          {/*<ListItem button={true}>*/}
-          {/*<ListItemIcon>*/}
-          {/*<Icon>settings_ethernet</Icon>*/}
-          {/*</ListItemIcon>*/}
-          {/*<ListItemText inset={true} primary="Web-STOMP" />*/}
-          {/*</ListItem>*/}
-          {/*</NavLink>*/}
-          {/*</List>*/}
+          <List style={{ width: 240 }}>
+            <NavLink to={`${match.url}/account`} activeClassName={'gdmn-nav-item-selected'}>
+              <ListItem button={true}>
+                <ListItemIcon>
+                  <Icon>account_circle</Icon>
+                </ListItemIcon>
+                <ListItemText inset={true} primary="Account" />
+              </ListItem>
+            </NavLink>
+            <NavLink to={`${match.url}/web-stomp`} activeClassName={'gdmn-nav-item-selected'}>
+              <ListItem button={true}>
+                <ListItemIcon>
+                  <Icon>settings_ethernet</Icon>
+                </ListItemIcon>
+                <ListItemText inset={true} primary="Web-STOMP" />
+              </ListItem>
+            </NavLink>
+          </List>
           <Divider />
           <List style={{ width: 240 }}>
             <ListItem button={true} onClick={signOut}>
@@ -144,14 +116,15 @@ class GdmnView extends PureComponent<IGdmnViewProps & RouteComponentProps<any> &
         <main styleName={location.pathname.includes('/nlp') ? '' : 'scene-pad'}>
           <ErrBoundary>
             <Switch>
-              {/*<Redirect exact={true} from={`${match.path}/`} to={`${match.path}/datastores`} />*/}
-              {/*<Route exact={true} path={`${match.path}/datastores`} component={DataStoresViewContainer} />*/}
-              {/*<Route*/}
-              {/*path={`${match.path}/datastores/:appId`}*/}
-              {/*component={getDatastoreViewContainer(this.appBarPortalTargetRef)}*/}
-              {/*/>*/}
-              {/*<Route path={`${match.path}/demos`} component={getDemosContainer(this.appBarPortalTargetRef)} />*/}
-              {/*<Route path={`${match.path}/stomp`} component={StompDemoView} />*/}
+              <Redirect exact={true} from={`${match.path}/`} to={`${match.path}/account`} />
+              <Route
+                path={`${match.path}/account`}
+                component={() => <AccountView apiDeleteAccount={this.props.apiDeleteAccount} />}
+              />
+              <Route
+                path={`${match.path}/web-stomp`}
+                component={() => <StompDemoView apiPing={this.props.apiPing} log={''} />}
+              />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>

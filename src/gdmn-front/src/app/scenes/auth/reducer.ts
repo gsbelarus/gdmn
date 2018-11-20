@@ -2,16 +2,16 @@ import { getType } from 'typesafe-actions';
 import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 
 import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
+import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 
 interface IAuthState {
   authenticated: boolean; // todo: selector
   accessTokenPayload?: IAccessTokenPayload;
+  refreshTokenPayload?: IRefreshTokenPayload;
   accessToken?: string;
   refreshToken?: string;
-  // todo: sessionId
 }
 
-// todo: persist
 const initialState: IAuthState = {
   authenticated: false
 };
@@ -25,10 +25,18 @@ const getReducer = () => (state: IAuthState = initialState, action: TAuthActions
         ...action.payload,
         accessTokenPayload:
           action.payload.accessTokenPayload || state.accessTokenPayload
-            ? {
+            ? <IAccessTokenPayload>({
                 ...state.accessTokenPayload,
                 ...action.payload.accessTokenPayload
-              }
+              })
+            : undefined
+        ,
+        refreshTokenPayload:
+          action.payload.refreshTokenPayload || state.refreshTokenPayload
+            ? <IRefreshTokenPayload>({
+                ...state.refreshTokenPayload,
+                ...action.payload.refreshTokenPayload
+              })
             : undefined,
         authenticated: true
       };
@@ -40,8 +48,8 @@ const getReducer = () => (state: IAuthState = initialState, action: TAuthActions
         ...state,
         accessTokenPayload: undefined,
         accessToken: undefined,
+        refreshTokenPayload: undefined,
         refreshToken: undefined,
-        // sessionId: undefined,
 
         authenticated: false
       };

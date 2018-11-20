@@ -1,16 +1,16 @@
 import {
   Client,
+  closeEventCallbackType,
+  debugFnType,
+  frameCallbackType,
   Message,
+  messageCallbackType,
   StompHeaders,
   StompSubscription,
-  Versions,
-  messageCallbackType,
-  frameCallbackType,
-  debugFnType,
-  closeEventCallbackType
+  Versions
 } from '@stomp/stompjs';
-import { Observable, Subject, Subscription, Subscriber, empty } from 'rxjs';
-import { share } from 'rxjs/operators';
+import { Observable, Subject, Subscriber, Subscription } from 'rxjs';
+import { filter, first, share } from 'rxjs/operators';
 
 import {
   TDisconnectFrameHeaders,
@@ -81,7 +81,7 @@ class WebStomp extends BasePubSubBridge<
   Partial<TSubcribeFrameHeaders>
 > {
   private client: Client | null = null;
-  private readonly clientConfig: IStompServiceConfig;
+  private clientConfig: IStompServiceConfig;
 
   constructor(clientConfig: IStompServiceConfig) {
     super();
@@ -96,9 +96,27 @@ class WebStomp extends BasePubSubBridge<
     this.client!.debug('Connecting...');
     if (!this.client) throw new Error('Connect failed: stomp client not initialized!');
 
-    this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
-    this.client.connectHeaders = <any>meta || this.clientConfig.connectHeaders || {}; // fixme: type
-    this.client.activate();
+    if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
+      console.log('connect: DISCONNECTIN')
+      this.connectionStatusObservable
+        .pipe(
+          filter(value => value === TPubSubConnectStatus.DISCONNECTED),
+          first()
+        )
+        .subscribe(() => {
+          if (this.client) {
+            console.log('connect: DISCONNECTING. DISCONNECTED->CONNECTING->activate')
+            this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
+            this.client.connectHeaders = <any>meta || this.clientConfig.connectHeaders || {}; // fixme: type
+            this.client.activate();
+          }
+        });
+    } else {
+      console.log('connect: NOT DISCONNECTING');
+      this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
+      this.client.connectHeaders = <any>meta || this.clientConfig.connectHeaders || {}; // fixme: type
+      this.client.activate();
+    }
   }
 
   public disconnect(meta?: Partial<TDisconnectFrameHeaders>): void {
@@ -106,16 +124,59 @@ class WebStomp extends BasePubSubBridge<
       console.log(`Stomp not initialized, no need to disconnect.`);
       return;
     }
+
+    if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTED) {
+      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
+      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
+      return;
+    }
+
     // if (!this.client.connected) { // todo: ?
     //   // todo || DISCONNECTING
+    // if (!this.client.connected) {
     //   this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
     //   return;
     // }
 
     this.client!.debug('Disconnecting...');
-    this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
-    this.client.disconnectHeaders = <any>meta || this.clientConfig.disconnectHeaders || {}; // fixme: type
-    this.client.deactivate();
+    // this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
+
+    // this.client.disconnectHeaders = <any>meta || this.clientConfig.disconnectHeaders || {}; // fixme: type
+
+    // fixme: tmp workaround lib bug
+    if (meta) {
+      console.log('deactivate WITH meta');
+      const tmp1 = this.client.connectHeaders;
+      const tmp2 = this.client.disconnectHeaders;
+      const tmp3 = this.clientConfig.disconnectHeaders || {};
+      this.clientConfig.disconnectHeaders = <any>meta || this.clientConfig.disconnectHeaders || {};
+
+      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING); // fixme: side effect logout
+      // todo: tmp wait
+      this.client.forceDisconnect();
+      this.client.deactivate();
+
+      this.initClient();
+      this.client.connectHeaders = tmp1;
+
+      // console.log('BEFORE this.client.disconnectHeaders: ', this.client.disconnectHeaders);
+
+      this.client.activate();
+      this.connectionConnectedObservable.pipe(first()).subscribe(() => {
+        console.log('toPromise');
+
+        this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);  // fixme: side effect
+        this!.client!.deactivate();
+
+        // this!.client!.disconnectHeaders = tmp2; // todo: wait
+        this.clientConfig.disconnectHeaders = tmp3;
+        // console.log('tmp2: ', tmp2)
+      });
+    } else {
+      console.log('deactivate');
+      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
+      this.client.deactivate();
+    }
   }
 
   /* if STOMP connection drops and reconnects, it will auto resubscribe */
@@ -131,26 +192,39 @@ class WebStomp extends BasePubSubBridge<
     /* observable that we return to caller remains same across all reconnects, so no special handling needed at the message subscriber */
     const messageColdObservable = Observable.create((messageObserver: Subscriber<TMessage>) => {
       /* will be used as part of the closure for unsubscribe*/
-      let subscription: StompSubscription;
+      let subscription: StompSubscription | null | undefined;
       let connectionConnectedRxSubscription: Subscription;
 
-      /* since 'state' is a BehaviourSubject, if stomp is already connected, it will immediately trigger */
+      // this.connectionConnectedRxSubscription.subscribe(value => console.log('test'))
+      // fixme init client after reconnect
       connectionConnectedRxSubscription = this.connectionConnectedObservable.subscribe(() => {
-        // this.client!.debug(`Will subscribe to ${topic}...`);
-        subscription = this.client!.subscribe(
-          topic,
-          (messageFrame: Message) => {
-            messageObserver.next(<any>{
-              // fixme: type
-              data: messageFrame.body,
-              meta: messageFrame.headers
-            });
+        // todo test on connected
+        this.client!.debug(`Will subscribe to ${topic}...`);
 
-            messageFrame.ack(); // todo headers
-          },
-          <any>meta // fixme: type
-        );
+        if (subscription !== null) {
+          subscription = this.client!.subscribe(
+            topic,
+            (messageFrame: Message) => {
+              messageObserver.next(<any>{
+                // fixme: type
+                data: messageFrame.body,
+                meta: messageFrame.headers
+              });
+
+              if (meta.ack !== 'auto') messageFrame.ack(); // todo headers
+            },
+            <any>meta // fixme: type
+          );
+        }
       });
+
+      // fixme: todo not sub after disconnect frame
+      this.connectionStatusObservable
+        .pipe(filter(value => value === TPubSubConnectStatus.DISCONNECTED))
+        .subscribe(value => {
+          // todo tmp test
+          subscription = null;
+        });
 
       /* TeardownLogic - will be called when no messageObservable subscribers are left */
       return () => {
@@ -161,8 +235,10 @@ class WebStomp extends BasePubSubBridge<
           this.client!.debug(`Stomp not connected, no need to unsubscribe from ${topic}.`);
           return;
         }
-        this.client!.debug(`Will unsubscribe from ${topic}...`);
-        subscription.unsubscribe(); // todo headers
+        if (subscription) {
+          this.client!.debug(`Will unsubscribe from ${topic}...`);
+          subscription.unsubscribe(); // todo headers
+        }
       };
     });
 
@@ -199,6 +275,10 @@ class WebStomp extends BasePubSubBridge<
     this.client = new Client(this.clientConfig);
     if (!this.clientConfig.debug) this.client.debug = console.log;
 
+    // if (this.connectedMessageObservable.hasError) {
+    //   this.connectedMessageObservable = new Subject();
+    // }
+
     this.client.onWebSocketClose = this.onWebSocketClose;
     this.client.onConnect = this.onConnectedFrame;
     this.client.onDisconnect = this.onDisconnectReceiptFrame;
@@ -208,26 +288,33 @@ class WebStomp extends BasePubSubBridge<
   }
 
   private onWebSocketClose: closeEventCallbackType = (evt: CloseEvent) => {
-    if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) {
-      // todo
-      this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting
+    console.log('onWebSocketClose');
+    // if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) {
+    //   // todo
+    //   this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting
+    // }
+
+    if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
+      console.log('onWebSocketClose: DISCONNECTING')
+      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
     }
   };
 
   private onConnectedFrame: frameCallbackType = connectedFrame => {
     this.client!.debug('Connected.');
 
+    this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTED); // todo before connectedMessage
     this.connectedMessageObservable.next({ meta: connectedFrame.headers });
-    this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTED);
   };
 
   private onDisconnectReceiptFrame: frameCallbackType = receiptFrame => {
+    console.log('onDisconnectReceiptFrame')
     this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
   };
 
   /* не отслеживаем receipt - STOMP broker will close the connection after error frame */
   private onErrorFrame: frameCallbackType = errorFrame => {
-    this.client!.debug(`Error: ${errorFrame.body}`);
+    this.client!.debug(`ErrorFrame: ${JSON.stringify(errorFrame)}`);
     this.errorMessageObservable.next({ meta: errorFrame.headers, data: errorFrame.body });
 
     if (this.client) this.client.forceDisconnect(); // todo ?
@@ -235,17 +322,29 @@ class WebStomp extends BasePubSubBridge<
     this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
 
     // todo: tmp
-    this.connectedMessageObservable = new Subject();
+    // this.connectedMessageObservable = new Subject();
     // this.errorMessageObservable = new Subject();
   };
 
   private onUnhandledMessageFrame: messageCallbackType = messageFrame => {
+    this.client!.debug('onUnhandledMessageFrame: ' + messageFrame);
+    messageFrame.ack();
     // this.unhandledMessageFrameObservable.next(messageFrame);
   };
 
   private onUnhandledReceiptFrame: frameCallbackType = receiptFrame => {
+    this.client!.debug('onUnhandledReceiptFrame: ' + receiptFrame);
     // this.unhandledReceiptFrameObservable.next(receiptFrame);
   };
+
+  set reconnectMeta(meta: Partial<TStompFrameHeaders>) {
+    if (!this.client) return;
+    this.client.connectHeaders = meta as any; // fixme: type // todo: test disconnect
+  }
+
+  get reconnectMeta(): Partial<TStompFrameHeaders> {
+    return this.client!.connectHeaders;
+  }
 }
 
 export { WebStomp, IStompServiceConfig };

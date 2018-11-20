@@ -13,24 +13,24 @@ import {
   IAccessAuthResponseMeta,
   ISignInRequestMeta,
   ISignUpRequestMeta,
-  TAccessAuthRequestMeta,
+  TAccessAuthRequestMeta, TAccountDeleteRequestMeta,
   TRefreshAuthRequestMeta,
   TRefreshAuthResponseMeta,
   TSignInResponseMeta,
   TSignUpResponseMeta
 } from './protocol';
 
-interface ICmd<TPaylaod> {
-  payload: TPaylaod;
+interface ICmd<TPayload> {
+  payload: TPayload;
 }
 
-interface ICmdResult<TPaylaod, IError = IGdmnMessageError> {
-  payload: TPaylaod;
+interface ICmdResult<TPayload, IError = IGdmnMessageError> {
+  payload: TPayload;
   error?: IError;
 }
 
 type TTaskCmd<TActionName extends keyof TTaskActionPayloadTypes> = ICmd<
-  TGdmnPublishMessageMeta & TTaskActionMessageData<TActionName>
+  TGdmnPublishMessageMeta & TTaskActionMessageData<TActionName> // todo type test
 >;
 
 type TTaskCmdResult<TActionName extends keyof TTaskActionResultTypes> = ICmdResult<
@@ -70,6 +70,12 @@ type TAuthCmdResult = ICmdResult<IAccessAuthResponseMeta, null>; // only protoco
 type TRefreshAuthCmd = ICmd<TRefreshAuthRequestMeta>;
 
 type TRefreshAuthCmdResult = ICmdResult<TRefreshAuthResponseMeta, null>; // only protocol errors
+
+// delete account
+
+type TDeleteAccountCmd = ICmd<TAccountDeleteRequestMeta>;
+
+type TDeleteAccountCmdResult = TSignOutCmdResult; // only protocol errors
 
 // ping task
 
@@ -120,6 +126,8 @@ export {
   TAuthCmdResult,
   TRefreshAuthCmd,
   TRefreshAuthCmdResult,
+  TDeleteAccountCmd,
+  TDeleteAccountCmdResult,
   TPingTaskCmd,
   TPingTaskCmdResult,
   TGetSchemaTaskCmd,

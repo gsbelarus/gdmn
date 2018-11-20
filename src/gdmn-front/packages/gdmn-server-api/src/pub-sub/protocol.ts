@@ -41,6 +41,11 @@ interface IAccessAuthResponseMeta {
 type TRefreshAuthRequestMeta = _IAuthRequestMeta;
 type TRefreshAuthResponseMeta = _ISignResponseMeta;
 
+// delete account
+type TAccountDeleteRequestMeta = {
+  'delete-user': 1
+}
+
 // publish
 type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
 
@@ -63,6 +68,7 @@ export {
   IAccessAuthResponseMeta,
   TRefreshAuthRequestMeta,
   TRefreshAuthResponseMeta,
+  TAccountDeleteRequestMeta,
   TPublishMessageMeta,
   TReceivedMessageMeta,
   IReceivedErrorMeta,

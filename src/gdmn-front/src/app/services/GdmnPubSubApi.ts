@@ -1,15 +1,15 @@
-import { Observable, throwError } from 'rxjs';
-import { catchError, filter, first, last, map, merge, take } from 'rxjs/operators';
+import { empty, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { catchError, filter, first, map, mergeMap } from 'rxjs/operators';
 import {
   _ISignResponseMeta,
   ICmdResult,
-  IGdmnMessageError,
   ITaskProgressMessageData,
   ITaskStatusMessageData,
   TAuthCmd,
   TAuthCmdResult,
   TCreateAppTaskCmd,
   TCreateAppTaskCmdResult,
+  TDeleteAccountCmd,
   TDeleteAppTaskCmd,
   TDeleteAppTaskCmdResult,
   TGdmnPublishMessageMeta,
@@ -48,8 +48,17 @@ import {
   WebStomp
 } from '@gdmn/client-core';
 
+import { Versions } from '@stomp/stompjs';
+
 class GdmnPubSubApi {
   public pubSubClient: PubSubClient;
+
+  private taskActionResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>; // todo ReplaySubject
+  private taskProgressResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>;
+  private taskStatusResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>;
+  private taskActionResultSubscription?: Subscription;
+  private taskProgressResultSubscription?: Subscription;
+  private taskStatusResultSubscription?: Subscription;
 
   constructor(endpointUrl: string) {
     // todo authScheme: TAuthScheme
@@ -59,10 +68,10 @@ class GdmnPubSubApi {
         brokerURL: endpointUrl,
         // connectHeaders,
         // disconnectHeaders,
-        heartbeatIncoming: 0,
-        heartbeatOutgoing: 20000,
-        reconnectDelay: 5000
-        // stompVersions
+        heartbeatIncoming: 2000, // todo 0
+        heartbeatOutgoing: 2000,
+        reconnectDelay: 5000,
+        stompVersions: new Versions([Versions.V1_2]) // todo
       })
     );
   }
@@ -80,12 +89,63 @@ class GdmnPubSubApi {
   }
 
   public async auth(cmd: TAuthCmd): Promise<TAuthCmdResult> {
+    // todo: tmp test
+    if (this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTED ||
+      this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTING
+    ) {
+      console.log('AUTH');
+
+      this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+        TGdmnTopic.TASK,
+        {
+          ack: 'client-individual'
+        }
+      );
+      this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+        TGdmnTopic.TASK_PROGRESS
+      );
+
+      this.taskStatusResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+        TGdmnTopic.TASK_STATUS
+      );
+
+      // setTimeout(()=>{
+
+      console.log('SUBSCRIBE');
+      // todo: tmp
+
+      this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
+        console.log('taskActionResult')
+      );
+
+      this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
+        console.log('taskProgressResult')
+      );
+      this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
+        console.log('taskStatusResult')
+      );
+
+      return empty().toPromise();
+    }
+
+    console.log('AUTH+connect');
     this.pubSubClient.connect(<any>cmd.payload); // fixme: type
+
+    // todo: fix 'authorization' (if 'session')
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
         map<IPubSubMessage, TAuthCmdResult>(connectedMessage => {
           const meta = connectedMessage.meta || {};
+
+          // todo: tmp
+          this.pubSubClient.reconnectMeta = {
+            // ...this.pubSubClient.reconnectMeta,
+            authorization: cmd.payload.authorization || this.pubSubClient.reconnectMeta['access-token'] || '', // todo ?
+            session: meta.session || this.pubSubClient.reconnectMeta.session || ''
+          };
+
+          console.log('auth: reconnectMeta', this.pubSubClient.reconnectMeta);
 
           return {
             payload: {
@@ -100,11 +160,66 @@ class GdmnPubSubApi {
         }),
         first()
       )
-      .toPromise();
+      .toPromise()
+      .then(result => {
+        this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+          TGdmnTopic.TASK,
+          {
+            ack: 'client-individual'
+          }
+        );
+        this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+          TGdmnTopic.TASK_PROGRESS
+        );
+
+        this.taskStatusResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+          TGdmnTopic.TASK_STATUS
+        );
+
+
+        // setTimeout(()=>{
+
+          console.log('SUBSCRIBE');
+          // todo: tmp
+
+        this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
+          console.log('taskActionResult')
+        );
+
+          this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
+            console.log('taskProgressResult')
+          );
+          this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
+            console.log('taskStatusResult')
+          );
+        // }, 10000);
+
+        return result;
+      });
   }
 
-  public async signOut(cmd: TSignOutCmd): Promise<TSignOutCmdResult> {
-    this.pubSubClient.disconnect();
+  public async signOut(cmd: TSignOutCmd | TDeleteAccountCmd): Promise<TSignOutCmdResult> {
+    // todo tmp
+    // this.taskActionResultSubscription!.unsubscribe();
+    // this.taskProgressResultSubscription!.unsubscribe();
+    // this.taskStatusResultSubscription!.unsubscribe();
+
+    this.pubSubClient.connectionStatusObservable
+      .pipe(filter(value => value === TPubSubConnectStatus.DISCONNECTING),
+        first()
+      )
+      .subscribe(() => {
+        console.log('signOut: DISCONNECTING sub');
+
+        if (!!this.taskActionResultSubscription) {
+          this.taskActionResultSubscription!.unsubscribe();
+          this.taskProgressResultSubscription!.unsubscribe();
+          this.taskStatusResultSubscription!.unsubscribe();
+        }
+      });
+
+    console.log('cmd.payload', cmd.payload);
+    this.pubSubClient.disconnect(<any>(!!cmd.payload && cmd.payload['delete-user'] === 1 ? cmd.payload : undefined));
 
     return await this.pubSubClient.connectionDisconnectedObservable
       .pipe(
@@ -113,10 +228,20 @@ class GdmnPubSubApi {
         })),
         first()
       )
-      .toPromise();
-  }
+      .toPromise()
+      .then(result => {
+        // todo tmp
+        // this.taskActionResultObservable = undefined;
+        // this.taskProgressResultObservable = undefined;
+        // this.taskStatusResultObservable = undefined;
 
-  // todo stop sub
+        // this.taskActionResultSubscription!.unsubscribe();
+        // this.taskProgressResultSubscription!.unsubscribe();
+        // this.taskStatusResultSubscription!.unsubscribe();
+
+        return result;
+      });
+  }
 
   public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {
     return this.runTaskCmd<TTaskActionNames.PING>(cmd);
@@ -142,13 +267,39 @@ class GdmnPubSubApi {
     return this.runTaskCmd<TTaskActionNames.GET_APPS>(cmd);
   }
 
+  public get errorMessageObservable(): Subject<IPubSubMessage> {
+    return this.pubSubClient.errorMessageObservable
+  }
+
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {
+    // const sessionSubscription = this.pubSubClient.connectedMessageObservable
+    //   .pipe(
+    //     map<IPubSubMessage, string | undefined>(
+    //       connectedMessage => (connectedMessage.meta ? connectedMessage.meta['session'] : undefined) // todo: session key
+    //     ),
+    //     distinctUntilChanged()
+    //   )
+    //   .subscribe(session => {
+    //     console.log('session: ' + session);
+    //
+    //     // this.pubSubClient.reconnectMeta = { 'session': session, ...this.pubSubClient.reconnectMeta }; // todo: session key
+    //   });
+
     this.pubSubClient.connect(<any>cmd.payload); // fixme: type
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
         map<IPubSubMessage, ICmdResult<_ISignResponseMeta, null>>(connectedMessage => {
           const meta = connectedMessage.meta || {};
+
+          // todo: tmp
+          this.pubSubClient.reconnectMeta = {
+            // ...this.pubSubClient.reconnectMeta || {},
+            authorization: meta['access-token'] || this.pubSubClient.reconnectMeta['access-token'] || '',
+            session: meta.session || this.pubSubClient.reconnectMeta.session || ''
+          };
+
+          console.log('sign: reconnectMeta', this.pubSubClient.reconnectMeta);
 
           return {
             payload: {
@@ -163,6 +314,7 @@ class GdmnPubSubApi {
           // todo: IGdmnMessageError
           return throwError(errMessage.meta ? new Error(errMessage.meta.message) : errMessage);
         }),
+        // finalize(() => sessionSubscription.unsubscribe()),
         first()
       )
       .toPromise();
@@ -178,13 +330,13 @@ class GdmnPubSubApi {
           action: taskCmd.payload.action,
           [TStandardHeaderKey.CONTENT_TYPE]: 'application/json;charset=utf-8' // todo
         },
-        data: JSON.stringify(taskCmd.payload.payload)
+        data: JSON.stringify({ payload: taskCmd.payload.payload })
       })
       .pipe(
         filter(
           (msgPublishState: IPubSubMsgPublishState) => msgPublishState.status === TPubSubMsgPublishStatus.PUBLISHED
         ),
-        map<IPubSubMsgPublishState, any>(msgPublishState => {
+        mergeMap(msgPublishState => {
           // fixme: type ,TTaskCmdResult<TActionName>
           const taskIdFilterOperator = filter(
             (
@@ -198,96 +350,89 @@ class GdmnPubSubApi {
           });
 
           /*
- 
-           <<< MESSAGE
-             destination:/task
-             action:...
-             message-id:msg-0
-             ack:client-individual (optional)
-             subscription:sub-0
-             task-id:task-0
-             content-type:application/json;charset=utf-8
-             content-length:...
- 
-           payload (request payload)
-           status
-           error
-           result (is sent only when the status is SUCCESS)
- 
-         */
-          const taskActionResult = this.pubSubClient
-            .subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(TGdmnTopic.TASK)
-            .pipe(
-              taskIdFilterOperator,
-              parseMsgDataMapOperator,
-              map<TTaskResultMessageData<TActionName>, TTaskCmdResult<TActionName>>((resultMsgData: any) => ({
-                // fixme: type
-                payload: {
-                  action: taskCmd.payload.action,
-                  status: resultMsgData.status,
-                  result: resultMsgData.result
-                },
-                error: resultMsgData.error
-              }))
-            );
+
+             <<< MESSAGE
+               destination:/task
+               action:...
+               message-id:msg-0
+               ack:client-individual (optional)
+               subscription:sub-0
+               task-id:task-0
+               content-type:application/json;charset=utf-8
+               content-length:...
+
+             payload (request payload)
+             status
+             error
+             result (is sent only when the status is SUCCESS)
+
+           */
+          const taskActionResult = this.taskActionResultObservable!.pipe(
+            taskIdFilterOperator,
+            parseMsgDataMapOperator,
+            map<TTaskResultMessageData<TActionName>, TTaskCmdResult<TActionName>>((resultMsgData: any) => ({
+              // fixme: type
+              payload: {
+                action: taskCmd.payload.action,
+                status: resultMsgData.status,
+                result: resultMsgData.result
+              },
+              error: resultMsgData.error
+            }))
+          );
 
           /*
- 
-           <<< MESSAGE
-             destination:/task/progress
-             action:...
-             message-id:msg-0
-             subscription:sub-0
-             task-id:task-0
-             content-type:application/json;charset=utf-8
-             content-length:...
- 
-           payload (request payload)
-           progress
- 
-         */
-          const taskProgressResult = this.pubSubClient
-            .subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(TGdmnTopic.TASK_PROGRESS)
-            .pipe(
-              taskIdFilterOperator,
-              parseMsgDataMapOperator,
-              map<ITaskProgressMessageData<TActionName>, TTaskCmdResult<TActionName>>((progressMsgData: any) => ({
-                // fixme: type
-                payload: {
-                  action: taskCmd.payload.action,
-                  progress: progressMsgData.progress
-                }
-              }))
-            );
+
+             <<< MESSAGE
+               destination:/task/progress
+               action:...
+               message-id:msg-0
+               subscription:sub-0
+               task-id:task-0
+               content-type:application/json;charset=utf-8
+               content-length:...
+
+             payload (request payload)
+             progress
+
+           */
+          const taskProgressResult = this.taskProgressResultObservable!.pipe(
+            taskIdFilterOperator,
+            parseMsgDataMapOperator,
+            map<ITaskProgressMessageData<TActionName>, TTaskCmdResult<TActionName>>((progressMsgData: any) => ({
+              // fixme: type
+              payload: {
+                action: taskCmd.payload.action,
+                progress: progressMsgData.progress
+              }
+            }))
+          );
 
           /*
- 
-            <<< MESSAGE
-              destination:/task/status
-              action:...
-              message-id:msg-0
-              subscription:sub-0
-              task-id:task-0
-              content-type:application/json;charset=utf-8
-              content-length:...
- 
-            payload (request payload)
-            status
- 
-         */
-          const taskStatusResult = this.pubSubClient
-            .subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(TGdmnTopic.TASK_STATUS)
-            .pipe(
-              taskIdFilterOperator,
-              parseMsgDataMapOperator,
-              map<ITaskStatusMessageData<TActionName>, TTaskCmdResult<TActionName>>((statusMsgData: any) => ({
-                // fixme: type
-                payload: {
-                  action: taskCmd.payload.action,
-                  status: statusMsgData.status
-                }
-              }))
-            );
+              <<< MESSAGE
+                destination:/task/status
+                action:...
+                message-id:msg-0
+                subscription:sub-0
+                task-id:task-0
+                content-type:application/json;charset=utf-8
+                content-length:...
+
+              payload (request payload)
+              status
+
+            */
+          const taskStatusResult = this.taskStatusResultObservable!.pipe(
+            taskIdFilterOperator,
+            parseMsgDataMapOperator,
+            map<ITaskStatusMessageData<TActionName>, TTaskCmdResult<TActionName>>((statusMsgData: any) => ({
+              // fixme: type
+              payload: {
+                action: taskCmd.payload.action,
+                status: statusMsgData.status
+              }
+            }))
+          );
 
           return merge(taskActionResult, taskProgressResult, taskStatusResult);
         })
@@ -296,5 +441,7 @@ class GdmnPubSubApi {
     // todo publishing status
   }
 }
+
+// todo stop sub
 
 export { GdmnPubSubApi };

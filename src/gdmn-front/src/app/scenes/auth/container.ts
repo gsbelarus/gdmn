@@ -1,7 +1,7 @@
 import { compose, withProps } from 'recompose';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form';
-import { IAccessTokenPayload, TUserRoleType } from '@gdmn/server-api';
+import { IAccessTokenPayload, IRefreshTokenPayload, TUserRoleType } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 
 import { IState } from '@src/app/store/reducer';
@@ -30,22 +30,22 @@ const getSignInFormContainer = (apiService: GdmnPubSubApi) =>
             const response: any = await apiService.signIn({
               payload: {
                 // 'app-uid'
-                // session
                 'create-user': 0,
                 login: formData.username || '',
                 passcode: formData.password || ''
               }
             });
 
+            const refreshTokenPayload = Auth.decodeToken<IRefreshTokenPayload>(response.payload['refresh-token']);
             const accessTokenPayload = Auth.decodeToken<IAccessTokenPayload>(response.payload['access-token']);
             accessTokenPayload.role = TUserRoleType.USER; // todo: tmp
 
             dispatch(
               authActions.signInAsync.success({
+                refreshTokenPayload,
                 accessTokenPayload,
                 accessToken: response.payload['access-token'] || '',
                 refreshToken: response.payload['refresh-token'] || ''
-                // todo: sessionId
               })
             );
           } catch (error) {
@@ -74,22 +74,22 @@ const getSignUpFormContainer = (apiService: GdmnPubSubApi) =>
             const response = await apiService.signUp({
               payload: {
                 // 'app-uid'
-                // session
                 'create-user': 1,
                 login: formData.username || '',
                 passcode: formData.password || ''
               }
             });
 
+            const refreshTokenPayload = Auth.decodeToken<IRefreshTokenPayload>(response.payload['refresh-token']);
             const accessTokenPayload = Auth.decodeToken<IAccessTokenPayload>(response.payload['access-token']);
             accessTokenPayload.role = TUserRoleType.USER; // todo: tmp
 
             dispatch(
               authActions.signUpAsync.success({
                 accessTokenPayload,
+                refreshTokenPayload,
                 accessToken: response.payload['access-token'] || '',
                 refreshToken: response.payload['refresh-token'] || ''
-                // todo: sessionId
               })
             );
           } catch (error) {
