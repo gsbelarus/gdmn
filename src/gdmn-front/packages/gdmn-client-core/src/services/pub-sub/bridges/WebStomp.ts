@@ -211,7 +211,11 @@ class WebStomp extends BasePubSubBridge<
                 meta: messageFrame.headers
               });
 
-              if (meta.ack !== 'auto') messageFrame.ack(); // todo headers
+              if (meta.ack !== 'auto') {
+                setTimeout(() => {
+                  messageFrame.ack();
+                }, 10000); // todo: tmp delete timout
+              } // todo headers
             },
             <any>meta // fixme: type
           );

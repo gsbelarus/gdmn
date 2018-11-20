@@ -376,6 +376,7 @@ class GdmnPubSubApi {
            */
           const taskActionResult = this.taskActionResultObservable!.pipe(
             taskIdFilterOperator,
+            first(),
             parseMsgDataMapOperator,
             map<TTaskResultMessageData<TActionName>, TTaskCmdResult<TActionName>>((resultMsgData: any) => ({
               // fixme: type
