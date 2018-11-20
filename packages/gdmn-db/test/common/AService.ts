@@ -2,10 +2,10 @@ import fs from "fs";
 import path from "path";
 import {AConnection, ADriver, IConnectionOptions} from "../../src";
 import {AService, IRestoreOptions, IServiceOptions} from "../../src/AService";
-import { bkpFileExt, dbFileExt, fixturesPath } from "../fb.test";
+import {bkpFileExt, dbFileExt, testPath} from "../fb.test";
 import {getData, IDataItem} from "../fixtures/getData";
 
-export function serviceTest( driver: ADriver, dbOptions: IConnectionOptions): void {
+export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): void {
 
     describe("AService", async () => {
         const svcOptions: IServiceOptions = {
@@ -16,11 +16,11 @@ export function serviceTest( driver: ADriver, dbOptions: IConnectionOptions): vo
         };
 
         const restoredTestDbPath = path.format({
-            dir: fixturesPath, name: "RESTORED_TEST_DB", ext: dbFileExt
+            dir: testPath, name: "RESTORED_TEST_DB", ext: dbFileExt
         });
 
         const backupTestDbPath = path.format({
-            dir: fixturesPath, name: "BACKUP_TEST", ext: bkpFileExt
+            dir: testPath, name: "BACKUP_TEST", ext: bkpFileExt
         });
 
         const restoredDbOptions = {...dbOptions, path: restoredTestDbPath};
@@ -171,8 +171,8 @@ export function serviceTest( driver: ADriver, dbOptions: IConnectionOptions): vo
                             SET name = :name
                         WHERE id = :id
                         `, {
-                        name: changedName,
-                        id: 1,
+                            name: changedName,
+                            id: 1
                         });
                     }
                 })
@@ -208,14 +208,14 @@ export function serviceTest( driver: ADriver, dbOptions: IConnectionOptions): vo
                         `,
                         params: {id: 1},
                         callback: async (resultSet) => {
-                          const result = [];
-                          while (await resultSet.next()) {
-                            result.push({
-                              name: resultSet.getString("NAME")
-                            });
-                          }
-                          const [ { name } ]: [{name: string}] = result as [{name: string}];
-                          expect(name).toEqual(changedName);
+                            const result = [];
+                            while (await resultSet.next()) {
+                                result.push({
+                                    name: resultSet.getString("NAME")
+                                });
+                            }
+                            const [{name}]: [{ name: string }] = result as [{ name: string }];
+                            expect(name).toEqual(changedName);
                         }
                     })
                 })
