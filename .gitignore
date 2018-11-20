@@ -4,6 +4,7 @@ dist
 packages/*/dist
 src/*/dist
 src/*/build
+src/gdmn-back/public
 databases.ts
 testDB.ts
 .lib
