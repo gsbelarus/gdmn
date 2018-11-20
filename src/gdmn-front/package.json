@@ -3,9 +3,9 @@
   "description": "gdmn web client",
   "scripts": {
     "--- gdmn ---": "",
-    "start": "yarn pkg:start",
-    "test": "jest",
+    "build": "yarn pkg:build",
     "clean": "shx rm -rf ./dist ./build",
+    "start": "yarn pkg:start",
     "watch": "tsc -w",
     "------------": "",
     "pkg:start": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack-dev-server --config configs/webpack/webpack.config.dev.ts",

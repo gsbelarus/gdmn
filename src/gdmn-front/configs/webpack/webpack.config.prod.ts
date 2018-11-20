@@ -53,11 +53,11 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
   },
   optimization: {
     minimizer: [
-      new UglifyJsPlugin({
-        cache: true,
-        parallel: true
-        // sourceMap: true
-      })
+      // new UglifyJsPlugin({ // todo
+      //   cache: true,
+      //   parallel: true
+      //   // sourceMap: true
+      // })
       // new OptimizeCSSAssetsPlugin({})
     ]
     // splitChunks: {
