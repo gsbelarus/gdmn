@@ -1,12 +1,11 @@
 import {Entity, StringAttribute} from "gdmn-orm";
-import log4js from "log4js";
 import {IDBDetail} from "../db/ADatabase";
 import {Application} from "./base/Application";
 
 export class GDMNApplication extends Application {
 
   constructor(dbDetail: IDBDetail) {
-    super(dbDetail, log4js.getLogger("GDMNApp"));
+    super(dbDetail);
   }
 
   protected async _onCreate(): Promise<void> {

@@ -73,6 +73,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
     TaskStatus.FAILED,
     TaskStatus.SUCCESS
   ];
+  public static readonly PROCESS_STATUSES = Task.STATUSES.filter((status) => !Task.DONE_STATUSES.includes(status));
 
   private static DEFAULT_TIMEOUT = ms(config.get("server.task.timeout") as string);
 
@@ -102,7 +103,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
         this.emitter.emit("progress", this);
       }
     });
-    this._updateStatus(TaskStatus.IDLE);
+    this._updateStatus(this._status);
   }
 
   get id(): string {

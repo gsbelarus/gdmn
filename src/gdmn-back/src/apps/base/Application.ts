@@ -1,6 +1,6 @@
 import {DataSource} from "gdmn-er-bridge";
 import {ERModel, IEntityQueryInspector, IERModel, IQueryResponse} from "gdmn-orm";
-import log4js, {Logger} from "log4js";
+import log4js from "log4js";
 import {ADatabase, DBStatus, IDBDetail} from "../../db/ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
@@ -31,8 +31,8 @@ export abstract class Application extends ADatabase {
   public readonly erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
   public readonly sessionManager = new SessionManager(this.erModel, this.sessionLogger);
 
-  protected constructor(dbDetail: IDBDetail, logger: Logger) {
-    super(dbDetail, logger);
+  protected constructor(dbDetail: IDBDetail) {
+    super(dbDetail);
   }
 
   public pushBeginTransCmd(session: Session, command: BeginTransCmd): Task<BeginTransCmd, string> {
@@ -43,7 +43,7 @@ export abstract class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const transaction = await this.erModel.startTransaction(context.session.connection);
         return context.session.addTransaction(transaction);
@@ -62,7 +62,7 @@ export abstract class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {transactionKey} = context.command.payload;
 
@@ -87,7 +87,7 @@ export abstract class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {transactionKey} = context.command.payload;
 
@@ -112,7 +112,7 @@ export abstract class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {steps, delay} = context.command.payload;
 
@@ -144,7 +144,7 @@ export abstract class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async () => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         return this.erModel.serialize();
       }
@@ -162,7 +162,7 @@ export abstract class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {transactionKey} = context.command.payload;
 
@@ -177,21 +177,18 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  protected _checkSession(session: Session): void | never {
+  public checkSession(session: Session): void | never {
     if (session.status !== SessionStatus.OPENED) {
-      const message = "Session is closed";
-      this._logger.warn(message);
-      throw new Error(message);
+      this._logger.warn("Session id#%s is not opened", session.id);
+      throw new Error("Session is not opened");
     }
     if (!session.active) {
-      const message = "Session is not active";
-      this._logger.warn(message);
-      throw new Error(message);
+      this._logger.warn("Session id#%s is not active", session.id);
+      throw new Error("Session is not active");
     }
     if (!this.sessionManager.includes(session)) {
-      const message = "Session does not belong to the application";
-      this._logger.warn(message);
-      throw new Error(message);
+      this._logger.warn("Session id#%s does not belong to the application", session.id);
+      throw new Error("Session does not belong to the application");
     }
   }
 
@@ -210,7 +207,7 @@ export abstract class Application extends ADatabase {
   protected async _onDisconnect(): Promise<void> {
     await super._onDisconnect();
 
-    await this.sessionManager.closeAll();
+    await this.sessionManager.forceCloseAll();
     this._logger.info("All session are closed");
   }
 }

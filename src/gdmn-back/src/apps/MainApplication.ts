@@ -13,7 +13,6 @@ import {
   StringAttribute,
   TimeStampAttribute
 } from "gdmn-orm";
-import log4js from "log4js";
 import path from "path";
 import {v1 as uuidV1} from "uuid";
 import {DBStatus, IDBDetail} from "../db/ADatabase";
@@ -94,8 +93,7 @@ export class MainApplication extends Application {
   private _applications: Map<string, Application> = new Map();
 
   constructor() {
-    super(MainApplication._createDBDetail("auth_db", path.resolve(MainApplication.MAIN_DIR, MainApplication.MAIN_DB)),
-      log4js.getLogger("MainApp"));
+    super(MainApplication._createDBDetail("auth_db", path.resolve(MainApplication.MAIN_DIR, MainApplication.MAIN_DB)));
 
     if (!existsSync(MainApplication.MAIN_DIR)) {
       mkdirSync(MainApplication.MAIN_DIR);
@@ -144,7 +142,7 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
@@ -192,7 +190,7 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {uid} = context.command.payload;
         const {userKey} = context.session;
@@ -230,7 +228,7 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
-        this._checkSession(session);
+        this.checkSession(session);
 
         const {userKey} = context.session;
         const connection = (context.session.connection as Connection).connection;

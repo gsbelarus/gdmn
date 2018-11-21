@@ -41,7 +41,10 @@ export class SessionManager {
     });
     session.emitter.on("change", (s) => {
       this.emitter.emit("change", s);
+
       switch (s.status) {
+        case SessionStatus.OPENED:
+          break;
         case SessionStatus.CLOSED:
           this._sessions.splice(this._sessions.indexOf(s), 1);
           break;
@@ -55,7 +58,8 @@ export class SessionManager {
       }
     });
     this._sessions.push(session);
-    this.emitter.emit("change", session);
+    // TODO
+    // this.emitter.emit("change", session);
 
     this.syncTasks();
     return session;
@@ -111,7 +115,7 @@ export class SessionManager {
     });
   }
 
-  public async closeAll(): Promise<void> {
+  public async forceCloseAll(): Promise<void> {
     const promise = this._sessions.map((session) => session.forceClose());
     await Promise.all(promise);
   }
