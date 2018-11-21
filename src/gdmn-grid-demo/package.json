@@ -25,6 +25,7 @@
     "gdmn-grid": "^1.0.0",
     "gdmn-recordset": "^1.0.0",
     "immutable": "^3.8.2",
+    "office-ui-fabric-react": "^6.106.2",
     "react": "^16",
     "react-dom": "^16",
     "react-draggable": "^3.0.5",
