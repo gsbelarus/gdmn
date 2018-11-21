@@ -9,6 +9,8 @@
     "@types/react": "^16.7.3",
     "@types/react-dom": "^16.0.9",
     "dagre": "^0.8.2",
+    "gdmn-grid": "^1.0.0",
+    "gdmn-nlp-agent": "^1.0.0",
     "office-ui-fabric-react": "^6.104.0",
     "react": "^16.6.1",
     "react-dom": "^16.6.1",
@@ -19,7 +21,7 @@
     "redux-devtools-extension": "^2.13.5",
     "redux-thunk": "^2.3.0",
     "typesafe-actions": "^2.0.4",
-    "typescript": "^3.1.6"
+    "typescript": "^3"
   },
   "scripts": {
     "start": "react-scripts start",
