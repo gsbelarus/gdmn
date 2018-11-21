@@ -130,7 +130,8 @@ export class CachedStatements {
       this._statements.columnsExists = await this._connection.prepare(this._transaction, `
         SELECT FIRST 1 0
         FROM RDB$RELATION_FIELDS rf
-        WHERE rf.RDB$RELATION_NAME = :tableName and rf.RDB$FIELD_NAME = :fieldName
+        WHERE rf.RDB$RELATION_NAME = :tableName
+          and rf.RDB$FIELD_NAME = :fieldName
       `);
     }
     return await AStatement.executeQueryResultSet({
@@ -145,7 +146,7 @@ export class CachedStatements {
 
     if (!this._statements.constraintExists) {
       this._statements.constraintExists = await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0 
+        SELECT FIRST 1 0
         FROM RDB$RELATION_CONSTRAINTS
         WHERE RDB$CONSTRAINT_NAME = :constraintName
       `);
@@ -226,10 +227,10 @@ export class CachedStatements {
     if (!this._statements.addToATFields) {
       this._statements.addToATFields = await this._connection.prepare(this._transaction, `
         INSERT INTO AT_FIELDS (FIELDNAME, LNAME, DESCRIPTION, REFTABLE, REFCONDITION, SETTABLE, SETLISTFIELD,
-          SETCONDITION, NUMERATION)
+                               SETCONDITION, NUMERATION)
         VALUES (:fieldName, :lName, :description, :refTable, :refCondition, :setTable, :setListField,
-          :setCondition, :numeration)
-        RETURNING ID
+                :setCondition, :numeration)
+               RETURNING ID
       `);
     }
     const numeration = (input.numeration || []).map(({key, value}) => `${key}=${value}`).join("#13#10");
@@ -254,7 +255,7 @@ export class CachedStatements {
       this._statements.addToATRelations = await this.connection.prepare(this._transaction, `
         INSERT INTO AT_RELATIONS (RELATIONNAME, RELATIONTYPE, LNAME, DESCRIPTION, SEMCATEGORY, ENTITYNAME)
         VALUES (:relationName, :relationType, :lName, :description, :semCategory, :entityName)
-        RETURNING ID
+               RETURNING ID
       `);
     }
     const result = await this._statements.addToATRelations.executeReturning({
@@ -274,10 +275,10 @@ export class CachedStatements {
     if (!this._statements.addToATRelationField) {
       this._statements.addToATRelationField = await this.connection.prepare(this._transaction, `
         INSERT INTO AT_RELATION_FIELDS (FIELDNAME, RELATIONNAME, LNAME, DESCRIPTION, FIELDSOURCE, FIELDSOURCEKEY,
-          ATTRNAME, MASTERENTITYNAME, SEMCATEGORY, CROSSTABLE, CROSSTABLEKEY, CROSSFIELD)
+                                        ATTRNAME, MASTERENTITYNAME, SEMCATEGORY, CROSSTABLE, CROSSTABLEKEY, CROSSFIELD)
         VALUES (:fieldName, :relationName, :lName, :description, :fieldSource, :fieldSourceKey,
-          :attrName, :masterEntityName, :semCategory, :crossTable, :crossTableKey, :crossField)
-        RETURNING ID
+                :attrName, :masterEntityName, :semCategory, :crossTable, :crossTableKey, :crossField)
+               RETURNING ID
       `);
     }
     const result = await this._statements.addToATRelationField.executeReturning({

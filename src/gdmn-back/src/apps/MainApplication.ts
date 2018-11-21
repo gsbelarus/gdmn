@@ -530,10 +530,10 @@ export class MainApplication extends Application {
                                     application: ICreateApplicationInfo): Promise<IApplicationInfo> {
     const uid = uuidV1().toUpperCase();
     const result = await connection.executeReturning(transaction, `
-        INSERT INTO APPLICATION (UID, OWNER, IS_EXTERNAL, HOST, PORT, USERNAME, PASSWORD, PATH)
-        VALUES (:uid, :owner, :external, :host, :port, :username, :password, :path)
-        RETURNING ID, CREATIONDATE
-      `, {
+      INSERT INTO APPLICATION (UID, OWNER, IS_EXTERNAL, HOST, PORT, USERNAME, PASSWORD, PATH)
+      VALUES (:uid, :owner, :external, :host, :port, :username, :password, :path)
+             RETURNING ID, CREATIONDATE
+    `, {
       uid,
       owner: application.ownerKey,
       external: application.external,
@@ -555,9 +555,9 @@ export class MainApplication extends Application {
                                         transaction: ATransaction,
                                         userApplication: ICreateUserApplicationInfo): Promise<void> {
     await connection.execute(transaction, `
-        INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS)
-        VALUES (:userKey, :appKey, :alias)
-      `, {
+      INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS)
+      VALUES (:userKey, :appKey, :alias)
+    `, {
       userKey: userApplication.userKey,
       appKey: userApplication.appKey,
       alias: userApplication.alias
@@ -569,10 +569,11 @@ export class MainApplication extends Application {
                                        ownerKey: number,
                                        uid: string): Promise<void> {
     await connection.execute(transaction, `
-        DELETE FROM APPLICATION
-        WHERE UID = :uid
-          AND OWNER = :ownerKey
-      `, {
+      DELETE
+      FROM APPLICATION
+      WHERE UID = :uid
+        AND OWNER = :ownerKey
+    `, {
       ownerKey,
       uid
     });
@@ -583,15 +584,14 @@ export class MainApplication extends Application {
                                            userKey: number,
                                            uid: string): Promise<void> {
     await connection.execute(transaction, `
-        DELETE FROM APP_USER_APPLICATIONS
-        WHERE KEY1 = :userKey
-          AND EXISTS (
-            SELECT ID
-            FROM APPLICATION app
-            WHERE app.ID = KEY2
-              AND app.UID = :uid
-          )
-      `, {
+      DELETE
+      FROM APP_USER_APPLICATIONS
+      WHERE KEY1 = :userKey
+        AND EXISTS(SELECT ID
+                   FROM APPLICATION app
+                   WHERE app.ID = KEY2
+                     AND app.UID = :uid)
+    `, {
       userKey,
       uid
     });
@@ -602,10 +602,10 @@ export class MainApplication extends Application {
     const passwordHash = MainApplication._createPasswordHash(user.password, salt);
 
     const result = await connection.executeReturning(transaction, `
-          INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN)
-          VALUES (:login, :passwordHash, :salt, :isAdmin)
-          RETURNING ID, LOGIN, PASSWORD_HASH, SALT, IS_ADMIN
-        `, {
+      INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN)
+      VALUES (:login, :passwordHash, :salt, :isAdmin)
+             RETURNING ID, LOGIN, PASSWORD_HASH, SALT, IS_ADMIN
+    `, {
       login: user.login,
       passwordHash: Buffer.from(passwordHash),
       salt: Buffer.from(salt),
@@ -622,8 +622,8 @@ export class MainApplication extends Application {
 
   private async _deleteUser(connection: AConnection, transaction: ATransaction, id: number): Promise<void> {
     await connection.execute(transaction, `
-      UPDATE APP_USER SET
-        DELETED = 1
+      UPDATE APP_USER
+      SET DELETED = 1
       WHERE ID = :id
     `, {id});
   }
