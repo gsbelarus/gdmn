@@ -10,7 +10,7 @@
     "watch": "tsc -w",
     "------------": "",
     "ci:compile": "yarn run clean && tsc -p ./tsconfig.json",
-    "pkg:build": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack --progress --display-modules --config configs/webpack/webpack.config.prod.ts",
+    "pkg:build": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack --progress --config configs/webpack/webpack.config.prod.ts",
     "pkg:deploy": "shx rm -rf ../gdmn-back/public && shx cp -r ./dist ../gdmn-back/public",
     "pkg:start": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack-dev-server --config configs/webpack/webpack.config.dev.ts",
     "prettier:cli": "prettier \"**/*.@(ts|tsx|js|jsx)\"",

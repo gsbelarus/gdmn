@@ -63,10 +63,6 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
       // new OptimizeCSSAssetsPlugin({})
     ]
   },
-  stats: "minimal",
-  // performance: {
-  //   hints: false
-  // },
   plugins: [
     new CleanWebpackPlugin(['dist'], {
       root: getRootRelativePath('')
@@ -76,7 +72,20 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     new EnvironmentPlugin({
       NODE_ENV: process.env.NODE_ENV || 'production'
     })
-  ]
+  ],
+  stats: {
+    // 'minimal'
+    all: false,
+    modules: true,
+    maxModules: 0,
+    errors: true,
+    warnings: true,
+    // additional options
+    entrypoints: true,
+    colors: true,
+    moduleTrace: true,
+    errorDetails: true
+  }
 });
 
 // tslint:disable-next-line no-default-export
