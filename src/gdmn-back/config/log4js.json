@@ -64,16 +64,7 @@
       ],
       "level": "trace"
     },
-    "mainApp": {
-      "appenders": [
-        "out",
-        "all",
-        "errorsFilter",
-        "warnsFilter"
-      ],
-      "level": "trace"
-    },
-    "gdmnApp": {
+    "database": {
       "appenders": [
         "out",
         "all",

@@ -142,7 +142,12 @@ export class StompSession implements StompClientCommandListener {
 
   get session(): Session {
     if (!this._session) {
-      throw new ServerError(ErrorCode.UNAUTHORIZED, "Session is not found");
+      throw new ServerError(ErrorCode.INTERNAL, "Session is not found");
+    }
+    try {
+      this.application.checkSession(this._session);
+    } catch (error) {
+      throw new ServerError(ErrorCode.UNAUTHORIZED, error.message);
     }
     return this._session;
   }
@@ -196,6 +201,9 @@ export class StompSession implements StompClientCommandListener {
       if (login && passcode) {
         let user;
         if (isCreateUser === "1") {
+          if (await this.mainApplication.findUser({login})) {
+            throw new ServerError(ErrorCode.INVALID, "User already exists");
+          }
           user = await this.mainApplication.addUser({
             login,
             password: passcode,
@@ -317,8 +325,7 @@ export class StompSession implements StompClientCommandListener {
           this._sendReceipt(headers);
 
           // notify about tasks
-          this.session.taskManager.find(...Task.STATUSES.filter((status) => !Task.DONE_STATUSES.includes(status)))
-            .forEach((task) => this._onChangeTask(task));
+          this.session.taskManager.find(...Task.PROCESS_STATUSES).forEach((task) => this._onChangeTask(task));
           break;
         }
         case StompSession.DESTINATION_TASK_PROGRESS: {
@@ -564,13 +571,22 @@ export class StompSession implements StompClientCommandListener {
   }
 
   protected _try(callback: () => Promise<void> | void, requestHeaders: StompHeaders): void {
-    Promise.resolve(callback()).catch((error) => {
-      if (error instanceof ServerError) {
-        this._sendError(error, requestHeaders);
-      } else {
-        this._sendError(new ServerError(ErrorCode.INTERNAL, error.message), requestHeaders);
+    try {
+      const result = callback();
+      if (result instanceof Promise) {
+        result.catch((error) => this._catch(error, requestHeaders));
       }
-    });
+    } catch (error) {
+      this._catch(error, requestHeaders);
+    }
+  }
+
+  private _catch(error: Error, requestHeaders: StompHeaders): void {
+    if (error instanceof ServerError) {
+      this._sendError(error, requestHeaders);
+    } else {
+      this._sendError(new ServerError(ErrorCode.INTERNAL, error.message), requestHeaders);
+    }
   }
 
   private _createAccessJwtToken(user: IUser): string {
