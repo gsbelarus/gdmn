@@ -38,6 +38,7 @@ module.exports = {
         new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src', 'app', 'index.html') }),
         new webpack.HotModuleReplacementPlugin()
     ],
+    /*
     stats: {
         // 'minimal'
         all: false,
@@ -51,4 +52,5 @@ module.exports = {
         moduleTrace: true,
         errorDetails: true
     }
+    */
 };
