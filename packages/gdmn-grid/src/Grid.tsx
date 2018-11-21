@@ -901,11 +901,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _getRowsCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) =>
     ({columnIndex, key, rowIndex, style}: GridCellProps) => {
-      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup } = this.props;
+      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup} = this.props;
       const currentRow = rs.currentRow;
       const adjustedColumnIndex = adjustFunc(columnIndex);
       const rowData = rs.get(rowIndex);
       const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
+      const footer = rowData.type === TRowType.Footer;
 
       const backgroundClass = fixed ? styles.FixedBackground
         : currentRow === rowIndex ? (adjustedColumnIndex === currentCol ? styles.CurrentCellBackground : styles.CurrentRowBackground)
@@ -1013,7 +1014,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       } else {
         return (
           <div
-            className={cn(backgroundClass, borderClass, styles.CellColumn, cellClass, textClass)}
+            className={footer? cn(styles.CellColumn, styles.FooterCell):cn(backgroundClass, borderClass, styles.CellColumn, cellClass, textClass)}
             key={key}
             style={style}
             onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }

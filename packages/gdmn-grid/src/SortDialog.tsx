@@ -203,6 +203,22 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
     this.setState({ sortFields });
   }
 
+  onCalcAggregates = (idx: number) => {
+      const sortFields = [...this.state.sortFields];
+
+      if (sortFields[idx].calcAggregates) {
+          for (let i=idx; i < sortFields.length; i++) {
+              sortFields[i].calcAggregates = undefined;
+          }
+      } else {
+          for (let i=0; i <= idx; i++) {
+              sortFields[i].calcAggregates = true;
+          }
+      }
+
+      this.setState({ sortFields });
+  }
+
   render() {
     const { onCancel, onApply, fieldDefs } = this.props;
     const { sortFields, attnFieldIdx } = this.state;
@@ -214,7 +230,7 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
           </MenuItem>
       );
 
-    const makeRow = (idx: number, fieldName: string, sortOrder: boolean, groupBy: boolean) => (
+    const makeRow = (idx: number, fieldName: string, sortOrder: boolean, groupBy: boolean, calcAggregates: boolean) => (
       <div key={`row-${fieldName}`} className={cn('GDMNSortDialogRow', { GDMNAttnSortDialogRow: idx >= 0 && idx === attnFieldIdx })}>
         <SmallButtonNoBorder
           variant="text"
@@ -223,6 +239,15 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
           onClick={() => this.onGroupBy(idx)}
         >
           {groupBy ? '☑' : '☐'}
+        </SmallButtonNoBorder>
+        <SmallButtonNoBorder
+            title="Вывод итого по группировкам"
+            variant="text"
+            disabled={false}
+            color="primary"
+            onClick={() => this.onCalcAggregates(idx)}
+        >
+          {calcAggregates ? '☑' : '☐'}
         </SmallButtonNoBorder>
         <FormControl>
           <div className="GDMNSortDialogLabel">Поле:</div>
@@ -313,7 +338,7 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
             Выберите поле или несколько полей и порядок сортировки. Отметьте галочками поля для группировки.
           </DialogContentText>
             <div className="GDMNSortDialogContainer">
-              {sortFields.map( (sf, idx) => makeRow(idx, sf.fieldName, !!sf.asc, !!sf.groupBy) )}
+              {sortFields.map( (sf, idx) => makeRow(idx, sf.fieldName, !!sf.asc, !!sf.groupBy, !!sf.calcAggregates) )}
             </div>
         </DialogContent>
         <DialogActions>

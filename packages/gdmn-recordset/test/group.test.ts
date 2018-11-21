@@ -1,4 +1,4 @@
-import { FieldDefs, TFieldType, IDataRow, getSumAggregator, RecordSet } from "../src";
+import { FieldDefs, TFieldType, IDataRow, GetRowDataFunc, getSumAggregator, RecordSet } from "../src";
 import { List } from "immutable";
 
 const fieldDefs: FieldDefs = [
@@ -97,9 +97,9 @@ const demoData = [
   },
 ];
 
-describe('olap', () => {
+describe('group', () => {
 
-  it('group', () => {
+  it('group without aggregates', () => {
 
     const data = List<any>(demoData.slice(0, 5));
     let rs = RecordSet.createWithData('group', fieldDefs, data);
@@ -108,7 +108,8 @@ describe('olap', () => {
         {
           fieldName: 'company',
           asc: true,
-          groupBy: true
+          groupBy: true,
+          calcAggregates: true,
         },
       ],
     );

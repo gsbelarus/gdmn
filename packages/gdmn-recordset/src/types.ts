@@ -46,6 +46,7 @@ export type FieldDefs = IFieldDef[];
 export interface ISortField extends INamedField {
   asc?: boolean;
   groupBy?: boolean;
+  calcAggregates?: boolean;
 };
 
 export type SortFields = ISortField[];
