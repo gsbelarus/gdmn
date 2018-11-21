@@ -63,6 +63,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
       // new OptimizeCSSAssetsPlugin({})
     ]
   },
+  stats: "minimal",
   // performance: {
   //   hints: false
   // },
