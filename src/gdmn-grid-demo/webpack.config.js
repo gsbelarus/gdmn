@@ -17,6 +17,7 @@ module.exports = {
         extensions: ['.js', '.jsx', '.json', '.ts', '.tsx']
     },
     performance: { hints: false },
+    stats: "minimal",
     module: {
         rules: [
             {
