@@ -56,6 +56,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
           if (errMessage.meta && !!errMessage.meta.code && errMessage.meta!.code === TGdmnErrorCodes.UNAUTHORIZED) {
             dispatch(authActions.signOut());
           } else {
+
             //  fixme: duplication after auth error
             dispatch(
               rootActions.onError(
@@ -65,7 +66,10 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               )
             );
 
-            // todo: if INTERNAL -> reconnect
+            // todo: test
+            if (errMessage.meta && !!errMessage.meta.code && errMessage.meta!.code === TGdmnErrorCodes.INTERNAL) {
+              dispatch(gdmnActions.apiConnect())
+            }
 
             // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));
           }
