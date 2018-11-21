@@ -187,7 +187,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const t = group.collapsed ? 0
     : group.subGroups.length ? group.subGroups.reduce( (p, s) => p + this._getGroupRowCount(s), 0 )
     : group.bufferCount;
-    return 1 + t + (group.footer ? 1 : 0);
+    return 1 + t + (group.footer && !group.collapsed ? 1 : 0);
   }
 
   private _findGroup(groups: IDataGroup<R>[], rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
@@ -217,7 +217,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const group = groups[approxGroupIdx];
 
     if (rowIdx > group.rowIdx && group.subGroups.length) {
-      return this._findGroup(group.subGroups, rowIdx);
+      if (group.footer && !group.collapsed && rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1) {
+        return { groupIdx: approxGroupIdx, group };
+      } else {
+        return this._findGroup(group.subGroups, rowIdx);
+      }
     } else {
       return { groupIdx: approxGroupIdx, group };
     }
@@ -252,7 +256,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       };
     }
 
-    if (group.footer && rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1) {
+    if (group.footer && !group.collapsed && rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1) {
       return {
         data: group.footer,
         type: TRowType.Footer,
