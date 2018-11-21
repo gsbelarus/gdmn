@@ -99,7 +99,7 @@ const demoData = [
 
 describe('group', () => {
 
-  it('group without aggregates', () => {
+  it('group 1 level without aggregates', () => {
 
     const data = List<any>(demoData.slice(0, 5));
     let rs = RecordSet.createWithData('group', fieldDefs, data);
@@ -108,8 +108,7 @@ describe('group', () => {
         {
           fieldName: 'company',
           asc: true,
-          groupBy: true,
-          calcAggregates: true,
+          groupBy: true
         },
       ],
     );
@@ -123,5 +122,109 @@ describe('group', () => {
     expect(rs.getString(4, 'company')).toEqual('Company A');
     expect(rs.getString(5, 'company')).toEqual('Company B');
     expect(rs.getString(6, 'company')).toEqual('Company B');
+  });
+
+  it('group 1 level with aggregates', () => {
+
+    const data = List<any>(demoData.slice(0, 5));
+    let rs = RecordSet.createWithData('group', fieldDefs, data);
+
+    rs = rs.sort([
+        {
+          fieldName: 'company',
+          asc: true,
+          groupBy: true,
+          calcAggregates: true
+        },
+      ],
+    );
+
+    expect(rs.size).toEqual(9);
+    expect(rs.fieldDefs.length).toEqual(9);
+    expect(rs.getString(0, 'company')).toEqual('Company A');
+    expect(rs.getString(1, 'company')).toEqual('Company A');
+    expect(rs.getString(2, 'company')).toEqual('Company A');
+    expect(rs.getString(3, 'company')).toEqual('Company A');
+    expect(rs.getString(4, 'company')).toEqual('Company A');
+    expect(rs.getString(5, 'company', '')).toEqual('');
+    expect(rs.getString(6, 'company')).toEqual('Company B');
+    expect(rs.getString(7, 'company')).toEqual('Company B');
+    expect(rs.getString(8, 'company', '')).toEqual('');
+    expect(rs.getNumber(5, 'cost')).toEqual(174.5);
+    expect(rs.getNumber(8, 'cost')).toEqual(20);
+  });
+
+  it('group 2 levels without aggregates', () => {
+
+    const data = List<any>(demoData.slice(0, 5));
+    let rs = RecordSet.createWithData('group', fieldDefs, data);
+
+    rs = rs.sort([
+        {
+          fieldName: 'company',
+          asc: true,
+          groupBy: true
+        },
+        {
+          fieldName: 'good',
+          asc: true,
+          groupBy: true
+        },
+      ],
+    );
+
+    expect(rs.size).toEqual(10);
+    expect(rs.fieldDefs.length).toEqual(9);
+    expect(rs.getString(0, 'company')).toEqual('Company A');
+    expect(rs.getString(1, 'company', '')).toEqual('');
+    expect(rs.getString(2, 'company')).toEqual('Company A');
+    expect(rs.getString(3, 'company')).toEqual('Company A');
+    expect(rs.getString(4, 'company', '')).toEqual('');
+    expect(rs.getString(5, 'company')).toEqual('Company A');
+    expect(rs.getString(6, 'company')).toEqual('Company A');
+    expect(rs.getString(7, 'company')).toEqual('Company B');
+    expect(rs.getString(8, 'company', '')).toEqual('');
+    expect(rs.getString(9, 'company')).toEqual('Company B');
+  });
+
+  it('group 2 levels with aggregates', () => {
+
+    const data = List<any>(demoData.slice(0, 5));
+    let rs = RecordSet.createWithData('group', fieldDefs, data);
+
+    rs = rs.sort([
+        {
+          fieldName: 'company',
+          asc: true,
+          groupBy: true,
+          calcAggregates: false
+        },
+        {
+          fieldName: 'good',
+          asc: true,
+          groupBy: true,
+          calcAggregates: true
+        },
+      ],
+    );
+
+    expect(rs.size).toEqual(13);
+    expect(rs.fieldDefs.length).toEqual(9);
+    expect(rs.getString(0, 'company')).toEqual('Company A');
+    expect(rs.getString(1, 'company', '')).toEqual('');
+    expect(rs.getString(2, 'company')).toEqual('Company A');
+    expect(rs.getString(3, 'company')).toEqual('Company A');
+    expect(rs.getString(4, 'company', '')).toEqual('');
+    expect(rs.getString(5, 'company', '')).toEqual('');
+    expect(rs.getString(6, 'company')).toEqual('Company A');
+    expect(rs.getString(7, 'company')).toEqual('Company A');
+    expect(rs.getString(8, 'company', '')).toEqual('');
+    expect(rs.getString(9, 'company')).toEqual('Company B');
+    expect(rs.getString(10, 'company', '')).toEqual('');
+    expect(rs.getString(11, 'company')).toEqual('Company B');
+    expect(rs.getString(12, 'company', '')).toEqual('');
+    expect(rs.getNumber(4, 'cost')).toEqual(15);
+    expect(rs.getNumber(8, 'cost')).toEqual(159.5);
+    expect(rs.getNumber(12, 'cost')).toEqual(20);
   });
 });

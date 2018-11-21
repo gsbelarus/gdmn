@@ -206,14 +206,14 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
   onCalcAggregates = (idx: number) => {
       const sortFields = [...this.state.sortFields];
 
-      if (sortFields[idx].calcAggregates) {
-          for (let i=idx; i < sortFields.length; i++) {
-              sortFields[i].calcAggregates = undefined;
-          }
+      if (sortFields[idx].groupBy) {
+        if (sortFields[idx].calcAggregates) {
+          sortFields[idx].calcAggregates = undefined;
+        } else {
+          sortFields[idx].calcAggregates = true;
+        }
       } else {
-          for (let i=0; i <= idx; i++) {
-              sortFields[i].calcAggregates = true;
-          }
+        sortFields[idx].calcAggregates = undefined;
       }
 
       this.setState({ sortFields });
@@ -241,7 +241,6 @@ class GDMNSortDialog extends React.Component<IGDMNSortDialogProps, {}> {
           {groupBy ? '☑' : '☐'}
         </SmallButtonNoBorder>
         <SmallButtonNoBorder
-            title="Вывод итого по группировкам"
             variant="text"
             disabled={false}
             color="primary"

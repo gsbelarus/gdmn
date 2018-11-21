@@ -158,10 +158,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         getTotal: fd.aggregator!.getTotal
       }));
 
-          for (let i = 0; i< this._data.size; i++){
-       accumulator.forEach(acc => acc.value = acc.processRow( this._getData(this._data, i, this._calcFields), acc.fieldName, acc.value));
-     }
-
+      for (let i = 0; i < this._data.size; i++){
+        accumulator.forEach(acc => acc.value = acc.processRow(this._getData(this._data, i, this._calcFields), acc.fieldName, acc.value));
+      }
 
       this._aggregates = accumulator.reduce(
         (prev, acc) => {
@@ -205,7 +204,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     let approxGroupIdx = Math.floor(groupsCount * (rowIdx - fg.rowIdx) / (lg.rowIdx + this._getGroupRowCount(lg) - fg.rowIdx));
 
-    while (approxGroupIdx > 0 && rowIdx <= groups[approxGroupIdx].rowIdx) {
+    while (approxGroupIdx > 0 && rowIdx < groups[approxGroupIdx].rowIdx) {
       approxGroupIdx--;
     }
 
@@ -555,19 +554,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             const headerData = this._getData(sorted, bufferBeginIdx, calcFields);
             const header: R = {[fieldName]: headerData[fieldName]} as R;
             let footer;
+
             if (sortFields[level].calcAggregates) {
-              const aggFields = this._fieldDefs.filter(fd => fd.aggregator);
+              const aggFields = this._fieldDefs.filter( fd => fd.aggregator );
 
               if (aggFields.length) {
-                const accumulator = aggFields.map(fd => ({
+                const accumulator = aggFields.map( fd => ({
                   fieldName: fd.fieldName,
                   value: fd.aggregator!.init(),
                   processRow: fd.aggregator!.processRow,
                   getTotal: fd.aggregator!.getTotal,
                 }));
-                
+
                 for (let i = bufferBeginIdx; i < bufferBeginIdx + bufferCount; i++) {
-                  accumulator.forEach(acc => acc.value = acc.processRow(this._getData(sorted, i, this._calcFields), acc.fieldName, acc.value));
+                  accumulator.forEach( acc => acc.value = acc.processRow(this._getData(sorted, i, this._calcFields), acc.fieldName, acc.value) );
                 }
 
                 footer = accumulator.reduce((prev, acc) => {
@@ -576,12 +576,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                 }, {} as R);
               };
             }
+
             const group = {
               header,
               level,
               collapsed: false,
               subGroups: sortFields.length > level + 1 && sortFields[level + 1].groupBy ? groupData(level + 1, rowIdx + 1, bufferBeginIdx, bufferCount) : [],
-              footer: footer,
+              footer,
               rowIdx: rowIdx,
               bufferIdx: bufferBeginIdx,
               bufferCount
