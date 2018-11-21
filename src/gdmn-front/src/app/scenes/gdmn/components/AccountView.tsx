@@ -21,4 +21,4 @@ class AccountView extends PureComponent<IAccountViewProps> {
   }
 }
 
-export { AccountView };
+export { AccountView, IAccountViewProps };

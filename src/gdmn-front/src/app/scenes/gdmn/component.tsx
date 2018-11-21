@@ -3,7 +3,6 @@ import { NavLink, Redirect, Route, RouteComponentProps, Switch } from 'react-rou
 import {
   AppBar,
   Button,
-  Collapse,
   Divider,
   Drawer,
   Icon,
@@ -18,47 +17,22 @@ import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
 
 import styles from './styles.css';
-// import { TDataStoresState } from '@src/app/scenes/datastores/reducer';
 import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
-import { StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
-import { AccountView } from '@src/app/scenes/gdmn/components/AccountView';
+import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
+import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
 
-interface IDemosViewActionsProps {
-  signOut: () => void;
-  apiConnect: () => void;
-  apiDisconnect: () => void;
-  apiPing: () => void;
-  apiDeleteAccount: () => void;
-}
-
-type TGdmnViewStateProps = any; // TDataStoresState;
-
-interface IGdmnViewProps extends IDemosViewActionsProps, TGdmnViewStateProps, InjectedProps {
-  // renderDataStoresViewContainer?: React.ComponentType;
-  // renderDatastoreViewContainer?: React.ComponentType;
-  // getDatastoreViewContainer: (appBarPortalTargetRef: RefObject<HTMLDivElement>) => React.ComponentType;
-  // getDemosContainer: (appBarPortalTargetRef: RefObject<HTMLDivElement>) => React.ComponentType;
-  // loadDataStores: () => void; // TODO extract to container
-}
+type TGdmnViewStateProps = any;
+type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 @CSSModules(styles, { allowMultiple: true })
-class GdmnView extends PureComponent<IGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
+class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   private appBarPortalTargetRef: RefObject<HTMLDivElement> = React.createRef();
 
   public render() {
-    const {
-      match,
-      // renderDataStoresViewContainer: DataStoresViewContainer,
-      // renderDatastoreViewContainer: DatastoreViewContainer,
-      // getDatastoreViewContainer,
-      // getDemosContainer,
-      signOut,
-      // dataStores,
-      breadcrumbs
-    } = this.props;
+    const { match, signOut, breadcrumbs } = this.props;
     return (
       <div styleName="layout">
         <AppBar styleName="header" position="static">
@@ -135,7 +109,7 @@ class GdmnView extends PureComponent<IGdmnViewProps & RouteComponentProps<any> &
   }
 }
 
-export { GdmnView, IGdmnViewProps, TGdmnViewStateProps };
+export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
 
 /*
 Organizations - supervised_user_circle

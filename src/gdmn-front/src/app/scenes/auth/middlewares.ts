@@ -3,7 +3,6 @@ import { Middleware } from 'redux';
 import { startSubmit, stopSubmit } from 'redux-form';
 
 import { authActions } from '@src/app/scenes/auth/actions';
-import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 
 const getSignInUpMiddleware = (reduxFormKey: string): Middleware => ({ dispatch, getState }) => next => action => {
@@ -24,13 +23,6 @@ const getSignInUpMiddleware = (reduxFormKey: string): Middleware => ({ dispatch,
       // dispatch(reset(reduxFormKey));
       dispatch(stopSubmit(reduxFormKey));
 
-      // if (action.payload && action.payload.fields) {
-      //   throw new SubmissionError( { [action.payload.fieldName]:  action.payload.toString() } );
-      //   action.payload.message = action.payload.toString();
-      // } else if (action.payload instanceof UnauthorizedError) {
-      //   action.payload.message = 'Invalid username or password!';
-      // }
-
       break;
   }
 
@@ -41,9 +33,7 @@ const signInMiddleware: Middleware = getSignInUpMiddleware('SignInForm');
 
 const signUpMiddleware: Middleware = getSignInUpMiddleware('SignUpForm');
 
-const getSignOutMiddleware = (apiService: GdmnPubSubApi): Middleware => ({ dispatch, getState }) => next => (
-  action: any
-) => {
+const signOutMiddleware: Middleware = ({ dispatch, getState }) => next => (action: any) => {
   if (action.type === getType(authActions.signOut)) {
     dispatch(gdmnActions.apiDisconnect());
   }
@@ -51,10 +41,6 @@ const getSignOutMiddleware = (apiService: GdmnPubSubApi): Middleware => ({ dispa
   return next(action);
 };
 
-const getAuthMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
-  signUpMiddleware,
-  signInMiddleware,
-  getSignOutMiddleware(apiService)
-];
+const authMiddlewares: Middleware[] = [signUpMiddleware, signInMiddleware, signOutMiddleware];
 
-export { getAuthMiddlewares };
+export { authMiddlewares };

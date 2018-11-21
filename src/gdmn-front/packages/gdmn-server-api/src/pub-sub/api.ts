@@ -17,12 +17,12 @@ type TGdmnReceivedErrorMeta = IReceivedErrorMeta<TGdmnErrorCodes>;
 
 // -- error
 const enum TGdmnErrorCodes {
-  INTERNAL = 0,
-  UNSUPPORTED = 1,
-  UNAUTHORIZED = 2,
-  INVALID = 3,
-  NOT_FOUND = 4,
-  NOT_UNIQUE = 5
+  INTERNAL = '0',
+  UNSUPPORTED = '1',
+  UNAUTHORIZED = '2',
+  INVALID = '3',
+  NOT_FOUND = '4',
+  NOT_UNIQUE = '5'
 }
 // -- task
 const enum TTaskActionNames {

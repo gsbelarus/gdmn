@@ -4,11 +4,12 @@ import { getType } from 'typesafe-actions';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { selectAuthState } from '@src/app/store/selectors';
-import { Auth } from '@gdmn/client-core';
+import { Auth, IPubSubMessage } from '@gdmn/client-core';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { Subscription } from 'rxjs';
-import { TGdmnErrorCodes } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TGdmnReceivedErrorMeta } from '@gdmn/server-api';
+import { first } from 'rxjs/operators';
 
 const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
   return ({ dispatch, getState }) => next => async (action: any) => {
@@ -16,16 +17,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
     switch (action.type) {
       case getType(gdmnActions.apiConnect):
-        // errorSubscription =  apiService.errorMessageObservable.subscribe(
-        //   value => {
-        //     // if (value.meta && value.meta.code && value.meta.code === TGdmnErrorCodes.UNAUTHORIZED) { // todo tmp
-        //     //
-        //     // }
-        //
-        //     // dispatch(rootActions.onError(new Error(JSON.stringify(value))));
-        //
-        //
-        //   }); // todo tmp test
+        // todo: sub first()
 
         const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
         const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
@@ -33,19 +25,58 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
           const token = Auth.isFreshToken(accessTokenPayload)
             ? selectAuthState(getState()).accessToken
             : selectAuthState(getState()).refreshToken;
-          await apiService.auth({
-            payload: {
-              authorization: token || ''
+
+          try {
+            await apiService.auth({
+              payload: {
+                authorization: token || ''
+              }
+            });
+          } catch (errMessage) {
+            console.log('auth: ', errMessage);
+
+            if (errorSubscription) {
+              errorSubscription.unsubscribe();
+              errorSubscription = undefined;
+            } // todo
+
+            // IPubSubMessage<TGdmnReceivedErrorMeta>
+            if (errMessage.meta && errMessage.meta.code && errMessage.meta.code === TGdmnErrorCodes.UNAUTHORIZED) {
+              dispatch(authActions.signOut());
+            } else {
+              dispatch(rootActions.onError(new Error(errMessage.meta ? errMessage.meta.message : errMessage)));
             }
-          });
+          }
         } else {
           dispatch(authActions.signOut());
         }
-        // todo dispatch onAuthSuccess
+
+        errorSubscription = apiService.errorMessageObservable.pipe(first()).subscribe(errMessage => {
+          //  IPubSubMessage<TGdmnReceivedErrorMeta>
+          if (errMessage.meta && !!errMessage.meta.code && errMessage.meta!.code === TGdmnErrorCodes.UNAUTHORIZED) {
+            dispatch(authActions.signOut());
+          } else {
+            //  fixme: duplication after auth error
+            dispatch(
+              rootActions.onError(
+                new Error(
+                  errMessage.meta && errMessage.meta!.message ? errMessage.meta!.message : JSON.stringify(errMessage)
+                )
+              )
+            );
+
+            // todo: if INTERNAL -> reconnect
+
+            // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));
+          }
+        });
 
         break;
       case getType(gdmnActions.apiDisconnect):
-        if (!!errorSubscription) errorSubscription.unsubscribe();
+        if (!!errorSubscription) {
+          errorSubscription.unsubscribe();
+          errorSubscription = undefined;
+        }
 
         apiService.signOut({ payload: null });
 
@@ -57,20 +88,12 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       case getType(gdmnActions.apiDeleteAccount): {
-        // try {
-
         const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
         const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
         if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
           const token = Auth.isFreshToken(accessTokenPayload)
             ? selectAuthState(getState()).accessToken
             : selectAuthState(getState()).refreshToken;
-
-          // await apiService.auth({
-          //   payload: {
-          //     authorization: token || ''
-          //   }
-          // });
 
           try {
             await apiService.deleteAccount({
@@ -79,22 +102,16 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
                 'delete-user': 1
               }
             });
-          } catch (value) {
-            // todo tmp
-            if (value.meta && value.meta.code && value.meta.code === TGdmnErrorCodes.UNAUTHORIZED) {
-              // todo tmp
+          } catch (errMessage) {
+            if (errMessage.meta && errMessage.meta.code && errMessage.meta.code === TGdmnErrorCodes.UNAUTHORIZED) {
               dispatch(authActions.signOut());
             } else {
-              dispatch(rootActions.onError(value));
+              dispatch(rootActions.onError(new Error(errMessage.meta ? errMessage.meta.message : errMessage)));
             }
           }
         } else {
           dispatch(authActions.signOut());
         }
-
-        // } catch(e) {
-        //   console.log(e)
-        // }
 
         break;
       }

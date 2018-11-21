@@ -29,15 +29,4 @@ const authActions = {
 
 type TAuthActions = ActionType<typeof authActions>;
 
-// actions.signInRequestError = (error: Error) => ({
-//   type: 'auth/SIGN_IN_REQUEST_ERROR',
-//   payload: error,
-//   error: true
-// });
-// actions.signUpRequestError = (error: Error) => ({
-//   type: 'auth/SIGN_UP_REQUEST_ERROR',
-//   payload: error,
-//   error: true
-// });
-
 export { authActions, TAuthActions };

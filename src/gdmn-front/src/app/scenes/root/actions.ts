@@ -23,6 +23,4 @@ const rootActions = {
 
 type TRootActions = ActionType<typeof rootActions>;
 
-// rootActions.onError = (error: Error, meta?: any) => ({ type: 'ON_ERROR', payload: error, error: true, meta });
-
 export { rootActions, TRootActions };

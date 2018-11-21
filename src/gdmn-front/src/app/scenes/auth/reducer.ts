@@ -2,7 +2,6 @@ import { getType } from 'typesafe-actions';
 import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 
 import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
-import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 
 interface IAuthState {
   authenticated: boolean; // todo: selector

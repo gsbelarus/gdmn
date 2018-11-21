@@ -50,15 +50,16 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     ]
   },
   output: {
-    publicPath: '/'//'/gs/ng/' // TODO test
+    publicPath: '/' //'/gs/ng/' // TODO test
   },
   optimization: {
     // minimize: true,
     minimizer: [
-      new TerserPlugin({ // todo
+      new TerserPlugin({
+        // todo
         cache: true,
         parallel: true
-      //   // sourceMap: true
+        //   // sourceMap: true
       })
       // new OptimizeCSSAssetsPlugin({})
     ]

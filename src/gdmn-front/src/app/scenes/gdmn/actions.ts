@@ -1,6 +1,5 @@
 import { ActionType, createAction } from 'typesafe-actions';
-
-// import { IWsMessageEventData } from '@core/@gdmn-api/ws/IWsMessageEventData';
+import { TPingTaskCmd } from '@gdmn/server-api';
 
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
@@ -12,16 +11,9 @@ const gdmnActions = {
     return () => resolve();
   }),
   apiPing: createAction('gdmn/API_PING', resolve => {
-    // TODO tmp
-    return (cmd: any) => resolve(cmd);
+    return (cmd: TPingTaskCmd) => resolve(cmd);
   }),
   apiDeleteAccount: createAction('gdmn/API_DELETE_ACCOUNT', resolve => {
-    // TODO tmp
-    return () => resolve();
-  }),
-
-  stompLog: createAction('gdmn/STOMP_LOG', resolve => {
-    // TODO tmp
     return () => resolve();
   })
 };

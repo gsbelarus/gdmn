@@ -102,12 +102,6 @@ class GdmnPubSubApi {
     ) {
       console.log('AUTH');
 
-      this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
-        TGdmnTopic.TASK,
-        {
-          ack: 'client-individual'
-        }
-      );
       this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
         TGdmnTopic.TASK_PROGRESS
       );
@@ -115,21 +109,24 @@ class GdmnPubSubApi {
       this.taskStatusResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
         TGdmnTopic.TASK_STATUS
       );
-
-      // setTimeout(()=>{
-
-      console.log('SUBSCRIBE');
-      // todo: tmp
-
-      this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
-        console.log('taskActionResult')
+      this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+        TGdmnTopic.TASK,
+        {
+          ack: 'client-individual'
+        }
       );
 
+      console.log('SUBSCRIBE');
+
+      // todo: НЕ УДАЛЯТЬ!
       this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
         console.log('taskProgressResult')
       );
       this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
         console.log('taskStatusResult')
+      );
+      this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
+        console.log('taskActionResult')
       );
 
       return empty().toPromise();
@@ -161,10 +158,10 @@ class GdmnPubSubApi {
             // error
           };
         }),
-        catchError((errMessage: IPubSubMessage<TGdmnReceivedErrorMeta>) => {
-          // todo: IGdmnMessageError
-          return throwError(errMessage.meta ? new Error(errMessage.meta.message) : errMessage);
-        }),
+        // catchError((errMessage: IPubSubMessage<TGdmnReceivedErrorMeta>) => {
+        //   // todo: IGdmnMessageError
+        //   return throwError(errMessage.meta ? new Error(errMessage.meta.message) : errMessage);
+        // }),
         first()
       )
       .toPromise()
@@ -178,19 +175,13 @@ class GdmnPubSubApi {
         this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
           TGdmnTopic.TASK_PROGRESS
         );
-
         this.taskStatusResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
           TGdmnTopic.TASK_STATUS
         );
 
-        // setTimeout(()=>{
-
         console.log('SUBSCRIBE');
-        // todo: tmp
 
-        this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
-          console.log('taskActionResult')
-        );
+        // todo: НЕ УДАЛЯТЬ!
 
         this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
           console.log('taskProgressResult')
@@ -198,34 +189,28 @@ class GdmnPubSubApi {
         this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
           console.log('taskStatusResult')
         );
-        // }, 10000);
+        this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
+          console.log('taskActionResult')
+        );
 
         return result;
       });
   }
 
   public async signOut(cmd: TSignOutCmd): Promise<TSignOutCmdResult> {
-    // todo tmp
-    // this.taskActionResultSubscription!.unsubscribe();
-    // this.taskProgressResultSubscription!.unsubscribe();
-    // this.taskStatusResultSubscription!.unsubscribe();
-
     this.pubSubClient.connectionStatusObservable
       .pipe(
         filter(value => value === TPubSubConnectStatus.DISCONNECTING),
         first()
       )
       .subscribe(() => {
-        console.log('signOut: DISCONNECTING sub');
-
         if (!!this.taskActionResultSubscription) {
-          this.taskActionResultSubscription!.unsubscribe();
-          this.taskProgressResultSubscription!.unsubscribe();
           this.taskStatusResultSubscription!.unsubscribe();
+          this.taskProgressResultSubscription!.unsubscribe();
+          this.taskActionResultSubscription!.unsubscribe();
         }
       });
 
-    console.log('cmd.payload', cmd.payload);
     this.pubSubClient.disconnect();
 
     return await this.pubSubClient.connectionDisconnectedObservable
@@ -235,19 +220,7 @@ class GdmnPubSubApi {
         })),
         first()
       )
-      .toPromise()
-      .then(result => {
-        // todo tmp
-        // this.taskActionResultObservable = undefined;
-        // this.taskProgressResultObservable = undefined;
-        // this.taskStatusResultObservable = undefined;
-
-        // this.taskActionResultSubscription!.unsubscribe();
-        // this.taskProgressResultSubscription!.unsubscribe();
-        // this.taskStatusResultSubscription!.unsubscribe();
-
-        return result;
-      });
+      .toPromise();
   }
 
   public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {
@@ -279,19 +252,6 @@ class GdmnPubSubApi {
   }
 
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {
-    // const sessionSubscription = this.pubSubClient.connectedMessageObservable
-    //   .pipe(
-    //     map<IPubSubMessage, string | undefined>(
-    //       connectedMessage => (connectedMessage.meta ? connectedMessage.meta['session'] : undefined) // todo: session key
-    //     ),
-    //     distinctUntilChanged()
-    //   )
-    //   .subscribe(session => {
-    //     console.log('session: ' + session);
-    //
-    //     // this.pubSubClient.reconnectMeta = { 'session': session, ...this.pubSubClient.reconnectMeta }; // todo: session key
-    //   });
-
     this.pubSubClient.connect(<any>cmd.payload); // fixme: type
 
     return await this.pubSubClient.connectedMessageObservable
@@ -317,11 +277,10 @@ class GdmnPubSubApi {
             // error
           };
         }),
-        catchError((errMessage: IPubSubMessage<TGdmnReceivedErrorMeta>) => {
-          // todo: IGdmnMessageError
-          return throwError(errMessage.meta ? new Error(errMessage.meta.message) : errMessage);
-        }),
-        // finalize(() => sessionSubscription.unsubscribe()),
+        // catchError((errMessage: IPubSubMessage<TGdmnReceivedErrorMeta>) => {
+        //   // todo: IGdmnMessageError
+        //   return throwError(errMessage.meta ? new Error(errMessage.meta.message) : errMessage);
+        // }),
         first()
       )
       .toPromise();
@@ -449,7 +408,5 @@ class GdmnPubSubApi {
     // todo publishing status
   }
 }
-
-// todo stop sub
 
 export { GdmnPubSubApi };

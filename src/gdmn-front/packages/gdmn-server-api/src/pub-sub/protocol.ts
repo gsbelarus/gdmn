@@ -53,7 +53,7 @@ type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTyp
 // receive
 type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
 
-interface IReceivedErrorMeta<TErrorCodes extends number> {
+interface IReceivedErrorMeta<TErrorCodes extends string> {
   code: TErrorCodes;
   message: string; // todo: tmp
 }

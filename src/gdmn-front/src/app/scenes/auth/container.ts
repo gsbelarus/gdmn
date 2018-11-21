@@ -1,7 +1,7 @@
 import { compose, withProps } from 'recompose';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form';
-import { IAccessTokenPayload, IRefreshTokenPayload, TUserRoleType } from '@gdmn/server-api';
+import { IAccessTokenPayload, IRefreshTokenPayload, TGdmnErrorCodes, TUserRoleType } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 
 import { IState } from '@src/app/store/reducer';
@@ -29,7 +29,6 @@ const getSignInFormContainer = (apiService: GdmnPubSubApi) =>
           try {
             const response: any = await apiService.signIn({
               payload: {
-                // 'app-uid'
                 'create-user': 0,
                 login: formData.username || '',
                 passcode: formData.password || ''
@@ -48,9 +47,11 @@ const getSignInFormContainer = (apiService: GdmnPubSubApi) =>
                 refreshToken: response.payload['refresh-token'] || ''
               })
             );
-          } catch (error) {
-            console.log('[GDMN] ', error);
-            dispatch(authActions.signInAsync.failure(error));
+          } catch (errMessage) {
+            console.log('[GDMN] ', errMessage);
+            dispatch(
+              authActions.signInAsync.failure(new Error(errMessage.meta ? errMessage.meta.message : errMessage))
+            );
           }
         }
       })
@@ -73,7 +74,6 @@ const getSignUpFormContainer = (apiService: GdmnPubSubApi) =>
           try {
             const response = await apiService.signUp({
               payload: {
-                // 'app-uid'
                 'create-user': 1,
                 login: formData.username || '',
                 passcode: formData.password || ''
@@ -92,9 +92,11 @@ const getSignUpFormContainer = (apiService: GdmnPubSubApi) =>
                 refreshToken: response.payload['refresh-token'] || ''
               })
             );
-          } catch (error) {
-            console.log('[GDMN] ', error);
-            dispatch(authActions.signUpAsync.failure(error));
+          } catch (errMessage) {
+            console.log('[GDMN] ', errMessage);
+            dispatch(
+              authActions.signUpAsync.failure(new Error(errMessage.meta ? errMessage.meta.message : errMessage))
+            );
           }
         }
       })

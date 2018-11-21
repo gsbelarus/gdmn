@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Button, TextField } from '@material-ui/core';
-import { TTaskActionNames } from '@gdmn/server-api';
+import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
 interface IStompDemoViewState {
   pingDelay: number;
@@ -9,7 +9,7 @@ interface IStompDemoViewState {
 
 interface IStompDemoViewProps {
   log: string;
-  apiPing: (command: any) => void;
+  apiPing: (cmd: TPingTaskCmd) => void;
 }
 
 class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewState> {
@@ -57,8 +57,8 @@ class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewSta
           delay: this.state.pingDelay,
           steps: this.state.pingSteps
         }
-      } as any // fixme: type
-    });
+      }
+    } as any); // fixme: type
   };
 
   private handlePingDelayChange = (event: any) => {
