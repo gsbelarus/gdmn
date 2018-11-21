@@ -257,14 +257,14 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
       </div>
       <div className="SyntaxTokens">
         {
-          tokens.map( t =>
-            <div>
+          tokens.map( (t, idx) =>
+            <div key={idx}>
               <div className={`Token${t.tokenType.name}`}>
-                {t.image.split('').map( ch => ch === ' ' ? <span>&nbsp;</span> : ch)}
+                {t.image.split('').map( (ch, idx) => ch === ' ' ? <span key={idx}>&nbsp;</span> : ch)}
               </div>
               {
                 t.tokenType === CyrillicWord ? morphAnalyzer(t.image).map( w =>
-                  <div>
+                  <div key={w.getSignature()}>
                     {w.getSignature()}
                   </div>)
                 :
