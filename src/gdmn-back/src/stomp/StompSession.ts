@@ -572,7 +572,10 @@ export class StompSession implements StompClientCommandListener {
 
   protected _try(callback: () => Promise<void> | void, requestHeaders: StompHeaders): void {
     try {
-      Promise.resolve(callback()).catch((error) => this._catch(error, requestHeaders));
+      const result = callback();
+      if (result instanceof Promise) {
+        result.catch((error) => this._catch(error, requestHeaders));
+      }
     } catch (error) {
       this._catch(error, requestHeaders);
     }
