@@ -94,7 +94,7 @@ export abstract class ADatabase {
       throw new Error("Database already created");
     }
 
-    this._updateStatus(DBStatus.CONNECTING);
+    this._updateStatus(DBStatus.CREATING);
 
     const {driver, connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
     try {
