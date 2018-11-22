@@ -2,9 +2,8 @@ import React, { ReactType } from 'react';
 import ReactDOM from 'react-dom';
 import { Redirect, Route, Switch } from 'react-router-dom';
 
-import { RouteAccessLevelType, I18n, Auth, WebStorage, WebStorageType } from '@gdmn/client-core';
+import { RouteAccessLevelType } from '@gdmn/client-core';
 
-import theme from '@src/styles/muiTheme';
 import { getStore } from '@src/app/store/store';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
@@ -77,7 +76,7 @@ async function start() {
 initializeIcons();
 
 function render(Root: ReactType) {
-  const rootComponent = <Root store={store} persistor={persistor} routes={rootRoutes} theme={theme} />;
+  const rootComponent = <Root store={store} persistor={persistor} routes={rootRoutes} />;
 
   ReactDOM.render(rootComponent, document.getElementById(domContainerNode));
 }

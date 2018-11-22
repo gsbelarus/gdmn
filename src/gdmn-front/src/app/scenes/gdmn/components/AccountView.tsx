@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react';
-import { Button } from '@material-ui/core';
+import { Button } from 'office-ui-fabric-react';
 
-interface IAccountViewProps {
+export interface IAccountViewProps {
   apiDeleteAccount: () => void;
-}
+};
 
-class AccountView extends PureComponent<IAccountViewProps> {
+export class AccountView extends PureComponent<IAccountViewProps> {
   private handleDeleteAccount = () => {
     this.props.apiDeleteAccount();
   };
@@ -13,12 +13,8 @@ class AccountView extends PureComponent<IAccountViewProps> {
   public render() {
     return (
       <div>
-        <Button style={{ marginRight: 18 }} variant="contained" size="small" onClick={this.handleDeleteAccount}>
-          DELETE ACCOUNT
-        </Button>
+        <Button onClick={this.handleDeleteAccount} text="DELETE ACCOUNT" />
       </div>
     );
   }
-}
-
-export { AccountView, IAccountViewProps };
+};

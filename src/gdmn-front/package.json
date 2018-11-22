@@ -20,8 +20,6 @@
     "yarn:reinstall": "yarn run yarn:clean && yarn"
   },
   "dependencies": {
-    "@material-ui/core": "1.4.3",
-    "@material-ui/icons": "2.0.1",
     "@stomp/stompjs": "5.0.0",
     "es6-error": "4.1.1",
     "gdmn-nlp-agent": "1.0.0",

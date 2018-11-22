@@ -22,7 +22,6 @@ export class SignUpForm extends React.Component<ISignUpFormProps> {
     return (
       <Form onSubmit={handleSubmit((values: Partial<ISignUpFormData>) => onSubmit(values))}>
         <Field name="username" component={TextField as any} label="Пользователь" validate={requireValidator} />
-        {/*<Field name="email" component={TextField as any} label="Email" validate={[requiredValidate, emailValidate]} />*/}
         <Field
           name="password"
           component={PasswordField as any}

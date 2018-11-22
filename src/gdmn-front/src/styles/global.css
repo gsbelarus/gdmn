@@ -4,11 +4,6 @@
 
 /*@import url("https://fonts.googleapis.com/css?family=Open+Sans");*/
 
-/* Material UI: Roboto */
-@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500&subset=cyrillic-ext');
-/* Material UI: Material Icons */
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-
 /*************************************************
  * RESET & NORMALIZE
  *************************************************/
@@ -18,8 +13,6 @@
 /*************************************************
  * VARIABLES
  *************************************************/
-
-@import "_mui-theme.css";
 
 /*************************************************
  * BASE
@@ -57,15 +50,12 @@ i {
   font-style: initial;
 }
 
-
 .dropzone {
   width: 100%;
   background-color: rgb(241, 243, 244);
   cursor: pointer;
 }
-.dropzone:hover * {
-  /*color: var(--palette-text-secondary) !important;*/
-}
+
 .dropzone:hover {
   background-color: var(--palette-action-hover);
 }
