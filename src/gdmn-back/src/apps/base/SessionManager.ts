@@ -39,7 +39,8 @@ export class SessionManager {
       connection: await this._erModel.createConnection(),
       logger: this._logger
     });
-    session.emitter.on("change", (s) => {
+
+    const callback = (s: Session) => {
       this.emitter.emit("change", s);
 
       switch (s.status) {
@@ -52,14 +53,16 @@ export class SessionManager {
           this._sessions.splice(this._sessions.indexOf(s), 1);
           break;
         case SessionStatus.FORCE_CLOSED:
+          s.emitter.removeListener("change", callback);
           break;
         default:
           throw new Error("Unknown session status");
       }
-    });
+    };
+    session.emitter.on("change", callback);
+
     this._sessions.push(session);
-    // TODO
-    // this.emitter.emit("change", session);
+    this.emitter.emit("change", session);
 
     this.syncTasks();
     return session;

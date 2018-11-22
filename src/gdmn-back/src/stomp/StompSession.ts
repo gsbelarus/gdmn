@@ -403,6 +403,7 @@ export class StompSession implements StompClientCommandListener {
           const action = headers.action as Actions;
           const bodyObj = JSON.parse(body || "{}");
 
+          // TODO remove task-id from receipt; use command.id
           switch (action) {
             // ------------------------------For MainApplication
             case "DELETE_APP": {
