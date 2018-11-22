@@ -186,10 +186,10 @@ export class StompSession implements StompClientCommandListener {
         login,
         passcode,
         authorization,
-        "app-uid": appUid,
         "create-user": isCreateUser,
         "delete-user": isDeleteUser
       } = headers;
+      let {"app-uid": appUid} = headers;
 
       let result: {
         userKey: number,
@@ -253,6 +253,12 @@ export class StompSession implements StompClientCommandListener {
 
       } else {
         throw new ServerError(ErrorCode.UNAUTHORIZED, "Incorrect headers");
+      }
+
+      // TODO tmp - remove
+      const appsInfo = await this.mainApplication.getUserApplicationsInfo(result.userKey);
+      if (appsInfo.length) {
+        appUid = appsInfo[0].uid;
       }
 
       if (appUid) {

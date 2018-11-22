@@ -31,6 +31,7 @@ export interface IUser {
   id: number;
   login: string;
   passwordHash: string;
+  creationDate: Date;
   salt: string;
   admin: boolean;
 }
@@ -300,6 +301,13 @@ export class MainApplication extends Application {
     return application;
   }
 
+  public async getUserApplicationsInfo(userKey: number): Promise<IUserApplicationInfo[]> {
+    return await this.executeConnection((connection) => AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
+    }));
+  }
+
   public async addUser(user: ICreateUser): Promise<IUser> {
     return await this.executeConnection((connection) => AConnection.executeTransaction({
       connection,
@@ -410,6 +418,10 @@ export class MainApplication extends Application {
         await userEntity.create(new BlobAttribute({
           name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
         }), connection, transaction);
+        await userEntity.create(new TimeStampAttribute({
+          name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
+          defaultValue: "CURRENT_TIMESTAMP"
+        }), connection, transaction);
         await userEntity.create(new BooleanAttribute({
           name: "IS_ADMIN", lName: {ru: {name: "Пользователь - администратор"}}
         }), connection, transaction);
@@ -460,27 +472,6 @@ export class MainApplication extends Application {
         }));
 
         await userEntity.create(appSet, connection, transaction);
-
-        // APPLICATION_BACKUPS
-        const backupEntity = await this.erModel.create(new Entity({
-          name: "APPLICATION_BACKUPS", lName: {ru: {name: "Резервная копия"}}
-        }), connection, transaction);
-        const backupUid = new StringAttribute({
-          name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
-        });
-        await backupEntity.create(backupUid, connection, transaction);
-        await backupEntity.addAttrUnique([backupUid], connection, transaction);
-
-        await backupEntity.create(new EntityAttribute({
-          name: "APP", lName: {ru: {name: "Приложение"}}, required: true, entities: [appEntity]
-        }), connection, transaction);
-        await backupEntity.create(new TimeStampAttribute({
-          name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
-          defaultValue: "CURRENT_TIMESTAMP"
-        }), connection, transaction);
-        await backupEntity.create(new StringAttribute({
-          name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-        }), connection, transaction);
 
         await transaction.commit();
       } catch (error) {
@@ -604,7 +595,7 @@ export class MainApplication extends Application {
     const result = await connection.executeReturning(transaction, `
       INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN)
       VALUES (:login, :passwordHash, :salt, :isAdmin)
-             RETURNING ID, LOGIN, PASSWORD_HASH, SALT, IS_ADMIN
+             RETURNING ID, LOGIN, PASSWORD_HASH, SALT, CREATIONDATE, IS_ADMIN
     `, {
       login: user.login,
       passwordHash: Buffer.from(passwordHash),
@@ -616,6 +607,7 @@ export class MainApplication extends Application {
       login: result.getString("LOGIN"),
       passwordHash: await result.getBlob("PASSWORD_HASH").asString(),
       salt: await result.getBlob("SALT").asString(),
+      creationDate: result.getDate("CREATIONDATE")!,
       admin: result.getBoolean("IS_ADMIN")
     };
   }
@@ -658,6 +650,7 @@ export class MainApplication extends Application {
             login: resultSet.getString("LOGIN"),
             passwordHash: await resultSet.getBlob("PASSWORD_HASH").asString(),
             salt: await resultSet.getBlob("SALT").asString(),
+            creationDate: resultSet.getDate("CREATIONDATE")!,
             admin: resultSet.getBoolean("IS_ADMIN")
           };
         }
