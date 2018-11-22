@@ -1,27 +1,32 @@
 import React from 'react';
 import { Field, Form, InjectedFormProps } from 'redux-form';
 import CSSModules from 'react-css-modules';
-import { Button } from '@material-ui/core';
-import { PasswordField, TextField, requireValidator } from '@gdmn/client-core';
+import { TextField, requireValidator, PasswordField } from '@gdmn/client-core';
+import { PrimaryButton } from "office-ui-fabric-react";
 
 import styles from './SignInForm.css';
 
-interface ISignInFormProps extends InjectedFormProps<ISignInFormData> {
+export interface ISignInFormProps extends InjectedFormProps<ISignInFormData> {
   onSubmit: (values: Partial<ISignInFormData>) => void;
-}
+};
 
-interface ISignInFormData {
+export interface ISignInFormData {
   username: string;
   password: string;
-}
+};
 
 @CSSModules(styles)
-class SignInForm extends React.Component<ISignInFormProps> {
+export class SignInForm extends React.Component<ISignInFormProps> {
   public render(): JSX.Element {
     const { handleSubmit, onSubmit, pristine, submitting, initialized } = this.props;
     return (
       <Form onSubmit={handleSubmit((values: Partial<ISignInFormData>) => onSubmit(values))}>
-        <Field name="username" component={TextField as any} label="Пользователь" validate={requireValidator} />
+        <Field
+          name="username"
+          component={TextField as any}
+          label="Пользователь"
+          validate={requireValidator}
+        />
         <Field
           name="password"
           component={PasswordField as any}
@@ -30,13 +35,13 @@ class SignInForm extends React.Component<ISignInFormProps> {
           validate={requireValidator}
         />
         <div styleName="form-actions">
-          <Button variant="raised" color="secondary" disabled={(!initialized && pristine) || submitting} type="submit">
-            <span>Войти</span>
-          </Button>
+          <PrimaryButton
+            disabled={(!initialized && pristine) || submitting}
+            type="submit"
+            text="Войти"
+          />
         </div>
       </Form>
     );
   }
-}
-
-export { SignInForm, ISignInFormProps, ISignInFormData };
+};

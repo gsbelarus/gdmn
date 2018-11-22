@@ -10,6 +10,7 @@ export * from './components/TextSkeleton';
 export * from './components/withEmpty';
 export * from './components/withForwardRef';
 export * from './components/withStyles';
+export * from './components/LinkCommandBarButton';
 export * from './errors/FetchError';
 export * from './errors/httpErrors';
 export * from './errors/HttpStatusError';

@@ -1,9 +1,9 @@
 import React, { ReactType, Fragment } from 'react';
 import CSSModules from 'react-css-modules';
-import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
-import { Paper, LinearProgress, Typography, Tab, Tabs } from '@material-ui/core';
-
+import { Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
+import { ProgressIndicator, Label, CommandBar, ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 import styles from './styles.css';
+import { LinkCommandBarButton } from '@gdmn/client-core';
 
 interface IAuthViewStateProps {
   signInFormSubmitting: boolean;
@@ -30,20 +30,20 @@ class AuthView extends React.Component<IAuthViewProps> {
     const { signInFormSubmitting, renderSignInFormContainer: SignInFormContainer } = this.props;
 
     return (
-      <Paper styleName="auth-card row-flex">
+      <div styleName="auth-card row-flex">
         <div styleName="col auth-card-description-box" />
         <div styleName="col" style={{ marginTop: 5 }}>
-          {signInFormSubmitting && <LinearProgress style={{ marginTop: -5 }} />}
+          {signInFormSubmitting && <ProgressIndicator />}
 
           <div styleName="auth-card-content">
-            <Typography variant="headline">{'Вход'}</Typography>
-            <Typography variant="body1">{'Используйте аккаунт Гедымин'}</Typography>
+            <Label>{'Вход'}</Label>
+            <Label>{'Используйте аккаунт Гедымин'}</Label>
             <div style={{ paddingTop: '10px' }}>
               <SignInFormContainer />
             </div>
           </div>
         </div>
-      </Paper>
+      </div>
     );
   }
 
@@ -53,20 +53,20 @@ class AuthView extends React.Component<IAuthViewProps> {
     const { signUpFormSubmitting, renderSignUpFormContainer: SignUpFormContainer } = this.props;
 
     return (
-      <Paper styleName="auth-card row-flex">
+      <div styleName="auth-card row-flex">
         <div styleName="col auth-card-description-box" />
         <div styleName="col" style={{ marginTop: 5 }}>
-          {signUpFormSubmitting && <LinearProgress style={{ marginTop: -5 }} />}
+          {signUpFormSubmitting && <ProgressIndicator />}
 
           <div styleName="auth-card-content">
-            <Typography variant="headline">{'Регистрация'}</Typography>
-            <Typography variant="body1">{'Создание аккаунта Гедымин'}</Typography>
+            <Label>{'Регистрация'}</Label>
+            <Label>{'Создание аккаунта Гедымин'}</Label>
             <div style={{ paddingTop: '10px' }}>
               <SignUpFormContainer />
             </div>
           </div>
         </div>
-      </Paper>
+      </div>
     );
   }
 
@@ -74,23 +74,14 @@ class AuthView extends React.Component<IAuthViewProps> {
 
   public render(): JSX.Element {
     const { match } = this.props;
+    // value={location.pathname.indexOf(`${match.url}/signIn`) !== -1 ? 0 : 1 /* todo: tmp*/}
     return (
       <Fragment>
-        <Paper>
-          <Tabs
-            value={location.pathname.indexOf(`${match.url}/signIn`) !== -1 ? 0 : 1 /* todo: tmp*/}
-            indicatorColor="primary"
-            textColor="primary"
-            centered={true}
-          >
-            <Link to={`${match.url}/signIn`}>
-              <Tab label="Вход" />
-            </Link>
-            <Link to={`${match.url}/signUp`}>
-              <Tab label="Регистрация" />
-            </Link>
-          </Tabs>
-        </Paper>
+        <div>
+          <CommandBar
+            items={this.getItems()}
+          />
+        </div>
         <Switch>
           <Redirect exact={true} from={`${match.path}/`} to={`${match.path}/signIn`} />
           <Route path={`${match.path}/signIn`} component={this.renderSignInView} />
@@ -99,6 +90,26 @@ class AuthView extends React.Component<IAuthViewProps> {
         </Switch>
       </Fragment>
     );
+  }
+
+  private getItems = (): ICommandBarItemProps[] => {
+    const { match } = this.props;
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
+
+    return [
+      {
+        key: 'signIn',
+        text: 'Вход',
+        commandBarButtonAs: btn(`${match.url}/signIn`)
+      },
+      {
+        key: 'signUp',
+        text: 'Регистрация',
+        commandBarButtonAs: btn(`${match.url}/signUp`)
+      }
+    ];
   }
 }
 

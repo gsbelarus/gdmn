@@ -11,6 +11,7 @@ import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteConta
 import { getAuthContainer } from '@src/app/scenes/auth/container';
 import { RootContainer } from '@src/app/scenes/root/container';
 import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
+import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 
 import config from 'config.json';
 
@@ -72,6 +73,8 @@ async function start() {
     // todo: i18nInit()
   ]);
 }
+
+initializeIcons();
 
 function render(Root: ReactType) {
   const rootComponent = <Root store={store} persistor={persistor} routes={rootRoutes} theme={theme} />;

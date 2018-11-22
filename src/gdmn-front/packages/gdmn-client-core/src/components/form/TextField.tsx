@@ -1,11 +1,10 @@
 import { compose, mapProps, setDisplayName } from 'recompose';
-import { TextField as TextInput } from '@material-ui/core';
+import { TextField as TextInput } from 'office-ui-fabric-react';
 
 // TODO types
 
 function fieldPropsMapper({ input: { name, value, onChange }, meta: { touched, error }, ...customProps }: any) {
   return {
-    style: { marginTop: '10px' },
     fullWidth: true,
     error: touched && !!error,
     helperText: touched && !!error ? error : null,
