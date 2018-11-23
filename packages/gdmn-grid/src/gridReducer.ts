@@ -77,7 +77,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         let newCurrentCol = componentState.currentCol;
         let insertIdx = 0;
         groupFields.forEach( gf => {
-          const found = newColumns.findIndex( c => c.fields[0].fieldName === gf.fieldName );
+          const found = newColumns.findIndex( c => c.fields.some( f => f.fieldName === gf.fieldName ) );
           if (found >= 0) {
             if (found !== insertIdx) {
               newColumns.splice(insertIdx, 0, newColumns.splice(found, 1)[0]);
