@@ -8,6 +8,7 @@ import { Rect } from "./Rect";
 import { Edge } from "./Edge";
 import { predefinedPhrases } from "./phrases";
 import { ICommand } from 'gdmn-nlp-agent';
+import { isMorphToken, IMorphToken } from "gdmn-nlp";
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -72,6 +73,13 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
               <div key={idx}>
                 <div className={this._getColor(s[0])}>
                   {s[0].image}
+                  {
+                    isMorphToken(s[0]) && (s[0] as IMorphToken).hsm ?
+                      <sup>
+                        {(s[0] as IMorphToken).hsm.map( h => h[0] && <span>{h[0].word}</span> )}
+                      </sup>
+                    : undefined
+                  }
                 </div>
                 {
                   s.map( (w, wi) => (

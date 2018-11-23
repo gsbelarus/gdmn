@@ -2,8 +2,10 @@ import { AnyWord } from '../morphology/morphology';
 import { CyrillicWord, tokenize, Comma } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
 import { morphTokens } from './rusMorphTokens';
-import { IMorphToken } from './types';
+import { IMorphToken, isMorphToken } from './types';
 import { IToken } from 'chevrotain';
+import { RusNoun } from '../morphology/rusNoun';
+import { RusConjunction } from '../morphology/rusConjunction';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -47,6 +49,90 @@ export function combinatorialMorph(text: string): IToken[][]
       return p;
     },
     [] as IToken[][]);
+
+  /**
+   * Найдем однородные существительные
+   */
+
+  let startIdx = 0;
+  while (startIdx < parts.length) {
+
+    let firstParts = [...parts[startIdx]];
+    const firstToken = firstParts[0];
+
+    if (!isMorphToken(firstToken) || !(firstToken.word instanceof RusNoun)) {
+      startIdx++;
+    } else {
+      let endIdx = startIdx + 1;
+      let found = false;
+      let wasConj = false;
+
+      while (endIdx < parts.length) {
+        const lastToken = parts[endIdx][0];
+
+        if (!isMorphToken(lastToken)) {
+          break;
+        }
+
+        if (lastToken.word instanceof RusConjunction) {
+          if (wasConj) {
+            break;
+          } else {
+            wasConj = true;
+            endIdx++;
+            continue;
+          }
+        }
+
+        wasConj = false;
+
+        if (!(lastToken.word instanceof RusNoun)) {
+          break;
+        }
+
+        const intersect = parts[endIdx].filter(
+          p => firstParts.some(
+            fp => isMorphToken(fp) && fp.word instanceof RusNoun && isMorphToken(p)
+              && p.word instanceof RusNoun && p.word.grammCase === fp.word.grammCase
+          )
+        );
+
+        if (!intersect.length) {
+          break;
+        }
+
+        found = true;
+
+        firstParts = firstParts.filter(
+          p => intersect.some(
+            fp => isMorphToken(fp) && fp.word instanceof RusNoun && isMorphToken(p)
+              && p.word instanceof RusNoun && p.word.grammCase === fp.word.grammCase
+          )
+        );
+
+        endIdx++;
+      }
+
+      if (found && firstParts.length) {
+        endIdx--;
+
+        if (wasConj) {
+          endIdx--;
+        }
+
+        const cnt = endIdx - startIdx + 1;
+
+        if (cnt >= 2) {
+          const hsm = parts.splice(startIdx + 1, cnt - 1).map(
+            p => p.reduce( (prev, w) => isMorphToken(w) ? [...prev, w.word] : prev, [] as AnyWord[] )
+          );
+          parts[startIdx] = firstParts.map( p => isMorphToken(p) ? {...p, hsm} : p );
+        }
+      }
+
+      startIdx++;
+    }
+  }
 
   const cmbn: IToken[][] = [];
 
