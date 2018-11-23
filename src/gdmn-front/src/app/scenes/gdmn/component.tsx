@@ -68,7 +68,7 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
   }
 
   private getItems = (): ICommandBarItemProps[] => {
-    const { match, signOut } = this.props;
+    const { erModel, match, signOut, apiGetSchema } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -88,6 +88,11 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
         key: 'Logout',
         text: 'Logout',
         onClick: signOut
+      },
+      {
+        key: 'GetERModel',
+        text: Object.keys(erModel.entities).length ? `Reload ERModel (${Object.keys(erModel.entities).length})` : `Load ERModel`,
+        onClick: apiGetSchema
       }
     ];
   }
