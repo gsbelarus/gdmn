@@ -20,7 +20,7 @@ import {
   cancelSortDialog,
   applySortDialog,
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TFieldType } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -30,14 +30,59 @@ export type GetGridRef = () => GDMNGrid;
 
 export function connectGrid(name: string, rs: RecordSet, getGridRef: GetGridRef) {
 
-  const columns: IColumn[] = rs.fieldDefs.map( fd => (
-    {
-      name: fd.fieldName,
-      caption: fd.caption || fd.fieldName,
-      fields: [{...fd}]
-    })
-  );
+  let columns: IColumn[];
 
+  if (rs.name === 'currencyMult') {
+    columns = rs.fieldDefs.map( fd => (
+      fd.fieldName === 'Cur_Code' ?
+      {
+        name: fd.fieldName,
+        caption: [fd.caption || fd.fieldName, 'Буквенный код'],
+        fields: [{...fd}, {
+          fieldName: 'Cur_Abbreviation',
+          dataType: TFieldType.String,
+          caption: 'Буквенный код',
+          required: true,
+          size: 3
+        }]
+      } 
+      : fd.fieldName === 'Cur_Name' ?
+      {
+        name: fd.fieldName,
+        caption: [fd.caption || fd.fieldName, 'Назва', 'Name'],
+        fields: [{...fd}, {
+          fieldName: 'Cur_Name_Bel',
+          dataType: TFieldType.String,
+          caption: 'Назва',
+          required: true,
+          size: 60
+        }, 
+        {
+          fieldName: 'Cur_Name_Eng',
+          dataType: TFieldType.String,
+          caption: 'Name',
+          required: true,
+          size: 60
+        }]
+      } 
+      : {
+        name: fd.fieldName,
+        caption: [fd.caption || fd.fieldName],
+        fields: [{...fd}]
+      }
+      )
+    )
+  }
+  else {
+    columns = rs.fieldDefs.map( fd => (
+      {
+        name: fd.fieldName,
+        caption: [fd.caption || fd.fieldName],
+        fields: [{...fd}]
+      })
+    );
+  }
+  
   store.dispatch(createGrid({name}));
 
   store.dispatch(setColumns({
@@ -163,7 +208,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         }
 
         const foundNode = rs.foundNodes![newSearchIdx];
-        const cursorCol = columns.findIndex( c => c.fields[0].fieldName === foundNode.fieldName);
+        const cursorCol = columns.findIndex( c => c.fields.some( f => f.fieldName === foundNode.fieldName ) );
 
         dispatch(setSearchIdx({ name, searchIdx: newSearchIdx }));
         dispatch(setCursorCol({ name, cursorCol }));

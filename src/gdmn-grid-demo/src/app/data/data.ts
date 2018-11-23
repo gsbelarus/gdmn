@@ -11,6 +11,10 @@ export const demoRecordSets: IDemoRecordSet[] = [
     createFunc: loadNBRBCurrencies
   },
   {
+    name: 'currencyMult',
+    createFunc: loadNBRBCurrencies
+  },
+  {
     name: 'rates',
     createFunc: loadNBRBRates
   },

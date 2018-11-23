@@ -1,17 +1,22 @@
-import { RecordSet, TFieldType, getSumAggregator, getAvgAggregator } from "gdmn-recordset";
+import { RecordSet, TFieldType, getSumAggregator, getAvgAggregator, IDataRow } from "gdmn-recordset";
 import { List } from "immutable";
 import { INBRBCurrency } from "../types";
 import nbrbCurrencies from '../../util/nbrbcurrencies.json';
 import { RSCreateFunc } from "./types";
 
-export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc) {
+export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc) {    
     const fieldDefs = [
       {
         fieldName: 'Cur_Abbreviation',
         dataType: TFieldType.String,
         caption: 'Буквенный код',
         required: true,
-        size: 3
+        size: 3,
+        aggregator: {
+          init: () => 'abc',
+          processRow: (row: IDataRow, fieldName: string, acc: string) => acc,
+          getTotal: (acc: string) => acc
+        }
       },
       {
         fieldName: 'Cur_Name',
@@ -39,7 +44,12 @@ export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc) {
         dataType: TFieldType.String,
         caption: 'Цифровой код',
         required: true,
-        size: 3
+        size: 3,
+        aggregator: {
+          init: () => 'hsdfbjh sdhf hf',
+          processRow: (row: IDataRow, fieldName: string, acc: string) => acc,
+          getTotal: (acc: string) => acc
+        }
       },
       {
         fieldName: 'Cur_Name_Bel',
