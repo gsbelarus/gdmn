@@ -70,9 +70,8 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               )
             );
 
-            // todo: test
             if (errMessage.meta && !!errMessage.meta.code && errMessage.meta!.code === TGdmnErrorCodes.INTERNAL) {
-              dispatch(gdmnActions.apiConnect())
+              dispatch(gdmnActions.apiConnect(true));
             }
 
             // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));

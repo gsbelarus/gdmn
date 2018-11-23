@@ -90,16 +90,12 @@ class GdmnPubSubApi {
   }
 
   public async deleteAccount(cmd: TDeleteAccountCmd): Promise<TAuthCmdResult> {
-    return this.auth(cmd);
+    return this.auth(cmd, true);
   }
 
-  public async auth(cmd: TAuthCmd | TDeleteAccountCmd): Promise<TAuthCmdResult> {
+  public async auth(cmd: TAuthCmd | TDeleteAccountCmd, reconnect: boolean = false): Promise<TAuthCmdResult> {
     // todo: tmp
-    if (
-      ((<any>cmd).payload['delete-user'] !== 1 &&
-        this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTED) ||
-      this.pubSubClient.connectionStatusObservable.getValue() == TPubSubConnectStatus.CONNECTING
-    ) {
+    if ((this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTING) && !reconnect) {
       console.log('AUTH');
 
       this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
@@ -182,7 +178,6 @@ class GdmnPubSubApi {
         console.log('SUBSCRIBE');
 
         // todo: НЕ УДАЛЯТЬ!
-
         this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
           console.log('taskProgressResult')
         );

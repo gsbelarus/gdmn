@@ -5,7 +5,7 @@ import { TPingTaskCmd, TGetSchemaTaskCmd } from '@gdmn/server-api';
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
     // TODO async
-    return () => resolve();
+    return (reconnect: boolean = false) => resolve(reconnect);
   }),
   apiDisconnect: createAction('gdmn/API_DISCONNECT', resolve => {
     // TODO async
