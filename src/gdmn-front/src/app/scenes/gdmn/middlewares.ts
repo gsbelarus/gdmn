@@ -1,15 +1,16 @@
-import { Middleware } from 'redux';
-import { getType } from 'typesafe-actions';
+import {Auth} from "@gdmn/client-core";
+import {TGdmnErrorCodes, TTaskActionNames} from "@gdmn/server-api";
+import {authActions} from "@src/app/scenes/auth/actions";
+import {gdmnActions} from "@src/app/scenes/gdmn/actions";
+import {rootActions} from "@src/app/scenes/root/actions";
 
-import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
-import { gdmnActions } from '@src/app/scenes/gdmn/actions';
-import { selectAuthState } from '@src/app/store/selectors';
-import { Auth, IPubSubMessage } from '@gdmn/client-core';
-import { authActions } from '@src/app/scenes/auth/actions';
-import { rootActions } from '@src/app/scenes/root/actions';
-import { Subscription } from 'rxjs';
-import { TGdmnErrorCodes, TGdmnReceivedErrorMeta } from '@gdmn/server-api';
-import { first } from 'rxjs/operators';
+import {GdmnPubSubApi} from "@src/app/services/GdmnPubSubApi";
+import {selectAuthState} from "@src/app/store/selectors";
+import {deserializeERModel} from "gdmn-orm";
+import {Middleware} from "redux";
+import {Subscription} from "rxjs";
+import {first} from "rxjs/operators";
+import {getType} from "typesafe-actions";
 
 const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
   return ({ dispatch, getState }) => next => async (action: any) => {
@@ -32,6 +33,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
                 authorization: token || ''
               }
             });
+
+            dispatch(gdmnActions.apiGetSchema());
+
           } catch (errMessage) {
             console.log('auth: ', errMessage);
 
@@ -88,6 +92,22 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
         apiService.ping(action.payload).subscribe(value => {
           console.log('PING response: ' + JSON.stringify(value));
         });
+
+        break;
+      case getType(gdmnActions.apiGetSchema):
+        apiService.getSchema({
+          payload: {
+            action: TTaskActionNames.GET_SCHEMA,
+            payload: undefined
+          }
+        }).subscribe(value => {
+            if (value.error) {
+              dispatch(rootActions.onError(new Error(value.error.message)));
+            } else if (!!value.payload.result) {
+              const erModel = deserializeERModel(value.payload.result);
+              dispatch(gdmnActions.setSchema(erModel));
+            }
+          });
 
         break;
       case getType(gdmnActions.apiDeleteAccount): {

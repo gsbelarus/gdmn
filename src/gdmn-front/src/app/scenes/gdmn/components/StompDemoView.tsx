@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
-import { Button, TextField } from '@material-ui/core';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
+import { Button, TextField } from 'office-ui-fabric-react';
 
 interface IStompDemoViewState {
   pingDelay: number;
@@ -22,29 +22,18 @@ class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewSta
     return (
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div>
-          <Button style={{ marginRight: 18 }} variant="contained" size="small" onClick={this.handlePingClick}>
-            SEND PING-TASK
-          </Button>
           <TextField
-            style={{ marginRight: 18 }}
             label="delay"
-            value={this.state.pingDelay}
+            value={this.state.pingDelay.toString()}
             onChange={this.handlePingDelayChange}
-            margin="normal"
           />
           <TextField
             label="steps"
-            multiline={true}
-            value={this.state.pingSteps}
+            value={this.state.pingSteps.toString()}
             onChange={this.handlePingStepsChange}
-            margin="normal"
           />
+          <Button onClick={this.handlePingClick} text="SEND PING-TASK" />
         </div>
-        {/*<textarea*/}
-        {/*style={{ width: '100%', minHeight: 300, resize: 'vertical', marginTop: 20, marginBottom: 20 }}*/}
-        {/*disabled={true}*/}
-        {/*value={this.props.log}*/}
-        {/*/>*/}
       </div>
     );
   }

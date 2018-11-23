@@ -9,6 +9,10 @@
   padding: 48px 40px 36px;
 }
 
+.auth-card-content h1 {
+  font-size: 18px;
+}
+
 .auth-card-description-box {
   display: flex;
   justify-content: flex-end;

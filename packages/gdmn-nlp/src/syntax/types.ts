@@ -3,6 +3,7 @@ import { AnyWord } from "../morphology/morphology";
 
 export interface IMorphToken extends IToken {
   word: AnyWord;
+  hsm?: AnyWord[][];
 };
 
 export interface ParserName {
@@ -12,4 +13,8 @@ export interface ParserName {
 
 export interface IDescribedParser {
   getName: () => ParserName;
+};
+
+export function isMorphToken(token: IToken | IMorphToken): token is IMorphToken {
+  return (token as IMorphToken).word !== undefined;
 };

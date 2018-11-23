@@ -19,7 +19,7 @@ import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
 import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, IUser, MainAction, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
 import {DBStatus} from "../db/ADatabase";
-import {ErrorCode, ServerError} from "./ServerError";
+import {StompErrorCode, StompServerError} from "./StompServerError";
 
 type Actions = AppAction | MainAction;
 
@@ -66,7 +66,6 @@ export class StompSession implements StompClientCommandListener {
           payload: task.options.command.payload,
           result: task.result ? task.result : undefined,
           error: task.error ? {
-            code: task.error.code,
             message: task.error.message
           } : undefined
         })).catch(this.logger.warn);
@@ -109,7 +108,7 @@ export class StompSession implements StompClientCommandListener {
 
   get logger(): Logger {
     if (!this._logger) {
-      throw new ServerError(ErrorCode.INTERNAL, "Logger is not found");
+      throw new Error("Logger is not found");
     }
     return this._logger;
   }
@@ -120,7 +119,7 @@ export class StompSession implements StompClientCommandListener {
 
   get application(): Application {
     if (!this._application) {
-      throw new ServerError(ErrorCode.INTERNAL, "Application is not found");
+      throw new Error("Application is not found");
     }
     return this._application;
   }
@@ -131,7 +130,7 @@ export class StompSession implements StompClientCommandListener {
 
   get mainApplication(): MainApplication {
     if (!this._mainApplication) {
-      throw new ServerError(ErrorCode.INTERNAL, "MainApplication is not found");
+      throw new Error("MainApplication is not found");
     }
     return this._mainApplication;
   }
@@ -142,12 +141,12 @@ export class StompSession implements StompClientCommandListener {
 
   get session(): Session {
     if (!this._session) {
-      throw new ServerError(ErrorCode.INTERNAL, "Session is not found");
+      throw new Error("Session is not found");
     }
     try {
       this.application.checkSession(this._session);
     } catch (error) {
-      throw new ServerError(ErrorCode.UNAUTHORIZED, error.message);
+      throw new StompServerError(StompErrorCode.UNAUTHORIZED, error.message);
     }
     return this._session;
   }
@@ -186,10 +185,10 @@ export class StompSession implements StompClientCommandListener {
         login,
         passcode,
         authorization,
-        "app-uid": appUid,
         "create-user": isCreateUser,
         "delete-user": isDeleteUser
       } = headers;
+      let {"app-uid": appUid} = headers;
 
       let result: {
         userKey: number,
@@ -202,7 +201,7 @@ export class StompSession implements StompClientCommandListener {
         let user;
         if (isCreateUser === "1") {
           if (await this.mainApplication.findUser({login})) {
-            throw new ServerError(ErrorCode.INVALID, "User already exists");
+            throw new StompServerError(StompErrorCode.INVALID, "User already exists");
           }
           user = await this.mainApplication.addUser({
             login,
@@ -212,7 +211,7 @@ export class StompSession implements StompClientCommandListener {
         } else {
           user = await this.mainApplication.checkUserPassword(login, passcode);
           if (!user) {
-            throw new ServerError(ErrorCode.INVALID, "Incorrect login or password");
+            throw new StompServerError(StompErrorCode.INVALID, "Incorrect login or password");
           }
         }
         result = {
@@ -227,7 +226,7 @@ export class StompSession implements StompClientCommandListener {
         const payload = this._getPayloadFromJwtToken(authorization);
         const user = await this.mainApplication.findUser({id: payload.id});
         if (!user) {
-          throw new ServerError(ErrorCode.UNAUTHORIZED, "User is not found");
+          throw new StompServerError(StompErrorCode.UNAUTHORIZED, "User is not found");
         }
 
         if (isDeleteUser === "1") {
@@ -240,7 +239,7 @@ export class StompSession implements StompClientCommandListener {
           ];
           sessions.forEach((s) => s.close());
           await this.mainApplication.deleteUser(user.id);
-          throw new ServerError(ErrorCode.UNAUTHORIZED, "User is not found");
+          throw new StompServerError(StompErrorCode.UNAUTHORIZED, "User is not found");
         }
 
         result = {userKey: user.id};
@@ -252,7 +251,13 @@ export class StompSession implements StompClientCommandListener {
         }
 
       } else {
-        throw new ServerError(ErrorCode.UNAUTHORIZED, "Incorrect headers");
+        throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Incorrect headers");
+      }
+
+      // TODO tmp - remove
+      const appsInfo = await this.mainApplication.getUserApplicationsInfo(result.userKey);
+      if (appsInfo.length) {
+        appUid = appsInfo[0].uid;
       }
 
       if (appUid) {
@@ -296,10 +301,10 @@ export class StompSession implements StompClientCommandListener {
   public subscribe(headers: StompHeaders): void {
     this._try(() => {
       if (this._subscriptions.some((sub) => sub.id === headers.id)) {
-        throw new ServerError(ErrorCode.NOT_UNIQUE, "Subscriptions with same id exists");
+        throw new StompServerError(StompErrorCode.NOT_UNIQUE, "Subscriptions with same id exists");
       }
       if (this._subscriptions.some((sub) => sub.destination === headers.destination)) {
-        throw new ServerError(ErrorCode.NOT_UNIQUE, "Subscriptions with same destination exists");
+        throw new StompServerError(StompErrorCode.NOT_UNIQUE, "Subscriptions with same destination exists");
       }
       switch (headers.destination) {
         case StompSession.DESTINATION_TASK: {
@@ -341,7 +346,7 @@ export class StompSession implements StompClientCommandListener {
           break;
         }
         default:
-          throw new ServerError(ErrorCode.UNSUPPORTED, `Unsupported destination '${headers.destination}'`);
+          throw new StompServerError(StompErrorCode.UNSUPPORTED, `Unsupported destination '${headers.destination}'`);
       }
     }, headers);
   }
@@ -350,7 +355,7 @@ export class StompSession implements StompClientCommandListener {
     this._try(() => {
       const subscription = this._subscriptions.find((sub) => sub.id === headers.id);
       if (!subscription) {
-        throw new ServerError(ErrorCode.NOT_FOUND, "Subscription is not found");
+        throw new StompServerError(StompErrorCode.NOT_FOUND, "Subscription is not found");
       }
       switch (subscription.destination) {
         case StompSession.DESTINATION_TASK: {
@@ -372,7 +377,7 @@ export class StompSession implements StompClientCommandListener {
           break;
         }
         default:
-          throw new ServerError(ErrorCode.UNSUPPORTED, `Unsupported destination '${headers.destination}'`);
+          throw new StompServerError(StompErrorCode.UNSUPPORTED, `Unsupported destination '${headers.destination}'`);
       }
     }, headers);
   }
@@ -398,14 +403,15 @@ export class StompSession implements StompClientCommandListener {
           const action = headers.action as Actions;
           const bodyObj = JSON.parse(body || "{}");
 
+          // TODO remove task-id from receipt; use command.id
           switch (action) {
             // ------------------------------For MainApplication
             case "DELETE_APP": {
               if (this.mainApplication !== this.application) {
-                throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported action");
+                throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
               }
               if (!bodyObj.payload || !bodyObj.payload.uid) {
-                throw new ServerError(ErrorCode.INVALID, "Payload must contains 'uid'");
+                throw new StompServerError(StompErrorCode.INVALID, "Payload must contains 'uid'");
               }
               const command: DeleteAppCmd = {id, action, ...bodyObj};
               const task = this.mainApplication.pushDeleteAppCmd(this.session, command);
@@ -416,10 +422,10 @@ export class StompSession implements StompClientCommandListener {
             }
             case "CREATE_APP": {
               if (this.mainApplication !== this.application) {
-                throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported action");
+                throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
               }
               if (!bodyObj.payload || !bodyObj.payload.alias || !bodyObj.payload.external) {
-                throw new ServerError(ErrorCode.INVALID, "Payload must contains 'alias' and 'external'");
+                throw new StompServerError(StompErrorCode.INVALID, "Payload must contains 'alias' and 'external'");
               }
               const command: CreateAppCmd = {id, action, ...bodyObj};
               const task = this.mainApplication.pushCreateAppCmd(this.session, command);
@@ -430,7 +436,7 @@ export class StompSession implements StompClientCommandListener {
             }
             case "GET_APPS": {
               if (this.mainApplication !== this.application) {
-                throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported action");
+                throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
               }
               const command: GetAppsCmd = {id, action, payload: undefined};
               const task = this.mainApplication.pushGetAppsCmd(this.session, command);
@@ -489,11 +495,11 @@ export class StompSession implements StompClientCommandListener {
               break;
             }
             default:
-              throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported action");
+              throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
           }
           break;
         default:
-          throw new ServerError(ErrorCode.UNSUPPORTED, `Unsupported destination '${destination}'`);
+          throw new StompServerError(StompErrorCode.UNSUPPORTED, `Unsupported destination '${destination}'`);
       }
     }, headers);
   }
@@ -509,25 +515,25 @@ export class StompSession implements StompClientCommandListener {
 
   public nack(headers: StompHeaders): void {
     this._try(() => {
-      throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported yet");
+      throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported yet");
     }, headers);
   }
 
   public begin(headers: StompHeaders): void {
     this._try(() => {
-      throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported yet");
+      throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported yet");
     }, headers);
   }
 
   public commit(headers: StompHeaders): void {
     this._try(() => {
-      throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported yet");
+      throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported yet");
     }, headers);
   }
 
   public abort(headers: StompHeaders): void {
     this._try(() => {
-      throw new ServerError(ErrorCode.UNSUPPORTED, "Unsupported yet");
+      throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported yet");
     }, headers);
   }
 
@@ -554,7 +560,7 @@ export class StompSession implements StompClientCommandListener {
     }).catch(this.logger.warn);
   }
 
-  protected _sendError(error: ServerError, requestHeaders?: StompHeaders): void {
+  protected _sendError(error: StompServerError, requestHeaders?: StompHeaders): void {
     const errorHeaders: StompHeaders = {code: `${error.code}`, message: error.message};
     if (requestHeaders && requestHeaders.receipt) {
       errorHeaders["receipt-id"] = requestHeaders.receipt;
@@ -582,10 +588,10 @@ export class StompSession implements StompClientCommandListener {
   }
 
   private _catch(error: Error, requestHeaders: StompHeaders): void {
-    if (error instanceof ServerError) {
+    if (error instanceof StompServerError) {
       this._sendError(error, requestHeaders);
     } else {
-      this._sendError(new ServerError(ErrorCode.INTERNAL, error.message), requestHeaders);
+      this._sendError(new StompServerError(StompErrorCode.INTERNAL, error.message), requestHeaders);
     }
   }
 
@@ -624,7 +630,7 @@ export class StompSession implements StompClientCommandListener {
   private _checkContentType(headers?: StompHeaders): void | never {
     const contentType = headers!["content-type"];
     if (contentType !== "application/json;charset=utf-8") {
-      throw new ServerError(ErrorCode.UNSUPPORTED,
+      throw new StompServerError(StompErrorCode.UNSUPPORTED,
         `Unsupported content-type '${contentType}'; supported - 'application/json;charset=utf-8'`);
     }
   }

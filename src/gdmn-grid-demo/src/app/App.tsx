@@ -7,11 +7,13 @@ import './_reset.css';
 import { ThunkDispatch } from 'redux-thunk';
 import { ActionType } from 'typesafe-actions';
 import { createRecordSet, CreateRecordSet, deleteRecordSet, DeleteRecordSet } from 'gdmn-recordset';
-import { RecordSet, Data } from 'gdmn-recordset';
+import { RecordSet } from 'gdmn-recordset';
 import { deleteGrid, DeleteGrid } from 'gdmn-grid';
-import { FieldDefs } from 'gdmn-recordset';
+import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 
 declare let module: any;
+
+initializeIcons();
 
 const DemoConnected = connect(
   (state: State) => ({

@@ -105,10 +105,10 @@ export class Session {
   }
 
   public close(): void {
-    this._updateStatus(SessionStatus.CLOSED);
-
     this.clearCloseTimer();
     this._internalClose();
+
+    this._updateStatus(SessionStatus.CLOSED);
   }
 
   public async forceClose(): Promise<void> {
@@ -127,7 +127,6 @@ export class Session {
       this._transactions.delete(key);
     }
     await this._options.connection.disconnect();
-    this.emitter.removeAllListeners();
 
     this._updateStatus(SessionStatus.FORCE_CLOSED);
   }

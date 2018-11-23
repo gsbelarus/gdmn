@@ -73,10 +73,12 @@ export class VPParser1 extends Parser implements IDescribedParser {
 
   public ppNoun = this.RULE('ppNoun', () => {
     this.SUBRULE(this.nounGent);
+    /*
     this.OPTION( () => {
       this.CONSUME(morphTokens.CONJ);
       this.SUBRULE(this.ppNoun);
     });
+    */
   });
 
   public nounGent = this.RULE('nounGent', () => {

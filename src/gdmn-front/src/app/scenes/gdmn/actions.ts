@@ -1,5 +1,6 @@
+import {ERModel} from "gdmn-orm";
 import { ActionType, createAction } from 'typesafe-actions';
-import { TPingTaskCmd } from '@gdmn/server-api';
+import { TPingTaskCmd, TGetSchemaTaskCmd } from '@gdmn/server-api';
 
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
@@ -13,8 +14,14 @@ const gdmnActions = {
   apiPing: createAction('gdmn/API_PING', resolve => {
     return (cmd: TPingTaskCmd) => resolve(cmd);
   }),
+  apiGetSchema: createAction('gdmn/API_GET_SCHEMA', resolve => {
+    return () => resolve();
+  }),
   apiDeleteAccount: createAction('gdmn/API_DELETE_ACCOUNT', resolve => {
     return () => resolve();
+  }),
+  setSchema: createAction("gdmm/SET_SCHEMA", resolve => {
+    return (erModel: ERModel) => resolve(erModel);
   })
 };
 

@@ -91,6 +91,10 @@
   margin-bottom: 2px;
 }
 
+.SyntaxCoombinations sup > span {
+  padding-left: 4px;
+}
+
 .VERBColor {
   background-color: blueviolet;
 }

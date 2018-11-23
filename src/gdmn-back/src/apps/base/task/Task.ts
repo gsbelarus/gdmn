@@ -4,7 +4,6 @@ import {Logger} from "log4js";
 import ms from "ms";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
-import {ErrorCode, ServerError} from "../../../stomp/ServerError";
 import {Session} from "../Session";
 import {IProgressOptions, Progress} from "./Progress";
 
@@ -88,7 +87,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
 
   private _status: TaskStatus = TaskStatus.IDLE;
   private _result?: Result;
-  private _error?: ServerError;
+  private _error?: Error;
   private _timer?: NodeJS.Timer;
 
   constructor(options: IOptions<Cmd, Result>) {
@@ -130,7 +129,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
     return this._result;
   }
 
-  get error(): ServerError | undefined {
+  get error(): Error | undefined {
     return this._error;
   }
 
@@ -171,7 +170,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
       this._updateStatus(TaskStatus.SUCCESS);
     } catch (error) {
       this._logger.warn("id#%s throw error; Error: %s", this._id, error);
-      this._error = error instanceof ServerError ? error : new ServerError(ErrorCode.INTERNAL, error.message);
+      this._error = error;
       this._updateStatus(TaskStatus.FAILED);
     }
   }

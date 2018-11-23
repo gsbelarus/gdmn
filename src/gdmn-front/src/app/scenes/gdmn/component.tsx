@@ -1,25 +1,13 @@
-import React, { Component, Fragment, PureComponent, RefObject, SFC } from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { NavLink, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
-import {
-  AppBar,
-  Button,
-  Divider,
-  Drawer,
-  Icon,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Typography
-} from '@material-ui/core';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
 
 import styles from './styles.css';
-import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
+import { isDevMode, ErrorBoundary, LinkCommandBarButton } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
+import { Breadcrumb, IComponentAsProps, IBreadcrumbItem, CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -27,67 +15,38 @@ type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStatePr
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
+interface IBreadcrumbItemWithLink extends IBreadcrumbItem {
+  link: string;
+}
+
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
-  private appBarPortalTargetRef: RefObject<HTMLDivElement> = React.createRef();
-
   public render() {
-    const { match, signOut, breadcrumbs } = this.props;
+    const { match, breadcrumbs } = this.props;
+
     return (
       <div styleName="layout">
-        <AppBar styleName="header" position="static">
-          <Toolbar>
-            <div styleName={'breadcrumbs'}>
-              {breadcrumbs.map((breadcrumb: BreadcrumbsProps, index: number) => (
-                <Typography variant="subheading" color="inherit" noWrap={true} key={breadcrumb.key}>
-                  <NavLink to={breadcrumb.props.match.url}>
-                    <Button styleName={'btn'} color="inherit" component={'div'}>
-                      {breadcrumb}
-                    </Button>
-                  </NavLink>
-                  {index < breadcrumbs.length - 1 && (
-                    <Button style={{ padding: 0 }} disabled={true} styleName={'btn'} color="inherit" component={'div'}>
-                      <i> ❯ </i>
-                    </Button>
-                  )}
-                </Typography>
-              ))}
-            </div>
-          </Toolbar>
-          <div id="portalTarget" ref={this.appBarPortalTargetRef} />
-        </AppBar>
-        <Drawer styleName="nav" variant="permanent" anchor="left">
-          <div style={{ minHeight: 64 }} />
-          <Divider />
-          <List style={{ width: 240 }}>
-            <NavLink to={`${match.url}/account`} activeClassName={'gdmn-nav-item-selected'}>
-              <ListItem button={true}>
-                <ListItemIcon>
-                  <Icon>account_circle</Icon>
-                </ListItemIcon>
-                <ListItemText inset={true} primary="Account" />
-              </ListItem>
-            </NavLink>
-            <NavLink to={`${match.url}/web-stomp`} activeClassName={'gdmn-nav-item-selected'}>
-              <ListItem button={true}>
-                <ListItemIcon>
-                  <Icon>settings_ethernet</Icon>
-                </ListItemIcon>
-                <ListItemText inset={true} primary="Web-STOMP" />
-              </ListItem>
-            </NavLink>
-          </List>
-          <Divider />
-          <List style={{ width: 240 }}>
-            <ListItem button={true} onClick={signOut}>
-              <ListItemIcon>
-                <Icon>exit_to_app</Icon>
-              </ListItemIcon>
-              <ListItemText primary="Logout" />
-            </ListItem>
-          </List>
-        </Drawer>
-        <main styleName={location.pathname.includes('/nlp') ? '' : 'scene-pad'}>
+        <div>
+          nav...
+        </div>
+        <div>
+          <CommandBar
+            items={this.getItems()}
+          />
+          <Breadcrumb
+            onRenderItem = { (props, defaultRenderer) => <NavLink to={(props as IBreadcrumbItemWithLink).link}>{defaultRenderer!(props)}</NavLink> }
+            items = {
+              breadcrumbs.map((breadcrumb: BreadcrumbsProps) => (
+                {
+                  key: breadcrumb.key,
+                  text: breadcrumb,
+                  link: breadcrumb.props.match.url
+                }
+              ))
+            }
+          />
+        </div>
+        <main styleName="scene-pad">
           <ErrBoundary>
             <Switch>
               <Redirect exact={true} from={`${match.path}/`} to={`${match.path}/account`} />
@@ -106,6 +65,36 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
         <footer />
       </div>
     );
+  }
+
+  private getItems = (): ICommandBarItemProps[] => {
+    const { erModel, match, signOut, apiGetSchema } = this.props;
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
+
+    return [
+      {
+        key: 'Account',
+        text: 'Account',
+        commandBarButtonAs: btn(`${match.url}/account`)
+      },
+      {
+        key: 'WebStomp',
+        text: 'web-stomp',
+        commandBarButtonAs: btn(`${match.url}/web-stomp`)
+      },
+      {
+        key: 'Logout',
+        text: 'Logout',
+        onClick: signOut
+      },
+      {
+        key: 'GetERModel',
+        text: Object.keys(erModel.entities).length ? `Reload ERModel (${Object.keys(erModel.entities).length})` : `Load ERModel`,
+        onClick: apiGetSchema
+      }
+    ];
   }
 }
 

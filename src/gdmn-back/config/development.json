@@ -7,8 +7,8 @@
     },
     "stomp": {
       "heartbeat": {
-        "incoming": "10s",
-        "outgoing": "10s"
+        "incoming": "30s",
+        "outgoing": "30s"
       }
     },
     "publicDir": "./public",

@@ -13,7 +13,7 @@ const MIN_GRID_COLUMN_WIDTH = 20;
 
 export interface IColumn {
   name: string;
-  caption?: string;
+  caption?: string[];
   fields: FieldDefs;
   hidden?: boolean;
   width?: number;
@@ -129,12 +129,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   constructor(props: IGridProps) {
     super(props);
-
+    const maxCountFieldInCell = props.columns.reduce( (max, c) => c.fields.length > max ? c.fields.length : max, 0);
+    const inCellRowHeight = 18;
+    const totalCellVertPadding = 2;
     this.state = {
       columnWidth: 125,
       overscanColumnCount: 5,
       overscanRowCount: 20,
-      rowHeight: 22,
+      rowHeight: maxCountFieldInCell === 1 ? inCellRowHeight + totalCellVertPadding 
+      : maxCountFieldInCell * inCellRowHeight + totalCellVertPadding,
       columnBeingResized: false
     };
   }
@@ -202,6 +205,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       sortDialog, onCancelSortDialog, onApplySortDialog, onSetCursorPos, currentCol } = this.props;
     const { rowHeight, overscanColumnCount, overscanRowCount } = this.state;
 
+    
     if (!rs) return <div>No data!</div>;
 
     const columnCount = columns.length;
@@ -709,11 +713,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     )
   }
 
-  private _getColumnLabel = (columnIndex: number): string => {
+  private _getColumnLabel = (columnIndex: number): string[] => {
     const { columns } = this.props;
     const column = columns[columnIndex];
-    return column ? column.caption || column.fields[0].caption || column.fields[0].fieldName
-      : '';
+
+    if (!column) {
+        return [];
+    }
+
+    return column.caption || (column.fields.map( f => f.caption ) && []);
   }
 
   private _adjustLeftSideColumnIndex = (gridColumnIndex: number): number => {
@@ -803,7 +811,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                   }
                 }
               >
-                {this._getColumnLabel(adjustedColumnIndex)}
+                {this._getColumnLabel(adjustedColumnIndex).map( (l, idx) => <span key={idx}>{l}</span> )}
               </div>
             </div>
             {draggableCore}
@@ -834,7 +842,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 }
               }
             >
-              {this._getColumnLabel(adjustedColumnIndex)}
+              {this._getColumnLabel(adjustedColumnIndex).map( (l, idx) => <span key={idx}>{l}</span> )}
             </div>
             {draggableCore}
           </div>;
@@ -943,29 +951,34 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-      const cellText = rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
-        <span>
-          {rs.splitMatched(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName).map(
-            (s, idx) => (s.matchFilter || s.foundIdx ?
-              <span
-                key={idx}
-                className={cn({'FilterMatchedHighlight': s.matchFilter, 'SearchMatchedHighlight': s.foundIdx})}
-              >
-                {s.str}
-              </span>
-              :
-              s.str)
-          )}
-          {groupRecCount}
-        </span>
-        : groupRecCount ?
-        <span>
-          {rs.getString(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName, '')}
-          {groupRecCount}
-        </span>
-        :
-        rs.getString(rowIndex, columns[adjustedColumnIndex].fields[0].fieldName, '');
-
+        const cellText = 
+          columns[adjustedColumnIndex].fields.map((fld, fldid) => 
+            rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
+            <span key={fldid}>
+              {rs.splitMatched(rowIndex, fld.fieldName).map(
+                (s, idx) => (s.matchFilter || s.foundIdx ?
+                  <span
+                    key={idx}
+                    className={cn({'FilterMatchedHighlight': s.matchFilter, 'SearchMatchedHighlight': s.foundIdx})}
+                  >
+                    {s.str}
+                  </span>
+                  :
+                  s.str)
+              )}
+              {groupRecCount}
+            </span>
+            : groupRecCount ?
+            <span key={fldid}>
+              {rs.getString(rowIndex, fld.fieldName, '')}
+              {groupRecCount}
+            </span>
+            :           
+            <span key={fldid}>                            
+              {rs.getString(rowIndex, fld.fieldName, '')}
+            </span>
+        ) 
+            
       const checkMark = selectRows && !adjustedColumnIndex ?
         <div
           className={styles.CellMarkArea}
@@ -1030,9 +1043,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const classNames = cn(styles.CellColumn, styles.FooterCell);
       const { rs, columns } = this.props;
       const column = columns[adjustFunc(columnIndex)];
-      const fieldName = column.fields[0].fieldName;
-      const aggregates = rs.aggregates;
-      const cellText = aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined;
+      const cellText = column.fields.map( (f, idx) => {
+        let fieldName = f.fieldName;
+        let aggregates = rs.aggregates;
+        return <span key={idx}>{aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined}</span>;
+      });    
 
       return (
         <div

@@ -11,11 +11,12 @@ import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 const getGdmnContainer = (apiService: GdmnPubSubApi) =>
   compose<TGdmnViewProps, TGdmnViewProps>(
     connect(
-      (state: IState, ownProps: TGdmnViewProps): TGdmnViewStateProps => ({}),
+      (state: IState, ownProps: TGdmnViewProps): TGdmnViewStateProps => ({erModel: state.gdmnState.erModel}),
       dispatch => ({
         apiConnect: bindActionCreators(gdmnActions.apiConnect, dispatch),
         apiDisconnect: bindActionCreators(gdmnActions.apiDisconnect, dispatch),
         apiPing: bindActionCreators(gdmnActions.apiPing, dispatch),
+        apiGetSchema: bindActionCreators(gdmnActions.apiGetSchema, dispatch),
         apiDeleteAccount: bindActionCreators(gdmnActions.apiDeleteAccount, dispatch),
         signOut: bindActionCreators(authActions.signOut, dispatch)
       })

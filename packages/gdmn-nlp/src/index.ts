@@ -22,6 +22,7 @@ export * from './syntax/syntax';
 export * from './syntax/lexer';
 export * from './syntax/parser';
 export * from './syntax/rusSyntax';
+export * from './syntax/types';
 export * from './semantics/types';
 export * from './semantics/categories';
 export * from './semantics/rusVerbSynonyms';

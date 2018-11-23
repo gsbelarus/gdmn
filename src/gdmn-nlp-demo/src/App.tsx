@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import { Route, BrowserRouter, Switch, Link } from 'react-router-dom';
 import { MorphBoxContainer } from './morphology/MorphBoxContainer';
-import { IComponentAs, CommandBar, ICommandBarItemProps, IComponentAsProps, CommandBarButton, BaseComponent, IRenderFunction, IButtonProps } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, IComponentAsProps, CommandBarButton, BaseComponent, IButtonProps } from 'office-ui-fabric-react';
 import { SyntaxBoxContainer } from './syntax/SyntaxBoxContainer';
 import { ERModelBoxContainer } from './ermodel/ERModelBoxContainer';
 import { Actions, State } from './store';
