@@ -13,3 +13,7 @@ export interface ParserName {
 export interface IDescribedParser {
   getName: () => ParserName;
 };
+
+export function isMorphToken(token: IToken | IMorphToken): token is IMorphToken {
+  return (token as IMorphToken).word !== undefined;
+};
