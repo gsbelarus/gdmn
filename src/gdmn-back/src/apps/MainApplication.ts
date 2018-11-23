@@ -487,31 +487,11 @@ export class MainApplication extends Application {
     await this._executeConnection((_connection) => AConnection.executeTransaction({
       connection: _connection,
       callback: async (transaction) => {
-        const admin = await this._addUser(_connection, transaction, {
+        await this._addUser(_connection, transaction, {
           login: "Administrator",
           password: "Administrator",
           admin: true
         });
-
-        // TODO tmp
-        try {
-          const {default: databases} = require("../db/databases");
-          for (const db of Object.values(databases)) {
-            const dbDetail = db as IDBDetail;
-            const appInfo = await this._addApplicationInfo(_connection, transaction, {
-              ...dbDetail.connectionOptions,
-              ownerKey: admin.id,
-              external: true
-            });
-            await this._addUserApplicationInfo(_connection, transaction, {
-              alias: dbDetail.alias,
-              appKey: appInfo.id,
-              userKey: admin.id
-            });
-          }
-        } catch (error) {
-          this._logger.warn(error);
-        }
       }
     }));
   }
@@ -588,6 +568,30 @@ export class MainApplication extends Application {
     });
   }
 
+  // TODO tmp - remove
+  private async _addTmpDatabasesToUser(connection: AConnection,
+                                       transaction: ATransaction,
+                                       userKey: number): Promise<void> {
+    try {
+      const {default: databases} = require("../db/databases");
+      for (const db of Object.values(databases)) {
+        const dbDetail = db as IDBDetail;
+        const appInfo = await this._addApplicationInfo(connection, transaction, {
+          ...dbDetail.connectionOptions,
+          ownerKey: userKey,
+          external: true
+        });
+        await this._addUserApplicationInfo(connection, transaction, {
+          alias: dbDetail.alias,
+          appKey: appInfo.id,
+          userKey
+        });
+      }
+    } catch (error) {
+      this._logger.warn(error);
+    }
+  }
+
   private async _addUser(connection: AConnection, transaction: ATransaction, user: ICreateUser): Promise<IUser> {
     const salt = crypto.randomBytes(128).toString("base64");
     const passwordHash = MainApplication._createPasswordHash(user.password, salt);
@@ -602,6 +606,10 @@ export class MainApplication extends Application {
       salt: Buffer.from(salt),
       isAdmin: user.admin
     });
+
+    // TODO tmp - remove
+    await this._addTmpDatabasesToUser(connection, transaction, result.getNumber("ID"));
+
     return {
       id: result.getNumber("ID"),
       login: result.getString("LOGIN"),
