@@ -141,42 +141,9 @@ class WebStomp extends BasePubSubBridge<
     this.client!.debug('Disconnecting...');
     // this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
 
-    // this.client.disconnectHeaders = <any>meta || this.clientConfig.disconnectHeaders || {}; // fixme: type
-
-    // fixme: tmp workaround lib bug
-    if (meta) {
-      console.log('deactivate WITH meta');
-      const tmp1 = this.client.connectHeaders;
-      const tmp2 = this.client.disconnectHeaders;
-      const tmp3 = this.clientConfig.disconnectHeaders || {};
-      this.clientConfig.disconnectHeaders = <any>meta || this.clientConfig.disconnectHeaders || {};
-
-      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING); // fixme: side effect logout
-      // todo: tmp wait
-      this.client.forceDisconnect();
-      this.client.deactivate();
-
-      this.initClient();
-      this.client.connectHeaders = tmp1;
-
-      // console.log('BEFORE this.client.disconnectHeaders: ', this.client.disconnectHeaders);
-
-      this.client.activate();
-      this.connectionConnectedObservable.pipe(first()).subscribe(() => {
-        console.log('toPromise');
-
-        this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING); // fixme: side effect
-        this!.client!.deactivate();
-
-        // this!.client!.disconnectHeaders = tmp2; // todo: wait
-        this.clientConfig.disconnectHeaders = tmp3;
-        // console.log('tmp2: ', tmp2)
-      });
-    } else {
-      console.log('deactivate');
-      this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
-      this.client.deactivate();
-    }
+    if (meta) this.client.disconnectHeaders = <any>meta;
+    this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
+    this.client.deactivate();
   }
 
   /* if STOMP connection drops and reconnects, it will auto resubscribe */
