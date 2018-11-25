@@ -9,8 +9,10 @@ const test: IDBDetail = {
     acquireTimeoutMillis: 60000
   },
   connectionOptions: {
-    host: "localhost",
-    port: 3050,
+    server: {
+      host: "localhost",
+      port: 3050
+    },
     username: "SYSDBA",
     password: "masterkey",
     path: "c:\\...enter_path_to_db...\\test.fdb"

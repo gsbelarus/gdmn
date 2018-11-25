@@ -31,8 +31,10 @@
     }
   },
   "db": {
-    "host": "localhost",
-    "port": 3050,
+    "server": {
+      "host": "localhost",
+      "port": 3050
+    },
     "user": "SYSDBA",
     "password": "masterkey",
     "dir": "./databases"

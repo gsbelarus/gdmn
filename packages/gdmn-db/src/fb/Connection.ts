@@ -11,8 +11,6 @@ import {Transaction} from "./Transaction";
 import {blobInfo} from "./utils/constants";
 import {createDpb} from "./utils/fb-utils";
 
-export type FirebirdOptions = IConnectionOptions;
-
 export class Connection extends AConnection {
 
     public client = new Client();
@@ -36,13 +34,11 @@ export class Connection extends AConnection {
         return false;
     }
 
-    private static _optionsToUri(options: FirebirdOptions): string {
+    private static _optionsToUri(options: IConnectionOptions): string {
         let url = "";
-        if (options.host) {
-            url += options.host;
-        }
-        if (options.port) {
-            url += `/${options.port}`;
+        if (options.server) {
+            url += options.server.host;
+            url += `/${options.server.port}`;
         }
         if (url) {
             url += ":";
@@ -51,7 +47,7 @@ export class Connection extends AConnection {
         return url;
     }
 
-    public async createDatabase(options: FirebirdOptions): Promise<void> {
+    public async createDatabase(options: IConnectionOptions): Promise<void> {
         if (this.handler) {
             throw new Error("Database already connected");
         }
@@ -78,7 +74,7 @@ export class Connection extends AConnection {
         await this.client.destroy();
     }
 
-    public async connect(options: FirebirdOptions): Promise<void> {
+    public async connect(options: IConnectionOptions): Promise<void> {
         if (this.handler) {
             throw new Error("Database already connected");
         }

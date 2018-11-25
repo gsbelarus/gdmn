@@ -4,9 +4,13 @@ import {ATransaction, ITransactionOptions} from "./ATransaction";
 import {Result} from "./fb/Result";
 import {IBaseExecuteOptions, TExecutor} from "./types";
 
-export interface IConnectionOptions {
+export interface IConnectionServer {
     host: string;
     port: number;
+}
+
+export interface IConnectionOptions {
+    server?: IConnectionServer;
     username: string;
     password: string;
     path: string;
@@ -36,7 +40,7 @@ export interface IExecuteQueryResultSetOptions<R> extends IBaseExecuteOptions<AR
     type?: CursorType;
 }
 
-export abstract class AConnection<Options extends IConnectionOptions = IConnectionOptions> {
+export abstract class AConnection {
 
     /**
      * Is the database connected.
@@ -93,7 +97,7 @@ export abstract class AConnection<Options extends IConnectionOptions = IConnecti
      * @param {Options} options
      * the type for creating database and connection absolute them
      */
-    public abstract async createDatabase(options: Options): Promise<void>;
+    public abstract async createDatabase(options: IConnectionOptions): Promise<void>;
 
     /** Drop database and disconnect from them. */
     public abstract async dropDatabase(): Promise<void>;
@@ -104,7 +108,7 @@ export abstract class AConnection<Options extends IConnectionOptions = IConnecti
      * @param {Options} options
      * the type for opening database connection
      */
-    public abstract async connect(options: Options): Promise<void>;
+    public abstract async connect(options: IConnectionOptions): Promise<void>;
 
     /** Disconnect from the database. */
     public abstract async disconnect(): Promise<void>;

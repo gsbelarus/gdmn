@@ -16,8 +16,6 @@ export const dbFileExt = ".FDB";
 export const bkpFileExt = ".BKP";
 
 export const dbOptions: IConnectionOptions = {
-    host: "localhost",
-    port: 3050,
     username: "SYSDBA",
     password: "masterkey",
     path: testDbPath
@@ -197,14 +195,16 @@ describe("Firebird driver tests", async () => {
                 connection: globalConnection,
                 callback: async (transaction) => {
                     await globalConnection.execute(transaction, `
-                        CREATE TABLE TEST2 (
-                          ID              INTEGER PRIMARY KEY
+                        CREATE TABLE TEST2
+                        (
+                            ID INTEGER PRIMARY KEY
                         )
                     `);
                     await globalConnection.execute(transaction, `
-                        CREATE TABLE TEST1 (
-                          ID              INTEGER PRIMARY KEY,
-                          REF             INTEGER REFERENCES TEST2 (ID)
+                        CREATE TABLE TEST1
+                        (
+                            ID  INTEGER PRIMARY KEY,
+                            REF INTEGER REFERENCES TEST2 (ID)
                         )
                     `);
                 }
@@ -213,12 +213,22 @@ describe("Firebird driver tests", async () => {
                 connection: globalConnection,
                 callback: async (transaction) => {
                     for (let i = 0; i < count; i++) {
-                        await globalConnection.execute(transaction, `INSERT INTO TEST2 (ID) VALUES (:id)`, {id: i});
-                        await globalConnection.execute(transaction, `INSERT INTO TEST1 (ID, REF) VALUES (:id, :ref)`, {
+                        await globalConnection.execute(transaction, `
+                            INSERT INTO TEST2 (ID)
+                            VALUES (:id)
+                        `, {id: i});
+                        await globalConnection.execute(transaction, `
+                            INSERT INTO TEST1 (ID, REF)
+                            VALUES (:id, :ref)
+                        `, {
                             id: i,
                             ref: i
                         });
-                        await expect(globalConnection.execute(transaction, `DELETE FROM TEST2 WHERE ID = :id`, {id: i}))
+                        await expect(globalConnection.execute(transaction, `
+                            DELETE
+                            FROM TEST2
+                            WHERE ID = :id
+                        `, {id: i}))
                             .rejects.toThrow(new Error(
                                 "Error: violation of FOREIGN KEY constraint \"INTEG_5\" on table \"TEST1\"\n" +
                                 "-Foreign key references are present for the record\n" +
@@ -234,14 +244,15 @@ describe("Firebird driver tests", async () => {
                 connection: globalConnection,
                 callback: async (transaction) => {
                     await globalConnection.execute(transaction, `
-                        CREATE TABLE TMP_TEST (
-                          ID                      INTEGER                         PRIMARY KEY,
-                          F_DECIMAL               DECIMAL(10, 4),
-                          F_VARCHAR               VARCHAR(20)           NOT NULL,
-                          F_TIMESTAMP             TIMESTAMP             NOT NULL,
-                          F_DATE                  DATE                  NOT NULL,
-                          F_TIME                  TIME                  NOT NULL,
-                          F_BLOB_TEXT             BLOB SUB_TYPE TEXT    NOT NULL
+                        CREATE TABLE TMP_TEST
+                        (
+                            ID          INTEGER PRIMARY KEY,
+                            F_DECIMAL   DECIMAL(10, 4),
+                            F_VARCHAR   VARCHAR(20) NOT NULL,
+                            F_TIMESTAMP TIMESTAMP   NOT NULL,
+                            F_DATE      DATE        NOT NULL,
+                            F_TIME      TIME        NOT NULL,
+                            F_BLOB_TEXT BLOB SUB_TYPE TEXT NOT NULL
                         )
                     `);
                 }
@@ -257,10 +268,14 @@ describe("Firebird driver tests", async () => {
                         MATCHING (ID)
                     `);
                     const _delete = await globalConnection.prepare(transaction, `
-                        DELETE FROM TMP_TEST WHERE ID = :id
+                        DELETE
+                        FROM TMP_TEST
+                        WHERE ID = :id
                     `);
                     const _select = await globalConnection.prepare(transaction, `
-                        SELECT FIRST 1 * FROM TMP_TEST WHERE ID = :id
+                        SELECT FIRST 1 *
+                        FROM TMP_TEST
+                        WHERE ID = :id
                     `);
 
                     try {

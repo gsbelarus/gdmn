@@ -1,7 +1,7 @@
 import config from "config";
 import crypto from "crypto";
 import {existsSync, mkdirSync} from "fs";
-import {AConnection, ATransaction, Factory} from "gdmn-db";
+import {AConnection, ATransaction, Factory, IConnectionServer} from "gdmn-db";
 import {Connection} from "gdmn-er-bridge";
 import {
   BlobAttribute,
@@ -37,8 +37,7 @@ export interface IUser {
 }
 
 export interface IOptConOptions {
-  host?: string;
-  port?: number;
+  server?: IConnectionServer;
   username?: string;
   password?: string;
   path?: string;
@@ -81,8 +80,9 @@ export type GetAppsCmd = MainCmd<"GET_APPS">;
 
 export class MainApplication extends Application {
 
-  public static readonly DEFAULT_HOST: string = config.get("db.host");
-  public static readonly DEFAULT_PORT: number = config.get("db.port");
+  public static readonly DEFAULT_SERVER?: IConnectionServer = config.has("db.server")
+    ? config.get("db.server")
+    : undefined;
   public static readonly DEFAULT_USER: string = config.get("db.user");
   public static readonly DEFAULT_PASSWORD: string = config.get("db.password");
 
@@ -117,8 +117,7 @@ export class MainApplication extends Application {
         acquireTimeoutMillis: 60 * 1000
       },
       connectionOptions: {
-        host: appInfo && appInfo.host || MainApplication.DEFAULT_HOST,
-        port: appInfo && appInfo.port || MainApplication.DEFAULT_PORT,
+        server: appInfo && appInfo.server || MainApplication.DEFAULT_SERVER,
         username: appInfo && appInfo.username || MainApplication.DEFAULT_USER,
         password: appInfo && appInfo.password || MainApplication.DEFAULT_PASSWORD,
         path: appInfo && appInfo.path || dbPath
@@ -378,6 +377,9 @@ export class MainApplication extends Application {
       callback: async (resultSet) => {
         const result: IUserApplicationInfo[] = [];
         while (await resultSet.next()) {
+          const host = !resultSet.isNull("HOST") ? resultSet.getString("HOST") : undefined;
+          const port = !resultSet.isNull("PORT") ? resultSet.getNumber("PORT") : undefined;
+
           result.push({
             alias: resultSet.getString("ALIAS"),
             id: resultSet.getNumber("ID"),
@@ -385,8 +387,7 @@ export class MainApplication extends Application {
             creationDate: resultSet.getDate("CREATIONDATE")!,
             ownerKey: resultSet.getNumber("OWNER"),
             external: resultSet.getBoolean("IS_EXTERNAL"),
-            host: !resultSet.isNull("HOST") ? resultSet.getString("HOST") : undefined,
-            port: !resultSet.isNull("PORT") ? resultSet.getNumber("PORT") : undefined,
+            server: host && port ? {host, port} : undefined,
             username: !resultSet.isNull("USERNAME") ? resultSet.getString("USERNAME") : undefined,
             password: !resultSet.isNull("PASSWORD") ? resultSet.getString("PASSWORD") : undefined,
             path: !resultSet.isNull("PATH") ? resultSet.getString("PATH") : undefined
@@ -508,8 +509,8 @@ export class MainApplication extends Application {
       uid,
       owner: application.ownerKey,
       external: application.external,
-      host: application.host,
-      port: application.port,
+      host: application.server && application.server.host,
+      port: application.server && application.server.port,
       username: application.username,
       password: application.password,
       path: application.path

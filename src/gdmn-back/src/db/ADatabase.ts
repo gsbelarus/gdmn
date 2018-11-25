@@ -220,16 +220,26 @@ export abstract class ADatabase {
 
   private _updateStatus(status: DBStatus): void {
     const {alias, connectionOptions}: IDBDetail = this.dbDetail;
-    const {host, port, path} = connectionOptions;
+    const {server, path} = connectionOptions;
 
     if (this._status === status && this._status !== DBStatus.IDLE) {
-      this._logger.info("alias#%s (%s:%s/%s) already has this status; Status: %s; new Status: %s'", alias, host, port,
-        path, DBStatus[this._status], DBStatus[status]);
+      if (server) {
+        this._logger.info("alias#%s (%s:%s/%s) already has this status; Status: %s; new Status: %s'", alias,
+          server.host, server.port, path, DBStatus[this._status], DBStatus[status]);
+      } else {
+        this._logger.info("alias#%s (%s) already has this status; Status: %s; new Status: %s'", alias, path,
+          DBStatus[this._status], DBStatus[status]);
+      }
       throw new Error("Database already has this status");
     }
 
     this._status = status;
-    this._logger.info("alias#%s (%s:%s/%s) is changed; Status: %s", alias, host, port, path, DBStatus[this._status]);
+    if (server) {
+      this._logger.info("alias#%s (%s:%s/%s) is changed; Status: %s", alias, server.host, server.port, path,
+        DBStatus[this._status]);
+    } else {
+      this._logger.info("alias#%s (%s) is changed; Status: %s", alias, path, DBStatus[this._status]);
+    }
     this.emitter.emit("change", this);
   }
 }

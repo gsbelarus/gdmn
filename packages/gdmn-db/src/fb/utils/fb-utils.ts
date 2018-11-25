@@ -384,8 +384,7 @@ export function fixMetadata(status: Status, metadata?: MessageMetadata): Message
         }
 
         ret = outBuilder.getMetadataSync(status)!;
-    }
-    finally {
+    } finally {
         outBuilder.releaseSync();
     }
 

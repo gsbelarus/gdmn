@@ -1,5 +1,5 @@
 import {existsSync, unlinkSync} from "fs";
-import {AConnection, TExecutor} from "gdmn-db";
+import {AConnection, Factory, IConnectionOptions, TExecutor} from "gdmn-db";
 import {SemCategory} from "gdmn-nlp";
 import {
   BlobAttribute,
@@ -26,6 +26,7 @@ import {
   TimeStampAttribute
 } from "gdmn-orm";
 import moment from "moment";
+import {resolve} from "path";
 import {
   Crud,
   IDelete,
@@ -38,8 +39,13 @@ import {
   IUpdateOrInsert
 } from "../src/crud/Crud";
 import {Constants} from "../src/ddl/Constants";
-import {IDBDetail} from "../src/ddl/export/dbdetail";
 import {DataSource} from "../src/source/DataSource";
+
+export const dbOptions: IConnectionOptions = {
+  username: "SYSDBA",
+  password: "masterkey",
+  path: resolve("./TEST.FDB")
+};
 
 interface IExecuteObj {
   connection: IConnection;
@@ -49,10 +55,8 @@ interface IExecuteObj {
 describe("DataSource", () => {
   jest.setTimeout(60 * 1000);
 
-  const {driver, options} = require("./testDB").importTestDBDetail as IDBDetail;
-
-  const connection = driver.newConnection();
-  const connectionPool = driver.newCommonConnectionPool();
+  const connection = Factory.FBDriver.newConnection();
+  const connectionPool = Factory.FBDriver.newCommonConnectionPool();
 
   const initERModel = async () => {
     const erModel = new ERModel(new DataSource(connectionPool));
@@ -80,11 +84,11 @@ describe("DataSource", () => {
   };
 
   beforeEach(async () => {
-    if (existsSync(options.path)) {
-      unlinkSync(options.path);
+    if (existsSync(dbOptions.path)) {
+      unlinkSync(dbOptions.path);
     }
-    await connection.createDatabase(options);
-    await connectionPool.create(options, {min: 1, max: 1, acquireTimeoutMillis: 10000});
+    await connection.createDatabase(dbOptions);
+    await connectionPool.create(dbOptions, {min: 1, max: 1, acquireTimeoutMillis: 10000});
   });
 
   afterEach(async () => {
@@ -495,7 +499,8 @@ describe("DataSource", () => {
 
         await placesResult.close();
 
-        const userAppSetSQL = `SELECT * FROM ${appSetAttribute.adapter!.crossRelation}`;
+        const userAppSetSQL = `SELECT *
+        FROM ${appSetAttribute.adapter!.crossRelation}`;
         const userAppSetResult = await connection.executeQuery(transaction, userAppSetSQL);
 
         const [expectedAppID1, expectedAppID2, expectedAppID3] = userAppSetAttrValue1.refIDs;
@@ -546,7 +551,8 @@ describe("DataSource", () => {
 
         await userAppSetResult.close();
 
-        const usersSQL = `SELECT * FROM ${userEntity.name}`;
+        const usersSQL = `SELECT *
+        FROM ${userEntity.name}`;
         const usersResult = await connection.executeQuery(transaction, usersSQL);
 
         await usersResult.next();
@@ -855,7 +861,8 @@ describe("DataSource", () => {
 
         await backupsResult.close();
 
-        const userAppSetSQL = `SELECT * FROM ${appSetAttribute.adapter!.crossRelation}`;
+        const userAppSetSQL = `SELECT *
+        FROM ${appSetAttribute.adapter!.crossRelation}`;
         const userAppSetResult = await connection.executeQuery(transaction, userAppSetSQL);
 
         await userAppSetResult.next();
@@ -1225,7 +1232,8 @@ describe("DataSource", () => {
 
         await placesResult.close();
 
-        const userAppSetSQL = `SELECT * FROM ${appSetAttribute.adapter!.crossRelation}`;
+        const userAppSetSQL = `SELECT *
+        FROM ${appSetAttribute.adapter!.crossRelation}`;
         const userAppSetResult = await connection.executeQuery(transaction, userAppSetSQL);
 
         await userAppSetResult.next();
@@ -1513,13 +1521,15 @@ describe("DataSource", () => {
 
         await placesResult.close();
 
-        const userAppSetSQL = `SELECT * FROM ${appSetAttribute.adapter!.crossRelation}`;
+        const userAppSetSQL = `SELECT *
+        FROM ${appSetAttribute.adapter!.crossRelation}`;
         const userAppSetResult = await connection.executeQuery(transaction, userAppSetSQL);
         expect(await userAppSetResult.next()).toBeFalsy();
 
         await userAppSetResult.close();
 
-        const userSQL = `SELECT * FROM ${userEntity.name}`;
+        const userSQL = `SELECT *
+        FROM ${userEntity.name}`;
         const userResult = await connection.executeQuery(transaction, userSQL);
         expect(await userResult.next()).toBeFalsy();
 

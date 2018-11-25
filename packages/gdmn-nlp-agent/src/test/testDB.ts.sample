@@ -6,8 +6,10 @@ export const testDB: IDBDetail[] = [
     alias: "alias",
     driver: Factory.FBDriver,
     options: {
-      host: "localhost",
-      port: 3050,
+      server: {
+        host: "localhost",
+        port: 3050
+      },
       username: "SYSDBA",
       password: "********",
       path: "path"

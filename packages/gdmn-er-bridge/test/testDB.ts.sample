@@ -6,22 +6,12 @@ export const exportTestDBDetail: IDBDetail = {
   alias: "exportTestDB",
   driver: Factory.FBDriver,
   options: {
-    host: "localhost",
-    port: 3050,
+    server: {
+      host: "localhost",
+      port: 3050
+    },
     username: "SYSDBA",
     password: "masterkey",
     path: "path"
-  }
-};
-
-export const importTestDBDetail: IDBDetail = {
-  alias: "importTestDB",
-  driver: Factory.FBDriver,
-  options: {
-    host: "localhost",
-    port: 3050,
-    username: "SYSDBA",
-    password: "masterkey",
-    path: resolve("./TEST.FDB")
   }
 };
