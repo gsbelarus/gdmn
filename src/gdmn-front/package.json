@@ -2,7 +2,6 @@
   "name": "gdmn-front",
   "description": "gdmn web client",
   "scripts": {
-    "postinstall": "yarn run pkg-links:build",
     "--- gdmn ---": "",
     "build": "yarn run pkg:build",
     "clean": "shx rm -rf ./dist ./build",
