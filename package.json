@@ -9,9 +9,9 @@
   ],
   "scripts": {
     "start": "lerna run start --parallel",
-    "start:back": "cd ./src/gdmn-back && yarn start",
-    "start:front": "cd ./src/gdmn-front && yarn start",
-    "start:grid-demo": "cd ./src/gdmn-grid-demo && yarn start",
+    "start:back": "lerna --scope=gdmn-back exec -- yarn start",
+    "start:front": "lerna --scope=gdmn-front exec -- yarn start",
+    "start:grid-demo": "lerna --scope=gdmn-grid-demo exec -- yarn start",
     "clean": "lerna run clean --parallel",
     "build": "lerna run build",
     "rebuild": "yarn clean && yarn build",

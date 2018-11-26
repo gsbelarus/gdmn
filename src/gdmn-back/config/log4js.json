@@ -6,7 +6,7 @@
     "all": {
       "type": "file",
       "filename": "./logs/all.log",
-      "maxLogSize": 100E6
+      "maxLogSize": 10E6
     },
     "errors": {
       "type": "file",
