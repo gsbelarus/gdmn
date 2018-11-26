@@ -166,9 +166,8 @@ class WebStomp extends BasePubSubBridge<
       // fixme init client after reconnect
       connectionConnectedRxSubscription = this.connectionConnectedObservable.subscribe(() => {
         // todo test on connected
-        this.client!.debug(`Will subscribe to ${topic}...`);
-
         if (subscription !== null) {
+          this.client!.debug(`Will subscribe to ${topic}...`);
           subscription = this.client!.subscribe(
             topic,
             (messageFrame: Message) => {

@@ -67,9 +67,7 @@ class GdmnPubSubApi {
     this.pubSubClient = new PubSubClient(
       new WebStomp({
         brokerURL: endpointUrl,
-        // connectHeaders,
-        // disconnectHeaders,
-        heartbeatIncoming: 2000, // todo 0
+        heartbeatIncoming: 2000,
         heartbeatOutgoing: 2000,
         reconnectDelay: 5000,
         stompVersions: new Versions([Versions.V1_2]) // todo
@@ -95,8 +93,16 @@ class GdmnPubSubApi {
 
   public async auth(cmd: TAuthCmd | TDeleteAccountCmd, reconnect: boolean = false): Promise<TAuthCmdResult> {
     // todo: tmp
-    if ((this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTING) && !reconnect) {
+    if ((this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTING
+      || this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED
+    ) && !reconnect) {
       console.log('AUTH');
+
+      if (!!this.taskActionResultSubscription) {
+        this.taskStatusResultSubscription!.unsubscribe();
+        this.taskProgressResultSubscription!.unsubscribe();
+        this.taskActionResultSubscription!.unsubscribe();
+      }
 
       this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
         TGdmnTopic.TASK_PROGRESS
