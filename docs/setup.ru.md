@@ -55,27 +55,16 @@
 3. gdmn-er-bridge (требуется для запуска тестов). Копируем файл /packages/gdmn-er-bridge/src/test/testDB.ts.sample в /packages/gdmn-er-bridge/src/test/testDB.ts.
 
 
-## Устанавливаем зависимости
+## Устанавливаем зависимости и компилируем проект
 
 Из командной строки:
 
     ```
     $ yarn
     $ yarn bootstrap
-    ```
-
-## Скачиваем демо-данные для проекта gdmn-grid-demo
-
-    ```
-    $ cd src/gdmn-grid-demo
-    $ yarn download-data
-    ```
-
-## Комплируем исходный код
-
-    ```
     $ yarn build
     ```
+
 ## Запускаем gdmn-back
 
 Прописываем в файле /src/config/development.json путь к серверу. Как правило, указываем 127.0.0.1, если сервер запускается на этом же компьютере:
