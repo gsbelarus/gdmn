@@ -54,12 +54,6 @@
 2. gdmn-nlp-agent (требуется для запуска тестов). Копируем файл /packages/gdmn-nlp-agent/src/test/testDB.ts.sample в /packages/gdmn-nlp-agent/src/test/testDB.ts.
 3. gdmn-er-bridge (требуется для запуска тестов). Копируем файл /packages/gdmn-er-bridge/src/test/testDB.ts.sample в /packages/gdmn-er-bridge/src/test/testDB.ts.
 
-## Скачиваем демо-данные для проекта gdmn-grid-demo
-    
-    ```
-    $ cd src/gdmn-grid-demo
-    $ yarn download-data
-    ```
 
 ## Устанавливаем зависимости
 
@@ -68,6 +62,18 @@
     ```
     $ yarn
     $ yarn bootstrap
+    ```
+
+## Скачиваем демо-данные для проекта gdmn-grid-demo
+
+    ```
+    $ cd src/gdmn-grid-demo
+    $ yarn download-data
+    ```
+
+## Комплируем исходный код
+
+    ```
     $ yarn build
     ```
 ## Запускаем gdmn-back
