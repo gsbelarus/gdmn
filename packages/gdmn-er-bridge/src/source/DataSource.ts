@@ -29,6 +29,8 @@ export class DataSource implements IDataSource {
   }
 
   public async init(obj: ERModel): Promise<ERModel> {
+    obj.clear();
+
     return await AConnectionPool.executeConnection({
       connectionPool: this.connectionPool,
       callback: async (connection) => {
