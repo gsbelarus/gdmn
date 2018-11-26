@@ -15,7 +15,6 @@ const urlNBRBRates = "http://www.nbrb.by/API/ExRates/Rates";
 const urlNBRBCurrencies = "http://www.nbrb.by/API/ExRates/Currencies";
 
 const force = process.argv.slice(2).includes("-force");
-console.log(force);
 
 const startDate = new Date(2014, 1, 1);
 const endDate = new Date(2018, 11, 1);
