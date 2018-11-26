@@ -8,7 +8,6 @@ import { getMiddlewares } from '@src/app/store/middlewares';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
-// import { TActions } from '@src/app/store/TActions';
 
 const getStore = (apiService: GdmnPubSubApi) => {
   const reducer = getReducer();
