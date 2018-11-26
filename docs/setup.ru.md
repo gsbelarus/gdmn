@@ -48,13 +48,6 @@
     $ cd gdmn
     ```
 
-## Прописываем пути подключения к базам данных (опционально)
-
-1. gdmn-back (требуется для подключения тестовой БД) Копируем файл /src/gdmn-back/src/db/databases.ts.sample в /src/gdmn-back/src/db/databases.ts.
-2. gdmn-nlp-agent (требуется для запуска тестов). Копируем файл /packages/gdmn-nlp-agent/src/test/testDB.ts.sample в /packages/gdmn-nlp-agent/src/test/testDB.ts.
-3. gdmn-er-bridge (требуется для запуска тестов). Копируем файл /packages/gdmn-er-bridge/src/test/testDB.ts.sample в /packages/gdmn-er-bridge/src/test/testDB.ts.
-
-
 ## Устанавливаем зависимости и компилируем проект
 
 Из командной строки выполнить:
@@ -73,12 +66,18 @@
 
     $ yarn start:name
 
-### Дополнительно
+## Дополнительно
 
 Конфигурации проектов:
 
 - ```./src/gdmn-back/config/development.json```
 - ```./src/gdmn-front/configs/config.json```
+
+Для запуска тестов прописываем пути подключения к базам данных:
+
+- gdmn-back (требуется для подключения тестовой БД) Копируем файл ```./src/gdmn-back/src/db/databases.ts.sample``` в ```./src/gdmn-back/src/db/databases.ts```.
+- gdmn-nlp-agent (требуется для запуска тестов). Копируем файл ```./packages/gdmn-nlp-agent/src/test/testDB.ts.sample``` в ```./packages/gdmn-nlp-agent/src/test/testDB.ts```.
+- gdmn-er-bridge (требуется для запуска тестов). Копируем файл ```./packages/gdmn-er-bridge/src/test/testDB.ts.sample``` в ```./packages/gdmn-er-bridge/src/test/testDB.ts```.
 
 Если требуется обновить демо данные для **gdmn-grid-demo** выполнить:
 
