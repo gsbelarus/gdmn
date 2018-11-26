@@ -8,13 +8,14 @@ import fs from "fs";
 import fetch from "node-fetch";
 import {NBRBCurrencies, NBRBRates} from "../app/types";
 
-const urlNBRBCurrencies = "http://www.nbrb.by/API/ExRates/Currencies";
-const urlNBRBRates = "http://www.nbrb.by/API/ExRates/Rates";
+const PATH_NB_RB_RATES = "./src/util/nbrbrates.json";
+const PATH_NB_RB_CUR = "./src/util/nbrbcurrencies.json";
 
-fetch(urlNBRBCurrencies)
-  .then(res => res.text())
-  .then(res => JSON.parse(res) as NBRBCurrencies)
-  .then(res => fs.writeFileSync("./src/util/nbrbcurrencies.json", JSON.stringify(res, undefined, 2)));
+const urlNBRBRates = "http://www.nbrb.by/API/ExRates/Rates";
+const urlNBRBCurrencies = "http://www.nbrb.by/API/ExRates/Currencies";
+
+const force = process.argv.slice(2).includes("-force");
+console.log(force);
 
 const startDate = new Date(2014, 1, 1);
 const endDate = new Date(2018, 11, 1);
@@ -30,6 +31,15 @@ const downloadRates = (d: Date, endDate: Date, rates: NBRBRates): Promise<NBRBRa
   }
 };
 
-downloadRates(startDate, endDate, [])
-  .then(res => fs.writeFileSync("./src/util/nbrbrates.json", JSON.stringify(res, undefined, 2)))
-  .catch(console.log);
+if (force || !fs.existsSync(PATH_NB_RB_RATES)) {
+  downloadRates(startDate, endDate, [])
+    .then(res => fs.writeFileSync(PATH_NB_RB_RATES, JSON.stringify(res, undefined, 2)))
+    .catch(console.log);
+}
+
+if (force || !fs.existsSync(PATH_NB_RB_CUR)) {
+  fetch(urlNBRBCurrencies)
+    .then(res => res.text())
+    .then(res => JSON.parse(res) as NBRBCurrencies)
+    .then(res => fs.writeFileSync(PATH_NB_RB_CUR, JSON.stringify(res, undefined, 2)));
+}

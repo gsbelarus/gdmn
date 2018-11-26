@@ -82,5 +82,5 @@
 Если требуется обновить демо данные для **gdmn-grid-demo** выполнить:
 
     $ cd src/gdmn-grid-demo
-    $ yarn download-data
+    $ yarn download-data -force
     $ cd ../..
