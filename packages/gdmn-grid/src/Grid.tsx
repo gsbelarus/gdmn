@@ -81,7 +81,9 @@ export const styles = {
   FixedCell: 'FixedCell',
   FixedBackground: 'FixedBackground',
   CellCaption: 'CellCaption',
-  DataCell: 'DataCell',
+  DataCellLeft: 'DataCellLeft',
+  DataCellCenter: 'DataCellCenter',  
+  DataCellRight: 'DataCellRight',
   LeftSideGrid: 'LeftSideGrid',
   RightSideCellFooter: 'RightSideCellFooter',
   LeftSideCellFooter: 'LeftSideCellFooter',
@@ -927,9 +929,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         : groupHeader ? styles.BorderBottom
         : styles.BorderRightBottom;
 
-      const cellClass = fixed ? styles.FixedCell
-        : styles.DataCell;
-
       const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText
         : styles.BlackText;
 
@@ -952,7 +951,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         undefined;
 
         const cellText = 
-          columns[adjustedColumnIndex].fields.map((fld, fldid) => 
+          columns[adjustedColumnIndex].fields.map((fld, fldid) => {
+            let cellClass = fld.alignment === 'RIGHT' ? styles.DataCellRight : fld.alignment === 'CENTER' ? styles.DataCellCenter : 'styles.DataCellLeft';
+            return (
             rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
             <span key={fldid}>
               {rs.splitMatched(rowIndex, fld.fieldName).map(
@@ -974,10 +975,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               {groupRecCount}
             </span>
             :           
-            <span key={fldid}>                            
+            <span key={fldid} className={cn(styles.CellColumn, cellClass, textClass)}>                            
               {rs.getString(rowIndex, fld.fieldName, '')}
-            </span>
-        ) 
+            </span>)
+          }
+          ) 
             
       const checkMark = selectRows && !adjustedColumnIndex ?
         <div
@@ -1009,6 +1011,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
+      const cellClassDiv = cn(fixed ? styles.FixedCell : '', styles.DataCellLeft);  
+
       if (checkMark || groupTriangle) {
         return (
           <div
@@ -1019,7 +1023,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           >
             {checkMark}
             {groupTriangle}
-            <div className={cn(styles.CellColumn, cellClass, textClass)}>
+            <div className={cn(styles.CellColumn, cellClassDiv, textClass)}>
               {cellText}
             </div>
           </div>
@@ -1027,7 +1031,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       } else {
         return (
           <div
-            className={footer? cn(styles.CellColumn, styles.FooterCell) : cn(backgroundClass, borderClass, styles.CellColumn, cellClass, textClass)}
+            className={footer? cn(styles.CellColumn, styles.FooterCell) : cn(backgroundClass, borderClass, styles.CellColumn, cellClassDiv, textClass)}
             key={key}
             style={style}
             onClick={ () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
@@ -1040,13 +1044,14 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _getFooterCellRenderer = (adjustFunc: AdjustColumnIndexFunc, _fixed: boolean) =>
     ({columnIndex, key, style}: GridCellProps) => {
-      const classNames = cn(styles.CellColumn, styles.FooterCell);
       const { rs, columns } = this.props;
       const column = columns[adjustFunc(columnIndex)];
+      const classNames = cn(styles.CellColumn, styles.FooterCell, _fixed ? styles.FixedCell : '');
       const cellText = column.fields.map( (f, idx) => {
+        let classNameSpan = f.alignment === 'RIGHT' ? styles.DataCellRight : f.alignment === 'CENTER' ? styles.DataCellCenter : styles.DataCellLeft;
         let fieldName = f.fieldName;
         let aggregates = rs.aggregates;
-        return <span key={idx}>{aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined}</span>;
+        return <span key={idx} className={classNameSpan}>{aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined}</span>;
       });    
 
       return (

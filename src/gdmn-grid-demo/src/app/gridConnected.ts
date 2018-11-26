@@ -25,6 +25,7 @@ import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
 import { SortFields } from "gdmn-recordset";
+import { Column } from "react-virtualized";
 
 export type GetGridRef = () => GDMNGrid;
 
@@ -33,7 +34,7 @@ export function connectGrid(name: string, rs: RecordSet, getGridRef: GetGridRef)
   let columns: IColumn[];
 
   if (rs.name === 'currencyMult') {
-    columns = rs.fieldDefs.map( fd => (
+    columns = rs.fieldDefs.map( (fd): IColumn => (
       fd.fieldName === 'Cur_Code' ?
       {
         name: fd.fieldName,
@@ -43,26 +44,30 @@ export function connectGrid(name: string, rs: RecordSet, getGridRef: GetGridRef)
           dataType: TFieldType.String,
           caption: 'Буквенный код',
           required: true,
-          size: 3
+          size: 3,
+          alignment: 'RIGHT'
         }]
       } 
       : fd.fieldName === 'Cur_Name' ?
       {
         name: fd.fieldName,
         caption: [fd.caption || fd.fieldName, 'Назва', 'Name'],
-        fields: [{...fd}, {
+        fields: [{
           fieldName: 'Cur_Name_Bel',
           dataType: TFieldType.String,
           caption: 'Назва',
           required: true,
-          size: 60
-        }, 
+          size: 60,
+          alignment: 'CENTER'}, 
+          {...fd} 
+        , 
         {
           fieldName: 'Cur_Name_Eng',
           dataType: TFieldType.String,
           caption: 'Name',
           required: true,
-          size: 60
+          size: 60,
+          alignment: 'RIGHT'
         }]
       } 
       : {

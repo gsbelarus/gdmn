@@ -25,6 +25,8 @@ export interface IFieldAggregator<Acc, Res = TDataType> {
 
 export type TDataType = string | number | boolean | Date | null;
 
+export type TAlignment = 'LEFT' | 'CENTER' | 'RIGHT';
+
 export interface IFieldDef extends INamedField {
   dataType: TFieldType;
   size?: number;
@@ -39,6 +41,7 @@ export interface IFieldDef extends INamedField {
   description?: string;
   aggregator?: IFieldAggregator<any>;
   olapValue?: TDataType[];
+  alignment?: TAlignment;
 };
 
 export type FieldDefs = IFieldDef[];

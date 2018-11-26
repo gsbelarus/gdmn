@@ -122,8 +122,20 @@
   white-space: nowrap;
 }
 
-.DataCell {
-  text-align: left;
+.CellColumn span {
+  padding: 0;
+}
+
+.DataCellLeft {
+  text-align: left;  
+}
+
+.DataCellCenter {
+  text-align: center;
+}
+
+.DataCellRight {
+  text-align: right;
 }
 
 .BorderRightBottom {
@@ -137,7 +149,6 @@
 
 .FixedCell {
   font-weight: bold;
-  text-align: left;
   align-items: left;
 }
 

@@ -30,7 +30,8 @@ export function loadNBRBRates(name: string, rscf: RSCreateFunc) {
         fieldName: 'Cur_Scale',
         dataType: TFieldType.Integer,
         caption: 'Количество единиц',
-        required: true
+        required: true,
+        alignment: 'RIGHT'
       },
       {
         fieldName: 'Cur_Name',
@@ -44,19 +45,22 @@ export function loadNBRBRates(name: string, rscf: RSCreateFunc) {
         dataType: TFieldType.Currency,
         caption: 'Курс',
         required: true,
-        aggregator: getAvgAggregator()
+        aggregator: getAvgAggregator(),
+        alignment: 'RIGHT'
       },
       {
         fieldName: 'Year',
         dataType: TFieldType.Integer,
         caption: 'Год',
-        calcFunc: (row: IDataRow) => (row['Date'] as Date).getFullYear()
+        calcFunc: (row: IDataRow) => (row['Date'] as Date).getFullYear(),
+        alignment: 'CENTER'
       },
       {
         fieldName: 'Month',
         dataType: TFieldType.Integer,
         caption: 'Месяц',
-        calcFunc: (row: IDataRow) => (row['Date'] as Date).getMonth() + 1
+        calcFunc: (row: IDataRow) => (row['Date'] as Date).getMonth() + 1,
+        alignment: 'RIGHT'
       },
       {
         fieldName: 'Date',
