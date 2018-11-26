@@ -36,6 +36,7 @@
     "typescript": "^3"
   },
   "devDependencies": {
+    "@types/node": "^10.12.10",
     "@types/node-fetch": "^2.1.2",
     "@types/react": "^16.4.18",
     "@types/react-dom": "^16.0.9",

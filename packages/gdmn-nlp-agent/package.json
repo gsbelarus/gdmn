@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/jest": "^23.3.8",
-    "@types/node": "^10.12.1",
+    "@types/node": "^10.12.10",
     "gdmn-er-bridge": "^1.0.0",
     "jest": "^23.6.0",
     "shx": "^0.3.2",
