@@ -77,6 +77,11 @@ export class ERModel {
     return !!this._sequencies[name];
   }
 
+  public clear(): void {
+    this._entities = {};
+    this._sequencies = {};
+  }
+
   public add(entity: Entity): Entity {
     if (this.hasEntity(entity.name)) {
       throw new Error(`Entity ${entity.name} already exists`);
