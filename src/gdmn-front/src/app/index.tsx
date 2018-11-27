@@ -7,7 +7,7 @@ import { RouteAccessLevelType } from '@gdmn/client-core';
 import { getStore } from '@src/app/store/store';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
-import { getAuthContainer } from '@src/app/scenes/auth/container';
+import { getSignInBoxContainer } from '@src/app/scenes/auth/container';
 import { RootContainer } from '@src/app/scenes/root/container';
 import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
@@ -26,7 +26,7 @@ const apiService = new GdmnPubSubApi(apiUrl); // todo: config.server.authScheme
 
 const { store, persistor } = getStore(apiService);
 
-const AuthContainer = getAuthContainer(apiService);
+const AuthContainer = getSignInBoxContainer(apiService);
 const GdmnContainer = getGdmnContainer(apiService);
 const NotFoundView = () => <h2>404!</h2>;
 const rootRoutes = (
