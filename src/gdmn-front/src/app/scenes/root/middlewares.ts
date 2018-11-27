@@ -25,11 +25,7 @@ const errorMiddleware: Middleware = ({ dispatch, getState }) => next => action =
       }
       selectRootState(getState()).snackbarMessage = errorMsg; // todo: showMessage test
     } else {
-      const exludedPrefix = '@@redux-form/';
-      if (action.type.slice(0, exludedPrefix.length) !== exludedPrefix) {
-        /* open snackbar */
-        dispatch(rootActions.showMessage(errorMsg || action.type));
-      }
+      dispatch(rootActions.showMessage(errorMsg || action.type));
     }
   }
 

@@ -1,5 +1,4 @@
 import { combineReducers, Reducer } from 'redux';
-import { reducer as formReducer } from 'redux-form';
 import { getType } from 'typesafe-actions';
 
 import { TActions } from '@src/app/store/TActions';
@@ -14,7 +13,7 @@ interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: IGdmnState;
-  readonly form: any;
+  // readonly form: any;
   // readonly dataStoresState: TDataStoresState;
   // readonly backupsState: IBackupsState;
 }
@@ -24,7 +23,7 @@ const getReducer = () => {
     rootState: rootReducer,
     gdmnState: gdmnReducer,
     authState: getAuthReducer(),
-    form: formReducer // todo: move to auth
+    // form: formReducer // todo: move to auth
     // dataStoresState: dataStoresReducer,
     // ermodelState: ermodelReducer,
     // backupsState: backupsReducer
