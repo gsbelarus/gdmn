@@ -7,7 +7,7 @@ import styles from './styles.css';
 import { isDevMode, ErrorBoundary, LinkCommandBarButton } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
-import { Breadcrumb, IComponentAsProps, IBreadcrumbItem, CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
+import { Breadcrumb, IComponentAsProps, IBreadcrumbItem, CommandBar, ICommandBarItemProps, Icon } from 'office-ui-fabric-react';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -25,10 +25,89 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
     const { match, breadcrumbs } = this.props;
 
     return (
-      <div styleName="layout">
-        <div>
-          nav...
+      <div className="App">
+        <div className="Header">
+          <Icon iconName="Home" className="RoundIcon" />
+          <Icon iconName="Chat" className="NoFrameIcon" />
+          <div className="SearchBox">
+            find something...
+            <span className="WhereToSearch">
+              /
+            </span>
+          </div>
+          <div className="ImportantMenu">
+            Lorem
+          </div>
+          <div className="ImportantMenu">
+            Ipsum
+          </div>
+          <div className="ImportantMenu">
+            Diem
+          </div>
+          <div className="RightSideHeaderPart">
+            <span className="BigLogo">
+              <b><i>#GDMN</i></b> &mdash; Березовский мясоконсервный комбинат
+            </span>
+            <span className="WithNotificationsCount">
+              <Icon iconName="Ringer" className="NoFrameIcon" />
+              <span className="NotificationsCount">4</span>
+            </span>
+            <Icon iconName="Contact" className="RoundIcon" />
+          </div>
         </div>
+        <div className="UrgentMessage">
+          Urgent message!
+        </div>
+        <div className="OpenTasks">
+          <span className="RegularTask">
+            Накладные на приход
+            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
+          </span>
+          <span className="CurrentTask">
+            Текущий документ
+            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
+          </span>
+          <span className="ProgressTask">
+            <span className="ProgressIndicator" />
+            Длительный отчет строится
+            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
+          </span>
+          <span className="RegularTask">
+            Счета-фактуры
+            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
+          </span>
+          <span className="AttentionTask">
+            Отчет уже построен
+            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
+          </span>
+        </div>
+        <div className="BPSeq">
+          <span>
+            Приход сырья
+          </span>
+          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
+          <span>
+            <b>Хранение</b>
+          </span>
+          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
+          <span>
+            Производство
+            <span className="SubMenu">
+              <div>Украли</div>
+              <div>Испортилось</div>
+              <div>Продали</div>
+            </span>
+          </span>
+          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
+          <span>
+            Приход ГП
+          </span>
+          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
+          <span>
+            Отгрузка
+          </span>
+        </div>
+
         <div>
           <CommandBar
             items={this.getItems()}
@@ -62,7 +141,6 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
             </Switch>
           </ErrBoundary>
         </main>
-        <footer />
       </div>
     );
   }

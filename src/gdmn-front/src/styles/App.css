@@ -1,0 +1,205 @@
+.App {
+  font-size: 14px;
+}
+
+.Header {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-end;
+  width: 100%;
+  height: 56px;
+  padding: 8px 12px 8px 12px;
+  background-color: #404040;
+  color: white;
+}
+
+.RoundIcon {
+  font-size: 20px;
+  border: 1px solid white;
+  padding: 8px 10px 10px 10px;
+  border-radius: 50%;
+  margin-right: 16px;
+}
+
+.NoFrameIcon {
+  position: relative;
+  font-size: 20px;
+  padding-bottom: 8px;
+  margin-right: 16px;
+}
+
+.SearchBox {
+  position: relative;
+  border: 1px solid white;
+  font-style: italic;
+  font-size: 12px;
+  padding: 2px 4px 2px 4px;
+  min-width: 200px;
+  margin: 0 24px 10px 0;
+}
+
+.WhereToSearch {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  bottom: 2px;
+  border: 1px solid silver;
+  padding: 1px 4px 2px 4px;
+  font-size: 8px;
+  border-radius: 2px;
+}
+
+.ImportantMenu {
+  font-weight: 700;
+  margin-bottom: 12px;
+  margin-right: 16px;
+}
+
+.RightSideHeaderPart {
+  justify-self: flex-end;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.BigLogo {
+  font-size: 20px;
+  margin-bottom: 8px;
+  margin-right: 24px;
+}
+
+.WithNotificationsCount {
+  position: relative;
+}
+
+.NotificationsCount {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  background-color: red;
+  border-radius: 50%;
+  font-size: 10px;
+  padding: 1px 5px 1px 5px;
+}
+
+.UrgentMessage {
+  width: 100%;
+  height: 20px;
+  padding: 0px 8px 4px 12px;
+  background-color: orange;
+  color: black;
+}
+
+.OpenTasks {
+  width: 100%;
+  height: 25px;
+  padding: 4px 8px 4px 12px;
+  font-size: 12px;
+}
+
+.OpenTasks > span {
+  position: relative;
+  padding: 0 24px 1px 8px;
+  vertical-align: baseline;
+  margin-right: 8px;
+}
+
+.CloseTask {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+}
+
+.RegularTask {
+  border: 1px solid dimgray;
+  background-color: #404040;
+  color: white;
+}
+
+.AttentionTask {
+  border: 1px solid maroon;
+  background-color: red;
+  color: white;
+}
+
+.CurrentTask {
+  border: 1px solid dimgray;
+  background-color: white;
+  color: black;
+}
+
+.ProgressTask {
+  border: 1px solid dimgray;
+  background-color: transparent;
+  color: black;
+}
+
+.ProgressIndicator, .ProgressIndicator:before {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  z-index: -10;
+  overflow-x: hidden;
+}
+
+.ProgressIndicator {
+  background-color: #b3d4fc;
+  display: flex;
+}
+
+.ProgressIndicator:before {
+  background-color: dodgerblue;
+  content: '';
+  animation: running-progress 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes running-progress {
+  0% { margin-left: 0px; margin-right: 100%; }
+  50% { margin-left: 25%; margin-right: 0%; }
+  100% { margin-left: 100%; margin-right: 0; }
+}
+
+.BPSeq {
+  width: 100%;
+  height: 25px;
+  padding: 4px 8px 4px 12px;
+  font-size: 12px;
+  color: red;
+  align-items: flex-end;
+  display: flex;
+  flex-direction: row;
+}
+
+.BPSeq > span {
+  position: relative;
+  padding: 0 4px 0 4px;
+}
+
+.BPSeq > span > b {
+  text-decoration: underline;
+}
+
+.BPArrow {
+  padding: 4px 8px 0px 8px;
+  font-size: 10px;
+}
+
+.SubMenu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 4px 4px 4px;
+  border: 1px solid maroon;
+}
