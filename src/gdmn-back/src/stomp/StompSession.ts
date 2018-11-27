@@ -613,18 +613,24 @@ export class StompSession implements StompClientCommandListener {
   }
 
   private _getPayloadFromJwtToken(token: string): any {
-    const verified = jwt.verify(token, StompSession.JWT_SECRET);
+    try {
+      const verified = jwt.verify(token, StompSession.JWT_SECRET);
+      if (verified) {
+        const payload = jwt.decode(token);
+        if (!payload) {
+          throw new StompServerError(StompErrorCode.UNAUTHORIZED, "No payload");
+        }
 
-    if (verified) {
-      const payload = jwt.decode(token);
-      if (!payload) {
-        throw new Error("No payload");
+        return payload;
       }
-
-      return payload;
+    } catch (error) {
+      if (error.message === "invalid token") {
+        throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Invalid token");
+      }
+      throw error;
     }
 
-    throw new Error("Token not valid");
+    throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Token not valid");
   }
 
   private _checkContentType(headers?: StompHeaders): void | never {
