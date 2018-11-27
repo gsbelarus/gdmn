@@ -27,7 +27,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "clean": "shx rm -rf ./build",
     "build": "react-scripts build",
+    "rebuild": "yarn clean && yarn build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
