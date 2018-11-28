@@ -3,7 +3,7 @@ import { ITextFieldProps, TextField, Icon } from 'office-ui-fabric-react';
 
 interface IPasswordInputState {
   passwVisible?: boolean;
-};
+}
 
 export class PasswordInput extends React.Component<ITextFieldProps, IPasswordInputState> {
   public state: IPasswordInputState = {
@@ -15,16 +15,17 @@ export class PasswordInput extends React.Component<ITextFieldProps, IPasswordInp
     return (
       <TextField
         {...this.props}
-        type = {passwVisible ? 'text' : 'password'}
-        onRenderSuffix = {
-          () => <Icon iconName='RedEye' onClick={
-            () => {
+        type={passwVisible ? 'text' : 'password'}
+        onRenderSuffix={() => (
+          <Icon
+            iconName="RedEye"
+            onClick={() => {
               this.setState({ passwVisible: true });
-              setTimeout( () => this.setState({ passwVisible: false }), 400);
-            }
-          } />
-        }
+              setTimeout(() => this.setState({ passwVisible: false }), 400);
+            }}
+          />
+        )}
       />
     );
   }
-};
+}

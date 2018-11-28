@@ -1,6 +1,6 @@
-import {gdmnActions, TGdmnActions} from "@src/app/scenes/gdmn/actions";
-import {ERModel} from "gdmn-orm";
-import {getType} from "typesafe-actions";
+import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
+import { ERModel } from 'gdmn-orm';
+import { getType } from 'typesafe-actions';
 
 interface IGdmnState {
   erModel: ERModel;
@@ -23,4 +23,4 @@ function reducer(state: IGdmnState = initialState, action: TGdmnActions) {
   }
 }
 
-export {reducer, IGdmnState};
+export { reducer, IGdmnState };

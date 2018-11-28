@@ -133,9 +133,9 @@ class PubSubClient {
         queuedMessage.publishStateObservable.next(publishState);
 
         if (publishState.status === TPubSubMsgPublishStatus.PUBLISHED) {
-          const itemIndex = this.queuedPublishMessages.findIndex(item => item === queuedMessage); // todo test
+          const itemIndex = this.queuedPublishMessages.findIndex(item => item === queuedMessage);
           if (itemIndex !== -1) {
-            this.queuedPublishMessages.splice(itemIndex, 1); // todo test ref
+            this.queuedPublishMessages.splice(itemIndex, 1);
           }
 
           // queuedMessage.publishStatusObservable.complete(); // todo

@@ -45,7 +45,7 @@ interface IGdmnMessageReply<TResult = any, TPayload = any, TErrorCode = number> 
   error: IGdmnMessageError<TErrorCode>;
 }
 
-interface IGdmnMessageError<TErrorCode = number> {
+interface IGdmnMessageError<TErrorCode = string> {
   code: TErrorCode;
   message: string;
 }

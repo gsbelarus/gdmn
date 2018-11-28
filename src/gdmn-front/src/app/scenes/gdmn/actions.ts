@@ -1,4 +1,4 @@
-import {ERModel} from "gdmn-orm";
+import { ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TPingTaskCmd, TGetSchemaTaskCmd } from '@gdmn/server-api';
 
@@ -20,7 +20,7 @@ const gdmnActions = {
   apiDeleteAccount: createAction('gdmn/API_DELETE_ACCOUNT', resolve => {
     return () => resolve();
   }),
-  setSchema: createAction("gdmm/SET_SCHEMA", resolve => {
+  setSchema: createAction('gdmm/SET_SCHEMA', resolve => {
     return (erModel: ERModel) => resolve(erModel);
   })
 };
