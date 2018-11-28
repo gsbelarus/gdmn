@@ -117,7 +117,7 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         this._connectionPool.addListener("factoryCreateError", console.error);
         this._connectionPool.addListener("factoryDestroyError", console.error);
 
-        (this._connectionPool as any).start();
+        this._connectionPool.start();
     }
 
     public async destroy(): Promise<void> {
@@ -125,10 +125,6 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
             throw new Error("Connection pool need created");
         }
         await this._connectionPool.drain();
-        // workaround; Wait until quantity minimum connections is established
-        await Promise.all(
-            Array.from((this._connectionPool as any)._factoryCreateOperations).map(reflector)
-        );
         await this._connectionPool.clear();
         this._connectionPool.removeListener("factoryCreateError", console.error);
         this._connectionPool.removeListener("factoryDestroyError", console.error);
@@ -143,17 +139,3 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         return await this._connectionPool.acquire();
     }
 }
-
-function noop(): void {
-    // ignore
-}
-
-/**
- * Reflects a promise but does not expose any
- * underlying value or rejection from that promise.
- * @param  {Promise} promise [description]
- * @return {Promise}         [description]
- */
-const reflector = (promise: any) => {
-    return promise.then(noop, noop);
-};
