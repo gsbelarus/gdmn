@@ -89,19 +89,19 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       case getType(gdmnActions.apiGetSchema):
-        // apiService.getSchema({
-        //   payload: {
-        //     action: TTaskActionNames.GET_SCHEMA,
-        //     payload: undefined
-        //   }
-        // }).subscribe(value => {
-        //     if (value.error) {
-        //       dispatch(rootActions.onError(new Error(value.error.message)));
-        //     } else if (!!value.payload.result) {
-        //       const erModel = deserializeERModel(value.payload.result);
-        //       dispatch(gdmnActions.setSchema(erModel));
-        //     }
-        //   });
+        apiService.getSchema({
+          payload: {
+            action: TTaskActionNames.GET_SCHEMA,
+            payload: undefined
+          }
+        }).subscribe(value => {
+            if (value.error) {
+              dispatch(rootActions.onError(new Error(value.error.message)));
+            } else if (!!value.payload.result) {
+              const erModel = deserializeERModel(value.payload.result);
+              dispatch(gdmnActions.setSchema(erModel));
+            }
+          });
 
         break;
       case getType(gdmnActions.apiDeleteAccount): {
