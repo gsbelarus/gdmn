@@ -22,7 +22,7 @@ const getReducer = () => {
   const reducer = combineReducers<IState>({
     rootState: rootReducer,
     gdmnState: gdmnReducer,
-    authState: getAuthReducer(),
+    authState: getAuthReducer()
     // form: formReducer // todo: move to auth
     // dataStoresState: dataStoresReducer,
     // ermodelState: ermodelReducer,

@@ -1,16 +1,16 @@
-import {Auth} from "@gdmn/client-core";
-import {TGdmnErrorCodes, TTaskActionNames} from "@gdmn/server-api";
-import {authActions} from "@src/app/scenes/auth/actions";
-import {gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {rootActions} from "@src/app/scenes/root/actions";
+import { Auth } from '@gdmn/client-core';
+import { TGdmnErrorCodes, TTaskActionNames } from '@gdmn/server-api';
+import { authActions } from '@src/app/scenes/auth/actions';
+import { gdmnActions } from '@src/app/scenes/gdmn/actions';
+import { rootActions } from '@src/app/scenes/root/actions';
 
-import {GdmnPubSubApi} from "@src/app/services/GdmnPubSubApi";
-import {selectAuthState} from "@src/app/store/selectors";
-import {deserializeERModel} from "gdmn-orm";
-import {Middleware} from "redux";
-import {Subscription} from "rxjs";
-import {first} from "rxjs/operators";
-import {getType} from "typesafe-actions";
+import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
+import { selectAuthState } from '@src/app/store/selectors';
+import { deserializeERModel } from 'gdmn-orm';
+import { Middleware } from 'redux';
+import { Subscription } from 'rxjs';
+import { first } from 'rxjs/operators';
+import { getType } from 'typesafe-actions';
 
 const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
   return ({ dispatch, getState }) => next => async (action: any) => {
@@ -18,8 +18,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
     switch (action.type) {
       case getType(gdmnActions.apiConnect):
-        // todo: sub first()
-
         const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
         const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
         if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
@@ -35,46 +33,42 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             });
 
             dispatch(gdmnActions.apiGetSchema());
-
-          } catch (errMessage) {
-            console.log('auth: ', errMessage);
+          } catch (error) {
+            console.log('auth error: ', error);
 
             if (errorSubscription) {
               errorSubscription.unsubscribe();
               errorSubscription = undefined;
             } // todo
 
-            // IPubSubMessage<TGdmnReceivedErrorMeta>
-            if (errMessage.meta && errMessage.meta.code && errMessage.meta.code === TGdmnErrorCodes.UNAUTHORIZED) {
+            // if (error instanceof GdmnPubSubError) {
+            if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
               dispatch(authActions.signOut());
             } else {
-              dispatch(rootActions.onError(new Error(errMessage.meta ? errMessage.meta.message : errMessage)));
+              dispatch(rootActions.onError(error));
             }
+            // } else {
+            //   dispatch(rootActions.onError(new Error(error)));
+            // }
           }
         } else {
           dispatch(authActions.signOut());
         }
 
         errorSubscription = apiService.errorMessageObservable.pipe(first()).subscribe(errMessage => {
-          //  IPubSubMessage<TGdmnReceivedErrorMeta>
-          if (errMessage.meta && !!errMessage.meta.code && errMessage.meta!.code === TGdmnErrorCodes.UNAUTHORIZED) {
+          const error = new GdmnPubSubError(<any>errMessage); // fixme type
+
+          if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
             dispatch(authActions.signOut());
           } else {
-
             //  fixme: duplication after auth error
-            dispatch(
-              rootActions.onError(
-                new Error(
-                  errMessage.meta && errMessage.meta!.message ? errMessage.meta!.message : JSON.stringify(errMessage)
-                )
-              )
-            );
+            dispatch(rootActions.onError(error));
 
-            if (errMessage.meta && !!errMessage.meta.code && errMessage.meta!.code === TGdmnErrorCodes.INTERNAL) {
+            if (error.errorData.code === TGdmnErrorCodes.INTERNAL) {
               dispatch(gdmnActions.apiConnect(true));
+            } else {
+              // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));
             }
-
-            // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));
           }
         });
 
@@ -95,19 +89,19 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       case getType(gdmnActions.apiGetSchema):
-        apiService.getSchema({
-          payload: {
-            action: TTaskActionNames.GET_SCHEMA,
-            payload: undefined
-          }
-        }).subscribe(value => {
-            if (value.error) {
-              dispatch(rootActions.onError(new Error(value.error.message)));
-            } else if (!!value.payload.result) {
-              const erModel = deserializeERModel(value.payload.result);
-              dispatch(gdmnActions.setSchema(erModel));
-            }
-          });
+        // apiService.getSchema({
+        //   payload: {
+        //     action: TTaskActionNames.GET_SCHEMA,
+        //     payload: undefined
+        //   }
+        // }).subscribe(value => {
+        //     if (value.error) {
+        //       dispatch(rootActions.onError(new Error(value.error.message)));
+        //     } else if (!!value.payload.result) {
+        //       const erModel = deserializeERModel(value.payload.result);
+        //       dispatch(gdmnActions.setSchema(erModel));
+        //     }
+        //   });
 
         break;
       case getType(gdmnActions.apiDeleteAccount): {
@@ -125,12 +119,16 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
                 'delete-user': 1
               }
             });
-          } catch (errMessage) {
-            if (errMessage.meta && errMessage.meta.code && errMessage.meta.code === TGdmnErrorCodes.UNAUTHORIZED) {
+          } catch (error) {
+            // if (error instanceof GdmnPubSubError) {
+            if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
               dispatch(authActions.signOut());
             } else {
-              dispatch(rootActions.onError(new Error(errMessage.meta ? errMessage.meta.message : errMessage)));
+              dispatch(rootActions.onError(error));
             }
+            // } else {
+            //   dispatch(rootActions.onError(new Error(error)));
+            // }
           }
         } else {
           dispatch(authActions.signOut());

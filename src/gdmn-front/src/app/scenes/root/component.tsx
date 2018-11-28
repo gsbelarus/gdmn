@@ -12,7 +12,7 @@ export interface IRootProps {
   readonly store: Store;
   readonly persistor: Persistor;
   readonly routes: ReactNode;
-};
+}
 
 // TODO const history = browserHistory; // syncHistoryWithStore(browserHistory, store)
 
@@ -23,9 +23,7 @@ export const Root: SFC<IRootProps> = ({ store, persistor, routes }) => (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Fragment>
-          <BrowserRouter>
-            {routes}
-          </BrowserRouter>
+          <BrowserRouter>{routes}</BrowserRouter>
         </Fragment>
       </PersistGate>
     </Provider>

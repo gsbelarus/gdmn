@@ -22,16 +22,8 @@ class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewSta
     return (
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div>
-          <TextField
-            label="delay"
-            value={this.state.pingDelay.toString()}
-            onChange={this.handlePingDelayChange}
-          />
-          <TextField
-            label="steps"
-            value={this.state.pingSteps.toString()}
-            onChange={this.handlePingStepsChange}
-          />
+          <TextField label="delay" value={this.state.pingDelay.toString()} onChange={this.handlePingDelayChange} />
+          <TextField label="steps" value={this.state.pingSteps.toString()} onChange={this.handlePingStepsChange} />
           <Button onClick={this.handlePingClick} text="SEND PING-TASK" />
         </div>
       </div>
