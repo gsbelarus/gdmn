@@ -1,4 +1,3 @@
-import React from 'react';
 import { compose, mapProps, setDisplayName, wrapDisplayName } from 'recompose';
 
 // TODO types

@@ -1,4 +1,3 @@
-export * from './components/form/PasswordField';
 export * from './components/form/PasswordInput';
 export * from './components/form/TextField';
 export * from './components/form/withField';

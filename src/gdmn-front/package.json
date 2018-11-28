@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^5.0.1",
+    "@types/i18next": "^11.9.3",
     "es6-error": "4.1.1",
     "gdmn-nlp-agent": "1.0.0",
     "gdmn-orm": "1.0.0",
