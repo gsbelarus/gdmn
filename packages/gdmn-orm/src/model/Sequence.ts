@@ -1,9 +1,7 @@
 import {ISequenceAdapter} from "../rdbadapter";
-import {IBaseOptions, ISequenceSource} from "../types";
+import {IBaseOptions} from "../types";
 
 export class Sequence<Adapter = ISequenceAdapter> {
-
-  protected _source?: ISequenceSource;
 
   private readonly _name: string;
   private readonly _adapter?: Adapter;
@@ -19,12 +17,5 @@ export class Sequence<Adapter = ISequenceAdapter> {
 
   get adapter(): Adapter | undefined {
     return this._adapter;
-  }
-
-  public async initDataSource(source?: ISequenceSource): Promise<void> {
-    this._source = source;
-    if (this._source) {
-      await this._source.init(this);
-    }
   }
 }

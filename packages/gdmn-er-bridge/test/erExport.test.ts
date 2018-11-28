@@ -1,23 +1,29 @@
-import * as fs from "fs";
+import fs from "fs";
+import {AConnection} from "gdmn-db";
 import {deserializeERModel, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
-import {DataSource} from "../src";
 import {IDBDetail} from "../src/ddl/export/dbdetail";
+import {ERBridge} from "../src/ERBridge";
 
 jest.setTimeout(120000);
 
 describe("ERExport", () => {
 
   const dbDetail = require("./testDB").exportTestDBDetail as IDBDetail;
-  const connectionPool = dbDetail.driver.newCommonConnectionPool();
-  const erModel = new ERModel(new DataSource(connectionPool));
+  const connection = dbDetail.driver.newConnection();
+  const erModel = new ERModel();
 
   beforeAll(async () => {
-    await connectionPool.create(dbDetail.options, {max: 1, acquireTimeoutMillis: 10000});
-    await erModel.init();
+    await connection.connect(dbDetail.options);
+    await ERBridge.initDatabase(connection);
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.reloadERModel(connection, transaction, erModel)
+    });
   });
 
   afterAll(async () => {
-    await connectionPool.destroy();
+    await connection.disconnect();
   });
 
   it("erExport", async () => {

@@ -93,7 +93,7 @@ export function deserializeERModel(serialized: IERModel): ERModel {
     let result = erModel.sequencies[sequence];
 
     if (!result) {
-      erModel.addSequence(result = new Sequence({name: sequence}));
+      erModel.add(result = new Sequence({name: sequence}));
     }
 
     return result;
@@ -230,7 +230,7 @@ export function deserializeERModel(serialized: IERModel): ERModel {
   const createUnique = (e: IEntity): void => {
     const entity = erModel.entity(e.name);
     const values = e.unique.map((_values) => _values.map((_attr) => entity.ownAttribute(_attr)));
-    values.forEach((attrs) => entity.addUnique(attrs));
+    values.forEach((attrs) => entity.add(attrs));
   };
 
   serialized.entities.forEach((e) => createEntity(e));

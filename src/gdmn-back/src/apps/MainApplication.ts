@@ -2,7 +2,7 @@ import config from "config";
 import crypto from "crypto";
 import {existsSync, mkdirSync} from "fs";
 import {AConnection, ATransaction, Factory, IConnectionServer} from "gdmn-db";
-import {Connection} from "gdmn-er-bridge";
+import {ERBridge} from "gdmn-er-bridge";
 import {
   BlobAttribute,
   BooleanAttribute,
@@ -146,7 +146,7 @@ export class MainApplication extends Application {
 
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
-        const connection = (context.session.connection as Connection).connection;
+        const connection = context.session.connection;
 
         const userAppInfo = await AConnection.executeTransaction({
           connection,
@@ -194,7 +194,7 @@ export class MainApplication extends Application {
 
         const {uid} = context.command.payload;
         const {userKey} = context.session;
-        const connection = (context.session.connection as Connection).connection;
+        const connection = context.session.connection;
 
         await AConnection.executeTransaction({
           connection,
@@ -231,7 +231,7 @@ export class MainApplication extends Application {
         this.checkSession(session);
 
         const {userKey} = context.session;
-        const connection = (context.session.connection as Connection).connection;
+        const connection = context.session.connection;
 
         return await AConnection.executeTransaction({
           connection,
@@ -262,7 +262,7 @@ export class MainApplication extends Application {
       throw new Error("MainApplication is not created");
     }
     let application = this._applications.get(uid);
-    const connection = (session.connection as Connection).connection;
+    const connection = session.connection;
     const userAppInfo = await AConnection.executeTransaction({
       connection,
       callback: (transaction) => this._getUserApplicationInfo(connection, transaction, session.userKey, uid)
@@ -401,89 +401,82 @@ export class MainApplication extends Application {
   protected async _onCreate(): Promise<void> {
     await super._onCreate();
 
-    const connection = await this.erModel.createConnection();
-    try {
-      const transaction = await this.erModel.startTransaction(connection);
-      try {
+    await this._executeConnection((connection) => AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.executeSelf({
+        connection,
+        transaction,
+        callback: async ({erBuilder, eBuilder}) => {
+          // APP_USER
+          const userEntity = await erBuilder.create(this.erModel, new Entity({
+            name: "APP_USER", lName: {ru: {name: "Пользователь"}}
+          }));
+          await eBuilder.create(userEntity, new StringAttribute({
+            name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1, maxLength: 32
+          }));
+          await eBuilder.create(userEntity, new BlobAttribute({
+            name: "PASSWORD_HASH", lName: {ru: {name: "Хешированный пароль"}}, required: true
+          }));
+          await eBuilder.create(userEntity, new BlobAttribute({
+            name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
+          }));
+          await eBuilder.create(userEntity, new TimeStampAttribute({
+            name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
+            defaultValue: "CURRENT_TIMESTAMP"
+          }));
+          await eBuilder.create(userEntity, new BooleanAttribute({
+            name: "IS_ADMIN", lName: {ru: {name: "Пользователь - администратор"}}
+          }));
+          await eBuilder.create(userEntity, new BooleanAttribute({
+            name: "DELETED", lName: {ru: {name: "Удален"}}
+          }));
 
-        // APP_USER
-        const userEntity = await this.erModel.create(new Entity({
-          name: "APP_USER", lName: {ru: {name: "Пользователь"}}
-        }), connection, transaction);
-        await userEntity.create(new StringAttribute({
-          name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1, maxLength: 32
-        }), connection, transaction);
-        await userEntity.create(new BlobAttribute({
-          name: "PASSWORD_HASH", lName: {ru: {name: "Хешированный пароль"}}, required: true
-        }), connection, transaction);
-        await userEntity.create(new BlobAttribute({
-          name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
-        }), connection, transaction);
-        await userEntity.create(new TimeStampAttribute({
-          name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
-          defaultValue: "CURRENT_TIMESTAMP"
-        }), connection, transaction);
-        await userEntity.create(new BooleanAttribute({
-          name: "IS_ADMIN", lName: {ru: {name: "Пользователь - администратор"}}
-        }), connection, transaction);
-        await userEntity.create(new BooleanAttribute({
-          name: "DELETED", lName: {ru: {name: "Удален"}}
-        }), connection, transaction);
+          // APPLICATION
+          const appEntity = await erBuilder.create(this.erModel, new Entity({
+            name: "APPLICATION", lName: {ru: {name: "Приложение"}}
+          }));
+          await eBuilder.create(appEntity, new EntityAttribute({
+            name: "OWNER", lName: {ru: {name: "Создатель"}}, required: true, entities: [userEntity]
+          }));
+          await eBuilder.create(appEntity, new BooleanAttribute({
+            name: "IS_EXTERNAL", lName: {ru: {name: "Является внешним"}}, required: true
+          }));
+          await eBuilder.create(appEntity, new StringAttribute({
+            name: "HOST", lName: {ru: {name: "Хост"}}, maxLength: 260
+          }));
+          await eBuilder.create(appEntity, new IntegerAttribute({
+            name: "PORT", lName: {ru: {name: "Хост"}}
+          }));
+          await eBuilder.create(appEntity, new StringAttribute({
+            name: "USERNAME", lName: {ru: {name: "Имя пользователя"}}, maxLength: 260
+          }));
+          await eBuilder.create(appEntity, new StringAttribute({
+            name: "PASSWORD", lName: {ru: {name: "Пароль"}}, maxLength: 260
+          }));
+          await eBuilder.create(appEntity, new StringAttribute({
+            name: "PATH", lName: {ru: {name: "Путь"}}, maxLength: 260
+          }));
+          const appUid = new StringAttribute({
+            name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
+          });
+          await eBuilder.create(appEntity, appUid);
+          await eBuilder.create(appEntity, [appUid]);
+          await eBuilder.create(appEntity, new TimeStampAttribute({
+            name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
+            defaultValue: "CURRENT_TIMESTAMP"
+          }));
+          const appSet = new SetAttribute({
+            name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
+            adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+          });
+          appSet.add(new StringAttribute({
+            name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
+          }));
 
-        // APPLICATION
-        const appEntity = await this.erModel.create(new Entity({
-          name: "APPLICATION", lName: {ru: {name: "Приложение"}}
-        }), connection, transaction);
-        await appEntity.create(new EntityAttribute({
-          name: "OWNER", lName: {ru: {name: "Создатель"}}, required: true, entities: [userEntity]
-        }), connection, transaction);
-        await appEntity.create(new BooleanAttribute({
-          name: "IS_EXTERNAL", lName: {ru: {name: "Является внешним"}}, required: true
-        }), connection, transaction);
-        await appEntity.create(new StringAttribute({
-          name: "HOST", lName: {ru: {name: "Хост"}}, maxLength: 260
-        }), connection, transaction);
-        await appEntity.create(new IntegerAttribute({
-          name: "PORT", lName: {ru: {name: "Хост"}}
-        }), connection, transaction);
-        await appEntity.create(new StringAttribute({
-          name: "USERNAME", lName: {ru: {name: "Имя пользователя"}}, maxLength: 260
-        }), connection, transaction);
-        await appEntity.create(new StringAttribute({
-          name: "PASSWORD", lName: {ru: {name: "Пароль"}}, maxLength: 260
-        }), connection, transaction);
-        await appEntity.create(new StringAttribute({
-          name: "PATH", lName: {ru: {name: "Путь"}}, maxLength: 260
-        }), connection, transaction);
-        const appUid = new StringAttribute({
-          name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
-        });
-        await appEntity.create(appUid, connection, transaction);
-        await appEntity.addAttrUnique([appUid], connection, transaction);
-        await appEntity.create(new TimeStampAttribute({
-          name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
-          defaultValue: "CURRENT_TIMESTAMP"
-        }), connection, transaction);
-        const appSet = new SetAttribute({
-          name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-          adapter: {crossRelation: "APP_USER_APPLICATIONS"}
-        });
-        appSet.add(new StringAttribute({
-          name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
-        }));
-
-        await userEntity.create(appSet, connection, transaction);
-
-        await transaction.commit();
-      } catch (error) {
-        await transaction.rollback();
-        throw error;
-      }
-    } finally {
-      if (connection.connected) {
-        await connection.disconnect();
-      }
-    }
+          await eBuilder.create(userEntity, appSet);
+        }
+      })
+    }));
 
     await this._executeConnection((_connection) => AConnection.executeTransaction({
       connection: _connection,

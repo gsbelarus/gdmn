@@ -1,6 +1,6 @@
 import fs from "fs";
-import {ADriver, IConnectionOptions} from "gdmn-db";
-import {DataSource} from "gdmn-er-bridge";
+import {AConnection, ADriver, IConnectionOptions} from "gdmn-db";
+import {ERBridge} from "gdmn-er-bridge";
 import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
 import {deserializeERModel, ERModel} from "gdmn-orm";
 import {ERTranslatorRU} from "../agent";
@@ -21,13 +21,16 @@ describe("erModel", () => {
 
   const dbDetail = require("./testDB").testDB[0] as IDBDetail;
   const {driver, options}: IDBDetail = dbDetail;
-  const connectionPool = driver.newCommonConnectionPool();
+  const connection = driver.newConnection();
 
   beforeAll(async () => {
-    await connectionPool.create(options, {max: 1, acquireTimeoutMillis: 10000});
+    await connection.connect(options);
+    await ERBridge.initDatabase(connection);
 
-    const erModel2 = new ERModel(new DataSource(connectionPool));
-    await erModel2.init();
+    const erModel2 = await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.reloadERModel(connection, transaction, new ERModel())
+    });
     expect(erModel2).toBeDefined();
     const serialized = erModel2.serialize();
     erModel = deserializeERModel(serialized);
@@ -48,7 +51,7 @@ describe("erModel", () => {
   });
 
   afterAll(async () => {
-    await connectionPool.destroy();
+    await connection.disconnect();
   });
 
   it("phrase", () => {

@@ -79,7 +79,7 @@ export class ERExport {
   public async execute(): Promise<ERModel> {
     this._atResult = await load(this._connection, this._transaction);
 
-    this._erModel.addSequence(new Sequence({name: Constants.GLOBAL_GENERATOR}));
+    this._erModel.add(new Sequence({name: Constants.GLOBAL_GENERATOR}));
     await this._gdEntities.create(this._getATResult());
 
     this._createEntities();
@@ -217,7 +217,7 @@ export class ERExport {
           }
           return uqAttr;
         });
-        entity.addUnique(attrs);
+        entity.add(attrs);
       });
     });
   }

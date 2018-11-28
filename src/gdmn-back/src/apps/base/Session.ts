@@ -1,6 +1,7 @@
 import config from "config";
 import {EventEmitter} from "events";
-import {IConnection, ITransaction} from "gdmn-orm";
+import {AConnection, ITransactionOptions} from "gdmn-db";
+import {ERBridge} from "gdmn-er-bridge";
 import {Logger} from "log4js";
 import ms from "ms";
 import StrictEventEmitter from "strict-event-emitter-types";
@@ -12,7 +13,7 @@ import {TaskManager} from "./task/TaskManager";
 export interface IOptions {
   readonly id: string;
   readonly userKey: number;
-  readonly connection: IConnection;
+  readonly connection: AConnection;
   readonly logger?: Logger;
 }
 
@@ -41,7 +42,7 @@ export class Session {
   protected readonly _logger: Logger | Console;
 
   private readonly _options: IOptions;
-  private readonly _transactions = new Map<string, ITransaction>();
+  private readonly _bridges = new Map<string, ERBridge>();
   private readonly _taskManager = new TaskManager();
 
   private _status: SessionStatus = SessionStatus.OPENED;
@@ -61,16 +62,12 @@ export class Session {
     return this._options.userKey;
   }
 
-  get connection(): IConnection {
+  get connection(): AConnection {
     return this._options.connection;
   }
 
   get status(): SessionStatus {
     return this._status;
-  }
-
-  get active(): boolean {
-    return this._options.connection.connected;
   }
 
   get taskManager(): TaskManager {
@@ -90,18 +87,44 @@ export class Session {
     }
   }
 
-  public addTransaction(transaction: ITransaction): string {
+  public async startBridge(options?: ITransactionOptions): Promise<string> {
     const uid = uuidV1().toUpperCase();
-    this._transactions.set(uid, transaction);
+    const transaction = await this._options.connection.startTransaction(options);
+    const erBridge = new ERBridge(this._options.connection, transaction);
+    this._bridges.set(uid, erBridge);
     return uid;
   }
 
-  public getTransaction(uid: string): ITransaction | undefined {
-    return uid !== undefined ? this._transactions.get(uid) : undefined;
+  public async commitBridge(uid: string): Promise<void> {
+    const bridge = this._bridges.get(uid);
+    if (!bridge) {
+      throw new Error("Bridge is not found");
+    }
+    this._bridges.delete(uid);
+    if (!bridge.disposed) {
+      await bridge.dispose();
+    }
+    if (!bridge.transaction.finished) {
+      await bridge.transaction.commit();
+    }
   }
 
-  public removeTransaction(uid: string): boolean {
-    return this._transactions.delete(uid);
+  public async rollbackBridge(uid: string): Promise<void> {
+    const bridge = this._bridges.get(uid);
+    if (!bridge) {
+      throw new Error("Bridge is not found");
+    }
+    this._bridges.delete(uid);
+    if (!bridge.disposed) {
+      await bridge.dispose();
+    }
+    if (!bridge.transaction.finished) {
+      await bridge.transaction.rollback();
+    }
+  }
+
+  public getBridge(uid: string): ERBridge | undefined {
+    return this._bridges.get(uid);
   }
 
   public close(): void {
@@ -119,12 +142,8 @@ export class Session {
       .filter((task) => task.options.session === this)
       .forEach((task) => task.interrupt());
     this._taskManager.clear();
-    for (const [key, transaction] of this._transactions) {
-      if (!transaction.finished) {
-        await transaction.rollback();
-        this._logger.info("id#%s transaction (id#%s) was rolled back", this.id, key);
-      }
-      this._transactions.delete(key);
+    for (const key of this._bridges.keys()) {
+      await this.rollbackBridge(key);
     }
     await this._options.connection.disconnect();
 

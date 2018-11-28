@@ -11,9 +11,7 @@ import {
   EnumAttribute,
   ERModel,
   FloatAttribute,
-  IConnection,
   IntegerAttribute,
-  ITransaction,
   MAX_16BIT_INT,
   MAX_32BIT_INT,
   MIN_16BIT_INT,
@@ -27,6 +25,7 @@ import {
 } from "gdmn-orm";
 import moment from "moment";
 import {resolve} from "path";
+import {ERBridge} from "../src";
 import {
   Crud,
   IDelete,
@@ -39,7 +38,6 @@ import {
   IUpdateOrInsert
 } from "../src/crud/Crud";
 import {Constants} from "../src/ddl/Constants";
-import {DataSource} from "../src/source/DataSource";
 
 export const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
@@ -47,40 +45,27 @@ export const dbOptions: IConnectionOptions = {
   path: resolve("./TEST.FDB")
 };
 
-interface IExecuteObj {
-  connection: IConnection;
-  transaction: ITransaction;
-}
+jest.setTimeout(60 * 1000);
 
 describe("DataSource", () => {
-  jest.setTimeout(60 * 1000);
-
   const connection = Factory.FBDriver.newConnection();
-  const connectionPool = Factory.FBDriver.newCommonConnectionPool();
 
   const initERModel = async () => {
-    const erModel = new ERModel(new DataSource(connectionPool));
-    await erModel.init();
-    return erModel;
+    return await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.reloadERModel(connection, transaction, new ERModel())
+    });
   };
 
-  const executeERModel = async <R>(erModel: ERModel, callback: TExecutor<IExecuteObj, R>): Promise<R> => {
-    const connection = await erModel.createConnection();
-    try {
-      const transaction = await erModel.startTransaction(connection);
-      try {
-        return await callback({connection, transaction});
-      } finally {
-        if (!transaction.finished) {
-          await transaction.commit();
-        }
-      }
-    } finally {
-      if (connection.connected) {
-        await connection.disconnect();
-      }
-      await erModel.clearDataSource();
-    }
+  const execute = async <R>(callback: TExecutor<ERBridge, R>): Promise<R> => {
+    return await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.executeSelf({
+        connection,
+        transaction,
+        callback: (erBridge) => callback(erBridge)
+      })
+    });
   };
 
   beforeEach(async () => {
@@ -88,55 +73,53 @@ describe("DataSource", () => {
       unlinkSync(dbOptions.path);
     }
     await connection.createDatabase(dbOptions);
-    await connectionPool.create(dbOptions, {min: 1, max: 1, acquireTimeoutMillis: 10000});
+    await ERBridge.initDatabase(connection);
   });
 
   afterEach(async () => {
-    await connectionPool.destroy();
     await connection.dropDatabase();
   });
 
   it("Insert", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const appEntity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const appEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
-      }), connection, transaction);
+      }));
 
-      await appEntity.create(new StringAttribute({
+      await eBuilder.create(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
+      }));
+      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
 
-      await appEntity.addAttrUnique([appEntity.attribute("UID")], connection, transaction);
-
-      const backupEntity = await erModel.create(new Entity({
+      const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
-      await backupEntity.addAttrUnique([backupEntity.attribute("UID")], connection, transaction);
-      await backupEntity.create(new EntityAttribute({
+      }));
+      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.create(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-      }), connection, transaction);
+      }));
 
-      const placeEntity = await erModel.create(new Entity({
+      const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
-      }), connection, transaction);
-      await placeEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
-      }), connection, transaction);
+      }));
 
-      const userEntity = await erModel.create(new Entity({
+      const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
-      }), connection, transaction);
-      await userEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
-      }), connection, transaction);
+      }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
         adapter: {crossRelation: "APP_USER_APPLICATIONS"}
@@ -144,12 +127,12 @@ describe("DataSource", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await userEntity.create(appSet, connection, transaction);
+      await eBuilder.create(userEntity, appSet);
 
-      await userEntity.create(new EntityAttribute({
+      await eBuilder.create(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
-      }), connection, transaction);
-      await userEntity.create(new DetailAttribute({
+      }));
+      await eBuilder.create(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -158,7 +141,7 @@ describe("DataSource", () => {
             link2masterField: Constants.DEFAULT_MASTER_KEY_NAME
           }]
         }
-      }), connection, transaction);
+      }));
     });
 
 
@@ -570,50 +553,49 @@ describe("DataSource", () => {
         await usersResult.close();
       }
     });
-
   });
 
   it("Update", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const appEntity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const appEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
-      }), connection, transaction);
+      }));
 
-      await appEntity.create(new StringAttribute({
+      await eBuilder.create(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
+      }));
 
-      await appEntity.addAttrUnique([appEntity.attribute("UID")], connection, transaction);
+      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
 
-      const backupEntity = await erModel.create(new Entity({
+      const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
-      await backupEntity.addAttrUnique([backupEntity.attribute("UID")], connection, transaction);
-      await backupEntity.create(new EntityAttribute({
+      }));
+      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.create(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-      }), connection, transaction);
+      }));
 
-      const placeEntity = await erModel.create(new Entity({
+      const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
-      }), connection, transaction);
-      await placeEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
-      }), connection, transaction);
+      }));
 
-      const userEntity = await erModel.create(new Entity({
+      const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
-      }), connection, transaction);
-      await userEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
-      }), connection, transaction);
+      }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
         adapter: {crossRelation: "APP_USER_APPLICATIONS"}
@@ -621,12 +603,12 @@ describe("DataSource", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await userEntity.create(appSet, connection, transaction);
+      await eBuilder.create(userEntity, appSet);
 
-      await userEntity.create(new EntityAttribute({
+      await eBuilder.create(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
-      }), connection, transaction);
-      await userEntity.create(new DetailAttribute({
+      }));
+      await eBuilder.create(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -635,7 +617,7 @@ describe("DataSource", () => {
             link2masterField: Constants.DEFAULT_MASTER_KEY_NAME
           }]
         }
-      }), connection, transaction);
+      }));
     });
 
 
@@ -913,45 +895,45 @@ describe("DataSource", () => {
 
   it("UpdateOrInsert", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const appEntity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const appEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
-      }), connection, transaction);
+      }));
 
-      await appEntity.create(new StringAttribute({
+      await eBuilder.create(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
+      }));
 
-      await appEntity.addAttrUnique([appEntity.attribute("UID")], connection, transaction);
+      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
 
-      const backupEntity = await erModel.create(new Entity({
+      const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
-      await backupEntity.addAttrUnique([backupEntity.attribute("UID")], connection, transaction);
-      await backupEntity.create(new EntityAttribute({
+      }));
+      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.create(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-      }), connection, transaction);
+      }));
 
-      const placeEntity = await erModel.create(new Entity({
+      const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
-      }), connection, transaction);
-      await placeEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
-      }), connection, transaction);
+      }));
 
-      const userEntity = await erModel.create(new Entity({
+      const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
-      }), connection, transaction);
-      await userEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
-      }), connection, transaction);
+      }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
         adapter: {crossRelation: "APP_USER_APPLICATIONS"}
@@ -959,12 +941,12 @@ describe("DataSource", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await userEntity.create(appSet, connection, transaction);
+      await eBuilder.create(userEntity, appSet);
 
-      await userEntity.create(new EntityAttribute({
+      await eBuilder.create(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
-      }), connection, transaction);
-      await userEntity.create(new DetailAttribute({
+      }));
+      await eBuilder.create(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -973,7 +955,7 @@ describe("DataSource", () => {
             link2masterField: Constants.DEFAULT_MASTER_KEY_NAME
           }]
         }
-      }), connection, transaction);
+      }));
     });
 
     const appEntity = erModel.entity("APPLICATION");
@@ -1260,45 +1242,45 @@ describe("DataSource", () => {
 
   it("Delete", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const appEntity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const appEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
-      }), connection, transaction);
+      }));
 
-      await appEntity.create(new StringAttribute({
+      await eBuilder.create(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
+      }));
 
-      await appEntity.addAttrUnique([appEntity.attribute("UID")], connection, transaction);
+      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
 
-      const backupEntity = await erModel.create(new Entity({
+      const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
-      }), connection, transaction);
-      await backupEntity.addAttrUnique([backupEntity.attribute("UID")], connection, transaction);
-      await backupEntity.create(new EntityAttribute({
+      }));
+      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.create(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-      }), connection, transaction);
+      }));
 
-      const placeEntity = await erModel.create(new Entity({
+      const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
-      }), connection, transaction);
-      await placeEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
-      }), connection, transaction);
+      }));
 
-      const userEntity = await erModel.create(new Entity({
+      const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
-      }), connection, transaction);
-      await userEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
-      }), connection, transaction);
+      }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
         adapter: {crossRelation: "APP_USER_APPLICATIONS"}
@@ -1306,12 +1288,12 @@ describe("DataSource", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await userEntity.create(appSet, connection, transaction);
+      await eBuilder.create(userEntity, appSet);
 
-      await userEntity.create(new EntityAttribute({
+      await eBuilder.create(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
-      }), connection, transaction);
-      await userEntity.create(new DetailAttribute({
+      }));
+      await eBuilder.create(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -1320,7 +1302,7 @@ describe("DataSource", () => {
             link2masterField: Constants.DEFAULT_MASTER_KEY_NAME
           }]
         }
-      }), connection, transaction);
+      }));
     });
 
     const appEntity = erModel.entity("APPLICATION");
@@ -1541,24 +1523,23 @@ describe("DataSource", () => {
 
   it("empty entity", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      await erModel.create(new Entity({
+    await execute(async ({erBuilder}) => {
+      await erBuilder.create(erModel, new Entity({
         name: "TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         semCategories: [SemCategory.Company],
         adapter: {
           relation: [{relationName: "TEST_ADAPTER"}]
         }
-      }), connection, transaction);
+      }));
 
-      await erModel.create(new Entity({
+      await erBuilder.create(erModel, new Entity({
         name: "TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity1 = erModel.entity("TEST1");
     const entity2 = erModel.entity("TEST2");
     const loadEntity1 = loadedERModel.entity("TEST1");
@@ -1571,37 +1552,36 @@ describe("DataSource", () => {
 
   it("integer", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new IntegerAttribute({
+      await eBuilder.create(entity, new IntegerAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT, defaultValue: -10000,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new IntegerAttribute({
+      }));
+      await eBuilder.create(entity, new IntegerAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_32BIT_INT, maxValue: MAX_32BIT_INT, defaultValue: -10000
-      }), connection, transaction);
-      // await entity.create(new IntegerAttribute({
+      }));
+      // await eBuilder.create(entity, new IntegerAttribute({
       //   name: "FIELD3", lName: {ru: {name: "Поле 3", fullName: "FULLNAME"}}, required: true,
       //   minValue: MIN_64BIT_INT, maxValue: MAX_64BIT_INT, defaultValue: -100000000000000
-      // }), connection, transaction);
-      await entity.create(new IntegerAttribute({
+      // }));
+      await eBuilder.create(entity, new IntegerAttribute({
         name: "FIELD4", lName: {ru: {name: "Поле 4", fullName: "FULLNAME"}},
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT + 1, defaultValue: 0
-      }), connection, transaction);
-      await entity.create(new IntegerAttribute({
+      }));
+      await eBuilder.create(entity, new IntegerAttribute({
         name: "FIELD5", lName: {ru: {name: "Поле 5", fullName: "FULLNAME"}},
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT + 1
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1610,29 +1590,28 @@ describe("DataSource", () => {
 
   it("numeric", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new NumericAttribute({
+      await eBuilder.create(entity, new NumericAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         precision: 4, scale: 2, minValue: 40, maxValue: 1000, defaultValue: 40.36,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new NumericAttribute({
+      }));
+      await eBuilder.create(entity, new NumericAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         precision: 4, scale: 2, minValue: 40, maxValue: 1000, defaultValue: 40.36
-      }), connection, transaction);
-      await entity.create(new NumericAttribute({
+      }));
+      await eBuilder.create(entity, new NumericAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         precision: 4, scale: 2, minValue: 40, maxValue: 1000
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1641,23 +1620,22 @@ describe("DataSource", () => {
 
   it("blob", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new BlobAttribute({
+      await eBuilder.create(entity, new BlobAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new BlobAttribute({
+      }));
+      await eBuilder.create(entity, new BlobAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}}
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1666,23 +1644,22 @@ describe("DataSource", () => {
 
   it("boolean", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new BooleanAttribute({
+      await eBuilder.create(entity, new BooleanAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         defaultValue: true, adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new BooleanAttribute({
+      }));
+      await eBuilder.create(entity, new BooleanAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}}
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1691,33 +1668,32 @@ describe("DataSource", () => {
 
   it("string", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new StringAttribute({
+      await eBuilder.create(entity, new StringAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minLength: 5, maxLength: 30, defaultValue: "test default", autoTrim: true,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity, new StringAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minLength: 1, maxLength: 160, defaultValue: "test default", autoTrim: true
-      }), connection, transaction);
-      await entity.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity, new StringAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minLength: 1, maxLength: 160, autoTrim: true
-      }), connection, transaction);
-      await entity.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity, new StringAttribute({
         name: "FIELD4", lName: {ru: {name: "Поле 3"}},
         minLength: 1, autoTrim: true
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1726,34 +1702,33 @@ describe("DataSource", () => {
 
   it("date", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new DateAttribute({
+      await eBuilder.create(entity, new DateAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: moment.utc().year(1999).month(10).date(3).startOf("date").local().toDate(),
         maxValue: moment.utc().year(2099).startOf("year").local().toDate(),
         defaultValue: moment.utc().startOf("date").local().toDate(),
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new DateAttribute({
+      }));
+      await eBuilder.create(entity, new DateAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).startOf("date").local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).startOf("date").local().toDate(),
         defaultValue: "CURRENT_DATE"
-      }), connection, transaction);
-      await entity.create(new DateAttribute({
+      }));
+      await eBuilder.create(entity, new DateAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).startOf("date").local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).startOf("date").local().toDate()
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1762,13 +1737,13 @@ describe("DataSource", () => {
 
   it("time", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new TimeAttribute({
+      await eBuilder.create(entity, new TimeAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: moment.utc().year(Constants.MIN_TIMESTAMP.getUTCFullYear()).month(Constants.MIN_TIMESTAMP.getUTCMonth())
           .date(Constants.MIN_TIMESTAMP.getDate()).startOf("date").local().toDate(),
@@ -1777,26 +1752,25 @@ describe("DataSource", () => {
         defaultValue: moment.utc().year(Constants.MIN_TIMESTAMP.getUTCFullYear()).month(Constants.MIN_TIMESTAMP.getUTCMonth())
           .date(Constants.MIN_TIMESTAMP.getDate()).local().toDate(),
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new TimeAttribute({
+      }));
+      await eBuilder.create(entity, new TimeAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP, Constants.TIME_TEMPLATE).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP, Constants.TIME_TEMPLATE)
           .year(Constants.MIN_TIMESTAMP.getUTCFullYear()).month(Constants.MIN_TIMESTAMP.getUTCMonth())
           .date(Constants.MIN_TIMESTAMP.getDate()).local().toDate(),
         defaultValue: "CURRENT_TIME"
-      }), connection, transaction);
-      await entity.create(new TimeAttribute({
+      }));
+      await eBuilder.create(entity, new TimeAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP, Constants.TIME_TEMPLATE).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP, Constants.TIME_TEMPLATE)
           .year(Constants.MIN_TIMESTAMP.getUTCFullYear()).month(Constants.MIN_TIMESTAMP.getUTCMonth())
           .date(Constants.MIN_TIMESTAMP.getDate()).local().toDate()
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1805,34 +1779,33 @@ describe("DataSource", () => {
 
   it("timestamp", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new TimeStampAttribute({
+      await eBuilder.create(entity, new TimeStampAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: moment.utc().year(1999).month(10).startOf("month").local().toDate(),
         maxValue: moment.utc().year(2099).month(1).date(1).endOf("date").local().toDate(),
         defaultValue: moment.utc().local().toDate(),
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new TimeStampAttribute({
+      }));
+      await eBuilder.create(entity, new TimeStampAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).local().toDate(),
         defaultValue: "CURRENT_TIMESTAMP"
-      }), connection, transaction);
-      await entity.create(new TimeStampAttribute({
+      }));
+      await eBuilder.create(entity, new TimeStampAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).local().toDate()
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1841,29 +1814,28 @@ describe("DataSource", () => {
 
   it("float", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new FloatAttribute({
+      await eBuilder.create(entity, new FloatAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123, defaultValue: 40,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      // await entity.create(new FloatAttribute({
+      }));
+      // await eBuilder.create(entity, new FloatAttribute({
       //   name: "FIELD2", lName: {ru: {name: "Поле 2"}},
       //   minValue: Number.MIN_VALUE, maxValue: Number.MAX_VALUE, defaultValue: 40
-      // }), connection, transaction);
-      await entity.create(new FloatAttribute({
+      // }));
+      await eBuilder.create(entity, new FloatAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1872,13 +1844,13 @@ describe("DataSource", () => {
 
   it("enum", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new EnumAttribute({
+      await eBuilder.create(entity, new EnumAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         values: [
           {
@@ -1895,19 +1867,18 @@ describe("DataSource", () => {
           }
         ], defaultValue: "Z",
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
-      }), connection, transaction);
-      await entity.create(new EnumAttribute({
+      }));
+      await eBuilder.create(entity, new EnumAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         values: [{value: "Z"}, {value: "X"}, {value: "Y"}], defaultValue: "Z"
-      }), connection, transaction);
-      await entity.create(new EnumAttribute({
+      }));
+      await eBuilder.create(entity, new EnumAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         values: [{value: "Z"}, {value: "X"}, {value: "Y"}]
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1916,26 +1887,25 @@ describe("DataSource", () => {
 
   it("link to entity", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity1 = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity1 = await erBuilder.create(erModel, new Entity({
         name: "TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
-      const entity2 = await erModel.create(new Entity({
+      }));
+      const entity2 = await erBuilder.create(erModel, new Entity({
         name: "TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity1.create(new EntityAttribute({
+      await eBuilder.create(entity1, new EntityAttribute({
         name: "LINK1", lName: {ru: {name: "Ссылка "}}, required: true, entities: [entity2]
-      }), connection, transaction);
-      await entity2.create(new EntityAttribute({
+      }));
+      await eBuilder.create(entity2, new EntityAttribute({
         name: "LINK", lName: {ru: {name: "Ссылка"}}, entities: [entity1]
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity1 = erModel.entity("TEST1");
     const entity2 = erModel.entity("TEST2");
     const loadEntity1 = loadedERModel.entity("TEST1");
@@ -1948,19 +1918,18 @@ describe("DataSource", () => {
 
   it("parent link to entity", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new ParentAttribute({
+      await eBuilder.create(entity, new ParentAttribute({
         name: "PARENT", lName: {ru: {name: "Дерево"}}, entities: [entity]
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -1969,22 +1938,21 @@ describe("DataSource", () => {
 
   it("detail entity", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity2 = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity2 = await erBuilder.create(erModel, new Entity({
         name: "TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
-      const entity1 = await erModel.create(new Entity({
+      }));
+      const entity1 = await erBuilder.create(erModel, new Entity({
         name: "TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
-      const entity3 = await erModel.create(new Entity({
+      }));
+      const entity3 = await erBuilder.create(erModel, new Entity({
         name: "TEST3",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-
-      await entity1.create(new DetailAttribute({
+      await eBuilder.create(entity1, new DetailAttribute({
         name: "DETAILLINK", lName: {ru: {name: "Позиции 1"}}, required: true, entities: [entity2],
         adapter: {
           masterLinks: [{
@@ -1992,14 +1960,13 @@ describe("DataSource", () => {
             link2masterField: "MASTER_KEY"
           }]
         }
-      }), connection, transaction);
-      await entity1.create(new DetailAttribute({
+      }));
+      await eBuilder.create(entity1, new DetailAttribute({
         name: "TEST3", lName: {ru: {name: "Позиции 2"}}, required: true, entities: [entity3]
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity1 = erModel.entity("TEST1");
     const entity2 = erModel.entity("TEST2");
     const entity3 = erModel.entity("TEST3");
@@ -2016,21 +1983,21 @@ describe("DataSource", () => {
 
   it("set link to entity", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity1 = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity1 = await erBuilder.create(erModel, new Entity({
         name: "TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
-      const entity2 = await erModel.create(new Entity({
+      }));
+      const entity2 = await erBuilder.create(erModel, new Entity({
         name: "TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
 
-      await entity1.create(new SetAttribute({
+      await eBuilder.create(entity1, new SetAttribute({
         name: "SET1", lName: {ru: {name: "Ссылка1"}}, required: true, entities: [entity2], presLen: 120,
         adapter: {crossRelation: "CROSS_TABLE_ADAPTER1", presentationField: "SET_FIELD_ADAPTER"}
-      }), connection, transaction);
+      }));
       const setAttr = new SetAttribute({
         name: "SET2", lName: {ru: {name: "Ссылка2"}}, required: true, entities: [entity2], presLen: 120,
         adapter: {crossRelation: "CROSS_TABLE_ADAPTER2"}
@@ -2044,16 +2011,15 @@ describe("DataSource", () => {
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_32BIT_INT, maxValue: MAX_32BIT_INT, defaultValue: -1000
       }));
-      await entity1.create(setAttr, connection, transaction);
+      await eBuilder.create(entity1, setAttr);
 
-      await entity1.create(new SetAttribute({
+      await eBuilder.create(entity1, new SetAttribute({
         name: "SET3", lName: {ru: {name: "Ссылка3"}}, required: true, entities: [entity2],
         adapter: {crossRelation: "TABLE_7"} // generated
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity1 = erModel.entity("TEST1");
     const entity2 = erModel.entity("TEST2");
     const loadEntity1 = loadedERModel.entity("TEST1");
@@ -2066,34 +2032,33 @@ describe("DataSource", () => {
 
   it("entity with unique fields", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity = await erBuilder.create(erModel, new Entity({
         name: "TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
+      }));
 
-      await entity.create(new StringAttribute({
+      await eBuilder.create(entity, new StringAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minLength: 5, maxLength: 30, defaultValue: "test default", autoTrim: true,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER1"}
-      }), connection, transaction);
-      await entity.create(new IntegerAttribute({
+      }));
+      await eBuilder.create(entity, new IntegerAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT, defaultValue: -100,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER2"}
-      }), connection, transaction);
-      await entity.create(new FloatAttribute({
+      }));
+      await eBuilder.create(entity, new FloatAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123, defaultValue: 40,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER3"}
-      }), connection, transaction);
+      }));
 
-      await entity.addAttrUnique([entity.attribute("FIELD1"), entity.attribute("FIELD2")], connection, transaction);
-      await entity.addAttrUnique([entity.attribute("FIELD2"), entity.attribute("FIELD3")], connection, transaction);
+      await eBuilder.create(entity, [entity.attribute("FIELD1"), entity.attribute("FIELD2")]);
+      await eBuilder.create(entity, [entity.attribute("FIELD2"), entity.attribute("FIELD3")]);
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity = erModel.entity("TEST");
     const loadEntity = loadedERModel.entity("TEST");
     expect(loadEntity).toEqual(entity);
@@ -2102,49 +2067,48 @@ describe("DataSource", () => {
 
   it("inheritance", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
-      const entity1 = await erModel.create(new Entity({
+    await execute(async ({erBuilder, eBuilder}) => {
+      const entity1 = await erBuilder.create(erModel, new Entity({
         name: "TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }), connection, transaction);
-      await entity1.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity1, new StringAttribute({
         name: "TEST_FIELD1", lName: {ru: {name: "Поле 1"}},
         adapter: {relation: "TEST1", field: "FIELD_ADAPTER1"}
-      }), connection, transaction);
+      }));
 
-      const entity2 = await erModel.create(new Entity({
+      const entity2 = await erBuilder.create(erModel, new Entity({
         name: "TEST2",
         parent: entity1,
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         adapter: {
           relation: [...entity1.adapter.relation, {relationName: "TEST2"}]
         }
-      }), connection, transaction);
-      await entity2.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity2, new StringAttribute({
         name: "TEST_FIELD2", lName: {ru: {name: "Поле 2"}},
         adapter: {relation: "TEST2", field: "FIELD_ADAPTER2"}
-      }), connection, transaction);
+      }));
 
-      const entity3 = await erModel.create(new Entity({
+      const entity3 = await erBuilder.create(erModel, new Entity({
         name: "TEST3",
         parent: entity1,
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         adapter: {
           relation: [...entity1.adapter.relation, {relationName: "TEST3"}]
         }
-      }), connection, transaction);
-      await entity3.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity3, new StringAttribute({
         name: "TEST_FIELD3", lName: {ru: {name: "Поле 3"}}
-      }), connection, transaction);
-      await entity3.create(new StringAttribute({
+      }));
+      await eBuilder.create(entity3, new StringAttribute({
         name: "TEST_FIELD1",
         lName: {ru: {name: "Переопределенное Поле 1"}},
         required: true
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const entity1 = erModel.entity("TEST1");
     const entity2 = erModel.entity("TEST2");
     const entity3 = erModel.entity("TEST3");
@@ -2161,37 +2125,37 @@ describe("DataSource", () => {
 
   it("AUTH DATABASE", async () => {
     const erModel = await initERModel();
-    await executeERModel(erModel, async ({connection, transaction}) => {
+    await execute(async ({erBuilder, eBuilder}) => {
       // APP_USER
-      const userEntity = await erModel.create(new Entity({
+      const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
-      }), connection, transaction);
-      await userEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1, maxLength: 32
-      }), connection, transaction);
-      await userEntity.create(new BlobAttribute({
+      }));
+      await eBuilder.create(userEntity, new BlobAttribute({
         name: "PASSWORD_HASH", lName: {ru: {name: "Хешированный пароль"}}, required: true
-      }), connection, transaction);
-      await userEntity.create(new BlobAttribute({
+      }));
+      await eBuilder.create(userEntity, new BlobAttribute({
         name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
-      }), connection, transaction);
-      await userEntity.create(new BooleanAttribute({
+      }));
+      await eBuilder.create(userEntity, new BooleanAttribute({
         name: "IS_ADMIN", lName: {ru: {name: "Флаг администратора"}}
-      }), connection, transaction);
+      }));
 
       // APPLICATION
-      const appEntity = await erModel.create(new Entity({
+      const appEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
-      }), connection, transaction);
+      }));
       const appUid = new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
       });
-      await appEntity.create(appUid, connection, transaction);
-      await appEntity.addAttrUnique([appUid], connection, transaction);
-      await appEntity.create(new TimeStampAttribute({
+      await eBuilder.create(appEntity, appUid);
+      await eBuilder.create(appEntity, [appUid]);
+      await eBuilder.create(appEntity, new TimeStampAttribute({
         name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
         minValue: Constants.MIN_TIMESTAMP, maxValue: Constants.MAX_TIMESTAMP, defaultValue: "CURRENT_TIMESTAMP"
-      }), connection, transaction);
+      }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
         adapter: {crossRelation: "APP_USER_APPLICATIONS"}
@@ -2200,32 +2164,31 @@ describe("DataSource", () => {
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
 
-      await userEntity.create(appSet, connection, transaction);
+      await eBuilder.create(userEntity, appSet);
 
       // APPLICATION_BACKUPS
-      const backupEntity = await erModel.create(new Entity({
+      const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Резервная копия"}}
-      }), connection, transaction);
+      }));
       const backupUid = new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
       });
-      await backupEntity.create(backupUid, connection, transaction);
-      await backupEntity.addAttrUnique([backupUid], connection, transaction);
+      await eBuilder.create(backupEntity, backupUid);
+      await eBuilder.create(backupEntity, [backupUid]);
 
-      await backupEntity.create(new EntityAttribute({
+      await eBuilder.create(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: "Приложение"}}, required: true, entities: [appEntity]
-      }), connection, transaction);
-      await backupEntity.create(new TimeStampAttribute({
+      }));
+      await eBuilder.create(backupEntity, new TimeStampAttribute({
         name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
         minValue: Constants.MIN_TIMESTAMP, maxValue: Constants.MAX_TIMESTAMP, defaultValue: "CURRENT_TIMESTAMP"
-      }), connection, transaction);
-      await backupEntity.create(new StringAttribute({
+      }));
+      await eBuilder.create(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-      }), connection, transaction);
+      }));
     });
 
     const loadedERModel = await initERModel();
-    await loadedERModel.clearDataSource();
     const userEntity = erModel.entity("APP_USER");
     const appEntity = erModel.entity("APPLICATION");
     const loadUserEntity = loadedERModel.entity("APP_USER");

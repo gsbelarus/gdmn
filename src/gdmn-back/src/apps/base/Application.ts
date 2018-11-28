@@ -1,5 +1,6 @@
-import {DataSource} from "gdmn-er-bridge";
-import {ERModel, IEntityQueryInspector, IERModel, IQueryResponse} from "gdmn-orm";
+import {AccessMode, AConnection} from "gdmn-db";
+import {ERBridge} from "gdmn-er-bridge";
+import {ERModel, IEntityQueryInspector, IERModel} from "gdmn-orm";
 import log4js from "log4js";
 import {ADatabase, DBStatus, IDBDetail} from "../../db/ADatabase";
 import {Session, SessionStatus} from "./Session";
@@ -28,8 +29,8 @@ export abstract class Application extends ADatabase {
   public sessionLogger = log4js.getLogger("Session");
   public taskLogger = log4js.getLogger("Task");
 
-  public readonly erModel: ERModel = new ERModel(new DataSource(this.connectionPool));
-  public readonly sessionManager = new SessionManager(this.erModel, this.sessionLogger);
+  public readonly erModel: ERModel = new ERModel();
+  public readonly sessionManager = new SessionManager(this.connectionPool, this.sessionLogger);
 
   protected constructor(dbDetail: IDBDetail) {
     super(dbDetail);
@@ -45,8 +46,7 @@ export abstract class Application extends ADatabase {
         await this.waitProcess();
         this.checkSession(session);
 
-        const transaction = await this.erModel.startTransaction(context.session.connection);
-        return context.session.addTransaction(transaction);
+        return await context.session.startBridge();
       }
     });
     session.taskManager.add(task);
@@ -66,12 +66,7 @@ export abstract class Application extends ADatabase {
 
         const {transactionKey} = context.command.payload;
 
-        const transaction = context.session.getTransaction(transactionKey);
-        if (!transaction) {
-          throw new Error("Transaction is not found");
-        }
-        await transaction.commit();
-        context.session.removeTransaction(transactionKey);
+        await context.session.commitBridge(transactionKey);
       }
     });
     session.taskManager.add(task);
@@ -91,12 +86,7 @@ export abstract class Application extends ADatabase {
 
         const {transactionKey} = context.command.payload;
 
-        const transaction = context.session.getTransaction(transactionKey);
-        if (!transaction) {
-          throw new Error("Transaction is not found");
-        }
-        await transaction.rollback();
-        context.session.removeTransaction(transactionKey);
+        await context.session.rollbackBridge(transactionKey);
       }
     });
     session.taskManager.add(task);
@@ -154,37 +144,37 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IQueryResponse> {
-    const task = new Task({
-      session,
-      command,
-      level: Level.SESSION,
-      logger: this.taskLogger,
-      worker: async (context) => {
-        await this.waitProcess();
-        this.checkSession(session);
-
-        const {transactionKey} = context.command.payload;
-
-        const transaction = context.session.getTransaction(transactionKey || "");
-        const result = await this.erModel.query(context.command.payload, context.session.connection, transaction);
-        await context.checkStatus();
-        return result;
-      }
-    });
-    session.taskManager.add(task);
-    this.sessionManager.syncTasks();
-    return task;
-  }
+  // public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IQueryResponse> {
+  //   const task = new Task({
+  //     session,
+  //     command,
+  //     level: Level.SESSION,
+  //     logger: this.taskLogger,
+  //     worker: async (context) => {
+  //       await this.waitProcess();
+  //       this.checkSession(session);
+  //
+  //       const {transactionKey} = context.command.payload;
+  //
+  //       const erBridge = context.session.getBridge(transactionKey);
+  //       const result = await erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload));
+  //       await context.checkStatus();
+  //       return result;
+  //     }
+  //   });
+  //   session.taskManager.add(task);
+  //   this.sessionManager.syncTasks();
+  //   return task;
+  // }
 
   public checkSession(session: Session): void | never {
     if (session.status !== SessionStatus.OPENED) {
       this._logger.warn("Session id#%s is not opened", session.id);
       throw new Error("Session is not opened");
     }
-    if (!session.active) {
-      this._logger.warn("Session id#%s is not active", session.id);
-      throw new Error("Session is not active");
+    if (!session.connection.connected) {
+      this._logger.warn("Session id#%s connection is not connected", session.id);
+      throw new Error("Session connection is not connected");
     }
     if (!this.sessionManager.includes(session)) {
       this._logger.warn("Session id#%s does not belong to the application", session.id);
@@ -195,13 +185,13 @@ export abstract class Application extends ADatabase {
   protected async _onCreate(): Promise<void> {
     await super._onCreate();
 
-    await this.erModel.init();
+    await this._init();
   }
 
   protected async _onConnect(): Promise<void> {
     await super._onConnect();
 
-    await this.erModel.init();
+    await this._init();
   }
 
   protected async _onDisconnect(): Promise<void> {
@@ -209,5 +199,17 @@ export abstract class Application extends ADatabase {
 
     await this.sessionManager.forceCloseAll();
     this._logger.info("All session are closed");
+  }
+
+  private async _init(): Promise<void> {
+    await this._executeConnection(async (connection) => {
+      await ERBridge.initDatabase(connection);
+
+      await AConnection.executeTransaction({
+        connection,
+        options: {accessMode: AccessMode.READ_ONLY},
+        callback: (transaction) => ERBridge.reloadERModel(connection, transaction, this.erModel)
+      });
+    });
   }
 }
