@@ -1,7 +1,9 @@
 import { parsePhrase } from "../parser";
 import { RusVerb } from "../../morphology/rusVerb";
-import { RusNP, RusPP, RusANP } from "../rusSyntax";
+import { RusNP, RusPP, RusANP, RusPhrase } from "../rusSyntax";
 import { RusWord } from "../../morphology/rusMorphology";
+import { RusNoun } from "../../morphology/rusNoun";
+import { RusConjunction } from "../../morphology/rusConjunction";
 
 describe("vpparser1", () => {
 
@@ -34,7 +36,9 @@ describe("vpparser1", () => {
     expect((anp!.items[0] as RusWord).word).toEqual('все');
     expect((anp!.items[1] as RusWord).word).toEqual('организации');
     expect((pp!.items[0] as RusWord).word).toEqual('из');
-    expect((pp!.items[1] as RusWord).word).toEqual('минска');
+    expect(((pp!.items[1] as RusPhrase).items[0] as RusNoun).word).toEqual('минска');
+    expect(((pp!.items[1] as RusPhrase).items[1] as RusConjunction).word).toEqual('и');
+    expect(((pp!.items[1] as RusPhrase).items[2] as RusNoun).word).toEqual('минска');
   });
 
   test("покажи минские организации", () => {

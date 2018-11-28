@@ -1,5 +1,10 @@
 import { VPParser1 } from "./VPParser1";
-import { RusImperativeVP, RusNP, RusANP, RusPP } from "../../rusSyntax";
+import { RusImperativeVP, RusNP, RusANP, RusPP, RusHomogeneousNouns } from "../../rusSyntax";
+import { RusNoun } from "../../../morphology/rusNoun";
+import { AnyWord } from "../../../morphology/morphology";
+import { RusConjunction } from "../../../morphology/rusConjunction";
+import { IToken } from "chevrotain";
+import { tokenToWordOrHomogeneous } from "../../parser";
 
 export const vpParser1 = new VPParser1();
 
@@ -40,7 +45,13 @@ export class VPVisitor1 extends BaseVPVisitor1 {
 
   public qualImperativeNoun = (ctx: any) => {
     if (ctx.imperativeDets) {
-      return new RusANP(this.visit(ctx.imperativeDets), this.visit(ctx.imperativeNoun));
+      const impN = this.visit(ctx.imperativeNoun);
+
+      if (Array.isArray(impN)) {
+        return new RusANP(this.visit(ctx.imperativeDets), new RusHomogeneousNouns(impN));
+      } else {
+        return new RusANP(this.visit(ctx.imperativeDets), impN);
+      }
     } else {
       return this.visit(ctx.imperativeNoun);
     };
@@ -62,17 +73,23 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public nounAccs = (ctx: any) => {
-    return ctx.NOUNAnimMascPlurAccs ? ctx.NOUNAnimMascPlurAccs[0].word
-      : ctx.NOUNAnimFemnPlurAccs ? ctx.NOUNAnimFemnPlurAccs[0].word
-      : ctx.NOUNAnimNeutPlurAccs ? ctx.NOUNAnimNeutPlurAccs[0].word
-      : ctx.NOUNInanMascPlurAccs ? ctx.NOUNInanMascPlurAccs[0].word
-      : ctx.NOUNInanFemnPlurAccs ? ctx.NOUNInanFemnPlurAccs[0].word
-      : ctx.NOUNInanNeutPlurAccs ? ctx.NOUNInanNeutPlurAccs[0].word
-      : undefined;
+    return tokenToWordOrHomogeneous(ctx.NOUNAnimMascPlurAccs ? ctx.NOUNAnimMascPlurAccs[0]
+    : ctx.NOUNAnimFemnPlurAccs ? ctx.NOUNAnimFemnPlurAccs[0]
+    : ctx.NOUNAnimNeutPlurAccs ? ctx.NOUNAnimNeutPlurAccs[0]
+    : ctx.NOUNInanMascPlurAccs ? ctx.NOUNInanMascPlurAccs[0]
+    : ctx.NOUNInanFemnPlurAccs ? ctx.NOUNInanFemnPlurAccs[0]
+    : ctx.NOUNInanNeutPlurAccs ? ctx.NOUNInanNeutPlurAccs[0]
+    : undefined);
   }
 
   public pp = (ctx: any) => {
-    return new RusPP(this.visit(ctx.prep), this.visit(ctx.ppNoun));
+    const ppn = this.visit(ctx.ppNoun);
+
+    if (Array.isArray(ppn)) {
+      return new RusPP(this.visit(ctx.prep), new RusHomogeneousNouns(ppn));
+    } else {
+      return new RusPP(this.visit(ctx.prep), ppn);
+    }
   }
 
   public prep = (ctx: any) => {
@@ -84,13 +101,13 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public nounGent = (ctx: any) => {
-    return ctx.NOUNInanMascSingGent ? ctx.NOUNInanMascSingGent[0].word
-      : ctx.NOUNInanFemnSingGent ? ctx.NOUNInanFemnSingGent[0].word
-      : ctx.NOUNInanNeutSingGent ? ctx.NOUNInanNeutSingGent[0].word
-      : ctx.NOUNInanMascPlurGent ? ctx.NOUNInanMascPlurGent[0].word
-      : ctx.NOUNInanFemnPlurGent ? ctx.NOUNInanFemnPlurGent[0].word
-      : ctx.NOUNInanNeutPlurGent ? ctx.NOUNInanNeutPlurGent[0].word
-      : undefined;
+    return tokenToWordOrHomogeneous(ctx.NOUNInanMascSingGent ? ctx.NOUNInanMascSingGent[0]
+    : ctx.NOUNInanFemnSingGent ? ctx.NOUNInanFemnSingGent[0]
+    : ctx.NOUNInanNeutSingGent ? ctx.NOUNInanNeutSingGent[0]
+    : ctx.NOUNInanMascPlurGent ? ctx.NOUNInanMascPlurGent[0]
+    : ctx.NOUNInanFemnPlurGent ? ctx.NOUNInanFemnPlurGent[0]
+    : ctx.NOUNInanNeutPlurGent ? ctx.NOUNInanNeutPlurGent[0]
+    : undefined);
   }
 
 };

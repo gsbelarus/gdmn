@@ -76,7 +76,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                   {
                     isMorphToken(s[0]) && (s[0] as IMorphToken).hsm ?
                       <sup>
-                        {(s[0] as IMorphToken).hsm.map( h => h[0] && <span>{h[0].word}</span> )}
+                        {(s[0] as IMorphToken).hsm.map( (h, idx) => h[0] && <span key={idx}>{h[0].word}</span> )}
                       </sup>
                     : undefined
                   }

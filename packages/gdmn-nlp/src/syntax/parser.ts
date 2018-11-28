@@ -3,7 +3,10 @@ import { AnyWord } from "../morphology/morphology";
 import { combinatorialMorph } from "./lexer";
 import { Parser } from "chevrotain";
 import { parsers } from "./grammar/rube/parsers";
-import { IDescribedParser } from "./types";
+import { IDescribedParser, IMorphToken } from "./types";
+import { RusNoun } from "../morphology/rusNoun";
+import { RusConjunction } from "../morphology/rusConjunction";
+import { RusWord } from "../morphology/rusMorphology";
 
 export type ParsedText = {
   readonly wordsSignatures: string[];
@@ -80,4 +83,41 @@ export function debugPhrase(text: string): ParsedText[] {
   }
 
   return res;
+};
+
+/**
+ * Функция вернет массив однородных членов, если они есть в токене,
+ * или слово из токена, если однородных членов нет.
+ */
+export function tokenToWordOrHomogeneous(t?: IMorphToken): AnyWord | AnyWord[] | undefined {
+  if (!t) {
+    return undefined;
+  }
+
+  const word = t.word;
+
+  if (!(word instanceof RusNoun)) {
+    throw new Error(`Only rus nouns supported. Word ${word.getText()} encountered.`);
+  }
+
+  if (!t.hsm || !t.hsm.length) {
+    return word as RusNoun;
+  }
+
+  return t.hsm.reduce(
+    (prev, w) => {
+      if (w[0] instanceof RusConjunction) {
+        return [...prev, w[0] as RusConjunction];
+      }
+
+      const found = w.find( n => (n as RusNoun).grammCase === (word as RusNoun).grammCase );
+
+      if (found) {
+        return [...prev, found as RusNoun];
+      }
+
+      throw new Error(`Invalid homogeneous structure`);
+    },
+    [word as RusNoun]
+  );
 };
