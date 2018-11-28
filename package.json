@@ -22,6 +22,6 @@
     "watch": "yarn build && lerna run watch --parallel"
   },
   "devDependencies": {
-    "lerna": "^3.4.3"
+    "lerna": "^3.5.0"
   }
 }
