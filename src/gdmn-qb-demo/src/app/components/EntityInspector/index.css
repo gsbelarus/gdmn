@@ -1,0 +1,229 @@
+.center-box-container {
+  position: absolute;
+  top: 0;
+  left: 300px;
+  width: calc(100% - 300px);
+  background: #f5f5f5;
+  height: 70%;
+  min-height: 210px;
+  overflow: hidden;
+  border-bottom: 1px solid #ddd;
+  color: #000000;
+}
+
+.left-box-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #f5f5f5;
+  border: #e8e8e8 solid;
+  border-width: 0 1px 0 0;
+  padding: 3px;
+  width: 300px;
+}
+
+.qb-logo {
+  height: 40px;
+  padding: 10px;
+  border-bottom: 1px #e8e8e8 solid;
+  color: #333;
+  font-size: 20px;
+}
+
+.component-container {
+  height: calc(100% - 40px);
+  padding: 3px 3px 0px 3px;
+}
+
+/* Load block */
+.load-buttons-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+button {
+  color: #fff;
+  background-color: #516873;
+  border: 1px solid #999;
+  border-radius: 3px;
+  font-size: 16px;
+}
+
+.loading-message {
+  margin: 5px;
+  padding: 5px 5px 0px 5px;
+  color: black;
+}
+
+.load-buttons-container > button {
+  width: 120px;
+  height: 35px;
+}
+
+button:hover {
+  background: peru;
+}
+
+button:active {
+  background: saddlebrown;
+}
+
+/* Filter block */
+.filter {
+  margin: 3px 0 3px 0;
+  border: 1px solid gray;
+  background-color: white;
+}
+
+.inner {
+  overflow: hidden;
+  position: relative;
+  height: 30px;
+}
+
+.filter-input {
+  padding: 5px 0px 5px;
+  border: none;
+  outline: none;
+  width: 100%;
+  height: 100%;
+}
+
+.filter-clear {
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  right: 0px;
+  padding: 0px;
+}
+
+/*   EntityList   */
+.entity-list {
+  height: calc(100% - 70px);
+  overflow-y: auto;
+}
+
+.entity-container {
+  background: #516873;
+  border: 1px solid #999;
+  border-radius: 3px;
+  margin: 5px 5px;
+  padding: 5px 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.entity-item {
+  color: #000000;
+  padding: 3px 0px 3px 0;
+  user-select: none;
+}
+
+.checkmark {
+  height: 20px;
+  width: 20px;
+}
+
+.entity-item label {
+  padding-left: 5px;
+}
+
+.entity-title {
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 80%;
+}
+
+.fa-search,
+.filter .fa-times {
+  color: gray;
+  padding: 7px;
+}
+
+.fa-angle-right,
+.fa-angle-down {
+  color: gray;
+  padding: 3px 7px;
+}
+
+.search-svg {
+  position: absolute;
+  width: 30px;
+}
+
+.filter button {
+  background: none;
+  border: none;
+  outline: none;
+  line-height: 0;
+  float: right;
+  top: 0;
+  cursor: pointer;
+}
+
+.filter-textbox {
+  margin-left: 30px;
+  margin-right: 23px;
+  height: 100%;
+}
+
+/* Entity - attributes */
+
+.entity-name {
+  border: 1px solid gray;
+  background: #516873;
+  color: #ffffff;
+  overflow: hidden;
+  position: relative;
+  padding: 5px 5px 0px 5px;
+  height: 30px;
+}
+
+.entity-name button {
+  border: none;
+  border-radius: 0px;
+  outline: none;
+  line-height: 0;
+  float: right;
+  top: 0;
+  cursor: pointer;
+}
+
+.attribute-entity-button {
+  margin: 0;
+  padding: 0;
+  height: 20px;
+  background: #f5f5f5;
+  width: 20px;
+  border: none;
+  border-radius: 0px;
+  outline: none;
+  line-height: 3px;
+  top: 0;
+  cursor: pointer;
+}
+
+.tree-node.dropdown {
+  visibility: hidden;
+}
+
+/* .tree-node:hover {
+  background: #f2fdff;
+}
+
+.tree-node.dropdown:hover {
+  visibility: inherit;
+} */
+
+.checkmark input{
+  height: 20px;
+  width: 20px;
+}
+
+.entity-item span {
+  margin-left: 5px;
+}

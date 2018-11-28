@@ -1,0 +1,68 @@
+.bottom-box-container {
+  position: absolute;
+  bottom: 0;
+  left: 300px;
+  width: calc(100% - 300px);
+  background: #f5f5f5;
+  height: 30%;
+  min-height: 210px;
+  overflow: hidden;
+  border-bottom: 1px solid #ddd;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  color: black;
+}
+
+thead {
+  display: table-header-group;
+  cursor: pointer;
+  vertical-align: middle;
+  background: #516873;
+  color: #fff;
+  font-size: 20px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 4px;
+  border-bottom: 1px solid #ddd;
+}
+
+tr {
+  border-radius: 4px;
+  width: 100%;
+  display: inline-table;
+  table-layout: fixed;
+}
+.field-alias {
+  background-color: white;
+  padding: 4px;
+  border: 1px solid #eee;
+  width: 100%;
+  border-radius: 3px;
+}
+
+td select {
+  border: 1px solid #eee;
+  width: 100%;
+  border-radius: 3px;
+  width: 70px;
+}
+
+tbody {
+  overflow-y: scroll;
+  height: 300px;
+  width: 100%;
+  position: absolute;
+}
+
+tbody tr:hover {
+  background-color: #e0e0e0;
+  box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.2), 0px 2px 2px 0px rgba(0, 0, 0, 0.14), 0px 3px 1px -2px rgba(0, 0, 0, 0.12);
+}
+
+

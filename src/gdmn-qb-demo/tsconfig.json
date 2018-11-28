@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "outDir": "./build",
+    "target": "es5",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "paths": {
+      "@gdmn/client-core": ["packages/gdmn-client-core/src/index.ts"],
+      "@gdmn/server-api": ["packages/gdmn-server-api/src/index.ts"],
+      "@gdmn/data-grid-core": ["packages/data-grid-core/src/index.ts"],
+      "@gdmn/data-grid-mui": ["packages/data-grid-mui/src/index.ts"],
+      "@src/*": ["src/*"]
+    }
+  },
+  "exclude": [
+    "build",
+    "configs",
+    "dist",
+    "node_modules",
+    "scripts"
+  ]
+}
