@@ -8,7 +8,7 @@ export abstract class BaseSimpleUpdate extends BaseUpdate {
       await DDLHelper.executeSelf({
         connection: this._connection,
         transaction,
-        defaultIgnoreExisting: true,
+        defaultIgnore: true,
         callback: async (ddlHelper) => {
           const flag = await ddlHelper.cachedStatements.isTableExists("AT_DATABASE");
 
