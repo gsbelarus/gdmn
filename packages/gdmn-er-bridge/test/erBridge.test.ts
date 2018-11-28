@@ -42,12 +42,12 @@ import {Constants} from "../src/ddl/Constants";
 export const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./TEST.FDB")
+  path: resolve("./TEST_ER_BRIDGE.FDB")
 };
 
 jest.setTimeout(60 * 1000);
 
-describe("DataSource", () => {
+describe("ERBridge", () => {
   const connection = Factory.FBDriver.newConnection();
 
   const initERModel = async () => {
