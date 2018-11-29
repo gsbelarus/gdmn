@@ -1,4 +1,4 @@
-import { Helpers } from '@src/app/model/temp/Helpers';
+import { Helpers } from './Helpers';
 
 export type BaseEntityType = 'entity' | 'link';
 

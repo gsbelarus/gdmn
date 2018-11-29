@@ -11,7 +11,7 @@ export const Filter: React.SFC<IProps> = props => (
   <div className="filter">
     <div className="inner">
       <div className="search-svg">
-        <i className="fas fa-search" />
+        <i className="fas fa-search"/>
       </div>
       <div className="filter-textbox">
         <input
@@ -24,7 +24,7 @@ export const Filter: React.SFC<IProps> = props => (
       </div>
       {props.value && (
         <button className="filter-clear" onClick={props.onClearFilter}>
-          <i className="fas fa-times" />
+          <i className="fas fa-times"/>
         </button>
       )}
     </div>

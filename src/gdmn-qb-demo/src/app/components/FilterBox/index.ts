@@ -1,1 +1,1 @@
-export * from '@src/app/components/FilterBox/FilterBox';
+export * from './FilterBox';

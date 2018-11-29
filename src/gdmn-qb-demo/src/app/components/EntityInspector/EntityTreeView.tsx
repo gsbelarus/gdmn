@@ -1,6 +1,6 @@
-import React from 'react';
 import memoize from 'memoize-one';
-import { Filter } from '@src/app/components/EntityInspector/Filter';
+import React from 'react';
+import { Filter } from './Filter';
 
 /* export interface ITreeNode {
   id?: string;
@@ -57,7 +57,7 @@ export class EntityTreeView extends React.PureComponent<IAppProps, IState> {
   };
 
   private getListItemNode = (item: ITreeNode) => (
-    <AttributeBlock {...item} onSelectEntity={this.handleChange(item.name, item.name)} key={item.name} />
+    <AttributeBlock {...item} onSelectEntity={this.handleChange(item.name, item.name)} key={item.name}/>
   );
 
   private getStatusMessageNode = (filteredList: ITreeNode[]) => (
@@ -78,7 +78,7 @@ export class EntityTreeView extends React.PureComponent<IAppProps, IState> {
         <div className="entity-name">
           <span>{rootItem.name}</span>
           <button className="filter-clear" onClick={this.props.onClear}>
-            <i className="fas fa-times" />
+            <i className="fas fa-times"/>
           </button>
         </div>
         <Filter
@@ -105,7 +105,7 @@ const AttributeBlock = (props: ITreeNode & IEntityEvent) => {
     <li key={props.name || props.name} className="entity-item">
       {props.name === '' ? (
         <button className="attribute-entity-button">
-          <i className="fas fa-angle-right" />
+          <i className="fas fa-angle-right"/>
         </button>
       ) : (
         <input

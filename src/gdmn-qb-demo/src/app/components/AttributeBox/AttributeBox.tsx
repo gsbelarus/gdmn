@@ -1,6 +1,5 @@
 import React from 'react';
-import { Attribute } from '@src/app/components/AttributeBox/Attribute';
-import { sortType } from '../../types';
+import { Attribute } from './Attribute';
 
 import './index.css';
 
@@ -111,25 +110,25 @@ export class AttributeBox extends React.PureComponent<IProps, IState> {
       <div className="bottom-box-container">
         <table>
           <thead>
-            <tr className="header">
-              <th>Visible</th>
-              <th>Expression</th>
-              <th>Field alias</th>
-              <th>Sort type</th>
-            </tr>
+          <tr className="header">
+            <th>Visible</th>
+            <th>Expression</th>
+            <th>Field alias</th>
+            <th>Sort type</th>
+          </tr>
           </thead>
           <tbody>
-            {this.props.list.map((item: IAttributeParams) => (
-              <Attribute
-                {...item}
-                onChange={this.handleChange(item.expression.entityName)}
-                onChangeSortType={this.handleChangeSortType(item.expression.entityName)}
-                onChangeFieldAlias={this.handleChangeFieldAlias(item.expression.entityName)}
-                /* onClickDelete={this.props.deleteAttribute} */ key={
-                  item.expression.fieldName || item.expression.fieldName
-                }
-              />
-            ))}
+          {this.props.list.map((item: IAttributeParams) => (
+            <Attribute
+              {...item}
+              onChange={this.handleChange(item.expression.entityName)}
+              onChangeSortType={this.handleChangeSortType(item.expression.entityName)}
+              onChangeFieldAlias={this.handleChangeFieldAlias(item.expression.entityName)}
+              /* onClickDelete={this.props.deleteAttribute} */ key={
+              item.expression.fieldName || item.expression.fieldName
+            }
+            />
+          ))}
           </tbody>
         </table>
       </div>

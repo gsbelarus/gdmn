@@ -13,7 +13,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -26,7 +26,7 @@ export const entityList: any = {
         },
         {
           name: 'NAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Константа',
@@ -41,7 +41,7 @@ export const entityList: any = {
         },
         {
           name: 'COMMENT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Комментарий',
@@ -56,7 +56,7 @@ export const entityList: any = {
         },
         {
           name: 'CONSTTYPE',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Тип константы',
@@ -72,7 +72,7 @@ export const entityList: any = {
         },
         {
           name: 'DATATYPE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'DATATYPE',
@@ -87,7 +87,7 @@ export const entityList: any = {
         },
         {
           name: 'EDITORKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Кто исправил',
@@ -101,7 +101,7 @@ export const entityList: any = {
         },
         {
           name: 'EDITIONDATE',
-          type: 'TimeStampAttribute',
+          type: 'TimeStamp',
           lName: {
             ru: {
               name: 'Дата изменения',
@@ -117,7 +117,7 @@ export const entityList: any = {
         },
         {
           name: 'AFULL',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Полный доступ',
@@ -133,7 +133,7 @@ export const entityList: any = {
         },
         {
           name: 'ACHAG',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Просмотр и редактирование',
@@ -149,7 +149,7 @@ export const entityList: any = {
         },
         {
           name: 'AVIEW',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Только просмотр',
@@ -165,7 +165,7 @@ export const entityList: any = {
         },
         {
           name: 'RESERVED',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Зарезервировано',
@@ -193,7 +193,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -206,7 +206,7 @@ export const entityList: any = {
         },
         {
           name: 'VERSIONSTRING',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Версия',
@@ -221,7 +221,7 @@ export const entityList: any = {
         },
         {
           name: 'RELEASEDATE',
-          type: 'DateAttribute',
+          type: 'Date',
           lName: {
             ru: {
               name: 'Дата версии',
@@ -236,7 +236,7 @@ export const entityList: any = {
         },
         {
           name: 'COMMENT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Комментарий',
@@ -264,7 +264,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -277,7 +277,7 @@ export const entityList: any = {
         },
         {
           name: 'OBJECTKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'OBJECTKEY',
@@ -292,7 +292,7 @@ export const entityList: any = {
         },
         {
           name: 'LINKEDKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'LINKEDKEY',
@@ -307,7 +307,7 @@ export const entityList: any = {
         },
         {
           name: 'LINKEDCLASS',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'LINKEDCLASS',
@@ -322,7 +322,7 @@ export const entityList: any = {
         },
         {
           name: 'LINKEDSUBTYPE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'LINKEDSUBTYPE',
@@ -337,7 +337,7 @@ export const entityList: any = {
         },
         {
           name: 'LINKEDNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'LINKEDNAME',
@@ -352,7 +352,7 @@ export const entityList: any = {
         },
         {
           name: 'LINKEDUSERTYPE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'LINKEDUSERTYPE',
@@ -367,7 +367,7 @@ export const entityList: any = {
         },
         {
           name: 'LINKEDORDER',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'LINKEDORDER',
@@ -395,7 +395,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -408,7 +408,7 @@ export const entityList: any = {
         },
         {
           name: 'NAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Логин',
@@ -424,7 +424,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSW',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Пароль',
@@ -440,7 +440,7 @@ export const entityList: any = {
         },
         {
           name: 'INGROUP',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Входит в группы',
@@ -456,7 +456,7 @@ export const entityList: any = {
         },
         {
           name: 'FULLNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Полное наименование пользователя',
@@ -471,7 +471,7 @@ export const entityList: any = {
         },
         {
           name: 'DESCRIPTION',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Описание',
@@ -486,7 +486,7 @@ export const entityList: any = {
         },
         {
           name: 'IBNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Пользователь Interbase',
@@ -502,7 +502,7 @@ export const entityList: any = {
         },
         {
           name: 'IBPASSWORD',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Пароль Interbase',
@@ -518,7 +518,7 @@ export const entityList: any = {
         },
         {
           name: 'CONTACTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Контакт',
@@ -532,7 +532,7 @@ export const entityList: any = {
         },
         {
           name: 'EXTERNALKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Внешний ключ',
@@ -547,7 +547,7 @@ export const entityList: any = {
         },
         {
           name: 'DISABLED',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Отключено',
@@ -561,7 +561,7 @@ export const entityList: any = {
         },
         {
           name: 'LOCKEDOUT',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Пользователь отключен',
@@ -575,7 +575,7 @@ export const entityList: any = {
         },
         {
           name: 'MUSTCHANGE',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Пароль должен быть изменен',
@@ -589,7 +589,7 @@ export const entityList: any = {
         },
         {
           name: 'CANTCHANGEPASSW',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Нельзя изменять пароль',
@@ -603,7 +603,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSWNEVEREXP',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Срок действия пароля никогда не истекает',
@@ -617,7 +617,7 @@ export const entityList: any = {
         },
         {
           name: 'EXPDATE',
-          type: 'DateAttribute',
+          type: 'Date',
           lName: {
             ru: {
               name: 'Дата истечения пароля',
@@ -632,7 +632,7 @@ export const entityList: any = {
         },
         {
           name: 'WORKSTART',
-          type: 'TimeAttribute',
+          type: 'Time',
           lName: {
             ru: {
               name: 'Начало работы',
@@ -645,7 +645,7 @@ export const entityList: any = {
         },
         {
           name: 'WORKEND',
-          type: 'TimeAttribute',
+          type: 'Time',
           lName: {
             ru: {
               name: 'Окончание работы',
@@ -658,7 +658,7 @@ export const entityList: any = {
         },
         {
           name: 'ALLOWAUDIT',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Позволять аудит действий пользователя',
@@ -674,7 +674,7 @@ export const entityList: any = {
         },
         {
           name: 'EDITIONDATE',
-          type: 'TimeStampAttribute',
+          type: 'TimeStamp',
           lName: {
             ru: {
               name: 'Дата изменения',
@@ -690,7 +690,7 @@ export const entityList: any = {
         },
         {
           name: 'EDITORKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Кто исправил',
@@ -705,7 +705,7 @@ export const entityList: any = {
         },
         {
           name: 'ICON',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Значок',
@@ -720,7 +720,7 @@ export const entityList: any = {
         },
         {
           name: 'RESERVED',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Зарезервировано',
@@ -735,7 +735,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_EDITONLYSELFDOC',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Изменять только свои документы',
@@ -749,7 +749,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_VIEWONLYSELFDOC',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Просмотр только своих док',
@@ -776,7 +776,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -789,7 +789,7 @@ export const entityList: any = {
         },
         {
           name: 'CONTACTKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Контакт',
@@ -804,7 +804,7 @@ export const entityList: any = {
         },
         {
           name: 'OPERATIONDATE',
-          type: 'TimeStampAttribute',
+          type: 'TimeStamp',
           lName: {
             ru: {
               name: 'Дата операции',
@@ -819,7 +819,7 @@ export const entityList: any = {
         },
         {
           name: 'SOURCE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Информация',
@@ -834,7 +834,7 @@ export const entityList: any = {
         },
         {
           name: 'OBJECTID',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Объект',
@@ -849,7 +849,7 @@ export const entityList: any = {
         },
         {
           name: 'DATA',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Данные',
@@ -864,7 +864,7 @@ export const entityList: any = {
         },
         {
           name: 'CLIENTADDRESS',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'CLIENTADDRESS',
@@ -892,7 +892,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -905,7 +905,7 @@ export const entityList: any = {
         },
         {
           name: 'PARENT',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Родитель',
@@ -919,7 +919,7 @@ export const entityList: any = {
         },
         {
           name: 'CONTACTTYPE',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Тип контакта',
@@ -934,7 +934,7 @@ export const entityList: any = {
         },
         {
           name: 'NAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Наименование',
@@ -949,7 +949,7 @@ export const entityList: any = {
         },
         {
           name: 'ADDRESS',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Адрес',
@@ -964,7 +964,7 @@ export const entityList: any = {
         },
         {
           name: 'DISTRICT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Район',
@@ -979,7 +979,7 @@ export const entityList: any = {
         },
         {
           name: 'CITY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Населенный пункт',
@@ -994,7 +994,7 @@ export const entityList: any = {
         },
         {
           name: 'REGION',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Область',
@@ -1009,7 +1009,7 @@ export const entityList: any = {
         },
         {
           name: 'ZIP',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Индекс',
@@ -1024,7 +1024,7 @@ export const entityList: any = {
         },
         {
           name: 'COUNTRY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Страна',
@@ -1039,7 +1039,7 @@ export const entityList: any = {
         },
         {
           name: 'NOTE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Описание',
@@ -1054,7 +1054,7 @@ export const entityList: any = {
         },
         {
           name: 'EXTERNALKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Внешний ключ',
@@ -1069,7 +1069,7 @@ export const entityList: any = {
         },
         {
           name: 'EMAIL',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Электронный адрес',
@@ -1084,7 +1084,7 @@ export const entityList: any = {
         },
         {
           name: 'URL',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Сайт',
@@ -1099,7 +1099,7 @@ export const entityList: any = {
         },
         {
           name: 'POBOX',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Абонентский ящик',
@@ -1114,7 +1114,7 @@ export const entityList: any = {
         },
         {
           name: 'PHONE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Телефон',
@@ -1129,7 +1129,7 @@ export const entityList: any = {
         },
         {
           name: 'FAX',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Факс',
@@ -1144,7 +1144,7 @@ export const entityList: any = {
         },
         {
           name: 'EDITORKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Кто исправил',
@@ -1158,7 +1158,7 @@ export const entityList: any = {
         },
         {
           name: 'EDITIONDATE',
-          type: 'TimeStampAttribute',
+          type: 'TimeStamp',
           lName: {
             ru: {
               name: 'Дата изменения',
@@ -1174,7 +1174,7 @@ export const entityList: any = {
         },
         {
           name: 'AFULL',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Полный доступ',
@@ -1190,7 +1190,7 @@ export const entityList: any = {
         },
         {
           name: 'ACHAG',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Просмотр и редактирование',
@@ -1206,7 +1206,7 @@ export const entityList: any = {
         },
         {
           name: 'AVIEW',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Только просмотр',
@@ -1222,7 +1222,7 @@ export const entityList: any = {
         },
         {
           name: 'DISABLED',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Отключено',
@@ -1236,7 +1236,7 @@ export const entityList: any = {
         },
         {
           name: 'RESERVED',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Зарезервировано',
@@ -1251,7 +1251,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$CONTACTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Контакт',
@@ -1265,7 +1265,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WG_LISTNUM',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Табельный номер'
@@ -1279,7 +1279,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$DEP_OLDCODE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'код Секрета'
@@ -1293,7 +1293,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WAGE_OLDEMPLKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Ключ сотрудника из ЗА',
@@ -1308,7 +1308,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WB_PERCFORCLASS',
-          type: 'NumericAttribute',
+          type: 'Numeric',
           lName: {
             ru: {
               name: '% доплаты за классность'
@@ -1324,7 +1324,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$DISTANCE',
-          type: 'NumericAttribute',
+          type: 'Numeric',
           lName: {
             ru: {
               name: 'Расстояние',
@@ -1341,7 +1341,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$COD',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код для Ветразя',
@@ -1356,7 +1356,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WAGE_OLDDEPTKEY',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Ключ подразделения из ЗА',
@@ -1371,7 +1371,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$MN_USEPORTION',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Использовать порционность',
@@ -1385,7 +1385,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WB_TABELNUM',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Табельный номер ПЛ'
@@ -1399,7 +1399,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$MN_REMAINSPRICE',
-          type: 'EnumAttribute',
+          type: 'Enum',
           lName: {
             ru: {
               name: 'Выбор цены остатков',
@@ -1430,7 +1430,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$MN_SMID',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код в клипере'
@@ -1444,7 +1444,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$SORT',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Сортировка'
@@ -1458,7 +1458,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$BRANCH_CODE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код филиала',
@@ -1473,7 +1473,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WAGE_CODE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код для ветразя из з\\п',
@@ -1488,7 +1488,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$TRADEAGENTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'USR$TRADEAGENTKEY',
@@ -1502,7 +1502,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VMK_FT_GROUP',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Группа магазинов для фирменной торговли'
@@ -1516,7 +1516,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$CONTRADEAGENTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Торговый агент'
@@ -1529,7 +1529,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_ISOBOSOB',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Обособленное подразделение',
@@ -1543,7 +1543,7 @@ export const entityList: any = {
         },
         {
           name: 'CREATORKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'CREATORKEY',
@@ -1557,7 +1557,7 @@ export const entityList: any = {
         },
         {
           name: 'CREATIONDATE',
-          type: 'TimeStampAttribute',
+          type: 'TimeStamp',
           lName: {
             ru: {
               name: 'CREATIONDATE',
@@ -1573,7 +1573,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VMK_FT_PERCGROUP',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Группа наценок ФТ',
@@ -1588,7 +1588,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$MAIN_DEPTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Основное подразделение'
@@ -1601,7 +1601,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VMK_ISGLASS',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Стекло',
@@ -1615,7 +1615,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$FA_OKONH',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код ОКОНХ'
@@ -1629,7 +1629,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VMK_NAME_FT_CON',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'ФТ',
@@ -1644,7 +1644,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VMK_FT_GOODNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Наименование для платежки',
@@ -1659,7 +1659,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VMK_INCLUDECASS',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Включать в кассу главного',
@@ -1673,7 +1673,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_MATCODE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код склада',
@@ -1688,7 +1688,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_SPENDDEPART',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Подразделение для затрат',
@@ -1702,7 +1702,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_MATRESPONSIBLE',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Материально-ответственный',
@@ -1717,7 +1717,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_ISMATRESP',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Является мат.ответственным',
@@ -1731,7 +1731,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_KINDUCHET',
-          type: 'EnumAttribute',
+          type: 'Enum',
           lName: {
             ru: {
               name: 'Вид учета по подразделению',
@@ -1761,7 +1761,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$SHCODE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код для терминалов',
@@ -1776,7 +1776,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_UNP',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'УНП для ЖО',
@@ -1791,7 +1791,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_TIME_WAIT',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Организ.время задержки',
@@ -1806,7 +1806,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_UPLIMTIME0',
-          type: 'TimeAttribute',
+          type: 'Time',
           lName: {
             ru: {
               name: 'Начало раб.дня',
@@ -1819,7 +1819,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_DNLIMTIME0',
-          type: 'TimeAttribute',
+          type: 'Time',
           lName: {
             ru: {
               name: 'Окончание раб.дня',
@@ -1832,7 +1832,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_COSTASDEPOT',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Цена как со склада магазина',
@@ -1846,7 +1846,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_MAINCONTACT',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Заведущий складом',
@@ -1860,7 +1860,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VISIBLE',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Видимое в ЛК',
@@ -1874,7 +1874,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_ISDENOM',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Магазин деноминирован',
@@ -1888,7 +1888,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_AVECOST',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Расчитывать среднюю цену'
@@ -1901,7 +1901,7 @@ export const entityList: any = {
         },
         {
           name: 'LAT',
-          type: 'NumericAttribute',
+          type: 'Numeric',
           lName: {
             ru: {
               name: 'LAT',
@@ -1918,7 +1918,7 @@ export const entityList: any = {
         },
         {
           name: 'LON',
-          type: 'NumericAttribute',
+          type: 'Numeric',
           lName: {
             ru: {
               name: 'LON',
@@ -1935,7 +1935,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_ISGSM',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'ГСМ',
@@ -1949,7 +1949,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$CODE_NOT_REZIDENT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Код страны не резидента',
@@ -1964,7 +1964,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$SHORTNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Наименование для товарооборота',
@@ -1979,7 +1979,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_NP',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Номер птичника',
@@ -1994,7 +1994,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$ENCASHMENT',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Инкасация'
@@ -2007,7 +2007,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$VBPF_MERCHANDISER',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Мерчандайзер',
@@ -2021,7 +2021,7 @@ export const entityList: any = {
         },
         {
           name: 'GD_CONTACTLIST',
-          type: 'SetAttribute',
+          type: 'Set',
           lName: {
             ru: {
               name: 'Список контактов',
@@ -2035,7 +2035,7 @@ export const entityList: any = {
           attributes: [
             {
               name: 'RESERVED',
-              type: 'IntegerAttribute',
+              type: 'Integer',
               lName: {
                 ru: {
                   name: 'Зарезервировано',
@@ -2066,7 +2066,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -2079,7 +2079,7 @@ export const entityList: any = {
         },
         {
           name: 'HEADCOMPANY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Головная организация',
@@ -2093,7 +2093,7 @@ export const entityList: any = {
         },
         {
           name: 'FULLNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Полное наименование',
@@ -2108,7 +2108,7 @@ export const entityList: any = {
         },
         {
           name: 'COMPANYTYPE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Тип организации',
@@ -2123,7 +2123,7 @@ export const entityList: any = {
         },
         {
           name: 'DIRECTORKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Директор'
@@ -2136,7 +2136,7 @@ export const entityList: any = {
         },
         {
           name: 'CHIEFACCOUNTANTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Глв. бух',
@@ -2150,7 +2150,7 @@ export const entityList: any = {
         },
         {
           name: 'LOGO',
-          type: 'BlobAttribute',
+          type: 'Blob',
           lName: {
             ru: {
               name: 'Логотип',
@@ -2163,7 +2163,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WG_PERSDIRKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Начальник ОК'
@@ -2176,7 +2176,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$INV_NDSDODGER',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Не плательщик НДС',
@@ -2190,7 +2190,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$PLUSCOMPANYTYPE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Дополнительный тип организации'
@@ -2204,7 +2204,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$TRADEAGENTKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Торговый агент'
@@ -2217,7 +2217,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$EVAT_OFFSHORE',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Резидент офшора',
@@ -2231,7 +2231,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$EVAT_EAEU',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Резидент ЕАЭС',
@@ -2245,7 +2245,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$EVAT_NATIVE',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Резидент РБ',
@@ -2259,7 +2259,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$EVAT_ISBIGCOMPANY',
-          type: 'BooleanAttribute',
+          type: 'Boolean',
           lName: {
             ru: {
               name: 'Крупный плательщик',
@@ -2273,7 +2273,7 @@ export const entityList: any = {
         },
         {
           name: 'GD_HOLDING',
-          type: 'SetAttribute',
+          type: 'Set',
           lName: {
             ru: {
               name: 'Холдинг',
@@ -2302,7 +2302,7 @@ export const entityList: any = {
       attributes: [
         {
           name: 'ID',
-          type: 'SequenceAttribute',
+          type: 'Sequence',
           lName: {
             ru: {
               name: 'Идентификатор'
@@ -2315,7 +2315,7 @@ export const entityList: any = {
         },
         {
           name: 'FIRSTNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Имя',
@@ -2330,7 +2330,7 @@ export const entityList: any = {
         },
         {
           name: 'SURNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Фамилия',
@@ -2345,7 +2345,7 @@ export const entityList: any = {
         },
         {
           name: 'MIDDLENAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Отчество'
@@ -2359,7 +2359,7 @@ export const entityList: any = {
         },
         {
           name: 'NICKNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Коротко',
@@ -2374,7 +2374,7 @@ export const entityList: any = {
         },
         {
           name: 'RANK',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Должность',
@@ -2389,7 +2389,7 @@ export const entityList: any = {
         },
         {
           name: 'HADDRESS',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Дом. адрес',
@@ -2404,7 +2404,7 @@ export const entityList: any = {
         },
         {
           name: 'HCITY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Город (домашний)',
@@ -2419,7 +2419,7 @@ export const entityList: any = {
         },
         {
           name: 'HREGION',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Область (проживания)',
@@ -2434,7 +2434,7 @@ export const entityList: any = {
         },
         {
           name: 'HZIP',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Индекс (проживания)',
@@ -2449,7 +2449,7 @@ export const entityList: any = {
         },
         {
           name: 'HCOUNTRY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Страна (прожив)',
@@ -2464,7 +2464,7 @@ export const entityList: any = {
         },
         {
           name: 'HDISTRICT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Район (проживания)',
@@ -2479,7 +2479,7 @@ export const entityList: any = {
         },
         {
           name: 'HPHONE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Дом. телефон',
@@ -2494,7 +2494,7 @@ export const entityList: any = {
         },
         {
           name: 'WCOMPANYKEY',
-          type: 'EntityAttribute',
+          type: 'Entity',
           lName: {
             ru: {
               name: 'Рабочая компания (ссылка)',
@@ -2508,7 +2508,7 @@ export const entityList: any = {
         },
         {
           name: 'WCOMPANYNAME',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Рабочая компания',
@@ -2523,7 +2523,7 @@ export const entityList: any = {
         },
         {
           name: 'WDEPARTMENT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Подразделение',
@@ -2538,7 +2538,7 @@ export const entityList: any = {
         },
         {
           name: 'SPOUSE',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Супруг(а)',
@@ -2553,7 +2553,7 @@ export const entityList: any = {
         },
         {
           name: 'CHILDREN',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Дети',
@@ -2568,7 +2568,7 @@ export const entityList: any = {
         },
         {
           name: 'SEX',
-          type: 'EnumAttribute',
+          type: 'Enum',
           lName: {
             ru: {
               name: 'Пол',
@@ -2592,7 +2592,7 @@ export const entityList: any = {
         },
         {
           name: 'BIRTHDAY',
-          type: 'DateAttribute',
+          type: 'Date',
           lName: {
             ru: {
               name: 'Дата рождения',
@@ -2607,7 +2607,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSPORTNUMBER',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Номер паспорта',
@@ -2622,7 +2622,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSPORTEXPDATE',
-          type: 'DateAttribute',
+          type: 'Date',
           lName: {
             ru: {
               name: 'Дата действия пасп',
@@ -2637,7 +2637,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSPORTISSDATE',
-          type: 'DateAttribute',
+          type: 'Date',
           lName: {
             ru: {
               name: 'Дата выдачи',
@@ -2652,7 +2652,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSPORTISSUER',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Кто выдал',
@@ -2667,7 +2667,7 @@ export const entityList: any = {
         },
         {
           name: 'PASSPORTISSCITY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Город выдачи',
@@ -2682,7 +2682,7 @@ export const entityList: any = {
         },
         {
           name: 'PERSONALNUMBER',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Персональный номер',
@@ -2697,7 +2697,7 @@ export const entityList: any = {
         },
         {
           name: 'VISITCARD',
-          type: 'BlobAttribute',
+          type: 'Blob',
           lName: {
             ru: {
               name: 'Визитная карточка',
@@ -2710,7 +2710,7 @@ export const entityList: any = {
         },
         {
           name: 'PHOTO',
-          type: 'BlobAttribute',
+          type: 'Blob',
           lName: {
             ru: {
               name: 'Фотография',
@@ -2723,7 +2723,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$ACCOUNT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Банковский счет'
@@ -2737,7 +2737,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WG_BCOUNTRY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Страна рождения'
@@ -2751,7 +2751,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WG_BREGION',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Область рождения'
@@ -2765,7 +2765,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WG_BCITY',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Нас. пункт рождения'
@@ -2779,7 +2779,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WG_BDISTRICT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Район рождения'
@@ -2793,7 +2793,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$WAGE_PASTCAT',
-          type: 'IntegerAttribute',
+          type: 'Integer',
           lName: {
             ru: {
               name: 'Разряд из ЗА',
@@ -2808,7 +2808,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$INSURANCENUMBER',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Страховой номер'
@@ -2822,7 +2822,7 @@ export const entityList: any = {
         },
         {
           name: 'USR$IBANACCOUNT',
-          type: 'StringAttribute',
+          type: 'String',
           lName: {
             ru: {
               name: 'Счет IBAN',

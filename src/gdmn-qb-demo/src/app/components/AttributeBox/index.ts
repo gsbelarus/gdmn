@@ -1,1 +1,1 @@
-export * from '@src/app/components/AttributeBox/AttributeBox';
+export * from './AttributeBox';

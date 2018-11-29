@@ -1,22 +1,11 @@
-import React, { Children } from 'react';
-import { entityAPI } from '@src/app/api/entity';
-import {
-  EntityLink,
-  EntityQuery,
-  Entity,
-  Attribute,
-  ERModel,
-  EntityQueryField,
-  EntityAttribute,
-  SetAttribute,
-  DetailAttribute,
-  ParentAttribute
-} from 'gdmn-orm';
-import { EntityInspector, ITreeNode, FilterBox, AttributeBox, IEnityListMessage } from '@src/app/components';
+import { Attribute, Entity, EntityAttribute, EntityLink, EntityQueryField, ERModel } from 'gdmn-orm';
+import React from 'react';
+import { entityAPI } from '../app/api/entity';
 import './App.css';
+import { AttributeBox, EntityInspector, IEntityListMessage, ITreeNode } from './components';
 
 interface IState {
-  statusMessage: IEnityListMessage;
+  statusMessage: IEntityListMessage;
   erModel?: ERModel;
   attributeList: EntityQueryField[];
   entityLink?: EntityLink;
@@ -188,7 +177,7 @@ export class App extends React.PureComponent<any, IState> {
 
     if (node.state.checked) {
       this.setState({ attributeList: [...this.state.attributeList] }, this.updateTreeData);
-      return ;
+      return;
     }
 
     console.log('set checked');

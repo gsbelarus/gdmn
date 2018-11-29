@@ -1,11 +1,11 @@
+// @ts-ignore
+import Checkbox from '@trendmicro/react-checkbox';
 import React from 'react';
 // @ts-ignore
 import InfiniteTree from 'react-infinite-tree';
-// @ts-ignore
-import Checkbox from '@trendmicro/react-checkbox';
 import styled from 'styled-components';
-import { ITreeNode } from '@src/app/components/EntityInspector/EntityInspector';
-import { Filter } from '@src/app/components/EntityInspector/Filter';
+import { ITreeNode } from './EntityTreeView';
+import { Filter } from './Filter';
 
 interface IProps {
   data: ITreeNode;
@@ -61,7 +61,7 @@ export class ReactTree extends React.PureComponent<IProps, IState> {
         <div className="entity-name">
           <span>{data.name}</span>
           <button className="filter-clear" onClick={this.props.onClear}>
-            <i className="fas fa-times" />
+            <i className="fas fa-times"/>
           </button>
         </div>
         <Filter
@@ -134,7 +134,7 @@ const renderTreeNode = ({ node, tree, toggleState, onUpdate }: any) => (
     />
     <span>{node.name}</span>
   </TreeNode>
-)
+);
 
 const defaultRowHeight = 20;
 
@@ -155,8 +155,8 @@ const TreeNode = ({ selected, depth, ...divProps }: any) => (
 
 const Toggler = styled(({ state, ...props }: any) => (
   <a {...props}>
-    {state === 'closed' && <i className="fa fa-fw fa-chevron-right" />}
-    {state === 'opened' && <i className="fa fa-fw fa-chevron-down" />}
+    {state === 'closed' && <i className="fa fa-fw fa-chevron-right"/>}
+    {state === 'opened' && <i className="fa fa-fw fa-chevron-down"/>}
   </a>
 ))`
   color: #333;

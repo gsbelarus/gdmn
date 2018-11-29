@@ -1,0 +1,11 @@
+{
+  "server": {
+    "http": {
+      "host": "http://localhost",
+      "port": 4000
+    },
+    "paths": {
+      "er": "/app/test/er"
+    }
+  }
+}

@@ -1,16 +1,13 @@
 import React from 'react';
-import { ReactTree } from '@src/app/components/EntityInspector/ReactTree';
-import { EntityList, IEnityListMessage } from '@src/app/components/EntityInspector/EntityList';
-import { EntityTreeView, ITreeNode } from '@src/app/components/EntityInspector/EntityTreeView';
-
-export { ITreeNode, IEnityListMessage };
-
+import { EntityList, IEntityListMessage } from './EntityList';
+import { ITreeNode } from './EntityTreeView';
 import './index.css';
+import { ReactTree } from './ReactTree';
 
 interface IProps {
   list: string[];
   treeData?: ITreeNode;
-  statusMessage: IEnityListMessage;
+  statusMessage: IEntityListMessage;
   onLoadMockEntities: () => void;
   onLoadEntities: () => void;
   onSelectEntity: (id: string, checked: boolean) => void;

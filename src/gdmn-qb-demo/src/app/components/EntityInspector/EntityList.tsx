@@ -1,16 +1,14 @@
-import React from 'react';
 import memoize from 'memoize-one';
-// import {Entity } from 'gdmn-orm';
-import { Filter } from '@src/app/components/EntityInspector/Filter';
+import React from 'react';
+import { Filter } from './Filter';
 
 import './index.css';
-import { rusPrepositions } from 'gdmn-nlp';
 
 interface IState {
   filterText: string;
 }
 
-export interface IEnityListMessage {
+export interface IEntityListMessage {
   loadingData?: boolean;
   loadingText?: string;
   loadingError?: boolean;
@@ -18,7 +16,7 @@ export interface IEnityListMessage {
 
 interface IProps {
   list: string[];
-  statusMessage: IEnityListMessage;
+  statusMessage: IEntityListMessage;
   onSelectEntity: (id: string, checked: boolean) => void;
   onLoadMockEntities: () => void;
   onLoadEntities: () => void;
@@ -46,7 +44,7 @@ export class EntityList extends React.PureComponent<IProps, IState> {
   };
 
   private getListItemNode = (item: string) => (
-    <EntityBlock name={item} onSelectEntity={this.handleChange(item)} key={item} />
+    <EntityBlock name={item} onSelectEntity={this.handleChange(item)} key={item}/>
   );
 
   private getStatusMessageNode = (filteredList: string[]) => (
@@ -70,7 +68,7 @@ export class EntityList extends React.PureComponent<IProps, IState> {
     return (
       <div className="component-container">
         <div className="load-buttons-container">
-          <button onClick={this.props.onLoadMockEntities}>Загрузить (тест) </button>
+          <button onClick={this.props.onLoadMockEntities}>Загрузить (тест)</button>
           <button onClick={this.props.onLoadEntities}>Загрузить</button>
         </div>
         <Filter
@@ -95,7 +93,7 @@ interface IEntityEvent {
 const EntityBlock = (props: { name: string } & IEntityEvent) => {
   return (
     <li className="entity-item">
-      <input className="checkmark" id={getName(props.name)} type="checkbox" onChange={props.onSelectEntity} />
+      <input className="checkmark" id={getName(props.name)} type="checkbox" onChange={props.onSelectEntity}/>
       <label htmlFor={getName(props.name)}>{props.name}</label>
     </li>
   );

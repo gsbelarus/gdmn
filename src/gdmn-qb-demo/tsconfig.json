@@ -1,35 +1,27 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "outDir": "./dist/src",
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "./dist/definitions",
+    "jsx": "preserve",
+    "preserveConstEnums": true,
+    "resolveJsonModule": true,
     "allowJs": true,
+    "skipLibCheck": false,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "jsx": "react",
-    "lib": ["es2017", "dom"],
+    "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noImplicitAny": true,
-    "outDir": "./build",
-    "paths": {
-      "@src/*": ["src/*"]
-    },
-    "rootDir": "src",
-    "sourceMap": true,
-    "strict": true,
-    "target": "es5",
-    "typeRoots": [
-      "node_modules/@types",
-      "./typings"
-    ],
+    "noEmit": true,
+    "isolatedModules": true
   },
   "exclude": [
-    "build",
-    "configs",
-    "dist",
-    "node_modules",
-    "scripts"
+    "./dist",
+    "./test"
+  ],
+  "include": [
+    "src"
   ]
 }

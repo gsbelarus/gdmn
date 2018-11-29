@@ -1,6 +1,6 @@
 import React from 'react';
 import shortid from 'shortid';
-import { IAttribute } from '@src/app/model';
+import { IAttribute } from '../../model/entity';
 
 import './index.css';
 
@@ -13,7 +13,7 @@ export const AttributeList: React.SFC<IAttributeList> = props => (
     <ul className="attributes">
       {props.data.map(i => (
         <li key={shortid.generate()}>
-          <input type="checkbox" id="checkbox}" />
+          <input type="checkbox" id="checkbox}"/>
           <label htmlFor="checkbox"> {i.name}</label>
         </li>
       ))}

@@ -1,8 +1,6 @@
-import React, { ReactEventHandler } from 'react';
-import Draggable from 'react-draggable';
-import { IAttribute } from '@src/app/model';
-import { IAttributeParams } from '@src/app/components/AttributeBox/AttributeBox';
-import { sortType, SortType } from '../../types';
+import React from 'react';
+import { sortType } from '../../types';
+import { IAttributeParams } from './AttributeBox';
 
 import './index.css';
 
@@ -16,7 +14,7 @@ export interface IEntityEvent {
 export const Attribute: React.SFC<IAttributeParams & IEntityEvent> = props => (
   <tr>
     <td>
-      <input type="checkbox" checked={props.visible} key={props.id} onChange={props.onChange} />
+      <input type="checkbox" checked={props.visible} key={props.id} onChange={props.onChange}/>
     </td>
     <td>
       {props.expression.entityName}.{props.expression.fieldName}
