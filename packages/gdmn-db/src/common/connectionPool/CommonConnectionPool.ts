@@ -125,6 +125,9 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
             throw new Error("Connection pool need created");
         }
         await this._connectionPool.drain();
+        // workaround; Wait until quantity minimum connections is established
+        await Promise.all(Array.from((this._connectionPool as any)._factoryCreateOperations)
+                .map((promise: any) => promise.then(null, null)));
         await this._connectionPool.clear();
         this._connectionPool.removeListener("factoryCreateError", console.error);
         this._connectionPool.removeListener("factoryDestroyError", console.error);
