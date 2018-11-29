@@ -24,7 +24,7 @@ export class EntityBuilder extends Builder {
       const tableName = Builder._getOwnRelationName(entity);
       const constraintName = Prefix.uniqueConstraint(await this.nextDDLUnique());
       await this.ddlHelper.addUnique(constraintName, tableName, uniqueAttrs.map((attr) => Builder._getFieldName(attr)));
-      entity.add(uniqueAttrs);
+      entity.addUnique(uniqueAttrs);
 
     } else if (source instanceof Attribute) {
       const attr = source;

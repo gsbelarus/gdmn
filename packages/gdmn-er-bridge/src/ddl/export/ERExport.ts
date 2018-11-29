@@ -162,7 +162,7 @@ export class ERExport {
 
   private _createAttributes(entity: Entity, forceAdapter: boolean): void {
     const ownRelationName = Builder._getOwnRelationName(entity);
-    entity.adapter.relation.forEach( rel => {
+    entity.adapter.relation.forEach(rel => {
       const relation = this._dbStructure.relations[rel.relationName];
       const atRelation = this._getATResult().atRelations[relation.name];
 
@@ -170,7 +170,7 @@ export class ERExport {
         throw new Error(`Relation ${relation.name} not found in AT_RELATIONS table. Synchronization needed.`);
       }
 
-      Object.values(relation.relationFields).forEach( relationField => {
+      Object.values(relation.relationFields).forEach(relationField => {
         if (rel.fields && !rel.fields.includes(relationField.name)) {
           return;
         }
@@ -217,7 +217,7 @@ export class ERExport {
           }
           return uqAttr;
         });
-        entity.add(attrs);
+        entity.addUnique(attrs);
       });
     });
   }
@@ -428,7 +428,16 @@ export class ERExport {
           max: MAX_16BIT_INT
         });
         const defaultValue = default2Int(defaultValueSource);
-        return new IntegerAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter});
+        return new IntegerAttribute({
+          name,
+          lName,
+          required,
+          minValue,
+          maxValue,
+          defaultValue,
+          semCategories,
+          adapter
+        });
       }
       case FieldType.BIG_INTEGER: {
         const {minValue, maxValue} = check2IntRange(fieldSource.validationSource, {
@@ -436,7 +445,16 @@ export class ERExport {
           max: MAX_64BIT_INT
         });
         const defaultValue = default2Int(defaultValueSource);
-        return new IntegerAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter});
+        return new IntegerAttribute({
+          name,
+          lName,
+          required,
+          minValue,
+          maxValue,
+          defaultValue,
+          semCategories,
+          adapter
+        });
       }
       case FieldType.INTEGER: {
         const fieldName = adapter ? adapter.field : name;
@@ -452,8 +470,8 @@ export class ERExport {
           }
 
           if (relationField.name === Constants.DEFAULT_PARENT_KEY_NAME) {
-            let lbField = '';
-            let rbField = '';
+            let lbField = "";
+            let rbField = "";
             let parentAttrAdapter: IParentAttributeAdapter | undefined;
 
             if (relation.relationFields[Constants.DEFAULT_LB_NAME] && relation.relationFields[Constants.DEFAULT_RB_NAME]) {
@@ -471,7 +489,13 @@ export class ERExport {
               };
             }
 
-            return new ParentAttribute({name, lName, entities: refEntities, semCategories, adapter: parentAttrAdapter});
+            return new ParentAttribute({
+              name,
+              lName,
+              entities: refEntities,
+              semCategories,
+              adapter: parentAttrAdapter
+            });
           }
           return new EntityAttribute({name, lName, required, entities: refEntities, semCategories, adapter});
         } else {

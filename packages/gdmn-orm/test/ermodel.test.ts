@@ -10,7 +10,7 @@ describe("ERModel", async () => {
     const testAttr = entity.add(new StringAttribute({
       name: "TEST_FIELD", lName: {en: {name: "Test field"}}
     }));
-    await entity.add([testAttr]);
+    await entity.addUnique([testAttr]);
 
     const serialized = erModel.serialize();
 

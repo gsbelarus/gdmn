@@ -36,7 +36,7 @@ export class Entity {
   }
 
   get pk(): Attribute[] {
-    return this._pk.slice();
+    return this._pk;
   }
 
   get adapter(): IEntityAdapter {
@@ -107,80 +107,52 @@ export class Entity {
     return this.parent ? (this.parent === a ? true : this.parent.hasAncestor(a)) : false;
   }
 
-  public has(uniqueAttributes: Attribute[]): boolean;
-  public has(attribute: Attribute): boolean;
-  public has(source: Attribute[] | Attribute): boolean {
-    if (Array.isArray(source)) {
-      return this.unique.includes(source);
-
-    } else if (source instanceof Attribute) {
-      return this.hasAttribute(source.name);
-
-    } else {
-      throw new Error("Unknown arg of type");
-    }
+  public hasUnique(attributes: Attribute[]): boolean {
+    return this._unique.includes(attributes);
   }
 
-  public hasOwn(uniqueAttributes: Attribute[]): boolean;
-  public hasOwn(attribute: Attribute): boolean;
-  public hasOwn(source: Attribute[] | Attribute): boolean {
-    if (Array.isArray(source)) {
-      return this.ownUnique.includes(source);
-
-    } else if (source instanceof Attribute) {
-      return this.hasOwnAttribute(source.name);
-
-    } else {
-      throw new Error("Unknown arg of type");
-    }
+  public hasOwnUnique(attributes: Attribute[]): boolean {
+    return this.ownUnique.includes(attributes);
   }
 
-  public add<T extends Attribute>(uniqueAttributes: T[]): void;
-  public add<T extends Attribute>(attribute: T): T;
-  public add<T extends Attribute>(source: T[] | T): void | T {
-    if (Array.isArray(source)) {
-      const uniqueAttributes = source;
-      uniqueAttributes.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
-      this._unique.push(uniqueAttributes);
-
-    } else if (source instanceof Attribute) {
-      const attribute = source;
-      if (this.hasOwnAttribute(attribute.name)) {
-        throw new Error(`Attribute ${attribute.name} of entity ${this.name} already exists`);
-      }
-
-      if (!this._pk.length) {
-        this._pk.push(attribute);
-      }
-      return this._attributes[attribute.name] = attribute;
-
-    } else {
-      throw new Error("Unknown arg of type");
-    }
+  public has(attribute: Attribute): boolean {
+    return this.hasAttribute(attribute.name);
   }
 
-  public remove(uniqueAttributes: Attribute[]): void;
-  public remove(attribute: Attribute): void;
-  public remove(source: Attribute[] | Attribute): void {
-    if (Array.isArray(source)) {
-      const attributes = source;
-      attributes.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
-      this._unique.splice(this._unique.indexOf(attributes), 1);
+  public hasOwn(attribute: Attribute): boolean {
+    return this.hasOwnAttribute(attribute.name);
+  }
 
-    } else if (source instanceof Attribute) {
-      const attribute = source;
-      if (!this.hasOwnAttribute(attribute.name)) {
-        throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
-      }
+  public addUnique(attributes: Attribute[]): void {
+    attributes.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
+    this._unique.push(attributes);
+  }
 
-      if (this._pk.length) {
-        this._pk.splice(this._pk.indexOf(attribute), 1);
-      }
-      delete this._attributes[attribute.name];
+  public removeUnique(attributes: Attribute[]): void {
+    attributes.forEach((attr) => this.ownAttribute(attr.name));  // check exists own attribute
+    this._unique.splice(this._unique.indexOf(attributes), 1);
+  }
 
-    } else {
-      throw new Error("Unknown arg of type");
+  public add<T extends Attribute>(attribute: T): T {
+    if (this.hasOwnAttribute(attribute.name)) {
+      throw new Error(`Attribute ${attribute.name} of entity ${this.name} already exists`);
     }
+
+    if (!this._pk.length) {
+      this._pk.push(attribute);
+    }
+    return this._attributes[attribute.name] = attribute;
+  }
+
+  public remove(attribute: Attribute): void {
+    if (!this.hasOwnAttribute(attribute.name)) {
+      throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
+    }
+
+    if (this._pk.length) {
+      this._pk.splice(this._pk.indexOf(attribute), 1);
+    }
+    delete this._attributes[attribute.name];
   }
 
   public serialize(): IEntity {
