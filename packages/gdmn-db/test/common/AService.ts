@@ -1,8 +1,7 @@
 import fs from "fs";
-import path from "path";
+import {resolve} from "path";
 import {AConnection, ADriver, IConnectionOptions} from "../../src";
 import {AService, IRestoreOptions, IServiceOptions} from "../../src/AService";
-import {bkpFileExt, dbFileExt, testPath} from "../fb.test";
 import {getData, IDataItem} from "../fixtures/getData";
 
 export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): void {
@@ -15,15 +14,12 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
             port: 3050
         };
 
-        const restoredTestDbPath = path.format({
-            dir: testPath, name: "RESTORED_TEST_DB", ext: dbFileExt
-        });
+        const backupTestDbPath = resolve("./GDMN_DB_BACKUP.BKP");
 
-        const backupTestDbPath = path.format({
-            dir: testPath, name: "BACKUP_TEST", ext: bkpFileExt
-        });
-
-        const restoredDbOptions = {...dbOptions, path: restoredTestDbPath};
+        const restoredDbOptions = {
+            ...dbOptions,
+            path: resolve("./GDMN_DB_RESTORED.DB")
+        };
 
         const tableName = "TEST_BACKUP_TABLE";
 
@@ -84,8 +80,7 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
                 });
             } catch (error) {
                 console.error(error);
-            }
-            finally {
+            } finally {
                 await connection.disconnect();
             }
 
@@ -93,8 +88,8 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
                 fs.unlinkSync(backupTestDbPath);
             }
 
-            if (fs.existsSync(restoredTestDbPath)) {
-                fs.unlinkSync(restoredTestDbPath);
+            if (fs.existsSync(restoredDbOptions.path)) {
+                fs.unlinkSync(restoredDbOptions.path);
             }
         });
 
@@ -103,8 +98,8 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
                 fs.unlinkSync(backupTestDbPath);
             }
 
-            if (fs.existsSync(restoredTestDbPath)) {
-                fs.unlinkSync(restoredTestDbPath);
+            if (fs.existsSync(restoredDbOptions.path)) {
+                fs.unlinkSync(restoredDbOptions.path);
             }
         });
 
@@ -117,14 +112,14 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
             expect(fs.existsSync(backupTestDbPath)).toBeTruthy();
 
             try {
-                await svcManager.restoreDatabase(restoredTestDbPath, backupTestDbPath);
+                await svcManager.restoreDatabase(restoredDbOptions.path, backupTestDbPath);
             } catch (error) {
                 console.error(error);
             } finally {
                 await svcManager.detach();
             }
 
-            expect(fs.existsSync(restoredTestDbPath)).toBeTruthy();
+            expect(fs.existsSync(restoredDbOptions.path)).toBeTruthy();
 
             const connection = driver.newConnection();
 
@@ -136,7 +131,8 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
                     callback: (transaction) => AConnection.executeQueryResultSet({
                         connection,
                         transaction,
-                        sql: `SELECT * FROM ${tableName}`,
+                        sql: `SELECT *
+                        FROM ${tableName}`,
                         callback: async (resultSet) => {
                             for (let i = 0; await resultSet.next(); i++) {
                                 const dataItem = fixtureArrayData[i];

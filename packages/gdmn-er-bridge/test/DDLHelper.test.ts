@@ -8,7 +8,7 @@ import {DBSchemaUpdater} from "../src/ddl/updates/DBSchemaUpdater";
 export const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./TEST_DDL_HELPER.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_DDL_HELPER.FDB")
 };
 
 jest.setTimeout(120000);

@@ -1,5 +1,5 @@
 import {existsSync, unlinkSync} from "fs";
-import path from "path";
+import {resolve} from "path";
 import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions} from "../src";
 import {Statement} from "../src/fb/Statement";
 import {connectionTest} from "./common/AConnection";
@@ -9,16 +9,10 @@ import {serviceTest} from "./common/AService";
 import {statementTest} from "./common/AStatement";
 import {transactionTest} from "./common/ATransaction";
 
-const cwd = `${process.cwd()}`;
-export const testPath = path.join(cwd, "test");
-export const testDbPath = path.join(testPath, "TEST.FDB");
-export const dbFileExt = ".FDB";
-export const bkpFileExt = ".BKP";
-
 export const dbOptions: IConnectionOptions = {
     username: "SYSDBA",
     password: "masterkey",
-    path: testDbPath
+    path: resolve("./GDMN_DB_FB.FDB")
 };
 
 jest.setTimeout(100 * 1000);
@@ -27,8 +21,8 @@ describe("Firebird driver tests", async () => {
     const globalConnectionPool = Factory.FBDriver.newCommonConnectionPool();
 
     beforeAll(async () => {
-        if (existsSync(testDbPath)) {
-            unlinkSync(testDbPath);
+        if (existsSync(dbOptions.path)) {
+            unlinkSync(dbOptions.path);
         }
         const connection = Factory.FBDriver.newConnection();
 
@@ -55,8 +49,8 @@ describe("Firebird driver tests", async () => {
         expect(connection.connected).toBeFalsy();
     });
 
-    it(testDbPath + " exists", async () => {
-        expect(existsSync(testDbPath)).toBeTruthy();
+    it(dbOptions.path + " exists", async () => {
+        expect(existsSync(dbOptions.path)).toBeTruthy();
     });
 
     connectionTest(Factory.FBDriver, dbOptions);

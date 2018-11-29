@@ -42,7 +42,7 @@ import {Constants} from "../src/ddl/Constants";
 export const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./TEST_ER_BRIDGE.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_ER_BRIDGE.FDB")
 };
 
 jest.setTimeout(60 * 1000);
