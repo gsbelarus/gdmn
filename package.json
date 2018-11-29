@@ -13,6 +13,7 @@
     "start:front": "lerna --scope=gdmn-front exec -- yarn start",
     "start:grid-demo": "lerna --scope=gdmn-grid-demo exec -- yarn start",
     "start:nlp-demo": "lerna --scope=gdmn-nlp-demo exec -- yarn start",
+    "start:qb-demo": "lerna --scope=gdmn-qb-demo exec -- yarn start",
     "clean": "lerna run clean --parallel",
     "build": "lerna run build",
     "rebuild": "yarn clean && yarn build",
