@@ -4,7 +4,6 @@ import { RusAdjective } from '../morphology/rusAdjective';
 import { RusPreposition } from '../morphology/rusPreposition';
 import { RusWord } from '../morphology/rusMorphology';
 import { Phrase, PhraseName } from './syntax';
-import { RusConjunction } from '../morphology/rusConjunction';
 import { AnyWord } from '../morphology/morphology';
 
 export class RusPhrase extends Phrase<RusWord> {};
@@ -89,11 +88,13 @@ export class RusANP extends RusPhrase {
     return this.items[0] as RusAdjective;
   }
 
-  /*
   get noun(): RusNoun {
-    return this.items[1] as RusNoun;
+    if (this.items[1] instanceof RusNoun) {
+      return this.items[1] as RusNoun;
+    } else {
+      return (this.items[1] as RusHomogeneousNouns).items[0] as RusNoun;
+    }
   }
-  */
 
   getName(): PhraseName {
     return {
@@ -129,11 +130,13 @@ export class RusPP extends RusPhrase {
     return this.items[0] as RusPreposition;
   }
 
-  /*
   get noun(): RusNoun {
-    return this.items[1] as RusNoun;
+    if (this.items[1] instanceof RusNoun) {
+      return this.items[1] as RusNoun;
+    } else {
+      return (this.items[1] as RusHomogeneousNouns).items[0] as RusNoun;
+    }
   }
-  */
 
   getName(): PhraseName {
     return {
