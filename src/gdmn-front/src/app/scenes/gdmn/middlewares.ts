@@ -6,7 +6,7 @@ import { rootActions } from '@src/app/scenes/root/actions';
 
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
-import { deserializeERModel } from 'gdmn-orm';
+import { deserializeERModel, ERModel, Entity, StringAttribute, EntityAttribute } from 'gdmn-orm';
 import { Middleware } from 'redux';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -17,13 +17,12 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
     let errorSubscription: Subscription | undefined;
 
     switch (action.type) {
-      case getType(gdmnActions.apiConnect):
-        const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
-        const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
-        if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
-          const token = Auth.isFreshToken(accessTokenPayload)
-            ? selectAuthState(getState()).accessToken
-            : selectAuthState(getState()).refreshToken;
+      case getType(gdmnActions.apiConnect): {
+        const authState = selectAuthState(getState());
+        const { accessTokenPayload, refreshTokenPayload, accessToken, refreshToken } = authState;
+
+        if (accessTokenPayload && refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
+          const token = Auth.isFreshToken(accessTokenPayload) ? accessToken : refreshToken;
 
           try {
             await apiService.auth({
@@ -33,6 +32,8 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             });
 
             dispatch(gdmnActions.apiGetSchema());
+
+            dispatch(gdmnActions.buildCommandList());
           } catch (error) {
             console.log('auth error: ', error);
 
@@ -73,7 +74,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
         });
 
         break;
-      case getType(gdmnActions.apiDisconnect):
+      }
+
+      case getType(gdmnActions.apiDisconnect): {
         if (!!errorSubscription) {
           errorSubscription.unsubscribe();
           errorSubscription = undefined;
@@ -82,13 +85,17 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
         apiService.signOut({ payload: null });
 
         break;
-      case getType(gdmnActions.apiPing):
+      }
+
+      case getType(gdmnActions.apiPing): {
         apiService.ping(action.payload).subscribe(value => {
           console.log('PING response: ' + JSON.stringify(value));
         });
 
         break;
-      case getType(gdmnActions.apiGetSchema):
+      }
+
+      case getType(gdmnActions.apiGetSchema): {
         apiService.getSchema({
           payload: {
             action: TTaskActionNames.GET_SCHEMA,
@@ -104,6 +111,61 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
           });
 
         break;
+      }
+
+      case getType(gdmnActions.buildCommandList): {
+        const commands = new ERModel();
+
+        const commandGroup = new Entity({
+          name: 'commandGroup',
+          lName: {
+            en: {
+              name: 'Command Group'
+            }
+          }
+        });
+        commandGroup.add(
+          new StringAttribute({
+            name: 'name',
+            lName: { en: { name: 'Group name' } }
+          })
+        );
+        commands.add(commandGroup);
+
+        const command = new Entity({
+          name: 'command',
+          lName: {
+            en: {
+              name: 'Command'
+            }
+          }
+        });
+        command.add(
+          new StringAttribute({
+            name: 'command',
+            lName: { en: { name: 'Command' } }
+          })
+        );
+        command.add(
+          new StringAttribute({
+            name: 'caption',
+            lName: { en: { name: 'Caption' } }
+          })
+        );
+        command.add(
+          new EntityAttribute({
+            name: 'group',
+            lName: { en: { name: 'Command group' } },
+            entities: [
+              commandGroup
+            ]
+          })
+        );
+        commands.add(command);
+
+        break;
+      }
+
       case getType(gdmnActions.apiDeleteAccount): {
         const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
         const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
