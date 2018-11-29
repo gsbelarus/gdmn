@@ -1,7 +1,7 @@
 import path from 'path';
 
-function getRelativePath(rootPath: string) {
-  return function fn(args: any) {
+function getRelativePath(rootPath) {
+  return function(args) {
     args = Array.prototype.slice.call(arguments, 0);
     return path.join.apply(path, [rootPath].concat(args));
   };

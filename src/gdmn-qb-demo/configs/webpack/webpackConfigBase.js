@@ -1,18 +1,15 @@
-import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader } from 'webpack';
+import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 
-// FIXME typings
-const config = require('../config.json');
-const pkg = require('../../package.json');
+import config from '../config.json';
 import { getRootRelativePath } from './utils';
-// import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
-function getWebpackConfigBase(outputFilename: string, outputChunkFilename: string): Configuration {
+function getWebpackConfigBase(outputFilename, outputChunkFilename) {
   return {
     entry: {
       app: [
         // TODO 'react-hot-loader/patch',
-        getRootRelativePath('src/app/App.tsx')
+        getRootRelativePath('src/index.tsx')
       ]
     },
     output: {
@@ -27,37 +24,32 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
         inject: false,
         minify: { collapseWhitespace: true, removeComments: true },
         template: getRootRelativePath('src/index.ejs'),
-        title: 'GDMN',
+        title: 'GDMN - QB',
         // template params
         appMountNodeId: config.webpack.appMountNodeId,
-        description: pkg.description,
+        description: 'query builder',
         mobile: true
       }),
-      new NoEmitOnErrorsPlugin() // fixme deprecated
+      new webpack.NoEmitOnErrorsPlugin()
     ],
     resolve: {
       alias: {
         '@src': getRootRelativePath('src'),
-        'config.json': getRootRelativePath('configs/config.json'),
-        /* packages */
-        '@gdmn/client-core': getRootRelativePath('packages/gdmn-client-core/src'),
-        '@gdmn/server-api': getRootRelativePath('packages/gdmn-server-api/src'),
-        '@gdmn/data-grid-core': getRootRelativePath('packages/data-grid-core/src'),
-        '@gdmn/data-grid-mui': getRootRelativePath('packages/data-grid-mui/src')
+        configFile: getRootRelativePath('configs/config.json')
       },
       extensions: ['.tsx', '.ts', '.js', '.jsx', '.json']
     }
   };
 }
 
-const cssLoader: RuleSetLoader = {
+const cssLoader = {
   loader: 'css-loader',
   options: {
     sourceMap: true
   }
 };
 
-const cssModulesLoader: RuleSetLoader = {
+let cssModulesLoader = {
   loader: 'css-loader',
   options: {
     modules: true,
@@ -66,5 +58,7 @@ const cssModulesLoader: RuleSetLoader = {
     localIdentName: '[name]__[local]__[hash:base64:5]'
   }
 };
+
+cssModulesLoader = cssLoader;
 
 export { getWebpackConfigBase, cssLoader, cssModulesLoader };
