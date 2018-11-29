@@ -152,7 +152,7 @@ class WebStomp extends BasePubSubBridge<
     meta: Partial<TSubcribeFrameHeaders> = {}
   ): Observable<TMessage> | never {
     if (!this.client) throw new Error(`Subscribe failed: stomp client not initialized!`);
-    // this.client!.debug(`Request to subscribe ${topic}.`);
+    console.log(`Request to subscribe ${topic}.`);
 
     if (!meta.ack) meta.ack = 'auto';
 
@@ -167,7 +167,7 @@ class WebStomp extends BasePubSubBridge<
       connectionConnectedRxSubscription = this.connectionConnectedObservable.subscribe(() => {
         // todo test on connected
         if (subscription !== null) {
-          this.client!.debug(`Will subscribe to ${topic}...`);
+          console.log(`Will subscribe to ${topic}...`);
           subscription = this.client!.subscribe(
             topic,
             (messageFrame: Message) => {
@@ -193,15 +193,15 @@ class WebStomp extends BasePubSubBridge<
 
       /* TeardownLogic - will be called when no messageObservable subscribers are left */
       return () => {
-        this.client!.debug(`Stop watching connection state (for ${topic}).`);
+        console.log(`Stop watching connection state (for ${topic}).`);
         connectionConnectedRxSubscription.unsubscribe();
 
         if (this.connectionStatusObservable.getValue() !== TPubSubConnectStatus.CONNECTED) {
-          this.client!.debug(`Stomp not connected, no need to unsubscribe from ${topic}.`);
+          console.log(`Stomp not connected, no need to unsubscribe from ${topic}.`);
           return;
         }
         if (subscription) {
-          this.client!.debug(`Will unsubscribe from ${topic}...`);
+          console.log(`Will unsubscribe from ${topic}...`);
           subscription.unsubscribe(); // todo headers
         }
       };

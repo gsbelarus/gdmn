@@ -1,9 +1,5 @@
 import { VPParser1 } from "./VPParser1";
-import { RusImperativeVP, RusNP, RusANP, RusPP, RusHomogeneousNouns } from "../../rusSyntax";
-import { RusNoun } from "../../../morphology/rusNoun";
-import { AnyWord } from "../../../morphology/morphology";
-import { RusConjunction } from "../../../morphology/rusConjunction";
-import { IToken } from "chevrotain";
+import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns } from "../../rusSyntax";
 import { tokenToWordOrHomogeneous } from "../../parser";
 
 export const vpParser1 = new VPParser1();
@@ -48,7 +44,7 @@ export class VPVisitor1 extends BaseVPVisitor1 {
       const impN = this.visit(ctx.imperativeNoun);
 
       if (Array.isArray(impN)) {
-        return new RusANP(this.visit(ctx.imperativeDets), new RusHomogeneousNouns(impN));
+        return new RusANP(this.visit(ctx.imperativeDets), new RusHmNouns(impN));
       } else {
         return new RusANP(this.visit(ctx.imperativeDets), impN);
       }
@@ -86,7 +82,7 @@ export class VPVisitor1 extends BaseVPVisitor1 {
     const ppn = this.visit(ctx.ppNoun);
 
     if (Array.isArray(ppn)) {
-      return new RusPP(this.visit(ctx.prep), new RusHomogeneousNouns(ppn));
+      return new RusPP(this.visit(ctx.prep), new RusHmNouns(ppn));
     } else {
       return new RusPP(this.visit(ctx.prep), ppn);
     }

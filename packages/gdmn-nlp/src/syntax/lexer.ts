@@ -66,9 +66,22 @@ export function combinatorialMorph(text: string): IToken[][]
       let endIdx = startIdx + 1;
       let found = false;
       let wasConj = false;
+      let wasComma = false;
 
       while (endIdx < parts.length) {
         const lastToken = parts[endIdx][0];
+
+        if (lastToken.tokenType === Comma) {
+          if (wasComma) {
+            throw new Error(`Invalid punctuation marks`);
+          } else {
+            wasComma = true;
+            endIdx++;
+            continue;
+          }
+        }
+
+        wasComma = false;
 
         if (!isMorphToken(lastToken)) {
           break;
@@ -123,7 +136,7 @@ export function combinatorialMorph(text: string): IToken[][]
         const cnt = endIdx - startIdx + 1;
 
         if (cnt >= 2) {
-          const hsm = parts.splice(startIdx + 1, cnt - 1).map(
+          const hsm = parts.splice(startIdx + 1, cnt - 1).filter( t => t[0].tokenType !== Comma ).map(
             p => p.reduce( (prev, w) => isMorphToken(w) ? [...prev, w.word] : prev, [] as AnyWord[] )
           );
           parts[startIdx] = firstParts.map( p => isMorphToken(p) ? {...p, hsm} : p );

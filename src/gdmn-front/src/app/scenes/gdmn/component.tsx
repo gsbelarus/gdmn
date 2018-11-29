@@ -7,7 +7,14 @@ import styles from './styles.css';
 import { isDevMode, ErrorBoundary, LinkCommandBarButton } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
-import { Breadcrumb, IComponentAsProps, IBreadcrumbItem, CommandBar, ICommandBarItemProps, Icon } from 'office-ui-fabric-react';
+import {
+  Breadcrumb,
+  IComponentAsProps,
+  IBreadcrumbItem,
+  CommandBar,
+  ICommandBarItemProps,
+  Icon
+} from 'office-ui-fabric-react';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -31,22 +38,17 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
           <Icon iconName="Chat" className="NoFrameIcon" />
           <div className="SearchBox">
             find something...
-            <span className="WhereToSearch">
-              /
-            </span>
+            <span className="WhereToSearch">/</span>
           </div>
-          <div className="ImportantMenu">
-            Lorem
-          </div>
-          <div className="ImportantMenu">
-            Ipsum
-          </div>
-          <div className="ImportantMenu">
-            Diem
-          </div>
+          <div className="ImportantMenu">Lorem</div>
+          <div className="ImportantMenu">Ipsum</div>
+          <div className="ImportantMenu">Diem</div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
-              <b><i>#GDMN</i></b> &mdash; Березовский мясоконсервный комбинат
+              <b>
+                <i>#GDMN</i>
+              </b>{' '}
+              &mdash; Березовский мясоконсервный комбинат
             </span>
             <span className="WithNotificationsCount">
               <Icon iconName="Ringer" className="NoFrameIcon" />
@@ -55,9 +57,7 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
             <Icon iconName="Contact" className="RoundIcon" />
           </div>
         </div>
-        <div className="UrgentMessage">
-          Urgent message!
-        </div>
+        <div className="UrgentMessage">Urgent message!</div>
         <div className="OpenTasks">
           <span className="RegularTask">
             Накладные на приход
@@ -82,9 +82,7 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
           </span>
         </div>
         <div className="BPSeq">
-          <span>
-            Приход сырья
-          </span>
+          <span>Приход сырья</span>
           <Icon iconName="ChromeBackMirrored" className="BPArrow" />
           <span>
             <b>Хранение</b>
@@ -99,30 +97,22 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
             </span>
           </span>
           <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>
-            Приход ГП
-          </span>
+          <span>Приход ГП</span>
           <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>
-            Отгрузка
-          </span>
+          <span>Отгрузка</span>
         </div>
 
         <div>
-          <CommandBar
-            items={this.getItems()}
-          />
+          <CommandBar items={this.getItems()} />
           <Breadcrumb
-            onRenderItem = { (props, defaultRenderer) => <NavLink to={(props as IBreadcrumbItemWithLink).link}>{defaultRenderer!(props)}</NavLink> }
-            items = {
-              breadcrumbs.map((breadcrumb: BreadcrumbsProps) => (
-                {
-                  key: breadcrumb.key,
-                  text: breadcrumb,
-                  link: breadcrumb.props.match.url
-                }
-              ))
-            }
+            onRenderItem={(props, defaultRenderer) => (
+              <NavLink to={(props as IBreadcrumbItemWithLink).link}>{defaultRenderer!(props)}</NavLink>
+            )}
+            items={breadcrumbs.map((breadcrumb: BreadcrumbsProps) => ({
+              key: breadcrumb.key,
+              text: breadcrumb,
+              link: breadcrumb.props.match.url
+            }))}
           />
         </div>
         <main styleName="scene-pad">
@@ -169,11 +159,13 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
       },
       {
         key: 'GetERModel',
-        text: Object.keys(erModel.entities).length ? `Reload ERModel (${Object.keys(erModel.entities).length})` : `Load ERModel`,
+        text: Object.keys(erModel.entities).length
+          ? `Reload ERModel (${Object.keys(erModel.entities).length})`
+          : `Load ERModel`,
         onClick: apiGetSchema
       }
     ];
-  }
+  };
 }
 
 export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };

@@ -1,6 +1,6 @@
 import {existsSync, unlinkSync} from "fs";
-import path from "path";
-import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions} from "../src";
+import {resolve} from "path";
+import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions, IServiceOptions} from "../src";
 import {Statement} from "../src/fb/Statement";
 import {connectionTest} from "./common/AConnection";
 import {connectionPoolTest} from "./common/AConnectionPool";
@@ -9,28 +9,29 @@ import {serviceTest} from "./common/AService";
 import {statementTest} from "./common/AStatement";
 import {transactionTest} from "./common/ATransaction";
 
-const cwd = `${process.cwd()}`;
-export const testPath = path.join(cwd, "test");
-export const testDbPath = path.join(testPath, "TEST.FDB");
-export const dbFileExt = ".FDB";
-export const bkpFileExt = ".BKP";
-
+const driver = Factory.FBDriver;
 export const dbOptions: IConnectionOptions = {
     username: "SYSDBA",
     password: "masterkey",
-    path: testDbPath
+    path: resolve("./GDMN_DB_FB.FDB")
+};
+const serviceOptions: IServiceOptions = {
+    host: "localhost",
+    port: 3050,
+    username: "SYSDBA",
+    password: "masterkey"
 };
 
 jest.setTimeout(100 * 1000);
 
 describe("Firebird driver tests", async () => {
-    const globalConnectionPool = Factory.FBDriver.newCommonConnectionPool();
+    const globalConnectionPool = driver.newCommonConnectionPool();
 
     beforeAll(async () => {
-        if (existsSync(testDbPath)) {
-            unlinkSync(testDbPath);
+        if (existsSync(dbOptions.path)) {
+            unlinkSync(dbOptions.path);
         }
-        const connection = Factory.FBDriver.newConnection();
+        const connection = driver.newConnection();
 
         await connection.createDatabase(dbOptions);
         expect(connection.connected).toBeTruthy();
@@ -46,7 +47,7 @@ describe("Firebird driver tests", async () => {
         await globalConnectionPool.destroy();
         expect(globalConnectionPool.created).toBeFalsy();
 
-        const connection = Factory.FBDriver.newConnection();
+        const connection = driver.newConnection();
 
         await connection.connect(dbOptions);
         expect(connection.connected).toBeTruthy();
@@ -55,21 +56,19 @@ describe("Firebird driver tests", async () => {
         expect(connection.connected).toBeFalsy();
     });
 
-    it(testDbPath + " exists", async () => {
-        expect(existsSync(testDbPath)).toBeTruthy();
+    it(dbOptions.path + " exists", async () => {
+        expect(existsSync(dbOptions.path)).toBeTruthy();
     });
 
-    connectionTest(Factory.FBDriver, dbOptions);
+    connectionTest(driver, dbOptions);
 
-    connectionPoolTest(Factory.FBDriver, dbOptions);
+    connectionPoolTest(driver, dbOptions);
 
     transactionTest(globalConnectionPool);
 
     statementTest(globalConnectionPool);
 
     resultSetTest(globalConnectionPool);
-
-    serviceTest(Factory.FBDriver, dbOptions);
 
     describe("CommonParamsAnalyzer", () => {
 
@@ -326,6 +325,31 @@ describe("Firebird driver tests", async () => {
             });
         });
     });
+});
+
+describe("Firebird service tests", async () => {
+    const connection = driver.newConnection();
+
+    beforeAll(async () => {
+        if (existsSync(dbOptions.path)) {
+            unlinkSync(dbOptions.path);
+        }
+        await connection.createDatabase(dbOptions);
+        expect(connection.connected).toBeTruthy();
+
+        await connection.disconnect();
+        expect(connection.connected).toBeFalsy();
+    });
+
+    afterAll(async () => {
+        await connection.connect(dbOptions);
+        expect(connection.connected).toBeTruthy();
+
+        await connection.dropDatabase();
+        expect(connection.connected).toBeFalsy();
+    });
+
+    serviceTest(driver, serviceOptions, dbOptions);
 });
 
 function randomDecimal(precision: number, scale: number): number {

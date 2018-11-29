@@ -3,7 +3,7 @@ import { Button } from 'office-ui-fabric-react';
 
 export interface IAccountViewProps {
   apiDeleteAccount: () => void;
-};
+}
 
 export class AccountView extends PureComponent<IAccountViewProps> {
   private handleDeleteAccount = () => {
@@ -17,4 +17,4 @@ export class AccountView extends PureComponent<IAccountViewProps> {
       </div>
     );
   }
-};
+}

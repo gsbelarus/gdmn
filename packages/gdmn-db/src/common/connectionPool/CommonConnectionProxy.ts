@@ -64,7 +64,7 @@ export class CommonConnectionProxy extends AConnection {
         }
 
         if (this.isBorrowed()) {
-            this._pool.release(this);
+            await this._pool.release(this);
         }
     }
 
@@ -108,6 +108,6 @@ export class CommonConnectionProxy extends AConnection {
     }
 
     private isBorrowed(): boolean {
-        return (this._pool as any).isBorrowedResource(this);    // there is no method in the file in .d.ts
+        return this._pool.isBorrowedResource(this);
     }
 }

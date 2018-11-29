@@ -14,7 +14,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
                 connection: globalConnection,
                 callback: async (transaction) => {
                     await globalConnection.execute(transaction, `
-                        CREATE TABLE TEST_TABLE (
+                        CREATE TABLE RESULT_SET_TABLE (
                             id              INT NOT NULL PRIMARY KEY,
                             name            VARCHAR(20)  NOT NULL,
                             dateTime        TIMESTAMP NOT NULL,
@@ -34,7 +34,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
                         connection: globalConnection,
                         transaction,
                         sql: `
-                            INSERT INTO TEST_TABLE (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob)
+                            INSERT INTO RESULT_SET_TABLE (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob)
                             VALUES(:id, :name, :dateTime, :onlyDate, :onlyTime, :nullValue, :textBlob)
                             RETURNING id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob
                         `, callback: async (statement) => {
@@ -58,14 +58,14 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         });
 
         afterAll(async () => {
-            await globalConnection.execute(globalTransaction, "DROP TABLE TEST_TABLE");
+            await globalConnection.execute(globalTransaction, "DROP TABLE RESULT_SET_TABLE");
             await globalTransaction.commit();
             await globalConnection.disconnect();
         });
 
         it("lifecycle", async () => {
             const resultSet = await globalConnection
-                .executeQuery(globalTransaction, "SELECT FIRST 1 * FROM TEST_TABLE");
+                .executeQuery(globalTransaction, "SELECT FIRST 1 * FROM RESULT_SET_TABLE");
 
             expect(await resultSet.next()).toBeTruthy();
             expect(resultSet.closed).toBeFalsy();
@@ -78,7 +78,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST :count * FROM TEST_TABLE",
+                sql: "SELECT FIRST :count * FROM RESULT_SET_TABLE",
                 params: {count: 1000},
                 type: CursorType.FORWARD_ONLY,
                 callback: async (resultSet) => {
@@ -99,7 +99,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     while (await resultSet.next()) {
                         expect(resultSet.isNull("ID")).toBe(false);
@@ -118,7 +118,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
@@ -139,7 +139,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
@@ -159,7 +159,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
@@ -179,7 +179,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
@@ -198,7 +198,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
@@ -217,7 +217,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         expect(resultSet.getBoolean("ID")).toBe(i !== 0);
@@ -235,7 +235,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT * FROM TEST_TABLE",
+                sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];

@@ -230,7 +230,7 @@ export function deserializeERModel(serialized: IERModel): ERModel {
   const createUnique = (e: IEntity): void => {
     const entity = erModel.entity(e.name);
     const values = e.unique.map((_values) => _values.map((_attr) => entity.ownAttribute(_attr)));
-    values.forEach((attrs) => entity.add(attrs));
+    values.forEach((attrs) => entity.addUnique(attrs));
   };
 
   serialized.entities.forEach((e) => createEntity(e));

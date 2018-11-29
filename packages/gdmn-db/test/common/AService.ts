@@ -1,101 +1,82 @@
 import fs from "fs";
-import path from "path";
+import {resolve} from "path";
 import {AConnection, ADriver, IConnectionOptions} from "../../src";
 import {AService, IRestoreOptions, IServiceOptions} from "../../src/AService";
-import {bkpFileExt, dbFileExt, testPath} from "../fb.test";
-import {getData, IDataItem} from "../fixtures/getData";
+import {getData} from "../fixtures/getData";
 
-export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): void {
-
+export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, dbOptions: IConnectionOptions): void {
     describe("AService", async () => {
-        const svcOptions: IServiceOptions = {
-            username: "SYSDBA",
-            password: "masterkey",
-            host: "localhost",
-            port: 3050
+
+        const backupTestDbPath = resolve("./GDMN_DB_BACKUP.BKP");
+
+        const restoredDbOptions = {
+            ...dbOptions,
+            path: resolve("./GDMN_DB_RESTORED.DB")
         };
 
-        const restoredTestDbPath = path.format({
-            dir: testPath, name: "RESTORED_TEST_DB", ext: dbFileExt
-        });
+        const tableName = "BACKUP_TABLE";
 
-        const backupTestDbPath = path.format({
-            dir: testPath, name: "BACKUP_TEST", ext: bkpFileExt
-        });
-
-        const restoredDbOptions = {...dbOptions, path: restoredTestDbPath};
-
-        const tableName = "TEST_BACKUP_TABLE";
-
-        let fixtureArrayData: IDataItem[];
+        const fixtureArrayData = getData(1000);
 
         beforeAll(async () => {
-            fixtureArrayData = getData(1000);
-            const connection = driver.newConnection();
-
-            try {
-                await connection.connect(dbOptions);
-
-                expect(connection.connected).toBeTruthy();
-
-                await AConnection.executeTransaction({
-                    connection,
-                    callback: async (transaction) => {
-                        await connection.execute(transaction, `
-                        CREATE TABLE ${tableName} (
-                            id              INT NOT NULL PRIMARY KEY,
-                            name            VARCHAR(20)  NOT NULL,
-                            dateTime        TIMESTAMP NOT NULL,
-                            onlyDate        DATE NOT NULL,
-                            onlyTime        TIME NOT NULL,
-                            nullValue       VARCHAR(20),
-                            textBlob        BLOB SUB_TYPE TEXT NOT NULL
-                        )
-                    `);
-                    }
-                });
-
-                await AConnection.executeTransaction({
-                    connection,
-                    callback: (transaction) => AConnection.executePrepareStatement({
-                        connection,
-                        transaction,
-                        sql: `
-                            INSERT INTO ${tableName} (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob)
-                            VALUES(:id, :name, :dateTime, :onlyDate, :onlyTime, :nullValue, :textBlob)
-                            RETURNING id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob
-                        `,
-                        callback: async (statement) => {
-                            for (const dataItem of fixtureArrayData) {
-                                const result = await statement.executeReturning(dataItem);
-                                expect(await result.getAny("ID")).toEqual(dataItem.id);
-                                expect(await result.getAny("NAME")).toEqual(dataItem.name);
-                                expect((await result.getAny("DATETIME"))!.getTime())
-                                    .toEqual(dataItem.dateTime.getTime());
-                                expect((await result.getAny("ONLYDATE"))!.getTime())
-                                    .toEqual(dataItem.onlyDate.getTime());
-                                expect((await result.getAny("ONLYTIME"))!.getTime())
-                                    .toEqual(dataItem.onlyTime.getTime());
-                                expect(await result.getAny("NULLVALUE")).toBeNull();
-                                expect(await result.getAny("TEXTBLOB")).toEqual(dataItem.textBlob);
-                            }
-                        }
-                    })
-                });
-            } catch (error) {
-                console.error(error);
-            }
-            finally {
-                await connection.disconnect();
-            }
-
             if (fs.existsSync(backupTestDbPath)) {
                 fs.unlinkSync(backupTestDbPath);
             }
 
-            if (fs.existsSync(restoredTestDbPath)) {
-                fs.unlinkSync(restoredTestDbPath);
+            if (fs.existsSync(restoredDbOptions.path)) {
+                fs.unlinkSync(restoredDbOptions.path);
             }
+
+            await AConnection.executeConnection({
+                connection: driver.newConnection(),
+                options: dbOptions,
+                callback: async (connection) => {
+                    await AConnection.executeTransaction({
+                        connection,
+                        callback: async (transaction) => {
+                            await connection.execute(transaction, `
+                                CREATE TABLE ${tableName} (
+                                    id              INT NOT NULL PRIMARY KEY,
+                                    name            VARCHAR(20)  NOT NULL,
+                                    dateTime        TIMESTAMP NOT NULL,
+                                    onlyDate        DATE NOT NULL,
+                                    onlyTime        TIME NOT NULL,
+                                    nullValue       VARCHAR(20),
+                                    textBlob        BLOB SUB_TYPE TEXT NOT NULL
+                                )
+                            `);
+                        }
+                    });
+
+                    await AConnection.executeTransaction({
+                        connection,
+                        callback: (transaction) => AConnection.executePrepareStatement({
+                            connection,
+                            transaction,
+                            sql: `
+                            INSERT INTO ${tableName} (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob)
+                            VALUES(:id, :name, :dateTime, :onlyDate, :onlyTime, :nullValue, :textBlob)
+                            RETURNING id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob
+                        `,
+                            callback: async (statement) => {
+                                for (const dataItem of fixtureArrayData) {
+                                    const result = await statement.executeReturning(dataItem);
+                                    expect(await result.getAny("ID")).toEqual(dataItem.id);
+                                    expect(await result.getAny("NAME")).toEqual(dataItem.name);
+                                    expect((await result.getAny("DATETIME"))!.getTime())
+                                        .toEqual(dataItem.dateTime.getTime());
+                                    expect((await result.getAny("ONLYDATE"))!.getTime())
+                                        .toEqual(dataItem.onlyDate.getTime());
+                                    expect((await result.getAny("ONLYTIME"))!.getTime())
+                                        .toEqual(dataItem.onlyTime.getTime());
+                                    expect(await result.getAny("NULLVALUE")).toBeNull();
+                                    expect(await result.getAny("TEXTBLOB")).toEqual(dataItem.textBlob);
+                                }
+                            }
+                        })
+                    });
+                }
+            });
         });
 
         afterAll(async () => {
@@ -103,40 +84,39 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
                 fs.unlinkSync(backupTestDbPath);
             }
 
-            if (fs.existsSync(restoredTestDbPath)) {
-                fs.unlinkSync(restoredTestDbPath);
+            if (fs.existsSync(restoredDbOptions.path)) {
+                fs.unlinkSync(restoredDbOptions.path);
             }
         });
 
         it("backup/restore", async () => {
             const svcManager: AService = driver.newService();
 
-            await svcManager.attach(svcOptions);
+            await svcManager.attach(serviceOptions);
             await svcManager.backupDatabase(dbOptions.path, backupTestDbPath);
 
             expect(fs.existsSync(backupTestDbPath)).toBeTruthy();
 
             try {
-                await svcManager.restoreDatabase(restoredTestDbPath, backupTestDbPath);
+                await svcManager.restoreDatabase(restoredDbOptions.path, backupTestDbPath);
             } catch (error) {
                 console.error(error);
             } finally {
                 await svcManager.detach();
             }
 
-            expect(fs.existsSync(restoredTestDbPath)).toBeTruthy();
-
-            const connection = driver.newConnection();
+            expect(fs.existsSync(restoredDbOptions.path)).toBeTruthy();
 
             await AConnection.executeConnection({
-                connection,
+                connection: driver.newConnection(),
                 options: restoredDbOptions,
-                callback: (_connection) => AConnection.executeTransaction({
-                    connection: _connection,
+                callback: (connection) => AConnection.executeTransaction({
+                    connection,
                     callback: (transaction) => AConnection.executeQueryResultSet({
                         connection,
                         transaction,
-                        sql: `SELECT * FROM ${tableName}`,
+                        sql: `SELECT *
+                        FROM ${tableName}`,
                         callback: async (resultSet) => {
                             for (let i = 0; await resultSet.next(); i++) {
                                 const dataItem = fixtureArrayData[i];
@@ -156,17 +136,15 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
         });
 
         it("restore with 'replace'", async () => {
-            const connection = driver.newConnection();
-
             const changedName = "SuperName";
 
             await AConnection.executeConnection({
-                connection,
+                connection: driver.newConnection(),
                 options: restoredDbOptions,
-                callback: (_connection) => AConnection.executeTransaction({
-                    connection: _connection,
+                callback: (connection) => AConnection.executeTransaction({
+                    connection,
                     callback: async (transaction) => {
-                        await _connection.execute(transaction, `
+                        await connection.execute(transaction, `
                         UPDATE ${tableName}
                             SET name = :name
                         WHERE id = :id
@@ -180,7 +158,7 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
 
             const svcManager: AService = driver.newService();
 
-            await svcManager.attach(svcOptions);
+            await svcManager.attach(serviceOptions);
             await svcManager.backupDatabase(restoredDbOptions.path, backupTestDbPath);
 
             try {
@@ -193,10 +171,10 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
             }
 
             await AConnection.executeConnection({
-                connection,
+                connection: driver.newConnection(),
                 options: restoredDbOptions,
-                callback: (_connection) => AConnection.executeTransaction({
-                    connection: _connection,
+                callback: (connection) => AConnection.executeTransaction({
+                    connection,
                     callback: (transaction) => AConnection.executeQueryResultSet({
                         connection,
                         transaction,

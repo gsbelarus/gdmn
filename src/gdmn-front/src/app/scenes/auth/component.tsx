@@ -78,9 +78,7 @@ class AuthView extends React.Component<IAuthViewProps> {
     return (
       <Fragment>
         <div>
-          <CommandBar
-            items={this.getItems()}
-          />
+          <CommandBar items={this.getItems()} />
         </div>
         <Switch>
           <Redirect exact={true} from={`${match.path}/`} to={`${match.path}/signIn`} />
@@ -110,7 +108,7 @@ class AuthView extends React.Component<IAuthViewProps> {
         commandBarButtonAs: btn(`${match.url}/signUp`)
       }
     ];
-  }
+  };
 }
 
 export { AuthView, IAuthViewProps, IAuthViewStateProps };
