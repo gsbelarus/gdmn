@@ -10,46 +10,19 @@ import {statementTest} from "./common/AStatement";
 import {transactionTest} from "./common/ATransaction";
 
 const driver = Factory.FBDriver;
+export const dbOptions: IConnectionOptions = {
+    username: "SYSDBA",
+    password: "masterkey",
+    path: resolve("./GDMN_DB_FB.FDB")
+};
 const serviceOptions: IServiceOptions = {
     host: "localhost",
     port: 3050,
     username: "SYSDBA",
     password: "masterkey"
 };
-export const dbOptions: IConnectionOptions = {
-    username: "SYSDBA",
-    password: "masterkey",
-    path: resolve("./GDMN_DB_FB.FDB")
-};
 
 jest.setTimeout(100 * 1000);
-
-describe("Firebird service tests", async () => {
-    beforeAll(async () => {
-        if (existsSync(dbOptions.path)) {
-            unlinkSync(dbOptions.path);
-        }
-        const connection = driver.newConnection();
-
-        await connection.createDatabase(dbOptions);
-        expect(connection.connected).toBeTruthy();
-
-        await connection.disconnect();
-        expect(connection.connected).toBeFalsy();
-    });
-
-    afterAll(async () => {
-        const connection = driver.newConnection();
-
-        await connection.connect(dbOptions);
-        expect(connection.connected).toBeTruthy();
-
-        await connection.dropDatabase();
-        expect(connection.connected).toBeFalsy();
-    });
-
-    serviceTest(driver, serviceOptions, dbOptions);
-});
 
 describe("Firebird driver tests", async () => {
     const globalConnectionPool = driver.newCommonConnectionPool();
@@ -352,6 +325,31 @@ describe("Firebird driver tests", async () => {
             });
         });
     });
+});
+
+describe("Firebird service tests", async () => {
+    const connection = driver.newConnection();
+
+    beforeAll(async () => {
+        if (existsSync(dbOptions.path)) {
+            unlinkSync(dbOptions.path);
+        }
+        await connection.createDatabase(dbOptions);
+        expect(connection.connected).toBeTruthy();
+
+        await connection.disconnect();
+        expect(connection.connected).toBeFalsy();
+    });
+
+    afterAll(async () => {
+        await connection.connect(dbOptions);
+        expect(connection.connected).toBeTruthy();
+
+        await connection.dropDatabase();
+        expect(connection.connected).toBeFalsy();
+    });
+
+    serviceTest(driver, serviceOptions, dbOptions);
 });
 
 function randomDecimal(precision: number, scale: number): number {

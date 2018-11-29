@@ -7,8 +7,6 @@ import {getData} from "../fixtures/getData";
 export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, dbOptions: IConnectionOptions): void {
     describe("AService", async () => {
 
-        const globalConnection = driver.newConnection();
-
         const backupTestDbPath = resolve("./GDMN_DB_BACKUP.BKP");
 
         const restoredDbOptions = {
@@ -29,57 +27,59 @@ export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, db
                 fs.unlinkSync(restoredDbOptions.path);
             }
 
-            await globalConnection.connect(dbOptions);
+            await AConnection.executeConnection({
+                connection: driver.newConnection(),
+                options: dbOptions,
+                callback: async (connection) => {
+                    await AConnection.executeTransaction({
+                        connection,
+                        callback: async (transaction) => {
+                            await connection.execute(transaction, `
+                                CREATE TABLE ${tableName} (
+                                    id              INT NOT NULL PRIMARY KEY,
+                                    name            VARCHAR(20)  NOT NULL,
+                                    dateTime        TIMESTAMP NOT NULL,
+                                    onlyDate        DATE NOT NULL,
+                                    onlyTime        TIME NOT NULL,
+                                    nullValue       VARCHAR(20),
+                                    textBlob        BLOB SUB_TYPE TEXT NOT NULL
+                                )
+                            `);
+                        }
+                    });
 
-            await AConnection.executeTransaction({
-                connection: globalConnection,
-                callback: async (transaction) => {
-                    await globalConnection.execute(transaction, `
-                        CREATE TABLE ${tableName} (
-                            id              INT NOT NULL PRIMARY KEY,
-                            name            VARCHAR(20)  NOT NULL,
-                            dateTime        TIMESTAMP NOT NULL,
-                            onlyDate        DATE NOT NULL,
-                            onlyTime        TIME NOT NULL,
-                            nullValue       VARCHAR(20),
-                            textBlob        BLOB SUB_TYPE TEXT NOT NULL
-                        )
-                    `);
-                }
-            });
-
-            await AConnection.executeTransaction({
-                connection: globalConnection,
-                callback: (transaction) => AConnection.executePrepareStatement({
-                    connection: globalConnection,
-                    transaction,
-                    sql: `
+                    await AConnection.executeTransaction({
+                        connection,
+                        callback: (transaction) => AConnection.executePrepareStatement({
+                            connection,
+                            transaction,
+                            sql: `
                             INSERT INTO ${tableName} (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob)
                             VALUES(:id, :name, :dateTime, :onlyDate, :onlyTime, :nullValue, :textBlob)
                             RETURNING id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob
                         `,
-                    callback: async (statement) => {
-                        for (const dataItem of fixtureArrayData) {
-                            const result = await statement.executeReturning(dataItem);
-                            expect(await result.getAny("ID")).toEqual(dataItem.id);
-                            expect(await result.getAny("NAME")).toEqual(dataItem.name);
-                            expect((await result.getAny("DATETIME"))!.getTime())
-                                .toEqual(dataItem.dateTime.getTime());
-                            expect((await result.getAny("ONLYDATE"))!.getTime())
-                                .toEqual(dataItem.onlyDate.getTime());
-                            expect((await result.getAny("ONLYTIME"))!.getTime())
-                                .toEqual(dataItem.onlyTime.getTime());
-                            expect(await result.getAny("NULLVALUE")).toBeNull();
-                            expect(await result.getAny("TEXTBLOB")).toEqual(dataItem.textBlob);
-                        }
-                    }
-                })
+                            callback: async (statement) => {
+                                for (const dataItem of fixtureArrayData) {
+                                    const result = await statement.executeReturning(dataItem);
+                                    expect(await result.getAny("ID")).toEqual(dataItem.id);
+                                    expect(await result.getAny("NAME")).toEqual(dataItem.name);
+                                    expect((await result.getAny("DATETIME"))!.getTime())
+                                        .toEqual(dataItem.dateTime.getTime());
+                                    expect((await result.getAny("ONLYDATE"))!.getTime())
+                                        .toEqual(dataItem.onlyDate.getTime());
+                                    expect((await result.getAny("ONLYTIME"))!.getTime())
+                                        .toEqual(dataItem.onlyTime.getTime());
+                                    expect(await result.getAny("NULLVALUE")).toBeNull();
+                                    expect(await result.getAny("TEXTBLOB")).toEqual(dataItem.textBlob);
+                                }
+                            }
+                        })
+                    });
+                }
             });
         });
 
         afterAll(async () => {
-            await globalConnection.disconnect();
-
             if (fs.existsSync(backupTestDbPath)) {
                 fs.unlinkSync(backupTestDbPath);
             }
