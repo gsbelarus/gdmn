@@ -8,6 +8,12 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
 
         beforeAll(async () => {
             globalConnection = await connectionPool.get();
+            await AConnection.executeTransaction({
+                connection: globalConnection,
+                callback: (transaction) => (
+                    globalConnection.execute(transaction, "CREATE TABLE STATEMENT_TABLE (ID INTEGER)")
+                )
+            });
             globalTransaction = await globalConnection.startTransaction();
         });
 
@@ -17,7 +23,8 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
         });
 
         it("lifecycle", async () => {
-            const statement = await globalConnection.prepare(globalTransaction, "SELECT FIRST 1 * FROM RDB$FIELDS");
+            const statement = await globalConnection
+                .prepare(globalTransaction, "SELECT FIRST 1 * FROM STATEMENT_TABLE");
             await statement.dispose();
         });
 
@@ -25,7 +32,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST 1 * FROM RDB$FIELDS",
+                sql: "INSERT INTO STATEMENT_TABLE (ID) VALUES (1)",
                 callback: async (statement) => {
                     const result = await statement.execute();
                     expect(result).toBeFalsy();
@@ -37,9 +44,9 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST :count * FROM RDB$FIELDS",
+                sql: "INSERT INTO STATEMENT_TABLE (ID) VALUES (:id)",
                 callback: async (statement) => {
-                    const result = await statement.execute({count: 1});
+                    const result = await statement.execute({id: 1});
                     expect(result).toBeFalsy();
                 }
             });
@@ -49,7 +56,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST ? * FROM RDB$FIELDS",
+                sql: "INSERT INTO STATEMENT_TABLE (ID) VALUES (?)",
                 callback: async (statement) => {
                     const result = await statement.execute([1]);
                     expect(result).toBeFalsy();
@@ -61,7 +68,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST 1 * FROM RDB$FIELDS",
+                sql: "SELECT FIRST 1 * FROM STATEMENT_TABLE",
                 callback: async (statement) => {
                     const resultSet = await statement.executeQuery();
                     expect(resultSet).toBeTruthy();
@@ -75,7 +82,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST :count * FROM RDB$FIELDS",
+                sql: "SELECT FIRST :count * FROM STATEMENT_TABLE",
                 callback: async (statement) => {
                     const resultSet = await statement.executeQuery({count: 1});
                     expect(resultSet).toBeTruthy();
@@ -89,7 +96,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST ? * FROM RDB$FIELDS",
+                sql: "SELECT FIRST ? * FROM STATEMENT_TABLE",
                 callback: async (statement) => {
                     const resultSet = await statement.executeQuery([1]);
                     expect(resultSet).toBeTruthy();
@@ -103,7 +110,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST 1 * FROM RDB$FIELDS",
+                sql: "SELECT FIRST 1 * FROM STATEMENT_TABLE",
                 callback: async (statement) => {
                     const result = await statement.executeReturning();
                     expect(result).toBeTruthy();
@@ -115,7 +122,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST :count * FROM RDB$FIELDS",
+                sql: "SELECT FIRST :count * FROM STATEMENT_TABLE",
                 callback: async (statement) => {
                     const result = await statement.executeReturning({count: 1});
                     expect(result).toBeTruthy();
@@ -127,7 +134,7 @@ export function statementTest(connectionPool: AConnectionPool<ICommonConnectionP
             await AConnection.executePrepareStatement({
                 connection: globalConnection,
                 transaction: globalTransaction,
-                sql: "SELECT FIRST ? * FROM RDB$FIELDS",
+                sql: "SELECT FIRST ? * FROM STATEMENT_TABLE",
                 callback: async (statement) => {
                     const result = await statement.executeReturning([1]);
                     expect(result).toBeTruthy();
