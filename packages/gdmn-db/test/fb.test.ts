@@ -18,13 +18,14 @@ export const dbOptions: IConnectionOptions = {
 jest.setTimeout(100 * 1000);
 
 describe("Firebird driver tests", async () => {
-    const globalConnectionPool = Factory.FBDriver.newCommonConnectionPool();
+    const driver = Factory.FBDriver;
+    const globalConnectionPool = driver.newCommonConnectionPool();
 
     beforeAll(async () => {
         if (existsSync(dbOptions.path)) {
             unlinkSync(dbOptions.path);
         }
-        const connection = Factory.FBDriver.newConnection();
+        const connection = driver.newConnection();
 
         await connection.createDatabase(dbOptions);
         expect(connection.connected).toBeTruthy();
@@ -40,7 +41,7 @@ describe("Firebird driver tests", async () => {
         await globalConnectionPool.destroy();
         expect(globalConnectionPool.created).toBeFalsy();
 
-        const connection = Factory.FBDriver.newConnection();
+        const connection = driver.newConnection();
 
         await connection.connect(dbOptions);
         expect(connection.connected).toBeTruthy();
@@ -53,9 +54,9 @@ describe("Firebird driver tests", async () => {
         expect(existsSync(dbOptions.path)).toBeTruthy();
     });
 
-    connectionTest(Factory.FBDriver, dbOptions);
+    connectionTest(driver, dbOptions);
 
-    connectionPoolTest(Factory.FBDriver, dbOptions);
+    connectionPoolTest(driver, dbOptions);
 
     transactionTest(globalConnectionPool);
 
@@ -63,7 +64,7 @@ describe("Firebird driver tests", async () => {
 
     resultSetTest(globalConnectionPool);
 
-    serviceTest(Factory.FBDriver, dbOptions);
+    serviceTest(driver, dbOptions);
 
     describe("CommonParamsAnalyzer", () => {
 
