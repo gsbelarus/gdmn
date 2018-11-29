@@ -4,14 +4,7 @@ import {AConnection, ADriver, IConnectionOptions} from "../../src";
 import {AService, IRestoreOptions, IServiceOptions} from "../../src/AService";
 import {getData} from "../fixtures/getData";
 
-const svcOptions: IServiceOptions = {
-    host: "localhost",
-    port: 3050,
-    username: "SYSDBA",
-    password: "masterkey"
-};
-
-export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): void {
+export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, dbOptions: IConnectionOptions): void {
     describe("AService", async () => {
 
         const globalConnection = driver.newConnection();
@@ -99,7 +92,7 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
         it("backup/restore", async () => {
             const svcManager: AService = driver.newService();
 
-            await svcManager.attach(svcOptions);
+            await svcManager.attach(serviceOptions);
             await svcManager.backupDatabase(dbOptions.path, backupTestDbPath);
 
             expect(fs.existsSync(backupTestDbPath)).toBeTruthy();
@@ -165,7 +158,7 @@ export function serviceTest(driver: ADriver, dbOptions: IConnectionOptions): voi
 
             const svcManager: AService = driver.newService();
 
-            await svcManager.attach(svcOptions);
+            await svcManager.attach(serviceOptions);
             await svcManager.backupDatabase(restoredDbOptions.path, backupTestDbPath);
 
             try {

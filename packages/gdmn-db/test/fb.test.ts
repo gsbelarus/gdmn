@@ -1,6 +1,6 @@
 import {existsSync, unlinkSync} from "fs";
 import {resolve} from "path";
-import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions} from "../src";
+import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions, IServiceOptions} from "../src";
 import {Statement} from "../src/fb/Statement";
 import {connectionTest} from "./common/AConnection";
 import {connectionPoolTest} from "./common/AConnectionPool";
@@ -9,6 +9,13 @@ import {serviceTest} from "./common/AService";
 import {statementTest} from "./common/AStatement";
 import {transactionTest} from "./common/ATransaction";
 
+const driver = Factory.FBDriver;
+const serviceOptions: IServiceOptions = {
+    host: "localhost",
+    port: 3050,
+    username: "SYSDBA",
+    password: "masterkey"
+};
 export const dbOptions: IConnectionOptions = {
     username: "SYSDBA",
     password: "masterkey",
@@ -17,8 +24,34 @@ export const dbOptions: IConnectionOptions = {
 
 jest.setTimeout(100 * 1000);
 
+describe("Firebird service tests", async () => {
+    beforeAll(async () => {
+        if (existsSync(dbOptions.path)) {
+            unlinkSync(dbOptions.path);
+        }
+        const connection = driver.newConnection();
+
+        await connection.createDatabase(dbOptions);
+        expect(connection.connected).toBeTruthy();
+
+        await connection.disconnect();
+        expect(connection.connected).toBeFalsy();
+    });
+
+    afterAll(async () => {
+        const connection = driver.newConnection();
+
+        await connection.connect(dbOptions);
+        expect(connection.connected).toBeTruthy();
+
+        await connection.dropDatabase();
+        expect(connection.connected).toBeFalsy();
+    });
+
+    serviceTest(driver, serviceOptions, dbOptions);
+});
+
 describe("Firebird driver tests", async () => {
-    const driver = Factory.FBDriver;
     const globalConnectionPool = driver.newCommonConnectionPool();
 
     beforeAll(async () => {
@@ -63,8 +96,6 @@ describe("Firebird driver tests", async () => {
     statementTest(globalConnectionPool);
 
     resultSetTest(globalConnectionPool);
-
-    serviceTest(driver, dbOptions);
 
     describe("CommonParamsAnalyzer", () => {
 
