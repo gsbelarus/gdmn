@@ -10,6 +10,7 @@ import {
   CommitTransCmd,
   GetSchemaCmd,
   PingCmd,
+  QueryCmd,
   RollbackTransCmd
 } from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
@@ -486,14 +487,14 @@ export class StompSession implements StompClientCommandListener {
               task.execute().catch(this.logger.error);
               break;
             }
-            // case "QUERY": {
-            //   const command: QueryCmd = {id, action, ...bodyObj};
-            //   const task = this.application.pushQueryCmd(this.session, command);
-            //   this._sendReceipt(headers, {"task-id": task.id});
-            //
-            //   task.execute().catch(this.logger.error);
-            //   break;
-            // }
+            case "QUERY": {
+              const command: QueryCmd = {id, action, ...bodyObj};
+              const task = this.application.pushQueryCmd(this.session, command);
+              this._sendReceipt(headers, {"task-id": task.id});
+
+              task.execute().catch(this.logger.error);
+              break;
+            }
             default:
               throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
           }

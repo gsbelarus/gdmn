@@ -1,6 +1,6 @@
 import config from "config";
 import {EventEmitter} from "events";
-import {AConnection, ITransactionOptions} from "gdmn-db";
+import {AConnection, ITransactionOptions, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {Logger} from "log4js";
 import ms from "ms";
@@ -72,6 +72,27 @@ export class Session {
 
   get taskManager(): TaskManager {
     return this._taskManager;
+  }
+
+  public static async executeERBridge<Result>(uid: string | undefined,
+                                              session: Session,
+                                              callback: TExecutor<ERBridge, Result>): Promise<Result> {
+    if (uid === undefined) {
+      return await AConnection.executeTransaction({
+        connection: session.connection,
+        callback: (transaction) => ERBridge.executeSelf({
+          connection: session.connection,
+          transaction,
+          callback: (erBridge) => callback(erBridge)
+        })
+      });
+    } else {
+      const erBridge = session.getBridge(uid);
+      if (!erBridge) {
+        throw new Error("ERBridge is not found");
+      }
+      return await callback(erBridge);
+    }
   }
 
   public setCloseTimer(timeout: number = Session.DEFAULT_TIMEOUT): void {
