@@ -114,7 +114,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
       }
 
       case getType(gdmnActions.buildCommandList): {
-        const commands = new ERModel();
+        const uiModel = new ERModel();
 
         const commandGroup = new Entity({
           name: 'commandGroup',
@@ -124,13 +124,13 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             }
           }
         });
-        commandGroup.add(
+        commandGroup.addUnique([
           new StringAttribute({
             name: 'name',
             lName: { en: { name: 'Group name' } }
           })
-        );
-        commands.add(commandGroup);
+        ]);
+        uiModel.add(commandGroup);
 
         const command = new Entity({
           name: 'command',
@@ -140,28 +140,26 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             }
           }
         });
-        command.add(
-          new StringAttribute({
-            name: 'command',
-            lName: { en: { name: 'Command' } }
-          })
-        );
-        command.add(
-          new StringAttribute({
-            name: 'caption',
-            lName: { en: { name: 'Caption' } }
-          })
-        );
-        command.add(
+        command.addUnique([
           new EntityAttribute({
             name: 'group',
             lName: { en: { name: 'Command group' } },
             entities: [
               commandGroup
             ]
+          }),
+          new StringAttribute({
+            name: 'command',
+            lName: { en: { name: 'Command' } }
+          })
+        ]);
+        command.add(
+          new StringAttribute({
+            name: 'caption',
+            lName: { en: { name: 'Caption' } }
           })
         );
-        commands.add(command);
+        uiModel.add(command);
 
         break;
       }
