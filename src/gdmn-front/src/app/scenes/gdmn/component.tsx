@@ -22,10 +22,6 @@ type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStatePr
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
-interface IBreadcrumbItemWithLink extends IBreadcrumbItem {
-  link: string;
-}
-
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
@@ -105,13 +101,20 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
         <div>
           <CommandBar items={this.getItems()} />
           <Breadcrumb
-            onRenderItem={(props, defaultRenderer) => (
-              <NavLink to={(props as IBreadcrumbItemWithLink).link}>{defaultRenderer!(props)}</NavLink>
-            )}
-            items={breadcrumbs.map((breadcrumb: BreadcrumbsProps) => ({
+            onRenderItem={(props, defaultRenderer) => {
+              if (defaultRenderer && props && props.href) {
+                return (
+                  <NavLink to={props.href}>{defaultRenderer!(props)}</NavLink>
+                )
+              } else {
+                return null;
+              }
+            }}
+
+            items={breadcrumbs.map((breadcrumb: BreadcrumbsProps): IBreadcrumbItem => ({
               key: breadcrumb.key,
-              text: breadcrumb,
-              link: breadcrumb.props.match.url
+              text: breadcrumb.key,
+              href: breadcrumb.props.match.url
             }))}
           />
         </div>
