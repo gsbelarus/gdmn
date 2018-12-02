@@ -2,10 +2,10 @@
   "server": {
     "http": {
       "host": "http://localhost",
-      "port": 4000
+      "port": 8090
     },
     "paths": {
-      "er": "/app/test/er"
+      "er": ""
     }
   }
 }

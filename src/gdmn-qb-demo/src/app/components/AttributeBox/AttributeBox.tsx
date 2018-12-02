@@ -84,7 +84,7 @@ export class AttributeBox extends React.PureComponent<IProps, IState> {
       (item: IAttributeParams) => (item.id === id ? { ...item, visible: event.target.checked } : item)
     );
     this.setState({ attributeList: newAttributeList });
-    console.log(this.state.attributeList);
+    console.log('handleCHange', this.state.attributeList);
   };
 
   private handleChangeFieldAlias = (id: string) => (event: React.ChangeEvent<HTMLInputElement>) => {

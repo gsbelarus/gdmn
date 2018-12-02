@@ -17,6 +17,7 @@ table {
 }
 
 thead {
+  /* text-align: left; */
   display: table-header-group;
   cursor: pointer;
   vertical-align: middle;
@@ -25,19 +26,24 @@ thead {
   font-size: 20px;
 }
 
-th,
-td {
-  text-align: left;
+
+th, td {
   padding: 4px;
   border-bottom: 1px solid #ddd;
 }
 
+td {
+  text-align: left;
+}
+
 tr {
+  text-align: center;
   border-radius: 4px;
   width: 100%;
   display: inline-table;
   table-layout: fixed;
 }
+
 .field-alias {
   background-color: white;
   padding: 4px;
