@@ -68,6 +68,12 @@ const uiForms = [
 
 const uiCommands = [
   {
+    command: 'userProfile',
+    form: 'mainHeader',
+    group: 'userAccount',
+    caption: 'User profile...'
+  },
+  {
     command: 'logout',
     form: 'mainHeader',
     group: 'userAccount',

@@ -1,10 +1,8 @@
 import React, { Fragment, PureComponent } from 'react';
-import { NavLink, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
+import { NavLink, Redirect, Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
-
-import styles from './styles.css';
-import { isDevMode, ErrorBoundary, LinkCommandBarButton } from '@gdmn/client-core';
+import { isDevMode, ErrorBoundary, ContextualMenuItemWithLink } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
 import {
@@ -13,8 +11,14 @@ import {
   IBreadcrumbItem,
   CommandBar,
   ICommandBarItemProps,
-  Icon
+  Icon,
+  IconButton,
+  IContextualMenuItemProps,
+  ContextualMenuItemType,
+  ContextualMenuItemBase,
+  ContextualMenuItem
 } from 'office-ui-fabric-react';
+import styles from './styles.css';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -50,7 +54,49 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
               <Icon iconName="Ringer" className="NoFrameIcon" />
               <span className="NotificationsCount">4</span>
             </span>
-            <Icon iconName="Contact" className="RoundIcon" />
+            <IconButton
+              iconProps={{ iconName: 'Contact'}}
+              styles={{
+                rootHovered: {
+                  color: 'lightblue'
+                },
+                menuIcon: {
+                  display: 'none'
+                }
+              }}
+              className="RoundIcon"
+              menuProps={{
+                shouldFocusOnMount: true,
+                gapSpace: 2,
+                isBeakVisible: true,
+                contextualMenuItemAs: (props: IContextualMenuItemProps) => {
+                  console.log(`link -- ${props.item.link}`);
+                  return props.item.link ? <Link to={props.item.link}><ContextualMenuItem {...props} /></Link> : <ContextualMenuItem {...props} />;
+                },
+                items: [
+                  {
+                    key: 'profile',
+                    text: 'Profile...',
+                    iconProps: {
+                      iconName: 'ContactInfo'
+                    },
+                    link: `${match.url}/account`
+                  },
+                  {
+                    key: 'divider',
+                    itemType: ContextualMenuItemType.Divider
+                  },
+                  {
+                    key: 'logout',
+                    text: 'Logout',
+                    iconProps: {
+                      iconName: 'SignOut'
+                    },
+                    onClick: this.props.signOut
+                  }
+                ]
+              }}
+            />
           </div>
         </div>
         <div className="UrgentMessage">Urgent message!</div>
@@ -121,7 +167,6 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
         <main styleName="scene-pad">
           <ErrBoundary>
             <Switch>
-              <Redirect exact={true} from={`${match.path}/`} to={`${match.path}/account`} />
               <Route
                 path={`${match.path}/account`}
                 component={() => <AccountView apiDeleteAccount={this.props.apiDeleteAccount} />}
@@ -140,9 +185,9 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
 
   private getItems = (): ICommandBarItemProps[] => {
     const { erModel, match, signOut, apiGetSchema } = this.props;
-    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
-      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
-    };
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => (
+      <ContextualMenuItemWithLink {...props} link={link} supText={supText} />
+    );
 
     return [
       {
