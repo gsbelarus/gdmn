@@ -13,6 +13,7 @@ const getGdmnContainer = (apiService: GdmnPubSubApi) =>
     connect(
       (state: IState, ownProps: TGdmnViewProps): TGdmnViewStateProps => ({ erModel: state.gdmnState.erModel }),
       dispatch => ({
+        dispatch,
         apiConnect: bindActionCreators(gdmnActions.apiConnect, dispatch),
         apiDisconnect: bindActionCreators(gdmnActions.apiDisconnect, dispatch),
         apiPing: bindActionCreators(gdmnActions.apiPing, dispatch),

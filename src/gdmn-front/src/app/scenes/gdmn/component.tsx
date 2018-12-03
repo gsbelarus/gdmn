@@ -1,5 +1,5 @@
-import React, { Fragment, PureComponent } from 'react';
-import { NavLink, Redirect, Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
+import React, { Fragment, Component } from 'react';
+import { NavLink, Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
 import { isDevMode, ErrorBoundary, ContextualMenuItemWithLink } from '@gdmn/client-core';
@@ -14,11 +14,11 @@ import {
   Icon,
   IconButton,
   IContextualMenuItemProps,
-  ContextualMenuItemType,
-  ContextualMenuItemBase,
   ContextualMenuItem
 } from 'office-ui-fabric-react';
 import styles from './styles.css';
+import { commandsToContextualMenuItems } from '@src/app/services/uiCommands';
+import { TAuthActions } from '../auth/actions';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -27,9 +27,9 @@ const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 @CSSModules(styles, { allowMultiple: true })
-class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
+class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, breadcrumbs } = this.props;
+    const { match, breadcrumbs, history, dispatch } = this.props;
 
     return (
       <div className="App">
@@ -73,33 +73,15 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
                   console.log(`link -- ${props.item.link}`);
                   return props.item.link ? <Link to={props.item.link}><ContextualMenuItem {...props} /></Link> : <ContextualMenuItem {...props} />;
                 },
-                items: [
-                  {
-                    key: 'profile',
-                    text: 'Profile...',
-                    iconProps: {
-                      iconName: 'ContactInfo'
-                    },
-                    link: `${match.url}/account`
-                  },
-                  {
-                    key: 'divider',
-                    itemType: ContextualMenuItemType.Divider
-                  },
-                  {
-                    key: 'logout',
-                    text: 'Logout',
-                    iconProps: {
-                      iconName: 'SignOut'
-                    },
-                    onClick: this.props.signOut
-                  }
-                ]
+                items: commandsToContextualMenuItems(
+                  ['userProfile', '-', 'logout'],
+                  (action: TAuthActions) => dispatch(action),
+                  (link: string) => history.push(`${match.url}${link}`)
+                )
               }}
             />
           </div>
         </div>
-        <div className="UrgentMessage">Urgent message!</div>
         <div className="OpenTasks">
           <span className="RegularTask">
             Накладные на приход
@@ -184,26 +166,16 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
   }
 
   private getItems = (): ICommandBarItemProps[] => {
-    const { erModel, match, signOut, apiGetSchema } = this.props;
+    const { erModel, match, apiGetSchema } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => (
       <ContextualMenuItemWithLink {...props} link={link} supText={supText} />
     );
 
     return [
       {
-        key: 'Account',
-        text: 'Account',
-        commandBarButtonAs: btn(`${match.url}/account`)
-      },
-      {
         key: 'WebStomp',
         text: 'web-stomp',
         commandBarButtonAs: btn(`${match.url}/web-stomp`)
-      },
-      {
-        key: 'Logout',
-        text: 'Logout',
-        onClick: signOut
       },
       {
         key: 'GetERModel',
