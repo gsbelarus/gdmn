@@ -31,6 +31,7 @@ export type Weak = true;
 
 export interface IRelation {
   relationName: string;
+  pk?: string[];
   selector?: IEntitySelector;
   fields?: string[];
   weak?: Weak;
