@@ -35,7 +35,7 @@ export class EntityBuilder extends Builder {
         const domainName = Prefix.domain(await this.nextDDLUnique());
         await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attr));
         await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-        await this._addATAttr(attr, {relationName: tableName, fieldName, domainName});
+        await this._updateATAttr(attr, {relationName: tableName, fieldName, domainName});
         if (attr.type === "Sequence") {
           const _attr = attr as SequenceAttribute;
           const seqName = _attr.sequence.adapter ? _attr.sequence.adapter.sequence : _attr.sequence.name;
@@ -68,7 +68,7 @@ export class EntityBuilder extends Builder {
               tableName,
               fieldName
             });
-            await this._addATAttr(dAttr, {
+            await this._updateATAttr(dAttr, {
               relationName: detailTableName,
               fieldName: detailLinkFieldName,
               domainName: domainName,
@@ -82,7 +82,7 @@ export class EntityBuilder extends Builder {
             const domainName = Prefix.domain(await this.nextDDLUnique());
             await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
             await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-            await this._addATAttr(pAttr, {relationName: tableName, fieldName, domainName});
+            await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
             /*
             const lbField = pAttr.adapter ? pAttr.adapter.lbField : Constants.DEFAULT_LB_NAME;
             const rbField = pAttr.adapter ? pAttr.adapter.rbField : Constants.DEFAULT_RB_NAME;
@@ -111,7 +111,7 @@ export class EntityBuilder extends Builder {
             const domainName = Prefix.domain(await this.nextDDLUnique());
             await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(eAttr));
             await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-            await this._addATAttr(eAttr, {relationName: tableName, fieldName, domainName});
+            await this._updateATAttr(eAttr, {relationName: tableName, fieldName, domainName});
             const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
             await this.ddlHelper.addForeignKey(fkConstName, {
               tableName,
@@ -169,7 +169,7 @@ export class EntityBuilder extends Builder {
             await this.ddlHelper.addPrimaryKey(crossPKConstName, crossTableName, pkFields.map((i) => i.name));
             for (const field of fields) {
               if (field.attr) {
-                await this._addATAttr(field.attr, {
+                await this._updateATAttr(field.attr, {
                   relationName: crossTableName,
                   fieldName: field.name,
                   domainName: field.domain
@@ -188,7 +188,7 @@ export class EntityBuilder extends Builder {
             const domainName = Prefix.domain(await this.nextDDLUnique());
             await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(sAttr));
             await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-            await this._addATAttr(sAttr, {
+            await this._updateATAttr(sAttr, {
               relationName: tableName,
               fieldName,
               domainName,

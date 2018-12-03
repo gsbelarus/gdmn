@@ -54,7 +54,7 @@ export class ERModelBuilder extends Builder {
         const fieldName = Builder._getFieldName(pkAttr);
         const domainName = Prefix.domain(await this.nextDDLUnique());
         await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
-        await this._addATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
+        await this._updateATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
         fields.push({
           name: fieldName,
           domain: domainName
@@ -64,7 +64,7 @@ export class ERModelBuilder extends Builder {
       const pkConstName = Prefix.pkConstraint(await this.nextDDLUnique());
       await this.ddlHelper.addTable(tableName, fields);
       await this.ddlHelper.addPrimaryKey(pkConstName, tableName, fields.map((i) => i.name));
-      await this.ddlHelper.cachedStatements.addToATRelations({
+      await this.ddlHelper.cachedStatements.updateATRelations({
         relationName: tableName,
         lName: entity.lName.ru && entity.lName.ru.name,
         description: entity.lName.ru && entity.lName.ru.fullName,

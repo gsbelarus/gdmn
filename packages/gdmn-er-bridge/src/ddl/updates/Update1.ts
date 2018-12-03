@@ -10,22 +10,22 @@ export class Update1 extends BaseSimpleUpdate {
   protected async internalRun(ddlHelper: DDLHelper): Promise<void> {
     await ddlHelper.addSequence(Constants.GLOBAL_GENERATOR);
 
-    await ddlHelper.addDomain("DINTKEY", {type: "INTEGER", notNull: true, check: "CHECK (VALUE > 0)"});
-    await ddlHelper.addDomain("DPARENT", {type: "INTEGER"});
-    await ddlHelper.addDomain("DFOREIGNKEY", {type: "INTEGER"});
-    await ddlHelper.addDomain("DLB", {type: "INTEGER", default: "1", notNull: true});
-    await ddlHelper.addDomain("DRB", {type: "INTEGER", default: "2", notNull: true});
-    await ddlHelper.addDomain("DTIMESTAMP_NOTNULL", {type: "TIMESTAMP", notNull: true});
-    await ddlHelper.addDomain("DBOOLEAN", {type: "SMALLINT", default: "0", check: "CHECK (VALUE IN (0, 1))"});
-    await ddlHelper.addDomain("DTABLENAME", {type: "VARCHAR(31)", check: "CHECK (VALUE > '')"});
-    await ddlHelper.addDomain("DFIELDNAME", {type: "VARCHAR(31)", check: "CHECK (VALUE > '')"});
-    await ddlHelper.addDomain("DTEXT255", {type: "VARCHAR(255)"});
-    await ddlHelper.addDomain("DTEXT180", {type: "VARCHAR(180)"});
-    await ddlHelper.addDomain("DTEXT60", {type: "VARCHAR(60)"});
-    await ddlHelper.addDomain("DNAME", {type: "VARCHAR(60)", notNull: true});
-    await ddlHelper.addDomain("DRELATIONTYPE", {type: "VARCHAR(1)", check: "CHECK (VALUE IN ('T', 'V'))"});
-    await ddlHelper.addDomain("DCLASSNAME", {type: "VARCHAR(40)"});
-    await ddlHelper.addDomain("DNUMERATIONBLOB", {type: "BLOB SUB_TYPE -1 SEGMENT SIZE 256"});
+    await ddlHelper.addDomain("DINTKEY", {type: "INTEGER", notNull: true, check: "CHECK (VALUE > 0)"}, true);
+    await ddlHelper.addDomain("DPARENT", {type: "INTEGER"}, true);
+    await ddlHelper.addDomain("DFOREIGNKEY", {type: "INTEGER"}, true);
+    await ddlHelper.addDomain("DLB", {type: "INTEGER", default: "1", notNull: true}, true);
+    await ddlHelper.addDomain("DRB", {type: "INTEGER", default: "2", notNull: true}, true);
+    await ddlHelper.addDomain("DTIMESTAMP_NOTNULL", {type: "TIMESTAMP", notNull: true}, true);
+    await ddlHelper.addDomain("DBOOLEAN", {type: "SMALLINT", default: "0", check: "CHECK (VALUE IN (0, 1))"}, true);
+    await ddlHelper.addDomain("DTABLENAME", {type: "VARCHAR(31)", check: "CHECK (VALUE > '')"}, true);
+    await ddlHelper.addDomain("DFIELDNAME", {type: "VARCHAR(31)", check: "CHECK (VALUE > '')"}, true);
+    await ddlHelper.addDomain("DTEXT255", {type: "VARCHAR(255)"}, true);
+    await ddlHelper.addDomain("DTEXT180", {type: "VARCHAR(180)"}, true);
+    await ddlHelper.addDomain("DTEXT60", {type: "VARCHAR(60)"}, true);
+    await ddlHelper.addDomain("DNAME", {type: "VARCHAR(60)", notNull: true}, true);
+    await ddlHelper.addDomain("DRELATIONTYPE", {type: "VARCHAR(1)", check: "CHECK (VALUE IN ('T', 'V'))"}, true);
+    await ddlHelper.addDomain("DCLASSNAME", {type: "VARCHAR(40)"}, true);
+    await ddlHelper.addDomain("DNUMERATIONBLOB", {type: "BLOB SUB_TYPE -1 SEGMENT SIZE 256"}, true);
 
     await ddlHelper.addTable("AT_FIELDS", [
       {name: "ID", domain: "DINTKEY"},
@@ -38,7 +38,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "SETLISTFIELD", domain: "DFIELDNAME"},
       {name: "SETCONDITION", domain: "DTEXT255"},
       {name: "NUMERATION", domain: "DNUMERATIONBLOB"}
-    ]);
+    ], true);
     await ddlHelper.addPrimaryKey("AT_PK_FIELDS", "AT_FIELDS", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_FIELDS", "AT_FIELDS", "ID", Constants.GLOBAL_GENERATOR);
 
@@ -49,7 +49,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "LNAME", domain: "DNAME"},
       {name: "DESCRIPTION", domain: "DTEXT180"},
       {name: "SEMCATEGORY", domain: "DTEXT60"}
-    ]);
+    ], true);
     await ddlHelper.addPrimaryKey("AT_PK_RELATIONS", "AT_RELATIONS", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_RELATIONS", "AT_RELATIONS", "ID", Constants.GLOBAL_GENERATOR);
 
@@ -65,7 +65,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "CROSSTABLE", domain: "DTABLENAME"},
       {name: "CROSSTABLEKEY", domain: "DFOREIGNKEY"},
       {name: "CROSSFIELD", domain: "DFIELDNAME"}
-    ]);
+    ], true);
     await ddlHelper.addPrimaryKey("AT_PK_RELATION_FIELDS", "AT_RELATION_FIELDS", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_RELATION_FIELDS", "AT_RELATION_FIELDS", "ID", Constants.GLOBAL_GENERATOR);
   }
