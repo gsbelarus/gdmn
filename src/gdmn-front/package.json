@@ -30,6 +30,7 @@
     "gdmn-orm": "1.0.0",
     "gdmn-recordset": "1.0.0",
     "hoist-non-react-statics": "^3.0.1",
+    "immutable": "^3.8.2",
     "i18next": "^12",
     "i18next-browser-languagedetector": "^2.2.3",
     "i18next-fetch-backend": "^2",

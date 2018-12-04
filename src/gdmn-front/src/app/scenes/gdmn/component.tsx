@@ -26,7 +26,7 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, dispatch } = this.props;
+    const { match, history, dispatch, erModel } = this.props;
 
     return (
       <div className="App">
@@ -83,7 +83,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               />
               <Route
                 path={`${match.path}/er-model`}
-                component={() => <ERModelView />}
+                component={() => <ERModelView erModel={erModel} />}
               />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

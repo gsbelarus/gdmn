@@ -17,6 +17,14 @@ export class View<P, S> extends Component<P, S> {
     );
   }
 
+  public renderWide(content: JSX.Element): JSX.Element {
+    return (
+      <div className="ViewWide">
+        {content}
+      </div>
+    );
+  }
+
   public render() {
     return (
       <div>
