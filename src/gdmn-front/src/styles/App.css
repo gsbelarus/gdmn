@@ -57,6 +57,10 @@
   margin-right: 16px;
 }
 
+.ImportantMenu:hover {
+  color: lightblue;
+}
+
 .RightSideHeaderPart {
   justify-self: flex-end;
   flex: 1 1 auto;

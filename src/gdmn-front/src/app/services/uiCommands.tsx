@@ -1,5 +1,7 @@
 import { TAuthActions, authActions } from "../scenes/auth/actions";
 import { IContextualMenuItem, ContextualMenuItemType } from "office-ui-fabric-react";
+import { Link } from "react-router-dom";
+import React from 'react';
 
 export const uiForms = [
   {
@@ -18,6 +20,13 @@ export interface IUICommand {
 };
 
 export const uiCommands: IUICommand[] = [
+  {
+    command: 'webStomp',
+    form: 'mainHeader',
+    group: 'stomp',
+    caption: 'Web-Stomp',
+    link: `/web-stomp`,
+  },
   {
     command: 'userProfile',
     form: 'mainHeader',
@@ -68,4 +77,30 @@ export function commandsToContextualMenuItems(commands: string[], dispatch: (act
       }
     }
   });
+};
+
+export function commandToLink(command: string, linkPrefix?: string, dispatch?: (action: TAuthActions) => void): JSX.Element {
+  const cmd = uiCommands.find( uic => uic.command === command );
+
+  if (!cmd) {
+    throw new Error(`Unknown command ${command}`);
+  }
+
+  if (cmd.link) {
+    return (
+      <Link to={`${linkPrefix ? linkPrefix : ''}${cmd.link}`}>
+        {cmd.caption}
+      </Link>
+    );
+  }
+  else if (cmd.action && dispatch) {
+    return (
+      <span onClick={ () => dispatch(cmd.action!()) }>
+        {cmd.caption}
+      </span>
+    );
+  }
+  else {
+    throw new Error(`Invalid command ${command}`);
+  }
 };

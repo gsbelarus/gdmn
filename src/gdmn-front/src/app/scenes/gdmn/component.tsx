@@ -17,7 +17,7 @@ import {
   ContextualMenuItem
 } from 'office-ui-fabric-react';
 import styles from './styles.css';
-import { commandsToContextualMenuItems } from '@src/app/services/uiCommands';
+import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '../auth/actions';
 
 type TGdmnViewStateProps = any;
@@ -40,7 +40,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             find something...
             <span className="WhereToSearch">/</span>
           </div>
-          <div className="ImportantMenu">Lorem</div>
+          <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
           <div className="ImportantMenu">Ipsum</div>
           <div className="ImportantMenu">Diem</div>
           <div className="RightSideHeaderPart">
@@ -70,7 +70,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 gapSpace: 2,
                 isBeakVisible: true,
                 contextualMenuItemAs: (props: IContextualMenuItemProps) => {
-                  console.log(`link -- ${props.item.link}`);
                   return props.item.link ? <Link to={props.item.link}><ContextualMenuItem {...props} /></Link> : <ContextualMenuItem {...props} />;
                 },
                 items: commandsToContextualMenuItems(
@@ -82,50 +81,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             />
           </div>
         </div>
-        <div className="OpenTasks">
-          <span className="RegularTask">
-            Накладные на приход
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="CurrentTask">
-            Текущий документ
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="ProgressTask">
-            <span className="ProgressIndicator" />
-            Длительный отчет строится
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="RegularTask">
-            Счета-фактуры
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="AttentionTask">
-            Отчет уже построен
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-        </div>
-        <div className="BPSeq">
-          <span>Приход сырья</span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>
-            <b>Хранение</b>
-          </span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>
-            Производство
-            <span className="SubMenu">
-              <div>Украли</div>
-              <div>Испортилось</div>
-              <div>Продали</div>
-            </span>
-          </span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>Приход ГП</span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>Отгрузка</span>
-        </div>
-
         <div>
           <CommandBar items={this.getItems()} />
           <Breadcrumb
@@ -146,7 +101,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             }))}
           />
         </div>
-        <main styleName="scene-pad">
+        <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>
               <Route
@@ -172,11 +127,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     );
 
     return [
-      {
-        key: 'WebStomp',
-        text: 'web-stomp',
-        commandBarButtonAs: btn(`${match.url}/web-stomp`)
-      },
       {
         key: 'GetERModel',
         text: Object.keys(erModel.entities).length
