@@ -22,7 +22,6 @@ const domContainerNode = config.webpack.appMountNodeId;
 // const webStorageService = new WebStorage(WebStorageType.local, { namespace: 'gdmn::' });
 // const authService = new Auth(webStorageService);
 const apiService = new GdmnPubSubApi(apiUrl); // todo: config.server.authScheme
-// const i18nService = I18n.getInstance();
 
 const { store, persistor } = getStore(apiService);
 
@@ -46,31 +45,8 @@ const rootRoutes = (
   </Switch>
 );
 
-// async function loadLocales(url: string, options: any, cb: Function, data: any) {
-//   try {
-//     const locale = await import(/* webpackMode: "lazy", webpackChunkName: "i18n-[index]" */
-//     `../locales/${url}`);
-//
-//     cb(locale, { status: '200' });
-//   } catch (e) {
-//     cb(null, { status: '404' });
-//   }
-// }
-//
-// async function i18nInit() {
-//   try {
-//     await i18nService.init(loadLocales, 'gdmn');
-//   } catch (e) {
-//     console.error(`Error loading i18n: ${e}`);
-//     throw e;
-//   }
-// }
-
 async function start() {
   console.log('[GDMN] start');
-  return Promise.all([
-    // todo: i18nInit()
-  ]);
 }
 
 initializeIcons();
