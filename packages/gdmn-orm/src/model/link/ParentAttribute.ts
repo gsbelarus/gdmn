@@ -1,17 +1,11 @@
-import {IParentAttributeAdapter} from "../../rdbadapter";
-import {AttributeTypes, IBaseSemOptions} from "../../types";
-import {Entity} from "../Entity";
-import {EntityAttribute} from "./EntityAttribute";
+import {AttributeTypes} from "../../types";
+import {EntityAttribute, IEntityAttributeOptions} from "./EntityAttribute";
 
-export interface IParentAttributeOptions extends IBaseSemOptions<IParentAttributeAdapter> {
-  entities: Entity[];
-}
-
-export class ParentAttribute extends EntityAttribute<IParentAttributeAdapter> {
+export class ParentAttribute extends EntityAttribute {
 
   public type: AttributeTypes = "Parent";
 
-  constructor(options: IParentAttributeOptions) {
+  constructor(options: IEntityAttributeOptions) {
     super(options);
   }
 }

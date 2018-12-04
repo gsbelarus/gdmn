@@ -34,7 +34,6 @@ import {
   TimeAttribute,
   TimeStampAttribute
 } from "gdmn-orm";
-import {IParentAttributeAdapter} from "gdmn-orm/src/rdbadapter";
 import {Builder} from "../builder/Builder";
 import {Constants} from "../Constants";
 import {IATLoadResult, IATRelation, load} from "./atData";
@@ -470,31 +469,15 @@ export class ERExport {
           }
 
           if (relationField.name === Constants.DEFAULT_PARENT_KEY_NAME) {
-            let lbField = "";
-            let rbField = "";
-            let parentAttrAdapter: IParentAttributeAdapter | undefined;
-
-            if (relation.relationFields[Constants.DEFAULT_LB_NAME] && relation.relationFields[Constants.DEFAULT_RB_NAME]) {
-              lbField = Constants.DEFAULT_LB_NAME;
-              rbField = Constants.DEFAULT_RB_NAME;
-            }
-
-            if (adapter) {
-              parentAttrAdapter = {...adapter, lbField, rbField};
-            } else if (lbField || rbField) {
-              parentAttrAdapter = {
-                relation: relation.name,
-                field: relationField.name,
-                lbField, rbField
-              };
-            }
-
             return new ParentAttribute({
               name,
               lName,
               entities: refEntities,
               semCategories,
-              adapter: parentAttrAdapter
+              adapter: {
+                relation: relation.name,
+                field: relationField.name
+              }
             });
           }
           return new EntityAttribute({name, lName, required, entities: refEntities, semCategories, adapter});
