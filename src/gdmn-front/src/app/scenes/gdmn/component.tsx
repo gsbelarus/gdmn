@@ -1,16 +1,11 @@
 import React, { Fragment, Component } from 'react';
-import { NavLink, Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
+import { Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
-import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
-import { isDevMode, ErrorBoundary, ContextualMenuItemWithLink } from '@gdmn/client-core';
+import { InjectedProps } from 'react-router-breadcrumbs-hoc';
+import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
 import {
-  Breadcrumb,
-  IComponentAsProps,
-  IBreadcrumbItem,
-  CommandBar,
-  ICommandBarItemProps,
   Icon,
   IconButton,
   IContextualMenuItemProps,
@@ -31,7 +26,7 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, breadcrumbs, history, dispatch } = this.props;
+    const { match, history, dispatch } = this.props;
 
     return (
       <div className="App">
@@ -49,7 +44,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               <b>
                 <i>#GDMN</i>
               </b>{' '}
-              &mdash; Березовский мясоконсервный комбинат
+              &mdash; революционная платформа
             </span>
             <span className="WithNotificationsCount">
               <Icon iconName="Ringer" className="NoFrameIcon" />
@@ -97,7 +92,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
       </div>
     );
   }
-}
+};
 
 export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
 

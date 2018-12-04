@@ -27,6 +27,7 @@
 
 .RoundIcon:hover {
   color: lightblue;
+  border-color: lightblue;
 }
 
 .NoFrameIcon {
