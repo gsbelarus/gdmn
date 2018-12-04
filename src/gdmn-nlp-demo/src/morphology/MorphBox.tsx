@@ -48,8 +48,13 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
 
   state: IMorphBoxState = {};
 
-  private _getPOSButtons = () => {
-    const items: [string, () => AnyWord[]][] = [
+  private _allWordsByPOS: [string, () => AnyWord[]][];
+  private _allWords: AnyWord[];
+
+  constructor(props) {
+    super(props);
+
+    this._allWordsByPOS = [
       ['Nouns', () => RusNounLexemes.reduce((p, l) => {p.push(l.getWordForm({ c: RusCase.Nomn, singular: true })); return p;}, [] as AnyWord[])],
       ['Verbs', () => RusVerbLexemes.reduce((p, l) => {p.push(l.getWordForm({ infn: true })); return p;}, [] as AnyWord[])],
       ['Adjs', () => RusAdjectiveLexemes.reduce((p, l) => {p.push(l.getWordForm({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })); return p;}, [] as AnyWord[])],
@@ -57,13 +62,23 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Pron', () => RusPronounLexemes.reduce((p, l) => {p.push(l.getWordForm(RusCase.Nomn)); return p;}, [] as AnyWord[])],
       ['Conj', () => RusConjunctionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])]
-    ];
+    ]; 
 
-    return items.map( i =>
+    this._allWords = this._allWordsByPOS.reduce(
+      (prev, pos) => ([...prev, ...pos[1]()]),
+      [] as AnyWord[]
+    )
+  }
+
+  private _getPOSButtons = () => {
+    return this._allWordsByPOS.map( i =>
       i[1] && <DefaultButton
         key={i[0]}
         text={i[0]}
-        onClick={() => this.setState({ vocabulary: i[1]().sort( (a, b) => a.word.localeCompare(b.word)) })}
+        onClick={() => {
+          this.props.onSetText("");
+          this.setState({ vocabulary: i[1]().sort( (a, b) => a.word.localeCompare(b.word)) })
+        }}
       />
     );
   };
@@ -80,7 +95,12 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             label="Word"
             style={{maxWidth: '200px'}}
             value={text}
-            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => onSetText(e.target.value) }
+            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
+              const foundWords: AnyWord[] = this._allWords.filter( f => (f.word).indexOf(e.target.value) >= 0 );
+              onSetText(e.target.value);
+              this.setState({ vocabulary: foundWords }); 
+            }
+          }
           />
           {this._getPOSButtons()}
         </div>
