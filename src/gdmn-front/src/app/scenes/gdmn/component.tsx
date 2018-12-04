@@ -19,6 +19,8 @@ import {
 import styles from './styles.css';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '../auth/actions';
+import { TGdmnActions } from './actions';
+import { ERModelView } from './components/ERModelView';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -34,15 +36,14 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     return (
       <div className="App">
         <div className="Header">
-          <Icon iconName="Home" className="RoundIcon" />
+          <Link to="/"><Icon iconName="Home" className="RoundIcon" /></Link>
           <Icon iconName="Chat" className="NoFrameIcon" />
           <div className="SearchBox">
             find something...
             <span className="WhereToSearch">/</span>
           </div>
           <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
-          <div className="ImportantMenu">Ipsum</div>
-          <div className="ImportantMenu">Diem</div>
+          <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
               <b>
@@ -56,14 +57,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             </span>
             <IconButton
               iconProps={{ iconName: 'Contact'}}
-              styles={{
-                rootHovered: {
-                  color: 'lightblue'
-                },
-                menuIcon: {
-                  display: 'none'
-                }
-              }}
+              styles={{ menuIcon: { display: 'none' } }}
               className="RoundIcon"
               menuProps={{
                 shouldFocusOnMount: true,
@@ -74,15 +68,46 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 },
                 items: commandsToContextualMenuItems(
                   ['userProfile', '-', 'logout'],
-                  (action: TAuthActions) => dispatch(action),
+                  (action: TAuthActions | TGdmnActions) => dispatch(action),
                   (link: string) => history.push(`${match.url}${link}`)
                 )
               }}
             />
           </div>
         </div>
-        <div>
-          <CommandBar items={this.getItems()} />
+        <main styleName="WorkArea">
+          <ErrBoundary>
+            <Switch>
+              <Route
+                path={`${match.path}/account`}
+                component={() => <AccountView apiDeleteAccount={this.props.apiDeleteAccount} />}
+              />
+              <Route
+                path={`${match.path}/web-stomp`}
+                component={() => <StompDemoView apiPing={this.props.apiPing} log={''} />}
+              />
+              <Route
+                path={`${match.path}/er-model`}
+                component={() => <ERModelView />}
+              />
+              <Route path={`${match.path}/*`} component={NotFoundView} />
+            </Switch>
+          </ErrBoundary>
+        </main>
+      </div>
+    );
+  }
+}
+
+export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
+
+/*
+Organizations - supervised_user_circle
+Account - alternate_email
+Profile - account_circle
+*/
+
+/*
           <Breadcrumb
             onRenderItem={(props, defaultRenderer) => {
               if (defaultRenderer && props && props.href) {
@@ -100,48 +125,4 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               href: breadcrumb.props.match.url
             }))}
           />
-        </div>
-        <main styleName="WorkArea">
-          <ErrBoundary>
-            <Switch>
-              <Route
-                path={`${match.path}/account`}
-                component={() => <AccountView apiDeleteAccount={this.props.apiDeleteAccount} />}
-              />
-              <Route
-                path={`${match.path}/web-stomp`}
-                component={() => <StompDemoView apiPing={this.props.apiPing} log={''} />}
-              />
-              <Route path={`${match.path}/*`} component={NotFoundView} />
-            </Switch>
-          </ErrBoundary>
-        </main>
-      </div>
-    );
-  }
-
-  private getItems = (): ICommandBarItemProps[] => {
-    const { erModel, match, apiGetSchema } = this.props;
-    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => (
-      <ContextualMenuItemWithLink {...props} link={link} supText={supText} />
-    );
-
-    return [
-      {
-        key: 'GetERModel',
-        text: Object.keys(erModel.entities).length
-          ? `Reload ERModel (${Object.keys(erModel.entities).length})`
-          : `Load ERModel`,
-        onClick: apiGetSchema
-      }
-    ];
-  };
-}
-
-export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
-
-/*
-Organizations - supervised_user_circle
-Account - alternate_email
-Profile - account_circle
- */
+*/

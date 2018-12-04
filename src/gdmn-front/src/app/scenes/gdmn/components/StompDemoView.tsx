@@ -5,12 +5,12 @@ import { Button, TextField } from 'office-ui-fabric-react';
 interface IStompDemoViewState {
   pingDelay: number;
   pingSteps: number;
-}
+};
 
 interface IStompDemoViewProps {
   log: string;
   apiPing: (cmd: TPingTaskCmd) => void;
-}
+};
 
 class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewState> {
   public state: IStompDemoViewState = {
@@ -53,6 +53,6 @@ class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewSta
       pingSteps: event.target.value
     });
   };
-}
+};
 
 export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };

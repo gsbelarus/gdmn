@@ -4,7 +4,7 @@ import { View } from '../../components/View';
 
 export interface IAccountViewProps {
   apiDeleteAccount: () => void;
-}
+};
 
 export class AccountView extends View<IAccountViewProps, {}> {
   private handleDeleteAccount = () => {
@@ -16,4 +16,4 @@ export class AccountView extends View<IAccountViewProps, {}> {
       <Button onClick={this.handleDeleteAccount} text="DELETE ACCOUNT" />
     );
   }
-}
+};

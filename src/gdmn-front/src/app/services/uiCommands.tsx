@@ -2,6 +2,7 @@ import { TAuthActions, authActions } from "../scenes/auth/actions";
 import { IContextualMenuItem, ContextualMenuItemType } from "office-ui-fabric-react";
 import { Link } from "react-router-dom";
 import React from 'react';
+import { TGdmnActions } from "../scenes/gdmn/actions";
 
 export const uiForms = [
   {
@@ -16,10 +17,17 @@ export interface IUICommand {
   caption?: string;
   iconName?: string;
   link?: string;
-  action?: () => TAuthActions;
+  action?: () => TAuthActions | TGdmnActions;
 };
 
 export const uiCommands: IUICommand[] = [
+  {
+    command: 'erModel',
+    form: 'mainHeader',
+    group: 'ermodel',
+    caption: 'ER Model',
+    link: `/er-model`,
+  },
   {
     command: 'webStomp',
     form: 'mainHeader',
@@ -51,7 +59,7 @@ export const uiCommands: IUICommand[] = [
   },
 ];
 
-export function commandsToContextualMenuItems(commands: string[], dispatch: (action: TAuthActions) => void, redirect: (link: string) => void): IContextualMenuItem[] {
+export function commandsToContextualMenuItems(commands: string[], dispatch: (action: TAuthActions | TGdmnActions) => void, redirect: (link: string) => void): IContextualMenuItem[] {
   return commands.map( (c, idx) => {
     if (c === '-') {
       return {
@@ -79,7 +87,7 @@ export function commandsToContextualMenuItems(commands: string[], dispatch: (act
   });
 };
 
-export function commandToLink(command: string, linkPrefix?: string, dispatch?: (action: TAuthActions) => void): JSX.Element {
+export function commandToLink(command: string, linkPrefix?: string, dispatch?: (action: TAuthActions | TGdmnActions) => void): JSX.Element {
   const cmd = uiCommands.find( uic => uic.command === command );
 
   if (!cmd) {
