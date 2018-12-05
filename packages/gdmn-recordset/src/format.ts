@@ -54,7 +54,7 @@ export const formatNumber: FormatNumber = (n: number, format?: INumberFormat): s
     const parts: string[] = [];
     let g = 1;
 
-    while (b > 0 && res[b - 1] !== '-' && res[b - 1] !== '+') {
+    while (b > 0 && (b > 1 || (res[b - 1] !== '-' && res[b - 1] !== '+'))) {
       if (g === 3) {
         parts.push(res.slice(b, e));
         e = b;
