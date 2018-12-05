@@ -163,11 +163,11 @@ export class EntityBuilder extends Builder {
 
           let crossTableName: string;
           if (attribute.adapter) {
-            crossTableName = await this.ddlHelper.addTable(attribute.adapter.crossRelation, fields);
+            crossTableName = attribute.adapter.crossRelation;
           } else {
             crossTableName = Prefix.table(await this.nextDDLUnique());
-            await this.ddlHelper.addTable(crossTableName, fields);
           }
+          await this.ddlHelper.addTable(crossTableName, fields);
 
           const crossPKConstName = Prefix.pkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addPrimaryKey(crossPKConstName, crossTableName, pkFields.map((i) => i.name));

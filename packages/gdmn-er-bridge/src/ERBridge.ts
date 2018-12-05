@@ -72,12 +72,9 @@ export class ERBridge {
     await this.ddlHelper.dispose();
   }
 
-  public async query(query: EntityQuery, dbStructure?: DBStructure): Promise<IQueryResponse> {
+  public async query(query: EntityQuery): Promise<IQueryResponse> {
     const {connection, transaction} = this.ddlHelper;
-    if (!dbStructure) {
-      dbStructure = await Factory.FBDriver.readDBStructure(connection, transaction);
-    }
-    const {sql, params, fieldAliases} = new Select(dbStructure, query);
+    const {sql, params, fieldAliases} = new Select(query);
 
     const data = await AConnection.executeQueryResultSet({
       connection,

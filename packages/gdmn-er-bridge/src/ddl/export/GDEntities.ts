@@ -124,11 +124,13 @@ export class GDEntities {
               }
             },
             {
-              relationName: "GD_COMPANY"
+              relationName: "GD_COMPANY",
+              pk: ["CONTACTKEY"]
             },
             {
               relationName: "GD_COMPANYCODE",
-              weak: true
+              pk: ["CONTACTKEY"],
+              weak: true,
             }
           ]
         }
@@ -160,14 +162,17 @@ export class GDEntities {
               }
             },
             {
-              relationName: "GD_COMPANY"
+              relationName: "GD_COMPANY",
+              pk: ["CONTACTKEY"]
             },
             {
               relationName: "GD_COMPANYCODE",
+              pk: ["CONTACTKEY"],
               weak: true
             },
             {
-              relationName: "GD_OURCOMPANY"
+              relationName: "GD_OURCOMPANY",
+              pk: ["CONTACTKEY"]
             }
           ],
           refresh: true
@@ -194,14 +199,17 @@ export class GDEntities {
               }
             },
             {
-              relationName: "GD_COMPANY"
+              relationName: "GD_COMPANY",
+              pk: ["CONTACTKEY"]
             },
             {
               relationName: "GD_COMPANYCODE",
+              pk: ["CONTACTKEY"],
               weak: true
             },
             {
-              relationName: "GD_BANK"
+              relationName: "GD_BANK",
+              pk: ["CONTACTKEY"]
             }
           ],
           refresh: true
@@ -255,7 +263,8 @@ export class GDEntities {
               }
             },
             {
-              relationName: "GD_PEOPLE"
+              relationName: "GD_PEOPLE",
+              pk: ["CONTACTKEY"]
             }
           ],
           refresh: true
@@ -293,10 +302,12 @@ export class GDEntities {
               }
             },
             {
-              relationName: "GD_PEOPLE"
+              relationName: "GD_PEOPLE",
+              pk: ["CONTACTKEY"]
             },
             {
-              relationName: "GD_EMPLOYEE"
+              relationName: "GD_EMPLOYEE",
+              pk: ["CONTACTKEY"]
             }
           ]
         }
@@ -342,7 +353,8 @@ export class GDEntities {
         new SetAttribute({
             name: "CONTACTLIST", lName: {ru: {name: "Контакты"}}, entities: [Company, Person],
             adapter: {
-              crossRelation: "GD_CONTACTLIST"
+              crossRelation: "GD_CONTACTLIST",
+              crossPk: ["GROUPKEY", "CONTACTKEY"]
             }
           }
         )

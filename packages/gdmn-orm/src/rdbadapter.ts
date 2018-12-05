@@ -49,6 +49,7 @@ export interface IAttributeAdapter {
 
 export interface ISetAttributeAdapter {
   crossRelation: string;
+  crossPk: string[];
   presentationField?: string;
 }
 

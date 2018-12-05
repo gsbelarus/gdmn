@@ -325,7 +325,10 @@ export class ERExport {
 
             // for custom set field
             let name = atSetField && atSetField[0] || crossName;
-            const setAdapter: ISetAttributeAdapter = {crossRelation: crossName};
+            const setAdapter: ISetAttributeAdapter = {
+              crossRelation: crossName,
+              crossPk: crossRelation.primaryKey!.fields
+            };
             if (atSetField) {
               const [a, atSetRelField] = atSetField;
               name = atSetRelField && atSetRelField.attrName || name;

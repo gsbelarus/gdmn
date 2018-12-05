@@ -1,4 +1,3 @@
-import {DBStructure} from "gdmn-db";
 import {
   Attribute,
   DetailAttribute,
@@ -31,27 +30,22 @@ export class Select {
   public readonly params: IParams = {};
   public readonly fieldAliases = new Map<EntityQueryField, IEntityQueryFieldAlias>();
 
-  private readonly _dbStructure: DBStructure; // TODO remove ?
   private readonly _query: EntityQuery;
 
   private readonly _linkAliases = new Map<EntityLink, IEntityQueryAlias>();
 
-  constructor(dbStructure: DBStructure, query: EntityQuery) {
-    this._dbStructure = dbStructure;
+  constructor(query: EntityQuery) {
     this._query = query;
 
     this._createAliases(this._query.link);
     this.sql = this._getSelect();
 
-    // TODO remove
-    console.log("===================");
-    console.log("QUERY:");
-    console.log(this._query);
-    console.log("SQL:");
-    console.log(this.sql);
-    console.log("PARAMS:");
-    console.log(this.params);
-    console.log("===================");
+    console.debug("===================\n" +
+      "QUERY:\n" + this._query.serialize() + "\n" +
+      "SQL:\n" + this.sql + "\n" +
+      "PARAMS:\n" + JSON.stringify(this.params) + "\n" +
+      "==================="
+    );
   }
 
   private static _arrayJoinWithBracket(array: string[], separator: string): string {
@@ -63,11 +57,38 @@ export class Select {
     return "";
   }
 
-  private static _getAttrAdapter(entity: Entity, attribute: Attribute): { relationName: string, fieldName: string } {
-    let relationName = entity.adapter.relation[0].relationName;
+  private static _getMainRelationName(entity: Entity): string {
+    return entity.adapter ? entity.adapter.relation[0].relationName : entity.name;
+  }
+
+  private static _getPKFieldName(entity: Entity, relationName: string): string {
+    if (entity.adapter) {
+      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
+      if (relation && relation.pk && relation.pk.length) {
+        return relation.pk[0];
+      }
+    }
+    const mainRelationName = Select._getMainRelationName(entity);
+    if (mainRelationName === relationName) {
+      const pkAttr = entity.pk[0];
+      if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
+        return pkAttr.adapter ? pkAttr.adapter.fieldName : pkAttr.name;
+      }
+    }
+    if (entity.parent) {
+      return this._getPKFieldName(entity.parent, relationName);
+    }
+    throw new Error(`Primary key is not found for ${relationName} relation`);
+  }
+
+  private static _getAttrAdapter(entity: Entity, attribute: Attribute): { relationName: string, fieldName: string, ownFk?: string, refFk?: string } {
+    let relationName = Select._getMainRelationName(entity);
     let fieldName = attribute.name;
     if (attribute.adapter) {
       switch (attribute.type) {
+        case "Parent": {
+          throw new Error("Unsupported yet");
+        }
         case "Set": {
           const attr = attribute as SetAttribute;
           if (attr.adapter) {
@@ -94,13 +115,6 @@ export class Select {
     }
 
     return {relationName, fieldName};
-  }
-
-  private static _getPrimaryAttribute(entity: Entity): Attribute {
-    if (entity.pk[0]) {
-      return entity.pk[0];
-    }
-    return entity.attributes[Object.keys(entity.attributes)[0]];
   }
 
   private static _checkInAttrMap(entity: Entity,
@@ -136,7 +150,6 @@ export class Select {
     link.fields.forEach((field) => {
       if (field.link) {
         if (field.attribute.type === "Set") {
-          const setAttr = field.attribute as SetAttribute;
           if (field.setAttributes) {
             const fieldAlias = field.setAttributes.reduce((alias, attr) => {
               alias[attr.name] = `F$${this.fieldAliases.size + 1}_${Object.keys(alias).length + 1}`;
@@ -144,6 +157,7 @@ export class Select {
             }, {} as IEntityQueryFieldAlias);
             this.fieldAliases.set(field, fieldAlias);
           }
+          const setAttr = field.attribute as SetAttribute;
           if (setAttr.adapter) {
             const setAdapter = Select._getAttrAdapter(field.link.entity, setAttr);
             const alias = this._linkAliases.get(link);
@@ -206,14 +220,16 @@ export class Select {
     const joinedFields = link.fields.reduce((items, field) => {
       if (field.link) {
         if (field.setAttributes) {
-          field.setAttributes.map((attr) => {
+          const crossFields = field.setAttributes.map((attr) => {
+            const crossAttrAdapter = Select._getAttrAdapter(link.entity, field.attribute);
             const attrAdapter = Select._getAttrAdapter(link.entity, attr);
             return SQLTemplates.field(
-              this._getTableAlias(link, attrAdapter.relationName),
+              this._getTableAlias(link, crossAttrAdapter.relationName),
               this._getFieldAlias(field, attr),
               attrAdapter.fieldName
             );
           });
+          items = items.concat(crossFields);
         }
         return items.concat(this._makeFields(field.link));
       }
@@ -224,7 +240,7 @@ export class Select {
   }
 
   private _makeFrom(link: EntityLink): string {
-    const primaryAttr = Select._getPrimaryAttribute(link.entity);
+    const primaryAttr = link.entity.pk[0];
     const primaryAttrAdapter = Select._getAttrAdapter(link.entity, primaryAttr);
 
     const mainRelation = link.entity.adapter.relation[0];
@@ -235,7 +251,7 @@ export class Select {
           joins.push(SQLTemplates.join(
             rel.relationName,
             this._getTableAlias(link, rel.relationName),
-            this._getPrimaryName(rel.relationName),
+            Select._getPKFieldName(link.entity, rel.relationName),
             this._getTableAlias(link),
             primaryAttrAdapter.fieldName
           ));
@@ -249,34 +265,38 @@ export class Select {
   }
 
   private _makeJoin(link: EntityLink): string[] {
-    const primaryAttr = Select._getPrimaryAttribute(link.entity);
-    const primaryAttrAdapter = Select._getAttrAdapter(link.entity, primaryAttr);
+    const pkAttr = link.entity.pk[0];
+    const pkAttrAdapter = Select._getAttrAdapter(link.entity, pkAttr);
 
     return link.fields.reduce((joins, field) => {
       if (field.link) {
         const attrAdapter = Select._getAttrAdapter(link.entity, field.attribute);
-        const nestedPrimaryAttr = Select._getPrimaryAttribute(field.link.entity);
-        const nestedPrimaryAttrAdapter = Select._getAttrAdapter(field.link.entity, nestedPrimaryAttr);
+        const nestedPKAttr = field.link.entity.pk[0];
+        const nestedPKAttrAdapter = Select._getAttrAdapter(field.link.entity, nestedPKAttr);
 
-        const mainRelation = field.link.entity.adapter.relation[0];
+        const mainRelationName = Select._getMainRelationName(field.link.entity);
         switch (field.attribute.type) {
+          case "Parent": {
+            throw new Error("Unsupported yet");
+          }
           case "Set": {
+            const attr = field.attribute as SetAttribute;
             joins.push(
               SQLTemplates.join(
                 attrAdapter.relationName,
                 this._getTableAlias(link, attrAdapter.relationName),
-                this._getPrimaryName(attrAdapter.relationName),
+                attr.adapter!.crossPk[0],
                 this._getTableAlias(link),
-                primaryAttrAdapter.fieldName
+                pkAttrAdapter.fieldName
               )
             );
             joins.push(
               SQLTemplates.join(
-                mainRelation.relationName,
-                this._getTableAlias(field.link, mainRelation.relationName),
-                nestedPrimaryAttrAdapter.fieldName,
+                mainRelationName,
+                this._getTableAlias(field.link, mainRelationName),
+                nestedPKAttrAdapter.fieldName,
                 this._getTableAlias(link, attrAdapter.relationName),
-                this._getPrimaryName(attrAdapter.relationName, 1)
+                attr.adapter!.crossPk[1]
               )
             );
             break;
@@ -284,11 +304,11 @@ export class Select {
           case "Detail": {
             joins.push(
               SQLTemplates.join(
-                mainRelation.relationName,
-                this._getTableAlias(field.link, mainRelation.relationName),
+                mainRelationName,
+                this._getTableAlias(field.link, mainRelationName),
                 attrAdapter.fieldName,
                 this._getTableAlias(link, attrAdapter.relationName),
-                nestedPrimaryAttrAdapter.fieldName
+                nestedPKAttrAdapter.fieldName
               )
             );
             break;
@@ -296,9 +316,9 @@ export class Select {
           default: {
             joins.push(
               SQLTemplates.join(
-                mainRelation.relationName,
-                this._getTableAlias(field.link, mainRelation.relationName),
-                nestedPrimaryAttrAdapter.fieldName,
+                mainRelationName,
+                this._getTableAlias(field.link, mainRelationName),
+                nestedPKAttrAdapter.fieldName,
                 this._getTableAlias(link, attrAdapter.relationName),
                 attrAdapter.fieldName
               )
@@ -313,9 +333,9 @@ export class Select {
                 SQLTemplates.join(
                   rel.relationName,
                   this._getTableAlias(field.link, rel.relationName),
-                  this._getPrimaryName(rel.relationName),
+                  Select._getPKFieldName(field.link.entity, rel.relationName),
                   this._getTableAlias(field.link),
-                  primaryAttrAdapter.fieldName
+                  pkAttrAdapter.fieldName
                 )
               );
             }
@@ -454,14 +474,6 @@ export class Select {
     return [];
   }
 
-  private _getPrimaryName(relationName: string, index: number = 0): string {
-    const relation = this._dbStructure.findRelation((item) => item.name === relationName);
-    if (relation && relation.primaryKey) {
-      return relation.primaryKey.fields[relation.primaryKey.fields.length - 1 - index];
-    }
-    return "";
-  }
-
   private _getTableAlias(link: EntityLink, relationName?: string): string {
     const alias = this._linkAliases.get(link);
     if (alias) {
@@ -494,7 +506,7 @@ export class Select {
         }
       }
     }
-    throw new Error("Alias not found");
+    throw new Error(`Alias ${alias} is not found`);
   }
 
   private _isExistInQuery(link: EntityLink, relationName: string): boolean {
