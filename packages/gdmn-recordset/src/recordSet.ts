@@ -36,7 +36,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     groups?: IDataGroup<R>[],
     aggregates?: R)
   {
-    if (!data.size && (currentRow >= 0)) {
+    if (!data.size && currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
 

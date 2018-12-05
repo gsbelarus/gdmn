@@ -1,30 +1,37 @@
 import React, { PureComponent } from 'react';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 import { Button, TextField } from 'office-ui-fabric-react';
+import { View } from '../../components/View';
 
 interface IStompDemoViewState {
   pingDelay: number;
   pingSteps: number;
-}
+};
 
 interface IStompDemoViewProps {
   log: string;
   apiPing: (cmd: TPingTaskCmd) => void;
-}
+};
 
-class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewState> {
+class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   public state: IStompDemoViewState = {
     pingDelay: 3000,
     pingSteps: 2
   };
 
+  public getViewCaption(): string {
+    return 'Stomp protocol'
+  }
+
   public render() {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <div>
-          <TextField label="delay" value={this.state.pingDelay.toString()} onChange={this.handlePingDelayChange} />
-          <TextField label="steps" value={this.state.pingSteps.toString()} onChange={this.handlePingStepsChange} />
-          <Button onClick={this.handlePingClick} text="SEND PING-TASK" />
+    return this.renderOneColumn(
+      <div className="ViewBody">
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div>
+            <TextField label="delay" value={this.state.pingDelay.toString()} onChange={this.handlePingDelayChange} />
+            <TextField label="steps" value={this.state.pingSteps.toString()} onChange={this.handlePingStepsChange} />
+            <Button onClick={this.handlePingClick} text="SEND PING-TASK" />
+          </div>
         </div>
       </div>
     );
@@ -53,6 +60,6 @@ class StompDemoView extends PureComponent<IStompDemoViewProps, IStompDemoViewSta
       pingSteps: event.target.value
     });
   };
-}
+};
 
 export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };

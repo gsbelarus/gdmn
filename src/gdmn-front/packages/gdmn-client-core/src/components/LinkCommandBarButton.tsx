@@ -1,5 +1,4 @@
 import {
-  IComponentAsProps,
   BaseComponent,
   IContextualMenuItem} from 'office-ui-fabric-react';
 import React from 'react';

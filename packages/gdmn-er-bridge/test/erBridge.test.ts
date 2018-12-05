@@ -1916,25 +1916,25 @@ describe("ERBridge", () => {
     expect(loadEntity2.serialize()).toEqual(entity2.serialize());
   });
 
-  it("parent link to entity", async () => {
-    const erModel = await initERModel();
-    await execute(async ({erBuilder, eBuilder}) => {
-      const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
-        lName: {ru: {name: "entity name", fullName: "full entity name"}}
-      }));
-
-      await eBuilder.create(entity, new ParentAttribute({
-        name: "PARENT", lName: {ru: {name: "Дерево"}}, entities: [entity]
-      }));
-    });
-
-    const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
-    expect(loadEntity).toEqual(entity);
-    expect(loadEntity.serialize()).toEqual(entity.serialize());
-  });
+  // it("parent link to entity", async () => {
+  //   const erModel = await initERModel();
+  //   await execute(async ({erBuilder, eBuilder}) => {
+  //     const entity = await erBuilder.create(erModel, new Entity({
+  //       name: "TEST",
+  //       lName: {ru: {name: "entity name", fullName: "full entity name"}}
+  //     }));
+  //
+  //     await eBuilder.create(entity, new ParentAttribute({
+  //       name: "PARENT", lName: {ru: {name: "Дерево"}}, entities: [entity]
+  //     }));
+  //   });
+  //
+  //   const loadedERModel = await initERModel();
+  //   const entity = erModel.entity("TEST");
+  //   const loadEntity = loadedERModel.entity("TEST");
+  //   expect(loadEntity).toEqual(entity);
+  //   expect(loadEntity.serialize()).toEqual(entity.serialize());
+  // });
 
   it("detail entity", async () => {
     const erModel = await initERModel();
