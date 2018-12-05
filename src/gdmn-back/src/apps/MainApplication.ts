@@ -467,7 +467,7 @@ export class MainApplication extends Application {
           }));
           const appSet = new SetAttribute({
             name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-            adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+            adapter: {crossRelation: "APP_USER_APPLICATIONS", crossPk: ["KEY1", "KEY2"]}
           });
           appSet.add(new StringAttribute({
             name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120

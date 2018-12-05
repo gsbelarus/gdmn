@@ -128,6 +128,12 @@ export class EntityBuilder extends Builder {
           if (!(attribute instanceof SetAttribute)) {
             throw new Error("Never throws");
           }
+          const setAttr = attribute as SetAttribute;
+
+          const relationName = setAttr.adapter ? setAttr.adapter.crossRelation : Prefix.table(await this.nextDDLUnique());
+          const ownPKName = setAttr.adapter ? setAttr.adapter.crossPk[0] : Constants.DEFAULT_CROSS_PK_OWN_NAME;
+          const refPKName = setAttr.adapter ? setAttr.adapter.crossPk[1] : Constants.DEFAULT_CROSS_PK_REF_NAME;
+
           // create cross table
           const fields: Array<IFieldProps & { attr?: Attribute }> = [];
           const pkFields: IFieldProps[] = [];
@@ -135,22 +141,22 @@ export class EntityBuilder extends Builder {
           const ownPKDomainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(ownPKDomainName, DomainResolver.resolve(entity.pk[0]));
           const ownPK = {
-            name: Constants.DEFAULT_CROSS_PK_OWN_NAME,
+            name: ownPKName,
             domain: ownPKDomainName
           };
           fields.push(ownPK);
           pkFields.push(ownPK);
 
           const refPKDomainName = Prefix.domain(await this.nextDDLUnique());
-          await this.ddlHelper.addDomain(refPKDomainName, DomainResolver.resolve(attribute.entities[0].pk[0]));
+          await this.ddlHelper.addDomain(refPKDomainName, DomainResolver.resolve(setAttr.entities[0].pk[0]));
           const refPK = {
-            name: Constants.DEFAULT_CROSS_PK_REF_NAME,
+            name: refPKName,
             domain: refPKDomainName
           };
           fields.push(refPK);
           pkFields.push(refPK);
 
-          for (const crossAttr of Object.values(attribute.attributes).filter((attr) => attr instanceof ScalarAttribute)) {
+          for (const crossAttr of Object.values(setAttr.attributes).filter((attr) => attr instanceof ScalarAttribute)) {
             const fieldName = Builder._getFieldName(crossAttr);
             const domainName = Prefix.domain(await this.nextDDLUnique());
             await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(crossAttr));
@@ -161,20 +167,14 @@ export class EntityBuilder extends Builder {
             });
           }
 
-          let crossTableName: string;
-          if (attribute.adapter) {
-            crossTableName = attribute.adapter.crossRelation;
-          } else {
-            crossTableName = Prefix.table(await this.nextDDLUnique());
-          }
-          await this.ddlHelper.addTable(crossTableName, fields);
+          await this.ddlHelper.addTable(relationName, fields);
 
           const crossPKConstName = Prefix.pkConstraint(await this.nextDDLUnique());
-          await this.ddlHelper.addPrimaryKey(crossPKConstName, crossTableName, pkFields.map((i) => i.name));
+          await this.ddlHelper.addPrimaryKey(crossPKConstName, relationName, pkFields.map((i) => i.name));
           for (const field of fields) {
             if (field.attr) {
               await this._updateATAttr(field.attr, {
-                relationName: crossTableName,
+                relationName,
                 fieldName: field.name,
                 domainName: field.domain
               });
@@ -184,38 +184,38 @@ export class EntityBuilder extends Builder {
           }
 
           const crossTableKey = await this.ddlHelper.cachedStatements.addToATRelations({
-            relationName: crossTableName
+            relationName
           });
 
           // create own table column
-          const fieldName = Builder._getFieldName(attribute);
+          const fieldName = Builder._getFieldName(setAttr);
           const domainName = Prefix.domain(await this.nextDDLUnique());
-          await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attribute));
+          await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(setAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-          await this._updateATAttr(attribute, {
+          await this._updateATAttr(setAttr, {
             relationName: tableName,
             fieldName,
             domainName,
-            crossTable: crossTableName,
+            crossTable: relationName,
             crossTableKey
           });
 
           // add foreign keys for cross table
           const crossFKOwnConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKOwnConstName, {
-            tableName: crossTableName,
-            fieldName: Constants.DEFAULT_CROSS_PK_OWN_NAME
+            tableName: relationName,
+            fieldName: ownPKName
           }, {
             tableName: Builder._getOwnRelationName(entity),
             fieldName: Builder._getFieldName(entity.pk[0])
           });
           const crossFKRefConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKRefConstName, {
-            tableName: crossTableName,
-            fieldName: Constants.DEFAULT_CROSS_PK_REF_NAME
+            tableName: relationName,
+            fieldName: refPKName
           }, {
-            tableName: Builder._getOwnRelationName(attribute.entities[0]),
-            fieldName: Builder._getFieldName(attribute.entities[0].pk[0])
+            tableName: Builder._getOwnRelationName(setAttr.entities[0]),
+            fieldName: Builder._getFieldName(setAttr.entities[0].pk[0])
           });
           break;
         }
