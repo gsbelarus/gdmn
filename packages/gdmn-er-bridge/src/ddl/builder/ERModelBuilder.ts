@@ -101,12 +101,12 @@ export class ERModelBuilder extends Builder {
 
       for (const attr of Object.values(entity.ownAttributes)) {
         if (!entity.pk.includes(attr)) {
-          await this.eBuilder.create(entity, attr);
+          await this.eBuilder.createAttribute(entity, attr);
         }
       }
 
       for (const unique of entity.ownUnique) {
-        await this.eBuilder.create(entity, unique);
+        await this.eBuilder.addUnique(entity, unique);
       }
 
       return erModel.add(entity);

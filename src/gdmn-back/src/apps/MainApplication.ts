@@ -411,23 +411,23 @@ export class MainApplication extends Application {
           const userEntity = await erBuilder.create(this.erModel, new Entity({
             name: "APP_USER", lName: {ru: {name: "Пользователь"}}
           }));
-          await eBuilder.create(userEntity, new StringAttribute({
+          await eBuilder.createAttribute(userEntity, new StringAttribute({
             name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1, maxLength: 32
           }));
-          await eBuilder.create(userEntity, new BlobAttribute({
+          await eBuilder.createAttribute(userEntity, new BlobAttribute({
             name: "PASSWORD_HASH", lName: {ru: {name: "Хешированный пароль"}}, required: true
           }));
-          await eBuilder.create(userEntity, new BlobAttribute({
+          await eBuilder.createAttribute(userEntity, new BlobAttribute({
             name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
           }));
-          await eBuilder.create(userEntity, new TimeStampAttribute({
+          await eBuilder.createAttribute(userEntity, new TimeStampAttribute({
             name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
             defaultValue: "CURRENT_TIMESTAMP"
           }));
-          await eBuilder.create(userEntity, new BooleanAttribute({
+          await eBuilder.createAttribute(userEntity, new BooleanAttribute({
             name: "IS_ADMIN", lName: {ru: {name: "Пользователь - администратор"}}
           }));
-          await eBuilder.create(userEntity, new BooleanAttribute({
+          await eBuilder.createAttribute(userEntity, new BooleanAttribute({
             name: "DELETED", lName: {ru: {name: "Удален"}}
           }));
 
@@ -435,33 +435,33 @@ export class MainApplication extends Application {
           const appEntity = await erBuilder.create(this.erModel, new Entity({
             name: "APPLICATION", lName: {ru: {name: "Приложение"}}
           }));
-          await eBuilder.create(appEntity, new EntityAttribute({
+          await eBuilder.createAttribute(appEntity, new EntityAttribute({
             name: "OWNER", lName: {ru: {name: "Создатель"}}, required: true, entities: [userEntity]
           }));
-          await eBuilder.create(appEntity, new BooleanAttribute({
+          await eBuilder.createAttribute(appEntity, new BooleanAttribute({
             name: "IS_EXTERNAL", lName: {ru: {name: "Является внешним"}}, required: true
           }));
-          await eBuilder.create(appEntity, new StringAttribute({
+          await eBuilder.createAttribute(appEntity, new StringAttribute({
             name: "HOST", lName: {ru: {name: "Хост"}}, maxLength: 260
           }));
-          await eBuilder.create(appEntity, new IntegerAttribute({
+          await eBuilder.createAttribute(appEntity, new IntegerAttribute({
             name: "PORT", lName: {ru: {name: "Хост"}}
           }));
-          await eBuilder.create(appEntity, new StringAttribute({
+          await eBuilder.createAttribute(appEntity, new StringAttribute({
             name: "USERNAME", lName: {ru: {name: "Имя пользователя"}}, maxLength: 260
           }));
-          await eBuilder.create(appEntity, new StringAttribute({
+          await eBuilder.createAttribute(appEntity, new StringAttribute({
             name: "PASSWORD", lName: {ru: {name: "Пароль"}}, maxLength: 260
           }));
-          await eBuilder.create(appEntity, new StringAttribute({
+          await eBuilder.createAttribute(appEntity, new StringAttribute({
             name: "PATH", lName: {ru: {name: "Путь"}}, maxLength: 260
           }));
           const appUid = new StringAttribute({
             name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
           });
-          await eBuilder.create(appEntity, appUid);
-          await eBuilder.create(appEntity, [appUid]);
-          await eBuilder.create(appEntity, new TimeStampAttribute({
+          await eBuilder.createAttribute(appEntity, appUid);
+          await eBuilder.addUnique(appEntity, [appUid]);
+          await eBuilder.createAttribute(appEntity, new TimeStampAttribute({
             name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
             defaultValue: "CURRENT_TIMESTAMP"
           }));
@@ -473,7 +473,7 @@ export class MainApplication extends Application {
             name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
           }));
 
-          await eBuilder.create(userEntity, appSet);
+          await eBuilder.createAttribute(userEntity, appSet);
         }
       })
     }));

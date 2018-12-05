@@ -17,7 +17,6 @@ import {
   MIN_16BIT_INT,
   MIN_32BIT_INT,
   NumericAttribute,
-  ParentAttribute,
   SetAttribute,
   StringAttribute,
   TimeAttribute,
@@ -39,7 +38,7 @@ import {
 } from "../src/crud/Crud";
 import {Constants} from "../src/ddl/Constants";
 
-export const dbOptions: IConnectionOptions = {
+const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
   path: resolve("./GDMN_ER_BRIDGE_ER_BRIDGE.FDB")
@@ -87,36 +86,36 @@ describe("ERBridge", () => {
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
       }));
 
-      await eBuilder.create(appEntity, new StringAttribute({
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
       }));
-      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
+      await eBuilder.addUnique(appEntity, [appEntity.attribute("UID")]);
 
       const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
       }));
-      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
-      await eBuilder.create(backupEntity, new EntityAttribute({
+      await eBuilder.addUnique(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.createAttribute(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
       }));
 
       const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
       }));
-      await eBuilder.create(placeEntity, new StringAttribute({
+      await eBuilder.createAttribute(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
       }));
 
       const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
       }));
-      await eBuilder.create(userEntity, new StringAttribute({
+      await eBuilder.createAttribute(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
       }));
@@ -127,12 +126,12 @@ describe("ERBridge", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await eBuilder.create(userEntity, appSet);
+      await eBuilder.createAttribute(userEntity, appSet);
 
-      await eBuilder.create(userEntity, new EntityAttribute({
+      await eBuilder.createAttribute(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
       }));
-      await eBuilder.create(userEntity, new DetailAttribute({
+      await eBuilder.createAttribute(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -562,37 +561,37 @@ describe("ERBridge", () => {
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
       }));
 
-      await eBuilder.create(appEntity, new StringAttribute({
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
       }));
 
-      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
+      await eBuilder.addUnique(appEntity, [appEntity.attribute("UID")]);
 
       const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
       }));
-      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
-      await eBuilder.create(backupEntity, new EntityAttribute({
+      await eBuilder.addUnique(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.createAttribute(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
       }));
 
       const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
       }));
-      await eBuilder.create(placeEntity, new StringAttribute({
+      await eBuilder.createAttribute(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
       }));
 
       const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
       }));
-      await eBuilder.create(userEntity, new StringAttribute({
+      await eBuilder.createAttribute(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
       }));
@@ -603,12 +602,12 @@ describe("ERBridge", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await eBuilder.create(userEntity, appSet);
+      await eBuilder.createAttribute(userEntity, appSet);
 
-      await eBuilder.create(userEntity, new EntityAttribute({
+      await eBuilder.createAttribute(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
       }));
-      await eBuilder.create(userEntity, new DetailAttribute({
+      await eBuilder.createAttribute(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -900,37 +899,37 @@ describe("ERBridge", () => {
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
       }));
 
-      await eBuilder.create(appEntity, new StringAttribute({
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
       }));
 
-      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
+      await eBuilder.addUnique(appEntity, [appEntity.attribute("UID")]);
 
       const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
       }));
-      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
-      await eBuilder.create(backupEntity, new EntityAttribute({
+      await eBuilder.addUnique(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.createAttribute(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
       }));
 
       const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
       }));
-      await eBuilder.create(placeEntity, new StringAttribute({
+      await eBuilder.createAttribute(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
       }));
 
       const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
       }));
-      await eBuilder.create(userEntity, new StringAttribute({
+      await eBuilder.createAttribute(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
       }));
@@ -941,12 +940,12 @@ describe("ERBridge", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await eBuilder.create(userEntity, appSet);
+      await eBuilder.createAttribute(userEntity, appSet);
 
-      await eBuilder.create(userEntity, new EntityAttribute({
+      await eBuilder.createAttribute(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
       }));
-      await eBuilder.create(userEntity, new DetailAttribute({
+      await eBuilder.createAttribute(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -1247,37 +1246,37 @@ describe("ERBridge", () => {
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
       }));
 
-      await eBuilder.create(appEntity, new StringAttribute({
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
       }));
 
-      await eBuilder.create(appEntity, [appEntity.attribute("UID")]);
+      await eBuilder.addUnique(appEntity, [appEntity.attribute("UID")]);
 
       const backupEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION_BACKUPS", lName: {ru: {name: "Бэкап"}}
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
       }));
-      await eBuilder.create(backupEntity, [backupEntity.attribute("UID")]);
-      await eBuilder.create(backupEntity, new EntityAttribute({
+      await eBuilder.addUnique(backupEntity, [backupEntity.attribute("UID")]);
+      await eBuilder.createAttribute(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: " "}}, required: true, entities: [appEntity]
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
       }));
 
       const placeEntity = await erBuilder.create(erModel, new Entity({
         name: "PLACE", lName: {ru: {name: "Место"}}
       }));
-      await eBuilder.create(placeEntity, new StringAttribute({
+      await eBuilder.createAttribute(placeEntity, new StringAttribute({
         name: "ADDRESS", lName: {ru: {name: "Адрес"}}, required: true, minLength: 1, maxLength: 100
       }));
 
       const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
       }));
-      await eBuilder.create(userEntity, new StringAttribute({
+      await eBuilder.createAttribute(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1,
         maxLength: 32
       }));
@@ -1288,12 +1287,12 @@ describe("ERBridge", () => {
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
-      await eBuilder.create(userEntity, appSet);
+      await eBuilder.createAttribute(userEntity, appSet);
 
-      await eBuilder.create(userEntity, new EntityAttribute({
+      await eBuilder.createAttribute(userEntity, new EntityAttribute({
         name: "PLACE", lName: {}, entities: [placeEntity]
       }));
-      await eBuilder.create(userEntity, new DetailAttribute({
+      await eBuilder.createAttribute(userEntity, new DetailAttribute({
         name: "DETAIL_PLACE", lName: {ru: {name: "Детальное место"}},
         required: false, entities: [placeEntity],
         adapter: {
@@ -1558,24 +1557,24 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new IntegerAttribute({
+      await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT, defaultValue: -10000,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new IntegerAttribute({
+      await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_32BIT_INT, maxValue: MAX_32BIT_INT, defaultValue: -10000
       }));
-      // await eBuilder.create(entity, new IntegerAttribute({
+      // await eBuilder.createAttribute(entity, new IntegerAttribute({
       //   name: "FIELD3", lName: {ru: {name: "Поле 3", fullName: "FULLNAME"}}, required: true,
       //   minValue: MIN_64BIT_INT, maxValue: MAX_64BIT_INT, defaultValue: -100000000000000
       // }));
-      await eBuilder.create(entity, new IntegerAttribute({
+      await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD4", lName: {ru: {name: "Поле 4", fullName: "FULLNAME"}},
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT + 1, defaultValue: 0
       }));
-      await eBuilder.create(entity, new IntegerAttribute({
+      await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD5", lName: {ru: {name: "Поле 5", fullName: "FULLNAME"}},
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT + 1
       }));
@@ -1596,16 +1595,16 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new NumericAttribute({
+      await eBuilder.createAttribute(entity, new NumericAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         precision: 4, scale: 2, minValue: 40, maxValue: 1000, defaultValue: 40.36,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new NumericAttribute({
+      await eBuilder.createAttribute(entity, new NumericAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         precision: 4, scale: 2, minValue: 40, maxValue: 1000, defaultValue: 40.36
       }));
-      await eBuilder.create(entity, new NumericAttribute({
+      await eBuilder.createAttribute(entity, new NumericAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         precision: 4, scale: 2, minValue: 40, maxValue: 1000
       }));
@@ -1626,11 +1625,11 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new BlobAttribute({
+      await eBuilder.createAttribute(entity, new BlobAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new BlobAttribute({
+      await eBuilder.createAttribute(entity, new BlobAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}}
       }));
     });
@@ -1650,11 +1649,11 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new BooleanAttribute({
+      await eBuilder.createAttribute(entity, new BooleanAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         defaultValue: true, adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new BooleanAttribute({
+      await eBuilder.createAttribute(entity, new BooleanAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}}
       }));
     });
@@ -1674,20 +1673,20 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new StringAttribute({
+      await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minLength: 5, maxLength: 30, defaultValue: "test default", autoTrim: true,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new StringAttribute({
+      await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minLength: 1, maxLength: 160, defaultValue: "test default", autoTrim: true
       }));
-      await eBuilder.create(entity, new StringAttribute({
+      await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minLength: 1, maxLength: 160, autoTrim: true
       }));
-      await eBuilder.create(entity, new StringAttribute({
+      await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD4", lName: {ru: {name: "Поле 3"}},
         minLength: 1, autoTrim: true
       }));
@@ -1708,20 +1707,20 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new DateAttribute({
+      await eBuilder.createAttribute(entity, new DateAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: moment.utc().year(1999).month(10).date(3).startOf("date").local().toDate(),
         maxValue: moment.utc().year(2099).startOf("year").local().toDate(),
         defaultValue: moment.utc().startOf("date").local().toDate(),
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new DateAttribute({
+      await eBuilder.createAttribute(entity, new DateAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).startOf("date").local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).startOf("date").local().toDate(),
         defaultValue: "CURRENT_DATE"
       }));
-      await eBuilder.create(entity, new DateAttribute({
+      await eBuilder.createAttribute(entity, new DateAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).startOf("date").local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).startOf("date").local().toDate()
@@ -1743,7 +1742,7 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new TimeAttribute({
+      await eBuilder.createAttribute(entity, new TimeAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: moment.utc().year(Constants.MIN_TIMESTAMP.getUTCFullYear()).month(Constants.MIN_TIMESTAMP.getUTCMonth())
           .date(Constants.MIN_TIMESTAMP.getDate()).startOf("date").local().toDate(),
@@ -1753,7 +1752,7 @@ describe("ERBridge", () => {
           .date(Constants.MIN_TIMESTAMP.getDate()).local().toDate(),
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new TimeAttribute({
+      await eBuilder.createAttribute(entity, new TimeAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP, Constants.TIME_TEMPLATE).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP, Constants.TIME_TEMPLATE)
@@ -1761,7 +1760,7 @@ describe("ERBridge", () => {
           .date(Constants.MIN_TIMESTAMP.getDate()).local().toDate(),
         defaultValue: "CURRENT_TIME"
       }));
-      await eBuilder.create(entity, new TimeAttribute({
+      await eBuilder.createAttribute(entity, new TimeAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP, Constants.TIME_TEMPLATE).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP, Constants.TIME_TEMPLATE)
@@ -1785,20 +1784,20 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new TimeStampAttribute({
+      await eBuilder.createAttribute(entity, new TimeStampAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: moment.utc().year(1999).month(10).startOf("month").local().toDate(),
         maxValue: moment.utc().year(2099).month(1).date(1).endOf("date").local().toDate(),
         defaultValue: moment.utc().local().toDate(),
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new TimeStampAttribute({
+      await eBuilder.createAttribute(entity, new TimeStampAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).local().toDate(),
         defaultValue: "CURRENT_TIMESTAMP"
       }));
-      await eBuilder.create(entity, new TimeStampAttribute({
+      await eBuilder.createAttribute(entity, new TimeStampAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         minValue: moment.utc(Constants.MIN_TIMESTAMP).local().toDate(),
         maxValue: moment.utc(Constants.MAX_TIMESTAMP).local().toDate()
@@ -1820,16 +1819,16 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new FloatAttribute({
+      await eBuilder.createAttribute(entity, new FloatAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123, defaultValue: 40,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      // await eBuilder.create(entity, new FloatAttribute({
+      // await eBuilder.createAttribute(entity, new FloatAttribute({
       //   name: "FIELD2", lName: {ru: {name: "Поле 2"}},
       //   minValue: Number.MIN_VALUE, maxValue: Number.MAX_VALUE, defaultValue: 40
       // }));
-      await eBuilder.create(entity, new FloatAttribute({
+      await eBuilder.createAttribute(entity, new FloatAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123
       }));
@@ -1850,7 +1849,7 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new EnumAttribute({
+      await eBuilder.createAttribute(entity, new EnumAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         values: [
           {
@@ -1868,11 +1867,11 @@ describe("ERBridge", () => {
         ], defaultValue: "Z",
         adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
       }));
-      await eBuilder.create(entity, new EnumAttribute({
+      await eBuilder.createAttribute(entity, new EnumAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
         values: [{value: "Z"}, {value: "X"}, {value: "Y"}], defaultValue: "Z"
       }));
-      await eBuilder.create(entity, new EnumAttribute({
+      await eBuilder.createAttribute(entity, new EnumAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}},
         values: [{value: "Z"}, {value: "X"}, {value: "Y"}]
       }));
@@ -1897,10 +1896,10 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity1, new EntityAttribute({
+      await eBuilder.createAttribute(entity1, new EntityAttribute({
         name: "LINK1", lName: {ru: {name: "Ссылка "}}, required: true, entities: [entity2]
       }));
-      await eBuilder.create(entity2, new EntityAttribute({
+      await eBuilder.createAttribute(entity2, new EntityAttribute({
         name: "LINK", lName: {ru: {name: "Ссылка"}}, entities: [entity1]
       }));
     });
@@ -1924,7 +1923,7 @@ describe("ERBridge", () => {
   //       lName: {ru: {name: "entity name", fullName: "full entity name"}}
   //     }));
   //
-  //     await eBuilder.create(entity, new ParentAttribute({
+  //     await eBuilder.createAttribute(entity, new ParentAttribute({
   //       name: "PARENT", lName: {ru: {name: "Дерево"}}, entities: [entity]
   //     }));
   //   });
@@ -1952,7 +1951,7 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity1, new DetailAttribute({
+      await eBuilder.createAttribute(entity1, new DetailAttribute({
         name: "DETAILLINK", lName: {ru: {name: "Позиции 1"}}, required: true, entities: [entity2],
         adapter: {
           masterLinks: [{
@@ -1961,7 +1960,7 @@ describe("ERBridge", () => {
           }]
         }
       }));
-      await eBuilder.create(entity1, new DetailAttribute({
+      await eBuilder.createAttribute(entity1, new DetailAttribute({
         name: "TEST3", lName: {ru: {name: "Позиции 2"}}, required: true, entities: [entity3]
       }));
     });
@@ -1994,7 +1993,7 @@ describe("ERBridge", () => {
       }));
 
 
-      await eBuilder.create(entity1, new SetAttribute({
+      await eBuilder.createAttribute(entity1, new SetAttribute({
         name: "SET1", lName: {ru: {name: "Ссылка1"}}, required: true, entities: [entity2], presLen: 120,
         adapter: {crossRelation: "CROSS_TABLE_ADAPTER1", presentationField: "SET_FIELD_ADAPTER"}
       }));
@@ -2011,9 +2010,9 @@ describe("ERBridge", () => {
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_32BIT_INT, maxValue: MAX_32BIT_INT, defaultValue: -1000
       }));
-      await eBuilder.create(entity1, setAttr);
+      await eBuilder.createAttribute(entity1, setAttr);
 
-      await eBuilder.create(entity1, new SetAttribute({
+      await eBuilder.createAttribute(entity1, new SetAttribute({
         name: "SET3", lName: {ru: {name: "Ссылка3"}}, required: true, entities: [entity2],
         adapter: {crossRelation: "TABLE_7"} // generated
       }));
@@ -2038,24 +2037,24 @@ describe("ERBridge", () => {
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
-      await eBuilder.create(entity, new StringAttribute({
+      await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minLength: 5, maxLength: 30, defaultValue: "test default", autoTrim: true,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER1"}
       }));
-      await eBuilder.create(entity, new IntegerAttribute({
+      await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT, defaultValue: -100,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER2"}
       }));
-      await eBuilder.create(entity, new FloatAttribute({
+      await eBuilder.createAttribute(entity, new FloatAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123, defaultValue: 40,
         adapter: {relation: "TEST", field: "FIELD_ADAPTER3"}
       }));
 
-      await eBuilder.create(entity, [entity.attribute("FIELD1"), entity.attribute("FIELD2")]);
-      await eBuilder.create(entity, [entity.attribute("FIELD2"), entity.attribute("FIELD3")]);
+      await eBuilder.addUnique(entity, [entity.attribute("FIELD1"), entity.attribute("FIELD2")]);
+      await eBuilder.addUnique(entity, [entity.attribute("FIELD2"), entity.attribute("FIELD3")]);
     });
 
     const loadedERModel = await initERModel();
@@ -2072,7 +2071,7 @@ describe("ERBridge", () => {
         name: "TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
-      await eBuilder.create(entity1, new StringAttribute({
+      await eBuilder.createAttribute(entity1, new StringAttribute({
         name: "TEST_FIELD1", lName: {ru: {name: "Поле 1"}},
         adapter: {relation: "TEST1", field: "FIELD_ADAPTER1"}
       }));
@@ -2085,7 +2084,7 @@ describe("ERBridge", () => {
           relation: [...entity1.adapter.relation, {relationName: "TEST2"}]
         }
       }));
-      await eBuilder.create(entity2, new StringAttribute({
+      await eBuilder.createAttribute(entity2, new StringAttribute({
         name: "TEST_FIELD2", lName: {ru: {name: "Поле 2"}},
         adapter: {relation: "TEST2", field: "FIELD_ADAPTER2"}
       }));
@@ -2098,10 +2097,10 @@ describe("ERBridge", () => {
           relation: [...entity1.adapter.relation, {relationName: "TEST3"}]
         }
       }));
-      await eBuilder.create(entity3, new StringAttribute({
+      await eBuilder.createAttribute(entity3, new StringAttribute({
         name: "TEST_FIELD3", lName: {ru: {name: "Поле 3"}}
       }));
-      await eBuilder.create(entity3, new StringAttribute({
+      await eBuilder.createAttribute(entity3, new StringAttribute({
         name: "TEST_FIELD1",
         lName: {ru: {name: "Переопределенное Поле 1"}},
         required: true
@@ -2130,16 +2129,16 @@ describe("ERBridge", () => {
       const userEntity = await erBuilder.create(erModel, new Entity({
         name: "APP_USER", lName: {ru: {name: "Пользователь"}}
       }));
-      await eBuilder.create(userEntity, new StringAttribute({
+      await eBuilder.createAttribute(userEntity, new StringAttribute({
         name: "LOGIN", lName: {ru: {name: "Логин"}}, required: true, minLength: 1, maxLength: 32
       }));
-      await eBuilder.create(userEntity, new BlobAttribute({
+      await eBuilder.createAttribute(userEntity, new BlobAttribute({
         name: "PASSWORD_HASH", lName: {ru: {name: "Хешированный пароль"}}, required: true
       }));
-      await eBuilder.create(userEntity, new BlobAttribute({
+      await eBuilder.createAttribute(userEntity, new BlobAttribute({
         name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
       }));
-      await eBuilder.create(userEntity, new BooleanAttribute({
+      await eBuilder.createAttribute(userEntity, new BooleanAttribute({
         name: "IS_ADMIN", lName: {ru: {name: "Флаг администратора"}}
       }));
 
@@ -2150,9 +2149,9 @@ describe("ERBridge", () => {
       const appUid = new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор приложения"}}, required: true, minLength: 1, maxLength: 36
       });
-      await eBuilder.create(appEntity, appUid);
-      await eBuilder.create(appEntity, [appUid]);
-      await eBuilder.create(appEntity, new TimeStampAttribute({
+      await eBuilder.createAttribute(appEntity, appUid);
+      await eBuilder.addUnique(appEntity, [appUid]);
+      await eBuilder.createAttribute(appEntity, new TimeStampAttribute({
         name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
         minValue: Constants.MIN_TIMESTAMP, maxValue: Constants.MAX_TIMESTAMP, defaultValue: "CURRENT_TIMESTAMP"
       }));
@@ -2164,7 +2163,7 @@ describe("ERBridge", () => {
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
       }));
 
-      await eBuilder.create(userEntity, appSet);
+      await eBuilder.createAttribute(userEntity, appSet);
 
       // APPLICATION_BACKUPS
       const backupEntity = await erBuilder.create(erModel, new Entity({
@@ -2173,17 +2172,17 @@ describe("ERBridge", () => {
       const backupUid = new StringAttribute({
         name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
       });
-      await eBuilder.create(backupEntity, backupUid);
-      await eBuilder.create(backupEntity, [backupUid]);
+      await eBuilder.createAttribute(backupEntity, backupUid);
+      await eBuilder.addUnique(backupEntity, [backupUid]);
 
-      await eBuilder.create(backupEntity, new EntityAttribute({
+      await eBuilder.createAttribute(backupEntity, new EntityAttribute({
         name: "APP", lName: {ru: {name: "Приложение"}}, required: true, entities: [appEntity]
       }));
-      await eBuilder.create(backupEntity, new TimeStampAttribute({
+      await eBuilder.createAttribute(backupEntity, new TimeStampAttribute({
         name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
         minValue: Constants.MIN_TIMESTAMP, maxValue: Constants.MAX_TIMESTAMP, defaultValue: "CURRENT_TIMESTAMP"
       }));
-      await eBuilder.create(backupEntity, new StringAttribute({
+      await eBuilder.createAttribute(backupEntity, new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
       }));
     });
