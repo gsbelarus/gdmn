@@ -7,7 +7,7 @@ interface IGdmnState {
 }
 
 const initialState: IGdmnState = {
-  erModel: new ERModel()
+  erModel: new ERModel(),
 };
 
 function reducer(state: IGdmnState = initialState, action: TGdmnActions) {

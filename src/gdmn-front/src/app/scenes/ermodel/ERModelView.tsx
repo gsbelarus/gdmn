@@ -1,6 +1,6 @@
 import React from 'react';
 import { DefaultButton } from 'office-ui-fabric-react';
-import { View } from '../../components/View';
+import { View } from '../components/View';
 import { ERModel } from 'gdmn-orm';
 import { GDMNGrid } from 'gdmn-grid';
 import { List } from 'immutable';
@@ -8,54 +8,43 @@ import { RecordSet, TFieldType } from 'gdmn-recordset';
 
 export interface IERModelViewProps {
   erModel?: ERModel;
+  entities?: RecordSet;
+  fillEntities: (erModel: ERModel) => void;
 };
 
 export interface IERModelViewState {
-  entities?: RecordSet;
-  attributes?: RecordSet;
 };
 
 export class ERModelView extends View<IERModelViewProps, {}> {
   public state: IERModelViewState = { };
 
-  constructor(props: IERModelViewProps) {
-    super(props);
+  private fillRecordSets() {
+    const { erModel, entities, fillEntities } = this.props;
 
-    const { erModel } = this.props;
+    if (!erModel) {
+      return;
+    }
 
-    if (erModel) {
-      this.state.entities = RecordSet.createWithData(
-        'entities',
-        [
-          {
-            fieldName: 'name',
-            dataType: TFieldType.String,
-            caption: 'Entity name'
-          },
-          {
-            fieldName: 'description',
-            dataType: TFieldType.String,
-            caption: 'Description'
-          },
-        ],
-        List(Object.entries(erModel.entities).map( ([name, ent]) => ({
-          name,
-          description: ent.lName.ru
-            ? ent.lName.ru.name
-            : name
-        })))
-      );
+    if (!entities) {
+      fillEntities(erModel);
     }
   }
 
+  public componentDidMount() {
+    this.fillRecordSets();
+  }
+
+  public componentDidUpdate() {
+    this.fillRecordSets();
+  }
+
   public render() {
-    const { erModel } = this.props;
-    const { entities } = this.state;
+    const { erModel, entities } = this.props;
 
     return this.renderWide(
       <>
-        {entities && `Loaded: ${entities.size}`}
-        {erModel && `Loaded: ${Object.entries(erModel.entities).length}`}
+        {entities && `RecordSet: ${entities.size}`}
+        {erModel && `ERModel: ${Object.entries(erModel.entities).length}`}
         <DefaultButton text="LOAD ER MODEL" />
       </>
     );

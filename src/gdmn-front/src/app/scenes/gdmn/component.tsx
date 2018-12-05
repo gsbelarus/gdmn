@@ -15,7 +15,8 @@ import styles from './styles.css';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '../auth/actions';
 import { TGdmnActions } from './actions';
-import { ERModelView } from './components/ERModelView';
+import { ERModelView } from '../ermodel/ERModelView';
+import { ERModelViewContainer } from '../ermodel/ERModelViewContainer';
 
 type TGdmnViewStateProps = any;
 type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
@@ -83,7 +84,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               />
               <Route
                 path={`${match.path}/er-model`}
-                component={() => <ERModelView erModel={erModel} />}
+                component={() => <ERModelViewContainer />}
               />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

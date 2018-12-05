@@ -5,18 +5,21 @@ import { IAuthState, getReducer as getAuthReducer } from '@src/app/scenes/auth/r
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
 import { IGdmnState, reducer as gdmnReducer } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
+import { RecordSetReducerState, recordSetReducer } from 'gdmn-recordset';
 
 interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: IGdmnState;
+  readonly recordSet: RecordSetReducerState;
 }
 
 const getReducer = () => {
   const reducer = combineReducers<IState>({
     rootState: rootReducer,
     gdmnState: gdmnReducer,
-    authState: getAuthReducer()
+    authState: getAuthReducer(),
+    recordSet: recordSetReducer
   });
 
   // reset state to initial
