@@ -121,7 +121,7 @@ describe("ERBridge", () => {
       }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-        adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+        adapter: {crossRelation: "APP_USER_APPLICATIONS", crossPk: ["KEY1", "KEY2"]}
       });
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
@@ -597,7 +597,7 @@ describe("ERBridge", () => {
       }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-        adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+        adapter: {crossRelation: "APP_USER_APPLICATIONS", crossPk: ["KEY1", "KEY2"]}
       });
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
@@ -935,7 +935,7 @@ describe("ERBridge", () => {
       }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-        adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+        adapter: {crossRelation: "APP_USER_APPLICATIONS", crossPk: ["KEY1", "KEY2"]}
       });
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
@@ -1282,7 +1282,7 @@ describe("ERBridge", () => {
       }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-        adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+        adapter: {crossRelation: "APP_USER_APPLICATIONS", crossPk: ["KEY1", "KEY2"]}
       });
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
@@ -1995,11 +1995,15 @@ describe("ERBridge", () => {
 
       await eBuilder.createAttribute(entity1, new SetAttribute({
         name: "SET1", lName: {ru: {name: "Ссылка1"}}, required: true, entities: [entity2], presLen: 120,
-        adapter: {crossRelation: "CROSS_TABLE_ADAPTER1", presentationField: "SET_FIELD_ADAPTER"}
+        adapter: {
+          crossRelation: "CROSS_TABLE_ADAPTER1",
+          crossPk: ["KEY1", "KEY2"],
+          presentationField: "SET_FIELD_ADAPTER"
+        }
       }));
       const setAttr = new SetAttribute({
         name: "SET2", lName: {ru: {name: "Ссылка2"}}, required: true, entities: [entity2], presLen: 120,
-        adapter: {crossRelation: "CROSS_TABLE_ADAPTER2"}
+        adapter: {crossRelation: "CROSS_TABLE_ADAPTER2", crossPk: ["KEY1", "KEY2"]}
       });
       setAttr.add(new IntegerAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1", fullName: "FULLNAME"}}, required: true,
@@ -2014,7 +2018,7 @@ describe("ERBridge", () => {
 
       await eBuilder.createAttribute(entity1, new SetAttribute({
         name: "SET3", lName: {ru: {name: "Ссылка3"}}, required: true, entities: [entity2],
-        adapter: {crossRelation: "TABLE_7"} // generated
+        adapter: {crossRelation: "TABLE_7", crossPk: ["KEY1", "KEY2"]} // generated
       }));
     });
 
@@ -2157,7 +2161,7 @@ describe("ERBridge", () => {
       }));
       const appSet = new SetAttribute({
         name: "APPLICATIONS", lName: {ru: {name: "Приложения"}}, entities: [appEntity],
-        adapter: {crossRelation: "APP_USER_APPLICATIONS"}
+        adapter: {crossRelation: "APP_USER_APPLICATIONS", crossPk: ["KEY1", "KEY2"]}
       });
       appSet.add(new StringAttribute({
         name: "ALIAS", lName: {ru: {name: "Название приложения"}}, required: true, minLength: 1, maxLength: 120
