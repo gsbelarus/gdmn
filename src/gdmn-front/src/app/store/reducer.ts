@@ -6,12 +6,14 @@ import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer
 import { IGdmnState, reducer as gdmnReducer } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { RecordSetReducerState, recordSetReducer } from 'gdmn-recordset';
+import { GridReducerState, gridReducer } from 'gdmn-grid';
 
 interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: IGdmnState;
   readonly recordSet: RecordSetReducerState;
+  readonly grid: GridReducerState;
 }
 
 const getReducer = () => {
@@ -19,7 +21,8 @@ const getReducer = () => {
     rootState: rootReducer,
     gdmnState: gdmnReducer,
     authState: getAuthReducer(),
-    recordSet: recordSetReducer
+    recordSet: recordSetReducer,
+    grid: gridReducer
   });
 
   // reset state to initial

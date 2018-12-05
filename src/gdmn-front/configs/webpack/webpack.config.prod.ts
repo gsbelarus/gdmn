@@ -1,3 +1,4 @@
+import path from 'path';
 import { Configuration, EnvironmentPlugin } from 'webpack';
 import merge from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -39,6 +40,12 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
       {
         test: /\.css$/,
         include: STYLES_PATH,
+        use: [MiniCssExtractPlugin.loader, cssLoader]
+      },
+      // static styles from our own packages of monorepository
+      {
+        test: /\.css$/,
+        include: path.resolve(__dirname, '../../../../packages'),
         use: [MiniCssExtractPlugin.loader, cssLoader]
       },
       {

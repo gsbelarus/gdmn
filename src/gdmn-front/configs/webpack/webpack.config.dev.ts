@@ -78,6 +78,12 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
         include: STYLES_PATH,
         use: ['style-loader', cssLoader]
       },
+      // static styles from our own packages of monorepository
+      {
+        test: /\.css$/,
+        include: path.resolve(__dirname, '../../../../packages'),
+        use: ['style-loader', cssLoader]
+      },
       // css modules
       {
         test: /\.css$/,

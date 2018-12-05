@@ -42,8 +42,6 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
         /* packages */
         '@gdmn/client-core': getRootRelativePath('packages/gdmn-client-core/src'),
         '@gdmn/server-api': getRootRelativePath('packages/gdmn-server-api/src'),
-        '@gdmn/data-grid-core': getRootRelativePath('packages/data-grid-core/src'),
-        '@gdmn/data-grid-mui': getRootRelativePath('packages/data-grid-mui/src')
       },
       extensions: ['.tsx', '.ts', '.js', '.jsx', '.json']
     }
