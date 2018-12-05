@@ -1,3 +1,4 @@
+import {SetAttribute} from "..";
 import {Attribute} from "../model/Attribute";
 import {Entity} from "../model/Entity";
 import {ERModel} from "../model/ERModel";
@@ -24,10 +25,14 @@ export class EntityQueryField {
   public static inspectorToObject(erModel: ERModel,
                                   entity: Entity,
                                   inspector: IEntityQueryFieldInspector): EntityQueryField {
+    const attribute = entity.attribute(inspector.attribute);
     return new EntityQueryField(
-      entity.attribute(inspector.attribute),
+      attribute,
       inspector.link && EntityLink.inspectorToObject(erModel, inspector.link),
-      inspector.setAttributes && inspector.setAttributes.map((attr) => entity.attribute(attr))
+      inspector.setAttributes && inspector.setAttributes.map((attrName) => {
+        const setAttr = attribute as SetAttribute;
+        return setAttr.attribute(attrName);
+      })
     );
   }
 
