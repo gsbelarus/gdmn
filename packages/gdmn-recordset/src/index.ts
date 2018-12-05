@@ -4,3 +4,4 @@ export * from './recordSetReducer';
 export * from './types';
 export * from './aggregators';
 export * from './utils';
+export * from './format';
