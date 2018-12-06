@@ -6,6 +6,12 @@
   font-size: 11px;
 }
 
+.ERModelSearch {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 8px;
+}
+
 .Entity {
   background-color: khaki;
   border: 1px solid darkgoldenrod;
@@ -25,6 +31,10 @@
   align-items: flex-start;
   padding-left: 4px;
   padding-right: 4px;
+}
+
+.Attr:last-child {
+  border-bottom: none;
 }
 
 .AttrName {

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./ERModelBox.css";
-import { Spinner, SpinnerSize } from "office-ui-fabric-react";
+import { Spinner, SpinnerSize, TextField } from "office-ui-fabric-react";
 import { ERModel } from "gdmn-orm";
 
 export interface IERModelBoxProps {
@@ -8,7 +8,15 @@ export interface IERModelBoxProps {
   erModel?: ERModel;
 };
 
+export interface IERModelBoxState {
+  text: string;
+};
+
 export class ERModelBox extends Component<IERModelBoxProps, {}> {
+
+  state: IERModelBoxState = {
+    text: ''
+  }
 
   render () {
     const { loading, erModel } = this.props;
@@ -19,14 +27,31 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
       );
     }
 
+    const { text } = this.state;
+
     return(
       <div>
-        <div>
-          Search panel...
+        <div className="ERModelSearch">
+          <TextField
+            label="Word"
+            style={{maxWidth: '200px'}}
+            value={text}
+            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
+              this.setState({ text: e.target.value });
+            }
+          }
+          />
         </div>
         <div className="ERModel">
           {
-            erModel && Object.entries(erModel.entities).slice(0, 100).map( ([name, entity]) =>
+            erModel && Object.entries(erModel.entities).filter(
+              ([name, entity]) => {
+                const desc = entity.lName.ru ? entity.lName.ru.name: name;
+                return !text
+                  || name.toUpperCase().indexOf(text.toUpperCase()) > -1
+                  || desc.toUpperCase().indexOf(text.toUpperCase()) > -1;
+              }
+            ).slice(0, 100).map( ([name, entity]) =>
               <div key={name} className="Entity">
                 <div>{name}</div>
                 <div>{entity.lName.ru ? entity.lName.ru.name: name}</div>
