@@ -28,7 +28,9 @@ import {
   RusPronounLexemes,
   RusAdverbLexemes,
   RusPrepositionLexemes,
-  RusAdverb
+  RusAdverb,
+  getSynonyms,
+  SemContext
 } from 'gdmn-nlp';
 import { TextField, DefaultButton } from 'office-ui-fabric-react';
 import './MorphBox.css';
@@ -122,6 +124,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
                   <div className="MorphOutputDisplayText">{w.getDisplayText().split(';').map( (s, i) => <div key={i}>{s}</div>)}</div>
                   <div className="MorphOutputSignature">{w.getSignature()}</div>
                 </div>
+                {this.getSynonymWords(w)}
                 {this.formatWordForms(w, onSetText)}
               </span>
             ))}
@@ -131,6 +134,17 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
         }
       </div>
     );
+  }
+
+  private getSynonymWords(w: AnyWord): JSX.Element {
+    const { onSetText } = this.props;
+    return w instanceof RusVerb 
+      ? <div className="SynonymWords">
+          {getSynonyms(w, SemContext.QueryDB).map( w => w.getWordForm({ infn: true })).filter( word => word.word !== w.word ).map( 
+            s => <span onClick = { () => onSetText(s.word) }>{s.word}</span>
+          )}
+        </div>
+      : undefined;  
   }
 
   private formatWordForms(

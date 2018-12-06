@@ -25,6 +25,11 @@ const rusVerbSynonyms: IRusVerbSynonyms[] = [
   }
 ];
 
+export function getSynonyms(word: RusVerb, semContext: SemContext) : RusVerbLexeme[] | undefined {
+  const synonyms = rusVerbSynonyms.find( s => s.semContext === semContext );
+  return synonyms ? synonyms.chains.find( r => r.includes(word.lexeme) ) : undefined;
+}
+
 export function hasMeaning(semContext: SemContext, meaning: string, word: RusVerb): boolean {
   const meaningLexeme = v(meaning);
 
