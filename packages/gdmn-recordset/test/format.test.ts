@@ -53,8 +53,9 @@ describe('format', () => {
   });
 
   it('format date', () => {
-    const d = new Date(2012, 5);
-    expect(formatDate(d, { locales: 'en-US', options: {year: 'numeric', month: 'long', day: 'numeric'} })).toEqual('June 1, 2012');
+    const d = new Date(2012, 5, 8);
+    expect(formatDate(d, 'dd.mm.yyyy')).toEqual('08.06.2012');
+    expect(formatDate(d, 'dd.mm.yy')).toEqual('08.06.12');
   });
 
 });

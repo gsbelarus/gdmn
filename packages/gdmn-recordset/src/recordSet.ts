@@ -1,4 +1,4 @@
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType, TFieldType } from "./types";
 import { IFilter } from "./filter";
 import { List } from "immutable";
 import equal from "fast-deep-equal";
@@ -274,6 +274,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public getString(rowIdx: number, fieldName: string, defaultValue?: string): string {
+    const fd = this.fieldDefs.find( fd => fd.fieldName === fieldName );
+    if (fd) {
+      switch (fd.dataType) {
+        case TFieldType.Float, TFieldType.Integer, TFieldType.Currency:
+          return getAsString(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue, fd.numberFormat);
+        case TFieldType.Date:
+          return getAsString(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue, undefined, fd.dateFormat);
+      }
+    }
     return getAsString(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
   }
 

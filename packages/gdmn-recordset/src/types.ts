@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { INumberFormat } from "./format";
+import { INumberFormat, IDateFormat } from "./format";
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
@@ -43,7 +43,8 @@ export interface IFieldDef extends INamedField {
   aggregator?: IFieldAggregator<any>;
   olapValue?: TDataType[];
   alignment?: TAlignment;
-  format?: INumberFormat;
+  numberFormat?: INumberFormat;
+  dateFormat?: IDateFormat;
 };
 
 export type FieldDefs = IFieldDef[];
