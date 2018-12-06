@@ -9,7 +9,22 @@
 .ERModelSearch {
   display: flex;
   flex-direction: row;
+  align-items: flex-end;
   padding-bottom: 8px;
+}
+
+.ERModelSearch > * {
+  margin-right: 8px;
+}
+
+.ViewMode > div {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.ViewMode label {
+  margin: 0;
 }
 
 .Entity {
@@ -21,6 +36,7 @@
   overflow: hidden;
   padding-top: 4px;
   padding-bottom: 4px;
+  min-width: 240px;
 }
 
 .Attr {
