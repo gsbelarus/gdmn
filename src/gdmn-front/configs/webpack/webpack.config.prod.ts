@@ -24,14 +24,6 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
         test: /\.(ts|tsx)$/,
         include: [getRootRelativePath('src'), getRootRelativePath('packages')],
         use: [
-          // {
-          //   loader: 'babel-loader',
-          //   options: {
-          //     babelrc: false,
-          //     // cacheDirectory: true,
-          //     // plugins: ['@babel/plugin-syntax-dynamic-import']
-          //   }
-          // },
           {
             loader: 'ts-loader'
           }
@@ -42,7 +34,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
         include: STYLES_PATH,
         use: [MiniCssExtractPlugin.loader, cssLoader]
       },
-      // static styles from our own packages of monorepository
+      /* static styles from our own packages of monorepository*/
       {
         test: /\.css$/,
         include: path.resolve(__dirname, '../../../../packages'),
@@ -57,16 +49,15 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     ]
   },
   output: {
-    publicPath: '/' //'/gs/ng/' // TODO test
+    publicPath: '/' //'/gs/ng/' // todo: test
   },
   optimization: {
     // minimize: true,
     minimizer: [
       new TerserPlugin({
-        // todo
         cache: true,
         parallel: true
-        //   // sourceMap: true
+        // sourceMap: true
       })
       // new OptimizeCSSAssetsPlugin({})
     ]
@@ -82,13 +73,13 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     })
   ],
   stats: {
-    // 'minimal'
+    /* 'minimal'*/
     all: false,
     modules: true,
     maxModules: 0,
     errors: true,
     warnings: true,
-    // additional options
+    /* additional options*/
     entrypoints: true,
     colors: true,
     moduleTrace: true,

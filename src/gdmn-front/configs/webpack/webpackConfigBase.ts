@@ -1,17 +1,17 @@
 import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+// import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 // FIXME typings
-const config = require('../config.json');
 const pkg = require('../../package.json');
+const config = require('../config.json');
 import { getRootRelativePath } from './utils';
-// import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 function getWebpackConfigBase(outputFilename: string, outputChunkFilename: string): Configuration {
   return {
     entry: {
       app: [
-        // TODO 'react-hot-loader/patch',
+        // todo: 'react-hot-loader/patch',
         getRootRelativePath('src/app/index.tsx')
       ]
     },
@@ -28,7 +28,7 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
         minify: { collapseWhitespace: true, removeComments: true },
         template: getRootRelativePath('src/index.ejs'),
         title: 'GDMN',
-        // template params
+        /* template params */
         appMountNodeId: config.webpack.appMountNodeId,
         description: pkg.description,
         mobile: true
