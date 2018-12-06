@@ -955,7 +955,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             let cellClass = fld.alignment === 'RIGHT' ? styles.DataCellRight : fld.alignment === 'CENTER' ? styles.DataCellCenter : 'styles.DataCellLeft';
             return (
             rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
-            <span key={fldid}>
+            <span key={fldid} className={cellClass}>
               {rs.splitMatched(rowIndex, fld.fieldName).map(
                 (s, idx) => (s.matchFilter || s.foundIdx ?
                   <span
@@ -970,7 +970,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               {groupRecCount}
             </span>
             : groupRecCount ?
-            <span key={fldid}>
+            <span key={fldid} className={cellClass}>
               {rs.getString(rowIndex, fld.fieldName, '')}
               {groupRecCount}
             </span>
