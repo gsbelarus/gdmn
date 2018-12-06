@@ -1,6 +1,4 @@
-import {
-  BaseComponent,
-  IContextualMenuItem} from 'office-ui-fabric-react';
+import { BaseComponent, IContextualMenuItem } from 'office-ui-fabric-react';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
@@ -29,9 +27,7 @@ export class ContextualMenuItemWithLink extends BaseComponent<IContextualMenuIte
         </NavLink>
       );
     } else {
-      return (
-         <DefaultRender {...buttonProps} onRenderText={onRenderText} />
-      );
+      return <DefaultRender {...buttonProps} onRenderText={onRenderText} />;
     }
   }
 }

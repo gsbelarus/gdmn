@@ -10,13 +10,12 @@ export interface IERModelViewProps {
   erModel?: ERModel;
   entities?: RecordSet;
   fillEntities: (erModel: ERModel) => void;
-};
+}
 
-export interface IERModelViewState {
-};
+export interface IERModelViewState {}
 
 export class ERModelView extends View<IERModelViewProps, {}> {
-  public state: IERModelViewState = { };
+  public state: IERModelViewState = {};
 
   private fillRecordSets() {
     const { erModel, entities, fillEntities } = this.props;
@@ -49,7 +48,7 @@ export class ERModelView extends View<IERModelViewProps, {}> {
       </>
     );
   }
-};
+}
 
 /*
 

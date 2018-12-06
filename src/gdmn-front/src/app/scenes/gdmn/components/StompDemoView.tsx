@@ -6,12 +6,12 @@ import { View } from '../../components/View';
 interface IStompDemoViewState {
   pingDelay: number;
   pingSteps: number;
-};
+}
 
 interface IStompDemoViewProps {
   log: string;
   apiPing: (cmd: TPingTaskCmd) => void;
-};
+}
 
 class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   public state: IStompDemoViewState = {
@@ -20,7 +20,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   };
 
   public getViewCaption(): string {
-    return 'Stomp protocol'
+    return 'Stomp protocol';
   }
 
   public render() {
@@ -60,6 +60,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       pingSteps: event.target.value
     });
   };
-};
+}
 
 export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };
