@@ -41,7 +41,7 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
         'config.json': getRootRelativePath('configs/config.json'),
         /* packages */
         '@gdmn/client-core': getRootRelativePath('packages/gdmn-client-core/src'),
-        '@gdmn/server-api': getRootRelativePath('packages/gdmn-server-api/src'),
+        '@gdmn/server-api': getRootRelativePath('packages/gdmn-server-api/src')
       },
       extensions: ['.tsx', '.ts', '.js', '.jsx', '.json']
     }

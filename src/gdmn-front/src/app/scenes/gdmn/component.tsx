@@ -5,12 +5,7 @@ import { InjectedProps } from 'react-router-breadcrumbs-hoc';
 import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
-import {
-  Icon,
-  IconButton,
-  IContextualMenuItemProps,
-  ContextualMenuItem
-} from 'office-ui-fabric-react';
+import { Icon, IconButton, IContextualMenuItemProps, ContextualMenuItem } from 'office-ui-fabric-react';
 import styles from './styles.css';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '../auth/actions';
@@ -32,7 +27,9 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     return (
       <div className="App">
         <div className="Header">
-          <Link to="/"><Icon iconName="Home" className="RoundIcon" /></Link>
+          <Link to="/">
+            <Icon iconName="Home" className="RoundIcon" />
+          </Link>
           <Icon iconName="Chat" className="NoFrameIcon" />
           <div className="SearchBox">
             find something...
@@ -52,7 +49,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               <span className="NotificationsCount">4</span>
             </span>
             <IconButton
-              iconProps={{ iconName: 'Contact'}}
+              iconProps={{ iconName: 'Contact' }}
               styles={{ menuIcon: { display: 'none' } }}
               className="RoundIcon"
               menuProps={{
@@ -60,7 +57,13 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 gapSpace: 2,
                 isBeakVisible: true,
                 contextualMenuItemAs: (props: IContextualMenuItemProps) => {
-                  return props.item.link ? <Link to={props.item.link}><ContextualMenuItem {...props} /></Link> : <ContextualMenuItem {...props} />;
+                  return props.item.link ? (
+                    <Link to={props.item.link}>
+                      <ContextualMenuItem {...props} />
+                    </Link>
+                  ) : (
+                    <ContextualMenuItem {...props} />
+                  );
                 },
                 items: commandsToContextualMenuItems(
                   ['userProfile', '-', 'logout'],
@@ -82,10 +85,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 path={`${match.path}/web-stomp`}
                 component={() => <StompDemoView apiPing={this.props.apiPing} log={''} />}
               />
-              <Route
-                path={`${match.path}/er-model`}
-                component={() => <ERModelViewContainer />}
-              />
+              <Route path={`${match.path}/er-model`} component={() => <ERModelViewContainer />} />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
@@ -93,7 +93,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
       </div>
     );
   }
-};
+}
 
 export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
 

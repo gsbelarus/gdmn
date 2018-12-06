@@ -12,20 +12,20 @@ import {
 import { Observable, Subject, Subscriber, Subscription } from 'rxjs';
 import { filter, first, share } from 'rxjs/operators';
 
+import { generateGuid } from '../../../utils/helpers';
 import {
   TDisconnectFrameHeaders,
   TSendFrameHeaders,
   TStompFrameHeaders,
   TSubcribeFrameHeaders
 } from '../protocols/stomp-protocol-v1.2';
+import { IPubSubMessage } from '../PubSubClient';
 import {
   BasePubSubBridge,
   IPubSubMsgPublishState,
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus
 } from './BasePubSubBridge';
-import { IPubSubMessage } from '../PubSubClient';
-import { generateGuid } from '../../../utils/helpers';
 
 interface IStompServiceConfig {
   /**
@@ -314,34 +314,12 @@ class WebStomp extends BasePubSubBridge<
 
 export { WebStomp, IStompServiceConfig };
 
-/*
-
-  public unhandledMessageFrameObservable: Subject<Message> = new Subject();
-  public unhandledReceiptFrameObservable: Subject<Frame> = new Subject();
-
-  public forceDisconnect() {
-    this.client!.forceDisconnect();
-  }
-  public watchForReceipt(receiptId: string, callback: frameCallbackType) {
-    this.client!.watchForReceipt(receiptId, callback);
-  }
-  public unsubscribe(id: string, headers?: StompHeaders) {
-    this.client!.unsubscribe(id, headers);
-  }
-  public begin(transactionId?: string): Transaction {
-    return this.client!.begin(transactionId);
-  }
-  public commit(transactionId: string) {
-    this.client!.commit(transactionId);
-  }
-  public abort(transactionId: string) {
-    this.client!.abort(transactionId);
-  }
-  public ack(messageId: string, subscriptionId: string, headers?: StompHeaders) {
-    this.client!.ack(messageId, subscriptionId, headers);
-  }
-  public nack(messageId: string, subscriptionId: string, headers?: StompHeaders) {
-    this.client!.nack(messageId, subscriptionId, headers)
-  }
-
-*/
+// public begin(transactionId?: string): Transaction {
+//   return this.client!.begin(transactionId);
+// }
+// public commit(transactionId: string) {
+//   this.client!.commit(transactionId);
+// }
+// public abort(transactionId: string) {
+//   this.client!.abort(transactionId);
+// }

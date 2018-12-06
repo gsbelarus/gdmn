@@ -1,4 +1,4 @@
-import { ERModel, Entity, StringAttribute, EntityAttribute } from "gdmn-orm";
+import { ERModel, Entity, StringAttribute, EntityAttribute } from 'gdmn-orm';
 
 export const uiModel = new ERModel();
 
@@ -41,17 +41,13 @@ const command = new Entity({
 const commandForm = new EntityAttribute({
   name: 'form',
   lName: { en: { name: 'Command form' } },
-  entities: [
-    form
-  ]
+  entities: [form]
 });
 
 const commandCommandGroup = new EntityAttribute({
   name: 'group',
   lName: { en: { name: 'Command group' } },
-  entities: [
-    commandGroup
-  ]
+  entities: [commandGroup]
 });
 
 const commandCommand = new StringAttribute({

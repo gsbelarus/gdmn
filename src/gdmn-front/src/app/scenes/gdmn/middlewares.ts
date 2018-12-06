@@ -96,12 +96,14 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
       }
 
       case getType(gdmnActions.apiGetSchema): {
-        apiService.getSchema({
-          payload: {
-            action: TTaskActionNames.GET_SCHEMA,
-            payload: undefined
-          }
-        }).subscribe(value => {
+        apiService
+          .getSchema({
+            payload: {
+              action: TTaskActionNames.GET_SCHEMA,
+              payload: undefined
+            }
+          })
+          .subscribe(value => {
             if (value.error) {
               dispatch(rootActions.onError(new Error(value.error.message)));
             } else if (!!value.payload.result) {
@@ -114,7 +116,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
       }
 
       case getType(gdmnActions.buildCommandList): {
-
         break;
       }
 

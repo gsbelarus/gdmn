@@ -64,9 +64,10 @@ type TAbortFrameHeaders = TBaseFrameHeader<
   TAbortFrameHeaderKeyStandard
 >;
 
-// PROTOCOL V1.2
-
-// -- HEADERS
+/**
+ * STOMP PROTOCOL V1.2
+ * headers
+ */
 
 type TFrameHeaderKey = string;
 type TFrameHeaderValue = string; // | undefined;
@@ -75,10 +76,10 @@ type TFrameHeaderValue = string; // | undefined;
 const enum TStandardHeaderKey {
   CONTENT_LENGTH = 'content-length',
   CONTENT_TYPE = 'content-type',
-  RECEIPT = 'receipt' // any client frames != connect
+  RECEIPT = 'receipt'
 }
 
-// stomp
+/* stomp */
 const enum TStompFrameHeaderKey {
   ACCEPT_VERSION = 'accept_version',
   HOST = 'host',
@@ -89,10 +90,10 @@ const enum TStompFrameHeaderKey {
 type TStompFrameHeaderKeyRequired = TStompFrameHeaderKey.ACCEPT_VERSION | TStompFrameHeaderKey.HOST;
 type TStompFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
-// disconnect
+/* disconnect */
 type TDisconnectFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
-// send
+/* send */
 const enum TSendFrameHeaderKey {
   DESTINATION = 'destination',
   TRANSACTION = 'transaction'
@@ -100,7 +101,7 @@ const enum TSendFrameHeaderKey {
 type TSendFrameHeaderKeyRequired = TSendFrameHeaderKey.DESTINATION;
 type TSendFrameHeaderKeyStandard = TStandardHeaderKey;
 
-// ack
+/* ack */
 const enum TAckFrameHeaderKey {
   ID = 'id',
   TRANSACTION = 'transaction'
@@ -108,12 +109,12 @@ const enum TAckFrameHeaderKey {
 type TAckFrameHeaderKeyRequired = TAckFrameHeaderKey.ID;
 type TAckFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
-// nack
+/* nack */
 type TNackFrameHeaderKey = TAckFrameHeaderKey;
 type TNackFrameHeaderKeyRequired = TAckFrameHeaderKeyRequired;
 type TNackFrameHeaderKeyStandard = TAckFrameHeaderKeyStandard;
 
-// subscribe
+/* subscribe */
 const enum TSubcribeFrameHeaderKey {
   DESTINATION = 'destination',
   ID = 'id',
@@ -122,30 +123,28 @@ const enum TSubcribeFrameHeaderKey {
 type TSubcribeFrameHeaderKeyRequired = TSubcribeFrameHeaderKey.DESTINATION | TSubcribeFrameHeaderKey.ID;
 type TSubcribeFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
-// unsubscribe
+/* unsubscribe */
 const enum TUnsubcribeFrameHeaderKey {
   ID = 'id'
 }
 type TUnsubcribeFrameHeaderKeyRequired = TUnsubcribeFrameHeaderKey.ID;
 type TUnsubcribeFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
-// begin
+/* begin */
 const enum TBeginFrameHeaderKey {
   TRANSACTION = 'transaction'
 }
 type TBeginFrameHeaderKeyRequired = TBeginFrameHeaderKey.TRANSACTION;
 type TBeginFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
-// commit
+/* commit */
 type TCommitFrameHeaderKey = TBeginFrameHeaderKey;
 type TCommitFrameHeaderKeyRequired = TBeginFrameHeaderKeyRequired;
 type TCommitFrameHeaderKeyStandard = TBeginFrameHeaderKeyStandard;
 
-// abort
+/* abort */
 type TAbortFrameHeaderKey = TBeginFrameHeaderKey;
 type TAbortFrameHeaderKeyRequired = TBeginFrameHeaderKeyRequired;
 type TAbortFrameHeaderKeyStandard = TBeginFrameHeaderKeyStandard;
-
-// -- FRAMES
 
 export { TStompFrameHeaders, TDisconnectFrameHeaders, TSubcribeFrameHeaders, TSendFrameHeaders, TStandardHeaderKey };
