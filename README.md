@@ -40,4 +40,4 @@ All rights reserved.
 [travis-url]: https://travis-ci.org/gsbelarus/gdmn
 [gdmn-front-url]: /src/gdmn-front
 [gdmn-front-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-front-readme-url]: /src/gdmn-front/#readme
+[gdmn-front-readme-url]: /src/gdmn-front/README.md
