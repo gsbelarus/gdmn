@@ -223,18 +223,32 @@ class GdmnPubSubApi {
       this.taskActionResultSubscription!.unsubscribe();
     }
 
+
+    /**
+     *  Я подставил преобразование к any просто для того, чтобы код откомпилировался
+     *  под TS 3.2.2!
+     *
+     *  это обязательно надо исправить!
+     *
+     *  Вообще, я бы пересмотрел все типы здесь идет какая-то адская смесь в которой
+     *  путаются и компилятор и все окружающие.
+     */
+
+    // TODO
+
+
     this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK_PROGRESS
-    );
+    ) as any;
     this.taskStatusResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK_STATUS
-    );
+    ) as any;
     this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK,
       {
         ack: 'client-individual'
       }
-    );
+    ) as any;
 
     console.log('SUBSCRIBE');
 

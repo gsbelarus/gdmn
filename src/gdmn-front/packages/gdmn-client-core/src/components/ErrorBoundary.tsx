@@ -60,14 +60,15 @@ class ErrorBoundary extends React.Component<IErrorBoundaryProps, IErrorBoundaryS
   }
 
   public render(): JSX.Element {
-    const { children, renderComponent: Component } = this.props;
+    const { children, renderComponent } = this.props;
     const { error, info } = this.state;
 
-    return error && Component ? (
-      <Component error={error} stack={info ? info.componentStack : ''} />
-    ) : (
-      <Fragment>{children}</Fragment>
-    );
+    if (error && renderComponent) {
+      const Component = renderComponent as any;
+      return <Component error={error} stack={info ? info.componentStack : ''} />
+    }
+
+    return <Fragment>{children}</Fragment>;
   }
 }
 

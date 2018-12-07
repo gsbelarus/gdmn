@@ -21,7 +21,7 @@
     "yarn:reinstall": "yarn run yarn:clean && yarn"
   },
   "dependencies": {
-    "@stomp/stompjs": "5.0.1",
+    "@stomp/stompjs": "^5.0.1",
     "es6-error": "4.1.1",
     "gdmn-grid": "1.0.0",
     "gdmn-nlp": "1.0.0",
@@ -83,7 +83,7 @@
     "ts-loader": "5.3.1",
     "ts-node": "7.0.1",
     "tslint": "5.11.0",
-    "typescript": "3.1.6",
+    "typescript": "^3.2.2",
     "webpack": "^4.26.0",
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",

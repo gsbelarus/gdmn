@@ -50,7 +50,7 @@ async function start() {
 initializeIcons();
 
 function render(Root: ReactType) {
-  const HotRoot = hot(module)(Root);
+  const HotRoot = hot(module)(Root) as any;
   const rootComponent = <HotRoot store={store} persistor={persistor} routes={rootRoutes} />;
 
   ReactDOM.render(rootComponent, document.getElementById(domContainerNode));
