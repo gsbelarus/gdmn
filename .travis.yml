@@ -1,0 +1,25 @@
+# For more information about the configurations used
+# in this file, please see the Travis CI documentation.
+#
+# https://docs.travis-ci.com
+
+sudo: false
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9.2
+
+notifications:
+  email:
+    on_failure: always
+    on_success: never
+
+language: node_js
+
+node_js:
+  - '11'
+  - '10'
+
+script:
+  - lerna run ci:build --scope gdmn-front
