@@ -10,10 +10,7 @@ import { getRootRelativePath } from './utils';
 function getWebpackConfigBase(outputFilename: string, outputChunkFilename: string): Configuration {
   return {
     entry: {
-      app: [
-        // todo: 'react-hot-loader/patch',
-        getRootRelativePath('src/app/index.tsx')
-      ]
+      app: [getRootRelativePath('src/app/index.tsx')]
     },
     output: {
       path: getRootRelativePath(config.webpack.buildPath),

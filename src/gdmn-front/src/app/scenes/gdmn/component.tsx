@@ -98,12 +98,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
 export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
 
 /*
-Organizations - supervised_user_circle
-Account - alternate_email
-Profile - account_circle
-*/
-
-/*
           <Breadcrumb
             onRenderItem={(props, defaultRenderer) => {
               if (defaultRenderer && props && props.href) {

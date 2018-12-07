@@ -12,14 +12,13 @@ const devCompose =
 const devMiddlewares: Middleware[] = [createLogger()];
 
 function configureStore(rootReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {
-  const store = createStore(rootReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares)));
+  const store = createStore(rootReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares))); // fixme
 
-  // webpack HMR for reducers
-  if ((<any>module).hot) {
-    (<any>module).hot.accept('../reducer', () => {
-      store.replaceReducer(rootReducer);
-    });
-  }
+  /* webpack HMR for reducers */ // if ((<any>module).hot) {
+  //   (<any>module).hot.accept('../reducer', () => {
+  //     store.replaceReducer(rootReducer);
+  //   });
+  // }
 
   return store;
 }

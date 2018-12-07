@@ -52,7 +52,6 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     publicPath: '/' //'/gs/ng/' // todo: test
   },
   optimization: {
-    // minimize: true,
     minimizer: [
       new TerserPlugin({
         cache: true,
