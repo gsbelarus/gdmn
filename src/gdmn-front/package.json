@@ -10,6 +10,8 @@
     "watch": "tsc -w",
     "------------": "",
     "ci:compile": "yarn run clean && tsc -p ./tsconfig.json",
+    "ci:build": "cd ../../ && yarn run clean && cd ./src/gdmn-front && yarn run yarn:reinstall && yarn run pkg-links:build && yarn run build",
+    "ci:start": "cd ../../ && yarn run clean && cd ./src/gdmn-front && yarn run yarn:reinstall && yarn run pkg-links:build && yarn run start",
     "pkg-links:build": "lerna run rebuild --scope={gdmn-grid,gdmn-nlp,gdmn-nlp-agent,gdmn-orm,gdmn-recordset,gdmn-db,gdmn-er-bridge}",
     "pkg:build": "cross-env TS_NODE_PROJECT=configs/tsconfig.webpack.json webpack --progress --config configs/webpack/webpack.config.prod.ts",
     "pkg:deploy": "shx rm -rf ../gdmn-back/public && shx cp -r ./dist ../gdmn-back/public",
@@ -87,7 +89,7 @@
     "webpack": "^4.26.0",
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.0",
+    "webpack-dev-server": "3.1.10",
     "webpack-merge": "^4.1.4"
   },
   "private": true,

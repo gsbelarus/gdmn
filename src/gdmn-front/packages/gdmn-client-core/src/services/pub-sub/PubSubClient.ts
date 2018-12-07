@@ -35,7 +35,7 @@ class PubSubClient {
   public readonly subscribe: <TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
     meta?: IPubSubMessageMeta
-  ) => Observable<IPubSubMessage> | never;
+  ) => Observable<TMessage> | never; // fixme: type ts 3.2
 
   constructor(bridge: BasePubSubBridge) {
     this.bridge = bridge;
