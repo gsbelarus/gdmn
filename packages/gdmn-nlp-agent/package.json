@@ -10,7 +10,7 @@
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
-    "test": "yarn build && jest"
+    "test": "jest"
   },
   "repository": {
     "type": "git",

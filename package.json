@@ -19,7 +19,7 @@
     "rebuild:pkgs": "lerna run rebuild --scope={gdmn-db,gdmn-er-bridge,gdmn-grid,gdmn-nlp,gdmn-nlp-agent,gdmn-orm,gdmn-recordset}",
     "rebuild:src": "lerna run rebuild --scope={gdmn-back,gdmn-front,gdmn-grid-demo,gdmn-nlp-demo,gdmn-qb-demo}",
     "lint": "lerna run lint",
-    "test": "lerna run test",
+    "test": "lerna run test --parallel",
     "bootstrap": "lerna bootstrap",
     "watch": "yarn build && lerna run watch --parallel"
   },

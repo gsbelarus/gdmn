@@ -11,7 +11,7 @@
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
     "tslint": "tslint --project .",
-    "test": "yarn build && yarn tslint && jest"
+    "test": "jest"
   },
   "repository": {
     "type": "git",

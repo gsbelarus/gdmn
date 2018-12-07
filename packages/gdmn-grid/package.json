@@ -11,7 +11,7 @@
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
     "tslint": "tslint --project .",
-    "test": "yarn build && jest",
+    "test": "jest",
     "static": "shx mkdir -p ./dist/src && shx cp -r ./src/*.css ./dist/src"
   },
   "repository": {
