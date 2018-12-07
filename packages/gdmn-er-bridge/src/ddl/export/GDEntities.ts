@@ -130,7 +130,7 @@ export class GDEntities {
             {
               relationName: "GD_COMPANYCODE",
               pk: ["CONTACTKEY"],
-              weak: true,
+              weak: true
             }
           ]
         }
@@ -454,7 +454,7 @@ export class GDEntities {
       throw new Error(`Unknown doc type ${parent_ruid} of ${className}`);
     }
 
-    const headerAdapter = appendAdapter(parent.adapter, setHR);
+    const headerAdapter = appendAdapter(parent.adapter!, setHR);
     headerAdapter.relation[0].selector = {field: "DOCUMENTTYPEKEY", value: id};
     const header = this._createEntity({
       parent,
@@ -474,7 +474,7 @@ export class GDEntities {
         throw new Error(`Unknown doc type ${parent_ruid} of ${className}`);
       }
 
-      const lineAdapter = appendAdapter(lineParent.adapter, setLR);
+      const lineAdapter = appendAdapter(lineParent.adapter!, setLR);
       lineAdapter.relation[0].selector = {field: "DOCUMENTTYPEKEY", value: id};
       const line = this._createEntity({
         parent: lineParent,
@@ -514,7 +514,8 @@ export class GDEntities {
         ([, f]) => f.fields.join() === inherited.primaryKey!.fields.join()
           && this._dbStructure.relationByUqConstraint(f.constNameUq) === parentRelation[parentRelation.length - 1])) {
         const newParent = [...parentRelation, inherited];
-        const parentAdapter = parentEntity ? parentEntity.adapter
+        const parentAdapter = parentEntity
+          ? parentEntity.adapter!
           : relationNames2Adapter(parentRelation.map(p => p.name));
         this._recursInherited(newParent, this._createEntity({
           parent: parentEntity,
@@ -532,7 +533,12 @@ export class GDEntities {
   private _createEntity(input: IEntityInput): Entity {
     if (!input.isAbstract) {
       const found = Object.values(this._erModel.entities).find(
-        (entity) => !entity.isAbstract && sameAdapter(input.adapter, entity.adapter)
+        (entity) => {
+          if (!entity.adapter) {
+            console.log(entity);
+          }
+          return !entity.isAbstract && sameAdapter(input.adapter, entity.adapter!);
+        }
       );
 
       if (found) {
@@ -548,7 +554,6 @@ export class GDEntities {
 
     const atRelation = this._getATResult().atRelations[relation.relationName];
     const name = adjustName(input.name || atRelation.entityName || relation.relationName);
-    const fake = relationName2Adapter(name);
 
     const entity = new Entity({
       parent: input.parent,
@@ -556,7 +561,7 @@ export class GDEntities {
       lName: input.lName ? input.lName : (atRelation ? atRelation.lName : {}),
       isAbstract: !!input.isAbstract,
       semCategories: input.semCategories,
-      adapter: JSON.stringify(input.adapter) !== JSON.stringify(fake) ? input.adapter : undefined
+      adapter: input.adapter
     });
 
     if (!input.parent) {
@@ -564,7 +569,11 @@ export class GDEntities {
         new SequenceAttribute({
           name: Constants.DEFAULT_ID_NAME,
           lName: {ru: {name: "Идентификатор"}},
-          sequence: this._erModel.sequencies[Constants.GLOBAL_GENERATOR]
+          sequence: this._erModel.sequencies[Constants.GLOBAL_GENERATOR],
+          adapter: {
+            relation: entity.adapter!.relation[0].relationName,
+            field: Constants.DEFAULT_ID_NAME
+          }
         })
       );
     }

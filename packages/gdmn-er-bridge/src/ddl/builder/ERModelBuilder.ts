@@ -1,4 +1,12 @@
-import {Entity, EntityAttribute, ERModel, Sequence, SequenceAttribute} from "gdmn-orm";
+import {
+  appendAdapter,
+  Entity,
+  EntityAttribute,
+  ERModel,
+  relationName2Adapter,
+  Sequence,
+  SequenceAttribute
+} from "gdmn-orm";
 import {Constants} from "../Constants";
 import {DDLHelper, IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
@@ -32,7 +40,11 @@ export class ERModelBuilder extends Builder {
             name: Constants.DEFAULT_INHERITED_KEY_NAME,
             required: true,
             lName: {ru: {name: "Родитель"}},
-            entities: [entity.parent]
+            entities: [entity.parent],
+            adapter: {
+              relation: Builder._getOwnRelationName(entity),
+              field: Constants.DEFAULT_INHERITED_KEY_NAME
+            }
           }));
         }
 
@@ -109,6 +121,11 @@ export class ERModelBuilder extends Builder {
         await this.eBuilder.addUnique(entity, unique);
       }
 
+      if (!entity.adapter) {
+        entity.adapter = entity.parent
+          ? appendAdapter(entity.parent.adapter!, tableName)
+          : relationName2Adapter(tableName);
+      }
       return erModel.add(entity);
     } else {
       throw new Error("Unknown type of arg");

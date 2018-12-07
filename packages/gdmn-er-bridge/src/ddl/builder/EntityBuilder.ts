@@ -3,7 +3,9 @@ import {
   DetailAttribute,
   Entity,
   EntityAttribute,
-  ParentAttribute,
+  IAttributeAdapter,
+  IDetailAttributeAdapter,
+  ISetAttributeAdapter,
   ScalarAttribute,
   SequenceAttribute,
   SetAttribute
@@ -44,6 +46,13 @@ export class EntityBuilder extends Builder {
         await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName, seqName);
       }
 
+      if (!attribute.adapter) {
+        attribute.adapter = {
+          relation: tableName,
+          field: fieldName
+        } as IAttributeAdapter;
+      }
+
     } else if (attribute instanceof EntityAttribute) {
       switch (attribute.type) {
         case "Detail": {
@@ -76,36 +85,46 @@ export class EntityBuilder extends Builder {
             domainName: domainName,
             masterEntity: entity
           });
+
+          if (!attribute.adapter) {
+            attribute.adapter = {
+              masterLinks: [{
+                detailRelation: detailTableName,
+                link2masterField: detailLinkFieldName
+              }]
+            } as IDetailAttributeAdapter;
+          }
           break;
         }
         case "Parent": {
-          const pAttr = attribute as ParentAttribute;
-          const fieldName = Builder._getFieldName(pAttr);
-          const domainName = Prefix.domain(await this.nextDDLUnique());
-          await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
-          await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-          await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
-          /*
-          const lbField = pAttr.adapter ? pAttr.adapter.lbField : Constants.DEFAULT_LB_NAME;
-          const rbField = pAttr.adapter ? pAttr.adapter.rbField : Constants.DEFAULT_RB_NAME;
-          await this.ddlHelper.addColumns(tableName, [{name: lbField, domain: "DLB"}]);
-          await this.ddlHelper.addColumns(tableName, [{name: rbField, domain: "DRB"}]);
-          await this.ddlHelper.createIndex(tableName, "ASC", [lbField]);
-          await this.ddlHelper.createIndex(tableName, "DESC", [rbField]);
-          await this.ddlHelper.addTableCheck(tableName, [`${lbField} <= ${rbField}`]);
-          */
-          const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
-          await this.ddlHelper.addForeignKey(fkConstName, {
-            tableName,
-            fieldName
-          }, {
-            tableName: Builder._getOwnRelationName(pAttr.entities[0]),
-            fieldName: Builder._getFieldName(pAttr.entities[0].pk[0])
-          }, {
-            onUpdate: "CASCADE",
-            onDelete: "CASCADE"
-          });
-          break;
+          throw new Error("Unsupported yet");
+          // const pAttr = attribute as ParentAttribute;
+          // const fieldName = Builder._getFieldName(pAttr);
+          // const domainName = Prefix.domain(await this.nextDDLUnique());
+          // await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
+          // await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
+          // await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
+          // /*
+          // const lbField = pAttr.adapter ? pAttr.adapter.lbField : Constants.DEFAULT_LB_NAME;
+          // const rbField = pAttr.adapter ? pAttr.adapter.rbField : Constants.DEFAULT_RB_NAME;
+          // await this.ddlHelper.addColumns(tableName, [{name: lbField, domain: "DLB"}]);
+          // await this.ddlHelper.addColumns(tableName, [{name: rbField, domain: "DRB"}]);
+          // await this.ddlHelper.createIndex(tableName, "ASC", [lbField]);
+          // await this.ddlHelper.createIndex(tableName, "DESC", [rbField]);
+          // await this.ddlHelper.addTableCheck(tableName, [`${lbField} <= ${rbField}`]);
+          // */
+          // const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.addForeignKey(fkConstName, {
+          //   tableName,
+          //   fieldName
+          // }, {
+          //   tableName: Builder._getOwnRelationName(pAttr.entities[0]),
+          //   fieldName: Builder._getFieldName(pAttr.entities[0].pk[0])
+          // }, {
+          //   onUpdate: "CASCADE",
+          //   onDelete: "CASCADE"
+          // });
+          // break;
         }
         case "Entity": {
           const eAttr = attribute as EntityAttribute;
@@ -122,6 +141,13 @@ export class EntityBuilder extends Builder {
             tableName: Builder._getOwnRelationName(eAttr.entities[0]),
             fieldName: Builder._getFieldName(eAttr.entities[0].pk[0])
           });
+
+          if (!attribute.adapter) {
+            attribute.adapter = {
+              relation: tableName,
+              field: fieldName
+            };
+          }
           break;
         }
         case "Set": {
@@ -165,6 +191,12 @@ export class EntityBuilder extends Builder {
               name: fieldName,
               domain: domainName
             });
+            if (!crossAttr.adapter) {
+              crossAttr.adapter = {
+                relation: relationName,
+                field: fieldName
+              } as IAttributeAdapter;
+            }
           }
 
           await this.ddlHelper.addTable(relationName, fields);
@@ -217,6 +249,13 @@ export class EntityBuilder extends Builder {
             tableName: Builder._getOwnRelationName(setAttr.entities[0]),
             fieldName: Builder._getFieldName(setAttr.entities[0].pk[0])
           });
+
+          if (!attribute.adapter) {
+            attribute.adapter = {
+              crossRelation: relationName,
+              crossPk: [ownPKName, refPKName]
+            } as ISetAttributeAdapter;
+          }
           break;
         }
       }

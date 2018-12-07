@@ -1,4 +1,4 @@
-import {SetAttribute} from "..";
+import {ScalarAttribute, SetAttribute} from "..";
 import {Attribute} from "../model/Attribute";
 import {Entity} from "../model/Entity";
 import {ERModel} from "../model/ERModel";
@@ -14,9 +14,9 @@ export class EntityQueryField {
 
   public attribute: Attribute;
   public link?: EntityLink;
-  public setAttributes?: Attribute[];
+  public setAttributes?: ScalarAttribute[];
 
-  constructor(attribute: Attribute, link?: EntityLink, setAttributes?: Attribute[]) {
+  constructor(attribute: Attribute, link?: EntityLink, setAttributes?: ScalarAttribute[]) {
     this.attribute = attribute;
     this.link = link;
     this.setAttributes = setAttributes;

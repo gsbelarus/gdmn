@@ -10,7 +10,6 @@ import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
   transaction: ATransaction;
-  dbStructure?: DBStructure;
 }
 
 export class ERBridge {
@@ -97,7 +96,7 @@ export class ERBridge {
 
     const aliases = [];
     for (const [key, value] of fieldAliases) {
-      const link = query.link.deepFindLinkByField(key);
+      const link = query.link.deepFindLink(key);
       if (!link) {
         throw new Error("Field not found");
       }

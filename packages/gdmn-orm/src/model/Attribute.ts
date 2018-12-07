@@ -14,7 +14,7 @@ export abstract class Attribute<Adapter = any> {
   public readonly lName: ILName;
   public readonly required: boolean;
   public readonly semCategories: SemCategory[];
-  public readonly adapter?: Adapter;
+  public adapter?: Adapter;
 
   protected constructor(options: IAttributeOptions<Adapter>) {
     this.name = options.name;
