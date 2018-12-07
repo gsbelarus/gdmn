@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import "./ERModelBox.css";
-import { Spinner, SpinnerSize, TextField, Checkbox, ChoiceGroup, IChoiceGroupOption, Slider, SpinButton } from "office-ui-fabric-react";
-import { ERModel } from "gdmn-orm";
+import { Spinner, SpinnerSize, TextField, Checkbox, ChoiceGroup, IChoiceGroupOption, PrimaryButton } from "office-ui-fabric-react";
+import { ERModel, Entity } from "gdmn-orm";
 
 export interface IERModelBoxProps {
   loading: boolean;
@@ -14,6 +14,8 @@ export interface IERModelBoxState {
   searchInAttribute: boolean;
   viewMode: 'S' | 'L';
   maxCount: number;
+  foundEntities: Entity[];
+  filtering: boolean;
 };
 
 export class ERModelBox extends Component<IERModelBoxProps, {}> {
@@ -23,7 +25,61 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
     searchInEntity: true,
     searchInAttribute: true,
     viewMode: 'L',
-    maxCount: 200
+    maxCount: 200,
+    foundEntities: [],
+    filtering: false
+  }
+
+  componentDidUpdate() {
+    const { erModel } = this.props;
+    const { text, searchInEntity, searchInAttribute, maxCount, filtering } = this.state;
+
+    if (!filtering || !erModel) {
+      return;
+    }
+
+    const foundEntities = Object.entries(erModel.entities).reduce(
+      (prev, [_name, entity]) => {
+        if (prev.length >= maxCount) {
+          return prev;
+        }
+
+        if (!text) {
+          prev.push(entity);
+        } else {
+          let res = false;
+          const upText = text.toUpperCase();
+
+          if (searchInEntity) {
+            const desc = entity.lName.ru ? entity.lName.ru.name : entity.name;
+            res = entity.name.toUpperCase().indexOf(upText) > -1 || desc.toUpperCase().indexOf(upText) > -1;
+          }
+
+          if (searchInAttribute && (res || !searchInEntity)) {
+            res = (Object.entries(entity.attributes).some(
+              ([_name, attr]) => {
+                const attrDesc = attr.lName.ru ? attr.lName.ru.name : attr.name;
+                return attr.name.toUpperCase().indexOf(upText) > -1
+                  || attrDesc.toUpperCase().indexOf(upText) > -1
+                  || attr.inspectDataType().toUpperCase().indexOf(upText) > -1;
+              }
+            ));
+          }
+
+          if (res) {
+            prev.push(entity);
+          }
+        }
+
+        return prev;
+      },
+      [] as Entity[]
+    );
+
+    this.setState({
+      foundEntities,
+      filtering: false
+    });
   }
 
   render () {
@@ -35,46 +91,20 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
       );
     }
 
-    const { text, searchInEntity, searchInAttribute, viewMode, maxCount } = this.state;
+    const { text, searchInEntity, searchInAttribute, viewMode, maxCount, foundEntities, filtering } = this.state;
 
-    const filtered = erModel && Object.entries(erModel.entities).filter(
-      ([name, entity]) => {
-        if (!text) {
-          return true;
-        }
-
-        const upText = text.toUpperCase();
-        const desc = entity.lName.ru ? entity.lName.ru.name: name;
-        const res = !searchInEntity
-          || name.toUpperCase().indexOf(text) > -1
-          || desc.toUpperCase().indexOf(text) > -1;
-
-        if (res && searchInAttribute) {
-          return Object.entries(entity.attributes).reduce(
-            (prev, [_name, attr]) => {
-              const attrDesc = attr.lName.ru ? attr.lName.ru.name: attr.name;
-              return prev && attr.name.toUpperCase().indexOf(upText) > -1
-                || attrDesc.toUpperCase().indexOf(upText) > -1
-                || attr.inspectDataType().toUpperCase().indexOf(upText) > -1;
-            },
-            true
-          );
-        }
-
-        return res;
-      }
-    ).slice(0, maxCount).map( ([name, entity]) =>
-      <div key={name} className="Entity">
-        <div>{name}</div>
-        <div>{entity.lName.ru ? entity.lName.ru.name: name}</div>
+    const entities = foundEntities.map( entity =>
+      <div key={entity.name} className="Entity">
+        <div>{entity.name}</div>
+        <div>{entity.lName.ru ? entity.lName.ru.name: entity.name}</div>
         {
           viewMode === 'S'
           ? undefined
-          : Object.entries(entity.attributes).map( ([attrName, attr], idx) => {
-              const desc = attr.lName.ru ? attr.lName.ru.name : name;
+          : Object.entries(entity.attributes).map( ([_attrName, attr], idx) => {
+              const desc = attr.lName.ru ? attr.lName.ru.name : attr.name;
               return (
-                <div className={'Attr' + (idx % 2 === 0 ? ' OddRow' : '')}>
-                  <span className={'AttrName' + (attrName.length > 20 ? ' SmallText' : '')}>{attrName}</span>
+                <div key={attr.name} className={'Attr' + (idx % 2 === 0 ? ' OddRow' : '')}>
+                  <span className={'AttrName' + (attr.name.length > 20 ? ' SmallText' : '')}>{attr.name}</span>
                   <span className={'AttrDesc' + (desc.length > 20 ? ' SmallText' : '')}>{desc}</span>
                   <span className="AttrType">{attr.inspectDataType()}</span>
                 </div>
@@ -88,7 +118,7 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
       <div>
         <div className="ERModelSearch">
           <TextField
-            label="Word"
+            label="Search for:"
             style={{maxWidth: '200px'}}
             value={text}
             onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,13 +134,6 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
             }}
           />
           <ChoiceGroup
-            className="ViewMode"
-            styles={{
-              flexContainer: {
-                display: 'flex',
-                flexDirection: 'row'
-              }
-            }}
             selectedKey={viewMode}
             options={[
               {
@@ -125,13 +148,12 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
             onChange={(ev: React.FormEvent<HTMLInputElement>, option: IChoiceGroupOption): void => {
               this.setState({ viewMode: option.key })
             }}
-            label="View"
           />
           {
             erModel &&
             <TextField
-              label="Max:"
-              style={{maxWidth: '100px'}}
+              label="Show max:"
+              style={{maxWidth: '60px'}}
               value={maxCount.toString()}
               onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
                 if (parseInt(e.target.value) > 0) {
@@ -140,12 +162,16 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
               }}
             />
           }
-          <span>
-            Shown: {filtered ? filtered.length : 0}
-          </span>
+          <PrimaryButton
+            text="Filter"
+            disabled={filtering}
+            onClick={ () => this.setState({ foundEntities: [], filtering: true })}
+          />
+          {entities && entities.length ? <span>Shown: {entities.length}</span> : undefined}
+          {erModel ? <span>ER Model: {Object.entries(erModel.entities).length}</span> : undefined}
         </div>
         <div className="ERModel">
-          {filtered}
+          {entities}
         </div>
       </div>
     );

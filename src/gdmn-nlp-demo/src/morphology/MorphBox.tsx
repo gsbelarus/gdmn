@@ -65,7 +65,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Pron', () => RusPronounLexemes.reduce((p, l) => {p.push(l.getWordForm(RusCase.Nomn)); return p;}, [] as AnyWord[])],
       ['Conj', () => RusConjunctionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])]
-    ]; 
+    ];
 
     this._allWords = this._allWordsByPOS.reduce(
       (prev, pos) => ([...prev, ...pos[1]()]),
@@ -101,7 +101,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
               const foundWords: AnyWord[] = this._allWords.filter( f => (f.word).indexOf(e.target.value) >= 0 );
               onSetText(e.target.value);
-              this.setState({ vocabulary: foundWords }); 
+              this.setState({ vocabulary: foundWords });
             }
           }
           />
@@ -112,17 +112,17 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             {
               vocabulary.reduce((p, l, idx) => {
                 p.push(
-                  <DefaultButton 
-                    key={idx} 
+                  <DefaultButton
+                    key={idx}
                     text={l.word}
                     onRenderText={
-                      l.lexeme.semCategories.length 
-                    ? (_props, _DefaultRender) => {
-                        return <div>{l.word}<sup>{l.lexeme.semCategories.length}</sup></div>;
-                      } 
-                      : undefined 
-                    } 
-                    onClick={ () => { onSetText(l.word); this.setState({ vocabulary: undefined }); } } 
+                      l.lexeme.semCategories.length
+                    ? () => {
+                        return <>{l.word}<sup>{l.lexeme.semCategories.length}</sup></>;
+                      }
+                      : undefined
+                    }
+                    onClick={ () => { onSetText(l.word); this.setState({ vocabulary: undefined }); } }
                   />
                 );
                 return p;
@@ -136,7 +136,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
               <span key={idx}>
                 <div>
                   <div className="MorphOutputDisplayText">
-                    {w.getDisplayText().split(';').map( 
+                    {w.getDisplayText().split(';').map(
                       (s, i) => <div key={i}>{s}</div>
                     )}
                   </div>
@@ -157,23 +157,23 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
 
   private getSynonymWords(w: AnyWord): JSX.Element {
     const { onSetText } = this.props;
-    return (w instanceof RusVerb && getSynonyms(w, SemContext.QueryDB) !== undefined) 
+    return (w instanceof RusVerb && getSynonyms(w, SemContext.QueryDB) !== undefined)
       ? <div className="SynonymWords">
-          {getSynonyms(w, SemContext.QueryDB).map( 
-            w => w.getWordForm({ infn: true })).filter( 
-              word => word.word !== w.word ).map( 
+          {getSynonyms(w, SemContext.QueryDB).map(
+            w => w.getWordForm({ infn: true })).filter(
+              word => word.word !== w.word ).map(
             s => <span onClick = { () => onSetText(s.word) }>{s.word}</span>
           )}
         </div>
-      : undefined;  
+      : undefined;
   }
 
   private getCategoryWords(w: AnyWord) : JSX.Element {
-    return w.lexeme.semCategories.length 
-      ? 
-        <div className="CategoryWords">
-          {w.lexeme.semCategories.map( c => <span>{semCategory2Str(c)}</span>)}
-        </div> 
+    return w.lexeme.semCategories.length
+      ?
+        <div className="SemCategories">
+          {w.lexeme.semCategories.map( (c, idx) => <span key={idx}>{semCategory2Str(c)}</span>)}
+        </div>
       : undefined;
   }
 
