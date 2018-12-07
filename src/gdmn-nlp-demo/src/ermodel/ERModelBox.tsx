@@ -51,9 +51,9 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
 
         if (res && searchInAttribute) {
           return Object.entries(entity.attributes).reduce(
-            (prev, [name, attr]) => {
-              const attrDesc = attr.lName.ru ? attr.lName.ru.name: name;
-              return prev && name.toUpperCase().indexOf(upText) > -1
+            (prev, [_name, attr]) => {
+              const attrDesc = attr.lName.ru ? attr.lName.ru.name: attr.name;
+              return prev && attr.name.toUpperCase().indexOf(upText) > -1
                 || attrDesc.toUpperCase().indexOf(upText) > -1
                 || attr.inspectDataType().toUpperCase().indexOf(upText) > -1;
             },

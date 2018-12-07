@@ -18,9 +18,10 @@ interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemPr
 
 class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
   public render(): JSX.Element {
-    const { defaultRender: DefaultRender = CommandBarButton, link, supText, ...buttonProps } = this.props;
+    const { defaultRender, link, supText, ...buttonProps } = this.props;
 
     const onRenderText = supText ? (props: IButtonProps) => <>{props.text}<sup>{supText}</sup></> : undefined;
+    const DefaultRender = defaultRender ? defaultRender as any : CommandBarButton;
 
     return (
       <Link to={link}>
