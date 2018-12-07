@@ -1453,10 +1453,10 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@stomp/stompjs@^5.0.1":
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/@stomp/stompjs/-/stompjs-5.0.2.tgz#4eaa67e30b72da6b918eac55abd2c7760df8d4ad"
-  integrity sha512-Mk5644q+k9LR/qRoXCRqn6f2JBqyxq6sWezDh5TFLlZy7fhfhKZtGHnqYIztbXjcbJ89rhchUVYTbOe+ON+lHg==
+"@stomp/stompjs@5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@stomp/stompjs/-/stompjs-5.0.1.tgz#5d0c99299c6a40a5d3bd0c453a2664c54aaec775"
+  integrity sha512-WPPWgTSvZkOQPkNGZvQRkDm26NMSK0Dgw7War7AQRP9qIgnZlBCutZ+95vZf249Ehecvdqp9K7CsVqHj9L3mdw==
 
 "@svgr/core@^2.4.1":
   version "2.4.1"

@@ -16,6 +16,7 @@
     "clean": "lerna run clean --parallel",
     "build": "lerna run build",
     "rebuild": "yarn clean && yarn build",
+    "rebuild:packages": "lerna run rebuild --scope={$(ls ./packages | xargs echo | sed 's/ /,/g')}",
     "lint": "lerna run lint",
     "test": "lerna run test",
     "bootstrap": "lerna bootstrap",
