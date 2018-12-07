@@ -87,6 +87,15 @@
   color: pink;
 }
 
+.CategoryWords {
+  background-color: midnightblue;
+  color: white;
+  padding: 4px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 .MorphOutputFlex {
   display: flex;
   flex-direction: row;

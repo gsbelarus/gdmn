@@ -30,7 +30,8 @@ import {
   RusPrepositionLexemes,
   RusAdverb,
   getSynonyms,
-  SemContext
+  SemContext,
+  semCategory2Str
 } from 'gdmn-nlp';
 import { TextField, DefaultButton } from 'office-ui-fabric-react';
 import './MorphBox.css';
@@ -110,7 +111,20 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
           <div className="MorphVocabulary">
             {
               vocabulary.reduce((p, l, idx) => {
-                p.push(<DefaultButton key={idx} text={l.word} onClick={ () => { onSetText(l.word); this.setState({ vocabulary: undefined }); } } />);
+                p.push(
+                  <DefaultButton 
+                    key={idx} 
+                    text={l.word}
+                    onRenderText={
+                      l.lexeme.semCategories.length 
+                    ? (_props, _DefaultRender) => {
+                        return <div>{l.word}<sup>{l.lexeme.semCategories.length}</sup></div>;
+                      } 
+                      : undefined 
+                    } 
+                    onClick={ () => { onSetText(l.word); this.setState({ vocabulary: undefined }); } } 
+                  />
+                );
                 return p;
               }, [] as JSX.Element[])
             }
@@ -121,10 +135,15 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             {words.map( (w, idx) => (
               <span key={idx}>
                 <div>
-                  <div className="MorphOutputDisplayText">{w.getDisplayText().split(';').map( (s, i) => <div key={i}>{s}</div>)}</div>
+                  <div className="MorphOutputDisplayText">
+                    {w.getDisplayText().split(';').map( 
+                      (s, i) => <div key={i}>{s}</div>
+                    )}
+                  </div>
                   <div className="MorphOutputSignature">{w.getSignature()}</div>
                 </div>
                 {this.getSynonymWords(w)}
+                {this.getCategoryWords(w)}
                 {this.formatWordForms(w, onSetText)}
               </span>
             ))}
@@ -138,13 +157,24 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
 
   private getSynonymWords(w: AnyWord): JSX.Element {
     const { onSetText } = this.props;
-    return w instanceof RusVerb 
+    return (w instanceof RusVerb && getSynonyms(w, SemContext.QueryDB) !== undefined) 
       ? <div className="SynonymWords">
-          {getSynonyms(w, SemContext.QueryDB).map( w => w.getWordForm({ infn: true })).filter( word => word.word !== w.word ).map( 
+          {getSynonyms(w, SemContext.QueryDB).map( 
+            w => w.getWordForm({ infn: true })).filter( 
+              word => word.word !== w.word ).map( 
             s => <span onClick = { () => onSetText(s.word) }>{s.word}</span>
           )}
         </div>
       : undefined;  
+  }
+
+  private getCategoryWords(w: AnyWord) : JSX.Element {
+    return w.lexeme.semCategories.length 
+      ? 
+        <div className="CategoryWords">
+          {w.lexeme.semCategories.map( c => <span>{semCategory2Str(c)}</span>)}
+        </div> 
+      : undefined;
   }
 
   private formatWordForms(

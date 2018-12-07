@@ -26,3 +26,4 @@ export * from './syntax/types';
 export * from './semantics/types';
 export * from './semantics/categories';
 export * from './semantics/rusVerbSynonyms';
+export * from './semantics/rusNounSemCategory';
