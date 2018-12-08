@@ -8,7 +8,7 @@ import { List } from 'immutable';
 export const ERModelViewContainer = connect(
   (state: IState): Partial<IERModelViewProps> => ({
     erModel: state.gdmnState.erModel,
-    entities: state.recordSet.entities
+    entitiesRs: state.recordSet.entities
   }),
   dispatch => ({
     fillEntities: (erModel: ERModel) => {
@@ -33,7 +33,6 @@ export const ERModelViewContainer = connect(
           }))
         )
       );
-      console.log(`recordset -- ${rs.size}`);
       dispatch(createRecordSet({ name: rs.name, rs }));
     }
   })

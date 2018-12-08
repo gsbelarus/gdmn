@@ -8,7 +8,7 @@ import { RecordSet, TFieldType } from 'gdmn-recordset';
 
 export interface IERModelViewProps {
   erModel?: ERModel;
-  entities?: RecordSet;
+  entitiesRs?: RecordSet;
   fillEntities: (erModel: ERModel) => void;
 }
 
@@ -18,7 +18,7 @@ export class ERModelView extends View<IERModelViewProps, {}> {
   public state: IERModelViewState = {};
 
   private fillRecordSets() {
-    const { erModel, entities, fillEntities } = this.props;
+    const { erModel, entitiesRs: entities, fillEntities } = this.props;
 
     if (!erModel) {
       return;
@@ -38,7 +38,7 @@ export class ERModelView extends View<IERModelViewProps, {}> {
   }
 
   public render() {
-    const { erModel, entities } = this.props;
+    const { erModel, entitiesRs: entities } = this.props;
 
     return this.renderWide(
       <>
