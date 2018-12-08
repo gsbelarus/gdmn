@@ -33,12 +33,14 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
       throw new Error(`Duplicate grid component name ${componentName}`);
     }
 
+    const { columns, leftSideColumns, rightSideColumns } = action.payload;
+
     return {
       ...state,
       [componentName]: {
-        columns: [],
-        leftSideColumns: 0,
-        rightSideColumns: 0,
+        columns,
+        leftSideColumns,
+        rightSideColumns,
         currentCol: -1,
         selectRows: false,
         hideHeader: false,
@@ -95,19 +97,6 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
       } else {
         return {...state, [componentName]: {...componentState, sortDialog: false}};
       }
-    }
-
-    case getType(actions.setColumns): {
-      const { columns, leftSideColumns, rightSideColumns } = action.payload;
-      return {...state,
-        [componentName]: {
-          ...componentState,
-          columns: [...columns],
-          leftSideColumns,
-          rightSideColumns,
-          currentCol: leftSideColumns
-        }
-      };
     }
 
     case getType(actions.setFixedColumns): {

@@ -4,11 +4,11 @@ import { SortFields } from "gdmn-recordset";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
 
-export const setColumns = createAction('GRID/SET_COLUMNS', resolve => {
+export const createGrid = createAction('GRID/CREATE', resolve => {
   return (params: WithComponentName<{ columns: Columns, leftSideColumns: number, rightSideColumns: number }>) => resolve(params);
 });
 
-export type SetColumns = typeof setColumns;
+export type CreateGrid = typeof createGrid;
 
 export const setFixedColumns = createAction('GRID/SET_FIXED_COLUMNS', resolve => {
   return (params: WithComponentName<{ leftSideColumns: number }>) => resolve(params);
@@ -63,12 +63,6 @@ export const setCursorCol = createAction('GRID/SET_CURSOR_COL', resolve => {
 });
 
 export type SetCursorCol = typeof setCursorCol;
-
-export const createGrid = createAction('GRID/CREATE', resolve => {
-  return (params: WithComponentName) => resolve(params);
-});
-
-export type CreateGrid = typeof createGrid;
 
 export const deleteGrid = createAction('GRID/DELETE', resolve => {
   return (params: WithComponentName) => resolve(params);
