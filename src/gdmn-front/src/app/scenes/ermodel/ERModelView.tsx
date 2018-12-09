@@ -2,29 +2,34 @@ import React from 'react';
 import { DefaultButton } from 'office-ui-fabric-react';
 import { View } from '../components/View';
 import { ERModel } from 'gdmn-orm';
-import { GDMNGrid } from 'gdmn-grid';
-import { List } from 'immutable';
-import { RecordSet, TFieldType } from 'gdmn-recordset';
+import { GDMNGrid, IColumn, GetGridRef } from 'gdmn-grid';
+import { RecordSet } from 'gdmn-recordset';
+import { ConnectedGrid } from '../components/GridContainer';
 
 export interface IERModelViewProps {
-  erModel?: ERModel;
-  entitiesRs?: RecordSet;
-  fillEntities: (erModel: ERModel) => void;
-}
+  erModel?: ERModel,
+  entitiesRs?: RecordSet,
+  fillEntities: (erModel: ERModel) => void,
+  connectGrid: (name: string, rs: RecordSet, columns: IColumn[] | undefined, getGridRef: GetGridRef) => ConnectedGrid
+};
 
-export interface IERModelViewState {}
+export interface IERModelViewState {
+  entitiesGrid?: ConnectedGrid;
+};
 
 export class ERModelView extends View<IERModelViewProps, {}> {
+  private _refEntitiesGrid?: GDMNGrid;
+
   public state: IERModelViewState = {};
 
   private fillRecordSets() {
-    const { erModel, entitiesRs: entities, fillEntities } = this.props;
+    const { erModel, entitiesRs, fillEntities } = this.props;
 
     if (!erModel) {
       return;
     }
 
-    if (!entities) {
+    if (!entitiesRs) {
       fillEntities(erModel);
     }
   }
@@ -38,17 +43,33 @@ export class ERModelView extends View<IERModelViewProps, {}> {
   }
 
   public render() {
-    const { erModel, entitiesRs: entities } = this.props;
+    const { erModel, entitiesRs, connectGrid } = this.props;
+    const { entitiesGrid: EntitiesGrid } = this.state;
 
     return this.renderWide(
       <>
-        {entities && `RecordSet: ${entities.size}`}
         {erModel && `ERModel: ${Object.entries(erModel.entities).length}`}
-        <DefaultButton text="LOAD ER MODEL" />
+        {entitiesRs && `RecordSet: ${entitiesRs.size}`}
+        {entitiesRs && <DefaultButton text="Load grid..." onClick={ () => {
+          this.setState({ entitiesGrid: connectGrid('entities', entitiesRs, undefined, () => {
+            const res = this._refEntitiesGrid;
+
+            if (!res) {
+              throw new Error(`Grid ref is not set`);
+            }
+
+            return res;
+          }) });
+        }} />}
+        {EntitiesGrid &&
+          <div className="ViewGridPlacement">
+            <EntitiesGrid ref={ (grid: any) => grid && (this._refEntitiesGrid = grid.getWrappedInstance()) } rs={entitiesRs!} />
+          </div>
+        }
       </>
     );
   }
-}
+};
 
 /*
 

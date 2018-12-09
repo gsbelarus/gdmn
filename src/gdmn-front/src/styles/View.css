@@ -24,6 +24,15 @@
   margin-bottom: 8px;
 }
 
+.ViewWide {
+  width: 100%;
+}
+
+.ViewGridPlacement {
+  width: 100%;
+  height: 80vh;
+}
+
 .DangerZone {
   border: 1px solid red;
   border-radius: 8px;

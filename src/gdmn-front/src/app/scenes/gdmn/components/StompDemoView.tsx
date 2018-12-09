@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
-import { Button, TextField } from 'office-ui-fabric-react';
+import { TextField, PrimaryButton } from 'office-ui-fabric-react';
 import { View } from '../../components/View';
 
 interface IStompDemoViewState {
@@ -30,7 +30,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           <div>
             <TextField label="delay" value={this.state.pingDelay.toString()} onChange={this.handlePingDelayChange} />
             <TextField label="steps" value={this.state.pingSteps.toString()} onChange={this.handlePingStepsChange} />
-            <Button onClick={this.handlePingClick} text="SEND PING-TASK" />
+            <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
           </div>
         </div>
       </div>

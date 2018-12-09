@@ -34,12 +34,6 @@ body {
   padding: 0 10px;
 }
 
-.GridBody {
-  width: 100%;
-  height: 100%;
-  float: left;
-}
-
 .GridFormNoPanel {
   width: 100%;
   height: 100%;
