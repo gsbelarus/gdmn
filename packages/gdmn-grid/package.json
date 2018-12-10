@@ -43,13 +43,13 @@
     "typesafe-actions": "^2.0.4"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.8",
-    "@types/node": "^10.12.10",
-    "jest": "^23.6.0",
+    "@types/jest": "^23",
+    "@types/node": "^10",
+    "jest": "^23",
     "shx": "^0.3.2",
-    "ts-jest": "^23.10.4",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
+    "ts-jest": "^23",
+    "ts-node": "^7",
+    "tslint": "^5",
     "typescript": "^3"
   }
 }

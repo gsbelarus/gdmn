@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "@types/dagre": "^0.7.40",
-    "@types/jest": "^23.3.9",
-    "@types/node": "^10.12.10",
+    "@types/jest": "^23",
+    "@types/node": "^10",
     "@types/react": "^16.7.3",
     "@types/react-dom": "^16.0.9",
     "@uifabric/fluent-theme": "^0.11.0",
