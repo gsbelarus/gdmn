@@ -15,8 +15,8 @@ node_js:
 
 env:
   - CXX=g++-5
-  global:
-    - PATH=${TRAVIS_BUILD_DIR}/node_modules/.bin:$PATH
+#  global:
+#    - PATH=${TRAVIS_BUILD_DIR}/node_modules/.bin:$PATH
 
 addons:
   apt:
