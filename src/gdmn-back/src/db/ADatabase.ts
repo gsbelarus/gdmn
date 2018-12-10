@@ -73,8 +73,9 @@ export abstract class ADatabase {
       await this.connect();
     } catch (error) {
       // TODO tmp
-      if (error.message.includes("No such file or directory") // linux || darwin
-        || error.message.includes("The system cannot find the file specified")) { // windows
+      if (error.message.includes("Error while trying to open file")) {
+        // || error.message.includes("No such file or directory") // linux || darwin
+        // || error.message.includes("The system cannot find the file specified")) { // windows
         await this.create();
       } else {
         throw error;
