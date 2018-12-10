@@ -37,10 +37,10 @@ export class SetAttribute extends EntityAttribute<ISetAttributeAdapter> {
     return this.attributes[attribute.name] = attribute;
   }
 
-  public serialize(): ISetAttribute {
+  public serialize(withAdapter?: boolean): ISetAttribute {
     return {
-      ...super.serialize(),
-      attributes: Object.entries(this.attributes).map((a) => a[1].serialize()),
+      ...super.serialize(withAdapter),
+      attributes: Object.entries(this.attributes).map((a) => a[1].serialize(withAdapter)),
       presLen: this.presLen
     };
   }

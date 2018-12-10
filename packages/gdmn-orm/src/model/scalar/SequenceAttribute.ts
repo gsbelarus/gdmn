@@ -19,9 +19,9 @@ export class SequenceAttribute extends ScalarAttribute<IAttributeAdapter> {
     this.sequence = options.sequence;
   }
 
-  public serialize(): ISequenceAttribute {
+  public serialize(withAdapter?: boolean): ISequenceAttribute {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       sequence: this.sequence.name
     };
   }

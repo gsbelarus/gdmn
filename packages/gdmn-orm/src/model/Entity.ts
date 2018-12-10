@@ -147,7 +147,7 @@ export class Entity {
     delete this._attributes[attribute.name];
   }
 
-  public serialize(): IEntity {
+  public serialize(withAdapter?: boolean): IEntity {
     return {
       parent: this.parent ? this.parent.name : undefined,
       name: this.name,
@@ -155,7 +155,8 @@ export class Entity {
       isAbstract: this.isAbstract,
       semCategories: semCategories2Str(this.semCategories),
       unique: this.ownUnique.map((values) => values.map((attr) => attr.name)),
-      attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize())
+      attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize(withAdapter)),
+      adapter: withAdapter ? this.adapter : undefined
     };
   }
 

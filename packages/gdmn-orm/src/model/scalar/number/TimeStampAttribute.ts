@@ -11,7 +11,7 @@ export class TimeStampAttribute extends NumberAttribute<Date, ContextVariables> 
     super(options);
   }
 
-  public serialize(): IDateAttribute {
-    return super.serialize();
+  public serialize(withAdapter?: boolean): IDateAttribute {
+    return super.serialize(withAdapter);
   }
 }

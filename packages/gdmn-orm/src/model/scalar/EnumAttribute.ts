@@ -26,9 +26,9 @@ export class EnumAttribute extends ScalarAttribute {
     return super.inspectDataType() + " " + JSON.stringify(this.values);
   }
 
-  public serialize(): IEnumAttribute {
+  public serialize(withAdapter?: boolean): IEnumAttribute {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       values: this.values,
       defaultValue: this.defaultValue
     };

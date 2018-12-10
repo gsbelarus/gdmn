@@ -24,13 +24,14 @@ export abstract class Attribute<Adapter = any> {
     this.adapter = options.adapter;
   }
 
-  public serialize(): IAttribute {
+  public serialize(withAdapter?: boolean): IAttribute {
     return {
       name: this.name,
       type: this.type,
       lName: this.lName,
       required: this.required,
-      semCategories: semCategories2Str(this.semCategories)
+      semCategories: semCategories2Str(this.semCategories),
+      adapter: withAdapter ? this.adapter : undefined
     };
   }
 

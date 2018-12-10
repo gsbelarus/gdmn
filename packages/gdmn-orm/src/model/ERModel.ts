@@ -110,7 +110,7 @@ export class ERModel {
     }
   }
 
-  public serialize(): IERModel {
+  public serialize(withAdapter?: boolean): IERModel {
     return {entities: Object.values(this._entities).map((e) => e.serialize())};
   }
 
