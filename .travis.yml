@@ -6,7 +6,7 @@ matrix:
 cache:
   yarn: true
   directories:
-    - $TRAVIS_BUILD_DIR/node_modules/node-firebird-native-api
+    - ${TRAVIS_BUILD_DIR}/node_modules/node-firebird-native-api
 
 language: node_js
 
@@ -15,8 +15,8 @@ node_js:
 
 env:
   - CXX=g++-5
-#  global:
-#    - PATH=$TRAVIS_BUILD_DIR/node_modules/.bin:$PATH
+  global:
+    - PATH=${TRAVIS_BUILD_DIR}/node_modules/.bin:$PATH
 
 addons:
   apt:
@@ -42,7 +42,7 @@ install:
 # - export PATH="$TRAVIS_BUILD_DIR/node_modules/.bin:$PATH"
 
 script:
-  - cd $TRAVIS_BUILD_DIR/src/gdmn-front && travis_wait yarn run ci:build # lerna exec --scope gdmn-front -- travis_wait yarn run ci:build
+  - cd ./src/gdmn-front && travis_wait yarn run ci:build # lerna exec --scope gdmn-front -- travis_wait yarn run ci:build
 
 notifications:
   email:
