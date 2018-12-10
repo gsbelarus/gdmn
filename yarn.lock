@@ -1431,9 +1431,9 @@
     write-file-atomic "^2.3.0"
 
 "@microsoft/load-themed-styles@^1.7.13":
-  version "1.8.45"
-  resolved "https://registry.yarnpkg.com/@microsoft/load-themed-styles/-/load-themed-styles-1.8.45.tgz#aa5cbbed719b6fb3afe9bb03e1ad4d952f98113f"
-  integrity sha512-aA5WX3w3tS4ebd4ySQra0dZHO17q/8Tt6nrPGggjWg8QLvtluse26xXgjXWHqcEuv9mrdvFzEaio6QozpxII9A==
+  version "1.8.47"
+  resolved "https://registry.yarnpkg.com/@microsoft/load-themed-styles/-/load-themed-styles-1.8.47.tgz#a5f8971139688a5a24c18fc2d1bf3b2b25deef86"
+  integrity sha512-Qn/gxmxkZ3I0ZCdyq0O32r0BQ+0yclcVfMV7aQguFpUy0eXr6Q+VGdhtIe46aTFaRk7ok3EVdwgJCS6U/+PfNA==
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
@@ -9507,10 +9507,24 @@ obuf@^1.0.0, obuf@^1.1.1:
   resolved "https://registry.yarnpkg.com/obuf/-/obuf-1.1.2.tgz#09bea3343d41859ebd446292d11c9d4db619084e"
   integrity sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==
 
-"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.111.1 <7.0.0", office-ui-fabric-react@^6, office-ui-fabric-react@^6.106.2, office-ui-fabric-react@^6.106.3:
+"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.111.1 <7.0.0":
   version "6.111.1"
   resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.111.1.tgz#252a09955c493291b58bfc5d8e1f9b5ea451f8eb"
   integrity sha512-Ba0TQl1OX+WVUNUh0wX8gpKBVj65BX6yptnbQMhFDWpEyKRxuq5RZkm2g2mU+3lzZhmGxskHysf9Tk6+VjNmiQ==
+  dependencies:
+    "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/icons" ">=6.3.0 <7.0.0"
+    "@uifabric/merge-styles" ">=6.15.0 <7.0.0"
+    "@uifabric/set-version" ">=1.1.3 <2.0.0"
+    "@uifabric/styling" ">=6.38.0 <7.0.0"
+    "@uifabric/utilities" ">=6.27.0 <7.0.0"
+    prop-types "^15.5.10"
+    tslib "^1.7.1"
+
+office-ui-fabric-react@^6, office-ui-fabric-react@^6.106.2, office-ui-fabric-react@^6.106.3:
+  version "6.111.2"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.111.2.tgz#5a2d208823ac466e0e08d2af38709981d3023d5a"
+  integrity sha512-AtO/H20jxhUEcG4tq3n/hd1j0C8QvJDwLj9HDctPp9qi1JP6Gh174R/Y2dC02xO6w6VRxrt6dEVH7J/xLsPU4w==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/icons" ">=6.3.0 <7.0.0"
@@ -13597,9 +13611,9 @@ webpack-manifest-plugin@2.0.4:
     tapable "^1.0.0"
 
 webpack-merge@^4.1.4:
-  version "4.1.4"
-  resolved "https://registry.yarnpkg.com/webpack-merge/-/webpack-merge-4.1.4.tgz#0fde38eabf2d5fd85251c24a5a8c48f8a3f4eb7b"
-  integrity sha512-TmSe1HZKeOPey3oy1Ov2iS3guIZjWvMT2BBJDzzT5jScHTjVC3mpjJofgueEzaEd6ibhxRDD6MIblDr8tzh8iQ==
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/webpack-merge/-/webpack-merge-4.1.5.tgz#2be31e846c20767d1bef56bdca64c328a681190a"
+  integrity sha512-sVcM+MMJv6DO0C0GLLltx8mUlGMKXE0zBsuMqZ9jz2X9gsekALw6Rs0cAfTWc97VuWS6NpVUa78959zANnMMLQ==
   dependencies:
     lodash "^4.17.5"
 
