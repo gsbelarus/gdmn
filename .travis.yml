@@ -16,7 +16,7 @@ node_js:
 env:
   - CXX=g++-5
   global:
-    - PATH=./node_modules/.bin:$PATH
+    - PATH="./node_modules/.bin:$PATH"
 
 addons:
   apt:
