@@ -98,7 +98,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "RESERVED", domain: "DINTEGER"},
       {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
       {name: "LISTFIELD", domain: "DFIELDNAME"},
-      {name: "EXTENDEDFIELDS", domain: "DTEXT254"},
+      {name: "EXTENDEDFIELDS", domain: "DTEXT254"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_RELATIONS", "AT_RELATIONS", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_RELATIONS", "AT_RELATIONS", "ID", Constants.GLOBAL_GENERATOR, true);
@@ -138,7 +138,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "OBJECTS", domain: "DBLOBTEXT80_1251"},
       {name: "DELETERULE", domain: "DDELETERULE"},
       {name: "RESERVED", domain: "DINTEGER"},
-      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
+      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_RELATION_FIELDS", "AT_RELATION_FIELDS", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_RELATION_FIELDS", "AT_RELATION_FIELDS", "ID", Constants.GLOBAL_GENERATOR, true);
@@ -171,7 +171,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
       {name: "RELATIONKEY", domain: "DFOREIGNKEY"},
       {name: "TRIGGERNAME", domain: "DFIELDNAME"},
-      {name: "TRIGGER_INACTIVE", domain: "DBOOLEAN"},
+      {name: "TRIGGER_INACTIVE", domain: "DBOOLEAN"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_TRIGGERS", "AT_TRIGGERS", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_TRIGGERS", "AT_TRIGGERS", "ID", Constants.GLOBAL_GENERATOR, true);
@@ -200,7 +200,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "INDEXNAME", domain: "DINDEXNAME"},
       {name: "FIELDLIST", domain: "DTEXT255"},
       {name: "RELATIONKEY", domain: "DMASTERKEY"},
-      {name: "UNIQUE_FLAG", domain: "DBOOLEAN"},
+      {name: "UNIQUE_FLAG", domain: "DBOOLEAN"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_INDICES", "AT_INDICES", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_INDICES", "AT_INDICES", "ID", Constants.GLOBAL_GENERATOR, true);
@@ -214,7 +214,7 @@ export class Update1 extends BaseSimpleUpdate {
 
     await ddlHelper.addTable("AT_PROCEDURES", [
       {name: "ID", domain: "DINTKEY"},
-      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
+      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_PROCEDURES", "AT_PROCEDURES", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_PROCEDURES", "AT_PROCEDURES", "ID", Constants.GLOBAL_GENERATOR, true);

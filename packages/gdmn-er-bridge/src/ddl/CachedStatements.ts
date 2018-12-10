@@ -565,7 +565,7 @@ export class CachedStatements {
     }
     await this._statements.dropATTriggers.execute({
       relationName: input.relationName,
-      triggerName: input.triggerName,
+      triggerName: input.triggerName
     });
   }
 
@@ -603,7 +603,7 @@ export class CachedStatements {
       relationName: input.relationName,
       indexInactive: input.indexInactive,
       fieldList: input.fieldList,
-      uniqueFlag: input.uniqueFlag,
+      uniqueFlag: input.uniqueFlag
     });
     return result.getNumber("ID");
   }
@@ -620,7 +620,7 @@ export class CachedStatements {
       `);
     }
     await this._statements.dropATGenerator.execute({
-      generatorName: input.generatorName,
+      generatorName: input.generatorName
     });
   }
 
@@ -636,7 +636,7 @@ export class CachedStatements {
       `);
     }
     await this._statements.dropATIndices.execute({
-      indexName: input.indexName,
+      indexName: input.indexName
     });
   }
 

@@ -106,7 +106,7 @@ describe("DDLHelper", () => {
           await ddlHelper.dropConstraint("TEST_TABLE_PRIMARY_KEY", "TEST_TABLE");
           await ddlHelper.dropConstraint("TEST_TABLE_CHECK", "TEST_TABLE");
 
-          await ddlHelper.dropAutoIncrementTrigger("TEST_TABLE_TRIGGER");
+          await ddlHelper.dropTrigger("TEST_TABLE_TRIGGER");
           expect(await cachedStatements.isTriggerExists("TEST_TABLE_TRIGGER")).toBeFalsy();
 
           await ddlHelper.dropIndex("TEST_TABLE_INDEX");

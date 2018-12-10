@@ -354,13 +354,14 @@ export class DDLHelper {
     return triggerName;
   }
 
-  public async dropAutoIncrementTrigger(triggerName: string,
-                                        skipAT: boolean = this._skipAT,
-                                        ignore: boolean = this._defaultIgnore): Promise<void> {
+  public async dropTrigger(triggerName: string,
+                           skipAT: boolean = this._skipAT,
+                           ignore: boolean = this._defaultIgnore): Promise<void> {
     if (ignore && !(await this._cachedStatements.isTriggerExists(triggerName))) {
       return;
     }
     await this._loggedExecute(`DROP TRIGGER ${triggerName}`);
+
     if (!skipAT) {
       await this._cachedStatements.dropATTriggers({triggerName: triggerName});
     }
