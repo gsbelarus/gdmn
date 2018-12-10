@@ -1,23 +1,22 @@
-# For more information about the configurations used
-# in this file, please see the Travis CI documentation.
-#
-# https://docs.travis-ci.com
-
-sudo: false
+sudo: required
 dist: trusty
-notifications:
-  email: false
+matrix:
+  fast_finish: true
+
+cache:
+  yarn: true
+  directories:
+    - ./node_modules/node-firebird-native-api
 
 language: node_js
 
 node_js:
   - '11'
-  - '10'
 
 env:
   - CXX=g++-5
   global:
-    - PATH=$HOME/.yarn/bin:$PATH
+    - PATH=/node_modules/.bin:$PATH
 
 addons:
   apt:
@@ -28,30 +27,32 @@ addons:
       - g++-5
       - libtommath0
 
-matrix:
-  fast_finish: true
-
 before_install:
-  - curl -o- -L https://yarnpkg.com/install.sh | bash
-
-install:
+  - sudo apt-get update
   - wget -O Firebird-3.0.3.32900-0.amd64.tar.gz "https://github.com/FirebirdSQL/firebird/releases/download/R3_0_3/Firebird-3.0.3.32900-0.amd64.tar.gz"
-  - tar xzvf Firebird-3.0.3.32900-0.amd64.tar.gz
-  - (cd Firebird-3.0.3.32900-0.amd64; sudo ./install.sh -silent)
+  - tar xzvf Firebird-[0-9]*.tar.gz
+  - (cd Firebird-[0-9]*; sudo ./install.sh -silent)
   - sudo usermod -a -G firebird travis
 
-#script:
-#  - sg firebird -c "yarn"
+install:
+  - travis_wait sg firebird -c "yarn install --frozen-lockfile"
+#  - yarn run bootstrap
 
-#matrix:
-#  include:
-#    - os: osx
-#      osx_image: xcode9.2
+script:
+  - cd ./src/gdmn-front && travis_wait yarn run ci:build # lerna run ci:build --scope gdmn-front
 
-#notifications:
-#  email:
-#    on_failure: always
-#    on_success: never
+notifications:
+  email:
+    on_failure: never # always
+    on_success: never
+  webhooks:
+    on_success: true
+    on_failure: true
+    on_start: true
 
-#script:
-#  - lerna run ci:build --scope gdmn-front
+branches:
+  only:
+    - travis
+
+git:
+  depth: 1
