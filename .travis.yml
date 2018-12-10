@@ -42,8 +42,7 @@ install:
 # - export PATH="$TRAVIS_BUILD_DIR/node_modules/.bin:$PATH"
 
 script:
-  - cd $TRAVIS_BUILD_DIR
-  - cd ./src/gdmn-front && travis_wait yarn run ci:build # lerna exec --scope gdmn-front -- travis_wait yarn run ci:build
+  - cd $TRAVIS_BUILD_DIR/src/gdmn-front && travis_wait yarn run ci:build # lerna exec --scope gdmn-front -- travis_wait yarn run ci:build
 
 notifications:
   email:
