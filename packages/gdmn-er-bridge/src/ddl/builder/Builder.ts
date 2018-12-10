@@ -7,8 +7,8 @@ interface IATAttrOptions {
   domainName: string;
   masterEntity?: Entity;
   crossTable?: string;
-  crossTableKey?: number;
   crossField?: string;
+  lsHortName?: string;
 }
 
 export abstract class Builder {
@@ -72,7 +72,6 @@ export abstract class Builder {
       fieldSource: options.domainName,
       semCategory: attr.semCategories,
       crossTable: options.crossTable,
-      crossTableKey: options.crossTableKey,
       crossField: options.crossField
     });
   }

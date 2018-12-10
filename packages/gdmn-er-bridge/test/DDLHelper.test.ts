@@ -8,7 +8,7 @@ import {DBSchemaUpdater} from "../src/ddl/updates/DBSchemaUpdater";
 export const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_DDL_HELPER.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_DDL_HELPER1.FDB")
 };
 
 jest.setTimeout(120000);
@@ -70,7 +70,7 @@ describe("DDLHelper", () => {
           await ddlHelper.addAutoIncrementTrigger("TEST_TABLE_TRIGGER", "TEST_TABLE", "ID", Constants.GLOBAL_GENERATOR);
           expect(await cachedStatements.isTriggerExists("TEST_TABLE_TRIGGER")).toBeTruthy();
 
-          await ddlHelper.createIndex("TEST_TABLE_INDEX", "TEST_TABLE", "ASC", ["FIELDNAME"]);
+          await ddlHelper.createIndex("TEST_TABLE_INDEX", "TEST_TABLE", ["FIELDNAME"]);
           expect(await cachedStatements.isIndexExists("TEST_TABLE_INDEX")).toBeTruthy();
 
           await ddlHelper.addTable("TEST_TABLE_2", [

@@ -210,14 +210,8 @@ export class EntityBuilder extends Builder {
                 fieldName: field.name,
                 domainName: field.domain
               });
-            } else {
-              // await this._getATHelper().insertATRelationFields();
             }
           }
-
-          const crossTableKey = await this.ddlHelper.cachedStatements.addToATRelations({
-            relationName
-          });
 
           // create own table column
           const fieldName = Builder._getFieldName(setAttr);
@@ -228,8 +222,7 @@ export class EntityBuilder extends Builder {
             relationName: tableName,
             fieldName,
             domainName,
-            crossTable: relationName,
-            crossTableKey
+            crossTable: relationName
           });
 
           // add foreign keys for cross table

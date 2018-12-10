@@ -23,7 +23,7 @@ describe("ERExport", () => {
   });
 
   afterAll(async () => {
-    await connection.disconnect();
+
   });
 
   it("erExport", async () => {

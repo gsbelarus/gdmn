@@ -26,12 +26,15 @@ export interface IFKOptions {
   onDelete: DeleteRule;
 }
 
-export type Sorting = "ASC" | "DESC";
+export interface IIndexOptions {
+  sortType?: "ASC" | "DESC";
+  unique?: boolean;
+}
 
 export interface IExecuteDDlOptions<R> extends IBaseExecuteOptions<DDLHelper, R> {
   connection: AConnection;
   transaction: ATransaction;
-  ignoreAT?: boolean;
+  skipAT?: boolean;
   defaultIgnore?: boolean;
 }
 
@@ -46,19 +49,19 @@ export class DDLHelper {
   private readonly _transaction: ATransaction;
   private readonly _cachedStatements: CachedStatements;
 
-  private readonly _ignoreAT: boolean;
+  private readonly _skipAT: boolean;
   private readonly _defaultIgnore: boolean;
 
   private _logs: string[] = [];
 
   constructor(connection: AConnection,
               transaction: ATransaction,
-              ignoreAT: boolean = false,
+              skipAT: boolean = false,
               defaultIgnore: boolean = false) {
     this._connection = connection;
     this._transaction = transaction;
     this._cachedStatements = new CachedStatements(connection, transaction);
-    this._ignoreAT = ignoreAT;
+    this._skipAT = skipAT;
     this._defaultIgnore = defaultIgnore;
   }
 
@@ -83,9 +86,9 @@ export class DDLHelper {
   }
 
   public static async executeSelf<R>(
-    {connection, transaction, ignoreAT, defaultIgnore, callback}: IExecuteDDlOptions<R>
+    {connection, transaction, skipAT, defaultIgnore, callback}: IExecuteDDlOptions<R>
   ): Promise<R> {
-    const ddlHelper = new DDLHelper(connection, transaction, ignoreAT, defaultIgnore);
+    const ddlHelper = new DDLHelper(connection, transaction, skipAT, defaultIgnore);
     try {
       return await callback(ddlHelper);
     } finally {
@@ -108,12 +111,17 @@ export class DDLHelper {
     await this._cachedStatements.dispose();
   }
 
-  public async addSequence(sequenceName: string, ignore: boolean = this._defaultIgnore): Promise<void> {
+  public async addSequence(sequenceName: string,
+                           skipAT: boolean = this._skipAT,
+                           ignore: boolean = this._defaultIgnore): Promise<void> {
     if (ignore && await this._cachedStatements.isSequenceExists(sequenceName)) {
       return;
     }
     await this._loggedExecute(`CREATE SEQUENCE ${sequenceName}`);
     await this._loggedExecute(`ALTER SEQUENCE ${sequenceName} RESTART WITH 0`);
+    if (!skipAT) {
+      await this._cachedStatements.addToATGenerator({generatorName: sequenceName});
+    }
   }
 
   public async dropSequence(sequenceName: string, ignore: boolean = this._defaultIgnore): Promise<void> {
@@ -125,7 +133,7 @@ export class DDLHelper {
 
   public async addTable(tableName: string,
                         scalarFields: IFieldProps[],
-                        ignoreAT: boolean = this._ignoreAT,
+                        skipAT: boolean = this._skipAT,
                         ignore: boolean = this._defaultIgnore): Promise<string> {
     if (ignore && await this._cachedStatements.isTableExists(tableName)) {
       return tableName;
@@ -134,7 +142,7 @@ export class DDLHelper {
       `${item.name.padEnd(31)} ${item.domain.padEnd(31)} ${DDLHelper._getColumnProps(item)}`.trim()
     ));
     await this._loggedExecute(`CREATE TABLE ${tableName} (\n  ` + fields.join(",\n  ") + `\n)`);
-    if (!ignoreAT) {
+    if (!skipAT) {
       await this._cachedStatements.addToATRelations({relationName: tableName});
       for (const field of scalarFields) {
         await this._cachedStatements.addToATRelationField({
@@ -148,7 +156,7 @@ export class DDLHelper {
   }
 
   public async dropTable(tableName: string,
-                         ignoreAT: boolean = this._ignoreAT,
+                         skipAT: boolean = this._skipAT,
                          ignore: boolean = this._defaultIgnore): Promise<void> {
     if (ignore
       && !(await this._cachedStatements.isTableExists(tableName))) {
@@ -156,7 +164,7 @@ export class DDLHelper {
     }
     await this._loggedExecute(`DROP TABLE ${tableName}`);
 
-    if (!ignoreAT) {
+    if (!skipAT) {
       await this._cachedStatements.dropATRelations({relationName: tableName});
     }
   }
@@ -174,7 +182,7 @@ export class DDLHelper {
 
   public async addColumns(tableName: string,
                           fields: IFieldProps[],
-                          ignoreAT: boolean = this._ignoreAT,
+                          skipAT: boolean = this._skipAT,
                           ignore: boolean = this._defaultIgnore): Promise<void> {
     for (const field of fields) {
       if (ignore && await this._cachedStatements.isColumnExists(tableName, field.name)) {
@@ -183,7 +191,7 @@ export class DDLHelper {
       const column = field.name.padEnd(31) + " " + field.domain.padEnd(31);
       await this._loggedExecute(`ALTER TABLE ${tableName} ADD ${column} ${DDLHelper._getColumnProps(field)}`.trim());
 
-      if (!ignoreAT) {
+      if (!skipAT) {
         await this._cachedStatements.addToATRelationField({
           fieldName: field.name,
           relationName: tableName,
@@ -195,7 +203,7 @@ export class DDLHelper {
 
   public async dropColumns(tableName: string,
                            fieldNames: string[],
-                           ignoreAT: boolean = this._ignoreAT,
+                           skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<void> {
     for (const field of fieldNames) {
       if (ignore && !(await this._cachedStatements.isColumnExists(tableName, field))) {
@@ -203,7 +211,7 @@ export class DDLHelper {
       }
       await this._loggedExecute(`ALTER TABLE ${tableName} DROP ${field}`);
 
-      if (!ignoreAT) {
+      if (!skipAT) {
         await this._cachedStatements.dropATRelationField(field);
       }
     }
@@ -211,17 +219,26 @@ export class DDLHelper {
 
   public async createIndex(indexName: string,
                            tableName: string,
-                           type: Sorting,
                            fieldNames: string[],
+                           options: IIndexOptions = {},
+                           skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<string> {
     if (ignore && await this._cachedStatements.isIndexExists(indexName)) {
       return indexName;
     }
-    await this._loggedExecute(`CREATE ${type} INDEX ${indexName} ON ${tableName} (${fieldNames.join(", ")})`);
+    const sortType = options.sortType || "";
+    const unique = options.unique ? "UNIQUE" : "";
+    const opt = `${unique} ${sortType}`.trim();
+    await this._loggedExecute(`CREATE ${opt} INDEX ${indexName} ON ${tableName} (${fieldNames.join(", ")})`);
+
+    if (!skipAT) {
+      await this._cachedStatements.addToATIndices({indexName: indexName, relationName: tableName});
+    }
     return indexName;
   }
 
   public async dropIndex(indexName: string,
+                         skipAT: boolean = this._skipAT,
                          ignore: boolean = this._defaultIgnore): Promise<void> {
 
     if (ignore && !(await this._cachedStatements.isIndexExists(indexName))) {
@@ -229,6 +246,9 @@ export class DDLHelper {
     }
     await this._loggedExecute(`DROP INDEX ${indexName}`);
 
+    if (!skipAT) {
+      await this._cachedStatements.dropATIndices({indexName: indexName});
+    }
   }
 
   public async addUnique(constraintName: string,
@@ -283,7 +303,7 @@ export class DDLHelper {
 
   public async addDomain(domainName: string,
                          props: IDomainProps,
-                         ignoreAT: boolean = this._ignoreAT,
+                         skipAT: boolean = this._skipAT,
                          ignore: boolean = this._defaultIgnore): Promise<string> {
     if (ignore && await this._cachedStatements.isDomainExists(domainName)) {
       return domainName;
@@ -291,21 +311,21 @@ export class DDLHelper {
     await this._loggedExecute(`CREATE DOMAIN ${domainName.padEnd(31)} AS ${props.type.padEnd(31)}` +
       DDLHelper._getColumnProps(props));
 
-    if (!ignoreAT) {
+    if (!skipAT) {
       await this._cachedStatements.addToATFields({fieldName: domainName});
     }
     return domainName;
   }
 
   public async dropDomain(domainName: string,
-                          ignoreAT: boolean = this._ignoreAT,
+                          skipAT: boolean = this._skipAT,
                           ignore: boolean = this._defaultIgnore): Promise<void> {
     if (ignore && !(await this._cachedStatements.isDomainExists(domainName))) {
       return;
     }
     await this._loggedExecute(`DROP DOMAIN ${domainName}`);
 
-    if (!ignoreAT) {
+    if (!skipAT) {
       await this._cachedStatements.dropATFields({fieldName: domainName});
     }
   }
@@ -314,6 +334,7 @@ export class DDLHelper {
                                        tableName: string,
                                        fieldName: string,
                                        sequenceName: string,
+                                       skipAT: boolean = this._skipAT,
                                        ignore: boolean = this._defaultIgnore): Promise<string> {
     if (ignore && await this._cachedStatements.isTriggerExists(triggerName)) {
       return triggerName;
@@ -326,15 +347,23 @@ export class DDLHelper {
         IF (NEW.${fieldName} IS NULL) THEN NEW.${fieldName} = NEXT VALUE FOR ${sequenceName};
       END
     `);
+
+    if (!skipAT) {
+      await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
+    }
     return triggerName;
   }
 
   public async dropAutoIncrementTrigger(triggerName: string,
+                                        skipAT: boolean = this._skipAT,
                                         ignore: boolean = this._defaultIgnore): Promise<void> {
     if (ignore && !(await this._cachedStatements.isTriggerExists(triggerName))) {
       return;
     }
     await this._loggedExecute(`DROP TRIGGER ${triggerName}`);
+    if (!skipAT) {
+      await this._cachedStatements.dropATTriggers({triggerName: triggerName});
+    }
   }
 
   private async _loggedExecute(sql: string): Promise<void> {
