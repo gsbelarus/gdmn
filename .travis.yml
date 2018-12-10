@@ -6,7 +6,7 @@ matrix:
 cache:
   yarn: true
   directories:
-    - $PWD/node_modules/node-firebird-native-api
+    - ${TRAVIS_BUILD_DIR}/node_modules/node-firebird-native-api
 
 language: node_js
 
@@ -16,7 +16,7 @@ node_js:
 env:
   - CXX=g++-5
   global:
-    - PATH="$PWD/node_modules/.bin:$PATH"
+    - PATH=${TRAVIS_BUILD_DIR}/node_modules/.bin:$PATH
 
 addons:
   apt:
@@ -40,7 +40,8 @@ install:
 #  - yarn run bootstrap
 
 script:
-  - cd ./src/gdmn-front && travis_wait yarn run ci:build # lerna run ci:build --scope gdmn-front
+  - cd $TRAVIS_BUILD_DIR
+  - lerna run ci:build --scope gdmn-front # cd ./src/gdmn-front && travis_wait yarn run ci:build
 
 notifications:
   email:
