@@ -9,10 +9,12 @@
 
 ### Windows
 
+Педварительно, если установлены, удалить Visual Studio Build tools 2017. Это можно сделать через инсталятор Visual Studio Installer в меню приложений Windows.
+
 Выполняем из командной строки с правами Администратора:
 
         ```
-        $ yarn global add windows-build-tools
+        $ npm install --global --production windows-build-tools --vs2015
         $ yarn global add node-gyp
         ```
 
