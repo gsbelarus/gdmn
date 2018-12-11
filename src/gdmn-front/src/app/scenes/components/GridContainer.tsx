@@ -44,8 +44,8 @@ export function getGridContainer(
           width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
         })),
       leftSideColumns: 0,
-      rightSideColumns: 0
-      // hideFooter: true //  fixme: type
+      rightSideColumns: 0,
+      hideFooter: true
     })
   );
 
