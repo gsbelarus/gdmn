@@ -1,5 +1,7 @@
 import React from 'react';
-import { TextField, DefaultButton, PrimaryButton } from 'office-ui-fabric-react';
+import { TextField  } from 'office-ui-fabric-react/lib/components/TextField';
+import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+
 import { View } from '../../components/View';
 
 export interface IAccountViewProps {

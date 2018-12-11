@@ -1,7 +1,8 @@
-import { TAuthActions, authActions } from '../scenes/auth/actions';
-import { IContextualMenuItem, ContextualMenuItemType } from 'office-ui-fabric-react';
-import { Link } from 'react-router-dom';
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { IContextualMenuItem, ContextualMenuItemType } from 'office-ui-fabric-react/lib/components/ContextualMenu';
+
+import { TAuthActions, authActions } from '../scenes/auth/actions';
 import { TGdmnActions } from '../scenes/gdmn/actions';
 
 export const uiForms = [

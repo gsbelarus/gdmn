@@ -1,10 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    // override
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": ["esnext", "dom"],
     "outDir": "./build",
-    "target": "es5",
+    "target": "es5", // fixme: esnext react-hot-loader
+    // additional
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",

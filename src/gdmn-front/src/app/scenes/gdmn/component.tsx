@@ -2,11 +2,15 @@ import React, { Fragment, Component } from 'react';
 import { Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { InjectedProps } from 'react-router-breadcrumbs-hoc';
+import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
+import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
+import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
+
+import styles from './styles.css';
+
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
-import { Icon, IconButton, IContextualMenuItemProps, ContextualMenuItem } from 'office-ui-fabric-react';
-import styles from './styles.css';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '../auth/actions';
 import { TGdmnActions } from './actions';

@@ -1,6 +1,7 @@
-import { BaseComponent, IContextualMenuItem } from 'office-ui-fabric-react';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { IContextualMenuItem } from 'office-ui-fabric-react/lib/components/ContextualMenu';
+import { BaseComponent } from 'office-ui-fabric-react/lib/Utilities';
 
 export interface IContextualMenuItemWithLink extends IContextualMenuItem {
   link?: string;

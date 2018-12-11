@@ -1,5 +1,7 @@
 import React, { MouseEvent, Component } from 'react';
 import { IToken } from 'chevrotain';
+import { TextField  } from 'office-ui-fabric-react/lib/components/TextField';
+import { DefaultButton } from 'office-ui-fabric-react/lib/components/Button';
 import {
   Involvement,
   RusAdjective,
@@ -33,7 +35,7 @@ import {
   SemContext,
   semCategory2Str
 } from 'gdmn-nlp';
-import { TextField, DefaultButton } from 'office-ui-fabric-react';
+
 import './MorphBox.css';
 
 export interface IMorphBoxProps {

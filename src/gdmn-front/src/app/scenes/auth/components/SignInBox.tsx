@@ -1,5 +1,7 @@
 import React, { Component, Fragment } from 'react';
-import { TextField, PrimaryButton, Spinner, SpinnerSize } from 'office-ui-fabric-react';
+import { TextField,  } from 'office-ui-fabric-react/lib/components/TextField';
+import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/components/Spinner';
 import { PasswordInput } from '@gdmn/client-core';
 
 //  пока добавлено в global.css

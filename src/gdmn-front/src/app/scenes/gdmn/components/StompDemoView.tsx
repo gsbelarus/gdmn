@@ -1,6 +1,8 @@
 import React from 'react';
+import { TextField  } from 'office-ui-fabric-react/lib/components/TextField';
+import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
-import { TextField, PrimaryButton } from 'office-ui-fabric-react';
+
 import { View } from '../../components/View';
 
 interface IStompDemoViewState {

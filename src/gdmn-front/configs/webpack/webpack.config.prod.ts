@@ -7,7 +7,8 @@ import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import TerserPlugin from 'terser-webpack-plugin';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
-// import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 
 import { getWebpackConfigBase, cssLoader, cssModulesLoader } from './webpackConfigBase';
 import { getRootRelativePath } from './utils';
@@ -51,14 +52,15 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     ]
   },
   output: {
-    publicPath: '/' //'/gs/ng/' // todo: test
+    publicPath: '/'
   },
   optimization: {
     minimizer: [
+      // new webpack.optimize.AggressiveMergingPlugin(),
       new TerserPlugin({
         cache: true,
-        parallel: true
-        // sourceMap: true
+        parallel: true,
+        sourceMap: true
       })
       // new OptimizeCSSAssetsPlugin({})
     ]
@@ -74,8 +76,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     }),
     new CompressionPlugin({
       algorithm: 'gzip',
-      test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/,
-      // deleteOriginalAssets: true
+      test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/
     })
   ],
   stats: {
