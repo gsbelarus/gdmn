@@ -7,17 +7,17 @@ import { RecordSet } from 'gdmn-recordset';
 import { ConnectedGrid } from '../components/GridContainer';
 
 export interface IERModelViewProps {
-  erModel?: ERModel;
-  entitiesRs?: RecordSet;
-  attributesRs?: RecordSet;
-  fillEntities: (erModel: ERModel) => void;
-  connectGrid: (name: string, rs: RecordSet, columns: IColumn[] | undefined, getGridRef: GetGridRef) => ConnectedGrid;
-}
+  erModel?: ERModel,
+  entitiesRs?: RecordSet,
+  attributesRs?: RecordSet,
+  fillEntities: (erModel: ERModel) => void,
+  connectGrid: (name: string, rs: RecordSet, columns: IColumn[] | undefined, getGridRef: GetGridRef) => ConnectedGrid
+};
 
 export interface IERModelViewState {
-  entitiesGrid?: ConnectedGrid;
-  attributesGrid?: ConnectedGrid;
-}
+  entitiesGrid?: ConnectedGrid,
+  attributesGrid?: ConnectedGrid
+};
 
 export class ERModelView extends View<IERModelViewProps, {}> {
   private _refEntitiesGrid?: GDMNGrid;
@@ -53,49 +53,40 @@ export class ERModelView extends View<IERModelViewProps, {}> {
       <>
         {erModel && `ERModel: ${Object.entries(erModel.entities).length}`}
         {entitiesRs && `RecordSet: ${entitiesRs.size}`}
-        {entitiesRs && attributesRs && (
-          <DefaultButton
-            text="Load grid..."
-            onClick={() => {
-              this.setState({
-                entitiesGrid: connectGrid('entities', entitiesRs, undefined, () => {
-                  const res = this._refEntitiesGrid;
+        {entitiesRs && attributesRs && <DefaultButton text="Load grid..." onClick={ () =>
+          {
+            this.setState({
+              entitiesGrid: connectGrid('entities', entitiesRs, undefined, () => {
+                const res = this._refEntitiesGrid;
 
-                  if (!res) {
-                    throw new Error(`Grid ref is not set`);
-                  }
+                if (!res) {
+                  throw new Error(`Grid ref is not set`);
+                }
 
-                  return res;
-                }),
-                attributesGrid: connectGrid('attributes', attributesRs, undefined, () => {
-                  const res = this._refAttributesGrid;
+                return res;
+              }),
+              attributesGrid: connectGrid('attributes', attributesRs, undefined, () => {
+                const res = this._refAttributesGrid;
 
-                  if (!res) {
-                    throw new Error(`Grid ref is not set`);
-                  }
+                if (!res) {
+                  throw new Error(`Grid ref is not set`);
+                }
 
-                  return res;
-                })
-              });
-            }}
-          />
-        )}
-        {EntitiesGrid && AttributesGrid && (
+                return res;
+              })
+            });
+          }}
+        />}
+        {EntitiesGrid && AttributesGrid &&
           <div className="ViewGridPlacement">
-            <EntitiesGrid
-              ref={(grid: any) => grid && (this._refEntitiesGrid = grid.getWrappedInstance())}
-              rs={entitiesRs!}
-            />
-            <AttributesGrid
-              ref={(grid: any) => grid && (this._refAttributesGrid = grid.getWrappedInstance())}
-              rs={attributesRs!}
-            />
+            <EntitiesGrid ref={ (grid: any) => grid && (this._refEntitiesGrid = grid.getWrappedInstance()) } rs={entitiesRs!} />
+            <AttributesGrid ref={ (grid: any) => grid && (this._refAttributesGrid = grid.getWrappedInstance()) } rs={attributesRs!} />
           </div>
-        )}
+        }
       </>
     );
   }
-}
+};
 
 /*
 
