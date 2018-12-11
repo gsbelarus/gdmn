@@ -15,7 +15,7 @@ export function getGridContainer(disp: ThunkDispatch<IState, never, GridAction>,
       })),
     leftSideColumns: 0,
     rightSideColumns: 0,
-    hideFooter: true
+    // hideFooter: true //  fixme: type
   }));
 
   return connect(
