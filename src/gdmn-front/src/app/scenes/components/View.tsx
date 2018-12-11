@@ -18,7 +18,11 @@ export class View<P, S> extends Component<P, S> {
     return <div className="ViewWide">{content}</div>;
   }
 
+  public renderLoading(): JSX.Element {
+    return <div>Loading...</div>;
+  }
+
   public render() {
-    return <div>The View...</div>;
+    return <div>{this.getViewCaption()}</div>;
   }
 }
