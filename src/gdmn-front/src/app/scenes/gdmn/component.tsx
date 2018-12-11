@@ -27,7 +27,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     return (
       <div className="App">
         <div className="Header">
-          <Link to="/">
+          <Link to={`${match.path}`}>
             <Icon iconName="Home" className="RoundIcon" />
           </Link>
           <Icon iconName="Chat" className="NoFrameIcon" />
