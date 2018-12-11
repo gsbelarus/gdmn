@@ -3,7 +3,7 @@ import React, { ReactType } from 'react';
 import ReactDOM from 'react-dom';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
-import { RouteAccessLevelType } from '@gdmn/client-core';
+import { isDevMode, RouteAccessLevelType } from '@gdmn/client-core';
 
 import { getStore } from '@src/app/store/store';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
@@ -14,9 +14,8 @@ import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
 
 import config from 'config.json';
 
-// TODO server host/port from window
 const clientRootPath = config.server.paths.clientRoot;
-const apiUrl = `${config.server.http.host}:${config.server.http.port}`;
+const apiUrl = `${isDevMode() ? config.server.api.host : 'ws://' + window.location.hostname}:${isDevMode() ? config.server.api.port : window.location.port}`;
 const domContainerNode = config.webpack.appMountNodeId;
 
 const apiService = new GdmnPubSubApi(apiUrl); // todo: config.server.authScheme
