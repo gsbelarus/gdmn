@@ -36,10 +36,13 @@ type TTaskCmd<TActionName extends keyof TTaskActionPayloadTypes> = ICmd<
 >;
 
 type TTaskCmdResult<TActionName extends keyof TTaskActionResultTypes> = ICmdResult<
-  TGdmnReceivedMessageMeta & {
+  // TGdmnReceivedMessageMeta & // todo: tmp
+  {
     result?: TTaskActionResultTypes[TActionName];
     status?: TTaskStatus;
     progress?: ITaskProgress;
+
+    action: TTaskActionNames; // todo: tmp
   }
 >;
 

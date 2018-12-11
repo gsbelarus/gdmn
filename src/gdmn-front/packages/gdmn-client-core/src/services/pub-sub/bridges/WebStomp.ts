@@ -19,7 +19,7 @@ import {
   TStompFrameHeaders,
   TSubcribeFrameHeaders
 } from '../protocols/stomp-protocol-v1.2';
-import { IPubSubMessage } from '../PubSubClient';
+import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
 import {
   BasePubSubBridge,
   IPubSubMsgPublishState,
@@ -75,7 +75,8 @@ interface IStompServiceConfig {
  feat: auto resubscribe
  note: явное использование receipt только для StompFrame - PublishMessage
 */
-class WebStomp extends BasePubSubBridge<
+class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends BasePubSubBridge<
+  TErrorMessage,
   Partial<TStompFrameHeaders>,
   Partial<TDisconnectFrameHeaders>,
   Partial<TSubcribeFrameHeaders>
@@ -107,14 +108,14 @@ class WebStomp extends BasePubSubBridge<
           if (this.client) {
             console.log('connect: DISCONNECTING. DISCONNECTED->CONNECTING->activate');
             this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
-            this.client.connectHeaders = <any>meta || this.clientConfig.connectHeaders || {}; // fixme: type
+            (<Partial<StompHeaders>>this.client.connectHeaders) = meta || this.clientConfig.connectHeaders || {};
             this.client.activate();
           }
         });
     } else {
       console.log('connect: NOT DISCONNECTING');
       this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
-      this.client.connectHeaders = <any>meta || this.clientConfig.connectHeaders || {}; // fixme: type
+      (<Partial<StompHeaders>>this.client.connectHeaders) = meta || this.clientConfig.connectHeaders || {};
       this.client.activate();
     }
   }
@@ -141,7 +142,7 @@ class WebStomp extends BasePubSubBridge<
     this.client!.debug('Disconnecting...');
     // this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
 
-    if (meta) this.client.disconnectHeaders = <any>meta;
+    if (meta) (<Partial<StompHeaders>>this.client.disconnectHeaders) = meta;
     this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTING);
     this.client.deactivate();
   }
@@ -171,14 +172,13 @@ class WebStomp extends BasePubSubBridge<
           subscription = this.client!.subscribe(
             topic,
             (messageFrame: Message) => {
-              messageObserver.next(<any>{
-                // fixme: type
+              messageObserver.next(<TMessage>{
                 data: messageFrame.body,
                 meta: messageFrame.headers
               });
               if (meta.ack !== 'auto') messageFrame.ack();
             },
-            <any>meta // fixme: type
+            <StompHeaders>meta
           );
         }
       });
@@ -231,7 +231,7 @@ class WebStomp extends BasePubSubBridge<
       status: TPubSubMsgPublishStatus.PUBLISHING,
       meta: { receipt: message.meta.receipt } // todo
     });
-    this.client.publish({ destination: topic, body: message.data, headers: <any>message.meta }); // fixme: type
+    this.client.publish({ destination: topic, body: message.data, headers: <StompHeaders>message.meta });
 
     return publishStateObservable;
   }
@@ -280,7 +280,7 @@ class WebStomp extends BasePubSubBridge<
   /* не отслеживаем receipt - STOMP broker will close the connection after error frame */
   private onErrorFrame: frameCallbackType = errorFrame => {
     this.client!.debug(`ErrorFrame: ${JSON.stringify(errorFrame)}`);
-    this.errorMessageObservable.next({ meta: errorFrame.headers, data: errorFrame.body });
+    this.errorMessageObservable.next(<TErrorMessage>{ meta: errorFrame.headers, data: errorFrame.body });
 
     if (this.client) this.client.forceDisconnect(); // todo ?
     this.disconnect();
@@ -304,7 +304,7 @@ class WebStomp extends BasePubSubBridge<
 
   set reconnectMeta(meta: Partial<TStompFrameHeaders>) {
     if (!this.client) return;
-    this.client.connectHeaders = meta as any; // fixme: type // todo: test disconnect
+    (<Partial<StompHeaders>>this.client.connectHeaders) = meta;
   }
 
   get reconnectMeta(): Partial<TStompFrameHeaders> {

@@ -1,3 +1,5 @@
+import { IPubSubMessageMeta } from '@gdmn/client-core';
+
 interface _IMessageMeta<TActionTypes extends string> {
   action: TActionTypes;
   [k: string]: string | undefined;
@@ -53,9 +55,14 @@ type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTyp
 // receive
 type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
 
-interface IReceivedErrorMeta<TErrorCodes extends string> {
+// interface IReceivedErrorMeta<TErrorCodes extends string> extends IPubSubMessageMeta {
+//   code: TErrorCodes;
+//   message: string;
+// } //& IPubSubMessageMeta;
+
+type IReceivedErrorMeta<TErrorCodes extends string> = IPubSubMessageMeta & {
   code: TErrorCodes;
-  message: string; // todo: tmp
+  message: string;
 }
 
 // todo reconnect (session)

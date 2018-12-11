@@ -7,7 +7,6 @@ import {
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus
 } from './bridges/BasePubSubBridge';
-import { TStompFrameHeaders } from '@gdmn/client-core';
 
 interface IPubSubMessageMeta {
   [key: string]: string | undefined;
@@ -76,13 +75,12 @@ class PubSubClient {
     topic: string,
     message: TMessage
   ): Subject<IPubSubMsgPublishState> {
-    // todo never
     const queuedMessage: IQueuedPublishMessage = { topic, message, publishStateObservable: new Subject() };
     this.queuedPublishMessages.push(queuedMessage);
 
     this.queuedMessagePublish(queuedMessage);
 
-    return queuedMessage.publishStateObservable; // todo test
+    return queuedMessage.publishStateObservable;
   }
 
   public get connectedMessageObservable(): Subject<IPubSubMessage> {
@@ -128,7 +126,7 @@ class PubSubClient {
     }
 
     this.bridge
-      .publish(queuedMessage.topic, queuedMessage.message) // todo never
+      .publish(queuedMessage.topic, queuedMessage.message)
       .subscribe(publishState => {
         queuedMessage.publishStateObservable.next(publishState);
 

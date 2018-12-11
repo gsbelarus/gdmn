@@ -57,4 +57,12 @@ function generateS4() {
     .substring(1);
 }
 
-export { promisify, isDevMode, Subtract, bytesToMb, formatDateToLocalLong, generateGuid };
+function stringfyValues(obj: any): { [key: string]: string } {
+    Object.keys(obj).forEach(key => {
+      typeof obj[key] === 'object' ? stringfyValues(obj[key]) : obj[key] = '' + obj[key];
+    });
+
+    return obj;
+}
+
+export { promisify, isDevMode, Subtract, bytesToMb, formatDateToLocalLong, generateGuid, stringfyValues };

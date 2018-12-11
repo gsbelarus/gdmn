@@ -5,10 +5,10 @@ import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
 
 const enum TPubSubConnectStatus {
   CONNECTED,
-  CONNECTING, // todo stomp.beforeconnect
+  CONNECTING, // todo: set on stomp.beforeconnect
   DISCONNECTING,
   DISCONNECTED
-  // todo reconnecting
+  // todo: RECONNECTING
 }
 
 const enum TPubSubMsgPublishStatus {
@@ -22,9 +22,10 @@ interface IPubSubMsgPublishState {
 }
 
 abstract class BasePubSubBridge<
+  TErrorMessage extends IPubSubMessage = IPubSubMessage,
   TConnectMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
   TDisconnectMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
-  TSubcribeMeta extends IPubSubMessageMeta = IPubSubMessageMeta
+  TSubcribeMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
 > {
   /* connect status*/
   public connectionStatusObservable: BehaviorSubject<TPubSubConnectStatus> = new BehaviorSubject<TPubSubConnectStatus>(
@@ -35,7 +36,7 @@ abstract class BasePubSubBridge<
   );
 
   public connectedMessageObservable: Subject<IPubSubMessage> = new Subject();
-  public errorMessageObservable: Subject<IPubSubMessage> = new Subject();
+  public errorMessageObservable: Subject<TErrorMessage> = new Subject();
 
   public abstract set reconnectMeta(meta: IPubSubMessageMeta);
   public abstract get reconnectMeta(): IPubSubMessageMeta;

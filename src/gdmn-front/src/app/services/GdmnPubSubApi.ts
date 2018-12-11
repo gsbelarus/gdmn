@@ -5,7 +5,7 @@ import ExtendableError from 'es6-error';
 
 import {
   _ISignResponseMeta,
-  ICmdResult,
+  ICmdResult, IGdmnMessageData,
   IGdmnMessageError,
   ITaskProgressMessageData,
   ITaskStatusMessageData,
@@ -14,7 +14,6 @@ import {
   TCreateAppTaskCmd,
   TCreateAppTaskCmdResult,
   TDeleteAccountCmd,
-  TDeleteAccountCmdResult,
   TDeleteAppTaskCmd,
   TDeleteAppTaskCmdResult,
   TGdmnErrorCodes,
@@ -48,6 +47,7 @@ import {
   IPubSubMessage,
   IPubSubMsgPublishState,
   PubSubClient,
+  stringfyValues,
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus,
   TStandardHeaderKey,
@@ -85,6 +85,7 @@ class GdmnPubSubApi {
 
     this.pubSubClient = new PubSubClient(
       new WebStomp({
+        // todo: <IPubSubMessage<TGdmnReceivedErrorMeta>>
         brokerURL: endpointUrl,
         heartbeatIncoming: 2000,
         heartbeatOutgoing: 2000,
@@ -149,8 +150,8 @@ class GdmnPubSubApi {
   }
 
   // todo: remove -> exeption
-  public get errorMessageObservable(): Subject<IPubSubMessage> {
-    return this.pubSubClient.errorMessageObservable;
+  public get errorMessageObservable(): Subject<IPubSubMessage<TGdmnReceivedErrorMeta>> {
+    return <any>this.pubSubClient.errorMessageObservable;
   }
 
   public async auth(cmd: TAuthCmd | TDeleteAccountCmd, reconnect: boolean = false): Promise<TAuthCmdResult> {
@@ -168,7 +169,8 @@ class GdmnPubSubApi {
     }
 
     console.log('AUTH+connect');
-    this.pubSubClient.connect(<any>cmd.payload); // fixme: type
+
+    this.pubSubClient.connect(stringfyValues(cmd.payload));
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
@@ -192,7 +194,7 @@ class GdmnPubSubApi {
   }
 
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {
-    this.pubSubClient.connect(<any>cmd.payload); // fixme: type
+    this.pubSubClient.connect(stringfyValues(cmd.payload));
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
@@ -264,28 +266,26 @@ class GdmnPubSubApi {
   ): Observable<TTaskCmdResult<TActionName>> {
     return this.pubSubClient
       .publish<IPubSubMessage<TGdmnPublishMessageMeta>>(TGdmnTopic.TASK, {
-        // fixme: type
         meta: {
           action: taskCmd.payload.action,
           [TStandardHeaderKey.CONTENT_TYPE]: 'application/json;charset=utf-8' // todo
         },
         data: JSON.stringify({ payload: taskCmd.payload.payload })
       })
-      .pipe(
-        filter(
-          (msgPublishState: IPubSubMsgPublishState) => msgPublishState.status === TPubSubMsgPublishStatus.PUBLISHED
-        ),
-        mergeMap(msgPublishState => {
-          // fixme: type ,TTaskCmdResult<TActionName>
-          const taskIdFilterOperator = filter(
-            (
-              message: IPubSubMessage<Partial<TGdmnReceivedMessageMeta>> // fixme: type
-            ) => !!msgPublishState.meta && !!message.meta && message.meta['task-id'] === msgPublishState.meta['task-id'] // todo
+      .pipe<IPubSubMsgPublishState, TTaskCmdResult<TActionName>>(
+        filter(msgPublishState => msgPublishState.status === TPubSubMsgPublishStatus.PUBLISHED),
+        mergeMap<IPubSubMsgPublishState, TTaskCmdResult<TActionName>>(msgPublishState => {
+          const taskIdFilterOperator = filter<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+            message =>
+              !!msgPublishState.meta && !!message.meta && message.meta['task-id'] === msgPublishState.meta['task-id'] // todo
           );
 
-          const parseMsgDataMapOperator = map((message: any) => {
-            // fixme: type  IPubSubMessage<Partial<TGdmnReceivedMessageMeta>>, ITaskStatusMessageData<TActionName>
-            return JSON.parse(message.data || '');
+          const parseMsgDataMapOperator = map<
+            IPubSubMessage<TGdmnReceivedMessageMeta>,
+            IGdmnMessageData
+          >(message => {
+            if (!message.data) throw Error('Invalid server response (TaskCmdResult)');
+            return JSON.parse(message.data);
           });
 
           /*
@@ -310,8 +310,10 @@ class GdmnPubSubApi {
             taskIdFilterOperator,
             first(),
             parseMsgDataMapOperator,
-            map<TTaskResultMessageData<TActionName>, TTaskCmdResult<TActionName>>((resultMsgData: any) => ({
-              // fixme: type
+            map<IGdmnMessageData, TTaskResultMessageData<TActionName>>(
+              resultMsgData => <TTaskResultMessageData<TActionName>>resultMsgData
+            ),
+            map<TTaskResultMessageData<TActionName>, TTaskCmdResult<TActionName>>(resultMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
                 status: resultMsgData.status,
@@ -339,8 +341,10 @@ class GdmnPubSubApi {
           const taskProgressResult = this.taskProgressResultObservable!.pipe(
             taskIdFilterOperator,
             parseMsgDataMapOperator,
-            map<ITaskProgressMessageData<TActionName>, TTaskCmdResult<TActionName>>((progressMsgData: any) => ({
-              // fixme: type
+            map<IGdmnMessageData, ITaskProgressMessageData<TActionName>>(
+              resultMsgData => <ITaskProgressMessageData<TActionName>>resultMsgData
+            ),
+            map<ITaskProgressMessageData<TActionName>, TTaskCmdResult<TActionName>>(progressMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
                 progress: progressMsgData.progress
@@ -365,8 +369,10 @@ class GdmnPubSubApi {
           const taskStatusResult = this.taskStatusResultObservable!.pipe(
             taskIdFilterOperator,
             parseMsgDataMapOperator,
-            map<ITaskStatusMessageData<TActionName>, TTaskCmdResult<TActionName>>((statusMsgData: any) => ({
-              // fixme: type
+            map<IGdmnMessageData, ITaskStatusMessageData<TActionName>>(
+              resultMsgData => <ITaskStatusMessageData<TActionName>>resultMsgData
+            ),
+            map<ITaskStatusMessageData<TActionName>, TTaskCmdResult<TActionName>>(statusMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
                 status: statusMsgData.status

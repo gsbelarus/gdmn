@@ -57,12 +57,11 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
         }
 
         errorSubscription = apiService.errorMessageObservable.pipe(first()).subscribe(errMessage => {
-          const error = new GdmnPubSubError(<any>errMessage); // fixme type
+          const error = new GdmnPubSubError(errMessage);
 
           if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
             dispatch(authActions.signOut());
           } else {
-            //  fixme: duplication after auth error
             dispatch(rootActions.onError(error));
 
             if (error.errorData.code === TGdmnErrorCodes.INTERNAL) {
