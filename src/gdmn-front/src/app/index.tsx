@@ -15,7 +15,9 @@ import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
 import config from 'config.json';
 
 const clientRootPath = config.server.paths.clientRoot;
-const apiUrl = `${isDevMode() ? config.server.api.host : 'ws://' + window.location.hostname}:${isDevMode() ? config.server.api.port : window.location.port}`;
+const apiUrl = `${isDevMode() ? config.server.api.host : 'ws://' + window.location.hostname}:${
+  isDevMode() ? config.server.api.port : window.location.port
+}`;
 const domContainerNode = config.webpack.appMountNodeId;
 
 const apiService = new GdmnPubSubApi(apiUrl); // todo: config.server.authScheme

@@ -3,6 +3,8 @@ import { Configuration, EnvironmentPlugin } from 'webpack';
 import merge from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 // @ts-ignore
+import CompressionPlugin from 'compression-webpack-plugin';
+// @ts-ignore
 import TerserPlugin from 'terser-webpack-plugin';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 // import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
@@ -69,6 +71,11 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     // new BundleAnalyzerPlugin(),
     new EnvironmentPlugin({
       NODE_ENV: process.env.NODE_ENV || 'production'
+    }),
+    new CompressionPlugin({
+      algorithm: 'gzip',
+      test: /\.js$|\.css$|\.html$|\.eot?.+$|\.ttf?.+$|\.woff?.+$|\.svg?.+$/,
+      // deleteOriginalAssets: true
     })
   ],
   stats: {
