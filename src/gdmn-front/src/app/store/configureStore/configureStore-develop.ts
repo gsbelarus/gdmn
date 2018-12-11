@@ -18,13 +18,14 @@ const devCompose =
  * там есть в том числе и лог и работает он быстрее чем этот логер,
  * который все пихает в консоль.
  */
-const devMiddlewares: Middleware[] = [/*createLogger()*/];
+const devMiddlewares: Middleware[] = [
+  /*createLogger()*/
+];
 
 function configureStore(rootReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {
-  const store = createStore(rootReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares))); // fixme
+  const store = createStore(rootReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares))); // fixme // if ((<any>module).hot) {
 
-  /* webpack HMR for reducers */ // if ((<any>module).hot) {
-  //   (<any>module).hot.accept('../reducer', () => {
+  /* webpack HMR for reducers */ //   (<any>module).hot.accept('../reducer', () => {
   //     store.replaceReducer(rootReducer);
   //   });
   // }

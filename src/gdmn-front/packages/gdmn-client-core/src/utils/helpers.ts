@@ -58,11 +58,11 @@ function generateS4() {
 }
 
 function stringfyValues(obj: any): { [key: string]: string } {
-    Object.keys(obj).forEach(key => {
-      typeof obj[key] === 'object' ? stringfyValues(obj[key]) : obj[key] = '' + obj[key];
-    });
+  Object.keys(obj).forEach(key => {
+    typeof obj[key] === 'object' ? stringfyValues(obj[key]) : (obj[key] = '' + obj[key]);
+  });
 
-    return obj;
+  return obj;
 }
 
 export { promisify, isDevMode, Subtract, bytesToMb, formatDateToLocalLong, generateGuid, stringfyValues };

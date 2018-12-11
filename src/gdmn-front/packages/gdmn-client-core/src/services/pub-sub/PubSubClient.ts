@@ -125,20 +125,18 @@ class PubSubClient {
       return;
     }
 
-    this.bridge
-      .publish(queuedMessage.topic, queuedMessage.message)
-      .subscribe(publishState => {
-        queuedMessage.publishStateObservable.next(publishState);
+    this.bridge.publish(queuedMessage.topic, queuedMessage.message).subscribe(publishState => {
+      queuedMessage.publishStateObservable.next(publishState);
 
-        if (publishState.status === TPubSubMsgPublishStatus.PUBLISHED) {
-          const itemIndex = this.queuedPublishMessages.findIndex(item => item === queuedMessage);
-          if (itemIndex !== -1) {
-            this.queuedPublishMessages.splice(itemIndex, 1);
-          }
-
-          // queuedMessage.publishStatusObservable.complete(); // todo
+      if (publishState.status === TPubSubMsgPublishStatus.PUBLISHED) {
+        const itemIndex = this.queuedPublishMessages.findIndex(item => item === queuedMessage);
+        if (itemIndex !== -1) {
+          this.queuedPublishMessages.splice(itemIndex, 1);
         }
-      });
+
+        // queuedMessage.publishStatusObservable.complete(); // todo
+      }
+    });
   }
 }
 

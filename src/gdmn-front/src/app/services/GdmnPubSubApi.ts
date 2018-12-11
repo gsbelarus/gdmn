@@ -5,7 +5,8 @@ import ExtendableError from 'es6-error';
 
 import {
   _ISignResponseMeta,
-  ICmdResult, IGdmnMessageData,
+  ICmdResult,
+  IGdmnMessageData,
   IGdmnMessageError,
   ITaskProgressMessageData,
   ITaskStatusMessageData,
@@ -280,10 +281,7 @@ class GdmnPubSubApi {
               !!msgPublishState.meta && !!message.meta && message.meta['task-id'] === msgPublishState.meta['task-id'] // todo
           );
 
-          const parseMsgDataMapOperator = map<
-            IPubSubMessage<TGdmnReceivedMessageMeta>,
-            IGdmnMessageData
-          >(message => {
+          const parseMsgDataMapOperator = map<IPubSubMessage<TGdmnReceivedMessageMeta>, IGdmnMessageData>(message => {
             if (!message.data) throw Error('Invalid server response (TaskCmdResult)');
             return JSON.parse(message.data);
           });

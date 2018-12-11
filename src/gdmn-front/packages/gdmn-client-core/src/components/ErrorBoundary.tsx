@@ -65,7 +65,7 @@ class ErrorBoundary extends React.Component<IErrorBoundaryProps, IErrorBoundaryS
 
     if (error && renderComponent) {
       const Component = renderComponent; // fixme: type ts 3.2
-      return <Component error={error} stack={info ? info.componentStack : ''} />
+      return <Component error={error} stack={info ? info.componentStack : ''} />;
     }
 
     return <Fragment>{children}</Fragment>;

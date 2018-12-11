@@ -63,7 +63,7 @@ type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTy
 type IReceivedErrorMeta<TErrorCodes extends string> = IPubSubMessageMeta & {
   code: TErrorCodes;
   message: string;
-}
+};
 
 // todo reconnect (session)
 

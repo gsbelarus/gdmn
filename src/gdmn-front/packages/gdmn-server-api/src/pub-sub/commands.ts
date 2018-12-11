@@ -35,16 +35,16 @@ type TTaskCmd<TActionName extends keyof TTaskActionPayloadTypes> = ICmd<
   TGdmnPublishMessageMeta & TTaskActionMessageData<TActionName> // todo type test
 >;
 
-type TTaskCmdResult<TActionName extends keyof TTaskActionResultTypes> = ICmdResult<
-  // TGdmnReceivedMessageMeta & // todo: tmp
-  {
-    result?: TTaskActionResultTypes[TActionName];
-    status?: TTaskStatus;
-    progress?: ITaskProgress;
+type TTaskCmdResult<
+  TActionName extends keyof TTaskActionResultTypes
+> = ICmdResult<// TGdmnReceivedMessageMeta & // todo: tmp
+{
+  result?: TTaskActionResultTypes[TActionName];
+  status?: TTaskStatus;
+  progress?: ITaskProgress;
 
-    action: TTaskActionNames; // todo: tmp
-  }
->;
+  action: TTaskActionNames; // todo: tmp
+}>;
 
 // sign up
 
