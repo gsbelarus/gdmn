@@ -5,7 +5,12 @@ import { SortFields } from "gdmn-recordset";
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
 
 export const createGrid = createAction('GRID/CREATE', resolve => {
-  return (params: WithComponentName<{ columns: Columns, leftSideColumns: number, rightSideColumns: number }>) => resolve(params);
+  return (params: WithComponentName<{
+    columns: Columns,
+    leftSideColumns: number,
+    rightSideColumns: number,
+    hideFooter: boolean
+  }>) => resolve(params);
 });
 
 export type CreateGrid = typeof createGrid;

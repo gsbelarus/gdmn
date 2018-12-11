@@ -1,7 +1,7 @@
 import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
 import { GridAction, IColumn, GetGridRef, createGrid, cancelSortDialog, applySortDialog, resizeColumn, columnMove, setCursorCol, GDMNGrid } from "gdmn-grid";
-import { RecordSet, RecordSetAction, SortFields, sortRecordSet, selectRow, setAllRowsSelected, setCurrentRow, toggleGroup } from "gdmn-recordset";
+import { RecordSet, RecordSetAction, SortFields, sortRecordSet, selectRow, setAllRowsSelected, setCurrentRow, toggleGroup, TFieldType } from "gdmn-recordset";
 import { connect } from "react-redux";
 
 export function getGridContainer(disp: ThunkDispatch<IState, never, GridAction>, name: string, rs: RecordSet, columns: IColumn[] | undefined, getGridRef: GetGridRef) {
@@ -10,10 +10,12 @@ export function getGridContainer(disp: ThunkDispatch<IState, never, GridAction>,
       {
         name: fd.fieldName,
         caption: [fd.caption || fd.fieldName],
-        fields: [{...fd}]
+        fields: [{...fd}],
+        width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
       })),
     leftSideColumns: 0,
-    rightSideColumns: 0
+    rightSideColumns: 0,
+    hideFooter: true
   }));
 
   return connect(

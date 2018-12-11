@@ -34,7 +34,8 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
         fields: [{...fd}]
       })),
     leftSideColumns: 0,
-    rightSideColumns: 0
+    rightSideColumns: 0,
+    hideFooter: false
   }));
 
   return connect(

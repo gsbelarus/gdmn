@@ -144,9 +144,8 @@
   text-align: right;
 }
 
-.BorderRightBottom {
+.BorderRight {
   border-right: 1px solid darkgray;
-  border-bottom: 1px solid darkgray;
 }
 
 .BorderBottom {

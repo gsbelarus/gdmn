@@ -33,7 +33,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
       throw new Error(`Duplicate grid component name ${componentName}`);
     }
 
-    const { columns, leftSideColumns, rightSideColumns } = action.payload;
+    const { columns, leftSideColumns, rightSideColumns, hideFooter } = action.payload;
 
     return {
       ...state,
@@ -44,7 +44,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         currentCol: -1,
         selectRows: false,
         hideHeader: false,
-        hideFooter: false,
+        hideFooter,
         sortDialog: false,
         searchIdx: 0
       }

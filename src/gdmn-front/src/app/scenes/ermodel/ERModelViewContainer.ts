@@ -10,7 +10,8 @@ import { ConnectedGrid, getGridContainer } from '../components/GridContainer';
 export const ERModelViewContainer = connect(
   (state: IState): Partial<IERModelViewProps> => ({
     erModel: state.gdmnState.erModel,
-    entitiesRs: state.recordSet.entities
+    entitiesRs: state.recordSet.entities,
+    attributesRs: state.recordSet.attributes
   }),
   dispatch => ({
     fillEntities: (erModel: ERModel) => {
@@ -20,11 +21,13 @@ export const ERModelViewContainer = connect(
           {
             fieldName: 'name',
             dataType: TFieldType.String,
+            size: 31,
             caption: 'Entity name'
           },
           {
             fieldName: 'description',
             dataType: TFieldType.String,
+            size: 60,
             caption: 'Description'
           }
         ],
@@ -36,6 +39,31 @@ export const ERModelViewContainer = connect(
         )
       );
       dispatch(createRecordSet({ name: rs.name, rs }));
+
+      const attributesRS = RecordSet.createWithData(
+        'attributes',
+        [
+          {
+            fieldName: 'name',
+            size: 31,
+            dataType: TFieldType.String,
+            caption: 'Attribute name'
+          },
+          {
+            fieldName: 'description',
+            dataType: TFieldType.String,
+            size: 60,
+            caption: 'Description'
+          }
+        ],
+        List(
+          Object.entries(erModel.entities[rs.getString(rs.currentRow, 'name')].attributes).map(([name, ent]) => ({
+            name,
+            description: ent.lName.ru ? ent.lName.ru.name : name
+          }))
+        )
+      );
+      dispatch(createRecordSet({ name: attributesRS.name, rs: attributesRS }));
     },
     connectGrid: (name: string, rs: RecordSet, columns: IColumn[] | undefined, getGridRef: GetGridRef): ConnectedGrid =>
       getGridContainer(dispatch, name, rs, columns, getGridRef)

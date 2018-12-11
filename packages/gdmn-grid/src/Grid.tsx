@@ -95,7 +95,7 @@ export const styles = {
   DragHandleIcon: 'DragHandleIcon',
   GroupHeaderBackground: 'GroupHeaderBackground',
   BorderBottom: 'BorderBottom',
-  BorderRightBottom: 'BorderRightBottom',
+  BorderRight: 'BorderRight',
   FixedBorder: 'FixedBorder',
   BlackText: 'BlackText',
   GrayText: 'GrayText'
@@ -929,7 +929,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       const borderClass = fixed ? styles.FixedBorder
         : groupHeader ? styles.BorderBottom
-        : styles.BorderRightBottom;
+        : styles.BorderRight;
 
       const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText
         : styles.BlackText;
