@@ -3,17 +3,15 @@ import jwt from "jsonwebtoken";
 import {Logger} from "log4js";
 import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
 import {v1 as uuidV1} from "uuid";
-import {AppAction, Application} from "../apps/base/Application";
+import {Application} from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
 import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
-import {CommandHandler} from "../apps/CommandHandler";
-import {IUser, MainAction, MainApplication} from "../apps/MainApplication";
+import {Actions, CommandProvider} from "../apps/CommandProvider";
+import {IUser, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
 import {DBStatus} from "../db/ADatabase";
 import {StompErrorCode, StompServerError} from "./StompServerError";
-
-type Actions = AppAction | MainAction;
 
 export type Ack = "auto" | "client" | "client-individual";
 
@@ -114,10 +112,6 @@ export class StompSession implements StompClientCommandListener {
       throw new Error("Application is not found");
     }
     return this._application;
-  }
-
-  set application(value: Application) {
-    this._application = value;
   }
 
   get mainApplication(): MainApplication {
@@ -393,16 +387,18 @@ export class StompSession implements StompClientCommandListener {
               return this._sendReceipt(headers, {"task-id": taskDuplicate.id});
             }
           }
-          const command: ICmd<any, any> = {
+          const command: ICmd<Actions, unknown> = {
             id,
             action: headers.action as Actions,
-            payload: JSON.parse(body || "{}").payload
+            payload: body ? JSON.parse(body).payload : undefined
           };
 
-          // TODO remove task-id from receipt; use command.id
-          const task = new CommandHandler(this.application).receive(this.session, command);
-          if (!task) {
-            throw new StompServerError(StompErrorCode.UNSUPPORTED, `Unsupported action: ${command.action}`);
+          // TODO remove task-id from receipt; use command.id ?
+          let task;
+          try {
+            task = new CommandProvider(this.application).receive(this.session, command);
+          } catch (error) {
+            throw new StompServerError(StompErrorCode.INVALID, error.message);
           }
           this._sendReceipt(headers, {"task-id": task.id});
           task.execute().catch(this.logger.error);
