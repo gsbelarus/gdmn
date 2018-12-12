@@ -12,7 +12,6 @@ import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '@src/app/scenes/auth/actions';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/ERModelViewContainer';
-import { IQueryDemoViewProps, QueryDemoView } from '@src/app/scenes/gdmn/components/QueryDemoView';
 import styles from './styles.css';
 import { TGdmnActions } from './actions';
 import { Dispatch } from 'redux';
@@ -21,7 +20,6 @@ type TGdmnViewStateProps = {
   erModel?: ERModel;
 };
 type TGdmnViewProps = IStompDemoViewProps &
-  IQueryDemoViewProps &
   IAccountViewProps &
   TGdmnViewStateProps & {
     dispatch: Dispatch<any>; // TODO
@@ -49,7 +47,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           </div>
           <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
           <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('query', match.url)}</div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
               <b>
@@ -94,10 +91,9 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 path={`${match.path}/account`}
                 component={() => <AccountView apiDeleteAccount={apiDeleteAccount} />}
               />
-              <Route path={`${match.path}/web-stomp`} component={() => <StompDemoView apiPing={apiPing} log={''} />} />
               <Route
-                path={`${match.path}/query`}
-                component={() => <QueryDemoView apiGetData={apiGetData} erModel={erModel} />}
+                path={`${match.path}/web-stomp`}
+                component={() => <StompDemoView apiPing={apiPing} apiGetData={apiGetData} erModel={erModel} />}
               />
               <Route path={`${match.path}/er-model`} component={ERModelViewContainer} />
               <Route path={`${match.path}/*`} component={NotFoundView} />

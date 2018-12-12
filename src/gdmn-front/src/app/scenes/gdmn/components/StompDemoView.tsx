@@ -1,9 +1,16 @@
 import React from 'react';
-import { TextField  } from 'office-ui-fabric-react/lib/components/TextField';
+import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
+import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
+import { RusPhrase } from 'gdmn-nlp';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
 import { View } from '../../components/View';
+
+function createNlpCommand(erTranslatorRU: ERTranslatorRU, parsedTextPhrase: RusPhrase): ICommand | never {
+  return erTranslatorRU.process(parsedTextPhrase);
+}
 
 interface IStompDemoViewState {
   pingDelay: number;
@@ -11,8 +18,9 @@ interface IStompDemoViewState {
 }
 
 interface IStompDemoViewProps {
-  log: string;
+  erModel?: ERModel;
   apiPing: (cmd: TPingTaskCmd) => void;
+  apiGetData: (queryInspector: IEntityQueryInspector) => void;
 }
 
 class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
@@ -34,6 +42,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             <TextField label="steps" value={this.state.pingSteps.toString()} onChange={this.handlePingStepsChange} />
             <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
           </div>
+          <div>
+            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+          </div>
         </div>
       </div>
     );
@@ -48,7 +59,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           steps: this.state.pingSteps
         }
       }
-    } as any); // fixme: type
+    });
   };
 
   private handlePingDelayChange = (event: any) => {
@@ -61,6 +72,45 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     this.setState({
       pingSteps: event.target.value
     });
+  };
+
+  private handleSendQueryClick = () => {
+    // -- BEGIN
+    if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
+    console.log('handleSendQueryClick');
+    const entity = Object.values(this.props.erModel.entities)[0];
+    const query = new EntityQuery(
+      new EntityLink(
+        entity,
+        'alias',
+        Object.values(entity!.attributes)
+          .filter(value => value instanceof ScalarAttribute)
+          .map(value => new EntityQueryField(value))
+      )
+    );
+    this.props.apiGetData(query.inspect());
+    // -- END
+
+    /*
+    // -- BEGIN
+    const phrase = 'покажи все организации и школы из минска и пинска';
+    const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
+
+    if (!parsedPhrase || !this.props.erModel) return;
+
+    const erTranslatorRU = new ERTranslatorRU(this.props.erModel);
+    try {
+      const nlpCmd: ICommand = createNlpCommand(erTranslatorRU, parsedPhrase);
+      const queries = EQueryTranslator.process(nlpCmd);
+
+        queries.map(query => {
+          this.props.apiGetData(query.inspect()); // query.serialize());
+        })
+    } catch (e) {
+      console.log('createCommand() error:', e);
+    }
+    // -- END
+    */
   };
 }
 
