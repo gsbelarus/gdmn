@@ -1,4 +1,4 @@
-import { ERModelView, IERModelViewProps } from './ERModelView';
+import { ERModelView } from './ERModelView';
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
 import { ERModel } from 'gdmn-orm';

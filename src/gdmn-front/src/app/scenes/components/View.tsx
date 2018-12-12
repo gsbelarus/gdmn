@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
 
 export class View<P = {}, S = {}> extends Component<P, S> {
   public getViewCaption(): string {
@@ -28,8 +29,25 @@ export class View<P = {}, S = {}> extends Component<P, S> {
   }
 
   public renderCommandBar(): JSX.Element | undefined {
-    return undefined;
+    return (
+      <CommandBar
+        items={this.getCommandBarItems()}
+      />
+    );
   }
+
+  public getCommandBarItems(): ICommandBarItemProps[] {
+    return [
+      {
+        key: 'test',
+        text: 'Test...'
+      },
+      {
+        key: 'test2',
+        text: 'Test 2...'
+      }
+    ];
+  };
 
   public render() {
     return <div>{this.getViewCaption()}</div>;
