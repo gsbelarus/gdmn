@@ -37,11 +37,11 @@ class QueryDemoView extends View<IQueryDemoViewProps> {
   }
 
   private handleSendQueryClick = () => {
-    // -- TEST BEGIN
+    // -- BEGIN
     if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
     console.log('handleSendQueryClick');
     const entity = Object.values(this.props.erModel.entities)[0];
-    const queries = [
+    const query =
       new EntityQuery(
         new EntityLink(
           entity,
@@ -50,18 +50,12 @@ class QueryDemoView extends View<IQueryDemoViewProps> {
             .filter(value => value instanceof ScalarAttribute)
             .map(value => new EntityQueryField(value))
         )
-      )
-    ];
-
-    Promise.all(
-      queries.map(query => {
-        this.props.apiGetData(query.inspect());
-      })
-    );
-    // -- TEST END
+      );
+      this.props.apiGetData(query.inspect());
+    // -- END
 
     /*
-    // -- TEST BEGIN
+    // -- BEGIN
     const phrase = 'покажи все организации и школы из минска и пинска';
     const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
 
@@ -72,15 +66,13 @@ class QueryDemoView extends View<IQueryDemoViewProps> {
       const nlpCmd: ICommand = createNlpCommand(erTranslatorRU, parsedPhrase);
       const queries = EQueryTranslator.process(nlpCmd);
 
-      Promise.all(
         queries.map(query => {
           this.props.apiGetData(query.inspect()); // query.serialize());
         })
-      );
     } catch (e) {
       console.log('createCommand() error:', e);
     }
-    // -- TEST END
+    // -- END
     */
   };
 }

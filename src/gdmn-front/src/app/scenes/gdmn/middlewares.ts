@@ -119,7 +119,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
           .getData({
             payload: {
               action: TTaskActionNames.QUERY,
-              payload: action.payload // query.inspect() // query.serialize()
+              payload: action.payload
             }
           })
           .subscribe(value => {
