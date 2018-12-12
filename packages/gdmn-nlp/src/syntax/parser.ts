@@ -8,22 +8,26 @@ import { RusNoun } from "../morphology/rusNoun";
 import { RusConjunction } from "../morphology/rusConjunction";
 import { RusWord } from "../morphology/rusMorphology";
 
-export type ParsedText = {
+export type ParsedText<W extends AnyWord = AnyWord> = {
   readonly wordsSignatures: string[];
-  readonly phrase?: Phrase<AnyWord>;
+  readonly phrase?: Phrase<W>;
   readonly parser?: Parser & IDescribedParser;
   readonly errors?: any;
 };
 
-function internalParsePhrase(text: string, parser: any, visitor: any): ParsedText {
+function internalParsePhrase(
+  text: string,
+  parser: any,
+  visitor: any
+): ParsedText {
   let wordsSignatures: string[] = [];
   let phrase: Phrase<AnyWord> | undefined = undefined;
   let errors: any = undefined;
 
-  combinatorialMorph(text).some( t => {
+  combinatorialMorph(text).some(t => {
     parser.input = t;
     const value = parser.sentence();
-    wordsSignatures = t.map( y => y.tokenType!.name );
+    wordsSignatures = t.map(y => y.tokenType!.name);
     if (value && !parser.errors.length) {
       phrase = visitor.visit(value);
       return true;
@@ -31,30 +35,36 @@ function internalParsePhrase(text: string, parser: any, visitor: any): ParsedTex
       errors = parser.errors;
       return false;
     }
-  })
+  });
 
   if (phrase) {
     return {
       wordsSignatures,
       phrase
-    }
+    };
   } else {
     return {
       wordsSignatures,
       errors
-    }
+    };
   }
-};
+}
 
-export function parsePhrase(text: string): ParsedText {
+export function parsePhrase<W extends AnyWord = AnyWord>(
+  text: string
+): ParsedText<W> {
   for (let i = 0; i < parsers.length; i++) {
-    const res = internalParsePhrase(text, parsers[i].parser, parsers[i].visitor);
+    const res = internalParsePhrase(
+      text,
+      parsers[i].parser,
+      parsers[i].visitor
+    );
     if (res.phrase) {
-      return {...res, parser: parsers[i].parser};
+      return <ParsedText<W>>{ ...res, parser: parsers[i].parser };
     }
   }
   throw new Error(`Unknown grammar of phrase "${text}"`);
-};
+}
 
 export function debugPhrase(text: string): ParsedText[] {
   const res: ParsedText[] = [];
@@ -62,10 +72,10 @@ export function debugPhrase(text: string): ParsedText[] {
   for (let i = 0; i < parsers.length; i++) {
     const parser = parsers[i].parser;
     const visitor = parsers[i].visitor;
-    combinatorialMorph(text).forEach( t => {
+    combinatorialMorph(text).forEach(t => {
       parser.input = t;
       const value = parser.sentence();
-      const wordsSignatures = t.map( y => y.tokenType!.name );
+      const wordsSignatures = t.map(y => y.tokenType!.name);
       if (value && !parser.errors.length) {
         res.push({
           wordsSignatures,
@@ -83,13 +93,15 @@ export function debugPhrase(text: string): ParsedText[] {
   }
 
   return res;
-};
+}
 
 /**
  * Функция вернет массив однородных членов, если они есть в токене,
  * или слово из токена, если однородных членов нет.
  */
-export function tokenToWordOrHomogeneous(t?: IMorphToken): AnyWord | AnyWord[] | undefined {
+export function tokenToWordOrHomogeneous(
+  t?: IMorphToken
+): AnyWord | AnyWord[] | undefined {
   if (!t) {
     return undefined;
   }
@@ -97,7 +109,9 @@ export function tokenToWordOrHomogeneous(t?: IMorphToken): AnyWord | AnyWord[] |
   const word = t.word;
 
   if (!(word instanceof RusNoun)) {
-    throw new Error(`Only rus nouns supported. Word ${word.getText()} encountered.`);
+    throw new Error(
+      `Only rus nouns supported. Word ${word.getText()} encountered.`
+    );
   }
 
   if (!t.hsm || !t.hsm.length) {
@@ -110,7 +124,9 @@ export function tokenToWordOrHomogeneous(t?: IMorphToken): AnyWord | AnyWord[] |
         return [...prev, w[0] as RusConjunction];
       }
 
-      const found = w.find( n => (n as RusNoun).grammCase === (word as RusNoun).grammCase );
+      const found = w.find(
+        n => (n as RusNoun).grammCase === (word as RusNoun).grammCase
+      );
 
       if (found) {
         return [...prev, found as RusNoun];
@@ -120,4 +136,4 @@ export function tokenToWordOrHomogeneous(t?: IMorphToken): AnyWord | AnyWord[] |
     },
     [word as RusNoun]
   );
-};
+}
