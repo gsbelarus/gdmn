@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './Demo.css';
 import { RecordSet, TFieldType } from 'gdmn-recordset';
-import { GDMNGrid, IColumn } from 'gdmn-grid';
+import { GDMNGrid, IColumn, GetConditionalStyle } from 'gdmn-grid';
 import { ConnectedGrid, ConnectedGridPanel, connectGrid, connectGridPanel } from '../gridConnected';
 import { demoRecordSets } from '../data/data';
 
@@ -114,11 +114,20 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
         )
       }
 
+      let getConditionalStyle: GetConditionalStyle | undefined = undefined;
+
+      if (rs.name === 'rates') {
+        getConditionalStyle = new Function(
+          'data',
+          '{ if (data["Cur_OfficialRate"] > 10000) { return {backgroundColor: "red"}; } else { return undefined; } }'
+        ) as GetConditionalStyle;
+      }
+
       this.setState({
         grids: {
           ...grids,
           [name]: {
-            Grid: connectGrid(name, rs, columns, getGridRef),
+            Grid: connectGrid(name, rs, columns, getConditionalStyle, getGridRef),
             Panel: connectGridPanel(name, rs, getGridRef)
           }
         }

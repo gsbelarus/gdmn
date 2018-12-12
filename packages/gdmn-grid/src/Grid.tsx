@@ -4,7 +4,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from "react-draggable";
-import { RecordSet, TRowType } from 'gdmn-recordset';
+import { RecordSet, TRowType, IDataRow } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { SortFields, TSortOrder, FieldDefs } from 'gdmn-recordset';
 import { SyncScroll, OnScroll } from './SyncScroll';
@@ -21,6 +21,8 @@ export interface IColumn {
 
 export type Columns = IColumn[];
 
+export type GetConditionalStyle = (data: IDataRow) => React.CSSProperties;
+
 export interface IGridProps {
   rs: RecordSet;
   columns: Columns;
@@ -31,6 +33,7 @@ export interface IGridProps {
   hideHeader?: boolean;
   hideFooter?: boolean;
   sortDialog: boolean;
+  getConditionalStyle?: GetConditionalStyle;
   onCancelSortDialog: () => void,
   onApplySortDialog: (sortFields: SortFields) => void,
   onColumnResize: (columnIndex: number, newWidth: number) => void;
@@ -913,7 +916,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _getRowsCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) =>
     ({columnIndex, key, rowIndex, style}: GridCellProps) => {
-      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup } = this.props;
+      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup, getConditionalStyle } = this.props;
       const currentRow = rs.currentRow;
       const adjustedColumnIndex = adjustFunc(columnIndex);
       const rowData = rs.get(rowIndex);
@@ -977,7 +980,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               {groupRecCount}
             </span>
             :
-            <span key={fldid} className={cn(styles.CellColumn, cellClass, textClass)}>
+            <span style={getConditionalStyle ? getConditionalStyle(rowData.data) : undefined} key={fldid} className={cn(styles.CellColumn, cellClass, textClass)}>
               {rs.getString(rowIndex, fld.fieldName, '')}
             </span>)
           }

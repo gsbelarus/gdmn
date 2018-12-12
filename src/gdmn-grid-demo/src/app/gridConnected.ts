@@ -20,12 +20,12 @@ import {
   applySortDialog,
 } from "gdmn-grid";
 import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups } from "gdmn-recordset";
-import { GDMNGridPanel } from "gdmn-grid";
+import { GDMNGridPanel, GetConditionalStyle } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
 import { SortFields } from "gdmn-recordset";
 
-export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined, getGridRef: GetGridRef) {
+export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined, getConditionalStyle: GetConditionalStyle | undefined, getGridRef: GetGridRef) {
   store.dispatch(createGrid({name,
     columns: columns || rs.fieldDefs.map( fd => (
       {
@@ -35,7 +35,8 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       })),
     leftSideColumns: 0,
     rightSideColumns: 0,
-    hideFooter: false
+    hideFooter: false,
+    getConditionalStyle
   }));
 
   return connect(
