@@ -224,6 +224,30 @@ describe("Query", () => {
     });
   });
 
+  it("inheritance without parent attributes", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY",
+        alias: "ce",
+        fields: [
+          {attribute: "TEST_STRING"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  E$1.TEST_STRING AS A$1\n" +
+      "FROM CHILD_ENTITY E$1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
   it("inheritance", async () => {
     const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
       link: {
@@ -235,7 +259,6 @@ describe("Query", () => {
         ]
       }
     }));
-
     expect(sql).toEqual("SELECT\n" +
       "  E$1.TEST_STRING AS A$1,\n" +
       "  E$1_2.TEST_FLOAT AS A$2\n" +

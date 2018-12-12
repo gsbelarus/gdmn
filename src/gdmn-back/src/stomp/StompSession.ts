@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import {Logger} from "log4js";
 import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
 import {v1 as uuidV1} from "uuid";
-import {Application} from "../apps/base/Application";
+import {Application, QueryCmd} from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
 import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";

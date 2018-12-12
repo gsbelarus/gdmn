@@ -1,6 +1,7 @@
 import fs from "fs";
 import {AConnection} from "gdmn-db";
-import {deserializeERModel, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
+import {deserializeERModel, EntityQuery, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
+import {Select} from "../src";
 import {IDBDetail} from "../src/ddl/export/dbdetail";
 import {ERBridge} from "../src/ERBridge";
 
@@ -61,5 +62,54 @@ describe("ERExport", () => {
     expect(gdPlace.attribute("LB")).toBeInstanceOf(IntegerAttribute);
     expect(gdPlace.attribute("RB")).toBeDefined();
     expect(gdPlace.attribute("RB")).toBeInstanceOf(IntegerAttribute);
+  });
+
+  it("simple entity", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "OurCompany",
+        alias: "oc",
+        fields: [
+          {attribute: "FULLNAME"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  E$1_1.FULLNAME AS A$1\n" +
+      "FROM GD_COMPANY E$1_1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("simple entity", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "OurCompany",
+        alias: "oc",
+        fields: [
+          {attribute: "NAME"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  E$1_1.NAME AS A$1\n" +
+      "FROM GD_CONTACT E$1_1\n" +
+      "WHERE E$1_1.CONTACTTYPE = :P$1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
   });
 });

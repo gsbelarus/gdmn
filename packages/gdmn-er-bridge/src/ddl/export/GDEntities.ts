@@ -79,6 +79,7 @@ export class GDEntities {
         adapter: {
           relation: [{
             relationName: "GD_CONTACT",
+            pk: ["ID"],
             selector: {
               field: "CONTACTTYPE",
               value: 0
@@ -118,6 +119,7 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 3
@@ -145,7 +147,11 @@ export class GDEntities {
         lName: {ru: {name: "Краткое наименование"}},
         required: true,
         maxLength: 60,
-        autoTrim: true
+        autoTrim: true,
+        adapter: {
+          relation: "GD_CONTACT",
+          field: "NAME"
+        }
       }));
 
       this._createEntity({
@@ -156,6 +162,7 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 3
@@ -193,6 +200,7 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 5
@@ -226,6 +234,7 @@ export class GDEntities {
         adapter: {
           relation: [{
             relationName: "GD_CONTACT",
+            pk: ["ID"],
             selector: {
               field: "CONTACTTYPE",
               value: 4
@@ -243,7 +252,11 @@ export class GDEntities {
       Department.add(
         new StringAttribute({
           name: "NAME", lName: {ru: {name: "Наименование"}}, required: true,
-          maxLength: 60, autoTrim: true
+          maxLength: 60, autoTrim: true,
+          adapter: {
+            relation: "GD_CONTACT",
+            field: "NAME"
+          }
         })
       );
 
@@ -257,6 +270,7 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 2
@@ -280,7 +294,11 @@ export class GDEntities {
       Person.add(
         new StringAttribute({
           name: "NAME", lName: {ru: {name: "ФИО"}}, required: true,
-          maxLength: 60, autoTrim: true
+          maxLength: 60, autoTrim: true,
+          adapter: {
+            relation: "GD_CONTACT",
+            field: "NAME"
+          }
         })
       );
 
@@ -296,6 +314,7 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 2
@@ -331,6 +350,7 @@ export class GDEntities {
           relation:
             [{
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 1
