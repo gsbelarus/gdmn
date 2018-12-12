@@ -1,4 +1,4 @@
-import { ERModel } from 'gdmn-orm';
+import { ERModel, IEntityQueryInspector } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TPingTaskCmd } from '@gdmn/server-api';
 
@@ -23,6 +23,10 @@ const gdmnActions = {
 
   apiDeleteAccount: createAction('gdmn/API_DELETE_ACCOUNT', resolve => {
     return () => resolve();
+  }),
+
+  apiGetData: createAction('gdmn/API_GET_DATA', resolve => {
+    return (queryInspector: IEntityQueryInspector) => resolve(queryInspector);
   }),
 
   setSchema: createAction('gdmm/SET_SCHEMA', resolve => {

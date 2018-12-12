@@ -114,6 +114,23 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
         break;
       }
 
+      case getType(gdmnActions.apiGetData): {
+        apiService
+          .getData({
+            payload: {
+              action: TTaskActionNames.QUERY,
+              payload: action.payload // query.inspect() // query.serialize()
+            }
+          })
+          .subscribe(value => {
+            if (value.error) {
+              dispatch(rootActions.onError(new Error(value.error.message)));
+            } else if (!!value.payload.result) {
+              console.log('QUERY response result: ', value.payload.result);
+            }
+          });
+      }
+
       case getType(gdmnActions.buildCommandList): {
         break;
       }

@@ -37,6 +37,13 @@ export const uiCommands: IUICommand[] = [
     link: `/web-stomp`
   },
   {
+    command: 'query',
+    form: 'mainHeader',
+    group: 'query',
+    caption: 'Query',
+    link: `/query`
+  },
+  {
     command: 'userProfile',
     form: 'mainHeader',
     group: 'userAccount',

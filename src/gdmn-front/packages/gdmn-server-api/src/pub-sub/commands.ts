@@ -32,7 +32,8 @@ interface ICmdResult<TPayload, IError = IGdmnMessageError> {
 }
 
 type TTaskCmd<TActionName extends keyof TTaskActionPayloadTypes> = ICmd<
-  TGdmnPublishMessageMeta & TTaskActionMessageData<TActionName> // todo type test
+  // TGdmnPublishMessageMeta & // todo: tmp
+  { action: TTaskActionNames } & TTaskActionMessageData<TActionName> // todo: tmp // todo type test
 >;
 
 type TTaskCmdResult<

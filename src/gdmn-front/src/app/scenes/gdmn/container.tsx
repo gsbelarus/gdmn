@@ -1,33 +1,43 @@
 import { compose, lifecycle, withProps } from 'recompose';
-import { bindActionCreators } from 'redux';
+import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import withBreadcrumbs from 'react-router-breadcrumbs-hoc';
+
 import { GdmnView, TGdmnViewProps, TGdmnViewStateProps } from '@src/app/scenes/gdmn/component';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { IState } from '@src/app/store/reducer';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
+import { selectGdmnState } from '@src/app/store/selectors';
+
+interface IDispatchToProps extends TGdmnViewProps {
+  // todo GdmnActionsProps
+  dispatch: Dispatch<any>; // TODO
+}
+
+// fixme: compose<any, TGdmnViewProps>
 
 const getGdmnContainer = (apiService: GdmnPubSubApi) =>
-  compose<TGdmnViewProps, TGdmnViewProps>(
+  compose<any, TGdmnViewProps>(
     connect(
-      (state: IState, ownProps: TGdmnViewProps): TGdmnViewStateProps => ({ erModel: state.gdmnState.erModel }),
+      (state: IState, ownProps: TGdmnViewProps): TGdmnViewStateProps => ({
+        erModel: selectGdmnState(state).erModel
+      }),
       dispatch => ({
         dispatch,
-        apiConnect: bindActionCreators(gdmnActions.apiConnect, dispatch),
-        apiDisconnect: bindActionCreators(gdmnActions.apiDisconnect, dispatch),
         apiPing: bindActionCreators(gdmnActions.apiPing, dispatch),
-        apiGetSchema: bindActionCreators(gdmnActions.apiGetSchema, dispatch),
         apiDeleteAccount: bindActionCreators(gdmnActions.apiDeleteAccount, dispatch),
+        apiGetData: bindActionCreators(gdmnActions.apiGetData, dispatch),
         signOut: bindActionCreators(authActions.signOut, dispatch)
+        // apiGetSchema: bindActionCreators(gdmnActions.apiGetSchema, dispatch)
       })
     ),
-    lifecycle<TGdmnViewProps, any>({
+    lifecycle<TGdmnViewProps, TGdmnViewProps>({
       componentDidMount() {
-        this.props.apiConnect();
+        this.props.dispatch(gdmnActions.apiConnect());
       },
       componentWillUnmount() {
-        this.props.apiDisconnect();
+        this.props.dispatch(gdmnActions.apiDisconnect());
       }
     }),
     withBreadcrumbs<TGdmnViewProps>([{ path: '/spa/gdmn/datastores/:appId', breadcrumb: '❖' }], {
