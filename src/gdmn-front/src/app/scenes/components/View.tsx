@@ -15,11 +15,20 @@ export class View<P, S> extends Component<P, S> {
   }
 
   public renderWide(content: JSX.Element): JSX.Element {
-    return <div className="ViewWide">{content}</div>;
+    return (
+      <div className="ViewWide">
+        {this.renderCommandBar()}
+        {content}
+      </div>
+    );
   }
 
   public renderLoading(): JSX.Element {
     return <div>Loading...</div>;
+  }
+
+  public renderCommandBar(): JSX.Element | undefined {
+    return undefined;
   }
 
   public render() {

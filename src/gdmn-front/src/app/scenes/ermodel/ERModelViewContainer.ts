@@ -9,16 +9,17 @@ import { ThunkDispatch } from 'redux-thunk';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({
-    data: [
+    data:
       {
         rs: state.recordSet.entities,
-        gcs: state.grid.entities
+        gcs: state.grid.entities,
+        detail: [
+          {
+            rs: state.recordSet.attributes,
+            gcs: state.grid.attributes
+          }
+        ]
       },
-      {
-        rs: state.recordSet.attributes,
-        gcs: state.grid.attributes
-      },
-    ],
     erModel: state.gdmnState.erModel
   }),
 
