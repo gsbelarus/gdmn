@@ -15,7 +15,6 @@
 
         ```
         $ npm install --global --production windows-build-tools --vs2015
-        $ yarn global add node-gyp
         ```
 
 Добавить в переменную окружения **PATH** путь к папке с библиотекой `fbclient.dll` (располагается в папке, куда был установлен сервер Firebird, по умолчанию -- c:\Program Files\Firebird).
