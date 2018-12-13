@@ -25,15 +25,15 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "@types/clone": "^0.1.30",
-    "clone": "^2.1.2",
-    "gdmn-nlp": "^1.0.0"
+    "@types/clone": "^0",
+    "clone": "^2",
+    "gdmn-nlp": "^1"
   },
   "devDependencies": {
     "@types/jest": "^23",
     "@types/node": "^10",
     "jest": "^23",
-    "shx": "^0.3.2",
+    "shx": "^0",
     "ts-jest": "^23",
     "ts-node": "^7",
     "tslint": "^5",

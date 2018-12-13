@@ -26,15 +26,15 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "gdmn-db": "^1.0.0",
-    "gdmn-orm": "^1.0.0",
+    "gdmn-db": "^1",
+    "gdmn-orm": "^1",
     "moment": "^2"
   },
   "devDependencies": {
     "@types/jest": "^23",
     "@types/node": "^10",
     "jest": "^23",
-    "shx": "^0.3.2",
+    "shx": "^0",
     "ts-jest": "^23",
     "typescript": "^3"
   }

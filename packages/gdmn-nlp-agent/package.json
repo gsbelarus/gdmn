@@ -27,16 +27,16 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "gdmn-nlp": "^1.0.0",
-    "gdmn-orm": "^1.0.0",
-    "immutable": "^3.8.2"
+    "gdmn-nlp": "^1",
+    "gdmn-orm": "^1",
+    "immutable": "^3"
   },
   "devDependencies": {
     "@types/jest": "^23",
     "@types/node": "^10",
-    "gdmn-er-bridge": "^1.0.0",
+    "gdmn-er-bridge": "^1",
     "jest": "^23",
-    "shx": "^0.3.2",
+    "shx": "^0",
     "ts-jest": "^23",
     "ts-node": "^7",
     "typescript": "^3"

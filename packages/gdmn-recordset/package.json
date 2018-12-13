@@ -25,15 +25,15 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "fast-deep-equal": "^2.0.1",
-    "immutable": "^3.8.2",
-    "typesafe-actions": "^2.0.4"
+    "fast-deep-equal": "^2",
+    "immutable": "^3",
+    "typesafe-actions": "^2"
   },
   "devDependencies": {
     "@types/jest": "^23",
     "@types/node": "^10",
     "jest": "^23",
-    "shx": "^0.3.2",
+    "shx": "^0",
     "ts-jest": "^23",
     "ts-node": "^7",
     "tslint": "^5",
