@@ -32,7 +32,7 @@ export interface IGridRef {
 export class DataView<P extends IDataViewProps, S> extends View<P, S> {
   private _gridRef: IGridRef = {};
 
-  private isDataLoaded(): boolean {
+  public isDataLoaded(): boolean {
     const { data } = this.props;
     return !!data && !!data.rs;
   }

@@ -3,11 +3,14 @@ import { ERModel } from 'gdmn-orm';
 import { ICommandBarItemProps } from 'office-ui-fabric-react';
 
 export interface IERModelViewProps extends IDataViewProps {
-  erModel?: ERModel;
-};
+  erModel?: ERModel
+  apiGetSchema: () => void
+}
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
   public getCommandBarItems(): ICommandBarItemProps[] {
+    const { apiGetSchema } = this.props;
+
     return [
       {
         key: 'loadEntity',
@@ -18,14 +21,15 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
       },
       {
         key: 'reloadERModel',
-        text: 'Reload ER Model',
+        text: this.isDataLoaded() ? 'Reload ERModel' : 'Load ERModel',
         iconProps: {
           iconName: 'DatabaseSync'
-        }
+        },
+        onClick: apiGetSchema
       }
     ];
-  };
-};
+  }
+}
 
 /*
 

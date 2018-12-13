@@ -29,7 +29,6 @@ const getGdmnContainer = (apiService: GdmnPubSubApi) =>
         apiDeleteAccount: bindActionCreators(gdmnActions.apiDeleteAccount, dispatch),
         apiGetData: bindActionCreators(gdmnActions.apiGetData, dispatch),
         signOut: bindActionCreators(authActions.signOut, dispatch)
-        // apiGetSchema: bindActionCreators(gdmnActions.apiGetSchema, dispatch)
       })
     ),
     lifecycle<TGdmnViewProps, TGdmnViewProps>({

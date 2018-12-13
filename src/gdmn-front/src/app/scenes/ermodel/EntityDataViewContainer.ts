@@ -7,28 +7,38 @@ import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
 import { connectDataViewDispatch } from '../components/connectDataView';
-import { gdmnActions, TGdmnActions } from '../gdmn/actions';
+import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 
-export const ERModelViewContainer = connect(
+/*
+export const getEntityDataViewContainer = (entityName: string) => connect(
   (state: IState) => ({
     data:
       {
-        rs: state.recordSet.entities,
-        gcs: state.grid.entities,
-        detail: [
-          {
-            rs: state.recordSet.attributes,
-            gcs: state.grid.attributes
-          }
-        ]
+        rs: state.recordSet[entityName],
+        gcs: state.grid[entityName]
       },
     erModel: state.gdmnState.erModel
   }),
 
-  (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
+  (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
     ...connectDataViewDispatch(dispatch),
-    apiGetSchema: () => dispatch(gdmnActions.apiGetSchema()),
-    loadFromERModel: (erModel: ERModel) => {
+    loadData: () => {
+
+        GdmnPubSubApi
+          .getData({
+            payload: {
+              action: TTaskActionNames.QUERY,
+              payload: action.payload
+            }
+          })
+          .subscribe(value => {
+            if (value.error) {
+              dispatch(rootActions.onError(new Error(value.error.message)));
+            } else if (!!value.payload.result) {
+              console.log('QUERY response result: ', value.payload.result);
+            }
+          });
+
       const entitiesRS = RecordSet.createWithData(
         'entities',
         [
@@ -107,19 +117,6 @@ export const ERModelViewContainer = connect(
         hideFooter: true
       }));
     }
-  }),
-
-  (stateProps, dispatchProps) => {
-    const { erModel } = stateProps;
-    const { loadFromERModel } = dispatchProps;
-    return {
-      ...stateProps,
-      ...dispatchProps,
-      loadData: () => {
-        if (erModel && Object.entries(erModel.entities).length) {
-          loadFromERModel(erModel);
-        }
-      }
-    }
-  }
-)(ERModelView);
+  })
+)(EntityDataView);
+*/
