@@ -73,30 +73,30 @@ All rights reserved.
 [gdmn-grid-demo-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
 [gdmn-grid-demo-readme-url]: /src/gdmn-grid-demo/README.md
 
-[gdmn-db-url]: /src/gdmn-db
+[gdmn-db-url]: /packages/gdmn-db
 [gdmn-db-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-db-readme-url]: /src/gdmn-db/README.md
+[gdmn-db-readme-url]: /packages/gdmn-db/README.md
 
-[gdmn-orm-url]: /src/gdmn-orm
+[gdmn-orm-url]: /packages/gdmn-orm
 [gdmn-orm-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-orm-readme-url]: /src/gdmn-orm/README.md
+[gdmn-orm-readme-url]: /packages/gdmn-orm/README.md
 
-[gdmn-er-bridge-url]: /src/gdmn-er-bridge
+[gdmn-er-bridge-url]: /packages/gdmn-er-bridge
 [gdmn-er-bridge-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-er-bridge-readme-url]: /src/gdmn-er-bridge/README.md
+[gdmn-er-bridge-readme-url]: /packages/gdmn-er-bridge/README.md
 
-[gdmn-recordset-url]: /src/gdmn-recordset
+[gdmn-recordset-url]: /packages/gdmn-recordset
 [gdmn-recordset-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-recordset-readme-url]: /src/gdmn-recordset/README.md
+[gdmn-recordset-readme-url]: /packages/gdmn-recordset/README.md
 
-[gdmn-grid-url]: /src/gdmn-grid
+[gdmn-grid-url]: /packages/gdmn-grid
 [gdmn-grid-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-grid-readme-url]: /src/gdmn-grid/README.md
+[gdmn-grid-readme-url]: /packages/gdmn-grid/README.md
 
-[gdmn-nlp-url]: /src/gdmn-nlp
+[gdmn-nlp-url]: /packages/gdmn-nlp
 [gdmn-nlp-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-nlp-readme-url]: /src/gdmn-nlp/README.md
+[gdmn-nlp-readme-url]: /packages/gdmn-nlp/README.md
 
-[gdmn-nlp-agent-url]: /src/gdmn-nlp-agent
+[gdmn-nlp-agent-url]: /packages/gdmn-nlp-agent
 [gdmn-nlp-agent-readme-badge]: https://img.shields.io/badge/docs-readme-orange.svg
-[gdmn-nlp-agent-readme-url]: /src/gdmn-nlp-agent/README.md
+[gdmn-nlp-agent-readme-url]: /packages/gdmn-nlp-agent/README.md
