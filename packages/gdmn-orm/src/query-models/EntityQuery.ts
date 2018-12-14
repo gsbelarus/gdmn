@@ -15,8 +15,8 @@ export interface IEntityQueryInspector {
 
 export class EntityQuery {
 
-  public link: EntityLink;
-  public options?: EntityQueryOptions;
+  public readonly link: EntityLink;
+  public readonly options?: EntityQueryOptions;
 
   constructor(query: EntityLink, options?: EntityQueryOptions) {
     this.link = query;

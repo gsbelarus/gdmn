@@ -34,33 +34,33 @@ export interface IEntityQueryOptionsInspector {
 export type EntityQueryOrderType = "ASC" | "DESC";
 
 export interface IEntityQueryAlias<Attr extends Attribute> {
-  alias: string;
-  attribute: Attr;
+  readonly alias: string;
+  readonly attribute: Attr;
 }
 
 export interface IEntityQueryWhereValue extends IEntityQueryAlias<ScalarAttribute> {
-  value: any;
+  readonly value: any;
 }
 
 export interface IEntityQueryWhere {
-  and?: IEntityQueryWhere[];
-  or?: IEntityQueryWhere[];
-  not?: IEntityQueryWhere[];
+  readonly and?: IEntityQueryWhere[];
+  readonly or?: IEntityQueryWhere[];
+  readonly not?: IEntityQueryWhere[];
 
-  isNull?: Array<IEntityQueryAlias<ScalarAttribute>>;
-  equals?: IEntityQueryWhereValue[];
+  readonly isNull?: Array<IEntityQueryAlias<ScalarAttribute>>;
+  readonly equals?: IEntityQueryWhereValue[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
-  type?: EntityQueryOrderType;
+  readonly type?: EntityQueryOrderType;
 }
 
 export class EntityQueryOptions {
 
-  public first?: number;
-  public skip?: number;
-  public where?: IEntityQueryWhere[];
-  public order?: IEntityQueryOrder[];
+  public readonly first?: number;
+  public readonly skip?: number;
+  public readonly where?: IEntityQueryWhere[];
+  public readonly order?: IEntityQueryOrder[];
 
   constructor(first?: number,
               skip?: number,
@@ -77,65 +77,58 @@ export class EntityQueryOptions {
       inspector.first,
       inspector.skip,
       inspector.where ? EntityQueryOptions.inspectorWhereToObject(link, inspector.where) : undefined,
-      inspector.order ? inspector.order.map((opt) => ({
-        alias: opt.alias,
-        attribute: EntityQueryOptions._getLink(link, opt.alias).entity.attribute(opt.attribute),
-        type: opt.type
-      })) : undefined
+      inspector.order ? inspector.order.map((opt) => {
+        const findLink = link.deepFindLink(opt.alias);
+        if (!findLink) {
+          throw new Error(`Alias ${opt.alias} is not found`);
+        }
+        return {
+          alias: opt.alias,
+          attribute: findLink.entity.attribute(opt.attribute),
+          type: opt.type
+        }
+      }) : undefined
     );
   }
 
   private static inspectorWhereToObject(link: EntityLink,
                                         inspector: IEntityQueryWhereInspector[]): IEntityQueryWhere[] {
     return inspector.reduce((items, item) => {
-      const where: IEntityQueryWhere = {};
-      if (item.and) {
-        where.and = EntityQueryOptions.inspectorWhereToObject(link, item.and);
+      const where: IEntityQueryWhere = {
+        and: item.and ? EntityQueryOptions.inspectorWhereToObject(link, item.and) : undefined,
+        or: item.or ? EntityQueryOptions.inspectorWhereToObject(link, item.or) : undefined,
+        not: item.not ? EntityQueryOptions.inspectorWhereToObject(link, item.not) : undefined,
+        isNull: item.isNull
+          ? item.isNull.map((isNull) => {
+            const findLink = link.deepFindLink(isNull.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${isNull.alias} is not found`);
+            }
+            return {
+              alias: isNull.alias,
+              attribute: findLink.entity.attribute(isNull.attribute)
+            };
+          })
+          : undefined,
+        equals: item.equals
+          ? item.equals.map((equals) => {
+            const findLink = link.deepFindLink(equals.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${equals.alias} is not found`);
+            }
+            return {
+              alias: equals.alias,
+              attribute: findLink.entity.attribute(equals.attribute),
+              value: equals.value
+            };
+          })
+          : undefined
+      };
+      if (Object.values(where).some((w) => !!w)) {
+        items.push(where);
       }
-      if (item.or) {
-        where.or = EntityQueryOptions.inspectorWhereToObject(link, item.or);
-      }
-      if (item.not) {
-        where.not = EntityQueryOptions.inspectorWhereToObject(link, item.not);
-      }
-
-      if (item.isNull) {
-        where.isNull = item.isNull.map((isNull) => {
-          const findLink = link.deepFindLink(isNull.alias);
-          if (!findLink) {
-            throw new Error("Alias not found");
-          }
-          return {
-            alias: isNull.alias,
-            attribute: EntityQueryOptions._getLink(link, isNull.alias).entity.attribute(isNull.attribute)
-          };
-        });
-      }
-      if (item.equals) {
-        where.equals = item.equals.map((equals) => {
-          const findLink = link.deepFindLink(equals.alias);
-          if (!findLink) {
-            throw new Error("Alias not found");
-          }
-          return {
-            alias: equals.alias,
-            attribute: EntityQueryOptions._getLink(link, equals.alias).entity.attribute(equals.attribute),
-            value: equals.value
-          };
-        });
-      }
-
-      items.push(where);
       return items;
     }, [] as IEntityQueryWhere[]);
-  }
-
-  private static _getLink(link: EntityLink, alias: string): EntityLink {
-    const findLink = link.deepFindLink(alias);
-    if (!findLink) {
-      throw new Error("Alias not found");
-    }
-    return findLink;
   }
 
   private static _inspectWhere(where: IEntityQueryWhere[]): IEntityQueryWhereInspector[] {

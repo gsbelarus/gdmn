@@ -10,9 +10,9 @@ export interface IEntityLinkInspector {
 
 export class EntityLink {
 
-  public entity: Entity;
-  public alias: string;
-  public fields: EntityQueryField[];
+  public readonly entity: Entity;
+  public readonly alias: string;
+  public readonly fields: EntityQueryField[];
 
   constructor(entity: Entity, alias: string, fields: EntityQueryField[]) {
     this.entity = entity;
