@@ -323,7 +323,7 @@ describe("Firebird driver tests", async () => {
                     }
                 }
             });
-        });
+        }, TIMEOUT);
     });
 });
 
