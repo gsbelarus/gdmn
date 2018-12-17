@@ -247,10 +247,12 @@ describe("Firebird driver tests", async () => {
                         (
                             ID          INTEGER PRIMARY KEY,
                             F_DECIMAL   DECIMAL(10, 4),
-                            F_VARCHAR   VARCHAR(20) NOT NULL,
-                            F_TIMESTAMP TIMESTAMP   NOT NULL,
-                            F_DATE      DATE        NOT NULL,
-                            F_TIME      TIME        NOT NULL,
+                            F_FLOAT     FLOAT            NOT NULL,
+                            F_DOUBLE    DOUBLE PRECISION NOT NULL,
+                            F_VARCHAR   VARCHAR(20)      NOT NULL,
+                            F_TIMESTAMP TIMESTAMP        NOT NULL,
+                            F_DATE      DATE             NOT NULL,
+                            F_TIME      TIME             NOT NULL,
                             F_BLOB_TEXT BLOB SUB_TYPE TEXT NOT NULL
                         )
                     `);
@@ -261,9 +263,9 @@ describe("Firebird driver tests", async () => {
                 callback: async (transaction) => {
                     const _updateOrInsert = await globalConnection.prepare(transaction, `
                         UPDATE OR INSERT INTO TMP_TEST (
-                            ID, F_DECIMAL, F_VARCHAR, F_TIMESTAMP, F_DATE, F_TIME, F_BLOB_TEXT)
+                            ID, F_DECIMAL, F_FLOAT, F_DOUBLE, F_VARCHAR, F_TIMESTAMP, F_DATE, F_TIME, F_BLOB_TEXT)
                         VALUES (
-                            :id, :fDecimal, :fVarChar, :fTimestamp, :fDate, :fTime, :fBlobText)
+                            :id, :fDecimal, :fFloat, :fDouble, :fVarChar, :fTimestamp, :fDate, :fTime, :fBlobText)
                         MATCHING (ID)
                     `);
                     const _delete = await globalConnection.prepare(transaction, `
@@ -282,6 +284,8 @@ describe("Firebird driver tests", async () => {
                             const id = i;
                             for (let j = 0; j < 2; j++) {
                                 const fDecimal = randomDecimal(10, 4);
+                                const fFloat = randomDecimal(10, 4);
+                                const fDouble = randomDecimal(10, 4);
                                 const fVarChar = randomString(20);
                                 const fTimestamp = randomDate(new Date(2000, 1, 1), new Date(2100, 1, 1));
                                 const fDate = new Date(fTimestamp);
@@ -291,6 +295,8 @@ describe("Firebird driver tests", async () => {
                                 await _updateOrInsert.execute({
                                     id,
                                     fDecimal,
+                                    fFloat,
+                                    fDouble,
                                     fVarChar,
                                     fTimestamp,
                                     fDate,
@@ -302,6 +308,8 @@ describe("Firebird driver tests", async () => {
 
                                 expect(result.getNumber("ID")).toEqual(id);
                                 expect(result.getNumber("F_DECIMAL")).toEqual(fDecimal);
+                                // expect(result.getNumber("F_FLOAT")).toEqual(fFloat);
+                                expect(result.getNumber("F_DOUBLE")).toEqual(fDouble);
                                 expect(result.getString("F_VARCHAR")).toEqual(fVarChar);
                                 expect(result.getDate("F_TIMESTAMP")).toEqual(fTimestamp);
                                 const date = result.getDate("F_DATE")!;
