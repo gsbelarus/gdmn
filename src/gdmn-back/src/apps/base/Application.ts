@@ -1,6 +1,6 @@
 import {AccessMode, AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
-import {EntityQuery, ERModel, IEntityQueryInspector, IERModel, IEntityQueryResponse} from "gdmn-orm";
+import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
 import log4js from "log4js";
 import {ADatabase, DBStatus, IDBDetail} from "../../db/ADatabase";
 import {Session, SessionStatus} from "./Session";

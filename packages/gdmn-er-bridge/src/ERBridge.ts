@@ -110,7 +110,7 @@ export class ERBridge {
                 setAttribute: field.attribute.type === "Set" && field.attribute !== attribute
                   ? attribute.name : undefined
               }
-            }
+            };
           }, aliases
         )
       ), {} as IEntityQueryResponseFieldAliases),
