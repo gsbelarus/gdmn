@@ -32,9 +32,9 @@ This is repository is a "mono repo" that we manage using [Lerna][lerna-url] and 
 
 | Package | Docs |  | Description |
 | --------| ---- | ------ | ----------- |
-| [`gdmn-db`][gdmn-db-url] | [![][gdmn-db-readme-badge]][gdmn-db-readme-url] |  |  |
-| [`gdmn-orm`][gdmn-orm-url] | [![][gdmn-orm-readme-badge]][gdmn-orm-readme-url] |  |  |
-| [`gdmn-er-bridge`][gdmn-er-bridge-url] | [![][gdmn-er-bridge-readme-badge]][gdmn-er-bridge-readme-url] |  |  |
+| [`gdmn-db`][gdmn-db-url] | [![][gdmn-db-readme-badge]][gdmn-db-readme-url] |  | abstract database driver with implementation for Firebird |
+| [`gdmn-orm`][gdmn-orm-url] | [![][gdmn-orm-readme-badge]][gdmn-orm-readme-url] |  | additional abstract logical level over the physical structure of the database |
+| [`gdmn-er-bridge`][gdmn-er-bridge-url] | [![][gdmn-er-bridge-readme-badge]][gdmn-er-bridge-readme-url] |  | bridge between gdmn-orm and database using gdmn-db |
 | [`gdmn-recordset`][gdmn-recordset-url] | [![][gdmn-recordset-readme-badge]][gdmn-recordset-readme-url] |  |  |
 | [`gdmn-grid`][gdmn-grid-url] | [![][gdmn-grid-readme-badge]][gdmn-grid-readme-url] |  | data-grid |
 | [`gdmn-nlp`][gdmn-nlp-url] | [![][gdmn-nlp-readme-badge]][gdmn-nlp-readme-url] |  | natural language processing |
