@@ -1,17 +1,15 @@
-import { ERModelView } from './ERModelView';
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { ERModel } from 'gdmn-orm';
-import { RecordSet, TFieldType, createRecordSet, RecordSetAction } from 'gdmn-recordset';
-import { createGrid, GridAction } from 'gdmn-grid';
-import { List } from 'immutable';
+import { ERModel, EntityQuery, EntityLink, EntityQueryField, ScalarAttribute } from 'gdmn-orm';
+import { RecordSetAction } from 'gdmn-recordset';
+import { GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
 import { connectDataViewDispatch } from '../components/connectDataView';
-import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { EntityDataView } from './EntityDataView';
 import { TTaskActionNames } from '@gdmn/server-api';
+import { apiService } from '@src/app/services/apiService';
+import { TGdmnActions } from '../gdmn/actions';
 
-/*
 export const getEntityDataViewContainer = (entityName: string) => connect(
   (state: IState) => ({
     data:
@@ -26,21 +24,27 @@ export const getEntityDataViewContainer = (entityName: string) => connect(
     ...connectDataViewDispatch(dispatch),
     loadFromERModel: (erModel: ERModel) => {
 
-        GdmnPubSubApi
+        const entity = erModel.entities[entityName];
+        const q = new EntityQuery(new EntityLink(
+          entity,
+          'z',
+          Object.values(entity.attributes).filter( attr => attr instanceof ScalarAttribute ).map( attr => new EntityQueryField(attr) )
+        ));
+
+        apiService
           .getData({
             payload: {
               action: TTaskActionNames.QUERY,
-              payload: action.payload
+              payload: q.inspect()
             }
           })
-          .subscribe(value => {
+          .subscribe( value => {
             if (value.error) {
-              dispatch(rootActions.onError(new Error(value.error.message)));
+              console.log(value.error.message);
             } else if (!!value.payload.result) {
               console.log('QUERY response result: ', value.payload.result);
             }
           });
-
     }
   }),
 
@@ -58,5 +62,4 @@ export const getEntityDataViewContainer = (entityName: string) => connect(
     }
   }
 )(EntityDataView);
-*/
 
