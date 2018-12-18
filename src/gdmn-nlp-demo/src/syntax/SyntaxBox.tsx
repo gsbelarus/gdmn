@@ -17,7 +17,7 @@ export interface ISyntaxBoxProps {
   parsedText?: ParsedText,
   parserDebug?: ParsedText[],
   commandError?: string,
-  command?: ICommand,
+  command?: ICommand[],
   onSetText: (text: string) => void
 };
 
@@ -204,25 +204,31 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     );
   }
 
-  private _renderCommand(command: ICommand) {
+  private _renderCommand(command: ICommand[]) {
     return (
       <div className="command">
-        <div className={`action${command.action}`} />
-        {command.objects &&
-          command.objects.map((co, idx) => (
-            <div className="commandObject" key={idx}>
-              <div className="entityName">{co.entity.name}</div>
-              {co.conditions &&
-                co.conditions.map((cond, idx2) => (
-                  <div className="condition" key={idx2}>
-                    <div className="attr">{cond.attr.name}</div>
-                    <div className={`op${cond.op}`} />
-                    <div className="value">{cond.value}</div>
-                  </div>
-                ))}
-            </div>
-          ))}
-      </div>
+        <div className={`action${command[0].action}`} />
+        { command[0].payload &&
+        <div className="payload" >
+          <div className="entityName"> {command[0].payload.link.entity.name} </div>
+          <div className="fields">
+            { command[0].payload.link.fields.map( (field, idx) => 
+                <div className="field" key={idx}>{field.attribute.name}</div>
+              ) }
+          </div>
+          {command[0].payload.options.where && command[0].payload.options.where.length && <div className="options" >
+            {command[0].payload.options.where.map( (m, idx1) => 
+              m.equals && <div className="allEquals" key={idx1}>
+              { m.equals.map( (eq, idx2) => 
+                <div className="equals" key={idx2}>
+                  <div className="attr">{eq.attribute.name}</div>
+                  <div className="opEQ" />
+                  <div className="value">{eq.value}</div>
+                </div>
+              ) }</div>
+         ) } </div>
+        } </div>
+      } </div>
     );
   }
 

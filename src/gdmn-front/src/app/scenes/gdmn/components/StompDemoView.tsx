@@ -2,15 +2,10 @@ import React from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
-import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
 import { RusPhrase } from 'gdmn-nlp';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
 import { View } from '../../components/View';
-
-function createNlpCommand(erTranslatorRU: ERTranslatorRU, parsedTextPhrase: RusPhrase): ICommand | never {
-  return erTranslatorRU.process(parsedTextPhrase);
-}
 
 interface IStompDemoViewState {
   pingDelay: number;
@@ -90,27 +85,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     );
     this.props.apiGetData(query.inspect());
     // -- END
-
-    /*
-    // -- BEGIN
-    const phrase = 'покажи все организации и школы из минска и пинска';
-    const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
-
-    if (!parsedPhrase || !this.props.erModel) return;
-
-    const erTranslatorRU = new ERTranslatorRU(this.props.erModel);
-    try {
-      const nlpCmd: ICommand = createNlpCommand(erTranslatorRU, parsedPhrase);
-      const queries = EQueryTranslator.process(nlpCmd);
-
-        queries.map(query => {
-          this.props.apiGetData(query.inspect()); // query.serialize());
-        })
-    } catch (e) {
-      console.log('createCommand() error:', e);
-    }
-    // -- END
-    */
   };
 }
 

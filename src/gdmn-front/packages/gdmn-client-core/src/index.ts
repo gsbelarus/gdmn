@@ -20,4 +20,3 @@ export * from './services/Auth';
 export * from './services/ReqResApi';
 export * from './services/WebStorage';
 export * from './utils/helpers';
-export * from './EQueryTranslator';

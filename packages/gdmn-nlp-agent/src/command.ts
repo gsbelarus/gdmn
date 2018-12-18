@@ -1,26 +1,8 @@
-import { Attribute, Entity } from "gdmn-orm";
+import { EntityQuery } from "gdmn-orm";
 
-export type Action = 'SHOW' | 'DELETE';
-
-export enum Determiner {
-  All = 0
-};
-
-export type Operator = 'EQ' | 'HASROOT';
-
-export interface IAttrCondition {
-  attr: Attribute;
-  op: Operator;
-  value: string;
-};
-
-export interface ICommandObject {
-  determiner: Determiner;
-  entity: Entity;
-  conditions: IAttrCondition[];
-};
+export type Action = 'QUERY' | 'DELETE';
 
 export interface ICommand {
   action: Action;
-  objects?: ICommandObject[];
+  payload: EntityQuery; 
 };
