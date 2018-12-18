@@ -66,7 +66,7 @@ export class DomainResolver {
       case "TimeStamp":
         return `TIMESTAMP`;
       case "Float":
-        return `FLOAT`;
+        return `DOUBLE PRECISION`;
       case "Boolean":
         return `SMALLINT`;
       case "Blob":
