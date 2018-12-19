@@ -238,7 +238,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     return (
       <div className="SelectQuery">
         <div className="sql">{selectQuery.sql}</div>
-        <div className="params">{selectQuery.params}</div>
+        <div className="params">{JSON.stringify(selectQuery.params)}</div>
       </div>
     );
   }
@@ -317,7 +317,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {this._renderPhrase()}
         {commandError && <div className="SyntaxError">{commandError}</div>}
         {command && <div>Command:{this._renderCommand(command[0])}</div>}
-        {command  && <div>Select query: {this.createStringSelect(command[0].payload)}</div>}
+        {command  && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
         {parserDebug ?
           <div className="ParserDebug">
             {parserDebug.map( (pd, idx) =>

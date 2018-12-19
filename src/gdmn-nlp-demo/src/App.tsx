@@ -106,7 +106,7 @@ export default connect(
         fetch(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`)
         .then( res => res.text() )
         .then( res => JSON.parse(res) )
-        .then( res => dispatch(loadERModel(deserializeERModel(res))) )
+        .then( res => dispatch(loadERModel(deserializeERModel(res, true))) )
         .then( _res => dispatch(setERModelLoading(false)) )
         .catch( err => {
           dispatch(setERModelLoading(false));
