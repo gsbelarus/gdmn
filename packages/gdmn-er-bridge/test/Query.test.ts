@@ -107,8 +107,8 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING AS A$1\n" +
-      "FROM TEST_ENTITY E$1");
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM TEST_ENTITY T$1");
 
     await AConnection.executeTransaction({
       connection,
@@ -140,9 +140,9 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING AS A$1\n" +
-      "FROM MASTER_ENTITY E$2\n" +
-      "  LEFT JOIN TEST_ENTITY E$1 ON E$1.ID = E$2.LINK");
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM MASTER_ENTITY T$2\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$2.LINK");
 
     await AConnection.executeTransaction({
       connection,
@@ -174,9 +174,9 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING2 AS A$1\n" +
-      "FROM MASTER_ENTITY E$2\n" +
-      "  LEFT JOIN DETAIL_ENTITY E$1 ON E$1.MASTERKEY = E$2.ID");
+      "  T$1.TEST_STRING2 AS F$1\n" +
+      "FROM MASTER_ENTITY T$2\n" +
+      "  LEFT JOIN DETAIL_ENTITY T$1 ON T$1.MASTERKEY = T$2.ID");
 
     await AConnection.executeTransaction({
       connection,
@@ -209,11 +209,11 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1_1.TEST_INTEGER AS A$1_1,\n" +
-      "  E$2.TEST_STRING AS A$2\n" +
-      "FROM MASTER_ENTITY E$3\n" +
-      "  LEFT JOIN TABLE_21 E$1_1 ON E$1_1.KEY1 = E$3.ID\n" +
-      "  LEFT JOIN TEST_ENTITY E$2 ON E$2.ID = E$1_1.KEY2");
+      "  T$1.TEST_INTEGER AS F$1,\n" +
+      "  T$2.TEST_STRING AS F$2\n" +
+      "FROM MASTER_ENTITY T$3\n" +
+      "  LEFT JOIN TABLE_21 T$1 ON T$1.KEY1 = T$3.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2");
 
     await AConnection.executeTransaction({
       connection,
@@ -236,8 +236,8 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING AS A$1\n" +
-      "FROM CHILD_ENTITY E$1");
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM CHILD_ENTITY T$1");
 
     await AConnection.executeTransaction({
       connection,
@@ -260,10 +260,10 @@ describe("Query", () => {
       }
     }));
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING AS A$1,\n" +
-      "  E$1_2.TEST_FLOAT AS A$2\n" +
-      "FROM TEST_ENTITY E$1_2\n" +
-      "  LEFT JOIN CHILD_ENTITY E$1 ON E$1.INHERITEDKEY = E$1_2.ID");
+      "  T$1.TEST_STRING AS F$1,\n" +
+      "  T$2.TEST_FLOAT AS F$2\n" +
+      "FROM TEST_ENTITY T$2\n" +
+      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$2.ID");
 
     await AConnection.executeTransaction({
       connection,
@@ -326,17 +326,17 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING AS A$1,\n" +
-      "  E$1_1.TEST_INTEGER AS A$2_1,\n" +
-      "  E$3.TEST_STRING AS A$3,\n" +
-      "  E$4.TEST_STRING2 AS A$4,\n" +
-      "  E$5.TEST_STRING AS A$5\n" +
-      "FROM MASTER_ENTITY E$6\n" +
-      "  LEFT JOIN TEST_ENTITY E$1 ON E$1.ID = E$6.LINK\n" +
-      "  LEFT JOIN TABLE_21 E$1_1 ON E$1_1.KEY1 = E$6.ID\n" +
-      "  LEFT JOIN TEST_ENTITY E$3 ON E$3.ID = E$1_1.KEY2\n" +
-      "  LEFT JOIN DETAIL_ENTITY E$4 ON E$4.MASTERKEY = E$6.ID\n" +
-      "  LEFT JOIN TEST_ENTITY E$5 ON E$5.ID = E$4.LINK");
+      "  T$1.TEST_STRING AS F$1,\n" +
+      "  T$2.TEST_INTEGER AS F$2,\n" +
+      "  T$3.TEST_STRING AS F$3,\n" +
+      "  T$4.TEST_STRING2 AS F$4,\n" +
+      "  T$5.TEST_STRING AS F$5\n" +
+      "FROM MASTER_ENTITY T$6\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$6.LINK\n" +
+      "  LEFT JOIN TABLE_21 T$2 ON T$2.KEY1 = T$6.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$3 ON T$3.ID = T$2.KEY2\n" +
+      "  LEFT JOIN DETAIL_ENTITY T$4 ON T$4.MASTERKEY = T$6.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$5 ON T$5.ID = T$4.LINK");
 
     await AConnection.executeTransaction({
       connection,
@@ -377,10 +377,10 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING1 AS A$1\n" +
-      "FROM DETAIL_ENTITY E$1\n" +
-      "  LEFT JOIN TEST_ENTITY E$2 ON E$2.ID = E$1.LINK\n" +
-      "ORDER BY E$1.TEST_STRING2 ASC, E$2.TEST_FLOAT DESC");
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM DETAIL_ENTITY T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.LINK\n" +
+      "ORDER BY T$1.TEST_STRING2 ASC, T$2.TEST_FLOAT DESC");
 
     await AConnection.executeTransaction({
       connection,
@@ -436,11 +436,11 @@ describe("Query", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1.TEST_STRING1 AS A$1\n" +
-      "FROM DETAIL_ENTITY E$1\n" +
-      "  LEFT JOIN TEST_ENTITY E$2 ON E$2.ID = E$1.LINK\n" +
-      "WHERE (E$1.TEST_STRING1 = :P$1 AND E$2.TEST_FLOAT = :P$2)\n" +
-      "  AND (E$1.TEST_STRING1 IS NULL OR E$2.TEST_FLOAT IS NULL)");
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM DETAIL_ENTITY T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.LINK\n" +
+      "WHERE (T$1.TEST_STRING1 = :P$1 AND T$2.TEST_FLOAT = :P$2)\n" +
+      "  AND (T$1.TEST_STRING1 IS NULL OR T$2.TEST_FLOAT IS NULL)");
     expect(params).toEqual({"P$1": "asd", "P$2": 10});
 
     await AConnection.executeTransaction({

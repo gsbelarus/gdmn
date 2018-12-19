@@ -76,8 +76,8 @@ describe("ERExport", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1_1.FULLNAME AS A$1\n" +
-      "FROM GD_COMPANY E$1_1");
+      "  T$1.FULLNAME AS F$1\n" +
+      "FROM GD_COMPANY T$1");
 
     await AConnection.executeTransaction({
       connection,
@@ -100,9 +100,9 @@ describe("ERExport", () => {
     }));
 
     expect(sql).toEqual("SELECT\n" +
-      "  E$1_1.NAME AS A$1\n" +
-      "FROM GD_CONTACT E$1_1\n" +
-      "WHERE E$1_1.CONTACTTYPE = :P$1");
+      "  T$1.NAME AS F$1\n" +
+      "FROM GD_CONTACT T$1\n" +
+      "WHERE T$1.CONTACTTYPE = :P$1");
 
     await AConnection.executeTransaction({
       connection,
