@@ -80,8 +80,6 @@ export class Select {
   }
 
   private _getSelect(): string {
-  console.log(this._query.link.entity.adapter)
-
     let sql = `SELECT`;
 
     if (this._query.options && this._query.options.first !== undefined) {
@@ -450,19 +448,18 @@ export class Select {
   }
 
   private _getTableAlias(link: EntityLink, relationName: string): string {
-    const ownRelation = Select._getOwnRelationName(link.entity);
-    const linkAliasesCount = this._linkAliases.size;
     let linkAlias = this._linkAliases.get(link);
     if (!linkAlias) {
       linkAlias = {};
       this._linkAliases.set(link, linkAlias);
     }
-    const relAliasesCount = Object.keys(linkAlias).length;
     let relAlias = linkAlias[relationName];
+    let i = 0;
     if (!relAlias) {
-      relAlias = ownRelation === relationName
-        ? `E$${linkAliasesCount + 1}`
-        : `E$${linkAliasesCount || 1}_${relAliasesCount + 1}`;
+      for (const values of this._linkAliases.values()) {
+        i += Object.keys(values).length;
+      }
+      relAlias = `T$${i + 1}`;
       linkAlias[relationName] = relAlias;
     }
     return relAlias;
@@ -473,18 +470,19 @@ export class Select {
       || (setAttr && field.setAttributes && !field.setAttributes.some((attr) => attr === setAttr))) {
       throw new Error("Incorrect set attribute");
     }
-    const fieldAliasesCount = this.fieldAliases.size;
     let fieldAlias = this.fieldAliases.get(field);
     if (!fieldAlias) {
       fieldAlias = new Map<Attribute, string>();
       this.fieldAliases.set(field, fieldAlias);
     }
-    const attrAliasesCount = fieldAlias.size;
     let attrAlias = fieldAlias.get(setAttr || field.attribute);
+
+    let i = 0;
     if (!attrAlias) {
-      attrAlias = setAttr
-        ? `A$${fieldAliasesCount + 1}_${attrAliasesCount + 1}`
-        : `A$${fieldAliasesCount + 1}`;
+      for (const values of this.fieldAliases.values()) {
+        i += values.size;
+      }
+      attrAlias = `F$${i + 1}`;
       fieldAlias.set(setAttr || field.attribute, attrAlias);
     }
     return attrAlias;

@@ -237,7 +237,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     const selectQuery = new Select(query);
     return (
       <div className="SelectQuery">
-        <div className="sql">{selectQuery.sql}</div>
+        <pre className="sql">{selectQuery.sql}</pre>
         <div className="params">{JSON.stringify(selectQuery.params)}</div>
       </div>
     );
