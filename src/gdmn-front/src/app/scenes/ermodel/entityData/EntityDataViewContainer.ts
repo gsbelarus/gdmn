@@ -4,13 +4,11 @@ import { ERModel, EntityQuery, EntityLink, EntityQueryField, ScalarAttribute } f
 import { RecordSetAction } from 'gdmn-recordset';
 import { GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
-import { bindDataViewDispatch } from '../components/bindDataView';
-import { EntityDataView } from './EntityDataView';
 import { TTaskActionNames } from '@gdmn/server-api';
 
 import { TGdmnActions } from '../../gdmn/actions';
 import { EntityDataView } from './EntityDataView';
-import { connectDataViewDispatch } from '@src/app/components/connectDataView';
+import { bindDataViewDispatch } from '@src/app/components/bindDataView';
 import { apiService } from '@src/app/services/apiService';
 
 export const getEntityDataViewContainer = (entityName: string) => connect(

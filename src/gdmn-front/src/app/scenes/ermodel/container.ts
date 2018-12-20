@@ -6,7 +6,7 @@ import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
 
 import { IState } from '@src/app/store/reducer';
-import { bindDataViewDispatch } from '../components/bindDataView';
+import { bindDataViewDispatch } from '@src/app/components/bindDataView';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';
 
