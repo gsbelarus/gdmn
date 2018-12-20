@@ -1,3 +1,5 @@
+export type JoinType = "LEFT" | "RIGHT" | "";
+
 export abstract class SQLTemplates {
 
   public static field(alias: string, fieldAlias: string, fieldName: string): string {
@@ -12,8 +14,9 @@ export abstract class SQLTemplates {
                      joinAlias: string,
                      joinFieldName: string,
                      alias: string,
-                     fieldName: string): string {
-    return `  LEFT JOIN ${joinTableName} ${joinAlias} ON ` +
+                     fieldName: string,
+                     type: JoinType = ""): string {
+    return `  ${type ? `${type} ` : type}JOIN ${joinTableName} ${joinAlias} ON ` +
       SQLTemplates.equals(joinAlias, joinFieldName, `${alias && `${alias}.`}${fieldName}`);
   }
 

@@ -155,7 +155,8 @@ export class Select {
           this._getTableAlias(link, rel.relationName),
           Select._getPKFieldName(link.entity, rel.relationName),
           this._getTableAlias(link, existsRelations[0].relationName),
-          Select._getPKFieldName(link.entity, existsRelations[0].relationName)
+          Select._getPKFieldName(link.entity, existsRelations[0].relationName),
+          rel.weak ? "LEFT" : ""
         );
       } else {
         return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
@@ -199,7 +200,8 @@ export class Select {
                 this._getTableAlias(link, attr.adapter!.crossRelation),
                 attr.adapter!.crossPk[0],
                 this._getTableAlias(link, firstRelationName),
-                Select._getPKFieldName(link.entity, firstRelationName)
+                Select._getPKFieldName(link.entity, firstRelationName),
+                "LEFT"
               )
             );
             joins.push(
@@ -208,7 +210,8 @@ export class Select {
                 this._getTableAlias(field.link, linkFirstRelationName),
                 linkFirstPKFieldName,
                 this._getTableAlias(link, attr.adapter!.crossRelation),
-                attr.adapter!.crossPk[1]
+                attr.adapter!.crossPk[1],
+                "LEFT"
               )
             );
             break;
@@ -225,7 +228,8 @@ export class Select {
                 this._getTableAlias(field.link, mLink.detailRelation),
                 mLink.link2masterField,
                 this._getTableAlias(link, firstRelationName),
-                firstPKFieldName
+                firstPKFieldName,
+                "LEFT"
               )
             );
             break;
@@ -239,7 +243,8 @@ export class Select {
                 this._getTableAlias(field.link, linkFirstRelationName),
                 linkFirstPKFieldName,
                 this._getTableAlias(link, attr.adapter!.relation),
-                attr.adapter!.field
+                attr.adapter!.field,
+                "LEFT"
               )
             );
           }
@@ -251,7 +256,8 @@ export class Select {
               this._getTableAlias(link, rel.relationName),
               Select._getPKFieldName(field.link.entity, rel.relationName),
               this._getTableAlias(link, linkExistsRelations[0].relationName),
-              Select._getPKFieldName(field.link.entity, linkExistsRelations[0].relationName)
+              Select._getPKFieldName(field.link.entity, linkExistsRelations[0].relationName),
+              rel.weak ? "LEFT" : ""
             ));
           }
           return relJoins;

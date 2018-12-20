@@ -263,7 +263,7 @@ describe("Query", () => {
       "  T$1.TEST_STRING AS F$1,\n" +
       "  T$2.TEST_FLOAT AS F$2\n" +
       "FROM TEST_ENTITY T$2\n" +
-      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$2.ID");
+      "  JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$2.ID");
 
     await AConnection.executeTransaction({
       connection,
