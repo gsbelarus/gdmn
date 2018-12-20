@@ -1,5 +1,5 @@
 import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType } from "gdmn-nlp";
-import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue } from "gdmn-orm";
+import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute } from "gdmn-orm";
 import { ICommand, Action} from "./command";
 import accepts = require("accepts");
 
@@ -90,14 +90,23 @@ export class ERTranslatorRU {
         if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
           const nounLexeme = (adjective.lexeme as RusAdjectiveLexeme).getNounLexeme();
           if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
-            const locationAttr = entity.attributesBySemCategory(SemCategory.ObjectLocation);
-            const attr = locationAttr[0];
+            const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
             const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
-            equals.push({
-              alias:"alias",
-              attribute: attr,
-              value: words
-            });
+            if (attr instanceof EntityAttribute) {
+              const linkEntity = attr.entities[0];
+              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "aliasL2", [])));
+              equals.push({
+                alias:"aliasL2",
+                attribute: linkEntity.attribute("NAME"),
+                value: words
+              });
+            } else {
+              equals.push({
+                alias:"alias",
+                attribute: attr,
+                value: words
+              });
+            }
           } else {
             throw new Error(`Can't find semantic category place for noun ${objectANP.word}`);
           }
@@ -109,14 +118,23 @@ export class ERTranslatorRU {
         if ((preposition.lexeme as RusPrepositionLexeme).prepositionType === PrepositionType.Place) {
           const nounLexeme = (np.pp as RusPP).noun.lexeme;
           if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
-            const locationAttr1 = entity.attributesBySemCategory(SemCategory.ObjectLocation);
-            const attr1 = locationAttr1[0];
-            const words1 = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
-            equals.push({
-              alias:"alias",
-              attribute: attr1,
-              value: words1
-            });
+            const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
+            const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+            if (attr instanceof EntityAttribute) {
+              const linkEntity = attr.entities[0];
+              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "aliasL2", [])));
+              equals.push({
+                alias:"aliasL2",
+                attribute: linkEntity.attribute("NAME"),
+                value: words
+              });
+            } else {
+              equals.push({
+                alias:"alias",
+                attribute: attr,
+                value: words
+              });
+            }
           }
         }
       }
