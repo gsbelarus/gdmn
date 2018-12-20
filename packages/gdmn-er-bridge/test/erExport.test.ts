@@ -2,19 +2,19 @@ import fs from "fs";
 import {AConnection} from "gdmn-db";
 import {deserializeERModel, EntityQuery, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
 import {Select} from "../src";
-import {IDBDetail} from "../src/ddl/export/dbdetail";
 import {ERBridge} from "../src/ERBridge";
+import {loadDBDetails} from "./testConfig";
 
 jest.setTimeout(120000);
 
 describe("ERExport", () => {
 
-  const dbDetail = require("./testDB").exportTestDBDetail as IDBDetail;
+  const dbDetail = loadDBDetails()[0];
   const connection = dbDetail.driver.newConnection();
   const erModel = new ERModel();
 
   beforeAll(async () => {
-    await connection.connect(dbDetail.options);
+    await connection.connect(dbDetail.connectionOptions);
     await ERBridge.initDatabase(connection);
 
     await AConnection.executeTransaction({

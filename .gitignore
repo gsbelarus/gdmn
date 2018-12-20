@@ -7,6 +7,7 @@ src/*/build
 src/gdmn-back/public
 databases.ts
 testDB.ts
+testConfig.json
 .lib
 *.js.map
 

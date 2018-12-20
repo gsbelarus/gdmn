@@ -1,0 +1,17 @@
+{
+  "dbDetails": [
+    {
+      "alias": "test",
+      "driver": "FBDriver",
+      "connectionOptions": {
+        "server": {
+          "host": "localhost",
+          "port": 3050
+        },
+        "username": "SYSDBA",
+        "password": "masterkey",
+        "path": "..."
+      }
+    }
+  ]
+}

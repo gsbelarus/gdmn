@@ -75,10 +75,7 @@
 - ```./src/gdmn-front/configs/config.json```
 
 Для запуска тестов прописываем пути подключения к базам данных:
-
-- gdmn-back (требуется для подключения тестовой БД) Копируем файл ```./src/gdmn-back/src/db/databases.ts.sample``` в ```./src/gdmn-back/src/db/databases.ts```.
-- gdmn-nlp-agent (требуется для запуска тестов). Копируем файл ```./packages/gdmn-nlp-agent/src/test/testDB.ts.sample``` в ```./packages/gdmn-nlp-agent/src/test/testDB.ts```.
-- gdmn-er-bridge (требуется для запуска тестов). Копируем файл ```./packages/gdmn-er-bridge/src/test/testDB.ts.sample``` в ```./packages/gdmn-er-bridge/src/test/testDB.ts```.
+- Копируем файл ```./testConfig.json.sample``` в ```./testConfig.json```.
 
 Если требуется обновить демо данные для **gdmn-grid-demo** выполнить:
 

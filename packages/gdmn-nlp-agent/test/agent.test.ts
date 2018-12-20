@@ -1,15 +1,10 @@
 import fs from "fs";
-import {AConnection, ADriver, IConnectionOptions} from "gdmn-db";
+import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
 import {deserializeERModel, ERModel} from "gdmn-orm";
-import {ERTranslatorRU} from "../agent";
-
-export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConnectionOptions> {
-  alias: string;
-  driver: ADriver;
-  options: ConnectionOptions;
-}
+import {ERTranslatorRU} from "../src/agent";
+import {loadDBDetails} from "./testConfig";
 
 jest.setTimeout(100 * 1000);
 
@@ -18,12 +13,11 @@ describe("erModel", () => {
   let erModel: ERModel;
   let translator: ERTranslatorRU;
 
-  const dbDetail = require("./testDB").testDB[0] as IDBDetail;
-  const {driver, options}: IDBDetail = dbDetail;
-  const connection = driver.newConnection();
+  const dbDetail = loadDBDetails()[0];
+  const connection = dbDetail.driver.newConnection();
 
   beforeAll(async () => {
-    await connection.connect(options);
+    await connection.connect(dbDetail.connectionOptions);
     await ERBridge.initDatabase(connection);
 
     const erModel2 = await AConnection.executeTransaction({
@@ -71,7 +65,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
-});
+  });
 
   it("phrase2", () => {
     const company = erModel.entities.Company;
@@ -97,7 +91,7 @@ describe("erModel", () => {
     expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias");
     expect(commands[0].payload.options!.where![0].equals![0].attribute).toEqual(placeKey);
     expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
-});
+  });
 
   it("phrase3", () => {
     const company = erModel.entities.Company;

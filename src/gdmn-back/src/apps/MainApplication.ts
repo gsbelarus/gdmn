@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import {existsSync, mkdirSync} from "fs";
-import {AConnection, ATransaction, Factory, IConnectionServer} from "gdmn-db";
+import {AConnection, ADriver, ATransaction, Factory, IConnectionServer} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {
   BlobAttribute,
@@ -563,9 +563,22 @@ export class MainApplication extends Application {
                                        transaction: ATransaction,
                                        userKey: number): Promise<void> {
     try {
-      const {default: databases} = require("../db/databases");
-      for (const db of Object.values(databases)) {
-        const dbDetail = db as IDBDetail;
+      const testConfig = require("../../../../../testConfig.json");
+      if (!testConfig) {
+        throw new Error("testConfig.json is not found");
+      }
+      const dbDetails: IDBDetail[] = testConfig.dbDetails.map((dbDetail: any) => ({
+        alias: dbDetail.alias,
+        driver: resolveDriver(dbDetail.driver),
+        connectionOptions: {
+          server: dbDetail.connectionOptions.server,
+          username: dbDetail.connectionOptions.username,
+          password: dbDetail.connectionOptions.password,
+          path: dbDetail.connectionOptions.path
+        }
+      }));
+      for (const dbDetail of dbDetails) {
+        console.log(dbDetail);
         const appInfo = await this._addApplicationInfo(connection, transaction, {
           ...dbDetail.connectionOptions,
           ownerKey: userKey,
@@ -654,5 +667,14 @@ export class MainApplication extends Application {
         }
       }
     });
+  }
+}
+
+function resolveDriver(driverName: string): ADriver {
+  switch (driverName) {
+    case "FBDriver":
+      return Factory.FBDriver;
+    default:
+      throw new Error(`Unknown driver name ${driverName}`);
   }
 }

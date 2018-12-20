@@ -25,17 +25,6 @@ import {
 import moment from "moment";
 import {resolve} from "path";
 import {ERBridge} from "../src";
-import {
-  Crud,
-  IDelete,
-  IDetailAttrValue,
-  IEntityAttrValue,
-  IInsert,
-  IScalarAttrValue,
-  ISetAttrValue,
-  IUpdate,
-  IUpdateOrInsert
-} from "../src/crud/Crud";
 import {Constants} from "../src/ddl/Constants";
 
 const dbOptions: IConnectionOptions = {
