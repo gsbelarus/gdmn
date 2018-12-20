@@ -1,8 +1,8 @@
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType, TFieldType } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType, TFieldType, MasterLink } from "./types";
 import { IFilter } from "./filter";
 import { List } from "immutable";
 import equal from "fast-deep-equal";
-import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull } from "./utils";
+import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull, checkField } from "./utils";
 
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
@@ -19,6 +19,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _foundRows?: FoundRows;
   private _groups?: IDataGroup<R>[];
   private _aggregates?: R;
+  private _masterLink?: MasterLink;
 
   private constructor (
     name: string,
@@ -34,7 +35,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     searchStr?: string,
     foundRows?: FoundRows,
     groups?: IDataGroup<R>[],
-    aggregates?: R)
+    aggregates?: R,
+    masterLink?: MasterLink)
   {
     if (!data.size && currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
@@ -54,6 +56,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._foundRows = foundRows;
     this._groups = groups;
     this._aggregates = aggregates;
+    this._masterLink = masterLink;
 
     if (this.size && currentRow >= this.size) {
       throw new Error('Invalid currentRow value');
@@ -63,7 +66,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   public static createWithData<R extends IDataRow = IDataRow>(
     name: string,
     fieldDefs: FieldDefs,
-    data: Data<R>): RecordSet<R>
+    data: Data<R>,
+    masterLink?: MasterLink): RecordSet<R>
   {
     const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
 
@@ -80,10 +84,37 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
           return res;
         },
-        data
+        data,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        masterLink
       );
     } else {
-      return new RecordSet<R>(name, fieldDefs, undefined, data);
+      return new RecordSet<R>(
+        name,
+        fieldDefs,
+        undefined,
+        data,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        masterLink
+      );
     }
   }
 
@@ -171,6 +202,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return this._aggregates;
+  }
+
+  get masterLink() {
+    return this._masterLink;
   }
 
   private _checkFields(fields: INamedField[]) {
@@ -273,6 +308,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._get(rowIdx, this._calcFields);
   }
 
+  public getValue(rowIdx: number, fieldName: string, defaultValue?: TDataType): TDataType {
+    return checkField(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
+  }
+
   public getString(rowIdx: number, fieldName: string, defaultValue?: string): string {
     const fd = this.fieldDefs.find( fd => fd.fieldName === fieldName );
     if (fd) {
@@ -370,7 +409,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           : {...g, rowIdx: prev ? prev.rowIdx + this._getGroupRowCount(prev) : parent ? parent.rowIdx + 1 : 0}
         }
       ),
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
   }
 
@@ -396,7 +436,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         undefined,
         undefined,
         undefined,
-        this._aggregates
+        this._aggregates,
+        this._masterLink
       );
     }
 
@@ -622,7 +663,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         undefined,
         undefined,
         groups,
-        this._aggregates
+        this._aggregates,
+        this._masterLink
       );
     }
 
@@ -640,7 +682,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       undefined,
       undefined,
       undefined,
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
 
     const foundIdx = res.indexOf(currentRowData);
@@ -694,7 +737,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
         }
       ),
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
   }
 
@@ -733,7 +777,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._searchStr,
       this._foundRows,
       this._groups,
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
   }
 
@@ -756,7 +801,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._searchStr,
       this._foundRows,
       this._groups,
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
   }
 
@@ -798,7 +844,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this._searchStr,
       this._foundRows,
       this._groups,
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
   }
 
@@ -843,7 +890,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       false,
       [],
       isFilter ? filter : undefined,
-      isFilter ? this._savedData || this._data : undefined
+      isFilter ? this._savedData || this._data : undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this._masterLink
     );
 
     const foundIdx = this.indexOf(currentRowData);
@@ -886,7 +938,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         undefined,
         undefined,
         this._groups,
-        this._aggregates
+        this._aggregates,
+        this._masterLink
       );
     }
 
@@ -935,7 +988,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       searchStr,
       foundRows.length ? foundRows : undefined,
       this._groups,
-      this._aggregates
+      this._aggregates,
+      this._masterLink
     );
   }
 
@@ -1002,6 +1056,26 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return [{ str: s }];
+  }
+
+  public setData(data: Data<R>, masterLink?: MasterLink): RecordSet<R> {
+    return new RecordSet<R>(
+      this.name,
+      this._fieldDefs,
+      this._calcFields,
+      data,
+      0,
+      [],
+      false,
+      [],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this._masterLink
+    );
   }
 };
 

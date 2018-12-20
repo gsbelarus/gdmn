@@ -43,14 +43,14 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
   }
 
   switch (action.type) {
-    case getType(actions.sortRecordSet): {
-      const { sortFields } = action.payload;
-      return newState(rs.sort(sortFields));
-    }
-
     case getType(actions.setCurrentRow): {
       const { currentRow } = action.payload;
       return newState(rs.setCurrentRow(currentRow));
+    }
+
+    case getType(actions.sortRecordSet): {
+      const { sortFields } = action.payload;
+      return newState(rs.sort(sortFields));
     }
 
     case getType(actions.setAllRowsSelected): {
@@ -81,6 +81,11 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
     case getType(actions.collapseExpandGroups): {
       const { collapse } = action.payload;
       return newState(rs.collapseExpandGroups(collapse));
+    }
+
+    case getType(actions.setRecordSetData): {
+      const { data, masterLink } = action.payload;
+      return newState(rs.setData(data, masterLink));
     }
 
     default:

@@ -6,8 +6,6 @@ import { GridComponentState, GDMNGrid } from 'gdmn-grid';
 export interface IRSAndGCS {
   rs: RecordSet,
   gcs: GridComponentState,
-  masterKeyField?: string[],
-  masterKeyValue?: TFieldType[],
   detail?: IRSAndGCS[]
 };
 
@@ -49,6 +47,34 @@ export class DataView<P extends IDataViewProps, S> extends View<P, S> {
     if (!this.isDataLoaded()) {
       loadData();
     }
+  }
+
+  private updateDetailed(data: IRSAndGCS): boolean {
+    if (!data.detail) {
+      return false;
+    }
+
+    return data.detail.reduce(
+      (prev, d) => {
+        if (data.rs.getValue(data.rs.currentRow, d.rs.masterLink![0].fieldName) !== d.rs.masterLink![0].value) {
+          this.updateDetailed(d);
+          return true;
+        } else {
+          return this.updateDetailed(d) || prev;
+        }
+      },
+      false
+    );
+  }
+
+  public shouldComponentUpdate(nextProps: P, _nextState: S) {
+    const { data } = nextProps;
+
+    if (data && data.rs) {
+
+    }
+
+    return true;
   }
 
   public render() {

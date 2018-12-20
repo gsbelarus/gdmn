@@ -129,3 +129,8 @@ export interface IMeasure<R extends IDataRow> {
 
 export type Measures<R extends IDataRow> = IMeasure<R>[];
 
+export type MasterLink = {
+  fieldName: string,
+  value: TDataType
+}[];
+

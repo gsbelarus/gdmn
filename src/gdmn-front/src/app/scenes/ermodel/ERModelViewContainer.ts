@@ -6,7 +6,7 @@ import { RecordSet, TFieldType, createRecordSet, RecordSetAction } from 'gdmn-re
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
-import { connectDataViewDispatch } from '../components/connectDataView';
+import { bindDataViewDispatch } from '../components/bindDataView';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
 
 export const ERModelViewContainer = connect(
@@ -25,10 +25,10 @@ export const ERModelViewContainer = connect(
     erModel: state.gdmnState.erModel
   }),
 
-  (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
-    ...connectDataViewDispatch(dispatch),
-    apiGetSchema: () => dispatch(gdmnActions.apiGetSchema()),
-    loadFromERModel: (erModel: ERModel) => {
+  (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
+    ...bindDataViewDispatch(thunkDispatch),
+    apiGetSchema: () => thunkDispatch(gdmnActions.apiGetSchema()),
+    loadFromERModel: (erModel: ERModel) => thunkDispatch( (dispatch, getState) => {
       const entitiesRS = RecordSet.createWithData(
         'entities',
         [
@@ -75,7 +75,13 @@ export const ERModelViewContainer = connect(
             name,
             description: ent.lName.ru ? ent.lName.ru.name : name
           }))
-        )
+        ),
+        [
+          {
+            fieldName: 'name',
+            value: entitiesRS.getString(entitiesRS.currentRow, 'name')
+          }
+        ]
       );
       dispatch(createRecordSet({ name: attributesRS.name, rs: attributesRS }));
 
@@ -106,7 +112,7 @@ export const ERModelViewContainer = connect(
         rightSideColumns: 0,
         hideFooter: true
       }));
-    }
+    })
   }),
 
   (stateProps, dispatchProps) => {
