@@ -1,4 +1,3 @@
-import config from "config";
 import http, {Server as HttpServer} from "http";
 import {Server as HttpsServer} from "https";
 import Koa from "koa";
@@ -12,6 +11,7 @@ import cors from "koa2-cors";
 import log4js from "log4js";
 import path from "path";
 import WebSocket from "ws";
+import {Constants} from "./Constants";
 import {checkHandledError, ErrorCodes, throwCtx} from "./ErrorCodes";
 import {StompManager} from "./stomp/StompManager";
 
@@ -20,8 +20,6 @@ interface IServer {
   httpServer?: HttpServer;
   wsHttpServer?: WebSocket.Server;
 }
-
-process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
 log4js.configure("./config/log4js.json");
 const defaultLogger = log4js.getLogger();
@@ -32,7 +30,7 @@ async function create(): Promise<IServer> {
 
   const serverApp = new Koa()
     .use(logger())
-    .use(serve(config.get("server.publicDir")))
+    .use(serve(Constants.SERVER.PUBLIC_DIR))
     .use(koaBody({multipart: true}))
     .use(cors())
     .use(errorHandler())
@@ -53,11 +51,11 @@ async function create(): Promise<IServer> {
   });
 
   const router = new Router()
-    // TODO temp
+  // TODO temp
     .get("/", (ctx) => ctx.redirect("/spa"))
     .get(/\/spa(\/*)?/g, async (ctx) => {
       await send(ctx, "/", { // send(ctx, "/gs/ng/", {
-        root: path.resolve(process.cwd(), config.get("server.publicDir")),
+        root: path.resolve(process.cwd(), Constants.SERVER.PUBLIC_DIR),
         index: "index",
         extensions: ["html"]
       });
@@ -97,9 +95,9 @@ function startWebSocketServer(stompManager: StompManager,
 
 function startHttpServer(serverApp: Koa): HttpServer | undefined {
   let httpServer: HttpServer | undefined;
-  if (config.get("server.http.enabled")) {
+  if (Constants.SERVER.HTTP.ENABLED) {
     httpServer = http.createServer(serverApp.callback());
-    httpServer.listen(config.get("server.http.port"), config.get("server.http.host"));
+    httpServer.listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST);
     httpServer.on("error", serverErrorHandler);
     httpServer.on("listening", () => {
       const address = httpServer!.address();

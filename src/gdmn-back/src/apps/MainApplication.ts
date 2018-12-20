@@ -1,4 +1,3 @@
-import config from "config";
 import crypto from "crypto";
 import {existsSync, mkdirSync} from "fs";
 import {AConnection, ATransaction, Factory, IConnectionServer} from "gdmn-db";
@@ -15,6 +14,7 @@ import {
 } from "gdmn-orm";
 import path from "path";
 import {v1 as uuidV1} from "uuid";
+import {Constants} from "../Constants";
 import {DBStatus, IDBDetail} from "../db/ADatabase";
 import {Application} from "./base/Application";
 import {Session, SessionStatus} from "./base/Session";
@@ -80,26 +80,19 @@ export type GetAppsCmd = MainCmd<"GET_APPS">;
 
 export class MainApplication extends Application {
 
-  public static readonly DEFAULT_SERVER?: IConnectionServer = config.has("db.server")
-    ? config.get("db.server")
-    : undefined;
-  public static readonly DEFAULT_USER: string = config.get("db.user");
-  public static readonly DEFAULT_PASSWORD: string = config.get("db.password");
-
-  public static readonly MAIN_DIR = path.resolve(config.get("db.dir"));
-  public static readonly WORK_DIR = path.resolve(MainApplication.MAIN_DIR, "work");
+  public static readonly WORK_DIR = path.resolve(Constants.DB.DIR, "work");
   public static readonly APP_EXT = ".FDB";
   public static readonly MAIN_DB = `MAIN${MainApplication.APP_EXT}`;
 
   private _applications: Map<string, Application> = new Map();
 
   constructor() {
-    super(MainApplication._createDBDetail("auth_db", path.resolve(MainApplication.MAIN_DIR, MainApplication.MAIN_DB)));
+    super(MainApplication._createDBDetail("auth_db", path.resolve(Constants.DB.DIR, MainApplication.MAIN_DB)));
 
-    if (!existsSync(MainApplication.MAIN_DIR)) {
-      mkdirSync(MainApplication.MAIN_DIR);
+    if (!existsSync(Constants.DB.DIR)) {
+      mkdirSync(Constants.DB.DIR);
     }
-    if (!existsSync(MainApplication.WORK_DIR)) {
+    if (!existsSync(Constants.DB.DIR)) {
       mkdirSync(MainApplication.WORK_DIR);
     }
   }
@@ -117,9 +110,12 @@ export class MainApplication extends Application {
         acquireTimeoutMillis: 60 * 1000
       },
       connectionOptions: {
-        server: appInfo && appInfo.server || MainApplication.DEFAULT_SERVER,
-        username: appInfo && appInfo.username || MainApplication.DEFAULT_USER,
-        password: appInfo && appInfo.password || MainApplication.DEFAULT_PASSWORD,
+        server: appInfo && appInfo.server || Constants.DB.SERVER && {
+          host: Constants.DB.SERVER.HOST,
+          port: Constants.DB.SERVER.PORT
+        },
+        username: appInfo && appInfo.username || Constants.DB.USER,
+        password: appInfo && appInfo.password || Constants.DB.PASSWORD,
         path: appInfo && appInfo.path || dbPath
       }
     };

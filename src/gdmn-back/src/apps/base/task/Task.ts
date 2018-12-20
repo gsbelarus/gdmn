@@ -1,9 +1,8 @@
-import config from "config";
 import {EventEmitter} from "events";
 import {Logger} from "log4js";
-import ms from "ms";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
+import {Constants} from "../../../Constants";
 import {Session} from "../Session";
 import {IProgressOptions, Progress} from "./Progress";
 
@@ -73,8 +72,6 @@ export class Task<Cmd extends ICmd<any>, Result> {
     TaskStatus.SUCCESS
   ];
   public static readonly PROCESS_STATUSES = Task.STATUSES.filter((status) => !Task.DONE_STATUSES.includes(status));
-
-  private static DEFAULT_TIMEOUT = ms(config.get("server.task.timeout") as string);
 
   public readonly emitter: StrictEventEmitter<EventEmitter, ITaskEvents<Cmd, Result>> = new EventEmitter();
 
@@ -190,7 +187,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
       this._timer = undefined;
     }
     if (this._status === TaskStatus.RUNNING) {
-      this._timer = setTimeout(() => this.interrupt(), Task.DEFAULT_TIMEOUT);
+      this._timer = setTimeout(() => this.interrupt(), Constants.SERVER.TASK.TIMEOUT);
     }
     this._logger.info("id#%s is changed; Action: %s; Status: %s", this._id, this._options.command.action,
       TaskStatus[this._status]);

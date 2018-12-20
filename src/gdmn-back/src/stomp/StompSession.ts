@@ -1,9 +1,9 @@
-import config from "config";
 import jwt from "jsonwebtoken";
 import {Logger} from "log4js";
+import ms from "ms";
 import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
 import {v1 as uuidV1} from "uuid";
-import {Application, QueryCmd} from "../apps/base/Application";
+import {Application} from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
 import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
@@ -22,10 +22,6 @@ export interface ISubscription {
 }
 
 export class StompSession implements StompClientCommandListener {
-
-  public static readonly JWT_SECRET: string = config.get("server.jwt.secret");
-  public static readonly JWT_ACCESS_TOKEN_TIMEOUT: string = config.get("server.jwt.token.access.timeout");
-  public static readonly JWT_REFRESH_TOKEN_TIMEOUT: string = config.get("server.jwt.token.refresh.timeout");
 
   public static readonly DESTINATION_TASK = "/task";
   public static readonly DESTINATION_TASK_STATUS = `${StompSession.DESTINATION_TASK}/status`;
@@ -504,8 +500,8 @@ export class StompSession implements StompClientCommandListener {
   private _createAccessJwtToken(user: IUser): string {
     return jwt.sign({
       id: user.id
-    }, StompSession.JWT_SECRET, {
-      expiresIn: StompSession.JWT_ACCESS_TOKEN_TIMEOUT
+    }, Constants.SERVER.JWT.SECRET, {
+      expiresIn: ms(Constants.SERVER.JWT.TOKEN.ACCESS.TIMEOUT)
     });
   }
 
@@ -513,14 +509,14 @@ export class StompSession implements StompClientCommandListener {
     return jwt.sign({
       id: user.id,
       isRefresh: true
-    }, StompSession.JWT_SECRET, {
-      expiresIn: StompSession.JWT_REFRESH_TOKEN_TIMEOUT
+    }, Constants.SERVER.JWT.SECRET, {
+      expiresIn: ms(Constants.SERVER.JWT.TOKEN.REFRESH.TIMEOUT)
     });
   }
 
   private _getPayloadFromJwtToken(token: string): any {
     try {
-      const verified = jwt.verify(token, StompSession.JWT_SECRET);
+      const verified = jwt.verify(token, Constants.SERVER.JWT.SECRET);
       if (verified) {
         const payload = jwt.decode(token);
         if (!payload) {
