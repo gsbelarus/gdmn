@@ -12,8 +12,12 @@ export interface ISignInBoxData {
   password: string;
 }
 
-export interface ISignInBoxProps {
-  initialValues: ISignInBoxData;
+export interface ISignInBoxStateProps {
+  signInInitialValues: ISignInBoxData;
+  signInRequesting: boolean;
+}
+
+export interface ISignInBoxProps extends ISignInBoxStateProps {
   onSignIn: (data: ISignInBoxData) => void;
 }
 
@@ -21,20 +25,17 @@ interface ISignInBoxState {
   activeTab: string;
   userName: string;
   password: string;
-  connecting: boolean;
 }
 
 export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
   state: ISignInBoxState = {
-    ...this.props.initialValues,
-    activeTab: 'Вход',
-    connecting: false
+    ...this.props.signInInitialValues,
+    activeTab: 'Вход'
   };
 
   render() {
-    const { userName, password, activeTab, connecting } = this.state;
-    const { onSignIn } = this.props;
-
+    const { onSignIn, signInRequesting } = this.props;
+    const { userName, password, activeTab } = this.state;
     const tabs = ['Вход', 'Регистрация'];
 
     return (
@@ -44,7 +45,7 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
             {tabs.map(t =>
               t === activeTab ? (
                 <Fragment key={t}>
-                  <div className="SignInFormTab" onClick={() => connecting || this.setState({ activeTab: t })}>
+                  <div className="SignInFormTab" onClick={() => signInRequesting || this.setState({ activeTab: t })}>
                     <div className="SignInFormActiveColor" />
                     <div className="SignInFormTabText SignInFormActiveTab">{t}</div>
                   </div>
@@ -52,7 +53,7 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                 </Fragment>
               ) : (
                 <Fragment key={t}>
-                  <div className="SignInFormTab" onClick={() => connecting || this.setState({ activeTab: t })}>
+                  <div className="SignInFormTab" onClick={() => signInRequesting || this.setState({ activeTab: t })}>
                     <div className="SignInFormTabText SignInFormInactiveTab">{t}</div>
                     <div className="SignInFormInactiveShadow" />
                   </div>
@@ -67,13 +68,13 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
               <>
                 <TextField
                   label="Пользователь:"
-                  disabled={connecting}
+                  disabled={signInRequesting}
                   value={userName}
                   onBeforeChange={userName => this.setState({ userName })}
                 />
                 <PasswordInput
                   label="Пароль:"
-                  disabled={connecting}
+                  disabled={signInRequesting}
                   value={password}
                   onBeforeChange={password => this.setState({ password })}
                 />
@@ -81,12 +82,11 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                 <div className="SignInButtons">
                   <PrimaryButton
                     text="Войти"
-                    disabled={connecting}
+                    disabled={signInRequesting}
                     onRenderIcon={
-                      connecting ? (_props, _defaultRenderer) => <Spinner size={SpinnerSize.xSmall} /> : undefined
+                      signInRequesting ? (_props, _defaultRenderer) => <Spinner size={SpinnerSize.xSmall} /> : undefined
                     }
                     onClick={() => {
-                      this.setState({ connecting: true });
                       onSignIn({ userName, password });
                     }}
                   />

@@ -1,5 +1,6 @@
-import { DataView, IDataViewProps } from '../components/DataView';
 import { ERModel } from 'gdmn-orm';
+
+import { DataView, IDataViewProps } from '@src/app/components/DataView';
 
 export interface IEntityDataViewProps extends IDataViewProps {
   erModel?: ERModel

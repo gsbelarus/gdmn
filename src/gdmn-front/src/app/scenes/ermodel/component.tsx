@@ -1,6 +1,7 @@
-import { DataView, IDataViewProps } from '../components/DataView';
 import { ERModel } from 'gdmn-orm';
 import { ICommandBarItemProps } from 'office-ui-fabric-react';
+
+import { DataView, IDataViewProps } from '@src/app/components/DataView';
 
 export interface IERModelViewProps extends IDataViewProps {
   erModel?: ERModel

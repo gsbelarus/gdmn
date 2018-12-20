@@ -9,17 +9,10 @@ const devCompose =
     ? (<any>window).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({})
     : compose;
 
-/**
- * я пока закоментировал логер, потому что с экшенами рекордсета/грида всё
- * становится адски медленно.
- *
- * я для отладки использую Redux Dev Tools в браузере.
- *
- * там есть в том числе и лог и работает он быстрее чем этот логер,
- * который все пихает в консоль.
- */
 const devMiddlewares: Middleware[] = [
-  /*createLogger()*/
+  createLogger({
+    predicate: (getState, action) => !(action.type.slice(0, 'RECORDSET'.length) === 'RECORDSET' || action.type.slice(0, 'GRID'.length) === 'GRID')
+  })
 ];
 
 function configureStore(rootReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {

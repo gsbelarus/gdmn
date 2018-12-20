@@ -4,11 +4,11 @@ import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 
 interface IRootState {
   // refererPath?: string;
-  snackbarMessage?: string;
+  errorMsgBarText?: string;
 }
 
 const initialState: IRootState = {
-  snackbarMessage: ''
+  errorMsgBarText: ''
 };
 
 function reducer(state: IRootState = initialState, action: TRootActions) {
@@ -23,13 +23,13 @@ function reducer(state: IRootState = initialState, action: TRootActions) {
     case getType(rootActions.showMessage): {
       return {
         ...state,
-        snackbarMessage: action.payload
+        errorMsgBarText: action.payload
       };
     }
     case getType(rootActions.hideMessage): {
       return {
         ...state,
-        snackbarMessage: ''
+        errorMsgBarText: ''
       };
     }
     default:

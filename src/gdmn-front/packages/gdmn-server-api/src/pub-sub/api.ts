@@ -106,9 +106,9 @@ interface IApplicationInfo {
 }
 
 const enum TTaskFinishStatus {
-  INTERRUPTED = '3',
-  ERROR = '4',
-  DONE = '5'
+  INTERRUPTED = 3,
+  ERROR = 4,
+  DONE = 5
 }
 
 // -- TASK-STATUS
@@ -120,11 +120,11 @@ interface ITaskStatusMessageData<TActionName extends keyof TTaskActionPayloadTyp
 }
 
 const enum TTaskStatus {
-  RUNNING = '1',
-  PAUSED = '2',
-  INTERRUPTED = '3',
-  ERROR = '4',
-  DONE = '5'
+  RUNNING = 1,
+  PAUSED = 2,
+  INTERRUPTED = 3,
+  ERROR = 4,
+  DONE = 5
 }
 
 // -- TASK-PROGRESS

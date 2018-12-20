@@ -3,10 +3,9 @@ import React, { ReactType } from 'react';
 import ReactDOM from 'react-dom';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
-import { isDevMode, RouteAccessLevelType } from '@gdmn/client-core';
+import { RouteAccessLevelType } from '@gdmn/client-core';
 
 import { getStore } from '@src/app/store/store';
-import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
 import { getSignInBoxContainer } from '@src/app/scenes/auth/container';
 import { RootContainer } from '@src/app/scenes/root/container';

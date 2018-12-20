@@ -73,9 +73,9 @@ class GdmnPubSubError extends ExtendableError {
 class GdmnPubSubApi {
   public pubSubClient: PubSubClient;
 
-  private taskActionResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>; // todo ReplaySubject
-  private taskProgressResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>;
-  private taskStatusResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>;
+  public taskActionResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>; // todo ReplaySubject
+  public taskProgressResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>;
+  public taskStatusResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>;
 
   private taskActionResultSubscription?: Subscription;
   private taskProgressResultSubscription?: Subscription;
@@ -150,7 +150,6 @@ class GdmnPubSubApi {
     return this.runTaskCmd<TTaskActionNames.GET_APPS>(cmd);
   }
 
-  // todo: remove -> exeption
   public get errorMessageObservable(): Subject<IPubSubMessage<TGdmnReceivedErrorMeta>> {
     return <any>this.pubSubClient.errorMessageObservable;
   }
@@ -243,13 +242,13 @@ class GdmnPubSubApi {
 
     // todo: test delete
     this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
-      console.log('taskProgressResult')
+      console.log('taskProgressResult: ', value)
     );
     this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
-      console.log('taskStatusResult')
+      console.log('taskStatusResult: ', value)
     );
     this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
-      console.log('taskActionResult')
+      console.log('taskActionResult: ', value)
     );
   }
 

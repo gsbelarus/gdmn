@@ -1,16 +1,16 @@
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { ERModel } from 'gdmn-orm';
 import { getType } from 'typesafe-actions';
+import { TGdmnViewStateProps } from '@src/app/scenes/gdmn/component';
 
-interface IGdmnState {
-  erModel: ERModel;
-}
+type TGdmnState = TGdmnViewStateProps;
 
-const initialState: IGdmnState = {
-  erModel: new ERModel()
+const initialState: TGdmnState = {
+  erModel: new ERModel(),
+  loading: false
 };
 
-function reducer(state: IGdmnState = initialState, action: TGdmnActions) {
+function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
   switch (action.type) {
     case getType(gdmnActions.setSchema): {
       return {
@@ -18,9 +18,16 @@ function reducer(state: IGdmnState = initialState, action: TGdmnActions) {
         erModel: action.payload
       };
     }
+    case getType(gdmnActions.setLoading): {
+      return {
+        ...state,
+        loading: action.payload.loading,
+        loadingMessage: action.payload.message
+      };
+    }
     default:
       return state;
   }
 }
 
-export { reducer, IGdmnState };
+export { reducer, TGdmnState };

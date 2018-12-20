@@ -2,21 +2,39 @@ import { getType } from 'typesafe-actions';
 import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 
 import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
+import { ISignInBoxStateProps } from '@src/app/scenes/auth/components/SignInBox';
 
-interface IAuthState {
-  authenticated: boolean; // todo: selector
+interface IAuthState extends ISignInBoxStateProps {
+  authenticated: boolean;
   accessTokenPayload?: IAccessTokenPayload;
   refreshTokenPayload?: IRefreshTokenPayload;
   accessToken?: string;
   refreshToken?: string;
+  // tmp
+  signUpRequesting: boolean;
 }
 
 const initialState: IAuthState = {
+  signUpRequesting: false,
+  signInRequesting: false,
+  signInInitialValues: { userName: 'Administrator', password: 'Administrator' },
   authenticated: false
 };
 
 const getReducer = () => (state: IAuthState = initialState, action: TAuthActions) => {
   switch (action.type) {
+    case getType(authActions.signInAsync.request): {
+      return {
+        ...state,
+        signInRequesting: true,
+      };
+    }
+    case getType(authActions.signUpAsync.request): {
+      return {
+        ...state,
+        signUpRequesting: true,
+      };
+    }
     case getType(authActions.signUpAsync.success):
     case getType(authActions.signInAsync.success): {
       return {
@@ -36,7 +54,11 @@ const getReducer = () => (state: IAuthState = initialState, action: TAuthActions
                 ...action.payload.refreshTokenPayload
               }
             : undefined,
-        authenticated: true
+
+        authenticated: true,
+
+        signUpRequesting: false,
+        signInRequesting: false
       };
     }
     case getType(authActions.signUpAsync.failure):
@@ -49,7 +71,10 @@ const getReducer = () => (state: IAuthState = initialState, action: TAuthActions
         refreshTokenPayload: undefined,
         refreshToken: undefined,
 
-        authenticated: false
+        authenticated: false,
+
+        signUpRequesting: false,
+        signInRequesting: false
       };
     }
     default:

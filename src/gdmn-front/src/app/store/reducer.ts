@@ -3,7 +3,7 @@ import { getType } from 'typesafe-actions';
 import { TActions } from '@src/app/store/TActions';
 import { IAuthState, getReducer as getAuthReducer } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
-import { IGdmnState, reducer as gdmnReducer } from '@src/app/scenes/gdmn/reducer';
+import { TGdmnState, reducer as gdmnReducer } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { RecordSetReducerState, recordSetReducer } from 'gdmn-recordset';
 import { GridReducerState, gridReducer } from 'gdmn-grid';
@@ -11,7 +11,7 @@ import { GridReducerState, gridReducer } from 'gdmn-grid';
 interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
-  readonly gdmnState: IGdmnState;
+  readonly gdmnState: TGdmnState;
   readonly recordSet: RecordSetReducerState;
   readonly grid: GridReducerState;
 }

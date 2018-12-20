@@ -1,13 +1,14 @@
-import { ERModelView } from './ERModelView';
-import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
 import { ERModel } from 'gdmn-orm';
 import { RecordSet, TFieldType, createRecordSet, RecordSetAction } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
+
+import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '../components/bindDataView';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
+import { ERModelView } from './component';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({

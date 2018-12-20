@@ -1,23 +1,25 @@
 import { connect } from 'react-redux';
-import { IAccessTokenPayload, IRefreshTokenPayload, TUserRoleType } from '@gdmn/server-api';
+import { IAccessTokenPayload, IRefreshTokenPayload, TSignInCmdResult, TUserRoleType } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
+
 import { authActions } from '@src/app/scenes/auth/actions';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
-import { ISignInBoxData, SignInBox } from './components/SignInBox';
-
-const signInBoxInitialValues: ISignInBoxData = { userName: 'Administrator', password: 'Administrator' };
+import { IState } from '@src/app/store/reducer';
+import { selectAuthState } from '@src/app/store/selectors';
+import { ISignInBoxData, ISignInBoxProps, ISignInBoxStateProps, SignInBox } from './components/SignInBox';
 
 export const getSignInBoxContainer = (apiService: GdmnPubSubApi) =>
   connect(
-    _state => ({
-      initialValues: signInBoxInitialValues
+    (state: IState, ownProps: ISignInBoxProps): ISignInBoxStateProps => ({
+      signInInitialValues: selectAuthState(state).signInInitialValues,
+      signInRequesting: selectAuthState(state).signInRequesting
     }),
     dispatch => ({
       onSignIn: async (data: ISignInBoxData) => {
         dispatch(authActions.signInAsync.request());
 
         try {
-          const response: any = await apiService.signIn({
+          const response: TSignInCmdResult = await apiService.signIn({
             payload: {
               'create-user': 0,
               login: data.userName,

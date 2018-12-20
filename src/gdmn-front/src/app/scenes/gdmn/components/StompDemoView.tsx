@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
-import { RusPhrase } from 'gdmn-nlp';
+import { parsePhrase, RusWord } from 'gdmn-nlp';
+import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
-import { View } from '../../components/View';
+import { View } from '@src/app/components/View';
 
 interface IStompDemoViewState {
-  pingDelay: number;
-  pingSteps: number;
+  pingDelay: string;
+  pingSteps: string;
 }
 
 interface IStompDemoViewProps {
@@ -20,8 +21,8 @@ interface IStompDemoViewProps {
 
 class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   public state: IStompDemoViewState = {
-    pingDelay: 3000,
-    pingSteps: 2
+    pingDelay: '3000',
+    pingSteps: '2'
   };
 
   public getViewCaption(): string {
@@ -30,16 +31,15 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   public render() {
     return this.renderOneColumn(
-      <div className="ViewBody">
+      <div className="ViewBody" style={{width: 'max-content'}}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div>
-            <TextField label="delay" value={this.state.pingDelay.toString()} onChange={this.handlePingDelayChange} />
-            <TextField label="steps" value={this.state.pingSteps.toString()} onChange={this.handlePingStepsChange} />
+            <TextField label="delay"  value={this.state.pingDelay.toString()} onChange={(e) =>this.handlePingDelayChange(e)} />
+            <TextField label="steps" value={this.state.pingSteps.toString()} onChange={(e) =>this.handlePingStepsChange(e)} />
             <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
-          </div>
-          <div>
+            <br/>
             <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
-          </div>
+            <br/>
+            <PrimaryButton onClick={this.handleSendNlpQueryClick} text="покажи все организации из минска и пинска" disabled={!this.props.erModel} />
         </div>
       </div>
     );
@@ -50,8 +50,8 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       payload: {
         action: TTaskActionNames.PING,
         payload: {
-          delay: this.state.pingDelay,
-          steps: this.state.pingSteps
+          delay: parseInt(this.state.pingDelay),
+          steps: parseInt(this.state.pingSteps)
         }
       }
     });
@@ -64,15 +64,15 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   };
 
   private handlePingStepsChange = (event: any) => {
+    console.log('handlePingStepsChange');
     this.setState({
       pingSteps: event.target.value
     });
   };
 
   private handleSendQueryClick = () => {
-    // -- BEGIN
     if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
-    console.log('handleSendQueryClick');
+
     const entity = Object.values(this.props.erModel.entities)[0];
     const query = new EntityQuery(
       new EntityLink(
@@ -84,8 +84,18 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       )
     );
     this.props.apiGetData(query.inspect());
-    // -- END
   };
+
+  private handleSendNlpQueryClick = () => {
+    const phrase = 'покажи всех организации из минска и пинска';
+    const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
+
+    if (!parsedPhrase || !this.props.erModel) return;
+    const cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase);
+    cmds.forEach(value => {
+      this.props.apiGetData(value.payload.inspect());
+    });
+  }
 }
 
 export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };

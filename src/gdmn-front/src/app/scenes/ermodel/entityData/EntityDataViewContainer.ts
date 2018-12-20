@@ -7,8 +7,11 @@ import { ThunkDispatch } from 'redux-thunk';
 import { bindDataViewDispatch } from '../components/bindDataView';
 import { EntityDataView } from './EntityDataView';
 import { TTaskActionNames } from '@gdmn/server-api';
+
+import { TGdmnActions } from '../../gdmn/actions';
+import { EntityDataView } from './EntityDataView';
+import { connectDataViewDispatch } from '@src/app/components/connectDataView';
 import { apiService } from '@src/app/services/apiService';
-import { TGdmnActions } from '../gdmn/actions';
 
 export const getEntityDataViewContainer = (entityName: string) => connect(
   (state: IState) => ({

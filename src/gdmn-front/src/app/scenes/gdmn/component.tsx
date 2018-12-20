@@ -6,18 +6,21 @@ import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
 import { ERModel } from 'gdmn-orm';
+import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
+import { Dispatch } from 'redux';
 
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { TAuthActions } from '@src/app/scenes/auth/actions';
-import { ERModelViewContainer } from '@src/app/scenes/ermodel/ERModelViewContainer';
+import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import styles from './styles.css';
 import { TGdmnActions } from './actions';
-import { Dispatch } from 'redux';
 
 type TGdmnViewStateProps = {
-  erModel?: ERModel;
+  erModel: ERModel;
+  loading: boolean;
+  loadingMessage?: string;
 };
 type TGdmnViewProps = IStompDemoViewProps &
   IAccountViewProps &
@@ -31,7 +34,7 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount } = this.props;
+    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading } = this.props;
     if (!match) return null; // todo
 
     return (
@@ -84,6 +87,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             />
           </div>
         </div>
+        <ProgressIndicator styles={{itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' }}} barHeight={4} description={this.props.loadingMessage} />
         <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>
