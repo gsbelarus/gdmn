@@ -1,11 +1,10 @@
-import config from "config";
 import {EventEmitter} from "events";
 import {AConnection, ITransactionOptions, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {Logger} from "log4js";
-import ms from "ms";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
+import {Constants} from "../../Constants";
 import {DBStatus} from "../../db/ADatabase";
 import {Task, TaskStatus} from "./task/Task";
 import {TaskManager} from "./task/TaskManager";
@@ -35,8 +34,6 @@ export class Session {
     SessionStatus.FORCE_CLOSING,
     SessionStatus.FORCE_CLOSED
   ];
-
-  private static DEFAULT_TIMEOUT = ms(config.get("server.session.timeout") as string);
 
   public readonly emitter: StrictEventEmitter<EventEmitter, ISessionEvents> = new EventEmitter();
   protected readonly _logger: Logger | Console;
@@ -95,7 +92,7 @@ export class Session {
     }
   }
 
-  public setCloseTimer(timeout: number = Session.DEFAULT_TIMEOUT): void {
+  public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
     this.clearCloseTimer();
     this._logger.info("id#%s is lost and will be closed after %s minutes", this.id, timeout / (60 * 1000));
     this._closeTimer = setTimeout(() => this.close(), timeout);

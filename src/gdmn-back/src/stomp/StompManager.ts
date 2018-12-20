@@ -1,15 +1,11 @@
-import config from "config";
 import log4js from "log4js";
-import ms from "ms";
 import {createStompServerSession, setLoggingListeners} from "stomp-protocol";
 import WebSocket from "ws";
 import {MainApplication} from "../apps/MainApplication";
 import {StompSession} from "./StompSession";
+import {Constants} from "../Constants";
 
 export class StompManager {
-
-  public static readonly DEFAULT_HEARTBEAT_INCOMING = ms(config.get("server.stomp.heartbeat.incoming") as string);
-  public static readonly DEFAULT_HEARTBEAT_OUTGOING = ms(config.get("server.stomp.heartbeat.outgoing") as string);
 
   private readonly _logger = log4js.getLogger("STOMP");
   private readonly _mainApplication = new MainApplication();
@@ -23,8 +19,8 @@ export class StompManager {
   public add(webSocket: WebSocket): boolean {
     const stomp = createStompServerSession(webSocket, StompSession, {
       heartbeat: {
-        incomingPeriod: StompManager.DEFAULT_HEARTBEAT_INCOMING,
-        outgoingPeriod: StompManager.DEFAULT_HEARTBEAT_OUTGOING
+        incomingPeriod: Constants.SERVER.STOMP.HEARTBEAT.INCOMING,
+        outgoingPeriod: Constants.SERVER.STOMP.HEARTBEAT.OUTGOING
       }
     });
     const session = stomp.listener as StompSession;
