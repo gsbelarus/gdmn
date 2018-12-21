@@ -2,9 +2,19 @@ import {ERModel} from "../model/ERModel";
 import {EntityLink, IEntityLinkInspector} from "./EntityLink";
 import {EntityQueryOptions, IEntityQueryOptionsInspector} from "./EntityQueryOptions";
 
-export interface IQueryResponse {
+export interface IEntityQueryResponseFieldAlias {
+  linkAlias: string;
+  attribute: string;
+  setAttribute?: string;
+}
+
+export interface IEntityQueryResponseFieldAliases {
+  [alias: string]: IEntityQueryResponseFieldAlias;
+}
+
+export interface IEntityQueryResponse {
   data: any[];
-  aliases: Array<{ alias: string, attribute: string, values: any }>;
+  aliases: IEntityQueryResponseFieldAliases;
   info: any;
 }
 
@@ -15,8 +25,8 @@ export interface IEntityQueryInspector {
 
 export class EntityQuery {
 
-  public link: EntityLink;
-  public options?: EntityQueryOptions;
+  public readonly link: EntityLink;
+  public readonly options?: EntityQueryOptions;
 
   constructor(query: EntityLink, options?: EntityQueryOptions) {
     this.link = query;

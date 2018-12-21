@@ -1,6 +1,7 @@
 import { visibleToIndex, Columns } from ".";
 import { ActionType, getType } from 'typesafe-actions';
 import * as actions from './gridActions';
+import { GetConditionalStyle } from "./Grid";
 
 export type GridAction = ActionType<typeof actions>;
 
@@ -14,6 +15,7 @@ export interface GridComponentState {
   hideFooter: boolean;
   sortDialog: boolean;
   searchIdx: number;
+  getConditionalStyle?: GetConditionalStyle;
 };
 
 export interface GridReducerState {
@@ -33,18 +35,21 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
       throw new Error(`Duplicate grid component name ${componentName}`);
     }
 
+    const { columns, leftSideColumns, rightSideColumns, hideFooter, getConditionalStyle } = action.payload;
+
     return {
       ...state,
       [componentName]: {
-        columns: [],
-        leftSideColumns: 0,
-        rightSideColumns: 0,
+        columns,
+        leftSideColumns,
+        rightSideColumns,
         currentCol: -1,
         selectRows: false,
         hideHeader: false,
-        hideFooter: false,
+        hideFooter,
         sortDialog: false,
-        searchIdx: 0
+        searchIdx: 0,
+        getConditionalStyle
       }
     };
   }
@@ -95,19 +100,6 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
       } else {
         return {...state, [componentName]: {...componentState, sortDialog: false}};
       }
-    }
-
-    case getType(actions.setColumns): {
-      const { columns, leftSideColumns, rightSideColumns } = action.payload;
-      return {...state,
-        [componentName]: {
-          ...componentState,
-          columns: [...columns],
-          leftSideColumns,
-          rightSideColumns,
-          currentCol: leftSideColumns
-        }
-      };
     }
 
     case getType(actions.setFixedColumns): {

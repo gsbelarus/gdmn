@@ -7,8 +7,8 @@ interface IATAttrOptions {
   domainName: string;
   masterEntity?: Entity;
   crossTable?: string;
-  crossTableKey?: number;
   crossField?: string;
+  lsHortName?: string;
 }
 
 export abstract class Builder {
@@ -49,8 +49,8 @@ export abstract class Builder {
     return await this.ddlHelper.cachedStatements.nextDDLUnique();
   }
 
-  protected async _addATAttr(attr: Attribute, options: IATAttrOptions): Promise<void> {
-    const fieldSourceKey = await this.ddlHelper.cachedStatements.addToATFields({
+  protected async _updateATAttr(attr: Attribute, options: IATAttrOptions): Promise<void> {
+    await this.ddlHelper.cachedStatements.updateATFields({
       fieldName: options.domainName,
       lName: attr.lName.ru && attr.lName.ru.name,
       description: attr.lName.ru && attr.lName.ru.fullName,
@@ -62,7 +62,7 @@ export abstract class Builder {
         : undefined
     });
 
-    await this.ddlHelper.cachedStatements.addToATRelationField({
+    await this.ddlHelper.cachedStatements.updateATRelationField({
       fieldName: options.fieldName,
       relationName: options.relationName,
       lName: attr.lName.ru && attr.lName.ru.name,
@@ -70,10 +70,8 @@ export abstract class Builder {
       attrName: attr.name,
       masterEntityName: options.masterEntity && options.masterEntity.name,
       fieldSource: options.domainName,
-      fieldSourceKey,
       semCategory: attr.semCategories,
       crossTable: options.crossTable,
-      crossTableKey: options.crossTableKey,
       crossField: options.crossField
     });
   }

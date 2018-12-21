@@ -26,6 +26,7 @@ export interface IAttribute {
   lName: ILName;
   required: boolean;
   semCategories: string;
+  adapter?: any;
 }
 
 export interface IEnumAttribute extends IAttribute {
@@ -80,13 +81,15 @@ export interface IEntity {
   semCategories: string;
   unique: string[][];
   attributes: IAttribute[];
+  adapter?: any;
 }
 
 export interface IERModel {
   entities: IEntity[];
 }
 
-export function deserializeERModel(serialized: IERModel): ERModel {
+// TODO serialize adapter - tmp
+export function deserializeERModel(serialized: IERModel, withAdapter?: boolean): ERModel {
   const erModel = new ERModel();
 
   const createSequence = (sequence: string): Sequence => {
@@ -100,6 +103,9 @@ export function deserializeERModel(serialized: IERModel): ERModel {
   };
 
   const createEntity = (e: IEntity): Entity => {
+    if (!withAdapter) {
+      e.adapter = undefined;
+    }
     let result = erModel.entities[e.name];
 
     if (!result) {
@@ -120,7 +126,8 @@ export function deserializeERModel(serialized: IERModel): ERModel {
           lName: e.lName,
           parent,
           isAbstract: e.isAbstract,
-          semCategories: str2SemCategories(e.semCategories)
+          semCategories: str2SemCategories(e.semCategories),
+          adapter: e.adapter
         })
       );
     }
@@ -130,91 +137,97 @@ export function deserializeERModel(serialized: IERModel): ERModel {
 
   const createAttribute = (_attr: IAttribute): Attribute => {
     const {name, lName, required} = _attr;
+    let {adapter} = _attr;
+    if (!withAdapter) {
+      adapter = undefined;
+    }
     const semCategories = str2SemCategories(_attr.semCategories);
 
     switch (_attr.type) {
       case "Detail": {
         const attr = _attr as IEntityAttribute;
         const entities = attr.references.map((e) => erModel.entities[e]);
-        return new DetailAttribute({name, lName, required, entities, semCategories});
+        return new DetailAttribute({name, lName, required, entities, semCategories, adapter});
       }
 
       case "Parent": {
         const attr = _attr as IEntityAttribute;
         const entities = attr.references.map((e) => erModel.entities[e]);
-        return new ParentAttribute({name, lName, entities, semCategories});
+        return new ParentAttribute({name, lName, entities, semCategories, adapter});
       }
 
       case "Entity": {
         const attr = _attr as IEntityAttribute;
         const entities = attr.references.map((e) => erModel.entity(e));
-        return new EntityAttribute({name, lName, required, entities, semCategories});
+        return new EntityAttribute({name, lName, required, entities, semCategories, adapter});
       }
 
       case "String": {
         const {minLength, maxLength, defaultValue, autoTrim, mask} = _attr as IStringAttribute;
         return new StringAttribute({
-          name, lName, required, minLength, maxLength, defaultValue, autoTrim, mask, semCategories
+          name, lName, required, minLength, maxLength, defaultValue, autoTrim, mask, semCategories, adapter
         });
       }
 
       case "Set": {
         const {presLen, attributes, references} = _attr as ISetAttribute;
         const entities = references.map((e) => erModel.entities[e]);
-        const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories});
+        const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories, adapter});
         attributes.forEach((a) => setAttribute.add(createAttribute(a)));
         return setAttribute;
       }
 
       case "Sequence": {
         const attr = _attr as ISequenceAttribute;
-        return new SequenceAttribute({name, lName, sequence: createSequence(attr.sequence), semCategories});
+        return new SequenceAttribute({name, lName, sequence: createSequence(attr.sequence), semCategories, adapter});
       }
 
       case "Integer": {
         const {minValue, maxValue, defaultValue} = _attr as INumberAttribute<number>;
-        return new IntegerAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories});
+        return new IntegerAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter});
       }
 
       case "Numeric": {
         const {precision, scale, minValue, maxValue, defaultValue} = _attr as INumericAttribute;
         return new NumericAttribute({
-          name, lName, required, precision, scale, minValue, maxValue, defaultValue, semCategories
+          name, lName, required, precision, scale, minValue, maxValue, defaultValue, semCategories, adapter
         });
       }
 
       case "Float": {
         const {minValue, maxValue, defaultValue} = _attr as INumberAttribute<number>;
-        return new FloatAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories});
+        return new FloatAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter});
       }
 
       case "Boolean": {
         const {defaultValue} = _attr as IBooleanAttribute;
-        return new BooleanAttribute({name, lName, required, defaultValue, semCategories});
+        return new BooleanAttribute({name, lName, required, defaultValue, semCategories, adapter});
       }
 
       case "Date": {
         const {minValue, maxValue, defaultValue} = _attr as IDateAttribute;
-        return new DateAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories});
+        return new DateAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter});
       }
 
       case "TimeStamp": {
         const {minValue, maxValue, defaultValue} = _attr as IDateAttribute;
-        return new TimeStampAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories});
+        return new TimeStampAttribute({
+          name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter
+        });
       }
 
       case "Time": {
         const {minValue, maxValue, defaultValue} = _attr as IDateAttribute;
-        return new TimeAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories});
+        return new TimeAttribute({name, lName, required, minValue, maxValue, defaultValue, semCategories, adapter});
       }
 
       case "Blob": {
-        return new BlobAttribute({name, lName, required, semCategories});
+        return new BlobAttribute({name, lName, required, semCategories, adapter});
       }
 
       case "Enum": {
         const {values, defaultValue} = _attr as IEnumAttribute;
-        return new EnumAttribute({name, lName, required, values, defaultValue, semCategories});
+        return new EnumAttribute({name, lName, required, values, defaultValue, semCategories, adapter});
       }
 
       default:

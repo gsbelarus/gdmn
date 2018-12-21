@@ -25,9 +25,9 @@ export class NumericAttribute extends NumberAttribute<number> {
     return `${super.inspectDataType()}(${this.precision}, ${Math.abs(this.scale)})`;
   }
 
-  public serialize(): INumericAttribute {
+  public serialize(withAdapter?: boolean): INumericAttribute {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       precision: this.precision,
       scale: this.scale
     };

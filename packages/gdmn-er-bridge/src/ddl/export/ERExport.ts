@@ -13,6 +13,7 @@ import {
   ERModel,
   FloatAttribute,
   hasField,
+  IAttributeAdapter,
   IEntitySelector,
   IntegerAttribute,
   ISetAttributeAdapter,
@@ -34,7 +35,6 @@ import {
   TimeAttribute,
   TimeStampAttribute
 } from "gdmn-orm";
-import {IParentAttributeAdapter} from "gdmn-orm/src/rdbadapter";
 import {Builder} from "../builder/Builder";
 import {Constants} from "../Constants";
 import {IATLoadResult, IATRelation, load} from "./atData";
@@ -85,14 +85,11 @@ export class ERExport {
     this._createEntities();
     Object.values(this._erModel.entities)
       .sort((a, b) => {
-        if (a.adapter.relation.length < b.adapter.relation.length) return -1;
-        else if (a.adapter.relation.length > b.adapter.relation.length) return 1;
+        if (a.adapter!.relation.length < b.adapter!.relation.length) return -1;
+        else if (a.adapter!.relation.length > b.adapter!.relation.length) return 1;
         return 0;
       })
-      .forEach((entity) => {
-        const forceAdapter = Object.values(this._erModel.entities).some((e) => e.parent === entity);
-        this._createAttributes(entity, forceAdapter);
-      });
+      .forEach((entity) => this._createAttributes(entity));
     this._createDetailAttributes();
     this._createSetAttributes();
 
@@ -126,15 +123,9 @@ export class ERExport {
 
   private _createEntity(parent: Entity | undefined, relation: Relation, atRelation: IATRelation): Entity {
     const name = atRelation && atRelation.entityName ? atRelation.entityName : relation.name;
-    let adapter = atRelation && atRelation.entityName && atRelation.entityName !== relation.name
-      ? relationName2Adapter(relation.name) : undefined;
     const lName = atRelation ? atRelation.lName : {};
     const semCategories = atRelation ? atRelation.semCategories : undefined;
-
-    if (parent) {
-      const relName = adapter ? adapter.relation[0].relationName : relation.name;
-      adapter = appendAdapter(parent.adapter, relName);
-    }
+    const adapter = parent ? appendAdapter(parent.adapter!, relation.name) : relationName2Adapter(relation.name);
 
     const entity = new Entity({parent, name, lName, semCategories, adapter});
     if (parent) {
@@ -142,7 +133,11 @@ export class ERExport {
         name: Constants.DEFAULT_INHERITED_KEY_NAME,
         required: true,
         lName: {ru: {name: "Родитель"}},
-        entities: [parent]
+        entities: [parent],
+        adapter: {
+          relation: Builder._getOwnRelationName(entity),
+          field: Constants.DEFAULT_INHERITED_KEY_NAME
+        }
       }));
     } else {
       entity.add(
@@ -160,9 +155,9 @@ export class ERExport {
     return entity;
   }
 
-  private _createAttributes(entity: Entity, forceAdapter: boolean): void {
+  private _createAttributes(entity: Entity): void {
     const ownRelationName = Builder._getOwnRelationName(entity);
-    entity.adapter.relation.forEach(rel => {
+    entity.adapter!.relation.forEach(rel => {
       const relation = this._dbStructure.relations[rel.relationName];
       const atRelation = this._getATResult().atRelations[relation.name];
 
@@ -179,13 +174,13 @@ export class ERExport {
           return;
         }
 
-        if (!hasField(entity.adapter, relation.name, relationField.name)
+        if (!hasField(entity.adapter!, relation.name, relationField.name)
           && !systemFields.find((sf) => sf === relationField.name)
           && !isUserDefined(relationField.name)) {
           return;
         }
 
-        if (entity.adapter.relation[0].selector && entity.adapter.relation[0].selector!.field === relationField.name) {
+        if (entity.adapter!.relation[0].selector && entity.adapter!.relation[0].selector!.field === relationField.name) {
           return;
         }
 
@@ -197,7 +192,7 @@ export class ERExport {
           }
         }
 
-        const attribute = this._createAttribute(relation, relationField, forceAdapter);
+        const attribute = this._createAttribute(relation, relationField);
 
         // ignore duplicates and override parent attributes
         if ((ownRelationName === rel.relationName && !entity.hasOwnAttribute(attribute.name))
@@ -208,10 +203,7 @@ export class ERExport {
 
       Object.values(relation.unique).forEach((uq) => {
         const attrs = uq.fields.map((field) => {
-          let uqAttr = Object.values(entity.attributes).find((attr) => {
-            const attrFieldName = attr.adapter ? attr.adapter.field : attr.name;
-            return attrFieldName === field;
-          });
+          let uqAttr = Object.values(entity.attributes).find((attr) => attr.adapter.field === field);
           if (!uqAttr) {
             uqAttr = entity.attribute(field);
           }
@@ -237,13 +229,12 @@ export class ERExport {
           const fieldSource = this._dbStructure.fields[relationField.fieldSource];
           const required: boolean = relationField.notNull || fieldSource.notNull;
           const lName = atRelationField ? atRelationField.lName : (atField ? atField.lName : {});
-
-          const detailAdapter = detailEntity.name !== name ? {
+          const detailAdapter = {
             masterLinks: [{
               detailRelation: detailEntity.name,
               link2masterField: relationField.name
             }]
-          } : undefined;
+          };
 
           masterEntity.add(new DetailAttribute({
             name, lName, required, entities: [detailEntity],
@@ -322,16 +313,19 @@ export class ERExport {
 
         entitiesOwner.forEach((entity) => {
           if (!Object.values(entity.attributes).find((attr) =>
-            (attr instanceof SetAttribute) && !!attr.adapter && attr.adapter.crossRelation === crossName)) {
+            (attr instanceof SetAttribute) && attr.adapter!.crossRelation === crossName)) {
 
             // for custom set field
             let name = atSetField && atSetField[0] || crossName;
-            const setAdapter: ISetAttributeAdapter = {crossRelation: crossName};
+            const adapter: ISetAttributeAdapter = {
+              crossRelation: crossName,
+              crossPk: crossRelation.primaryKey!.fields
+            };
             if (atSetField) {
               const [a, atSetRelField] = atSetField;
               name = atSetRelField && atSetRelField.attrName || name;
               if (a !== name) {
-                setAdapter.presentationField = a;
+                adapter.presentationField = a;
               }
             }
             const setAttr = new SetAttribute({
@@ -341,13 +335,13 @@ export class ERExport {
                 entities: referenceEntities,
                 presLen: (setFieldSource && setFieldSource.fieldType === FieldType.VARCHAR) ? setFieldSource.fieldLength : 0,
                 semCategories: atCrossRelation.semCategories,
-                adapter: setAdapter
+                adapter
               }
             );
 
             Object.entries(crossRelation.relationFields).forEach(([addName, addField]) => {
               if (!crossRelation.primaryKey!.fields.find(f => f === addName)) {
-                setAttr.add(this._createAttribute(crossRelation, addField, false));
+                setAttr.add(this._createAttribute(crossRelation, addField));
               }
             });
 
@@ -359,22 +353,21 @@ export class ERExport {
   }
 
   private _createAttribute(relation: Relation,
-                           relationField: RelationField,
-                           forceAdapter: boolean): Attribute {
+                           relationField: RelationField): Attribute {
     const atRelation = this._getATResult().atRelations[relation.name];
     const atRelationField = atRelation ? atRelation.relationFields[relationField.name] : undefined;
     const atField = this._getATResult().atFields[relationField.fieldSource];
     const fieldSource = this._dbStructure.fields[relationField.fieldSource];
 
     const name = atRelationField && atRelationField.attrName !== undefined ? atRelationField.attrName : relationField.name;
-    const adapter = (atRelationField && atRelationField.attrName !== undefined) || forceAdapter ? {
-      relation: relation.name,
-      field: relationField.name
-    } : undefined;
     const required: boolean = relationField.notNull || fieldSource.notNull;
     const defaultValueSource: string | null = relationField.defaultSource || fieldSource.defaultSource;
     const lName = atRelationField ? atRelationField.lName : (atField ? atField.lName : {});
     const semCategories = atRelationField ? atRelationField.semCategories : [];
+    const adapter: IAttributeAdapter = {
+      relation: relation.name,
+      field: relationField.name
+    };
 
     const createDomainFunc = gdDomains[relationField.fieldSource];
 
@@ -457,8 +450,7 @@ export class ERExport {
         });
       }
       case FieldType.INTEGER: {
-        const fieldName = adapter ? adapter.field : name;
-        const fk = Object.values(relation.foreignKeys).find((fk) => fk.fields.includes(fieldName));
+        const fk = Object.values(relation.foreignKeys).find((fk) => fk.fields.includes(adapter.field));
 
         if (fk && fk.fields.length) {
           const refRelationName = this._dbStructure.relationByUqConstraint(fk.constNameUq).name;
@@ -470,31 +462,15 @@ export class ERExport {
           }
 
           if (relationField.name === Constants.DEFAULT_PARENT_KEY_NAME) {
-            let lbField = "";
-            let rbField = "";
-            let parentAttrAdapter: IParentAttributeAdapter | undefined;
-
-            if (relation.relationFields[Constants.DEFAULT_LB_NAME] && relation.relationFields[Constants.DEFAULT_RB_NAME]) {
-              lbField = Constants.DEFAULT_LB_NAME;
-              rbField = Constants.DEFAULT_RB_NAME;
-            }
-
-            if (adapter) {
-              parentAttrAdapter = {...adapter, lbField, rbField};
-            } else if (lbField || rbField) {
-              parentAttrAdapter = {
-                relation: relation.name,
-                field: relationField.name,
-                lbField, rbField
-              };
-            }
-
             return new ParentAttribute({
               name,
               lName,
               entities: refEntities,
               semCategories,
-              adapter: parentAttrAdapter
+              adapter: {
+                relation: relation.name,
+                field: relationField.name
+              }
             });
           }
           return new EntityAttribute({name, lName, required, entities: refEntities, semCategories, adapter});

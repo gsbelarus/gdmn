@@ -19,9 +19,9 @@ export class BooleanAttribute extends ScalarAttribute {
     this.defaultValue = options.defaultValue || false;
   }
 
-  public serialize(): IBooleanAttribute {
+  public serialize(withAdapter?: boolean): IBooleanAttribute {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       defaultValue: this.defaultValue
     };
   }

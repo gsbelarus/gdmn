@@ -79,6 +79,7 @@ export class GDEntities {
         adapter: {
           relation: [{
             relationName: "GD_CONTACT",
+            pk: ["ID"],
             selector: {
               field: "CONTACTTYPE",
               value: 0
@@ -118,16 +119,19 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 3
               }
             },
             {
-              relationName: "GD_COMPANY"
+              relationName: "GD_COMPANY",
+              pk: ["CONTACTKEY"]
             },
             {
               relationName: "GD_COMPANYCODE",
+              pk: ["CONTACTKEY"],
               weak: true
             }
           ]
@@ -143,7 +147,11 @@ export class GDEntities {
         lName: {ru: {name: "Краткое наименование"}},
         required: true,
         maxLength: 60,
-        autoTrim: true
+        autoTrim: true,
+        adapter: {
+          relation: "GD_CONTACT",
+          field: "NAME"
+        }
       }));
 
       this._createEntity({
@@ -154,20 +162,24 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 3
               }
             },
             {
-              relationName: "GD_COMPANY"
+              relationName: "GD_COMPANY",
+              pk: ["CONTACTKEY"]
             },
             {
               relationName: "GD_COMPANYCODE",
+              pk: ["CONTACTKEY"],
               weak: true
             },
             {
-              relationName: "GD_OURCOMPANY"
+              relationName: "GD_OURCOMPANY",
+              pk: ["CONTACTKEY"]
             }
           ],
           refresh: true
@@ -188,20 +200,24 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 5
               }
             },
             {
-              relationName: "GD_COMPANY"
+              relationName: "GD_COMPANY",
+              pk: ["CONTACTKEY"]
             },
             {
               relationName: "GD_COMPANYCODE",
+              pk: ["CONTACTKEY"],
               weak: true
             },
             {
-              relationName: "GD_BANK"
+              relationName: "GD_BANK",
+              pk: ["CONTACTKEY"]
             }
           ],
           refresh: true
@@ -218,6 +234,7 @@ export class GDEntities {
         adapter: {
           relation: [{
             relationName: "GD_CONTACT",
+            pk: ["ID"],
             selector: {
               field: "CONTACTTYPE",
               value: 4
@@ -235,7 +252,11 @@ export class GDEntities {
       Department.add(
         new StringAttribute({
           name: "NAME", lName: {ru: {name: "Наименование"}}, required: true,
-          maxLength: 60, autoTrim: true
+          maxLength: 60, autoTrim: true,
+          adapter: {
+            relation: "GD_CONTACT",
+            field: "NAME"
+          }
         })
       );
 
@@ -249,13 +270,15 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 2
               }
             },
             {
-              relationName: "GD_PEOPLE"
+              relationName: "GD_PEOPLE",
+              pk: ["CONTACTKEY"]
             }
           ],
           refresh: true
@@ -271,7 +294,11 @@ export class GDEntities {
       Person.add(
         new StringAttribute({
           name: "NAME", lName: {ru: {name: "ФИО"}}, required: true,
-          maxLength: 60, autoTrim: true
+          maxLength: 60, autoTrim: true,
+          adapter: {
+            relation: "GD_CONTACT",
+            field: "NAME"
+          }
         })
       );
 
@@ -287,16 +314,19 @@ export class GDEntities {
           relation: [
             {
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 2
               }
             },
             {
-              relationName: "GD_PEOPLE"
+              relationName: "GD_PEOPLE",
+              pk: ["CONTACTKEY"]
             },
             {
-              relationName: "GD_EMPLOYEE"
+              relationName: "GD_EMPLOYEE",
+              pk: ["CONTACTKEY"]
             }
           ]
         }
@@ -320,6 +350,7 @@ export class GDEntities {
           relation:
             [{
               relationName: "GD_CONTACT",
+              pk: ["ID"],
               selector: {
                 field: "CONTACTTYPE",
                 value: 1
@@ -342,7 +373,8 @@ export class GDEntities {
         new SetAttribute({
             name: "CONTACTLIST", lName: {ru: {name: "Контакты"}}, entities: [Company, Person],
             adapter: {
-              crossRelation: "GD_CONTACTLIST"
+              crossRelation: "GD_CONTACTLIST",
+              crossPk: ["GROUPKEY", "CONTACTKEY"]
             }
           }
         )
@@ -442,7 +474,7 @@ export class GDEntities {
       throw new Error(`Unknown doc type ${parent_ruid} of ${className}`);
     }
 
-    const headerAdapter = appendAdapter(parent.adapter, setHR);
+    const headerAdapter = appendAdapter(parent.adapter!, setHR);
     headerAdapter.relation[0].selector = {field: "DOCUMENTTYPEKEY", value: id};
     const header = this._createEntity({
       parent,
@@ -462,7 +494,7 @@ export class GDEntities {
         throw new Error(`Unknown doc type ${parent_ruid} of ${className}`);
       }
 
-      const lineAdapter = appendAdapter(lineParent.adapter, setLR);
+      const lineAdapter = appendAdapter(lineParent.adapter!, setLR);
       lineAdapter.relation[0].selector = {field: "DOCUMENTTYPEKEY", value: id};
       const line = this._createEntity({
         parent: lineParent,
@@ -502,7 +534,8 @@ export class GDEntities {
         ([, f]) => f.fields.join() === inherited.primaryKey!.fields.join()
           && this._dbStructure.relationByUqConstraint(f.constNameUq) === parentRelation[parentRelation.length - 1])) {
         const newParent = [...parentRelation, inherited];
-        const parentAdapter = parentEntity ? parentEntity.adapter
+        const parentAdapter = parentEntity
+          ? parentEntity.adapter!
           : relationNames2Adapter(parentRelation.map(p => p.name));
         this._recursInherited(newParent, this._createEntity({
           parent: parentEntity,
@@ -520,7 +553,12 @@ export class GDEntities {
   private _createEntity(input: IEntityInput): Entity {
     if (!input.isAbstract) {
       const found = Object.values(this._erModel.entities).find(
-        (entity) => !entity.isAbstract && sameAdapter(input.adapter, entity.adapter)
+        (entity) => {
+          if (!entity.adapter) {
+            console.log(entity);
+          }
+          return !entity.isAbstract && sameAdapter(input.adapter, entity.adapter!);
+        }
       );
 
       if (found) {
@@ -536,7 +574,6 @@ export class GDEntities {
 
     const atRelation = this._getATResult().atRelations[relation.relationName];
     const name = adjustName(input.name || atRelation.entityName || relation.relationName);
-    const fake = relationName2Adapter(name);
 
     const entity = new Entity({
       parent: input.parent,
@@ -544,7 +581,7 @@ export class GDEntities {
       lName: input.lName ? input.lName : (atRelation ? atRelation.lName : {}),
       isAbstract: !!input.isAbstract,
       semCategories: input.semCategories,
-      adapter: JSON.stringify(input.adapter) !== JSON.stringify(fake) ? input.adapter : undefined
+      adapter: input.adapter
     });
 
     if (!input.parent) {
@@ -552,7 +589,11 @@ export class GDEntities {
         new SequenceAttribute({
           name: Constants.DEFAULT_ID_NAME,
           lName: {ru: {name: "Идентификатор"}},
-          sequence: this._erModel.sequencies[Constants.GLOBAL_GENERATOR]
+          sequence: this._erModel.sequencies[Constants.GLOBAL_GENERATOR],
+          adapter: {
+            relation: entity.adapter!.relation[0].relationName,
+            field: Constants.DEFAULT_ID_NAME
+          }
         })
       );
     }

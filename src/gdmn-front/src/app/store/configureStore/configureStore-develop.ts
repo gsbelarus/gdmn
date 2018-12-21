@@ -9,17 +9,19 @@ const devCompose =
     ? (<any>window).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({})
     : compose;
 
-const devMiddlewares: Middleware[] = [createLogger()];
+const devMiddlewares: Middleware[] = [
+  createLogger({
+    predicate: (getState, action) => !(action.type.slice(0, 'RECORDSET'.length) === 'RECORDSET' || action.type.slice(0, 'GRID'.length) === 'GRID')
+  })
+];
 
 function configureStore(rootReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {
-  const store = createStore(rootReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares)));
+  const store = createStore(rootReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares))); // fixme // if ((<any>module).hot) {
 
-  // webpack HMR for reducers
-  if ((<any>module).hot) {
-    (<any>module).hot.accept('../reducer', () => {
-      store.replaceReducer(rootReducer);
-    });
-  }
+  /* webpack HMR for reducers */ //   (<any>module).hot.accept('../reducer', () => {
+  //     store.replaceReducer(rootReducer);
+  //   });
+  // }
 
   return store;
 }

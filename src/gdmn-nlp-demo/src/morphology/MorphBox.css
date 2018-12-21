@@ -66,6 +66,36 @@
   border-bottom: 1px solid dimgray;
 }
 
+.SynonymWords {
+  background-color: maroon;
+  color: white;
+  border-bottom: 1px solid dimgray;
+  padding: 4px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.SynonymWords > span {
+  border: 1px solid dimgray;
+  border-radius: 2px;
+  padding: 2px;
+  margin-right: 4px;
+}
+
+.SynonymWords > span:hover {
+  color: pink;
+}
+
+.SemCategories {
+  background-color: midnightblue;
+  color: white;
+  padding: 4px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
 .MorphOutputFlex {
   display: flex;
   flex-direction: row;

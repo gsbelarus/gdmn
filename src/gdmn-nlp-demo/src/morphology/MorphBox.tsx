@@ -1,5 +1,7 @@
 import React, { MouseEvent, Component } from 'react';
 import { IToken } from 'chevrotain';
+import { TextField  } from 'office-ui-fabric-react/lib/components/TextField';
+import { DefaultButton } from 'office-ui-fabric-react/lib/components/Button';
 import {
   Involvement,
   RusAdjective,
@@ -28,9 +30,12 @@ import {
   RusPronounLexemes,
   RusAdverbLexemes,
   RusPrepositionLexemes,
-  RusAdverb
+  RusAdverb,
+  getSynonyms,
+  SemContext,
+  semCategory2Str
 } from 'gdmn-nlp';
-import { TextField, DefaultButton } from 'office-ui-fabric-react';
+
 import './MorphBox.css';
 
 export interface IMorphBoxProps {
@@ -48,8 +53,13 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
 
   state: IMorphBoxState = {};
 
-  private _getPOSButtons = () => {
-    const items: [string, () => AnyWord[]][] = [
+  private _allWordsByPOS: [string, () => AnyWord[]][];
+  private _allWords: AnyWord[];
+
+  constructor(props) {
+    super(props);
+
+    this._allWordsByPOS = [
       ['Nouns', () => RusNounLexemes.reduce((p, l) => {p.push(l.getWordForm({ c: RusCase.Nomn, singular: true })); return p;}, [] as AnyWord[])],
       ['Verbs', () => RusVerbLexemes.reduce((p, l) => {p.push(l.getWordForm({ infn: true })); return p;}, [] as AnyWord[])],
       ['Adjs', () => RusAdjectiveLexemes.reduce((p, l) => {p.push(l.getWordForm({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })); return p;}, [] as AnyWord[])],
@@ -59,11 +69,21 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])]
     ];
 
-    return items.map( i =>
+    this._allWords = this._allWordsByPOS.reduce(
+      (prev, pos) => ([...prev, ...pos[1]()]),
+      [] as AnyWord[]
+    )
+  }
+
+  private _getPOSButtons = () => {
+    return this._allWordsByPOS.map( i =>
       i[1] && <DefaultButton
         key={i[0]}
         text={i[0]}
-        onClick={() => this.setState({ vocabulary: i[1]().sort( (a, b) => a.word.localeCompare(b.word)) })}
+        onClick={() => {
+          this.props.onSetText("");
+          this.setState({ vocabulary: i[1]().sort( (a, b) => a.word.localeCompare(b.word)) })
+        }}
       />
     );
   };
@@ -80,7 +100,12 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             label="Word"
             style={{maxWidth: '200px'}}
             value={text}
-            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => onSetText(e.target.value) }
+            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
+              const foundWords: AnyWord[] = this._allWords.filter( f => (f.word).indexOf(e.target.value) >= 0 );
+              onSetText(e.target.value);
+              this.setState({ vocabulary: foundWords });
+            }
+          }
           />
           {this._getPOSButtons()}
         </div>
@@ -88,7 +113,20 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
           <div className="MorphVocabulary">
             {
               vocabulary.reduce((p, l, idx) => {
-                p.push(<DefaultButton key={idx} text={l.word} onClick={ () => { onSetText(l.word); this.setState({ vocabulary: undefined }); } } />);
+                p.push(
+                  <DefaultButton
+                    key={idx}
+                    text={l.word}
+                    onRenderText={
+                      l.lexeme.semCategories.length
+                    ? () => {
+                        return <>{l.word}<sup>{l.lexeme.semCategories.length}</sup></>;
+                      }
+                      : undefined
+                    }
+                    onClick={ () => { onSetText(l.word); this.setState({ vocabulary: undefined }); } }
+                  />
+                );
                 return p;
               }, [] as JSX.Element[])
             }
@@ -99,9 +137,15 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             {words.map( (w, idx) => (
               <span key={idx}>
                 <div>
-                  <div className="MorphOutputDisplayText">{w.getDisplayText().split(';').map( (s, i) => <div key={i}>{s}</div>)}</div>
+                  <div className="MorphOutputDisplayText">
+                    {w.getDisplayText().split(';').map(
+                      (s, i) => <div key={i}>{s}</div>
+                    )}
+                  </div>
                   <div className="MorphOutputSignature">{w.getSignature()}</div>
                 </div>
+                {this.getSynonymWords(w)}
+                {this.getCategoryWords(w)}
                 {this.formatWordForms(w, onSetText)}
               </span>
             ))}
@@ -111,6 +155,28 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
         }
       </div>
     );
+  }
+
+  private getSynonymWords(w: AnyWord): JSX.Element {
+    const { onSetText } = this.props;
+    return (w instanceof RusVerb && getSynonyms(w, SemContext.QueryDB) !== undefined)
+      ? <div className="SynonymWords">
+          {getSynonyms(w, SemContext.QueryDB).map(
+            w => w.getWordForm({ infn: true })).filter(
+              word => word.word !== w.word ).map(
+            s => <span onClick = { () => onSetText(s.word) }>{s.word}</span>
+          )}
+        </div>
+      : undefined;
+  }
+
+  private getCategoryWords(w: AnyWord) : JSX.Element {
+    return w.lexeme.semCategories.length
+      ?
+        <div className="SemCategories">
+          {w.lexeme.semCategories.map( (c, idx) => <span key={idx}>{semCategory2Str(c)}</span>)}
+        </div>
+      : undefined;
   }
 
   private formatWordForms(

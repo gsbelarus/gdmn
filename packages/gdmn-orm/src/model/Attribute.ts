@@ -14,7 +14,7 @@ export abstract class Attribute<Adapter = any> {
   public readonly lName: ILName;
   public readonly required: boolean;
   public readonly semCategories: SemCategory[];
-  public readonly adapter?: Adapter;
+  public adapter?: Adapter;
 
   protected constructor(options: IAttributeOptions<Adapter>) {
     this.name = options.name;
@@ -24,13 +24,14 @@ export abstract class Attribute<Adapter = any> {
     this.adapter = options.adapter;
   }
 
-  public serialize(): IAttribute {
+  public serialize(withAdapter?: boolean): IAttribute {
     return {
       name: this.name,
       type: this.type,
       lName: this.lName,
       required: this.required,
-      semCategories: semCategories2Str(this.semCategories)
+      semCategories: semCategories2Str(this.semCategories),
+      adapter: withAdapter ? this.adapter : undefined
     };
   }
 

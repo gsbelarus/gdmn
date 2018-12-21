@@ -10,7 +10,7 @@
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
-    "test": "yarn build && jest"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -26,16 +26,16 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "gdmn-db": "^1.0.0",
-    "gdmn-orm": "^1.0.0",
-    "moment": "^2.22.2"
+    "gdmn-db": "^1",
+    "gdmn-orm": "^1",
+    "moment": "^2"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.8",
-    "@types/node": "^10.12.10",
-    "jest": "^23.6.0",
-    "shx": "^0.3.2",
-    "ts-jest": "^23.10.4",
+    "@types/jest": "^23",
+    "@types/node": "^10",
+    "jest": "^23",
+    "shx": "^0",
+    "ts-jest": "^23",
     "typescript": "^3"
   }
 }

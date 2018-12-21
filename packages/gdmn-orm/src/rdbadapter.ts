@@ -31,6 +31,7 @@ export type Weak = true;
 
 export interface IRelation {
   relationName: string;
+  pk?: string[];
   selector?: IEntitySelector;
   fields?: string[];
   weak?: Weak;
@@ -48,12 +49,8 @@ export interface IAttributeAdapter {
 
 export interface ISetAttributeAdapter {
   crossRelation: string;
+  crossPk: string[];
   presentationField?: string;
-}
-
-export interface IParentAttributeAdapter extends IAttributeAdapter {
-  lbField: string;
-  rbField: string;
 }
 
 /**

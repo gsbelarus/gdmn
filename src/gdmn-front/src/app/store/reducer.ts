@@ -1,32 +1,28 @@
 import { combineReducers, Reducer } from 'redux';
 import { getType } from 'typesafe-actions';
-
 import { TActions } from '@src/app/store/TActions';
 import { IAuthState, getReducer as getAuthReducer } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
-import { IGdmnState, reducer as gdmnReducer } from '@src/app/scenes/gdmn/reducer';
-// import { TDataStoresState, dataStoresReducer } from '@src/app/scenes/datastores/reducer';
+import { TGdmnState, reducer as gdmnReducer } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
-// import { backupsReducer, IBackupsState } from '@src/app/scenes/backups/reducer';
+import { RecordSetReducerState, recordSetReducer } from 'gdmn-recordset';
+import { GridReducerState, gridReducer } from 'gdmn-grid';
 
 interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
-  readonly gdmnState: IGdmnState;
-  // readonly form: any;
-  // readonly dataStoresState: TDataStoresState;
-  // readonly backupsState: IBackupsState;
+  readonly gdmnState: TGdmnState;
+  readonly recordSet: RecordSetReducerState;
+  readonly grid: GridReducerState;
 }
 
 const getReducer = () => {
   const reducer = combineReducers<IState>({
     rootState: rootReducer,
     gdmnState: gdmnReducer,
-    authState: getAuthReducer()
-    // form: formReducer // todo: move to auth
-    // dataStoresState: dataStoresReducer,
-    // ermodelState: ermodelReducer,
-    // backupsState: backupsReducer
+    authState: getAuthReducer(),
+    recordSet: recordSetReducer,
+    grid: gridReducer
   });
 
   // reset state to initial

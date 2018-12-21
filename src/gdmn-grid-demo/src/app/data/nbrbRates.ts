@@ -24,7 +24,8 @@ export function loadNBRBRates(name: string, rscf: RSCreateFunc) {
         fieldName: 'Date',
         dataType: TFieldType.Date,
         caption: 'Дата',
-        required: true
+        required: true,
+        dateFormat: 'dd.mm.yy'
       },
       {
         fieldName: 'Cur_Scale',
@@ -46,7 +47,12 @@ export function loadNBRBRates(name: string, rscf: RSCreateFunc) {
         caption: 'Курс',
         required: true,
         aggregator: getAvgAggregator(),
-        alignment: 'RIGHT'
+        alignment: 'RIGHT',
+        numberFormat: {
+          maxDecDigits: 4,
+          minDecDigits: 4,
+          useGrouping: true
+        }
       },
       {
         fieldName: 'Year',
@@ -63,9 +69,9 @@ export function loadNBRBRates(name: string, rscf: RSCreateFunc) {
         alignment: 'RIGHT'
       },
       {
-        fieldName: 'Date',
+        fieldName: 'DateFormat',
         dataType: TFieldType.String,
-        caption: 'Date',
+        caption: 'DateFormat',
         calcFunc: (row: IDataRow) => { const d = row['Date'] as Date; return `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDay().toString().padStart(2, '0')}`; }
       }
     ];

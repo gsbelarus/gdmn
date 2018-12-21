@@ -1,6 +1,6 @@
-import { ERModel } from 'gdmn-orm';
-import { ActionType, createAction } from 'typesafe-actions';
-import { TPingTaskCmd } from '@gdmn/server-api';
+import { ERModel, IEntityQueryInspector } from 'gdmn-orm';
+import { ActionType, createAction, createAsyncAction } from 'typesafe-actions';
+import { IAccessTokenPayload, IRefreshTokenPayload, TPingTaskCmd } from '@gdmn/server-api';
 
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
@@ -25,8 +25,16 @@ const gdmnActions = {
     return () => resolve();
   }),
 
+  apiGetData: createAction('gdmn/API_GET_DATA', resolve => {
+    return (queryInspector: IEntityQueryInspector) => resolve(queryInspector);
+  }),
+
   setSchema: createAction('gdmm/SET_SCHEMA', resolve => {
     return (erModel: ERModel) => resolve(erModel);
+  }),
+
+  setLoading: createAction('gdmm/SET_LOADING', resolve => {
+    return (loading: boolean, message?: string) => resolve({loading, message});
   }),
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST')

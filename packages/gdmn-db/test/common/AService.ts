@@ -63,12 +63,9 @@ export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, db
                                     const result = await statement.executeReturning(dataItem);
                                     expect(await result.getAny("ID")).toEqual(dataItem.id);
                                     expect(await result.getAny("NAME")).toEqual(dataItem.name);
-                                    expect((await result.getAny("DATETIME"))!.getTime())
-                                        .toEqual(dataItem.dateTime.getTime());
-                                    expect((await result.getAny("ONLYDATE"))!.getTime())
-                                        .toEqual(dataItem.onlyDate.getTime());
-                                    expect((await result.getAny("ONLYTIME"))!.getTime())
-                                        .toEqual(dataItem.onlyTime.getTime());
+                                    expect(await result.getAny("DATETIME")).toEqual(dataItem.dateTime);
+                                    expect(await result.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
+                                    expect(await result.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
                                     expect(await result.getAny("NULLVALUE")).toBeNull();
                                     expect(await result.getAny("TEXTBLOB")).toEqual(dataItem.textBlob);
                                 }

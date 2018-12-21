@@ -8,7 +8,7 @@ import {DBSchemaUpdater} from "../src/ddl/updates/DBSchemaUpdater";
 export const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_DDL_HELPER.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_DDL_HELPER1.FDB")
 };
 
 jest.setTimeout(120000);
@@ -44,9 +44,10 @@ describe("DDLHelper", () => {
           await ddlHelper.addDomain("TEST_DOMAIN", {type: "VARCHAR(200)"});
           expect(await cachedStatements.isDomainExists("TEST_DOMAIN")).toBeTruthy();
 
+
           await ddlHelper.addTable("TEST_TABLE", [
             {name: "ID", domain: "DINTKEY"},
-            {name: "FIELDNAME", domain: "DFIELDNAME", notNull: true}
+            {name: "FIELDNAME", domain: "TEST_DOMAIN", notNull: true}
           ]);
           expect(await cachedStatements.isTableExists("TEST_TABLE")).toBeTruthy();
 
@@ -69,7 +70,7 @@ describe("DDLHelper", () => {
           await ddlHelper.addAutoIncrementTrigger("TEST_TABLE_TRIGGER", "TEST_TABLE", "ID", Constants.GLOBAL_GENERATOR);
           expect(await cachedStatements.isTriggerExists("TEST_TABLE_TRIGGER")).toBeTruthy();
 
-          await ddlHelper.createIndex("TEST_TABLE_INDEX", "TEST_TABLE", "ASC", ["FIELDNAME"]);
+          await ddlHelper.createIndex("TEST_TABLE_INDEX", "TEST_TABLE", ["FIELDNAME"]);
           expect(await cachedStatements.isIndexExists("TEST_TABLE_INDEX")).toBeTruthy();
 
           await ddlHelper.addTable("TEST_TABLE_2", [
@@ -96,9 +97,6 @@ describe("DDLHelper", () => {
         callback: async (ddlHelper) => {
           const cachedStatements = ddlHelper.cachedStatements;
 
-          await ddlHelper.dropSequence("TEST_GENERATOR");
-          expect(await cachedStatements.isSequenceExists("TEST_GENERATOR")).toBeFalsy();
-
           await ddlHelper.dropColumns("TEST_TABLE", ["ATTRNAME"]);
           expect(await cachedStatements.isColumnExists("TEST_TABLE", "ATTRNAME")).toBeFalsy();
 
@@ -108,17 +106,20 @@ describe("DDLHelper", () => {
           await ddlHelper.dropConstraint("TEST_TABLE_PRIMARY_KEY", "TEST_TABLE");
           await ddlHelper.dropConstraint("TEST_TABLE_CHECK", "TEST_TABLE");
 
-          await ddlHelper.dropAutoIncrementTrigger("TEST_TABLE_TRIGGER");
+          await ddlHelper.dropTrigger("TEST_TABLE_TRIGGER");
           expect(await cachedStatements.isTriggerExists("TEST_TABLE_TRIGGER")).toBeFalsy();
 
           await ddlHelper.dropIndex("TEST_TABLE_INDEX");
           expect(await cachedStatements.isIndexExists("TEST_TABLE_INDEX")).toBeFalsy();
 
+          await ddlHelper.dropTable("TEST_TABLE");
+          expect(await cachedStatements.isTableExists("TEST_TABLE")).toBeFalsy();
+
           await ddlHelper.dropDomain("TEST_DOMAIN");
           expect(await cachedStatements.isDomainExists("TEST_DOMAIN")).toBeFalsy();
 
-          await ddlHelper.dropTable("TEST_TABLE");
-          expect(await cachedStatements.isTableExists("TEST_TABLE")).toBeFalsy();
+          await ddlHelper.dropSequence("TEST_GENERATOR");
+          expect(await cachedStatements.isSequenceExists("TEST_GENERATOR")).toBeFalsy();
         }
       })
     });

@@ -1,8 +1,11 @@
 import React from 'react';
 import cn from 'classnames';
-import './SortDialog.css';
+import { DefaultButton, PrimaryButton, IconButton } from 'office-ui-fabric-react/lib/components/Button';
+import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/components/Dialog';
+import { ComboBox, IComboBox, IComboBoxOption } from 'office-ui-fabric-react/lib/components/ComboBox';
 import { FieldDefs, SortFields } from 'gdmn-recordset';
-import { Dialog, DialogType, DialogFooter, PrimaryButton, DefaultButton, Toggle, ComboBox, IComboBox, IComboBoxOption, IconButton } from 'office-ui-fabric-react';
+
+import './SortDialog.css';
 
 export interface IGDMNSortDialogProps {
   fieldDefs: FieldDefs,

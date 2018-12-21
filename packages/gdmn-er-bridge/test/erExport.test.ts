@@ -1,19 +1,20 @@
 import fs from "fs";
 import {AConnection} from "gdmn-db";
-import {deserializeERModel, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
-import {IDBDetail} from "../src/ddl/export/dbdetail";
+import {deserializeERModel, EntityQuery, ERModel, IntegerAttribute, ParentAttribute} from "gdmn-orm";
+import {Select} from "../src";
 import {ERBridge} from "../src/ERBridge";
+import {loadDBDetails} from "./testConfig";
 
 jest.setTimeout(120000);
 
 describe("ERExport", () => {
 
-  const dbDetail = require("./testDB").exportTestDBDetail as IDBDetail;
+  const dbDetail = loadDBDetails()[0];
   const connection = dbDetail.driver.newConnection();
   const erModel = new ERModel();
 
   beforeAll(async () => {
-    await connection.connect(dbDetail.options);
+    await connection.connect(dbDetail.connectionOptions);
     await ERBridge.initDatabase(connection);
 
     await AConnection.executeTransaction({
@@ -61,5 +62,54 @@ describe("ERExport", () => {
     expect(gdPlace.attribute("LB")).toBeInstanceOf(IntegerAttribute);
     expect(gdPlace.attribute("RB")).toBeDefined();
     expect(gdPlace.attribute("RB")).toBeInstanceOf(IntegerAttribute);
+  });
+
+  it("simple entity", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "OurCompany",
+        alias: "oc",
+        fields: [
+          {attribute: "FULLNAME"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.FULLNAME AS F$1\n" +
+      "FROM GD_COMPANY T$1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("simple entity", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "OurCompany",
+        alias: "oc",
+        fields: [
+          {attribute: "NAME"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.NAME AS F$1\n" +
+      "FROM GD_CONTACT T$1\n" +
+      "WHERE T$1.CONTACTTYPE = :P$1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
   });
 });

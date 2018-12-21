@@ -21,7 +21,7 @@ export class GDMNApplication extends Application {
             name: "TEST", lName: {ru: {name: "Тестовая сущность"}}
           }));
 
-          await eBuilder.create(entity, new StringAttribute({
+          await eBuilder.createAttribute(entity, new StringAttribute({
             name: "TEST_FILED", lName: {ru: {name: "Тестовое поле"}}, required: true, maxLength: 150
           }));
         }

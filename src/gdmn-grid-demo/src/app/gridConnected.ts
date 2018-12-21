@@ -1,4 +1,4 @@
-import { GDMNGrid, IColumn, Columns, setSearchIdx } from "gdmn-grid";
+import { GDMNGrid, IColumn, Columns, setSearchIdx, GetGridRef } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
 import { GridAction } from "gdmn-grid";
@@ -7,7 +7,6 @@ import {
   resizeColumn,
   columnMove,
   setCursorCol,
-  setColumns,
   createGrid,
   deleteGrid,
   setFixedColumns,
@@ -20,81 +19,24 @@ import {
   cancelSortDialog,
   applySortDialog,
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TFieldType } from "gdmn-recordset";
-import { GDMNGridPanel } from "gdmn-grid";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups } from "gdmn-recordset";
+import { GDMNGridPanel, GetConditionalStyle } from "gdmn-grid";
 import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
 import { SortFields } from "gdmn-recordset";
-import { Column } from "react-virtualized";
 
-export type GetGridRef = () => GDMNGrid;
-
-export function connectGrid(name: string, rs: RecordSet, getGridRef: GetGridRef) {
-
-  let columns: IColumn[];
-
-  if (rs.name === 'currencyMult') {
-    columns = rs.fieldDefs.map( (fd): IColumn => (
-      fd.fieldName === 'Cur_Code' ?
-      {
-        name: fd.fieldName,
-        caption: [fd.caption || fd.fieldName, 'Буквенный код'],
-        fields: [{...fd}, {
-          fieldName: 'Cur_Abbreviation',
-          dataType: TFieldType.String,
-          caption: 'Буквенный код',
-          required: true,
-          size: 3,
-          alignment: 'RIGHT'
-        }]
-      } 
-      : fd.fieldName === 'Cur_Name' ?
-      {
-        name: fd.fieldName,
-        caption: [fd.caption || fd.fieldName, 'Назва', 'Name'],
-        fields: [{
-          fieldName: 'Cur_Name_Bel',
-          dataType: TFieldType.String,
-          caption: 'Назва',
-          required: true,
-          size: 60,
-          alignment: 'CENTER'}, 
-          {...fd} 
-        , 
-        {
-          fieldName: 'Cur_Name_Eng',
-          dataType: TFieldType.String,
-          caption: 'Name',
-          required: true,
-          size: 60,
-          alignment: 'RIGHT'
-        }]
-      } 
-      : {
-        name: fd.fieldName,
-        caption: [fd.caption || fd.fieldName],
-        fields: [{...fd}]
-      }
-      )
-    )
-  }
-  else {
-    columns = rs.fieldDefs.map( fd => (
+export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined, getConditionalStyle: GetConditionalStyle | undefined, getGridRef: GetGridRef) {
+  store.dispatch(createGrid({name,
+    columns: columns || rs.fieldDefs.map( fd => (
       {
         name: fd.fieldName,
         caption: [fd.caption || fd.fieldName],
         fields: [{...fd}]
-      })
-    );
-  }
-  
-  store.dispatch(createGrid({name}));
-
-  store.dispatch(setColumns({
-    name,
-    columns,
+      })),
     leftSideColumns: 0,
-    rightSideColumns: 0
+    rightSideColumns: 0,
+    hideFooter: false,
+    getConditionalStyle
   }));
 
   return connect(

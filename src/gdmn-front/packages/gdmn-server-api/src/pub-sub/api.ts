@@ -1,4 +1,4 @@
-import { IEntityQueryInspector, IERModel, IQueryResponse } from 'gdmn-orm';
+import { IEntityQueryInspector, IERModel, IEntityQueryResponse } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 
@@ -40,7 +40,7 @@ interface IGdmnMessageData<TPayload = any> {
   payload: TPayload;
 }
 
-interface IGdmnMessageReply<TResult = any, TPayload = any, TErrorCode = number> extends IGdmnMessageData<TPayload> {
+interface IGdmnMessageReply<TResult = any, TPayload = any, TErrorCode = string> extends IGdmnMessageData<TPayload> {
   result: TResult;
   error: IGdmnMessageError<TErrorCode>;
 }
@@ -93,7 +93,7 @@ type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = 
 interface TTaskActionResultTypes {
   [TTaskActionNames.PING]: undefined;
   [TTaskActionNames.GET_SCHEMA]: IERModel;
-  [TTaskActionNames.QUERY]: IQueryResponse;
+  [TTaskActionNames.QUERY]: IEntityQueryResponse;
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];

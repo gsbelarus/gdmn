@@ -31,9 +31,9 @@ export class StringAttribute extends ScalarAttribute {
     this.mask = options.mask;
   }
 
-  public serialize(): IStringAttribute {
+  public serialize(withAdapter?: boolean): IStringAttribute {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       minLength: this.minLength,
       maxLength: this.maxLength,
       defaultValue: this.defaultValue,

@@ -24,9 +24,9 @@ export abstract class NumberAttribute<T, DF = undefined, Adapter = IAttributeAda
     this.defaultValue = options.defaultValue;
   }
 
-  public serialize(): INumberAttribute<T, DF> {
+  public serialize(withAdapter?: boolean): INumberAttribute<T, DF> {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       minValue: this.minValue,
       maxValue: this.maxValue,
       defaultValue: this.defaultValue

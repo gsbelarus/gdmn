@@ -14,8 +14,7 @@ function promisify<T>(fn: Function, context = null): (...args: any[]) => Promise
 }
 
 function isDevMode() {
-  // @ts-ignore
-  return JSON.stringify(process.env.NODE_ENV) !== 'production';
+  return JSON.stringify(process.env.NODE_ENV) !== JSON.stringify('production');
 }
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
@@ -57,4 +56,12 @@ function generateS4() {
     .substring(1);
 }
 
-export { promisify, isDevMode, Subtract, bytesToMb, formatDateToLocalLong, generateGuid };
+function stringfyValues(obj: any): { [key: string]: string } {
+  Object.keys(obj).forEach(key => {
+    typeof obj[key] === 'object' ? stringfyValues(obj[key]) : (obj[key] = '' + obj[key]);
+  });
+
+  return obj;
+}
+
+export { promisify, isDevMode, Subtract, bytesToMb, formatDateToLocalLong, generateGuid, stringfyValues };

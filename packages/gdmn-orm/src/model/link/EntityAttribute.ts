@@ -19,9 +19,9 @@ export class EntityAttribute<Adapter = IAttributeAdapter> extends Attribute<Adap
     this.entities = options.entities;
   }
 
-  public serialize(): IEntityAttribute {
+  public serialize(withAdapter?: boolean): IEntityAttribute {
     return {
-      ...super.serialize(),
+      ...super.serialize(withAdapter),
       references: this.entities.map((ent) => ent.name)
     };
   }

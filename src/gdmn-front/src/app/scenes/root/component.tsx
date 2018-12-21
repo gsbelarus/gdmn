@@ -1,6 +1,6 @@
 import '@src/styles/global.css';
 
-import React, { ReactNode, SFC, Fragment } from 'react';
+import React, { ReactNode, SFC, Fragment, ReactType } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Store } from 'redux';
@@ -12,18 +12,20 @@ export interface IRootProps {
   readonly store: Store;
   readonly persistor: Persistor;
   readonly routes: ReactNode;
+  readonly renderMessageBarContainer: ReactType;
 }
 
 // TODO const history = browserHistory; // syncHistoryWithStore(browserHistory, store)
 
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
-export const Root: SFC<IRootProps> = ({ store, persistor, routes }) => (
+export const Root: SFC<IRootProps> = ({ store, persistor, routes, renderMessageBarContainer: MessageBarContainer }) => (
   <ErrBoundary>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Fragment>
           <BrowserRouter>{routes}</BrowserRouter>
+          <MessageBarContainer />
         </Fragment>
       </PersistGate>
     </Provider>

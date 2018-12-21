@@ -5,28 +5,29 @@ import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
 
 const enum TPubSubConnectStatus {
   CONNECTED,
-  CONNECTING, // todo stomp.beforeconnect
+  CONNECTING, // todo: set on stomp.beforeconnect
   DISCONNECTING,
   DISCONNECTED
-  // todo reconnecting
+  // todo: RECONNECTING
 }
 
 const enum TPubSubMsgPublishStatus {
-  PUBLISHING, // sent
-  PUBLISHED // receipted
+  PUBLISHING /* sent*/,
+  PUBLISHED /* receipted*/
 }
-// todo
+
 interface IPubSubMsgPublishState {
   status: TPubSubMsgPublishStatus;
   meta?: IPubSubMessageMeta;
 }
 
 abstract class BasePubSubBridge<
+  TErrorMessage extends IPubSubMessage = IPubSubMessage,
   TConnectMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
   TDisconnectMeta extends IPubSubMessageMeta = IPubSubMessageMeta,
   TSubcribeMeta extends IPubSubMessageMeta = IPubSubMessageMeta
 > {
-  // connect status
+  /* connect status*/
   public connectionStatusObservable: BehaviorSubject<TPubSubConnectStatus> = new BehaviorSubject<TPubSubConnectStatus>(
     TPubSubConnectStatus.DISCONNECTED
   );
@@ -35,14 +36,17 @@ abstract class BasePubSubBridge<
   );
 
   public connectedMessageObservable: Subject<IPubSubMessage> = new Subject();
-  public errorMessageObservable: Subject<IPubSubMessage> = new Subject(); // todo observable ?
+  public errorMessageObservable: Subject<TErrorMessage> = new Subject();
 
   public abstract set reconnectMeta(meta: IPubSubMessageMeta);
   public abstract get reconnectMeta(): IPubSubMessageMeta;
 
   public abstract connect(meta?: TConnectMeta): void | never;
+
   public abstract disconnect(meta?: TDisconnectMeta): void;
+
   public abstract publish(topic: string, message: IPubSubMessage): Subject<IPubSubMsgPublishState> | never;
+
   public abstract subscribe<TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
     meta?: TSubcribeMeta
@@ -54,7 +58,3 @@ abstract class BasePubSubBridge<
 }
 
 export { BasePubSubBridge, TPubSubConnectStatus, IPubSubMsgPublishState, TPubSubMsgPublishStatus };
-
-// unsubscribe(topic, meta); /* unsubscribe topic-subscriptions */
-// unsubscribeAll(meta);
-// unsubscribeSubscriber(subscriptionId, meta);

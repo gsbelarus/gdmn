@@ -1,6 +1,6 @@
 import {AccessMode, AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
-import {ERModel, IEntityQueryInspector, IERModel} from "gdmn-orm";
+import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
 import log4js from "log4js";
 import {ADatabase, DBStatus, IDBDetail} from "../../db/ADatabase";
 import {Session, SessionStatus} from "./Session";
@@ -144,28 +144,28 @@ export abstract class Application extends ADatabase {
     return task;
   }
 
-  // public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IQueryResponse> {
-  //   const task = new Task({
-  //     session,
-  //     command,
-  //     level: Level.SESSION,
-  //     logger: this.taskLogger,
-  //     worker: async (context) => {
-  //       await this.waitProcess();
-  //       this.checkSession(session);
-  //
-  //       const {transactionKey} = context.command.payload;
-  //
-  //       const erBridge = context.session.getBridge(transactionKey);
-  //       const result = await erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload));
-  //       await context.checkStatus();
-  //       return result;
-  //     }
-  //   });
-  //   session.taskManager.add(task);
-  //   this.sessionManager.syncTasks();
-  //   return task;
-  // }
+  public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IEntityQueryResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitProcess();
+        this.checkSession(session);
+
+        const {transactionKey} = context.command.payload;
+
+        const result = await Session.executeERBridge(transactionKey, context.session,
+          (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload)));
+        await context.checkStatus();
+        return result;
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
 
   public checkSession(session: Session): void | never {
     if (session.status !== SessionStatus.OPENED) {

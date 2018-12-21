@@ -1,0 +1,47 @@
+.ViewOneColumn {
+  width: 860px;
+  margin: 16px auto;
+}
+
+.ViewCaption {
+  font-size: 24px;
+  font-weight: 700;
+  padding-bottom: 4px;
+  color: #404040;
+}
+
+.ViewBody {
+  border: 1px solid silver;
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.ViewBody > * {
+  margin-bottom: 8px;
+}
+
+.ViewWide {
+  width: 100%;
+}
+
+.ViewGridPlacement {
+  width: 100%;
+  height: 80vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.DangerZone {
+  border: 1px solid red;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.DangerZone > div {
+  margin-bottom: 16px;
+}

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import './Demo.css';
-import { RecordSet } from 'gdmn-recordset';
-import { GDMNGrid } from 'gdmn-grid';
+import { RecordSet, TFieldType } from 'gdmn-recordset';
+import { GDMNGrid, IColumn, GetConditionalStyle } from 'gdmn-grid';
 import { ConnectedGrid, ConnectedGridPanel, connectGrid, connectGridPanel } from '../gridConnected';
 import { demoRecordSets } from '../data/data';
 
@@ -66,11 +66,68 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
         return res;
       }
 
+      let columns: IColumn[] | undefined;
+
+      if (rs.name === 'currencyMult') {
+        columns = rs.fieldDefs.map( (fd): IColumn => (
+          fd.fieldName === 'Cur_Code' ?
+          {
+            name: fd.fieldName,
+            caption: [fd.caption || fd.fieldName, 'Буквенный код'],
+            fields: [{...fd}, {
+              fieldName: 'Cur_Abbreviation',
+              dataType: TFieldType.String,
+              caption: 'Буквенный код',
+              required: true,
+              size: 3,
+              alignment: 'RIGHT'
+            }]
+          }
+          : fd.fieldName === 'Cur_Name' ?
+          {
+            name: fd.fieldName,
+            caption: [fd.caption || fd.fieldName, 'Назва', 'Name'],
+            fields: [{
+              fieldName: 'Cur_Name_Bel',
+              dataType: TFieldType.String,
+              caption: 'Назва',
+              required: true,
+              size: 60,
+              alignment: 'CENTER'},
+              {...fd}
+            ,
+            {
+              fieldName: 'Cur_Name_Eng',
+              dataType: TFieldType.String,
+              caption: 'Name',
+              required: true,
+              size: 60,
+              alignment: 'RIGHT'
+            }]
+          }
+          : {
+            name: fd.fieldName,
+            caption: [fd.caption || fd.fieldName],
+            fields: [{...fd}]
+          }
+          )
+        )
+      }
+
+      let getConditionalStyle: GetConditionalStyle | undefined = undefined;
+
+      if (rs.name === 'rates') {
+        getConditionalStyle = new Function(
+          'data',
+          '{ if (data["Cur_OfficialRate"] > 10000) { return {backgroundColor: "red"}; } else { return undefined; } }'
+        ) as GetConditionalStyle;
+      }
+
       this.setState({
         grids: {
           ...grids,
           [name]: {
-            Grid: connectGrid(name, rs, getGridRef),
+            Grid: connectGrid(name, rs, columns, getConditionalStyle, getGridRef),
             Panel: connectGridPanel(name, rs, getGridRef)
           }
         }

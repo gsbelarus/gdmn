@@ -22,9 +22,7 @@ const authActions = {
     },
     Error
   >(),
-  signOut: createAction('auth/SIGN_OUT', resolve => {
-    return () => resolve();
-  })
+  signOut: createAction('auth/SIGN_OUT')
 };
 
 type TAuthActions = ActionType<typeof authActions>;

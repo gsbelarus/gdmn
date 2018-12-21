@@ -1,5 +1,5 @@
 import {semCategories2Str, SemCategory} from "gdmn-nlp";
-import {IEntityAdapter, relationName2Adapter} from "../rdbadapter";
+import {IEntityAdapter} from "../rdbadapter";
 import {IEntity} from "../serialize";
 import {IBaseSemOptions, ILName} from "../types";
 import {Attribute} from "./Attribute";
@@ -20,8 +20,8 @@ export class Entity {
   public readonly lName: ILName;
   public readonly isAbstract: boolean;
   public readonly semCategories: SemCategory[];
+  public adapter?: IEntityAdapter;
 
-  private readonly _adapter?: IEntityAdapter;
   private readonly _pk: Attribute[] = [];
   private readonly _attributes: IAttributes = {};
   private readonly _unique: Attribute[][] = [];
@@ -32,19 +32,11 @@ export class Entity {
     this.lName = options.lName;
     this.isAbstract = options.isAbstract || false;
     this.semCategories = options.semCategories || [];
-    this._adapter = options.adapter;
+    this.adapter = options.adapter;
   }
 
   get pk(): Attribute[] {
     return this._pk;
-  }
-
-  get adapter(): IEntityAdapter {
-    if (this._adapter) {
-      return this._adapter;
-    } else {
-      return relationName2Adapter(this.name);
-    }
   }
 
   get unique(): Attribute[][] {
@@ -155,7 +147,7 @@ export class Entity {
     delete this._attributes[attribute.name];
   }
 
-  public serialize(): IEntity {
+  public serialize(withAdapter?: boolean): IEntity {
     return {
       parent: this.parent ? this.parent.name : undefined,
       name: this.name,
@@ -163,7 +155,8 @@ export class Entity {
       isAbstract: this.isAbstract,
       semCategories: semCategories2Str(this.semCategories),
       unique: this.ownUnique.map((values) => values.map((attr) => attr.name)),
-      attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize())
+      attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize(withAdapter)),
+      adapter: withAdapter ? this.adapter : undefined
     };
   }
 

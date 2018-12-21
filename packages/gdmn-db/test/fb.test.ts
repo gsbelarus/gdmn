@@ -161,8 +161,8 @@ describe("Firebird driver tests", async () => {
 
     describe.skip("stress", async () => {
 
-        const TIMEOUT = 8.64e+7;
-        const count = 1000;
+        const TIMEOUT = 8.64E7;
+        const count = 1E3;
 
         let globalConnection: AConnection;
 
@@ -247,10 +247,12 @@ describe("Firebird driver tests", async () => {
                         (
                             ID          INTEGER PRIMARY KEY,
                             F_DECIMAL   DECIMAL(10, 4),
-                            F_VARCHAR   VARCHAR(20) NOT NULL,
-                            F_TIMESTAMP TIMESTAMP   NOT NULL,
-                            F_DATE      DATE        NOT NULL,
-                            F_TIME      TIME        NOT NULL,
+                            F_FLOAT     FLOAT            NOT NULL,
+                            F_DOUBLE    DOUBLE PRECISION NOT NULL,
+                            F_VARCHAR   VARCHAR(20)      NOT NULL,
+                            F_TIMESTAMP TIMESTAMP        NOT NULL,
+                            F_DATE      DATE             NOT NULL,
+                            F_TIME      TIME             NOT NULL,
                             F_BLOB_TEXT BLOB SUB_TYPE TEXT NOT NULL
                         )
                     `);
@@ -261,9 +263,9 @@ describe("Firebird driver tests", async () => {
                 callback: async (transaction) => {
                     const _updateOrInsert = await globalConnection.prepare(transaction, `
                         UPDATE OR INSERT INTO TMP_TEST (
-                            ID, F_DECIMAL, F_VARCHAR, F_TIMESTAMP, F_DATE, F_TIME, F_BLOB_TEXT)
+                            ID, F_DECIMAL, F_FLOAT, F_DOUBLE, F_VARCHAR, F_TIMESTAMP, F_DATE, F_TIME, F_BLOB_TEXT)
                         VALUES (
-                            :id, :fDecimal, :fVarChar, :fTimestamp, :fDate, :fTime, :fBlobText)
+                            :id, :fDecimal, :fFloat, :fDouble, :fVarChar, :fTimestamp, :fDate, :fTime, :fBlobText)
                         MATCHING (ID)
                     `);
                     const _delete = await globalConnection.prepare(transaction, `
@@ -280,37 +282,45 @@ describe("Firebird driver tests", async () => {
                     try {
                         for (let i = 0; i < count; i++) {
                             const id = i;
-                            const fDecimal = randomDecimal(10, 4);
-                            const fVarChar = randomString(20);
-                            const fTimestamp = randomDate(new Date(2000, 1, 1), new Date(2100, 1, 1));
-                            const fDate = new Date(fTimestamp);
-                            const fTime = new Date(fTimestamp);
-                            const fBlobText = randomString(1E3);
+                            for (let j = 0; j < 2; j++) {
+                                const fDecimal = randomDecimal(10, 4);
+                                const fFloat = randomDecimal(10, 4);
+                                const fDouble = randomDecimal(10, 4);
+                                const fVarChar = randomString(20);
+                                const fTimestamp = randomDate(new Date(2000, 1, 1), new Date(2100, 1, 1));
+                                const fDate = new Date(fTimestamp);
+                                const fTime = new Date(fTimestamp);
+                                const fBlobText = randomString(1E3);
 
-                            await _updateOrInsert.execute({
-                                id,
-                                fDecimal,
-                                fVarChar,
-                                fTimestamp,
-                                fDate,
-                                fTime,
-                                fBlobText
-                            });
+                                await _updateOrInsert.execute({
+                                    id,
+                                    fDecimal,
+                                    fFloat,
+                                    fDouble,
+                                    fVarChar,
+                                    fTimestamp,
+                                    fDate,
+                                    fTime,
+                                    fBlobText
+                                });
 
-                            const result = await _select.executeReturning({id});
+                                const result = await _select.executeReturning({id});
 
-                            expect(result.getNumber("ID")).toEqual(id);
-                            expect(result.getNumber("F_DECIMAL")).toEqual(fDecimal);
-                            expect(result.getString("F_VARCHAR")).toEqual(fVarChar);
-                            expect(result.getDate("F_TIMESTAMP")).toEqual(fTimestamp);
-                            const date = result.getDate("F_DATE")!;
-                            date.setHours(fDate.getHours(), fDate.getMinutes(), fDate.getSeconds(),
-                                fDate.getMilliseconds());
-                            const time = result.getDate("F_TIME")!;
-                            time.setFullYear(fTime.getFullYear(), fTime.getMonth(), fTime.getDate());
-                            expect(date).toEqual(fDate);
-                            expect(time).toEqual(fTime);
-                            expect(await result.getBlob("F_BLOB_TEXT").asString()).toEqual(fBlobText);
+                                expect(result.getNumber("ID")).toEqual(id);
+                                expect(result.getNumber("F_DECIMAL")).toEqual(fDecimal);
+                                // expect(result.getNumber("F_FLOAT")).toEqual(fFloat);
+                                expect(result.getNumber("F_DOUBLE")).toEqual(fDouble);
+                                expect(result.getString("F_VARCHAR")).toEqual(fVarChar);
+                                expect(result.getDate("F_TIMESTAMP")).toEqual(fTimestamp);
+                                const date = result.getDate("F_DATE")!;
+                                date.setHours(fDate.getHours(), fDate.getMinutes(), fDate.getSeconds(),
+                                    fDate.getMilliseconds());
+                                const time = result.getDate("F_TIME")!;
+                                time.setFullYear(fTime.getFullYear(), fTime.getMonth(), fTime.getDate());
+                                expect(date).toEqual(fDate);
+                                expect(time).toEqual(fTime);
+                                expect(await result.getBlob("F_BLOB_TEXT").asString()).toEqual(fBlobText);
+                            }
 
                             if (id % 2 === 0) {
                                 await _delete.execute({id});
@@ -323,7 +333,7 @@ describe("Firebird driver tests", async () => {
                     }
                 }
             });
-        });
+        }, TIMEOUT);
     });
 });
 

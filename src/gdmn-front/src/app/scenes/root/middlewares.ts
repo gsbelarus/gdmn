@@ -7,23 +7,23 @@ const errorMiddleware: Middleware = ({ dispatch, getState }) => next => action =
   if (
     action.payload &&
     /* support not fsa-compliant redux actions (without action.error) see: piotrwitek/typesafe-actions#52 */
-    (action.error || action.payload instanceof Error) // todo: test
+    (action.error || action.payload instanceof Error)
   ) {
     let errorMsg = action.payload.toString();
 
-    if (action.payload instanceof SyntaxError) {
-      // todo: custom response parse error
-      errorMsg = '[client internal error]';
-      console.log(action.payload);
-    }
+    // if (action.payload instanceof SyntaxError) {
+    //   // todo: custom response parse error
+    //   errorMsg = '[client internal error]';
+    //   console.log(action.payload);
+    // }
     // todo: on server UnauthorizedError -> signOut
 
-    if (selectRootState(getState()).snackbarMessage !== '') {
+    if (selectRootState(getState()).errorMsgBarText !== '') {
       /* snackbar opened */
-      if (errorMsg !== selectRootState(getState()).snackbarMessage) {
-        errorMsg += '  \n  ' + selectRootState(getState()).snackbarMessage;
+      if (errorMsg !== selectRootState(getState()).errorMsgBarText) {
+        errorMsg += '  \n  ' + selectRootState(getState()).errorMsgBarText;
       }
-      selectRootState(getState()).snackbarMessage = errorMsg; // todo: showMessage test
+      selectRootState(getState()).errorMsgBarText = errorMsg; // todo action
     } else {
       dispatch(rootActions.showMessage(errorMsg || action.type));
     }

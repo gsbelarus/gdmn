@@ -18,9 +18,10 @@ interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemPr
 
 class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
   public render(): JSX.Element {
-    const { defaultRender: DefaultRender = CommandBarButton, link, supText, ...buttonProps } = this.props;
+    const { defaultRender, link, supText, ...buttonProps } = this.props;
 
     const onRenderText = supText ? (props: IButtonProps) => <>{props.text}<sup>{supText}</sup></> : undefined;
+    const DefaultRender = defaultRender ? defaultRender as any : CommandBarButton;
 
     return (
       <Link to={link}>
@@ -105,7 +106,7 @@ export default connect(
         fetch(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`)
         .then( res => res.text() )
         .then( res => JSON.parse(res) )
-        .then( res => dispatch(loadERModel(deserializeERModel(res))) )
+        .then( res => dispatch(loadERModel(deserializeERModel(res, true))) )
         .then( _res => dispatch(setERModelLoading(false)) )
         .catch( err => {
           dispatch(setERModelLoading(false));

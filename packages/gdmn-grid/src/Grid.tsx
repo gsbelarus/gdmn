@@ -4,7 +4,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from "react-draggable";
-import { RecordSet, TRowType } from 'gdmn-recordset';
+import { RecordSet, TRowType, IDataRow } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { SortFields, TSortOrder, FieldDefs } from 'gdmn-recordset';
 import { SyncScroll, OnScroll } from './SyncScroll';
@@ -21,6 +21,8 @@ export interface IColumn {
 
 export type Columns = IColumn[];
 
+export type GetConditionalStyle = (data: IDataRow) => React.CSSProperties;
+
 export interface IGridProps {
   rs: RecordSet;
   columns: Columns;
@@ -31,6 +33,7 @@ export interface IGridProps {
   hideHeader?: boolean;
   hideFooter?: boolean;
   sortDialog: boolean;
+  getConditionalStyle?: GetConditionalStyle;
   onCancelSortDialog: () => void,
   onApplySortDialog: (sortFields: SortFields) => void,
   onColumnResize: (columnIndex: number, newWidth: number) => void;
@@ -82,7 +85,7 @@ export const styles = {
   FixedBackground: 'FixedBackground',
   CellCaption: 'CellCaption',
   DataCellLeft: 'DataCellLeft',
-  DataCellCenter: 'DataCellCenter',  
+  DataCellCenter: 'DataCellCenter',
   DataCellRight: 'DataCellRight',
   LeftSideGrid: 'LeftSideGrid',
   RightSideCellFooter: 'RightSideCellFooter',
@@ -95,7 +98,7 @@ export const styles = {
   DragHandleIcon: 'DragHandleIcon',
   GroupHeaderBackground: 'GroupHeaderBackground',
   BorderBottom: 'BorderBottom',
-  BorderRightBottom: 'BorderRightBottom',
+  BorderRight: 'BorderRight',
   FixedBorder: 'FixedBorder',
   BlackText: 'BlackText',
   GrayText: 'GrayText'
@@ -114,6 +117,8 @@ export function visibleToIndex(columns: Columns, visibleIndex: number) {
 type AdjustColumnIndexFunc = (gridColumnIndex: number) => number;
 
 export type ScrollIntoView = (recordIndex: number, columnIndex?: number) => void;
+
+export type GetGridRef = () => GDMNGrid;
 
 export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _leftSideHeaderGrid: Grid | undefined;
@@ -138,7 +143,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       columnWidth: 125,
       overscanColumnCount: 5,
       overscanRowCount: 20,
-      rowHeight: maxCountFieldInCell === 1 ? inCellRowHeight + totalCellVertPadding 
+      rowHeight: maxCountFieldInCell === 1 ? inCellRowHeight + totalCellVertPadding
       : maxCountFieldInCell * inCellRowHeight + totalCellVertPadding,
       columnBeingResized: false
     };
@@ -207,7 +212,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       sortDialog, onCancelSortDialog, onApplySortDialog, onSetCursorPos, currentCol } = this.props;
     const { rowHeight, overscanColumnCount, overscanRowCount } = this.state;
 
-    
+
     if (!rs) return <div>No data!</div>;
 
     const columnCount = columns.length;
@@ -911,7 +916,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _getRowsCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) =>
     ({columnIndex, key, rowIndex, style}: GridCellProps) => {
-      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup } = this.props;
+      const { columns, rs, currentCol, onSetCursorPos, selectRows, onSelectRow, onToggleGroup, getConditionalStyle } = this.props;
       const currentRow = rs.currentRow;
       const adjustedColumnIndex = adjustFunc(columnIndex);
       const rowData = rs.get(rowIndex);
@@ -927,7 +932,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       const borderClass = fixed ? styles.FixedBorder
         : groupHeader ? styles.BorderBottom
-        : styles.BorderRightBottom;
+        : styles.BorderRight;
 
       const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText
         : styles.BlackText;
@@ -950,12 +955,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-        const cellText = 
+        const cellText =
           columns[adjustedColumnIndex].fields.map((fld, fldid) => {
             let cellClass = fld.alignment === 'RIGHT' ? styles.DataCellRight : fld.alignment === 'CENTER' ? styles.DataCellCenter : 'styles.DataCellLeft';
             return (
             rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ?
-            <span key={fldid}>
+            <span key={fldid} className={cellClass}>
               {rs.splitMatched(rowIndex, fld.fieldName).map(
                 (s, idx) => (s.matchFilter || s.foundIdx ?
                   <span
@@ -970,17 +975,17 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               {groupRecCount}
             </span>
             : groupRecCount ?
-            <span key={fldid}>
+            <span key={fldid} className={cellClass}>
               {rs.getString(rowIndex, fld.fieldName, '')}
               {groupRecCount}
             </span>
-            :           
-            <span key={fldid} className={cn(styles.CellColumn, cellClass, textClass)}>                            
+            :
+            <span style={getConditionalStyle ? getConditionalStyle(rowData.data) : undefined} key={fldid} className={cn(styles.CellColumn, cellClass, textClass)}>
               {rs.getString(rowIndex, fld.fieldName, '')}
             </span>)
           }
-          ) 
-            
+          )
+
       const checkMark = selectRows && !adjustedColumnIndex ?
         <div
           className={styles.CellMarkArea}
@@ -1011,7 +1016,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         :
         undefined;
 
-      const cellClassDiv = cn(fixed ? styles.FixedCell : '', styles.DataCellLeft);  
+      const cellClassDiv = cn(fixed ? styles.FixedCell : '', styles.DataCellLeft);
 
       if (checkMark || groupTriangle) {
         return (
@@ -1052,7 +1057,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         let fieldName = f.fieldName;
         let aggregates = rs.aggregates;
         return <span key={idx} className={classNameSpan}>{aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined}</span>;
-      });    
+      });
 
       return (
         <div

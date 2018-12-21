@@ -7,7 +7,6 @@ import {
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus
 } from './bridges/BasePubSubBridge';
-import { TStompFrameHeaders } from '@gdmn/client-core';
 
 interface IPubSubMessageMeta {
   [key: string]: string | undefined;
@@ -35,7 +34,7 @@ class PubSubClient {
   public readonly subscribe: <TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
     meta?: IPubSubMessageMeta
-  ) => Observable<TMessage> | never;
+  ) => Observable<TMessage> | never; // fixme: type ts 3.2
 
   constructor(bridge: BasePubSubBridge) {
     this.bridge = bridge;
@@ -76,13 +75,12 @@ class PubSubClient {
     topic: string,
     message: TMessage
   ): Subject<IPubSubMsgPublishState> {
-    // todo never
     const queuedMessage: IQueuedPublishMessage = { topic, message, publishStateObservable: new Subject() };
     this.queuedPublishMessages.push(queuedMessage);
 
     this.queuedMessagePublish(queuedMessage);
 
-    return queuedMessage.publishStateObservable; // todo test
+    return queuedMessage.publishStateObservable;
   }
 
   public get connectedMessageObservable(): Subject<IPubSubMessage> {
@@ -127,20 +125,18 @@ class PubSubClient {
       return;
     }
 
-    this.bridge
-      .publish(queuedMessage.topic, queuedMessage.message) // todo never
-      .subscribe(publishState => {
-        queuedMessage.publishStateObservable.next(publishState);
+    this.bridge.publish(queuedMessage.topic, queuedMessage.message).subscribe(publishState => {
+      queuedMessage.publishStateObservable.next(publishState);
 
-        if (publishState.status === TPubSubMsgPublishStatus.PUBLISHED) {
-          const itemIndex = this.queuedPublishMessages.findIndex(item => item === queuedMessage);
-          if (itemIndex !== -1) {
-            this.queuedPublishMessages.splice(itemIndex, 1);
-          }
-
-          // queuedMessage.publishStatusObservable.complete(); // todo
+      if (publishState.status === TPubSubMsgPublishStatus.PUBLISHED) {
+        const itemIndex = this.queuedPublishMessages.findIndex(item => item === queuedMessage);
+        if (itemIndex !== -1) {
+          this.queuedPublishMessages.splice(itemIndex, 1);
         }
-      });
+
+        // queuedMessage.publishStatusObservable.complete(); // todo
+      }
+    });
   }
 }
 

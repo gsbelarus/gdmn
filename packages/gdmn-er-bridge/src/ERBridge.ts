@@ -1,5 +1,5 @@
 import {AConnection, ATransaction, DBStructure, Factory, IBaseExecuteOptions} from "gdmn-db";
-import {EntityQuery, ERModel, IQueryResponse} from "gdmn-orm";
+import {EntityQuery, ERModel, IEntityQueryResponse, IEntityQueryResponseFieldAliases} from "gdmn-orm";
 import {Select} from "./crud/query/Select";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
@@ -10,7 +10,6 @@ import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
   transaction: ATransaction;
-  dbStructure?: DBStructure;
 }
 
 export class ERBridge {
@@ -72,12 +71,9 @@ export class ERBridge {
     await this.ddlHelper.dispose();
   }
 
-  public async query(query: EntityQuery, dbStructure?: DBStructure): Promise<IQueryResponse> {
+  public async query(query: EntityQuery): Promise<IEntityQueryResponse> {
     const {connection, transaction} = this.ddlHelper;
-    if (!dbStructure) {
-      dbStructure = await Factory.FBDriver.readDBStructure(connection, transaction);
-    }
-    const {sql, params, fieldAliases} = new Select(dbStructure, query);
+    const {sql, params, fieldAliases} = new Select(query);
 
     const data = await AConnection.executeQueryResultSet({
       connection,
@@ -98,22 +94,26 @@ export class ERBridge {
       }
     });
 
-    const aliases = [];
-    for (const [key, value] of fieldAliases) {
-      const link = query.link.deepFindLinkByField(key);
-      if (!link) {
-        throw new Error("Field not found");
-      }
-      aliases.push({
-        alias: link.alias,
-        attribute: key.attribute.name,
-        values: value
-      });
-    }
-
     return {
       data,
-      aliases,
+      aliases: Array.from(fieldAliases).reduce((aliases, [field, values]) => (
+        Array.from(values).reduce((map, [attribute, fieldAlias]) => {
+            const link = query.link.deepFindLink(field);
+            if (!link) {
+              throw new Error("Field not found");
+            }
+            return {
+              ...aliases,
+              [fieldAlias]: {
+                linkAlias: link.alias,
+                attribute: field.attribute.name,
+                setAttribute: field.attribute.type === "Set" && field.attribute !== attribute
+                  ? attribute.name : undefined
+              }
+            };
+          }, aliases
+        )
+      ), {} as IEntityQueryResponseFieldAliases),
       info: {
         select: sql,
         params

@@ -1,26 +1,17 @@
-import config from "config";
 import jwt from "jsonwebtoken";
 import {Logger} from "log4js";
+import ms from "ms";
 import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
 import {v1 as uuidV1} from "uuid";
-import {
-  AppAction,
-  Application,
-  BeginTransCmd,
-  CommitTransCmd,
-  GetSchemaCmd,
-  PingCmd,
-  RollbackTransCmd
-} from "../apps/base/Application";
+import {Application} from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
-import {Task, TaskStatus} from "../apps/base/task/Task";
+import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
-import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, IUser, MainAction, MainApplication} from "../apps/MainApplication";
+import {Actions, CommandProvider} from "../apps/CommandProvider";
+import {IUser, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
 import {DBStatus} from "../db/ADatabase";
 import {StompErrorCode, StompServerError} from "./StompServerError";
-
-type Actions = AppAction | MainAction;
 
 export type Ack = "auto" | "client" | "client-individual";
 
@@ -31,10 +22,6 @@ export interface ISubscription {
 }
 
 export class StompSession implements StompClientCommandListener {
-
-  public static readonly JWT_SECRET: string = config.get("server.jwt.secret");
-  public static readonly JWT_ACCESS_TOKEN_TIMEOUT: string = config.get("server.jwt.token.access.timeout");
-  public static readonly JWT_REFRESH_TOKEN_TIMEOUT: string = config.get("server.jwt.token.refresh.timeout");
 
   public static readonly DESTINATION_TASK = "/task";
   public static readonly DESTINATION_TASK_STATUS = `${StompSession.DESTINATION_TASK}/status`;
@@ -121,10 +108,6 @@ export class StompSession implements StompClientCommandListener {
       throw new Error("Application is not found");
     }
     return this._application;
-  }
-
-  set application(value: Application) {
-    this._application = value;
   }
 
   get mainApplication(): MainApplication {
@@ -394,109 +377,28 @@ export class StompSession implements StompClientCommandListener {
           // protection against re-sending messages (https://github.com/gsbelarus/gdmn/issues/23)
           if (id) {
             const selfTasks = this.session.taskManager.find(this.session);
-            const task = selfTasks.find((t) => t.options.command.id === id);
-            if (task) {
+            const taskDuplicate = selfTasks.find((t) => t.options.command.id === id);
+            if (taskDuplicate) {
               this.logger.info("Duplicate received; Ignore it");
-              return this._sendReceipt(headers, {"task-id": task.id});
+              return this._sendReceipt(headers, {"task-id": taskDuplicate.id});
             }
           }
-          const action = headers.action as Actions;
-          const bodyObj = JSON.parse(body || "{}");
+          const command: ICmd<Actions, unknown> = {
+            id,
+            action: headers.action as Actions,
+            payload: body ? JSON.parse(body).payload : undefined
+          };
 
-          // TODO remove task-id from receipt; use command.id
-          switch (action) {
-            // ------------------------------For MainApplication
-            case "DELETE_APP": {
-              if (this.mainApplication !== this.application) {
-                throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
-              }
-              if (!bodyObj.payload || !bodyObj.payload.uid) {
-                throw new StompServerError(StompErrorCode.INVALID, "Payload must contains 'uid'");
-              }
-              const command: DeleteAppCmd = {id, action, ...bodyObj};
-              const task = this.mainApplication.pushDeleteAppCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            case "CREATE_APP": {
-              if (this.mainApplication !== this.application) {
-                throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
-              }
-              if (!bodyObj.payload || !bodyObj.payload.alias || !bodyObj.payload.external) {
-                throw new StompServerError(StompErrorCode.INVALID, "Payload must contains 'alias' and 'external'");
-              }
-              const command: CreateAppCmd = {id, action, ...bodyObj};
-              const task = this.mainApplication.pushCreateAppCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            case "GET_APPS": {
-              if (this.mainApplication !== this.application) {
-                throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
-              }
-              const command: GetAppsCmd = {id, action, payload: undefined};
-              const task = this.mainApplication.pushGetAppsCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            // ------------------------------For all applications
-            case "BEGIN_TRANSACTION": {
-              const command: BeginTransCmd = {id, action, ...bodyObj};
-              const task = this.application.pushBeginTransCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            case "COMMIT_TRANSACTION": {
-              const command: CommitTransCmd = {id, action, ...bodyObj};
-              const task = this.application.pushCommitTransCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            case "ROLLBACK_TRANSACTION": {
-              const command: RollbackTransCmd = {id, action, ...bodyObj};
-              const task = this.application.pushRollbackTransCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            case "PING": {
-              const command: PingCmd = {id, action, ...bodyObj};
-              const task = this.application.pushPingCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            case "GET_SCHEMA": {
-              const command: GetSchemaCmd = {id, action, payload: undefined};
-              const task = this.application.pushGetSchemaCmd(this.session, command);
-              this._sendReceipt(headers, {"task-id": task.id});
-
-              task.execute().catch(this.logger.error);
-              break;
-            }
-            // case "QUERY": {
-            //   const command: QueryCmd = {id, action, ...bodyObj};
-            //   const task = this.application.pushQueryCmd(this.session, command);
-            //   this._sendReceipt(headers, {"task-id": task.id});
-            //
-            //   task.execute().catch(this.logger.error);
-            //   break;
-            // }
-            default:
-              throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported action");
+          // TODO remove task-id from receipt; use command.id ?
+          let task;
+          try {
+            task = new CommandProvider(this.application).receive(this.session, command);
+          } catch (error) {
+            throw new StompServerError(StompErrorCode.INVALID, error.message);
           }
+          this._sendReceipt(headers, {"task-id": task.id});
+          task.execute().catch(this.logger.error);
+
           break;
         default:
           throw new StompServerError(StompErrorCode.UNSUPPORTED, `Unsupported destination '${destination}'`);
@@ -598,8 +500,8 @@ export class StompSession implements StompClientCommandListener {
   private _createAccessJwtToken(user: IUser): string {
     return jwt.sign({
       id: user.id
-    }, StompSession.JWT_SECRET, {
-      expiresIn: StompSession.JWT_ACCESS_TOKEN_TIMEOUT
+    }, Constants.SERVER.JWT.SECRET, {
+      expiresIn: ms(Constants.SERVER.JWT.TOKEN.ACCESS.TIMEOUT)
     });
   }
 
@@ -607,14 +509,14 @@ export class StompSession implements StompClientCommandListener {
     return jwt.sign({
       id: user.id,
       isRefresh: true
-    }, StompSession.JWT_SECRET, {
-      expiresIn: StompSession.JWT_REFRESH_TOKEN_TIMEOUT
+    }, Constants.SERVER.JWT.SECRET, {
+      expiresIn: ms(Constants.SERVER.JWT.TOKEN.REFRESH.TIMEOUT)
     });
   }
 
   private _getPayloadFromJwtToken(token: string): any {
     try {
-      const verified = jwt.verify(token, StompSession.JWT_SECRET);
+      const verified = jwt.verify(token, Constants.SERVER.JWT.SECRET);
       if (verified) {
         const payload = jwt.decode(token);
         if (!payload) {

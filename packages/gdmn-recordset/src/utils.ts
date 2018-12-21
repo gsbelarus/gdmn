@@ -1,4 +1,5 @@
 import { IDataRow, TDataType } from "./types";
+import { INumberFormat, formatNumber, IDateFormat, formatDate } from "./format";
 
 export function checkField<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: TDataType): TDataType {
   const value = row[fieldName];
@@ -13,15 +14,29 @@ export function checkField<R extends IDataRow = IDataRow>(row: R, fieldName: str
   return value;
 };
 
-export function getAsString<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: string): string {
+export function getAsString<R extends IDataRow = IDataRow>(
+  row: R,
+  fieldName: string,
+  defaultValue?: string,
+  numberFormat?: INumberFormat,
+  dateFormat?: IDateFormat
+): string {
   const value = checkField(row, fieldName, defaultValue);
-
-  if (value === null) {
-    return '';
-  }
 
   if (typeof value === 'string') {
     return value;
+  }
+
+  if (typeof value === 'number') {
+    return formatNumber(value, numberFormat);
+  }
+
+  if (value instanceof Date) {
+    return formatDate(value, dateFormat);
+  }
+
+  if (value === null) {
+    return '';
   }
 
   return value.toString();
@@ -29,10 +44,6 @@ export function getAsString<R extends IDataRow = IDataRow>(row: R, fieldName: st
 
 export function getAsNumber<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: number): number {
   const value = checkField(row, fieldName, defaultValue);
-
-  if (value === null) {
-    return 0;
-  }
 
   if (typeof value === 'number') {
     return value;
@@ -42,15 +53,15 @@ export function getAsNumber<R extends IDataRow = IDataRow>(row: R, fieldName: st
     return value ? 1 : 0;
   }
 
+  if (value === null) {
+    return 0;
+  }
+
   throw new Error(`Field ${fieldName} can't be converted to number`);
 };
 
 export function getAsBoolean<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: boolean): boolean {
   const value = checkField(row, fieldName, defaultValue);
-
-  if (value === null) {
-    return false;
-  }
 
   if (typeof value === 'boolean') {
     return value;
@@ -58,6 +69,10 @@ export function getAsBoolean<R extends IDataRow = IDataRow>(row: R, fieldName: s
 
   if (typeof value === 'number') {
     return !!value;
+  }
+
+  if (value === null) {
+    return false;
   }
 
   if (value.toString().toUpperCase() === 'TRUE') {

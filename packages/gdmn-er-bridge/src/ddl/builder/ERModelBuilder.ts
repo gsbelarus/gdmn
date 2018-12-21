@@ -1,4 +1,12 @@
-import {Entity, EntityAttribute, ERModel, Sequence, SequenceAttribute} from "gdmn-orm";
+import {
+  appendAdapter,
+  Entity,
+  EntityAttribute,
+  ERModel,
+  relationName2Adapter,
+  Sequence,
+  SequenceAttribute
+} from "gdmn-orm";
 import {Constants} from "../Constants";
 import {DDLHelper, IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
@@ -32,7 +40,11 @@ export class ERModelBuilder extends Builder {
             name: Constants.DEFAULT_INHERITED_KEY_NAME,
             required: true,
             lName: {ru: {name: "Родитель"}},
-            entities: [entity.parent]
+            entities: [entity.parent],
+            adapter: {
+              relation: Builder._getOwnRelationName(entity),
+              field: Constants.DEFAULT_INHERITED_KEY_NAME
+            }
           }));
         }
 
@@ -54,7 +66,7 @@ export class ERModelBuilder extends Builder {
         const fieldName = Builder._getFieldName(pkAttr);
         const domainName = Prefix.domain(await this.nextDDLUnique());
         await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
-        await this._addATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
+        await this._updateATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
         fields.push({
           name: fieldName,
           domain: domainName
@@ -64,7 +76,7 @@ export class ERModelBuilder extends Builder {
       const pkConstName = Prefix.pkConstraint(await this.nextDDLUnique());
       await this.ddlHelper.addTable(tableName, fields);
       await this.ddlHelper.addPrimaryKey(pkConstName, tableName, fields.map((i) => i.name));
-      await this.ddlHelper.cachedStatements.addToATRelations({
+      await this.ddlHelper.cachedStatements.updateATRelations({
         relationName: tableName,
         lName: entity.lName.ru && entity.lName.ru.name,
         description: entity.lName.ru && entity.lName.ru.fullName,
@@ -101,14 +113,19 @@ export class ERModelBuilder extends Builder {
 
       for (const attr of Object.values(entity.ownAttributes)) {
         if (!entity.pk.includes(attr)) {
-          await this.eBuilder.create(entity, attr);
+          await this.eBuilder.createAttribute(entity, attr);
         }
       }
 
       for (const unique of entity.ownUnique) {
-        await this.eBuilder.create(entity, unique);
+        await this.eBuilder.addUnique(entity, unique);
       }
 
+      if (!entity.adapter) {
+        entity.adapter = entity.parent
+          ? appendAdapter(entity.parent.adapter!, tableName)
+          : relationName2Adapter(tableName);
+      }
       return erModel.add(entity);
     } else {
       throw new Error("Unknown type of arg");

@@ -4,7 +4,7 @@
     "buildPath": "/dist"
   },
   "server": {
-    "http": {
+    "api": {
       "host": "ws://localhost",
       "port": 4000
     },

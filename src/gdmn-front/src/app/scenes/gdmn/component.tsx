@@ -1,132 +1,105 @@
-import React, { Fragment, PureComponent } from 'react';
-import { NavLink, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
+import React, { Fragment, Component } from 'react';
+import { Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
-import { BreadcrumbsProps, InjectedProps } from 'react-router-breadcrumbs-hoc';
+import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
+import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
+import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
+import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
+import { ERModel } from 'gdmn-orm';
+import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
+import { Dispatch } from 'redux';
 
-import styles from './styles.css';
-import { isDevMode, ErrorBoundary, LinkCommandBarButton } from '@gdmn/client-core';
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
-import {
-  Breadcrumb,
-  IComponentAsProps,
-  IBreadcrumbItem,
-  CommandBar,
-  ICommandBarItemProps,
-  Icon
-} from 'office-ui-fabric-react';
+import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
+import { TAuthActions } from '@src/app/scenes/auth/actions';
+import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
+import styles from './styles.css';
+import { TGdmnActions } from './actions';
 
-type TGdmnViewStateProps = any;
-type TGdmnViewProps = IStompDemoViewProps & IAccountViewProps & TGdmnViewStateProps & InjectedProps;
+type TGdmnViewStateProps = {
+  erModel: ERModel;
+  loading: boolean;
+  loadingMessage?: string;
+};
+type TGdmnViewProps = IStompDemoViewProps &
+  IAccountViewProps &
+  TGdmnViewStateProps & {
+    dispatch: Dispatch<any>; // TODO
+  };
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
-interface IBreadcrumbItemWithLink extends IBreadcrumbItem {
-  link: string;
-}
-
 @CSSModules(styles, { allowMultiple: true })
-class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
+class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, breadcrumbs } = this.props;
+    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading } = this.props;
+    if (!match) return null; // todo
 
     return (
       <div className="App">
         <div className="Header">
-          <Icon iconName="Home" className="RoundIcon" />
+          <Link to={`${match.path}`}>
+            <Icon iconName="Home" className="RoundIcon" />
+          </Link>
           <Icon iconName="Chat" className="NoFrameIcon" />
           <div className="SearchBox">
             find something...
             <span className="WhereToSearch">/</span>
           </div>
-          <div className="ImportantMenu">Lorem</div>
-          <div className="ImportantMenu">Ipsum</div>
-          <div className="ImportantMenu">Diem</div>
+          <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
               <b>
                 <i>#GDMN</i>
               </b>{' '}
-              &mdash; Березовский мясоконсервный комбинат
+              &mdash; революционная платформа
             </span>
             <span className="WithNotificationsCount">
               <Icon iconName="Ringer" className="NoFrameIcon" />
               <span className="NotificationsCount">4</span>
             </span>
-            <Icon iconName="Contact" className="RoundIcon" />
+            <IconButton
+              iconProps={{ iconName: 'Contact' }}
+              styles={{ menuIcon: { display: 'none' } }}
+              className="RoundIcon"
+              menuProps={{
+                shouldFocusOnMount: true,
+                gapSpace: 2,
+                isBeakVisible: true,
+                contextualMenuItemAs: (props: IContextualMenuItemProps) => {
+                  return props.item.link ? (
+                    <Link to={props.item.link}>
+                      <ContextualMenuItem {...props} />
+                    </Link>
+                  ) : (
+                    <ContextualMenuItem {...props} />
+                  );
+                },
+                items: commandsToContextualMenuItems(
+                  ['userProfile', '-', 'logout'],
+                  (action: TAuthActions | TGdmnActions) => dispatch(action),
+                  (link: string) => history.push(`${match.url}${link}`)
+                )
+              }}
+            />
           </div>
         </div>
-        <div className="UrgentMessage">Urgent message!</div>
-        <div className="OpenTasks">
-          <span className="RegularTask">
-            Накладные на приход
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="CurrentTask">
-            Текущий документ
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="ProgressTask">
-            <span className="ProgressIndicator" />
-            Длительный отчет строится
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="RegularTask">
-            Счета-фактуры
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-          <span className="AttentionTask">
-            Отчет уже построен
-            <Icon iconName="BoxMultiplySolid" className="CloseTask" />
-          </span>
-        </div>
-        <div className="BPSeq">
-          <span>Приход сырья</span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>
-            <b>Хранение</b>
-          </span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>
-            Производство
-            <span className="SubMenu">
-              <div>Украли</div>
-              <div>Испортилось</div>
-              <div>Продали</div>
-            </span>
-          </span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>Приход ГП</span>
-          <Icon iconName="ChromeBackMirrored" className="BPArrow" />
-          <span>Отгрузка</span>
-        </div>
-
-        <div>
-          <CommandBar items={this.getItems()} />
-          <Breadcrumb
-            onRenderItem={(props, defaultRenderer) => (
-              <NavLink to={(props as IBreadcrumbItemWithLink).link}>{defaultRenderer!(props)}</NavLink>
-            )}
-            items={breadcrumbs.map((breadcrumb: BreadcrumbsProps) => ({
-              key: breadcrumb.key,
-              text: breadcrumb,
-              link: breadcrumb.props.match.url
-            }))}
-          />
-        </div>
-        <main styleName="scene-pad">
+        <ProgressIndicator styles={{itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' }}} barHeight={4} description={this.props.loadingMessage} />
+        <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>
-              <Redirect exact={true} from={`${match.path}/`} to={`${match.path}/account`} />
               <Route
                 path={`${match.path}/account`}
-                component={() => <AccountView apiDeleteAccount={this.props.apiDeleteAccount} />}
+                component={() => <AccountView apiDeleteAccount={apiDeleteAccount} />}
               />
               <Route
                 path={`${match.path}/web-stomp`}
-                component={() => <StompDemoView apiPing={this.props.apiPing} log={''} />}
+                component={() => <StompDemoView apiPing={apiPing} apiGetData={apiGetData} erModel={erModel} />}
               />
+              <Route path={`${match.path}/er-model`} component={ERModelViewContainer} />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
@@ -134,44 +107,26 @@ class GdmnView extends PureComponent<TGdmnViewProps & RouteComponentProps<any> &
       </div>
     );
   }
-
-  private getItems = (): ICommandBarItemProps[] => {
-    const { erModel, match, signOut, apiGetSchema } = this.props;
-    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
-      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
-    };
-
-    return [
-      {
-        key: 'Account',
-        text: 'Account',
-        commandBarButtonAs: btn(`${match.url}/account`)
-      },
-      {
-        key: 'WebStomp',
-        text: 'web-stomp',
-        commandBarButtonAs: btn(`${match.url}/web-stomp`)
-      },
-      {
-        key: 'Logout',
-        text: 'Logout',
-        onClick: signOut
-      },
-      {
-        key: 'GetERModel',
-        text: Object.keys(erModel.entities).length
-          ? `Reload ERModel (${Object.keys(erModel.entities).length})`
-          : `Load ERModel`,
-        onClick: apiGetSchema
-      }
-    ];
-  };
 }
 
 export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
 
 /*
-Organizations - supervised_user_circle
-Account - alternate_email
-Profile - account_circle
- */
+          <Breadcrumb
+            onRenderItem={(props, defaultRenderer) => {
+              if (defaultRenderer && props && props.href) {
+                return (
+                  <NavLink to={props.href}>{defaultRenderer!(props)}</NavLink>
+                )
+              } else {
+                return null;
+              }
+            }}
+
+            items={breadcrumbs.map((breadcrumb: BreadcrumbsProps): IBreadcrumbItem => ({
+              key: breadcrumb.key,
+              text: breadcrumb.key,
+              href: breadcrumb.props.match.url
+            }))}
+          />
+*/

@@ -1,4 +1,5 @@
 import { List } from "immutable";
+import { INumberFormat, IDateFormat } from "./format";
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
@@ -42,6 +43,8 @@ export interface IFieldDef extends INamedField {
   aggregator?: IFieldAggregator<any>;
   olapValue?: TDataType[];
   alignment?: TAlignment;
+  numberFormat?: INumberFormat;
+  dateFormat?: IDateFormat;
 };
 
 export type FieldDefs = IFieldDef[];
@@ -125,4 +128,9 @@ export interface IMeasure<R extends IDataRow> {
 };
 
 export type Measures<R extends IDataRow> = IMeasure<R>[];
+
+export type MasterLink = {
+  fieldName: string,
+  value: TDataType
+}[];
 

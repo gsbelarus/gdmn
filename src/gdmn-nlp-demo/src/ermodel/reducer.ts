@@ -9,7 +9,7 @@ export interface IERModelState {
   loading: boolean;
   erModel?: ERModel;
   erTranslatorRU?: ERTranslatorRU;
-  command?: ICommand;
+  command?: ICommand[];
   commandError?: string;
 };
 

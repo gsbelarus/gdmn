@@ -9,6 +9,8 @@ import { Edge } from "./Edge";
 import { predefinedPhrases } from "./phrases";
 import { ICommand } from 'gdmn-nlp-agent';
 import { isMorphToken, IMorphToken } from "gdmn-nlp";
+import { Select } from "../query/Select";
+import { EntityQuery } from "gdmn-orm";
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -17,7 +19,7 @@ export interface ISyntaxBoxProps {
   parsedText?: ParsedText,
   parserDebug?: ParsedText[],
   commandError?: string,
-  command?: ICommand,
+  command?: ICommand[],
   onSetText: (text: string) => void
 };
 
@@ -208,20 +210,35 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     return (
       <div className="command">
         <div className={`action${command.action}`} />
-        {command.objects &&
-          command.objects.map((co, idx) => (
-            <div className="commandObject" key={idx}>
-              <div className="entityName">{co.entity.name}</div>
-              {co.conditions &&
-                co.conditions.map((cond, idx2) => (
-                  <div className="condition" key={idx2}>
-                    <div className="attr">{cond.attr.name}</div>
-                    <div className={`op${cond.op}`} />
-                    <div className="value">{cond.value}</div>
-                  </div>
-                ))}
-            </div>
-          ))}
+        <div className="payload" >
+          <div className="entityName"> {command.payload.link.entity.name} </div>
+          <div className="fields">
+            { command.payload.link.fields.map( (field, idx) => 
+                <div className="field" key={idx}>{field.attribute.name}</div>
+              ) }
+          </div>
+          {command.payload.options.where && command.payload.options.where.length && <div className="options" >
+            {command.payload.options.where.map( (m, idx1) => 
+              m.equals && <div className="allEquals" key={idx1}>
+              { m.equals.map( (eq, idx2) => 
+                <div className="equals" key={idx2}>
+                  <div className="attr">{eq.attribute.name}</div>
+                  <div className="opEQ" />
+                  <div className="value">{eq.value}</div>
+                </div>
+              ) }</div>
+            ) } </div>
+          } </div>
+      </div>
+    );
+  }
+
+  private createStringSelect(query: EntityQuery) {
+    const selectQuery = new Select(query);
+    return (
+      <div className="SelectQuery">
+        <pre className="sql">{selectQuery.sql}</pre>
+        <div className="params">{JSON.stringify(selectQuery.params)}</div>
       </div>
     );
   }
@@ -299,7 +316,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {this._getCoombinations()}
         {this._renderPhrase()}
         {commandError && <div className="SyntaxError">{commandError}</div>}
-        {command && <div>Command:{this._renderCommand(command)}</div>}
+        {command && <div>Command:{this._renderCommand(command[0])}</div>}
+        {command  && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
         {parserDebug ?
           <div className="ParserDebug">
             {parserDebug.map( (pd, idx) =>

@@ -214,7 +214,7 @@
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
   padding-top: 12px;
 }
 
@@ -222,7 +222,7 @@
   margin-right: 8px;
 }
 
-.actionSHOW {
+.actionQUERY {
   background-color: rgb(152, 248, 181);
   padding: 2px 6px 2px 6px;
   border: 1px solid green;
@@ -230,8 +230,8 @@
   box-shadow: 2px 2px rgba(0,0,0,0.2);
 }
 
-.actionSHOW::after {
-  content: "SHOW";
+.actionQUERY::after {
+  content: "QUERY";
 }
 
 .actionDELETE {
@@ -246,7 +246,7 @@
   content: "DELETE";
 }
 
-.commandObject {
+.payload {
   background-color: bisque;
   padding: 8px;
   border: 1px solid coral;
@@ -255,10 +255,10 @@
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.commandObject > * {
+.payload > * {
   margin-right: 8px;
 }
 
@@ -270,7 +270,31 @@
   box-shadow: 2px 2px rgba(0,0,0,0.2);
 }
 
-.condition {
+.fields {
+  background-color: forestgreen;
+  padding: 8px;
+  border: 1px solid fuchsia;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.fields > * {
+  margin-bottom: 8px;
+}
+
+.field {
+  background-color: rgb(152, 248, 181);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+}
+
+.options {
   background-color: darkgoldenrod;
   padding: 8px;
   border: 1px solid darkred;
@@ -282,7 +306,7 @@
   align-items: center;
 }
 
-.condition > * {
+.options > * {
   margin-right: 8px;
 }
 
@@ -292,6 +316,24 @@
   border: 1px solid green;
   border-radius: 4px;
   box-shadow: 2px 2px rgba(0,0,0,0.2);
+}
+
+.allEquals {
+  display: flex;
+  flex-direction: column;
+}
+
+.allEquals > * {
+  margin-bottom: 8px;
+}
+
+.equals {
+  display: flex;
+  flex-direction: row;
+}
+
+.equals > * {
+  margin-right: 8px;
 }
 
 .opEQ {

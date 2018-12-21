@@ -11,7 +11,7 @@
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
     "tslint": "tslint --project .",
-    "test": "yarn build && jest"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -25,18 +25,19 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "fast-deep-equal": "^2.0.1",
-    "immutable": "^3.8.2",
-    "typesafe-actions": "^2.0.4"
+    "fast-deep-equal": "^2",
+    "immutable": "^3",
+    "rxjs": "^6.3.3",
+    "typesafe-actions": "^2"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.9",
-    "@types/node": "^10.12.10",
-    "jest": "^23.6.0",
-    "shx": "^0.3.2",
-    "ts-jest": "^23.10.4",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
+    "@types/jest": "^23",
+    "@types/node": "^10",
+    "jest": "^23",
+    "shx": "^0",
+    "ts-jest": "^23",
+    "ts-node": "^7",
+    "tslint": "^5",
     "typescript": "^3"
   }
 }

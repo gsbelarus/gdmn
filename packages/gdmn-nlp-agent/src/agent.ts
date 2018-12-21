@@ -1,6 +1,7 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, RusPrepositionLexeme, PrepositionType, SemCategory, RusNounLexeme, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP } from "gdmn-nlp";
-import { Entity, ERModel, EntityAttribute } from "gdmn-orm";
-import { ICommand, Determiner, Operator } from "./command";
+import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType } from "gdmn-nlp";
+import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute } from "gdmn-orm";
+import { ICommand, Action} from "./command";
+import accepts = require("accepts");
 
 export class ERTranslatorRU {
 
@@ -29,7 +30,7 @@ export class ERTranslatorRU {
     );
   }
 
-  public process(phrase: RusPhrase): ICommand {
+  public process(phrase: RusPhrase): ICommand[] {
     if (phrase instanceof RusImperativeVP) {
       return this.processImperativeVP(phrase as RusImperativeVP);
     } else {
@@ -37,26 +38,32 @@ export class ERTranslatorRU {
     }
   }
 
-  public processImperativeVP(imperativeVP: RusImperativeVP): ICommand {
-
-    const command = ((v: RusVerb): ICommand => {
+  public processImperativeVP(imperativeVP: RusImperativeVP): ICommand[] {
+    const action = ((v: RusVerb): Action => {
       if (hasMeaning(SemContext.QueryDB, 'показать', v)) {
-        return {action: 'SHOW'};
+        return 'QUERY';
       }
       if (hasMeaning(SemContext.QueryDB, 'удалить', v)) {
-        return {action: 'DELETE'};
+        return 'DELETE';
       }
       throw new Error(`Unknown verb ${v.word}`);
     })(imperativeVP.imperativeVerb);
 
     if (!imperativeVP.imperativeNP) {
-      return command;
+      throw new Error("teasd");
     }
 
     const np = imperativeVP.imperativeNP;
-    const determiner = Determiner.All;
 
-    const object = (() => {
+    const objectPP = (() => {
+      if (np.pp instanceof RusPP) {
+        return (np.pp as RusPP).noun;
+      } else {
+        return undefined;
+      }
+    })();
+
+    const objectANP = (() => {
       if (np.noun instanceof RusANP) {
         return (np.noun as RusANP).noun;
       } else {
@@ -64,79 +71,81 @@ export class ERTranslatorRU {
       }
     })();
 
-    const entities = this.neMap.get(object.lexeme);
+
+    const entities = this.neMap.get(objectANP.lexeme);
 
     if (!entities) {
-      throw new Error(`Can't find entities for noun ${object.word}`);
+      throw new Error(`Can't find entities for noun ${objectANP.word}`);
     }
 
-    command.objects = [];
+    const commands = entities.map(entity => {
+      const fields = Object.values(entity.attributes)
+      .filter(attr => attr instanceof ScalarAttribute)
+      .map(attr => new EntityQueryField(attr));
 
-    entities.forEach( entity => {
-      command.objects!.push({ determiner, entity, conditions: [] })
-    });
-
-    if (np.noun instanceof RusANP) {
-      const adjective = (np.noun as RusANP).adjf;
-
-      if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
-        const nounLexeme = (adjective.lexeme as RusAdjectiveLexeme).getNounLexeme();
-
-        if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
-          command.objects.forEach( co => {
-            const locationAttr = co.entity.attributesBySemCategory(SemCategory.ObjectLocation);
-
-            if (locationAttr.length) {
-              const attr = locationAttr[0];
-              let op: Operator;
-
-              if (attr instanceof EntityAttribute && (attr as EntityAttribute).entities[0].isTree) {
-                op = 'HASROOT';
-              } else {
-                op = 'EQ';
-              }
-
-              co.conditions.push(
-                {
-                  attr,
-                  op,
-                  value: nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word
-                }
-              );
-            }
-          });
-        }
-      }
-    }
-
-    if (np.pp) {
-      command.objects.forEach( co => {
-        const pl = np.pp!.prep.lexeme as RusPrepositionLexeme;
-        if (pl.prepositionType === PrepositionType.Place) {
-          const locationAttr = co.entity.attributesBySemCategory(SemCategory.ObjectLocation);
-
-          if (locationAttr.length) {
-            const attr = locationAttr[0];
-            let op: Operator;
-
-            if (attr instanceof EntityAttribute && (attr as EntityAttribute).entities[0].isTree) {
-              op = 'HASROOT';
+      let options;
+      const equals: IEntityQueryWhereValue[] = [];
+      if (np.noun instanceof RusANP) {
+        const adjective = (np.noun as RusANP).adjf;
+        if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
+          const nounLexeme = (adjective.lexeme as RusAdjectiveLexeme).getNounLexeme();
+          if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
+            const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
+            const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+            if (attr instanceof EntityAttribute) {
+              const linkEntity = attr.entities[0];
+              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "aliasL2", [])));
+              equals.push({
+                alias:"aliasL2",
+                attribute: linkEntity.attribute("NAME"),
+                value: words
+              });
             } else {
-              op = 'EQ';
+              equals.push({
+                alias:"alias",
+                attribute: attr,
+                value: words
+              });
             }
-
-            co.conditions.push(
-              {
-                attr,
-                op,
-                value: (np.pp!.noun.lexeme as RusNounLexeme).getWordForm({ c: RusCase.Nomn, singular: true }).word
-              }
-            );
+          } else {
+            throw new Error(`Can't find semantic category place for noun ${objectANP.word}`);
           }
         }
-      });
-    }
+      }
 
-    return command;
+      if (np.pp instanceof RusPP) {
+        const preposition = (np.pp as RusPP).prep;
+        if ((preposition.lexeme as RusPrepositionLexeme).prepositionType === PrepositionType.Place) {
+          const nounLexeme = (np.pp as RusPP).noun.lexeme;
+          if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
+            const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
+            const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+            if (attr instanceof EntityAttribute) {
+              const linkEntity = attr.entities[0];
+              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "aliasL2", [])));
+              equals.push({
+                alias:"aliasL2",
+                attribute: linkEntity.attribute("NAME"),
+                value: words
+              });
+            } else {
+              equals.push({
+                alias:"alias",
+                attribute: attr,
+                value: words
+              });
+            }
+          }
+        }
+      }
+      options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+
+      const entityLink = new EntityLink(entity, "alias", fields);
+      return {
+        action,
+        payload: new EntityQuery(entityLink, options)
+      };
+    })
+    return commands;
   }
 }

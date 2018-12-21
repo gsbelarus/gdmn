@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "esnext",
     "allowJs": true,
     "skipLibCheck": false,
     "esModuleInterop": true,
@@ -13,9 +13,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "lib": ["es2017", "dom"]
+    "lib": [
+      "es2017",
+      "dom"
+    ]
   },
   "include": [
-    "src"
+    "./src/**/*"
   ]
 }

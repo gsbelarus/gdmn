@@ -1,24 +1,19 @@
-import {
-  IComponentAsProps,
-  ICommandBarItemProps,
-  BaseComponent,
-  CommandBarButton,
-  IButtonProps
-} from 'office-ui-fabric-react';
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { IContextualMenuItem } from 'office-ui-fabric-react/lib/components/ContextualMenu';
+import { BaseComponent } from 'office-ui-fabric-react/lib/Utilities';
 
-export interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
-  link: string;
+export interface IContextualMenuItemWithLink extends IContextualMenuItem {
+  link?: string;
   supText?: string;
 }
 
-export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
+export class ContextualMenuItemWithLink extends BaseComponent<IContextualMenuItemWithLink> {
   public render(): JSX.Element {
-    const { defaultRender: DefaultRender = CommandBarButton, link, supText, ...buttonProps } = this.props;
+    const { defaultRender: DefaultRender, link, supText, ...buttonProps } = this.props;
 
     const onRenderText = supText
-      ? (props: IButtonProps) => (
+      ? (props: IContextualMenuItem) => (
           <>
             {props.text}
             <sup>{supText}</sup>
@@ -26,10 +21,14 @@ export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonPro
         )
       : undefined;
 
-    return (
-      <NavLink to={link}>
-        <DefaultRender {...buttonProps} onRenderText={onRenderText} />
-      </NavLink>
-    );
+    if (link) {
+      return (
+        <NavLink to={link}>
+          <DefaultRender {...buttonProps} onRenderText={onRenderText} />
+        </NavLink>
+      );
+    } else {
+      return <DefaultRender {...buttonProps} onRenderText={onRenderText} />;
+    }
   }
 }

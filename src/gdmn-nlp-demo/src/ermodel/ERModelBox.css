@@ -1,0 +1,85 @@
+.ERModel {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
+.ERModelSearch {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding-bottom: 8px;
+}
+
+.ERModelSearch > * {
+  margin-right: 16px;
+}
+
+.ViewMode > div {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.ViewMode label {
+  margin: 0;
+}
+
+.Entity {
+  background-color: khaki;
+  border: 1px solid darkgoldenrod;
+  box-shadow: 2px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  min-width: 240px;
+}
+
+.Attr {
+  border-bottom: 1px dotted darkred;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.Attr:last-child {
+  border-bottom: none;
+}
+
+.AttrName {
+  display: inline-block;
+  min-width: 140px;
+  max-width: 140px;
+  padding-right: 4px;
+  overflow: hidden;
+}
+
+.AttrDesc {
+  display: inline-block;
+  min-width: 140px;
+  max-width: 140px;
+  padding-right: 4px;
+  overflow: hidden;
+}
+
+.AttrType {
+  display: inline-block;
+  min-width: 140px;
+  max-width: 140px;
+  overflow: hidden;
+}
+
+.SmallText {
+  font-size: 10px;
+}
+
+.OddRow {
+  background-color: lightgoldenrodyellow;
+}
