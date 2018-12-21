@@ -172,7 +172,7 @@ export class App extends React.PureComponent<any, IState> {
   };
 
   private handleUpdateNode = (node: any) => {
-    console.log('click node', node);
+    console.log('click node', node.parent.name, node.id);
     // console.log('node.state', node.state);
 
     if (node.state.checked) {

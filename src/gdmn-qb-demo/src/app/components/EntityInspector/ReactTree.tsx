@@ -128,6 +128,7 @@ const renderTreeNode = ({ node, tree, toggleState, onUpdate }: any) => (
         event.stopPropagation();
       }}
       onChange={(event: any) => {
+        // console.log('click');
         // tree.checkNode(node);
         onUpdate(node);
       }}

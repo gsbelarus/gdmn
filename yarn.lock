@@ -1446,7 +1446,7 @@
     "@svgr/core" "^2.4.1"
     loader-utils "^1.1.0"
 
-"@trendmicro/react-checkbox@^3.4.1":
+"@trendmicro/react-checkbox@3.4.1":
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/@trendmicro/react-checkbox/-/react-checkbox-3.4.1.tgz#7f555a85e32c062c3ad64b151e4e08dd1684a744"
   integrity sha512-t3mXJ+ekb4ipTnvQsxDtj6CPflcc/wyrHSV7WxNTjbanB6W9MWXktwiN7QUV2+2lHmH72Z22sRhdeQ8Yz1vjow==

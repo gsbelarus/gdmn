@@ -21,18 +21,17 @@
     "react-scripts": "^2.1.1"
   },
   "dependencies": {
-    "@trendmicro/react-checkbox": "^3.4.1",
-    "gdmn-orm": "^1.0.0",
-    "memoize-one": "^4.0.2",
+    "@trendmicro/react-checkbox": "3.4.1",
+    "gdmn-orm": "1.0.0",
     "react": "^16.6.1",
     "react-dom": "^16.6.1",
-    "react-draggable": "^3.0.5",
     "react-infinite-tree": "^1.0.0-alpha.6",
     "react-redux": "^5.1.1",
     "redux": "^4.0.1",
     "shortid": "^2.2.13",
-    "styled-components": "^3.4.9",
-    "typesafe-actions": "^2.0.4"
+    "typesafe-actions": "^2.0.4",
+    "memoize-one": "^4.0.2",
+    "styled-components": "^3.4.9"
   },
   "eslintConfig": {
     "extends": "react-app"
