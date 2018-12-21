@@ -27,6 +27,7 @@
   "dependencies": {
     "fast-deep-equal": "^2",
     "immutable": "^3",
+    "rxjs": "^6.3.3",
     "typesafe-actions": "^2"
   },
   "devDependencies": {
