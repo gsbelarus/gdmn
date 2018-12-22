@@ -1,7 +1,24 @@
-import { ThunkDispatch } from "redux-thunk";
-import { IState } from "@src/app/store/reducer";
-import { GridAction, cancelSortDialog, GDMNGrid, applySortDialog, resizeColumn, columnMove, setCursorCol } from "gdmn-grid";
-import { RecordSetAction, RecordSet, SortFields, sortRecordSet, selectRow, setAllRowsSelected, setCurrentRow, toggleGroup } from "gdmn-recordset";
+import { ThunkDispatch } from 'redux-thunk';
+import { IState } from '@src/app/store/reducer';
+import {
+  applySortDialog,
+  cancelSortDialog,
+  columnMove,
+  GDMNGrid,
+  GridAction,
+  resizeColumn,
+  setCursorCol
+} from 'gdmn-grid';
+import {
+  RecordSet,
+  RecordSetAction,
+  selectRow,
+  setAllRowsSelected,
+  setCurrentRow,
+  SortFields,
+  sortRecordSet,
+  toggleGroup
+} from 'gdmn-recordset';
 
 export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
   onCancelSortDialog:

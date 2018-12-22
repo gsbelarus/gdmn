@@ -1,6 +1,6 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { ERModel, EntityQuery, EntityLink, EntityQueryField, ScalarAttribute } from 'gdmn-orm';
+import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
 import { RecordSetAction } from 'gdmn-recordset';
 import { GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';

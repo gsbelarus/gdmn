@@ -1,4 +1,4 @@
-import { ERModel, Entity, StringAttribute, EntityAttribute } from 'gdmn-orm';
+import { Entity, EntityAttribute, ERModel, StringAttribute } from 'gdmn-orm';
 
 export const uiModel = new ERModel();
 

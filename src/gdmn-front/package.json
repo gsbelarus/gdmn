@@ -19,7 +19,7 @@
     "prettier:cli": "prettier \"**/*.@(ts|tsx|js|jsx)\"",
     "prettier:fix": "yarn run prettier:cli -- --write",
     "prettier:lint": "yarn run prettier:cli -- -l",
-    "yarn:clean": "cd ../../ && shx rm -rf yarn.lock && lerna exec -- shx rm -rf node_modules",
+    "yarn:clean": "cd ../../ && lerna exec -- shx rm -rf node_modules",
     "yarn:reinstall": "yarn run yarn:clean && yarn"
   },
   "dependencies": {

@@ -1,10 +1,10 @@
-import React, { Fragment, Component } from 'react';
-import { Route, RouteComponentProps, Switch, Link } from 'react-router-dom';
+import React, { Component, Fragment } from 'react';
+import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
-import { isDevMode, ErrorBoundary } from '@gdmn/client-core';
+import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { ERModel } from 'gdmn-orm';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
 import { Dispatch } from 'redux';

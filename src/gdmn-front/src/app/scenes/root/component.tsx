@@ -1,11 +1,11 @@
 import '@src/styles/global.css';
 
-import React, { ReactNode, SFC, Fragment, ReactType } from 'react';
+import React, { Fragment, ReactNode, ReactType, SFC } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Store } from 'redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { Persistor } from 'redux-persist/es/types';
+import { Persistor } from 'redux-persist/lib/types';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 
 export interface IRootProps {

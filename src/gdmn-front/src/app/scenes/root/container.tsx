@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { withProps, compose, branch, renderNothing } from 'recompose';
+import { branch, compose, renderNothing, withProps } from 'recompose';
 import { IMessageBarProps, MessageBar, MessageBarType } from 'office-ui-fabric-react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';

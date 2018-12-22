@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from './View';
-import { RecordSet, SortFields, TFieldType } from 'gdmn-recordset';
-import { GridComponentState, GDMNGrid } from 'gdmn-grid';
+import { RecordSet, SortFields } from 'gdmn-recordset';
+import { GDMNGrid, GridComponentState } from 'gdmn-grid';
 
 export interface IRSAndGCS {
   rs: RecordSet,

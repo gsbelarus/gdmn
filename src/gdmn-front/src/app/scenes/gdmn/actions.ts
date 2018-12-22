@@ -1,6 +1,6 @@
 import { ERModel, IEntityQueryInspector } from 'gdmn-orm';
-import { ActionType, createAction, createAsyncAction } from 'typesafe-actions';
-import { IAccessTokenPayload, IRefreshTokenPayload, TPingTaskCmd } from '@gdmn/server-api';
+import { ActionType, createAction } from 'typesafe-actions';
+import { TPingTaskCmd } from '@gdmn/server-api';
 
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {

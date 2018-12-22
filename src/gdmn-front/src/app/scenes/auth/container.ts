@@ -11,8 +11,8 @@ import { ISignInBoxData, ISignInBoxProps, ISignInBoxStateProps, SignInBox } from
 export const getSignInBoxContainer = (apiService: GdmnPubSubApi) =>
   connect(
     (state: IState, ownProps: ISignInBoxProps): ISignInBoxStateProps => ({
-      signInInitialValues: selectAuthState(state).signInInitialValues,
-      signInRequesting: selectAuthState(state).signInRequesting
+      signInInitialValues: selectAuthState(state).signInInitialValues!,
+      signInRequesting: selectAuthState(state).signInRequesting!
     }),
     dispatch => ({
       onSignIn: async (data: ISignInBoxData) => {

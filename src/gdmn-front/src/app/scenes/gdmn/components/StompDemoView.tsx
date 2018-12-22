@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';

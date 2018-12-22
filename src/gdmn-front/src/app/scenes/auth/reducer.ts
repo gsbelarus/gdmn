@@ -1,10 +1,12 @@
 import { getType } from 'typesafe-actions';
 import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 
-import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
+import { authActions } from '@src/app/scenes/auth/actions';
 import { ISignInBoxStateProps } from '@src/app/scenes/auth/components/SignInBox';
+import { PersistPartial } from 'redux-persist';
+import { TActions } from '@src/app/store/TActions';
 
-interface IAuthState extends ISignInBoxStateProps {
+interface _IAuthState extends ISignInBoxStateProps {
   authenticated: boolean;
   accessTokenPayload?: IAccessTokenPayload;
   refreshTokenPayload?: IRefreshTokenPayload;
@@ -13,15 +15,16 @@ interface IAuthState extends ISignInBoxStateProps {
   // tmp
   signUpRequesting: boolean;
 }
+type IAuthState = _IAuthState & PersistPartial;
 
-const initialState: IAuthState = {
+const initialState: _IAuthState = {
   signUpRequesting: false,
   signInRequesting: false,
   signInInitialValues: { userName: 'Administrator', password: 'Administrator' },
   authenticated: false
 };
 
-const getReducer = () => (state: IAuthState = initialState, action: TAuthActions) => {
+function reducer(state: _IAuthState = initialState, action: TActions) {
   switch (action.type) {
     case getType(authActions.signInAsync.request): {
       return {
@@ -80,6 +83,6 @@ const getReducer = () => (state: IAuthState = initialState, action: TAuthActions
     default:
       return state;
   }
-};
+}
 
-export { IAuthState, getReducer };
+export { IAuthState, _IAuthState, reducer };
