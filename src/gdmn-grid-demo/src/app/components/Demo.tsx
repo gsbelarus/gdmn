@@ -146,7 +146,7 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
       <div className="DemoContainer">
         <div>
           {
-            demoRecordSets.map( drs => <button key={`c${drs.name}`} onClick={ () => drs.createFunc(drs.name, createRecordSet) }>Load {drs.name}...</button> )
+            demoRecordSets.map( drs => <button key={`c${drs.name}`} onClick={ () => (drs.createFunc as any)(drs.name, createRecordSet) }>Load {drs.name}...</button> )
           }
           {
             demoRecordSets.map( drs => <button key={`d${drs.name}`} onClick={ () => deleteRecordSet(drs.name) }>Delete {drs.name}</button> )

@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { ERModel } from 'gdmn-orm';
-import { RecordSet, TFieldType, createRecordSet, RecordSetAction } from 'gdmn-recordset';
+import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
@@ -50,7 +50,7 @@ export const ERModelViewContainer = connect(
           Object.entries(erModel.entities).map(([name, ent]) => ({
             name,
             description: ent.lName.ru ? ent.lName.ru.name : name
-          }))
+          } as IDataRow))
         )
       );
       dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
@@ -75,7 +75,7 @@ export const ERModelViewContainer = connect(
           Object.entries(erModel.entities[entitiesRS.getString(entitiesRS.currentRow, 'name')].attributes).map(([name, ent]) => ({
             name,
             description: ent.lName.ru ? ent.lName.ru.name : name
-          }))
+          } as IDataRow))
         ),
         [
           {

@@ -4,6 +4,24 @@ import { List } from "immutable";
 import equal from "fast-deep-equal";
 import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull, checkField } from "./utils";
 
+export interface IRecordSetParams<R extends IDataRow = IDataRow> {
+  name: string,
+  fieldDefs: FieldDefs,
+  calcFields: TRowCalcFunc<R> | undefined,
+  data: Data<R>,
+  currentRow: number,
+  sortFields: SortFields,
+  allRowsSelected: boolean,
+  selectedRows: boolean[],
+  filter?: IFilter,
+  savedData?: Data<R>,
+  searchStr?: string,
+  foundRows?: FoundRows,
+  groups?: IDataGroup<R>[],
+  aggregates?: R,
+  masterLink?: MasterLink
+};
+
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
   private _fieldDefs: FieldDefs;
@@ -21,23 +39,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _aggregates?: R;
   private _masterLink?: MasterLink;
 
-  private constructor (
-    name: string,
-    fieldDefs: FieldDefs,
-    calcFields: TRowCalcFunc<R> | undefined,
-    data: Data<R>,
-    currentRow: number = 0,
-    sortFields: SortFields = [],
-    allRowsSelected: boolean = false,
-    selectedRows: boolean[] = [],
-    filter?: IFilter,
-    savedData?: Data<R>,
-    searchStr?: string,
-    foundRows?: FoundRows,
-    groups?: IDataGroup<R>[],
-    aggregates?: R,
-    masterLink?: MasterLink)
+  private constructor (params: IRecordSetParams<R>)
   {
+    const { name, fieldDefs, calcFields, data, currentRow, sortFields, allRowsSelected,
+      selectedRows, filter, savedData, searchStr, foundRows, groups, aggregates, masterLink } = params;
+
     if (!data.size && currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
@@ -72,10 +78,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
 
     if (withCalcFunc.length) {
-      return new RecordSet<R>(
+      return new RecordSet<R>({
         name,
         fieldDefs,
-        (row: R): R => {
+        calcFields: (row: R): R => {
           const res = Object.assign({} as R, row);
 
           withCalcFunc.forEach(
@@ -85,37 +91,45 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           return res;
         },
         data,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
+        currentRow: 0,
+        sortFields: [],
+        allRowsSelected: false,
+        selectedRows: [],
         masterLink
-      );
+      });
     } else {
-      return new RecordSet<R>(
+      return new RecordSet<R>({
         name,
         fieldDefs,
-        undefined,
+        calcFields: undefined,
         data,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
+        currentRow: 0,
+        sortFields: [],
+        allRowsSelected: false,
+        selectedRows: [],
         masterLink
-      );
+      });
     }
+  }
+
+  get params(): IRecordSetParams<R> {
+    return {
+      name: this.name,
+      fieldDefs: this._fieldDefs,
+      calcFields: this._calcFields,
+      data: this._data,
+      currentRow: this._currentRow,
+      sortFields: this._sortFields,
+      allRowsSelected: this._allRowsSelected,
+      selectedRows: this._selectedRows,
+      filter: this._filter,
+      savedData: this._savedData,
+      searchStr: this._searchStr,
+      foundRows: this._foundRows,
+      groups: this._groups,
+      aggregates: this._aggregates,
+      masterLink: this._masterLink
+    };
   }
 
   get fieldDefs() {
@@ -390,27 +404,18 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const fg = this._findGroup(groups, rowIdx);
 
     return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      this._data,
-      fg.group.rowIdx,
-      this._sortFields,
-      this._allRowsSelected,
-      [],
-      this._filter,
-      this._savedData,
-      this._searchStr,
-      this._foundRows,
-      this._cloneGroups(undefined, groups,
-        (parent, prev, g) => {
-          return g.rowIdx < fg.group.rowIdx ? g
-          : g.rowIdx === fg.group.rowIdx ? {...g, collapsed: !g.collapsed}
-          : {...g, rowIdx: prev ? prev.rowIdx + this._getGroupRowCount(prev) : parent ? parent.rowIdx + 1 : 0}
-        }
-      ),
-      this._aggregates,
-      this._masterLink
+      {
+        ...this.params,
+        currentRow: fg.group.rowIdx,
+        selectedRows: [],
+        groups: this._cloneGroups(undefined, groups,
+          (parent, prev, g) => {
+            return g.rowIdx < fg.group.rowIdx ? g
+            : g.rowIdx === fg.group.rowIdx ? {...g, collapsed: !g.collapsed}
+            : {...g, rowIdx: prev ? prev.rowIdx + this._getGroupRowCount(prev) : parent ? parent.rowIdx + 1 : 0}
+          }
+        )
+      }
     );
   }
 
@@ -422,23 +427,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (!sortFields.length) {
-      return new RecordSet<R>(
-        this.name,
-        this._fieldDefs,
-        this._calcFields,
-        this._data,
-        this._currentRow,
-        [],
-        this._allRowsSelected,
-        this._selectedRows,
-        this._filter,
-        this._savedData,
-        undefined,
-        undefined,
-        undefined,
-        this._aggregates,
-        this._masterLink
-      );
+      return new RecordSet<R>({
+        ...this.params,
+        sortFields: [],
+        searchStr: undefined,
+        foundRows: undefined,
+        groups: undefined
+      });
     }
 
     const currentRowData = this.get(this._currentRow);
@@ -649,42 +644,33 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
       const groups = groupData(0, 0, 0, sorted.size);
 
-      return new RecordSet<R>(
-        this.name,
+      return new RecordSet<R>({
+        ...this.params,
         fieldDefs,
         calcFields,
-        sorted,
-        0,
+        data: sorted,
+        currentRow: 0,
         sortFields,
-        false,
-        [],
-        this._filter,
-        this._savedData,
-        undefined,
-        undefined,
+        allRowsSelected: false,
+        selectedRows: [],
+        searchStr: undefined,
+        foundRows: undefined,
         groups,
-        this._aggregates,
-        this._masterLink
-      );
+      });
     }
 
-    const res = new RecordSet<R>(
-      this.name,
+    const res = new RecordSet<R>({
+      ...this.params,
       fieldDefs,
       calcFields,
-      sorted,
-      0,
+      data: sorted,
+      currentRow: 0,
       sortFields,
-      this._allRowsSelected,
-      [],
-      this._filter,
-      this._savedData,
-      undefined,
-      undefined,
-      undefined,
-      this._aggregates,
-      this._masterLink
-    );
+      selectedRows: [],
+      searchStr: undefined,
+      foundRows: undefined,
+      groups: undefined
+    });
 
     const foundIdx = res.indexOf(currentRowData);
     if (foundIdx >= 0) {
@@ -711,20 +697,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Not in grouping mode`);
     }
 
-    return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      this._data,
-      0,
-      this._sortFields,
-      this._allRowsSelected,
-      [],
-      this._filter,
-      this._savedData,
-      undefined,
-      undefined,
-      this._cloneGroups(undefined, this._groups,
+    return new RecordSet<R>({
+      ...this.params,
+      currentRow: 0,
+      selectedRows: [],
+      searchStr: undefined,
+      foundRows: undefined,
+      groups: this._cloneGroups(undefined, this._groups,
         (parent, prev, g) => {
           if (prev) {
             return {...g, rowIdx: prev.rowIdx + this._getGroupRowCount(prev), collapsed: collapse};
@@ -737,9 +716,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
         }
       ),
-      this._aggregates,
-      this._masterLink
-    );
+    });
   }
 
   public moveBy(delta: number): RecordSet<R> {
@@ -763,23 +740,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Invalid row index`);
     }
 
-    return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      this._data,
+    return new RecordSet<R>({
+      ...this.params,
       currentRow,
-      this._sortFields,
-      this._allRowsSelected,
-      this._selectedRows,
-      this._filter,
-      this._savedData,
-      this._searchStr,
-      this._foundRows,
-      this._groups,
-      this._aggregates,
-      this._masterLink
-    );
+    });
   }
 
   public setAllRowsSelected(value: boolean): RecordSet<R> {
@@ -787,23 +751,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return this;
     }
 
-    return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      this._data,
-      this._currentRow,
-      this._sortFields,
-      value,
-      value ? [] : this._selectedRows,
-      this._filter,
-      this._savedData,
-      this._searchStr,
-      this._foundRows,
-      this._groups,
-      this._aggregates,
-      this._masterLink
-    );
+    return new RecordSet<R>({
+      ...this.params,
+      allRowsSelected: value,
+      selectedRows: value ? [] : this._selectedRows
+    });
   }
 
   public selectRow(idx: number, selected: boolean): RecordSet<R> {
@@ -830,23 +782,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const allRowsSelected = this.size === selectedRows.reduce( (p, sr) => sr ? p + 1 : p, 0 );
 
-    return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      this._data,
-      this._currentRow,
-      this._sortFields,
+    return new RecordSet<R>({
+      ...this.params,
       allRowsSelected,
-      allRowsSelected ? [] : selectedRows,
-      this._filter,
-      this._savedData,
-      this._searchStr,
-      this._foundRows,
-      this._groups,
-      this._aggregates,
-      this._masterLink
-    );
+      selectedRows: allRowsSelected ? [] : selectedRows
+    });
   }
 
   public setFilter(filter: IFilter | undefined): RecordSet<R> {
@@ -880,23 +820,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       newData = this._savedData;
     }
 
-    const res = new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      newData,
-      0,
-      [],
-      false,
-      [],
-      isFilter ? filter : undefined,
-      isFilter ? this._savedData || this._data : undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      this._masterLink
-    );
+    const res = new RecordSet<R>({
+      ...this.params,
+      data: newData,
+      currentRow: 0,
+      sortFields: [],
+      allRowsSelected: false,
+      selectedRows: [],
+      filter: isFilter ? filter : undefined,
+      savedData: isFilter ? this._savedData || this._data : undefined,
+      searchStr: undefined,
+      foundRows: undefined,
+      groups: undefined,
+      aggregates: undefined
+    });
 
     const foundIdx = this.indexOf(currentRowData);
     if (foundIdx >= 0) {
@@ -924,23 +861,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   public search(searchStr: string | undefined): RecordSet<R> {
     if (!searchStr) {
-      return new RecordSet<R>(
-        this.name,
-        this._fieldDefs,
-        this._calcFields,
-        this._data,
-        this._currentRow,
-        this._sortFields,
-        this._allRowsSelected,
-        this._selectedRows,
-        this._filter,
-        this._savedData,
-        undefined,
-        undefined,
-        this._groups,
-        this._aggregates,
-        this._masterLink
-      );
+      return new RecordSet<R>({
+        ...this.params,
+        searchStr: undefined,
+        foundRows: undefined
+      });
     }
 
     const re = RegExp(searchStr, 'i');
@@ -974,23 +899,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
         }
 
-    return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
-      this._data,
-      this._currentRow,
-      this._sortFields,
-      this._allRowsSelected,
-      this._selectedRows,
-      this._filter,
-      this._savedData,
+    return new RecordSet<R>({
+      ...this.params,
       searchStr,
-      foundRows.length ? foundRows : undefined,
-      this._groups,
-      this._aggregates,
-      this._masterLink
-    );
+      foundRows: foundRows.length ? foundRows : undefined
+    });
   }
 
   public splitMatched(row: number, fieldName: string): IMatchedSubString[] {
@@ -1059,23 +972,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setData(data: Data<R>, masterLink?: MasterLink): RecordSet<R> {
-    return new RecordSet<R>(
-      this.name,
-      this._fieldDefs,
-      this._calcFields,
+    return new RecordSet<R>({
+      ...this.params,
       data,
-      0,
-      [],
-      false,
-      [],
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      this._masterLink
-    );
+      currentRow: 0,
+      sortFields: [],
+      allRowsSelected: false,
+      selectedRows: [],
+      filter: undefined,
+      savedData: undefined,
+      searchStr: undefined,
+      foundRows: undefined,
+      groups: undefined,
+      aggregates: undefined
+    });
   }
 };
 

@@ -1,8 +1,9 @@
 import { GetRowDataFunc } from "gdmn-recordset";
 import { RSCreateFunc } from "./types";
 import { loadNBRBRates } from "./nbrbRates";
+import { INBRBRate } from "../types";
 
-export function loadNBRBOLAP(name: string, rscf: RSCreateFunc) {
+export function loadNBRBOLAP(name: string, rscf: RSCreateFunc<INBRBRate>) {
   loadNBRBRates(name, rs => {
     rscf(rs.sort([
         {

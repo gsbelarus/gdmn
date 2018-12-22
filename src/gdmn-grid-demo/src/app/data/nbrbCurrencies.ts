@@ -4,7 +4,7 @@ import { INBRBCurrency } from "../types";
 import nbrbCurrencies from '../../util/nbrbcurrencies.json';
 import { RSCreateFunc } from "./types";
 
-export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc) {    
+export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc<INBRBCurrency>) {
     const fieldDefs = [
       {
         fieldName: 'Cur_Abbreviation',
@@ -129,5 +129,5 @@ export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc) {
 
     const data = List<INBRBCurrency>(nbrbCurrencies as any);
 
-    rscf(RecordSet.createWithData(name, fieldDefs, data));
+    rscf(RecordSet.createWithData<INBRBCurrency>(name, fieldDefs, data));
   };
