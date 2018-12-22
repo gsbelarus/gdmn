@@ -20,7 +20,7 @@ export class EntityLink {
   public readonly fields: EntityQueryField[];
   public readonly options?: IEntityLinkInspectorOptions;
 
-  constructor(entity: Entity, alias: string, fields: EntityQueryField[], options: IEntityLinkInspectorOptions) {
+  constructor(entity: Entity, alias: string, fields: EntityQueryField[], options?: IEntityLinkInspectorOptions) {
     this.entity = entity;
     this.alias = alias;
     this.fields = fields;
@@ -35,7 +35,7 @@ export class EntityLink {
     ));
     const options = inspector.options;
 
-    return new EntityLink(entity, alias, fields, options!);
+    return new EntityLink(entity, alias, fields, options);
   }
 
   public deepFindLink(alias: string): EntityLink | undefined;
