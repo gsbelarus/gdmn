@@ -43,10 +43,10 @@ const reducer = combineReducers<IState>({
 
     return authReducer(
       action.type === getType(authActions.signOut) || action.type === getType(gdmnActions.apiDeleteAccount)
-        ? undefined  /* reset state to initial*/
+        ? undefined /* reset state to initial*/
         : state,
       action
-    )
+    );
   }),
   recordSet: recordSetReducer,
   grid: gridReducer
@@ -55,12 +55,12 @@ const reducer = combineReducers<IState>({
 const enhacedReducer = (state: IState | undefined, action: TActions) =>
   reducer(
     action.type === getType(authActions.signOut) || action.type === getType(gdmnActions.apiDeleteAccount)
-      ? undefined  /* reset state to initial*/
+      ? undefined /* reset state to initial*/
       : state,
     action
   );
 
-type TReducer = Reducer<IState  & PersistPartial, TActions>;
+type TReducer = Reducer<IState & PersistPartial, TActions>;
 
 // tslint:disable-next-line no-default-export
 export default enhacedReducer; // TODO test hmr require without default

@@ -15,17 +15,22 @@ const devCompose =
 const devMiddlewares: Middleware[] = [
   createLogger({
     collapsed: () => true,
-    predicate: (getState, action) => !(action.type.slice(0, 'RECORDSET'.length) === 'RECORDSET' || action.type.slice(0, 'GRID'.length) === 'GRID')
+    predicate: (getState, action) =>
+      !(action.type.slice(0, 'RECORDSET'.length) === 'RECORDSET' || action.type.slice(0, 'GRID'.length) === 'GRID')
   })
 ];
 
 function configureStore(persistedReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {
-  const store = createStore(persistedReducer, initialState!, devCompose(applyMiddleware(...middlewares, ...devMiddlewares)));
+  const store = createStore(
+    persistedReducer,
+    initialState!,
+    devCompose(applyMiddleware(...middlewares, ...devMiddlewares))
+  );
 
   /* webpack HMR for reducers */
-    //(<any>module).hot.accept('../reducer', () => {
-    //   store.replaceReducer(rootReducer);
-    // });
+  //(<any>module).hot.accept('../reducer', () => {
+  //   store.replaceReducer(rootReducer);
+  // });
 
   /**
    * https://github.com/rt2zz/redux-persist/blob/master/docs/hot-module-replacement.md
@@ -33,10 +38,7 @@ function configureStore(persistedReducer: TReducer, middlewares: Middleware[] = 
   if ((<any>module).hot) {
     const nextReducer = require('../reducer').default;
 
-    const nextPersistedReducer = persistReducer<IState, TActions>(
-      persistConfig,
-      nextReducer
-    );
+    const nextPersistedReducer = persistReducer<IState, TActions>(persistConfig, nextReducer);
     store.replaceReducer(nextPersistedReducer);
   }
 

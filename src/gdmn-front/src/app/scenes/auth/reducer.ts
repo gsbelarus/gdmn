@@ -29,13 +29,13 @@ function reducer(state: _IAuthState = initialState, action: TActions) {
     case getType(authActions.signInAsync.request): {
       return {
         ...state,
-        signInRequesting: true,
+        signInRequesting: true
       };
     }
     case getType(authActions.signUpAsync.request): {
       return {
         ...state,
-        signUpRequesting: true,
+        signUpRequesting: true
       };
     }
     case getType(authActions.signUpAsync.success):

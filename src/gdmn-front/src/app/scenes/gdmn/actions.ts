@@ -34,7 +34,7 @@ const gdmnActions = {
   }),
 
   setLoading: createAction('gdmm/SET_LOADING', resolve => {
-    return (loading: boolean, message?: string) => resolve({loading, message});
+    return (loading: boolean, message?: string) => resolve({ loading, message });
   }),
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST')

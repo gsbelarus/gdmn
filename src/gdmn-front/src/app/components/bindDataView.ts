@@ -21,22 +21,19 @@ import {
 } from 'gdmn-recordset';
 
 export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
-  onCancelSortDialog:
-    (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
+  onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
 
-  onApplySortDialog:
-    (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => dispatch(
-      (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>, getState: () => IState) => {
-        dispatch(applySortDialog({ name: gridName, sortFields }));
-        dispatch(sortRecordSet({ name: rs.name, sortFields }));
-        if (gridRef) {
-          gridRef.scrollIntoView(getState().recordSet[rs.name].currentRow);
-        }
+  onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) =>
+    dispatch((dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>, getState: () => IState) => {
+      dispatch(applySortDialog({ name: gridName, sortFields }));
+      dispatch(sortRecordSet({ name: rs.name, sortFields }));
+      if (gridRef) {
+        gridRef.scrollIntoView(getState().recordSet[rs.name].currentRow);
       }
-    ),
+    }),
 
-  onColumnResize:
-    (gridName: string, columnIndex: number, newWidth: number) => dispatch(
+  onColumnResize: (gridName: string, columnIndex: number, newWidth: number) =>
+    dispatch(
       resizeColumn({
         name: gridName,
         columnIndex,
@@ -44,8 +41,8 @@ export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, Grid
       })
     ),
 
-  onColumnMove:
-    (gridName: string, oldIndex: number, newIndex: number) => dispatch(
+  onColumnMove: (gridName: string, oldIndex: number, newIndex: number) =>
+    dispatch(
       columnMove({
         name: gridName,
         oldIndex,
@@ -53,8 +50,8 @@ export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, Grid
       })
     ),
 
-  onSelectRow:
-    (rs: RecordSet, idx: number, selected: boolean) => dispatch(
+  onSelectRow: (rs: RecordSet, idx: number, selected: boolean) =>
+    dispatch(
       selectRow({
         name: rs.name,
         idx,
@@ -62,49 +59,46 @@ export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, Grid
       })
     ),
 
-  onSelectAllRows:
-    (rs: RecordSet, value: boolean) => dispatch(
+  onSelectAllRows: (rs: RecordSet, value: boolean) =>
+    dispatch(
       setAllRowsSelected({
         name: rs.name,
         value
       })
     ),
 
-  onSetCursorPos:
-    (rs: RecordSet, gridName: string, cursorCol: number, cursorRow: number) => {
+  onSetCursorPos: (rs: RecordSet, gridName: string, cursorCol: number, cursorRow: number) => {
+    dispatch(
+      setCurrentRow({
+        name: rs.name,
+        currentRow: cursorRow
+      })
+    );
+
+    dispatch(
+      setCursorCol({
+        name: gridName,
+        cursorCol
+      })
+    );
+  },
+
+  onSort: (rs: RecordSet, sortFields: SortFields, gridRef?: GDMNGrid) =>
+    dispatch((dispatch: ThunkDispatch<IState, never, RecordSetAction>, getState: () => IState) => {
       dispatch(
-        setCurrentRow({
+        sortRecordSet({
           name: rs.name,
-          currentRow: cursorRow
+          sortFields
         })
       );
 
-      dispatch(
-        setCursorCol({
-          name: gridName,
-          cursorCol
-        })
-      );
-    },
-
-  onSort:
-    (rs: RecordSet, sortFields: SortFields, gridRef?: GDMNGrid) => dispatch(
-      (dispatch: ThunkDispatch<IState, never, RecordSetAction>, getState: () => IState) => {
-        dispatch(
-          sortRecordSet({
-            name: rs.name,
-            sortFields
-          })
-        );
-
-        if (gridRef) {
-          gridRef.scrollIntoView(getState().recordSet[rs.name].currentRow);
-        }
+      if (gridRef) {
+        gridRef.scrollIntoView(getState().recordSet[rs.name].currentRow);
       }
-    ),
+    }),
 
-  onToggleGroup:
-    (rs: RecordSet, rowIdx: number) => dispatch(
+  onToggleGroup: (rs: RecordSet, rowIdx: number) =>
+    dispatch(
       toggleGroup({
         name: rs.name,
         rowIdx

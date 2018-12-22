@@ -87,7 +87,11 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             />
           </div>
         </div>
-        <ProgressIndicator styles={{itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' }}} barHeight={4} description={this.props.loadingMessage} />
+        <ProgressIndicator
+          styles={{ itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' } }}
+          barHeight={4}
+          description={this.props.loadingMessage}
+        />
         <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>

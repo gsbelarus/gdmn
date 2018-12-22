@@ -29,11 +29,7 @@ export class View<P = {}, S = {}> extends Component<P, S> {
   }
 
   public renderCommandBar(): JSX.Element | undefined {
-    return (
-      <CommandBar
-        items={this.getCommandBarItems()}
-      />
-    );
+    return <CommandBar items={this.getCommandBarItems()} />;
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -47,7 +43,7 @@ export class View<P = {}, S = {}> extends Component<P, S> {
         text: 'Test 2...'
       }
     ];
-  };
+  }
 
   public render() {
     return <div>{this.getViewCaption()}</div>;

@@ -60,7 +60,8 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               }
             });
             connectionStatusSub = apiService.pubSubClient.connectionStatusObservable.subscribe(value => {
-              if (value == TPubSubConnectStatus.CONNECTING) { // todo: test
+              if (value == TPubSubConnectStatus.CONNECTING) {
+                // todo: test
                 dispatch(gdmnActions.setLoading(true, 'Connecting...'));
               } else {
                 dispatch(gdmnActions.setLoading(false));
