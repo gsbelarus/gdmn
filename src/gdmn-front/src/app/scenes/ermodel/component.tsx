@@ -4,13 +4,14 @@ import { ICommandBarItemProps } from 'office-ui-fabric-react';
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 
 export interface IERModelViewProps extends IDataViewProps {
-  erModel?: ERModel
-  apiGetSchema: () => void
+  erModel?: ERModel,
+  apiGetSchema: () => void,
+  apiLoadEntityData: (entity: string) => void
 }
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const { apiGetSchema } = this.props;
+    const { apiGetSchema, apiLoadEntityData, data } = this.props;
 
     return [
       {
@@ -18,6 +19,11 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
         text: 'Load entity',
         iconProps: {
           iconName: 'Table'
+        },
+        onClick: () => {
+          if (data && data.rs) {
+            apiLoadEntityData(data.rs.getString(data.rs.currentRow, 'name'));
+          }
         }
       },
       {

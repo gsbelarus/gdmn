@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { ERModel } from 'gdmn-orm';
+import { ERModel, EntityQuery, EntityLink, ScalarAttribute, EntityQueryField } from 'gdmn-orm';
 import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
@@ -9,6 +9,8 @@ import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataView';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';
+import { apiService } from '@src/app/services/apiService';
+import { TTaskActionNames } from '@gdmn/server-api';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({
@@ -29,6 +31,29 @@ export const ERModelViewContainer = connect(
   (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
     ...bindDataViewDispatch(thunkDispatch),
     apiGetSchema: () => thunkDispatch(gdmnActions.apiGetSchema()),
+    loadEntityData: (erModel: ERModel, entityName: string) => {
+      const entity = erModel.entities[entityName];
+      const q = new EntityQuery(new EntityLink(
+        entity,
+        'z',
+        Object.values(entity.attributes).filter( attr => attr instanceof ScalarAttribute ).map( attr => new EntityQueryField(attr) )
+      ));
+
+      apiService
+        .getData({
+          payload: {
+            action: TTaskActionNames.QUERY,
+            payload: q.inspect()
+          }
+        })
+        .subscribe( value => {
+          if (value.error) {
+            console.log(value.error.message);
+          } else if (!!value.payload.result) {
+            console.log('QUERY response result: ', value.payload.result);
+          }
+        });
+    },
     loadFromERModel: (erModel: ERModel) => thunkDispatch( (dispatch, getState) => {
       const entitiesRS = RecordSet.createWithData(
         'entities',
@@ -118,10 +143,11 @@ export const ERModelViewContainer = connect(
 
   (stateProps, dispatchProps) => {
     const { erModel } = stateProps;
-    const { loadFromERModel } = dispatchProps;
+    const { loadFromERModel, loadEntityData } = dispatchProps;
     return {
       ...stateProps,
       ...dispatchProps,
+      apiLoadEntityData: (entity: string) => loadEntityData(erModel, entity),
       loadData: () => {
         if (erModel && Object.entries(erModel.entities).length) {
           loadFromERModel(erModel);
