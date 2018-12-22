@@ -1,7 +1,33 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType } from "gdmn-nlp";
-import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute } from "gdmn-orm";
-import { ICommand, Action} from "./command";
-import accepts = require("accepts");
+import {
+  hasMeaning,
+  morphAnalyzer,
+  Noun,
+  NounLexeme,
+  PrepositionType,
+  RusAdjectiveCategory,
+  RusAdjectiveLexeme,
+  RusANP,
+  RusCase,
+  RusImperativeVP,
+  RusPhrase,
+  RusPP,
+  RusPrepositionLexeme,
+  RusVerb,
+  SemCategory,
+  SemContext
+} from "gdmn-nlp";
+import {
+  Entity,
+  EntityAttribute,
+  EntityLink,
+  EntityQuery,
+  EntityQueryField,
+  EntityQueryOptions,
+  ERModel,
+  IEntityQueryWhereValue,
+  ScalarAttribute
+} from "gdmn-orm";
+import {Action, ICommand} from "./command";
 
 export class ERTranslatorRU {
 
@@ -12,7 +38,7 @@ export class ERTranslatorRU {
     this.erModel = erModel;
     this.neMap = new Map<NounLexeme, Entity[]>();
 
-    Object.entries(this.erModel.entities).forEach( ([, e]) =>
+    Object.entries(this.erModel.entities).forEach(([, e]) =>
       e.lName.ru && e.lName.ru.name.split(",").forEach(n =>
         morphAnalyzer(n.trim()).forEach(w => {
           if (w instanceof Noun) {
@@ -40,11 +66,11 @@ export class ERTranslatorRU {
 
   public processImperativeVP(imperativeVP: RusImperativeVP): ICommand[] {
     const action = ((v: RusVerb): Action => {
-      if (hasMeaning(SemContext.QueryDB, 'показать', v)) {
-        return 'QUERY';
+      if (hasMeaning(SemContext.QueryDB, "показать", v)) {
+        return "QUERY";
       }
-      if (hasMeaning(SemContext.QueryDB, 'удалить', v)) {
-        return 'DELETE';
+      if (hasMeaning(SemContext.QueryDB, "удалить", v)) {
+        return "DELETE";
       }
       throw new Error(`Unknown verb ${v.word}`);
     })(imperativeVP.imperativeVerb);
@@ -78,10 +104,10 @@ export class ERTranslatorRU {
       throw new Error(`Can't find entities for noun ${objectANP.word}`);
     }
 
-    const commands = entities.map(entity => {
+    return entities.map(entity => {
       const fields = Object.values(entity.attributes)
-      .filter(attr => attr instanceof ScalarAttribute)
-      .map(attr => new EntityQueryField(attr));
+        .filter(attr => attr instanceof ScalarAttribute)
+        .map(attr => new EntityQueryField(attr));
 
       let options;
       const equals: IEntityQueryWhereValue[] = [];
@@ -89,20 +115,20 @@ export class ERTranslatorRU {
         const adjective = (np.noun as RusANP).adjf;
         if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
           const nounLexeme = (adjective.lexeme as RusAdjectiveLexeme).getNounLexeme();
-          if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
+          if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
             const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
-            const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+            const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
             if (attr instanceof EntityAttribute) {
               const linkEntity = attr.entities[0];
-              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "aliasL2", [])));
+              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "alias2", [])));
               equals.push({
-                alias:"aliasL2",
+                alias: "alias2",
                 attribute: linkEntity.attribute("NAME"),
                 value: words
               });
             } else {
               equals.push({
-                alias:"alias",
+                alias: "alias1",
                 attribute: attr,
                 value: words
               });
@@ -117,20 +143,20 @@ export class ERTranslatorRU {
         const preposition = (np.pp as RusPP).prep;
         if ((preposition.lexeme as RusPrepositionLexeme).prepositionType === PrepositionType.Place) {
           const nounLexeme = (np.pp as RusPP).noun.lexeme;
-          if (nounLexeme && nounLexeme.semCategories.find( sc => sc === SemCategory.Place)) {
+          if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
             const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
-            const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+            const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
             if (attr instanceof EntityAttribute) {
               const linkEntity = attr.entities[0];
-              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "aliasL2", [])));
+              fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, "alias2", [])));
               equals.push({
-                alias:"aliasL2",
+                alias: "alias2",
                 attribute: linkEntity.attribute("NAME"),
                 value: words
               });
             } else {
               equals.push({
-                alias:"alias",
+                alias: "alias1",
                 attribute: attr,
                 value: words
               });
@@ -140,12 +166,11 @@ export class ERTranslatorRU {
       }
       options = new EntityQueryOptions(undefined, undefined, [{equals}]);
 
-      const entityLink = new EntityLink(entity, "alias", fields);
+      const entityLink = new EntityLink(entity, "alias1", fields);
       return {
         action,
         payload: new EntityQuery(entityLink, options)
       };
-    })
-    return commands;
+    });
   }
 }

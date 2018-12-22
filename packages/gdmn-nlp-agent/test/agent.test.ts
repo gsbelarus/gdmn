@@ -2,7 +2,7 @@ import fs from "fs";
 import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
-import {deserializeERModel, ERModel} from "gdmn-orm";
+import {deserializeERModel, EntityAttribute, ERModel} from "gdmn-orm";
 import {ERTranslatorRU} from "../src/agent";
 import {loadDBDetails} from "./testConfig";
 
@@ -88,8 +88,10 @@ describe("erModel", () => {
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias");
-    expect(commands[0].payload.options!.where![0].equals![0].attribute).toEqual(placeKey);
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
   });
 
@@ -134,8 +136,10 @@ describe("erModel", () => {
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias");
-    expect(commands[0].payload.options!.where![0].equals![0].attribute).toEqual(placeKey);
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
   });
 
@@ -160,8 +164,10 @@ describe("erModel", () => {
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias");
-    expect(commands[0].payload.options!.where![0].equals![0].attribute).toEqual(placeKey);
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
   });
 
