@@ -8,6 +8,7 @@ import {
   ERModel,
   FloatAttribute,
   IntegerAttribute,
+  ParentAttribute,
   SetAttribute,
   StringAttribute
 } from "gdmn-orm";
@@ -83,8 +84,27 @@ describe("Query", () => {
               lName: {},
               parent: TestEntity
             }));
+
             await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "TEST_STRING", lName: {}}));
             await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "TEST_STRING1", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity, new ParentAttribute({
+              name: "PARENT",
+              lName: {},
+              entities: [ChildEntity]
+            }));
+
+            const ChildEntity2 = await erBuilder.create(erModel, new Entity({
+              name: "CHILD_ENTITY2",
+              lName: {},
+              parent: ChildEntity
+            }));
+            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "TEST_STRING", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "TEST_STRING2", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity2, new ParentAttribute({
+              name: "PARENT",
+              lName: {},
+              entities: [ChildEntity2]
+            }));
           }
         });
       }
@@ -443,6 +463,259 @@ describe("Query", () => {
       "  AND (T$1.TEST_STRING1 IS NULL OR T$2.TEST_FLOAT IS NULL)");
     expect(params).toEqual({"P$1": "asd", "P$2": 10});
 
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: simple", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY",
+              alias: "parent",
+              fields: [
+                {attribute: "ID"}
+              ]
+            }
+          }
+        ]
+      }
+
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.ID AS F$1\n" +
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$3.PARENT");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: inheritance, parentRelationFields", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY2",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY2",
+              alias: "parent",
+              fields: [
+                {attribute: "ID"}
+              ]
+            }
+          }
+        ]
+      }
+
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.ID AS F$1\n" +
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$3.PARENT");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: inheritance: ParentAttribute, middleRelationFields", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY2",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY2",
+              alias: "parent",
+              fields: [
+                {attribute: "TEST_STRING1"}
+              ]
+            }
+          }
+        ]
+      }
+
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM CHILD_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.INHERITEDKEY\n" +
+      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$3.PARENT");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: inheritance: ParentAttribute, ownRelationFields", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY2",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY2",
+              alias: "parent",
+              fields: [
+                {attribute: "TEST_STRING2"}
+              ]
+            }
+          }
+        ]
+      }
+
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING2 AS F$1\n" +
+      "FROM CHILD_ENTITY2 T$2\n" +
+      "  LEFT JOIN CHILD_ENTITY2 T$1 ON T$1.INHERITEDKEY = T$2.PARENT");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: inheritance: ParentAttribute, HasRoot parentRelationFields", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY2",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY2",
+              alias: "parent",
+              fields: [
+                {attribute: "ID"}
+
+              ],
+              options: {
+                hasRoot: true
+              }
+            }
+          }
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.ID AS F$1\n" +
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.LB <= T$3.LB AND T$4.RB >= T$3.RB\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$3.PARENT");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: inheritance: ParentAttribute, HasRoot middleRelationFields", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY2",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY2",
+              alias: "parent",
+              fields: [
+                {attribute: "TEST_STRING1"}
+
+              ],
+              options: {
+                hasRoot: true
+              }
+            }
+          }
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM CHILD_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.INHERITEDKEY\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.LB <= T$3.LB AND T$4.RB >= T$3.RB\n" +
+      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$3.PARENT");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: inheritance: ParentAttribute, HasRoot ownRelationFields", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "CHILD_ENTITY2",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "CHILD_ENTITY2",
+              alias: "parent",
+              fields: [
+                {attribute: "TEST_STRING2"}
+              ],
+              options: {
+                hasRoot: true
+              }
+            }
+          }
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING2 AS F$1\n" +
+      "FROM CHILD_ENTITY2 T$2\n" +
+      "  JOIN CHILD_ENTITY2 T$1 ON T$1.LB <= T$2.LB AND T$1.RB >= T$2.RB");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({

@@ -20,6 +20,16 @@ export abstract class SQLTemplates {
       SQLTemplates.equals(joinAlias, joinFieldName, `${alias && `${alias}.`}${fieldName}`);
   }
 
+  public static joinWithTree(joinTableName: string,
+                             joinAlias: string,
+                             joinFieldName: string,
+                             alias: string,
+                             fieldName: string): string {
+    return `  JOIN ${joinTableName} ${joinAlias} ON ` +
+      SQLTemplates.lessOrEquals(joinAlias, joinFieldName, `${alias && `${alias}.`}${joinFieldName}`)
+      + " AND " + SQLTemplates.greaterOrEquals(joinAlias, fieldName, `${alias && `${alias}.`}${fieldName}`);
+  }
+
   public static order(alias: string, fieldName: string, sort: string): string {
     return `${alias && `${alias}.`}${fieldName} ${sort}`;
   }
@@ -43,4 +53,13 @@ export abstract class SQLTemplates {
   public static less(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "<", value);
   }
+
+  public static lessOrEquals(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "<=", value);
+  }
+
+  public static greaterOrEquals(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, ">=", value);
+  }
+
 }

@@ -8,7 +8,8 @@ import {
   ISetAttributeAdapter,
   ScalarAttribute,
   SequenceAttribute,
-  SetAttribute
+  SetAttribute,
+  ParentAttribute
 } from "gdmn-orm";
 import {Constants} from "../Constants";
 import {IFieldProps} from "../DDLHelper";
@@ -97,34 +98,43 @@ export class EntityBuilder extends Builder {
           break;
         }
         case "Parent": {
-          throw new Error("Unsupported yet");
-          // const pAttr = attribute as ParentAttribute;
-          // const fieldName = Builder._getFieldName(pAttr);
-          // const domainName = Prefix.domain(await this.nextDDLUnique());
-          // await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
-          // await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-          // await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
-          // /*
-          // const lbField = pAttr.adapter ? pAttr.adapter.lbField : Constants.DEFAULT_LB_NAME;
-          // const rbField = pAttr.adapter ? pAttr.adapter.rbField : Constants.DEFAULT_RB_NAME;
-          // await this.ddlHelper.addColumns(tableName, [{name: lbField, domain: "DLB"}]);
-          // await this.ddlHelper.addColumns(tableName, [{name: rbField, domain: "DRB"}]);
-          // await this.ddlHelper.createIndex(tableName, "ASC", [lbField]);
-          // await this.ddlHelper.createIndex(tableName, "DESC", [rbField]);
-          // await this.ddlHelper.addTableCheck(tableName, [`${lbField} <= ${rbField}`]);
-          // */
-          // const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.addForeignKey(fkConstName, {
-          //   tableName,
-          //   fieldName
-          // }, {
-          //   tableName: Builder._getOwnRelationName(pAttr.entities[0]),
-          //   fieldName: Builder._getFieldName(pAttr.entities[0].pk[0])
-          // }, {
-          //   onUpdate: "CASCADE",
-          //   onDelete: "CASCADE"
-          // });
-          // break;
+          //throw new Error("Unsupported yet");
+          const pAttr = attribute as ParentAttribute;
+          const fieldName = Builder._getFieldName(pAttr);
+          const domainName = Prefix.domain(await this.nextDDLUnique());
+          await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
+          await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
+          await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
+
+          await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
+          await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
+          // const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.createIndex(indexName, tableName,[lbField], {sortType: "ASC"});
+          // const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.createIndex(indexName2, tableName, [rbField],{sortType:"DESC"});
+
+          // const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.addTableCheck(checkName ,tableName, `${lbField} <= ${rbField}`);
+          //
+          const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
+          await this.ddlHelper.addForeignKey(fkConstName, {
+            tableName,
+            fieldName
+          }, {
+            tableName: Builder._getOwnRelationName(pAttr.entities[0]),
+            fieldName: Builder._getFieldName(pAttr.entities[0].pk[0])
+          }, {
+            onUpdate: "CASCADE",
+            onDelete: "CASCADE"
+          });
+
+          if (!attribute.adapter) {
+            attribute.adapter = {
+              relation: tableName,
+              field: fieldName
+            } as IAttributeAdapter;
+          }
+          break;
         }
         case "Entity": {
           const eAttr = attribute as EntityAttribute;

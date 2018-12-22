@@ -11,7 +11,7 @@ import {
   ScalarAttribute,
   SetAttribute
 } from "gdmn-orm";
-
+import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "./SQLTemplates";
 
 export interface IParams {
@@ -190,7 +190,32 @@ export class Select {
 
         switch (field.attribute.type) {
           case "Parent": {
-            throw new Error("Unsupported yet");
+            const attr = field.attribute as EntityAttribute;
+            if (field.link.options && field.link.options.hasRoot) {
+              joins.push(
+                SQLTemplates.joinWithTree(
+                  attr.adapter!.relation,
+                  this._getTableAlias(field.link, attr.adapter!.relation),
+                  Constants.DEFAULT_LB_NAME,
+                  this._getTableAlias(link, attr.adapter!.relation),
+                  Constants.DEFAULT_RB_NAME
+                )
+              );
+            }
+
+            if (linkFirstRelationName !== attr.adapter!.relation || !(field.link.options && field.link.options.hasRoot)) {
+              joins.push(
+                SQLTemplates.join(
+                  linkFirstRelationName,
+                  this._getTableAlias(field.link, linkFirstRelationName),
+                  linkFirstPKFieldName,
+                  this._getTableAlias(link, attr.adapter!.relation),
+                  attr.adapter!.field,
+                  "LEFT"
+                )
+              );
+            }
+            break;
           }
           case "Set": {
             const attr = field.attribute as SetAttribute;
@@ -255,8 +280,8 @@ export class Select {
               rel.relationName,
               this._getTableAlias(link, rel.relationName),
               Select._getPKFieldName(field.link.entity, rel.relationName),
-              this._getTableAlias(link, linkExistsRelations[0].relationName),
-              Select._getPKFieldName(field.link.entity, linkExistsRelations[0].relationName),
+              this._getTableAlias(link, linkFirstRelationName),
+              Select._getPKFieldName(field.link.entity, linkFirstRelationName),
               rel.weak ? "LEFT" : ""
             ));
           }
@@ -366,7 +391,9 @@ export class Select {
         const attribute = field.attribute as EntityAttribute;
         switch (attribute.type) {
           case "Parent": {
-            throw new Error("Unsupported yet");
+            if (attribute.adapter && attribute.adapter.relation === relationName) {
+              return true;
+            }
           }
           case "Detail": {
             const pkAttr = link.entity.pk[0];

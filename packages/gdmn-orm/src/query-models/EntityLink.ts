@@ -6,6 +6,11 @@ export interface IEntityLinkInspector {
   entity: string;
   alias: string;
   fields: IEntityQueryFieldInspector[];
+  options?: IEntityLinkInspectorOptions;
+}
+
+export interface IEntityLinkInspectorOptions {
+  hasRoot: boolean;
 }
 
 export class EntityLink {
@@ -13,11 +18,13 @@ export class EntityLink {
   public readonly entity: Entity;
   public readonly alias: string;
   public readonly fields: EntityQueryField[];
+  public readonly options?: IEntityLinkInspectorOptions;
 
-  constructor(entity: Entity, alias: string, fields: EntityQueryField[]) {
+  constructor(entity: Entity, alias: string, fields: EntityQueryField[], options: IEntityLinkInspectorOptions) {
     this.entity = entity;
     this.alias = alias;
     this.fields = fields;
+    this.options = options;
   }
 
   public static inspectorToObject(erModel: ERModel, inspector: IEntityLinkInspector): EntityLink {
@@ -26,8 +33,9 @@ export class EntityLink {
     const fields = inspector.fields.map((inspectorField) => (
       EntityQueryField.inspectorToObject(erModel, entity, inspectorField)
     ));
+    const options = inspector.options;
 
-    return new EntityLink(entity, alias, fields);
+    return new EntityLink(entity, alias, fields, options!);
   }
 
   public deepFindLink(alias: string): EntityLink | undefined;
@@ -69,7 +77,8 @@ export class EntityLink {
     return {
       entity: this.entity.name,
       alias: this.alias,
-      fields: this.fields.map((field) => field.inspect())
+      fields: this.fields.map((field) => field.inspect()),
+      options: this.options
     };
   }
 }
