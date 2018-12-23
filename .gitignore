@@ -10,6 +10,7 @@ testDB.ts
 testConfig.json
 .lib
 *.js.map
+*.xml
 
 # Firebird
 *.fdb

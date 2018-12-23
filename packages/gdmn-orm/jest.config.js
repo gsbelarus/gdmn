@@ -6,7 +6,6 @@ module.exports = {
         '^.+\\.tsx?$': 'ts-jest'
     },
     'testRegex': '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
-    'testEnvironment': 'node',
     'moduleFileExtensions': [
         'ts',
         'tsx',
@@ -15,4 +14,5 @@ module.exports = {
         'json',
         'node'
     ],
-}
+    'reporters': ['default', 'jest-junit'],
+};
