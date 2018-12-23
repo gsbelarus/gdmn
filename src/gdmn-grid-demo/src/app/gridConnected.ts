@@ -19,9 +19,9 @@ import {
   cancelSortDialog,
   applySortDialog,
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet } from "gdmn-recordset";
 import { GDMNGridPanel, GetConditionalStyle } from "gdmn-grid";
-import { sortRecordSet, setCurrentRow, selectRow, setAllRowsSelected } from "gdmn-recordset";
+import { sortRecordSet, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
 import { SortFields } from "gdmn-recordset";
 
@@ -47,39 +47,44 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
         columns: gridComponentState.columns.filter( c => !c.hidden )
       }
     },
-    (dispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
+    (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
       onCancelSortDialog:
-        () => dispatch(cancelSortDialog({name})),
+        () => thunkDispatch(cancelSortDialog({name})),
       onApplySortDialog:
-        (sortFields: SortFields) => dispatch(
-          (dispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>, getState: () => State) => {
+        (sortFields: SortFields) => thunkDispatch(
+          (dispatch, getState) => {
             dispatch(applySortDialog({ name, sortFields }));
             dispatch(sortRecordSet({ name: rs.name, sortFields }));
             getGridRef().scrollIntoView(getState().recordSet[rs.name].currentRow);
           }
         ),
       onColumnResize:
-        (columnIndex: number, newWidth: number) => dispatch(resizeColumn({name, columnIndex, newWidth})),
+        (columnIndex: number, newWidth: number) => thunkDispatch(resizeColumn({name, columnIndex, newWidth})),
       onColumnMove:
-        (oldIndex: number, newIndex: number) => dispatch(columnMove({name, oldIndex, newIndex})),
+        (oldIndex: number, newIndex: number) => thunkDispatch(columnMove({name, oldIndex, newIndex})),
       onSelectRow:
-        (idx: number, selected: boolean) => dispatch(selectRow({name, idx, selected})),
+        (idx: number, selected: boolean) => thunkDispatch(selectRow({name, idx, selected})),
       onSelectAllRows:
-        (value: boolean) => dispatch(setAllRowsSelected({name, value})),
+        (value: boolean) => thunkDispatch(setAllRowsSelected({name, value})),
       onSetCursorPos:
-        (cursorCol: number, cursorRow: number) => {
-          dispatch(setCurrentRow({ name: rs.name, currentRow: cursorRow }));
-          dispatch(setCursorCol({ name, cursorCol }));
-        },
+        (cursorCol: number, cursorRow: number) => thunkDispatch(
+          (dispatch, getState) => {
+            const recordSet = getState().recordSet[rs.name];
+            if (recordSet) {
+              dispatch(setRecordSet({ name: rs.name, rs: recordSet.setCurrentRow(cursorRow) }));
+              dispatch(setCursorCol({ name, cursorCol }));
+            }
+          }
+        ),
       onSort:
-        (rs: RecordSet, sortFields: SortFields) => dispatch(
+        (rs: RecordSet, sortFields: SortFields) => thunkDispatch(
           (dispatch: ThunkDispatch<State, never, RecordSetAction>, getState: () => State) => {
             dispatch(sortRecordSet({ name: rs.name, sortFields }));
             getGridRef().scrollIntoView(getState().recordSet[rs.name].currentRow);
           }
         ),
       onToggleGroup:
-        (rowIdx: number) => dispatch(toggleGroup({ name: rs.name, rowIdx }))
+        (rowIdx: number) => thunkDispatch(toggleGroup({ name: rs.name, rowIdx }))
     }),
     null,
     { withRef: true }
@@ -102,44 +107,47 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         visibleColumns: gridComponentState.columns.filter( c => !c.hidden )
       }
     },
-    (dispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
+    (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
       onSortDialog:
-        () => dispatch(showSortDialog({name})),
+        () => thunkDispatch(showSortDialog({name})),
       onScrollIntoView:
         () => getGridRef().scrollIntoView(-1),
       onSetFixedColumns:
-        (leftSideColumns: number) => dispatch(setFixedColumns({name, leftSideColumns})),
+        (leftSideColumns: number) => thunkDispatch(setFixedColumns({name, leftSideColumns})),
       onSetFixedTailColumns:
-        (rightSideColumns: number) => dispatch(setFixedTailColumns({name, rightSideColumns})),
+        (rightSideColumns: number) => thunkDispatch(setFixedTailColumns({name, rightSideColumns})),
       onGoToRow:
-        (rowNumber: number) => {
-          dispatch(setCurrentRow({ name: rs.name, currentRow: rowNumber }));
-          getGridRef().scrollIntoView(rowNumber);
-        },
+        (rowNumber: number) => thunkDispatch( (dispatch, getState) => {
+          const recordSet = getState().recordSet[rs.name];
+          if (recordSet) {
+            dispatch(setRecordSet({ name: rs.name, rs: recordSet.setCurrentRow(rowNumber) }));
+            getGridRef().scrollIntoView(rowNumber);
+          }
+        }),
       onToggle:
-        (columnName: string) => dispatch(toggleColumn({name, columnName})),
+        (columnName: string) => thunkDispatch(toggleColumn({name, columnName})),
       onSetSelectRows:
-        (value: boolean) => dispatch(setSelectRows({name, value})),
+        (value: boolean) => thunkDispatch(setSelectRows({name, value})),
       onToggleHideFooter:
-        () => dispatch(toggleHideFooter({name})),
+        () => thunkDispatch(toggleHideFooter({name})),
       onToggleHideHeader:
-        () => dispatch(toggleHideHeader({name})),
+        () => thunkDispatch(toggleHideHeader({name})),
       onCollapseAll:
-        () => dispatch(collapseExpandGroups({ name: rs.name, collapse: true })),
+        () => thunkDispatch(collapseExpandGroups({ name: rs.name, collapse: true })),
       onExpandAll:
-        () => dispatch(collapseExpandGroups({ name: rs.name, collapse: false })),
+        () => thunkDispatch(collapseExpandGroups({ name: rs.name, collapse: false })),
       onSetFilter:
         (filter: string) => {
           if (filter) {
-            dispatch(setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } }))
+            thunkDispatch(setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } }))
           } else {
-            dispatch(setFilter({name: rs.name, filter: undefined }))
+            thunkDispatch(setFilter({name: rs.name, filter: undefined }))
           }
         },
       onSearch:
         (searchText: string) => {
-          dispatch(doSearch({ name: rs.name, searchStr: searchText ? searchText : undefined }))
-          dispatch(setSearchIdx({ name, searchIdx: 0 }));
+          thunkDispatch(doSearch({ name: rs.name, searchStr: searchText ? searchText : undefined }))
+          thunkDispatch(setSearchIdx({ name, searchIdx: 0 }));
         },
       onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => {
         const foundNodesCount = rs.foundNodesCount;
@@ -157,9 +165,14 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         const foundNode = rs.foundNodes![newSearchIdx];
         const cursorCol = columns.findIndex( c => c.fields.some( f => f.fieldName === foundNode.fieldName ) );
 
-        dispatch(setSearchIdx({ name, searchIdx: newSearchIdx }));
-        dispatch(setCursorCol({ name, cursorCol }));
-        dispatch(setCurrentRow({ name: rs.name, currentRow: foundNode.rowIdx }));
+        thunkDispatch(setSearchIdx({ name, searchIdx: newSearchIdx }));
+        thunkDispatch(setCursorCol({ name, cursorCol }));
+        thunkDispatch( (dispatch, getState) => {
+          const recordSet = getState().recordSet[rs.name];
+          if (recordSet) {
+            dispatch(setRecordSet({ name: rs.name, rs: recordSet.setCurrentRow(foundNode.rowIdx) }));
+          }
+        });
         getGridRef().scrollIntoView(foundNode.rowIdx, cursorCol);
       }
     })
