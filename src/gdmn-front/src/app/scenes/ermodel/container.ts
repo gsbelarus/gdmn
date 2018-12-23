@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { ERModel, EntityQuery, EntityLink, ScalarAttribute, EntityQueryField } from 'gdmn-orm';
-import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow } from 'gdmn-recordset';
+import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow, setRecordSet } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
@@ -54,7 +54,13 @@ export const ERModelViewContainer = connect(
           }
         });
     },
-    loadFromERModel: (erModel: ERModel) => thunkDispatch( (dispatch, getState) => {
+    loadData: () => thunkDispatch( (dispatch, getState) => {
+      const erModel = getState().gdmnState.erModel;
+
+      if (!erModel || !Object.keys(erModel.entities).length) {
+        return;
+      }
+
       const entitiesRS = RecordSet.createWithData(
         'entities',
         [
@@ -78,6 +84,26 @@ export const ERModelViewContainer = connect(
           } as IDataRow))
         )
       );
+
+      entitiesRS.asObservable.subscribe(
+        e => {
+          if (e.event === 'AfterScroll') {
+            const attributesRS = getState().recordSet['attributes'];
+
+            if (attributesRS) {
+              const data = List(
+                Object.entries(erModel.entities[e.rs.getString(e.rs.currentRow, 'name')].attributes).map(([name, ent]) => ({
+                  name,
+                  description: ent.lName.ru ? ent.lName.ru.name : name
+                } as IDataRow))
+              );
+
+              dispatch(setRecordSet({ name: 'attributes', rs: attributesRS.setData(data) }));
+            }
+          }
+        }
+      );
+
       dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
 
       const attributesRS = RecordSet.createWithData(
@@ -101,13 +127,7 @@ export const ERModelViewContainer = connect(
             name,
             description: ent.lName.ru ? ent.lName.ru.name : name
           } as IDataRow))
-        ),
-        [
-          {
-            fieldName: 'name',
-            value: entitiesRS.getString(entitiesRS.currentRow, 'name')
-          }
-        ]
+        )
       );
       dispatch(createRecordSet({ name: attributesRS.name, rs: attributesRS }));
 
@@ -143,16 +163,11 @@ export const ERModelViewContainer = connect(
 
   (stateProps, dispatchProps) => {
     const { erModel } = stateProps;
-    const { loadFromERModel, loadEntityData } = dispatchProps;
+    const { loadEntityData } = dispatchProps;
     return {
       ...stateProps,
       ...dispatchProps,
-      apiLoadEntityData: (entity: string) => loadEntityData(erModel, entity),
-      loadData: () => {
-        if (erModel && Object.entries(erModel.entities).length) {
-          loadFromERModel(erModel);
-        }
-      }
+      apiLoadEntityData: (entity: string) => loadEntityData(erModel, entity)
     }
   }
 )(ERModelView);

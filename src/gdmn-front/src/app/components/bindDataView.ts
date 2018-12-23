@@ -14,10 +14,10 @@ import {
   RecordSetAction,
   selectRow,
   setAllRowsSelected,
-  setCurrentRow,
   SortFields,
   sortRecordSet,
-  toggleGroup
+  toggleGroup,
+  setRecordSet
 } from 'gdmn-recordset';
 
 export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
@@ -69,9 +69,9 @@ export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, Grid
 
   onSetCursorPos: (rs: RecordSet, gridName: string, cursorCol: number, cursorRow: number) => {
     dispatch(
-      setCurrentRow({
+      setRecordSet({
         name: rs.name,
-        currentRow: cursorRow
+        rs: rs.setCurrentRow(cursorRow)
       })
     );
 
