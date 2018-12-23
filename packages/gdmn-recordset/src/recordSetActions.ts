@@ -11,17 +11,25 @@ export const createRecordSet = createAction('RECORDSET/CREATE', resolve => {
 
 export type CreateRecordSet = typeof createRecordSet;
 
+export const setRecordSet = createAction('RECORDSET/SET', resolve => {
+  return (params: WithComponentName<{ rs: RecordSet }>) => resolve(params);
+});
+
+export type SetRecordSet = typeof setRecordSet;
+
 export const deleteRecordSet = createAction('RECORDSET/DELETE', resolve => {
   return (params: WithComponentName) => resolve(params);
 });
 
 export type DeleteRecordSet = typeof deleteRecordSet;
 
+/*
 export const setRecordSetData = createAction('RECORDSET/SET_DATA', resolve => {
   return (params: WithComponentName<{ data: Data, masterLink?: MasterLink }>) => resolve(params);
 });
 
 export type SetRecordSetData = typeof setRecordSetData;
+*/
 
 export const sortRecordSet = createAction('RECORDSET/SORT', resolve => {
   return (params: WithComponentName<{ sortFields: SortFields }>) => resolve(params);
@@ -29,11 +37,13 @@ export const sortRecordSet = createAction('RECORDSET/SORT', resolve => {
 
 export type SortRecordSet = typeof sortRecordSet;
 
+/*
 export const setCurrentRow = createAction('RECORDSET/SET_CURRENT_ROW', resolve => {
   return (params: WithComponentName<{ currentRow: number }>) => resolve(params);
 });
 
 export type SetCurrentRow = typeof setCurrentRow;
+*/
 
 export const setAllRowsSelected = createAction('RECORDSET/SET_ALL_ROWS_SELECTED', resolve => {
   return (params: WithComponentName<{ value: boolean }>) => resolve(params);

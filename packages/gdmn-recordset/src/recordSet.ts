@@ -3,6 +3,11 @@ import { IFilter } from "./filter";
 import { List } from "immutable";
 import equal from "fast-deep-equal";
 import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull, checkField } from "./utils";
+import { Subject } from "rxjs";
+
+export type RecordSetEvent = 'AfterScroll' | 'BeforeScroll';
+
+export type RecordSetEventData<R extends IDataRow = IDataRow> = { event: RecordSetEvent, rs: RecordSet<R> };
 
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   name: string,
@@ -19,8 +24,9 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   foundRows?: FoundRows,
   groups?: IDataGroup<R>[],
   aggregates?: R,
-  masterLink?: MasterLink
-};
+  masterLink?: MasterLink,
+  subject: Subject<RecordSetEventData<R>>
+}
 
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
@@ -38,11 +44,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _groups?: IDataGroup<R>[];
   private _aggregates?: R;
   private _masterLink?: MasterLink;
+  private _subject: Subject<RecordSetEventData<R>>;
 
   private constructor (params: IRecordSetParams<R>)
   {
     const { name, fieldDefs, calcFields, data, currentRow, sortFields, allRowsSelected,
-      selectedRows, filter, savedData, searchStr, foundRows, groups, aggregates, masterLink } = params;
+      selectedRows, filter, savedData, searchStr, foundRows, groups, aggregates, masterLink,
+      subject } = params;
 
     if (!data.size && currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
@@ -63,6 +71,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._groups = groups;
     this._aggregates = aggregates;
     this._masterLink = masterLink;
+    this._subject = subject;
 
     if (this.size && currentRow >= this.size) {
       throw new Error('Invalid currentRow value');
@@ -95,7 +104,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         sortFields: [],
         allRowsSelected: false,
         selectedRows: [],
-        masterLink
+        masterLink,
+        subject: new Subject<RecordSetEventData<R>>()
       });
     } else {
       return new RecordSet<R>({
@@ -107,7 +117,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         sortFields: [],
         allRowsSelected: false,
         selectedRows: [],
-        masterLink
+        masterLink,
+        subject: new Subject<RecordSetEventData<R>>()
       });
     }
   }
@@ -128,7 +139,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       foundRows: this._foundRows,
       groups: this._groups,
       aggregates: this._aggregates,
-      masterLink: this._masterLink
+      masterLink: this._masterLink,
+      subject: this._subject
     };
   }
 
@@ -220,6 +232,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get masterLink() {
     return this._masterLink;
+  }
+
+  get asObservable() {
+    return this._subject;
   }
 
   private _checkFields(fields: INamedField[]) {
@@ -740,10 +756,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Invalid row index`);
     }
 
-    return new RecordSet<R>({
+    this._subject.next({ event: 'BeforeScroll', rs: this });
+
+    const rs = new RecordSet<R>({
       ...this.params,
       currentRow,
     });
+
+    this._subject.next({ event: 'AfterScroll', rs });
+
+    return rs;
   }
 
   public setAllRowsSelected(value: boolean): RecordSet<R> {
@@ -972,7 +994,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setData(data: Data<R>, masterLink?: MasterLink): RecordSet<R> {
-    return new RecordSet<R>({
+    const rs = new RecordSet<R>({
       ...this.params,
       data,
       currentRow: 0,
@@ -986,6 +1008,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       groups: undefined,
       aggregates: undefined
     });
+
+    this._subject.next({ event: 'AfterScroll', rs });
+
+    return rs;
   }
 };
 
