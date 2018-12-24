@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from './View';
+import { View, IViewProps } from './View';
 import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState } from 'gdmn-grid';
 
@@ -9,7 +9,7 @@ export interface IRSAndGCS {
   detail?: IRSAndGCS[];
 }
 
-export interface IDataViewProps {
+export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
   loadData: () => void;
   onCancelSortDialog: (gridName: string) => void;
@@ -27,7 +27,7 @@ export interface IGridRef {
   [name: string]: GDMNGrid | undefined;
 }
 
-export class DataView<P extends IDataViewProps, S> extends View<P, S> {
+export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S, R> {
   private _gridRef: IGridRef = {};
 
   public isDataLoaded(): boolean {

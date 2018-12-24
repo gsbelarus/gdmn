@@ -1,9 +1,11 @@
 import { ERModel } from 'gdmn-orm';
-import { ICommandBarItemProps } from 'office-ui-fabric-react';
+import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
+import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
+import React from 'react';
 
-export interface IERModelViewProps extends IDataViewProps {
+export interface IERModelViewProps extends IDataViewProps<any> {
   erModel?: ERModel,
   apiGetSchema: () => void,
   apiLoadEntityData: (entity: string) => void
@@ -11,7 +13,10 @@ export interface IERModelViewProps extends IDataViewProps {
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const { apiGetSchema, apiLoadEntityData, data } = this.props;
+    const { apiGetSchema, apiLoadEntityData, data, history, match } = this.props;
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
 
     return [
       {
@@ -20,11 +25,16 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
         iconProps: {
           iconName: 'Table'
         },
+        commandBarButtonAs: btn(data && match ? `${match.url}/entity/Folder` : '')
+
+        /*
         onClick: () => {
           if (data && data.rs) {
-            apiLoadEntityData(data.rs.getString(data.rs.currentRow, 'name'));
+            history.push(`/entity/${data.rs.getString(data.rs.currentRow, 'name')}`)
+            //apiLoadEntityData(data.rs.getString(data.rs.currentRow, 'name'));
           }
         }
+        */
       },
       {
         key: 'reloadERModel',

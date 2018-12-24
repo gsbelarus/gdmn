@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
+import { RouteComponentProps } from 'react-router';
 
-export class View<P = {}, S = {}> extends Component<P, S> {
+export interface IViewProps<R = any> extends RouteComponentProps<R> { }
+
+export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
   public getViewCaption(): string {
     return 'The View...';
   }

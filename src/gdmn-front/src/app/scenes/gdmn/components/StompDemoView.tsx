@@ -6,14 +6,14 @@ import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
-import { View } from '@src/app/components/View';
+import { View, IViewProps } from '@src/app/components/View';
 
 interface IStompDemoViewState {
   pingDelay: string;
   pingSteps: string;
 }
 
-interface IStompDemoViewProps {
+interface IStompDemoViewProps extends IViewProps {
   erModel?: ERModel;
   apiPing: (cmd: TPingTaskCmd) => void;
   apiGetData: (queryInspector: IEntityQueryInspector) => void;

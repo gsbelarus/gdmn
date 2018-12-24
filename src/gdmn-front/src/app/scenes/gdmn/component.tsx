@@ -16,12 +16,14 @@ import { TAuthActions } from '@src/app/scenes/auth/actions';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import styles from './styles.css';
 import { TGdmnActions } from './actions';
+import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
   loading: boolean;
   loadingMessage?: string;
 };
+
 type TGdmnViewProps = IStompDemoViewProps &
   IAccountViewProps &
   TGdmnViewStateProps & {
@@ -50,6 +52,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           </div>
           <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
           <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
+          <div className="ImportantMenu"><Link to={`${match.url}/entity/Folder`}>Folder</Link></div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
               <b>
@@ -97,14 +100,24 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             <Switch>
               <Route
                 path={`${match.path}/account`}
-                component={() => <AccountView apiDeleteAccount={apiDeleteAccount} />}
+                render={ props => <AccountView apiDeleteAccount={apiDeleteAccount} {...props} /> }
               />
               <Route
                 path={`${match.path}/web-stomp`}
-                component={() => <StompDemoView apiPing={apiPing} apiGetData={apiGetData} erModel={erModel} />}
+                render={ props => <StompDemoView apiPing={apiPing} apiGetData={apiGetData} erModel={erModel} {...props} /> }
               />
-              <Route path={`${match.path}/er-model`} component={ERModelViewContainer} />
-              <Route path={`${match.path}/*`} component={NotFoundView} />
+              <Route
+                path={`${match.path}/er-model`}
+                component={ERModelViewContainer}
+              />
+              <Route
+                path={`${match.path}/entity/:entityName`}
+                component={EntityDataViewContainer}
+              />
+              <Route
+                path={`${match.path}/*`}
+                component={NotFoundView}
+              />
             </Switch>
           </ErrBoundary>
         </main>
