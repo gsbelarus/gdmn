@@ -526,10 +526,7 @@ export class StompSession implements StompClientCommandListener {
         return payload;
       }
     } catch (error) {
-      if (error.message === "invalid token") {
-        throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Invalid token");
-      }
-      throw error;
+      throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Invalid token");
     }
 
     throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Token not valid");
