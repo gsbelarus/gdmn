@@ -106,17 +106,19 @@ export class ERExport {
   private _createEntities(): void {
     Object.entries(this._getATResult().atRelations).forEach(([atRelationName, atRelation]) => {
       const relation = this._dbStructure.relations[atRelationName];
-      const inheritedFk = Object.values(relation.foreignKeys)
-        .find((fk) => fk.fields.includes(Constants.DEFAULT_INHERITED_KEY_NAME));
-      let parent: Entity | undefined;
-      if (inheritedFk) {
-        const refRelation = this._dbStructure.relationByUqConstraint(inheritedFk.constNameUq);
-        const refEntities = this._findEntities(refRelation.name);
-        parent = refEntities[0];
-      }
-      const entity = this._createEntity(parent, relation, atRelation);
-      if (!this._erModel.entities[entity.name]) {
-        this._erModel.add(entity);
+      if (!this._isCrossRelation(relation)) {
+        const inheritedFk = Object.values(relation.foreignKeys)
+          .find((fk) => fk.fields.includes(Constants.DEFAULT_INHERITED_KEY_NAME));
+        let parent: Entity | undefined;
+        if (inheritedFk) {
+          const refRelation = this._dbStructure.relationByUqConstraint(inheritedFk.constNameUq);
+          const refEntities = this._findEntities(refRelation.name);
+          parent = refEntities[0];
+        }
+        const entity = this._createEntity(parent, relation, atRelation);
+        if (!this._erModel.entities[entity.name]) {
+          this._erModel.add(entity);
+        }
       }
     });
   }
@@ -257,7 +259,7 @@ export class ERExport {
    */
   private _createSetAttributes(): void {
     Object.entries(this._dbStructure.relations).forEach(([crossName, crossRelation]) => { // TODO correct ordering
-      if (crossRelation.primaryKey && crossRelation.primaryKey.fields.length >= 2) {
+      if (this._isCrossRelation(crossRelation)) {
         const fkOwner = Object
           .values(crossRelation.foreignKeys)
           .find((fk) => fk.fields.length === 1 && fk.fields[0] === crossRelation.primaryKey!.fields[0]);
@@ -350,6 +352,10 @@ export class ERExport {
         });
       }
     });
+  }
+
+  private _isCrossRelation(relation: Relation): boolean {
+    return !!relation.primaryKey && relation.primaryKey.fields.length >= 2;
   }
 
   private _createAttribute(relation: Relation,
