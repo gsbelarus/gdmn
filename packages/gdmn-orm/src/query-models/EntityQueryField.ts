@@ -43,7 +43,7 @@ export class EntityQueryField {
     const attribute = entity.attribute(inspector.attribute);
     if (attribute instanceof EntityAttribute) {
       if (!inspector.link) {
-        throw new Error("EntityQueryField with EntityAttribute must has 'link' property")
+        throw new Error("EntityQueryField with EntityAttribute must has 'link' property");
       }
       if (attribute instanceof SetAttribute) {
         return new EntityQueryField(attribute, EntityLink.inspectorToObject(erModel, inspector.link),

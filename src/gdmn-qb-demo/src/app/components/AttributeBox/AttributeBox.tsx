@@ -106,6 +106,7 @@ export class AttributeBox extends React.PureComponent<IProps, IState> {
   };
 
   public render() {
+    console.log(this.props.list);
     return (
       <div className="bottom-box-container">
         <table>

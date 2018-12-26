@@ -15,9 +15,9 @@ interface IState {
 export class App extends React.PureComponent<any, IState> {
   public state: Readonly<IState> = {
     statusMessage: {},
-    attributeList: [],
     entityLink: undefined,
-    treeData: undefined
+    treeData: undefined,
+    attributeList: []
   };
 
   public componentDidMount() {
@@ -33,22 +33,9 @@ export class App extends React.PureComponent<any, IState> {
       return;
     }
 
-    /*     if (!entityLink) {
-      // Нет entityLink => дерево из списка enteties
-      const entityList = Object.values(erModel.entities).map((i: Entity) => i.name);
-      this.setState({ treeData: undefined, entityList });
-      const treeEntities: ITreeNode[] = Object.values(erModel.entities).map((i: Entity) => {
-        return {
-          id: i.name,
-          name: i.name
-        };
-      });
-      this.setState({ treeData: { id: 'Entities', name: 'Entities', children: treeEntities } });
-      return;
-    } */
-
     const treeChildren: ITreeNode[] = Object.values(entityLink.entity.attributes).map((attr: Attribute) => {
-      const attrList = Object.values(this.state.attributeList);
+      const attrList = Object.values(entityLink.fields);
+
       const isChecked = !!attrList.find(i => i.attribute.name === attr.name);
       return {
         id: attr.name,
@@ -70,37 +57,6 @@ export class App extends React.PureComponent<any, IState> {
         children: treeChildren
       }
     });
-
-    // entityLink.entity.attributes
-    // const attributeList = entityLink.entity.attributes;
-
-    /*   const attributes: ITreeNode[] = Object.values(attributeList).map(attr => {
-      const checked = !!this.state.selectedAttributes.find(
-        (i: IAttributeFilter) => i.entityAlias === selectedEntity.entityName && i.fieldName === attr.name
-      );
-
-      return EntityAttribute.isType(attr) &&
-        !SetAttribute.isType(attr) &&
-        !ParentAttribute.isType(attr) &&
-        !DetailAttribute.isType(attr)
-        ? {
-            id: attr.name,
-            name: attr.name,
-            entities: Object.values(attr.entities).map(i => i.name),
-            parentAlias: selectedEntity.entityName,
-            checked
-          }
-        : { id: attr.name, name: attr.name, parentAlias: selectedEntity.entityName, checked };
-    });
-
-    this.setState({
-      treeData: {
-        id: selectedEntity.entityName,
-        name: selectedEntity.entityName,
-        children: attributes,
-        parentAlias: ''
-      }
-    }); */
   };
 
   private handleLoadMockEntities = () => {
@@ -166,24 +122,27 @@ export class App extends React.PureComponent<any, IState> {
     const newEntity: Entity = erModel.entities[name];
     if (!newEntity) return;
 
-    const entityLink: EntityLink = new EntityLink(newEntity, '', this.state.attributeList);
+    const entityLink: EntityLink = new EntityLink(newEntity, '', []);
 
     this.setState({ entityLink }, this.updateTreeData);
   };
 
-  private handleUpdateNode = (node: any) => {
+  private handleUpdateNode = (node: ITreeNode) => {
+    if (!node.parent) return;
     console.log('click node', node.parent.name, node.id);
-    // console.log('node.state', node.state);
+
+    const { entityLink, erModel } = this.state;
+    if (!entityLink || !erModel) return;
 
     if (node.state.checked) {
-      this.setState({ attributeList: [...this.state.attributeList] }, this.updateTreeData);
-      return;
+      entityLink.fields.splice(entityLink.fields.findIndex(i => i.attribute.name === node.name), 1);
+    } else {
+      const newField = new EntityQueryField(erModel.entities[node.parent.name].attributes[node.name]);
+      entityLink.fields.push(newField);
     }
 
-    console.log('set checked');
-
     this.setState(
-      { attributeList: this.state.attributeList.filter((i: EntityQueryField) => i.attribute.name !== node.name) },
+      { attributeList: entityLink.fields },
       this.updateTreeData
     );
   };
@@ -208,6 +167,7 @@ export class App extends React.PureComponent<any, IState> {
 
   public render() {
     const list = !!this.state.erModel ? Object.keys(this.state.erModel.entities) : [];
+    const { entityLink } = this.state;
     return (
       <div className="App">
         <main className="application-main" role="main">
@@ -222,11 +182,13 @@ export class App extends React.PureComponent<any, IState> {
             onUnselectEntity={this.handleUnSelectEntity}
             onSelectAttribute={this.handleSelectAttribute}
           />
-          <AttributeBox
-            list={this.state.attributeList.map(i => ({
-              expression: { entityName: i.attribute.name, fieldName: i.attribute.name }
-            }))}
-          />
+          {entityLink ? (
+            <AttributeBox
+              list={entityLink.fields.map(i => ({
+                expression: { entityName: i.attribute.name, fieldName: i.attribute.name }
+              }))}
+            />
+          ) : null}
           {/* <FilterBox /> */}
         </main>
       </div>
