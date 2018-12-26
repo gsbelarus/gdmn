@@ -163,15 +163,15 @@ export class StompSession implements StompClientCommandListener {
 
   public connect(headers: StompHeaders): void {
     this._try(async () => {
-      const {
+      let {
         session,
         login,
         passcode,
         authorization,
         "create-user": isCreateUser,
-        "delete-user": isDeleteUser
+        "delete-user": isDeleteUser,
+        "app-uid": appUid
       } = headers;
-      let {"app-uid": appUid} = headers;
 
       let result: {
         userKey: number,
@@ -526,7 +526,7 @@ export class StompSession implements StompClientCommandListener {
         return payload;
       }
     } catch (error) {
-      throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Invalid token");
+      throw new StompServerError(StompErrorCode.UNAUTHORIZED, error.message);
     }
 
     throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Token not valid");

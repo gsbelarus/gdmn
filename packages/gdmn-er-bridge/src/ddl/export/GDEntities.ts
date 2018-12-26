@@ -131,7 +131,7 @@ export class GDEntities {
             },
             {
               relationName: "GD_COMPANYCODE",
-              pk: ["CONTACTKEY"],
+              pk: ["COMPANYKEY"],
               weak: true
             }
           ]
@@ -174,12 +174,12 @@ export class GDEntities {
             },
             {
               relationName: "GD_COMPANYCODE",
-              pk: ["CONTACTKEY"],
+              pk: ["COMPANYKEY"],
               weak: true
             },
             {
               relationName: "GD_OURCOMPANY",
-              pk: ["CONTACTKEY"]
+              pk: ["COMPANYKEY"]
             }
           ],
           refresh: true
@@ -212,12 +212,12 @@ export class GDEntities {
             },
             {
               relationName: "GD_COMPANYCODE",
-              pk: ["CONTACTKEY"],
+              pk: ["COMPANYKEY"],
               weak: true
             },
             {
               relationName: "GD_BANK",
-              pk: ["CONTACTKEY"]
+              pk: ["BANKKEY"]
             }
           ],
           refresh: true

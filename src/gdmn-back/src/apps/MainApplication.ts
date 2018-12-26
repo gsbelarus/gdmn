@@ -578,7 +578,6 @@ export class MainApplication extends Application {
         }
       }));
       for (const dbDetail of dbDetails) {
-        console.log(dbDetail);
         const appInfo = await this._addApplicationInfo(connection, transaction, {
           ...dbDetail.connectionOptions,
           ownerKey: userKey,
