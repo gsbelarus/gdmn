@@ -35,6 +35,28 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               }
             });
 
+            /// tmp
+            if (errorSubscription) {
+              errorSubscription.unsubscribe();
+              errorSubscription = undefined;
+            }
+            if (taskProgressResultSub) {
+              taskProgressResultSub.unsubscribe();
+              taskProgressResultSub = undefined;
+            }
+            if (taskStatusResultSub) {
+              taskStatusResultSub.unsubscribe();
+              taskStatusResultSub = undefined;
+            }
+            if (taskActionResultSub) {
+              taskActionResultSub.unsubscribe();
+              taskActionResultSub = undefined;
+            }
+            if (connectionStatusSub) {
+              connectionStatusSub.unsubscribe();
+              connectionStatusSub = undefined;
+            }
+
             //// PROGRESS
             taskProgressResultSub = apiService.taskProgressResultObservable!.subscribe(message => {
               if (!message.data) throw Error('Invalid server response');

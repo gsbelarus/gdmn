@@ -4,13 +4,14 @@ import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow, setR
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
+import { withRouter } from 'react-router';
+import { TTaskActionNames } from '@gdmn/server-api';
 
 import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataView';
+import { apiService } from '@src/app/services/apiService';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';
-import { apiService } from '@src/app/services/apiService';
-import { TTaskActionNames } from '@gdmn/server-api';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({
@@ -170,4 +171,4 @@ export const ERModelViewContainer = connect(
       apiLoadEntityData: (entity: string) => loadEntityData(erModel, entity)
     }
   }
-)(ERModelView);
+)(withRouter(ERModelView));

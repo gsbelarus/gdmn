@@ -9,7 +9,7 @@ const errorMiddleware: Middleware = ({ dispatch, getState }) => next => action =
     /* support not fsa-compliant redux actions (without action.error) see: piotrwitek/typesafe-actions#52 */
     (action.error || action.payload instanceof Error)
   ) {
-    let errorMsg = action.payload.toString();
+    let errorMsg = (<Error>action.payload).message;
 
     // if (action.payload instanceof SyntaxError) {
     //   // todo: custom response parse error

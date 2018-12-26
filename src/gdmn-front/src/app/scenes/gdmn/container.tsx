@@ -8,6 +8,7 @@ import { IState } from '@src/app/store/reducer';
 import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { selectGdmnState } from '@src/app/store/selectors';
+import { rootActions } from '@src/app/scenes/root/actions';
 
 // fixme: compose<any, TGdmnViewProps>
 
@@ -24,7 +25,8 @@ const getGdmnContainer = (apiService: GdmnPubSubApi) =>
         apiPing: bindActionCreators(gdmnActions.apiPing, dispatch),
         apiDeleteAccount: bindActionCreators(gdmnActions.apiDeleteAccount, dispatch),
         apiGetData: bindActionCreators(gdmnActions.apiGetData, dispatch),
-        signOut: bindActionCreators(authActions.signOut, dispatch)
+        signOut: bindActionCreators(authActions.signOut, dispatch),
+        onError: bindActionCreators(rootActions.onError, dispatch)
       })
     ),
     lifecycle<TGdmnViewProps, TGdmnViewProps>({

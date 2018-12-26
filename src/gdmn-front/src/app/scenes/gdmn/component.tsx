@@ -36,7 +36,7 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading } = this.props;
+    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading, onError } = this.props;
     if (!match) return null; // todo
 
     return (
@@ -52,7 +52,9 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           </div>
           <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
           <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
-          <div className="ImportantMenu"><Link to={`${match.url}/entity/Folder`}>Folder</Link></div>
+          <div className="ImportantMenu">
+            <Link to={`${match.url}/entity/Folder`}>Folder</Link>
+          </div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
               <b>
@@ -100,24 +102,23 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             <Switch>
               <Route
                 path={`${match.path}/account`}
-                render={ props => <AccountView apiDeleteAccount={apiDeleteAccount} {...props} /> }
+                render={props => <AccountView apiDeleteAccount={apiDeleteAccount} {...props} />}
               />
               <Route
                 path={`${match.path}/web-stomp`}
-                render={ props => <StompDemoView apiPing={apiPing} apiGetData={apiGetData} erModel={erModel} {...props} /> }
+                render={props => (
+                  <StompDemoView
+                    apiPing={apiPing}
+                    apiGetData={apiGetData}
+                    erModel={erModel}
+                    {...props}
+                    onError={onError}
+                  />
+                )}
               />
-              <Route
-                path={`${match.path}/er-model`}
-                component={ERModelViewContainer}
-              />
-              <Route
-                path={`${match.path}/entity/:entityName`}
-                component={EntityDataViewContainer}
-              />
-              <Route
-                path={`${match.path}/*`}
-                component={NotFoundView}
-              />
+              <Route path={`${match.path}/er-model`} component={ERModelViewContainer} />
+              <Route path={`${match.path}/entity/:entityName`} component={EntityDataViewContainer} />
+              <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
         </main>

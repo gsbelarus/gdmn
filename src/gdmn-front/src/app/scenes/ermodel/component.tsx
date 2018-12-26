@@ -25,7 +25,7 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
         iconProps: {
           iconName: 'Table'
         },
-        commandBarButtonAs: btn(data && match ? `${match.url}/entity/Folder` : '')
+        commandBarButtonAs: btn(data ? `${match!.url}/entity/Folder` : `${match!.url}`)
 
         /*
         onClick: () => {

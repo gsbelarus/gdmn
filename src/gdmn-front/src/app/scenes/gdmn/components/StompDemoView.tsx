@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ErrorInfo } from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
@@ -7,6 +7,7 @@ import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
 import { View, IViewProps } from '@src/app/components/View';
+import { ICommand } from 'gdmn-nlp-agent/dist/definitions';
 
 interface IStompDemoViewState {
   pingDelay: string;
@@ -17,6 +18,7 @@ interface IStompDemoViewProps extends IViewProps {
   erModel?: ERModel;
   apiPing: (cmd: TPingTaskCmd) => void;
   apiGetData: (queryInspector: IEntityQueryInspector) => void;
+  onError: (error: Error, meta?: any) => void;
 }
 
 class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
@@ -91,7 +93,14 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
 
     if (!parsedPhrase || !this.props.erModel) return;
-    const cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase);
+
+    let cmds: ICommand[] = [];
+    try {
+      cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase);
+    } catch (e) {
+      this.props.onError(e);
+    }
+
     cmds.forEach(value => {
       this.props.apiGetData(value.payload.inspect());
     });
