@@ -81,3 +81,4 @@ jspm_packages/
 .DS_Store
 .vscode/*
 testConfig.json.old
+_testConfig.json
