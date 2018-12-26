@@ -20,7 +20,6 @@
 .SignInFormTabs {
   width: 100%;
   height: 32px;
-  flex: 0 0 initial;
   display: flex;
   flex-direction: row;
   justify-content: flex-start;

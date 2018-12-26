@@ -8,7 +8,7 @@ import { withRouter } from 'react-router';
 import { TTaskActionNames } from '@gdmn/server-api';
 
 import { IState } from '@src/app/store/reducer';
-import { bindDataViewDispatch } from '@src/app/components/bindDataView';
+import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';

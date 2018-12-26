@@ -36,6 +36,7 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
   }
 
   public componentDidMount() {
+    super.componentDidMount();
     const { loadData } = this.props;
     if (!this.isDataLoaded()) {
       loadData();

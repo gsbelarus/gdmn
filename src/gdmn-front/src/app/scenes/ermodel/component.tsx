@@ -12,6 +12,10 @@ export interface IERModelViewProps extends IDataViewProps<any> {
 }
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
+  public getViewCaption(): string {
+    return 'ER Model';
+  }
+
   public getCommandBarItems(): ICommandBarItemProps[] {
     const { apiGetSchema, apiLoadEntityData, data, history, match } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {

@@ -8,8 +8,9 @@ import { TTaskActionNames } from '@gdmn/server-api';
 
 import { TGdmnActions } from '../../gdmn/actions';
 import { EntityDataView, IEntityDataViewProps } from './EntityDataView';
-import { bindDataViewDispatch } from '@src/app/components/bindDataView';
+import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
+import { withRouter } from 'react-router';
 
 export const EntityDataViewContainer = connect(
   (state: IState, ownProps: IEntityDataViewProps) => {
@@ -72,5 +73,5 @@ export const EntityDataViewContainer = connect(
       }
     }
   }
-)(EntityDataView);
+)(withRouter(EntityDataView));
 

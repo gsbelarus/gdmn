@@ -17,11 +17,13 @@ import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import styles from './styles.css';
 import { TGdmnActions } from './actions';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
+import { IViewTab } from './types';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
   loading: boolean;
   loadingMessage?: string;
+  viewTabs: IViewTab[];
 };
 
 type TGdmnViewProps = IStompDemoViewProps &
@@ -36,8 +38,10 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading, onError } = this.props;
+    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading, onError, addToTabList, viewTabs } = this.props;
     if (!match) return null; // todo
+
+    console.log(`MATCH -- ${location.pathname}`);
 
     return (
       <div className="App">
@@ -97,12 +101,44 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           barHeight={4}
           description={this.props.loadingMessage}
         />
+        {
+          viewTabs.length ?
+            <div styleName="ViewTabs">
+              <div styleName="ViewTabSpace" />
+              {viewTabs.map(vt =>
+                vt.url === location.pathname ? (
+                  <Fragment key={vt.url}>
+                    <div styleName="ViewTab">
+                      <div styleName="ViewActiveColor" />
+                        <Link to={vt.url}>
+                          <div styleName="ViewTabText ViewActiveTab">{vt.caption}</div>
+                        </Link>
+                    </div>
+                    <div styleName="ViewTabSpace" />
+                  </Fragment>
+                ) : (
+                  <Fragment key={vt.url}>
+                    <div styleName="ViewTab">
+                      <Link to={vt.url}>
+                        <div styleName="ViewTabText ViewInactiveTab">{vt.caption}</div>
+                      </Link>
+                      <div styleName="ViewInactiveShadow" />
+                    </div>
+                    <div styleName="ViewTabSpace" />
+                  </Fragment>
+                )
+              )}
+              <div styleName="ViewRestSpace" />
+            </div>
+          :
+            undefined
+        }
         <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>
               <Route
                 path={`${match.path}/account`}
-                render={props => <AccountView apiDeleteAccount={apiDeleteAccount} {...props} />}
+                render={props => <AccountView apiDeleteAccount={apiDeleteAccount} addToTabList={addToTabList} {...props} />}
               />
               <Route
                 path={`${match.path}/web-stomp`}
@@ -111,6 +147,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                     apiPing={apiPing}
                     apiGetData={apiGetData}
                     erModel={erModel}
+                    addToTabList={addToTabList}
                     {...props}
                     onError={onError}
                   />

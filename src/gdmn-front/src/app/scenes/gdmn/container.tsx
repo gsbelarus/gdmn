@@ -9,6 +9,8 @@ import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { selectGdmnState } from '@src/app/store/selectors';
 import { rootActions } from '@src/app/scenes/root/actions';
+import { bindViewDispatch } from '@src/app/components/bindViewDispatch';
+import { withRouter } from 'react-router';
 
 // fixme: compose<any, TGdmnViewProps>
 
@@ -18,9 +20,11 @@ const getGdmnContainer = (apiService: GdmnPubSubApi) =>
       (state: IState, ownProps: TGdmnViewProps): TGdmnViewStateProps => ({
         erModel: selectGdmnState(state).erModel,
         loading: selectGdmnState(state).loading,
-        loadingMessage: selectGdmnState(state).loadingMessage
+        loadingMessage: selectGdmnState(state).loadingMessage,
+        viewTabs: selectGdmnState(state).viewTabs,
       }),
       dispatch => ({
+        ...bindViewDispatch(dispatch),
         dispatch,
         apiPing: bindActionCreators(gdmnActions.apiPing, dispatch),
         apiDeleteAccount: bindActionCreators(gdmnActions.apiDeleteAccount, dispatch),
@@ -37,6 +41,6 @@ const getGdmnContainer = (apiService: GdmnPubSubApi) =>
         this.props.dispatch(gdmnActions.apiDisconnect());
       }
     })
-  )(GdmnView);
+  )(withRouter(GdmnView));
 
 export { getGdmnContainer };

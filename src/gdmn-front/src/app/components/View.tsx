@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
 import { RouteComponentProps } from 'react-router';
+import { IViewTab } from '../scenes/gdmn/types';
 
-export interface IViewProps<R = any> extends RouteComponentProps<R> { }
+export interface IViewProps<R = any> extends RouteComponentProps<R> {
+  addToTabList: (viewTab: IViewTab) => void;
+}
 
 export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
   public getViewCaption(): string {
@@ -46,6 +49,16 @@ export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P,
         text: 'Test 2...'
       }
     ];
+  }
+
+  public componentDidMount() {
+    const { addToTabList, match } = this.props;
+
+    addToTabList({
+      caption: this.getViewCaption(),
+      url: match ? match.url : '',
+      loading: false
+    });
   }
 
   public render() {

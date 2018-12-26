@@ -1,6 +1,7 @@
 import { ERModel, IEntityQueryInspector } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TPingTaskCmd } from '@gdmn/server-api';
+import { IViewTab } from './types';
 
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
@@ -37,7 +38,15 @@ const gdmnActions = {
     return (loading: boolean, message?: string) => resolve({ loading, message });
   }),
 
-  buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST')
+  buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST'),
+
+  updateViewTab: createAction('gdmn/UPDATE_VIEW_TAB', resolve => {
+    return (viewTab: IViewTab) => resolve(viewTab);
+  }),
+
+  deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => {
+    return (viewTab: IViewTab) => resolve(viewTab);
+  })
 };
 
 type TGdmnActions = ActionType<typeof gdmnActions>;

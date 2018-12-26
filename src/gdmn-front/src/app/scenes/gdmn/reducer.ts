@@ -7,7 +7,8 @@ type TGdmnState = TGdmnViewStateProps;
 
 const initialState: TGdmnState = {
   erModel: new ERModel(),
-  loading: false
+  loading: false,
+  viewTabs: []
 };
 
 function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
@@ -18,6 +19,7 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
         erModel: action.payload
       };
     }
+
     case getType(gdmnActions.setLoading): {
       return {
         ...state,
@@ -25,6 +27,36 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
         loadingMessage: action.payload.message
       };
     }
+
+    case getType(gdmnActions.updateViewTab): {
+      const idx = state.viewTabs.findIndex( vt => vt.url === action.payload.url );
+
+      if (idx === -1) {
+        return {
+          ...state,
+          viewTabs: [...state.viewTabs, action.payload]
+        }
+      } else {
+        return {
+          ...state,
+          viewTabs: [...state.viewTabs.slice(0, idx), action.payload, ...state.viewTabs.slice(idx + 1)]
+        }
+      }
+    }
+
+    case getType(gdmnActions.deleteViewTab): {
+      const idx = state.viewTabs.findIndex( vt => vt.url === action.payload.url );
+
+      if (idx === -1) {
+        return state;
+      } else {
+        return {
+          ...state,
+          viewTabs: [...state.viewTabs.slice(0, idx), ...state.viewTabs.slice(idx + 1)]
+        }
+      }
+    }
+
     default:
       return state;
   }

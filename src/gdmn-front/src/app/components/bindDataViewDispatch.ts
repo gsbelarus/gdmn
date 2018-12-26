@@ -19,8 +19,11 @@ import {
   toggleGroup,
   setRecordSet
 } from 'gdmn-recordset';
+import { bindViewDispatch } from './bindViewDispatch';
 
 export const bindDataViewDispatch = (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
+  ...bindViewDispatch(dispatch),
+
   onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
 
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) =>
