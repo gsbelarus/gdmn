@@ -33,6 +33,9 @@ export const EntityDataViewContainer = connect(
       console.log('LOADING ' + entityName);
 
       const entity = erModel.entities['Folder'];
+
+      if (!entity) return;
+
       const q = new EntityQuery(new EntityLink(
         entity,
         'z',
