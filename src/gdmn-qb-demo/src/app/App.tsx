@@ -185,7 +185,7 @@ export class App extends React.PureComponent<any, IState> {
           {entityLink ? (
             <AttributeBox
               list={entityLink.fields.map(i => ({
-                expression: { entityName: i.attribute.name, fieldName: i.attribute.name }
+                expression: { entityName: entityLink.entity.name, fieldName: i.attribute.name }
               }))}
             />
           ) : null}
