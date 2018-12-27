@@ -71,7 +71,7 @@ class WebStorage implements IWebStorage {
 
   public static async isPersisted() {
     const persistent = await (<any>window.navigator).storage.persisted();
-    console.log(
+    console.log('[WebStorage] ',
       persistent
         ? 'Storage will not be cleared except by explicit user action'
         : 'Storage may be cleared by the UA under storage pressure.'
@@ -84,7 +84,7 @@ class WebStorage implements IWebStorage {
     // TODO Permissions.query()
 
     const granted = await (<any>window.navigator).storage.persist();
-    console.log(
+    console.log('[WebStorage] ',
       granted
         ? 'Storage will not be cleared except by explicit user action'
         : 'Storage may be cleared by the UA under storage pressure.'

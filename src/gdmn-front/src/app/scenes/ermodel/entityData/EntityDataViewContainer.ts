@@ -31,7 +31,7 @@ export const EntityDataViewContainer = connect(
 
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
 
-      console.log('LOADING ' + entityName);
+      console.log('[GDMN] LOADING ' + entityName);
 
       const entity = erModel.entities['Folder'];
 
@@ -50,13 +50,13 @@ export const EntityDataViewContainer = connect(
             payload: q.inspect()
           }
         })
-        .subscribe( value => {
-          if (value.error) {
-            console.log(value.error.message);
-          } else if (!!value.payload.result) {
-            console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
-          }
-        });
+        // .subscribe( value => {
+        //   if (value.error) {
+        //     console.log(value.error.message);
+        //   } else if (!!value.payload.result) {
+        //     console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
+        //   }
+        // });
     }
   }),
 

@@ -51,7 +51,7 @@ class PubSubClient {
     this.bridge.connectionConnectedObservable.subscribe(
       // todo connectedMessage
       () => {
-        console.log('connectedMessage');
+        // console.log('connectedMessage');
         this.queuePublish();
       },
       error => {
@@ -109,11 +109,11 @@ class PubSubClient {
   }
 
   private queuePublish(): void {
-    console.log(`Will try sending queued messages...`);
+    console.log(`[PUB-SUB] Will try sending queued messages...`);
     console.log(this.queuedPublishMessages);
 
     this.queuedPublishMessages.forEach(queuedMessage => {
-      console.log(`Attempting to send...`);
+      console.log(`[PUB-SUB] Attempting to send...`);
       console.log(queuedMessage);
       this.queuedMessagePublish(queuedMessage);
     });
@@ -121,7 +121,7 @@ class PubSubClient {
 
   private queuedMessagePublish(queuedMessage: IQueuedPublishMessage): void {
     if (!this.bridge.isConnected()) {
-      console.log(`Not connected, queueing message...`);
+      console.log(`[PUB-SUB] Not connected, queueing message...`);
       return;
     }
 

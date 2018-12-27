@@ -47,13 +47,13 @@ export const ERModelViewContainer = connect(
             payload: q.inspect()
           }
         })
-        .subscribe( value => {
-          if (value.error) {
-            console.log(value.error.message);
-          } else if (!!value.payload.result) {
-            console.log('QUERY response result: ', value.payload.result);
-          }
-        });
+        // .subscribe( value => {
+        //   if (value.error) {
+        //     console.log(value.error.message);
+        //   } else if (!!value.payload.result) {
+        //     console.log('QUERY response result: ', value.payload.result);
+        //   }
+        // });
     },
     loadData: () => thunkDispatch( (dispatch, getState) => {
       const erModel = getState().gdmnState.erModel;

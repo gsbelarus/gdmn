@@ -66,7 +66,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   };
 
   private handlePingStepsChange = (event: any) => {
-    console.log('handlePingStepsChange');
     this.setState({
       pingSteps: event.target.value
     });

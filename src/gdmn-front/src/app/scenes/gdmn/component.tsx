@@ -41,7 +41,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading, onError, addToTabList, viewTabs } = this.props;
     if (!match) return null; // todo
 
-    console.log(`MATCH -- ${location.pathname}`);
+    // console.log(`MATCH -- ${location.pathname}`);
 
     return (
       <div className="App">
@@ -56,9 +56,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           </div>
           <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
           <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
-          <div className="ImportantMenu">
-            <Link to={`${match.url}/entity/Folder`}>Folder</Link>
-          </div>
           <div className="RightSideHeaderPart">
             <span className="BigLogo">
               <b>

@@ -161,14 +161,14 @@ class GdmnPubSubApi {
         this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) &&
       !reconnect
     ) {
-      console.log('AUTH');
+      // console.log('AUTH');
 
       this.subTasks();
 
       return empty().toPromise(); // todo test
     }
 
-    console.log('AUTH+connect');
+    // console.log('AUTH+connect');
 
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
@@ -238,17 +238,17 @@ class GdmnPubSubApi {
       }
     ); // fixme: type ts 3.2
 
-    console.log('SUBSCRIBE');
+    // console.log('SUBSCRIBE');
 
     // todo: test delete
     this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
-      console.log('taskProgressResult: ', value)
+      console.log('[GDMN][PUB-SUB] taskProgressResult: ', value)
     );
     this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
-      console.log('taskStatusResult: ', value)
+      console.log('[GDMN][PUB-SUB] taskStatusResult: ', value)
     );
     this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
-      console.log('taskActionResult: ', value)
+      console.log('[GDMN][PUB-SUB] taskActionResult: ', value)
     );
   }
 
@@ -281,7 +281,7 @@ class GdmnPubSubApi {
           );
 
           const parseMsgDataMapOperator = map<IPubSubMessage<TGdmnReceivedMessageMeta>, IGdmnMessageData>(message => {
-            if (!message.data) throw Error('Invalid server response (TaskCmdResult)');
+            if (!message.data) throw Error('[GDMN][PUB-SUB] Invalid server response (TaskCmdResult)');
             return JSON.parse(message.data);
           });
 

@@ -12,6 +12,8 @@ import { rootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
 
+const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
+
 const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
   return ({ dispatch, getState }) => next => async (action: TGdmnActions) => {
     let errorSubscription: Subscription | undefined;
@@ -19,6 +21,8 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
     let taskStatusResultSub: Subscription | undefined;
     let taskActionResultSub: Subscription | undefined;
     let connectionStatusSub: Subscription | undefined;
+
+    let internalErrorCounter: number = 0;
 
     switch (action.type) {
       case getType(gdmnActions.apiConnect): {
@@ -59,12 +63,12 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
             //// PROGRESS
             taskProgressResultSub = apiService.taskProgressResultObservable!.subscribe(message => {
-              if (!message.data) throw Error('Invalid server response');
+              if (!message.data) throw Error('[GDMN] Invalid server response');
 
               dispatch(gdmnActions.setLoading(true, JSON.parse(message.data).progress.description || ''));
             });
             taskStatusResultSub = apiService.taskStatusResultObservable!.subscribe(message => {
-              if (!message.data) throw Error('Invalid server response');
+              if (!message.data) throw Error('[GDMN] Invalid server response');
 
               const status: TTaskStatus = JSON.parse(message.data).status;
 
@@ -75,7 +79,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               }
             });
             taskActionResultSub = apiService.taskActionResultObservable!.subscribe(message => {
-              if (!message.data) throw Error('Invalid server response');
+              if (!message.data) throw Error('[GDMN] Invalid server response');
 
               if (JSON.parse(message.data).error) {
                 dispatch(rootActions.onError(new Error(JSON.parse(message.data).error)));
@@ -95,7 +99,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
-            console.log('auth error: ', error);
+            console.log('[GDMN] auth error: ', error);
 
             if (errorSubscription) {
               errorSubscription.unsubscribe();
@@ -141,7 +145,12 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             dispatch(rootActions.onError(error));
 
             if (error.errorData.code === TGdmnErrorCodes.INTERNAL) {
-              dispatch(gdmnActions.apiConnect(true));
+              if (internalErrorCounter <= MAX_INTERNAL_ERROR_RECONNECT_COUNT) {
+                internalErrorCounter++;
+                dispatch(gdmnActions.apiConnect(true));
+              } else {
+                rootActions.onError(new Error('[GDMN] Исчерпано максимальное кол-во попыток соединения с сервером. Попробуйте позже.'))
+              }
             } else {
               // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));
             }
