@@ -13,7 +13,7 @@ import { apiService } from '@src/app/services/apiService';
 import { withRouter } from 'react-router';
 
 export const EntityDataViewContainer = connect(
-  (state: IState, ownProps: IEntityDataViewProps) => {
+  (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
     const entityName = ownProps.match ? ownProps.match.params.entityName : '';
     return {
       data:
@@ -21,11 +21,12 @@ export const EntityDataViewContainer = connect(
           rs: state.recordSet[entityName],
           gcs: state.grid[entityName]
         },
-      erModel: state.gdmnState.erModel
+      erModel: state.gdmnState.erModel,
+      viewTabs: state.gdmnState.viewTabs
     };
   },
 
-  (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>, ownProps: IEntityDataViewProps) => ({
+  (dispatch: ThunkDispatch<IState, never, TGdmnActions>, ownProps: Partial<IEntityDataViewProps>) => ({
     ...bindDataViewDispatch(dispatch),
     loadFromERModel: (erModel: ERModel) => {
 
@@ -50,13 +51,13 @@ export const EntityDataViewContainer = connect(
             payload: q.inspect()
           }
         })
-        // .subscribe( value => {
-        //   if (value.error) {
-        //     console.log(value.error.message);
-        //   } else if (!!value.payload.result) {
-        //     console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
-        //   }
-        // });
+        .subscribe( value => {
+          if (value.error) {
+            console.log(value.error.message);
+          } else if (!!value.payload.result) {
+            console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
+          }
+        });
     }
   }),
 

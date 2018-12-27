@@ -135,7 +135,15 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             <Switch>
               <Route
                 path={`${match.path}/account`}
-                render={props => <AccountView apiDeleteAccount={apiDeleteAccount} addToTabList={addToTabList} {...props} />}
+                render={
+                  props =>
+                    <AccountView
+                      apiDeleteAccount={apiDeleteAccount}
+                      addToTabList={addToTabList}
+                      viewTabs={viewTabs}
+                      {...props}
+                    />
+                }
               />
               <Route
                 path={`${match.path}/web-stomp`}
@@ -145,13 +153,28 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                     apiGetData={apiGetData}
                     erModel={erModel}
                     addToTabList={addToTabList}
+                    viewTabs={viewTabs}
                     {...props}
                     onError={onError}
                   />
                 )}
               />
-              <Route path={`${match.path}/er-model`} component={ERModelViewContainer} />
-              <Route path={`${match.path}/entity/:entityName`} component={EntityDataViewContainer} />
+              <Route
+                path={`${match.path}/er-model`}
+                render={props =>
+                  <ERModelViewContainer
+                    {...props}
+                  />
+                }
+              />
+              <Route
+                path={`${match.path}/entity/:entityName`}
+                render={props =>
+                  <EntityDataViewContainer
+                    {...props}
+                  />
+                }
+              />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>

@@ -32,46 +32,55 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
 
   public isDataLoaded(): boolean {
     const { data } = this.props;
-    return !!data && !!data.rs;
+    return !!(data && data.rs);
   }
 
   public componentDidMount() {
-    super.componentDidMount();
-    const { loadData } = this.props;
-    if (!this.isDataLoaded()) {
+    const { viewTabs, addToTabList, match, loadData } = this.props;
+
+    if (!match || !match.url) {
+      throw new Error(`Invalid view ${this.getViewCaption()}`);
+    }
+
+    const viewTab = viewTabs.find( vt => vt.url === match.url );
+
+    if (viewTab && viewTab.loading) {
+      return;
+    }
+
+    if (this.isDataLoaded()) {
+      super.componentDidMount();
+    } else {
+      addToTabList({
+        caption: this.getViewCaption(),
+        url: match.url,
+        loading: true
+      });
+
       loadData();
     }
   }
 
   public componentDidUpdate() {
-    const { loadData } = this.props;
-    if (!this.isDataLoaded()) {
-      loadData();
-    }
-  }
+    const { viewTabs, addToTabList, match, loadData } = this.props;
 
-  private updateDetailed(data: IRSAndGCS): boolean {
-    if (!data.detail) {
-      return false;
+    if (!match || !match.url) {
+      throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
-    return data.detail.reduce((prev, d) => {
-      if (data.rs.getValue(data.rs.currentRow, d.rs.masterLink![0].fieldName) !== d.rs.masterLink![0].value) {
-        this.updateDetailed(d);
-        return true;
-      } else {
-        return this.updateDetailed(d) || prev;
-      }
-    }, false);
-  }
+    const viewTab = viewTabs.find( vt => vt.url === match.url );
 
-  public shouldComponentUpdate(nextProps: P, _nextState: S) {
-    const { data } = nextProps;
-
-    if (data && data.rs) {
+    if (!viewTab) {
+      throw new Error(`No viewTab for view ${this.getViewCaption()}`);
     }
 
-    return true;
+    if (viewTab.loading && this.isDataLoaded()) {
+      addToTabList({
+        caption: this.getViewCaption(),
+        url: match.url,
+        loading: false
+      });
+    }
   }
 
   public render() {

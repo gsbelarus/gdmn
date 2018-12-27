@@ -4,6 +4,7 @@ import { RouteComponentProps } from 'react-router';
 import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IViewProps<R = any> extends RouteComponentProps<R> {
+  viewTabs: IViewTab[];
   addToTabList: (viewTab: IViewTab) => void;
 }
 
@@ -54,9 +55,13 @@ export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P,
   public componentDidMount() {
     const { addToTabList, match } = this.props;
 
+    if (!match || !match.url) {
+      throw new Error(`Invalid view ${this.getViewCaption()}`);
+    }
+
     addToTabList({
       caption: this.getViewCaption(),
-      url: match ? match.url : '',
+      url: match.url,
       loading: false
     });
   }

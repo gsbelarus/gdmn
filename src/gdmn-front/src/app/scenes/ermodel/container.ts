@@ -11,7 +11,8 @@ import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
-import { ERModelView } from './component';
+import { ERModelView, IERModelViewProps } from './component';
+import { selectGdmnState } from '@src/app/store/selectors';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({
@@ -26,7 +27,8 @@ export const ERModelViewContainer = connect(
           }
         ]
       },
-    erModel: state.gdmnState.erModel
+    erModel: state.gdmnState.erModel,
+    viewTabs: state.gdmnState.viewTabs
   }),
 
   (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
