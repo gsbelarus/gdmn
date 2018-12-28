@@ -47,10 +47,10 @@ export class SessionManager {
         case SessionStatus.OPENED:
           break;
         case SessionStatus.CLOSED:
-          this._sessions.splice(this._sessions.indexOf(s), 1);
+          delete this._sessions[this._sessions.indexOf(s)];
           break;
         case SessionStatus.FORCE_CLOSING:
-          this._sessions.splice(this._sessions.indexOf(s), 1);
+          delete this._sessions[this._sessions.indexOf(s)];
           break;
         case SessionStatus.FORCE_CLOSED:
           s.emitter.removeListener("change", callback);
