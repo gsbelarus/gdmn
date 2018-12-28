@@ -318,8 +318,35 @@
   box-shadow: 2px 2px rgba(0,0,0,0.2);
 }
 
-.allEquals {
+.allOrs {
+  background-color: rgb(75, 148, 97);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
   display: flex;
+  flex-direction: column;
+}
+
+.allOrs > * {
+  margin-bottom: 8px;
+}
+
+.or {
+  display: flex;
+  flex-direction: row;
+}
+
+.or > * {
+  margin-right: 8px;
+}
+
+.allEquals {
+  background-color: rgb(31, 125, 168);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid rgb(151, 226, 10);
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);display: flex;
   flex-direction: column;
 }
 
@@ -328,12 +355,26 @@
 }
 
 .equals {
-  display: flex;
+  background-color: rgb(24, 199, 243);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);display: flex;
   flex-direction: row;
 }
 
 .equals > * {
   margin-right: 8px;
+}
+
+.equal {
+  background-color: rgb(6, 133, 165);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: row;
 }
 
 .opEQ {
@@ -364,6 +405,29 @@
   background-color: rgb(152, 248, 181);
   padding: 2px 6px 2px 6px;
   border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+}
+
+#scrollUp {
+  display: none;
+}
+
+.s {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+#buttonForScroll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgb(160, 160, 160);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  color: green;
   border-radius: 4px;
   box-shadow: 2px 2px rgba(0,0,0,0.2);
 }

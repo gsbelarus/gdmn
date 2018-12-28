@@ -152,6 +152,39 @@ describe("erModel", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
+    const phrase = parsePhrase("покажи организации из минска, пинска").phrase;
+    expect(phrase).toBeDefined();
+    expect(phrase instanceof RusPhrase).toBeTruthy();
+
+    const commands = translator.process(phrase as RusPhrase);
+
+    expect(commands[0].action).toEqual("QUERY");
+    expect(commands[0].payload).toBeDefined();
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.options).toBeDefined();
+    expect(commands[0].payload.options!.where).toBeDefined();
+    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("пинск");
+  });
+
+  it("phrase6", () => {
+    const company = erModel.entities.Company;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
     const phrase = parsePhrase("покажи все организации из минска").phrase;
     expect(phrase).toBeDefined();
     expect(phrase instanceof RusPhrase).toBeTruthy();
@@ -169,6 +202,72 @@ describe("erModel", () => {
     expect(commands[0].payload.options!.where![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+  });
+
+  it("phrase7", () => {
+    const company = erModel.entities.Company;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
+    const phrase = parsePhrase("покажи все организации из минска и пинска").phrase;
+    expect(phrase).toBeDefined();
+    expect(phrase instanceof RusPhrase).toBeTruthy();
+
+    const commands = translator.process(phrase as RusPhrase);
+
+    expect(commands[0].action).toEqual("QUERY");
+    expect(commands[0].payload).toBeDefined();
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.options).toBeDefined();
+    expect(commands[0].payload.options!.where).toBeDefined();
+    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("пинск");
+  });
+
+  it("phrase8", () => {
+    const company = erModel.entities.Company;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
+    const phrase = parsePhrase("покажи все организации из минска, пинска").phrase;
+    expect(phrase).toBeDefined();
+    expect(phrase instanceof RusPhrase).toBeTruthy();
+
+    const commands = translator.process(phrase as RusPhrase);
+
+    expect(commands[0].action).toEqual("QUERY");
+    expect(commands[0].payload).toBeDefined();
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.options).toBeDefined();
+    expect(commands[0].payload.options!.where).toBeDefined();
+    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(placeKey).toBeInstanceOf(EntityAttribute);
+    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("пинск");
   });
 
   // it("phrase6", () => {
@@ -192,10 +291,10 @@ describe("erModel", () => {
   //  expect(commands[0].payload.options).toBeDefined();
   //  expect(commands[0].payload.options!.where).toBeDefined();
   //  expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-  //  expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias");
+  //  expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("aliasL2");
   //  expect(commands[0].payload.options!.where![0].equals![0].attribute).toEqual(placeKey);
   //  expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
-  //  expect(commands[0].payload.options!.where![0].equals![1].alias).toEqual("alias");
+  //  expect(commands[0].payload.options!.where![0].equals![1].alias).toEqual("aliasL2");
   //  expect(commands[0].payload.options!.where![0].equals![1].attribute).toEqual(placeKey);
   //  expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("минск");
   // });

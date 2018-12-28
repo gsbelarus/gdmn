@@ -10,7 +10,7 @@ import { predefinedPhrases } from "./phrases";
 import { ICommand } from 'gdmn-nlp-agent';
 import { isMorphToken, IMorphToken } from "gdmn-nlp";
 import { Select } from "../query/Select";
-import { EntityQuery } from "gdmn-orm";
+import { EntityQuery, EntityQueryField } from "gdmn-orm";
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -206,29 +206,65 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     );
   }
 
+  private collUpsFields(id: string) {
+    var div = document.getElementById(id);
+    div.style.display = div.style.display !== "none" && div.style.display !== "block" ? "block" : div.style.display === "none" ? "block" : "none";
+    var button = document.getElementById("buttonForScroll");
+    button.innerHTML = div.style.display === "none" ? "..." : "^";
+}
+
   private _renderCommand(command: ICommand) {
     return (
       <div className="command">
         <div className={`action${command.action}`} />
         <div className="payload" >
-          <div className="entityName"> {command.payload.link.entity.name} </div>
-          <div className="fields">
-            { command.payload.link.fields.map( (field, idx) => 
-                <div className="field" key={idx}>{field.attribute.name}</div>
-              ) }
-          </div>
-          {command.payload.options.where && command.payload.options.where.length && <div className="options" >
-            {command.payload.options.where.map( (m, idx1) => 
-              m.equals && <div className="allEquals" key={idx1}>
-              { m.equals.map( (eq, idx2) => 
-                <div className="equals" key={idx2}>
-                  <div className="attr">{eq.attribute.name}</div>
-                  <div className="opEQ" />
-                  <div className="value">{eq.value}</div>
+        <div className="alias">{command.payload.link.alias}</div>
+        <div className="entityName"> {command.payload.link.entity.name} </div>
+        <div className="fields">
+          <div id="scrollUp">
+            <div className="s">
+              { command.payload.link.fields.map( (field, idx) =>
+                <div>
+                  <div className="field" key={idx}>{field.attribute.name}
+                  {field.link &&
+                    <div className="payload">
+                      <div className="alias">{field.link.alias}</div>
+                      <div className="entityName">{field.link.entity.name}</div>
+                      <div className="fields">{
+                        field.link.fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )
+                      }</div>
+                    </div>
+                  } </div>
                 </div>
-              ) }</div>
-            ) } </div>
-          } </div>
+              ) }
+              </div>
+            </div>
+            <button id="buttonForScroll" onClick={ () => this.collUpsFields("scrollUp") }>...</button>
+          </div>
+        </div>  
+        {command.payload.options.where && command.payload.options.where.length && <div className="options" >
+          {command.payload.options.where.map( (m, idx1) => 
+            m.or && <div className="allOrs" key={idx1}>
+            { m.or.map( (or, idx2) =>
+              <div  key={`or${idx2}`}>
+                { idx2 !== 0 ? <div>OR</div> : undefined }
+                <div className="or" key={idx2}>
+                  { or.equals && <div className="equals">
+                      {or.equals.map((equal, idx3) => 
+                        <div className="equal" key={idx3}>
+                          <div className="alias">{equal.alias}</div>
+                          <div className="attr">{equal.attribute.name}</div>
+                          <div className="opEQ" />
+                          <div className="value"> {equal.value} </div>
+                        </div> 
+                      )}
+                    </div>
+                  }
+              </div>
+            </div>
+            ) }</div>
+          ) } </div>
+        } 
       </div>
     );
   }
