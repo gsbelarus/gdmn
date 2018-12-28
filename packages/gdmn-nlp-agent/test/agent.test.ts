@@ -87,12 +87,13 @@ describe("erModel", () => {
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
   });
 
   it("phrase3", () => {
@@ -135,12 +136,13 @@ describe("erModel", () => {
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
   });
 
   it("phrase5", () => {
@@ -163,17 +165,20 @@ describe("erModel", () => {
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("пинск");
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].value).toEqual("пинск");
   });
 
   it("phrase6", () => {
@@ -196,12 +201,13 @@ describe("erModel", () => {
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
   });
 
   it("phrase7", () => {
@@ -224,17 +230,20 @@ describe("erModel", () => {
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("пинск");
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].value).toEqual("пинск");
   });
 
   it("phrase8", () => {
@@ -257,17 +266,20 @@ describe("erModel", () => {
     expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals).toBeDefined();
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
-    expect(commands[0].payload.options!.where![0].equals![0].alias).toEqual("alias2");
+    expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
+    expect(commands[0].payload.options!.where![0].or).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![0].equals).toBeDefined();
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].alias).toEqual("alias2");
     expect(placeKey).toBeInstanceOf(EntityAttribute);
-    expect(commands[0].payload.options!.where![0].equals![0].attribute)
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
-    expect(commands[0].payload.options!.where![0].equals![1].value).toEqual("пинск");
+    expect(commands[0].payload.options!.where![0].or![1].equals![0].value).toEqual("пинск");
   });
 
   // it("phrase6", () => {
