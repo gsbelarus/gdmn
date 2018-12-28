@@ -178,14 +178,19 @@ describe("Firebird driver tests", async () => {
         it("preparation sql with an error", () => AConnection.executeTransaction({
             connection: globalConnection,
             callback: async (transaction) => {
+                const promises = [];
                 for (let i = 0; i < count; i++) {
-                    await expect(globalConnection.execute(transaction, "DROP TABLE TEST"))
-                        .rejects.toThrow(new Error("Error: unsuccessful metadata update\n" +
+                    promises.push(globalConnection.execute(transaction, "DROP TABLE TEST"));
+                }
+                for (const promise of promises) {
+                    await expect(promise).rejects.toThrow(
+                        new Error("Error: unsuccessful metadata update\n" +
                             "-DROP TABLE TEST failed\n" +
                             "-SQL error code = -607\n" +
                             "-Invalid command\n" +
                             "-Table TEST does not exist"
-                        ));
+                        )
+                    );
                 }
             }
         }), TIMEOUT);
@@ -212,34 +217,39 @@ describe("Firebird driver tests", async () => {
             await AConnection.executeTransaction({
                 connection: globalConnection,
                 callback: async (transaction) => {
-                    for (let i = 0; i < count; i++) {
-                        await globalConnection.execute(transaction, `
+                    const id = 1;
+                    await globalConnection.execute(transaction, `
                             INSERT INTO TEST2 (ID)
                             VALUES (:id)
-                        `, {id: i});
-                        await globalConnection.execute(transaction, `
+                        `, {id});
+                    await globalConnection.execute(transaction, `
                             INSERT INTO TEST1 (ID, REF)
                             VALUES (:id, :ref)
                         `, {
-                            id: i,
-                            ref: i
-                        });
-                        await expect(globalConnection.execute(transaction, `
+                        id,
+                        ref: id
+                    });
+                    const promises = [];
+                    for (let i = 0; i < count; i++) {
+                        promises.push(globalConnection.execute(transaction, `
                             DELETE
                             FROM TEST2
                             WHERE ID = :id
-                        `, {id: i}))
-                            .rejects.toThrow(new Error(
-                                "Error: violation of FOREIGN KEY constraint \"INTEG_5\" on table \"TEST1\"\n" +
+                        `, {id}));
+                    }
+                    for (const promise of promises) {
+                        await expect(promise).rejects.toThrow(
+                            new Error("Error: violation of FOREIGN KEY constraint \"INTEG_5\" on table \"TEST1\"\n" +
                                 "-Foreign key references are present for the record\n" +
                                 "-Problematic key value is (\"ID\" = 1)"
-                            ));
+                            )
+                        );
                     }
                 }
             });
         }, TIMEOUT);
 
-        it("execution sql with an error", async () => {
+        it("execution sql with insert/update/delete", async () => {
             await AConnection.executeTransaction({
                 connection: globalConnection,
                 callback: async (transaction) => {
