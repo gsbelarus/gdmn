@@ -257,7 +257,9 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING AS F$1\n" +
-      "FROM CHILD_ENTITY T$1");
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$2.ID");
+
 
     await AConnection.executeTransaction({
       connection,
@@ -531,8 +533,9 @@ describe("Query", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.ID AS F$1\n" +
       "FROM TEST_ENTITY T$2\n" +
-      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
-      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$3.PARENT");
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$4.PARENT");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({
@@ -565,9 +568,10 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING1 AS F$1\n" +
-      "FROM CHILD_ENTITY T$2\n" +
-      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.INHERITEDKEY\n" +
-      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$3.PARENT");
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$4.PARENT");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({
@@ -600,8 +604,10 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING2 AS F$1\n" +
-      "FROM CHILD_ENTITY2 T$2\n" +
-      "  LEFT JOIN CHILD_ENTITY2 T$1 ON T$1.INHERITEDKEY = T$2.PARENT");
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  LEFT JOIN CHILD_ENTITY2 T$1 ON T$1.INHERITEDKEY = T$4.PARENT");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({
@@ -638,9 +644,10 @@ describe("Query", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.ID AS F$1\n" +
       "FROM TEST_ENTITY T$2\n" +
-      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
-      "  JOIN CHILD_ENTITY2 T$4 ON T$4.LB <= T$3.LB AND T$4.RB >= T$3.RB\n" +
-      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$3.PARENT");
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$5 ON T$5.LB <= T$4.LB AND T$5.RB >= T$4.RB\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$4.PARENT");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({
@@ -676,10 +683,11 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING1 AS F$1\n" +
-      "FROM CHILD_ENTITY T$2\n" +
-      "  JOIN CHILD_ENTITY2 T$3 ON T$3.INHERITEDKEY = T$2.INHERITEDKEY\n" +
-      "  JOIN CHILD_ENTITY2 T$4 ON T$4.LB <= T$3.LB AND T$4.RB >= T$3.RB\n" +
-      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$3.PARENT");
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$5 ON T$5.LB <= T$4.LB AND T$5.RB >= T$4.RB\n" +
+      "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$4.PARENT");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({
@@ -714,8 +722,10 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING2 AS F$1\n" +
-      "FROM CHILD_ENTITY2 T$2\n" +
-      "  JOIN CHILD_ENTITY2 T$1 ON T$1.LB <= T$2.LB AND T$1.RB >= T$2.RB");
+      "FROM TEST_ENTITY T$2\n" +
+      "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$1 ON T$1.LB <= T$4.LB AND T$1.RB >= T$4.RB");
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({

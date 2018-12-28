@@ -49,6 +49,10 @@ export class Select {
     return "";
   }
 
+  private static _geMainRelationName(entity: Entity): IRelation {
+    return entity.adapter!.relation[0];
+  }
+
   private static _getOwnRelationName(entity: Entity): string {
     if (entity.adapter) {
       const relations = entity.adapter.relation.filter((rel) => !rel.weak);
@@ -147,26 +151,21 @@ export class Select {
   private _makeFrom(): string {
     const link = this._query.link;
 
-    const existsRelations = this._getExistsRelations(link);
-    const from = existsRelations.map((rel, index) => {
-      if (index) {
+    const mainRelation = Select._geMainRelationName(link.entity);
+    const from = link.entity.adapter!.relation.map((rel) => {
+      if (rel.relationName == mainRelation.relationName) {
+        return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
+      } else {
         return SQLTemplates.join(
           rel.relationName,
           this._getTableAlias(link, rel.relationName),
           Select._getPKFieldName(link.entity, rel.relationName),
-          this._getTableAlias(link, existsRelations[0].relationName),
-          Select._getPKFieldName(link.entity, existsRelations[0].relationName),
+          this._getTableAlias(link, mainRelation.relationName),
+          Select._getPKFieldName(link.entity, mainRelation.relationName),
           rel.weak ? "LEFT" : ""
         );
-      } else {
-        return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
       }
     });
-
-    if (!from.length) {
-      const relationName = link.entity.adapter!.relation[0].relationName;
-      from.push(SQLTemplates.from(this._getTableAlias(link, relationName), relationName));
-    }
 
     return from.join("\n");
   }

@@ -77,7 +77,10 @@ describe("ERExport", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.FULLNAME AS F$1\n" +
-      "FROM GD_COMPANY T$1");
+      "FROM GD_CONTACT T$2\n" +
+      "  JOIN GD_COMPANY T$1 ON T$1.CONTACTKEY = T$2.ID\n" +
+      "  LEFT JOIN GD_COMPANYCODE T$3 ON T$3.COMPANYKEY = T$2.ID\n" +
+      "  JOIN GD_OURCOMPANY T$4 ON T$4.COMPANYKEY = T$2.ID");
 
     await AConnection.executeTransaction({
       connection,
@@ -102,6 +105,9 @@ describe("ERExport", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.NAME AS F$1\n" +
       "FROM GD_CONTACT T$1\n" +
+      "  JOIN GD_COMPANY T$2 ON T$2.CONTACTKEY = T$1.ID\n" +
+      "  LEFT JOIN GD_COMPANYCODE T$3 ON T$3.COMPANYKEY = T$1.ID\n" +
+      "  JOIN GD_OURCOMPANY T$4 ON T$4.COMPANYKEY = T$1.ID\n" +
       "WHERE T$1.CONTACTTYPE = :P$1");
 
     await AConnection.executeTransaction({
