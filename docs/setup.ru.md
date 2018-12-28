@@ -9,7 +9,7 @@
 
 ### Windows
 
-Педварительно, если установлены, удалить Visual Studio Build tools 2017. Это можно сделать через инсталятор Visual Studio Installer в меню приложений Windows.
+Предварительно, если установлены, удалить Visual Studio Build tools 2017. Это можно сделать через инсталятор Visual Studio Installer в меню приложений Windows.
 
 Выполняем из командной строки с правами Администратора:
 
