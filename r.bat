@@ -1,2 +1,2 @@
-yarn
-yarn rebuild
+call yarn
+call yarn rebuild

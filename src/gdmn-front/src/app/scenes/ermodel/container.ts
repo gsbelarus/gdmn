@@ -1,18 +1,14 @@
 import { connect } from 'react-redux';
-import { ERModel, EntityQuery, EntityLink, ScalarAttribute, EntityQueryField } from 'gdmn-orm';
 import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow, setRecordSet } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
 import { withRouter } from 'react-router';
-import { TTaskActionNames } from '@gdmn/server-api';
 
 import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
-import { apiService } from '@src/app/services/apiService';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
-import { ERModelView, IERModelViewProps } from './component';
-import { selectGdmnState } from '@src/app/store/selectors';
+import { ERModelView } from './component';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({
@@ -34,29 +30,6 @@ export const ERModelViewContainer = connect(
   (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
     ...bindDataViewDispatch(thunkDispatch),
     apiGetSchema: () => thunkDispatch(gdmnActions.apiGetSchema()),
-    loadEntityData: (erModel: ERModel, entityName: string) => {
-      const entity = erModel.entities[entityName];
-      const q = new EntityQuery(new EntityLink(
-        entity,
-        'z',
-        Object.values(entity.attributes).filter( attr => attr instanceof ScalarAttribute ).map( attr => new EntityQueryField(attr) )
-      ));
-
-      apiService
-        .getData({
-          payload: {
-            action: TTaskActionNames.QUERY,
-            payload: q.inspect()
-          }
-        })
-        // .subscribe( value => {
-        //   if (value.error) {
-        //     console.log(value.error.message);
-        //   } else if (!!value.payload.result) {
-        //     console.log('QUERY response result: ', value.payload.result);
-        //   }
-        // });
-    },
     loadData: () => thunkDispatch( (dispatch, getState) => {
       const erModel = getState().gdmnState.erModel;
 
@@ -162,15 +135,5 @@ export const ERModelViewContainer = connect(
         hideFooter: true
       }));
     })
-  }),
-
-  (stateProps, dispatchProps) => {
-    const { erModel } = stateProps;
-    const { loadEntityData } = dispatchProps;
-    return {
-      ...stateProps,
-      ...dispatchProps,
-      apiLoadEntityData: (entity: string) => loadEntityData(erModel, entity)
-    }
-  }
+  })
 )(withRouter(ERModelView));

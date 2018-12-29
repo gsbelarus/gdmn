@@ -1,16 +1,17 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
-import { RecordSetAction } from 'gdmn-recordset';
+import { RecordSetAction, IFieldDef, RecordSet, IDataRow } from 'gdmn-recordset';
 import { GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
 import { TTaskActionNames } from '@gdmn/server-api';
-
+import { List } from 'immutable';
 import { TGdmnActions } from '../../gdmn/actions';
 import { EntityDataView, IEntityDataViewProps } from './EntityDataView';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
 import { withRouter } from 'react-router';
+import { attr2fd } from './utils';
 
 export const EntityDataViewContainer = connect(
   (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
@@ -54,8 +55,24 @@ export const EntityDataViewContainer = connect(
         .subscribe( value => {
           if (value.error) {
             console.log(value.error.message);
-          } else if (!!value.payload.result) {
+          } else if (value.payload.result) {
             console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
+            console.log('QUERY response result: ', JSON.stringify(value.payload.result.aliases));
+            console.log('QUERY response result: ', JSON.stringify(value.payload.result.info));
+
+            const fieldDefs = Object.entries(value.payload.result.aliases).map( ([fieldAlias, data]) => {
+              const attr = entity.attributes[data.attribute];
+              if (!attr) {
+                throw new Error(`Unknown attribute ${data.attribute}`);
+              }
+              return attr2fd(fieldAlias, entity, attr);
+            });
+
+            const rs = RecordSet.createWithData(
+              entity.name,
+              fieldDefs,
+              List(value.payload.result.data as IDataRow[])
+            );
           }
         });
     }
