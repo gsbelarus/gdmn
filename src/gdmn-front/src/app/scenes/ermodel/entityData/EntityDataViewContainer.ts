@@ -1,8 +1,8 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
-import { RecordSetAction, IFieldDef, RecordSet, IDataRow } from 'gdmn-recordset';
-import { GridAction } from 'gdmn-grid';
+import { RecordSetAction, IFieldDef, RecordSet, IDataRow, createRecordSet, TFieldType } from 'gdmn-recordset';
+import { GridAction, createGrid } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
 import { TTaskActionNames } from '@gdmn/server-api';
 import { List } from 'immutable';
@@ -27,7 +27,7 @@ export const EntityDataViewContainer = connect(
     };
   },
 
-  (dispatch: ThunkDispatch<IState, never, TGdmnActions>, ownProps: Partial<IEntityDataViewProps>) => ({
+  (dispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({
     ...bindDataViewDispatch(dispatch),
     loadFromERModel: (erModel: ERModel) => {
 
@@ -73,6 +73,22 @@ export const EntityDataViewContainer = connect(
               fieldDefs,
               List(value.payload.result.data as IDataRow[])
             );
+
+            dispatch(createRecordSet({ name: rs.name, rs }));
+
+            dispatch(createGrid({
+              name: rs.name,
+              columns: rs.fieldDefs.map( fd => (
+                {
+                  name: fd.fieldName,
+                  caption: [fd.caption || fd.fieldName],
+                  fields: [{...fd}],
+                  width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                })),
+              leftSideColumns: 0,
+              rightSideColumns: 0,
+              hideFooter: true
+            }));
           }
         });
     }

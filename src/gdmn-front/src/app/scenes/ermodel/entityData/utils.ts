@@ -1,4 +1,4 @@
-import { StringAttribute, IntegerAttribute, FloatAttribute, DateAttribute, NumberAttribute, Attribute, Entity } from "gdmn-orm";
+import { StringAttribute, IntegerAttribute, FloatAttribute, DateAttribute, NumberAttribute, Attribute, Entity, SequenceAttribute } from "gdmn-orm";
 import { IFieldDef, TFieldType } from "gdmn-recordset";
 
 export function attr2fd(fieldAlias: string, _entity: Entity, attr: Attribute): IFieldDef {
@@ -7,7 +7,7 @@ export function attr2fd(fieldAlias: string, _entity: Entity, attr: Attribute): I
 
   if (attr instanceof StringAttribute) {
     dataType = TFieldType.String;
-  } else if (attr instanceof IntegerAttribute) {
+  } else if (attr instanceof IntegerAttribute || attr instanceof SequenceAttribute) {
     dataType = TFieldType.Integer;
   } else if (attr instanceof FloatAttribute) {
     dataType = TFieldType.Float;
@@ -16,7 +16,7 @@ export function attr2fd(fieldAlias: string, _entity: Entity, attr: Attribute): I
   } else if (attr instanceof NumberAttribute) {
     dataType = TFieldType.Currency;
   } else {
-    throw new Error(`Unsupported attribute type ${attr.inspectDataType()}`);
+    throw new Error(`Unsupported attribute type ${attr.type} of ${attr.name}`);
   }
 
   return {
