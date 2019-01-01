@@ -25,6 +25,7 @@ type TGdmnViewStateProps = {
   loading: boolean;
   loadingMessage?: string;
   viewTabs: IViewTab[];
+  onCloseTab: (url: string) => void;
 };
 
 type TGdmnViewProps = IStompDemoViewProps &
@@ -39,7 +40,8 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount, loading, onError, addToTabList, viewTabs } = this.props;
+    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount,
+      loading, onError, addToTabList, viewTabs, onCloseTab } = this.props;
     if (!match) return null; // todo
 
     // console.log(`MATCH -- ${location.pathname}`);
@@ -99,7 +101,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           barHeight={4}
           description={this.props.loadingMessage}
         />
-        <ViewTabs viewTabs={viewTabs} />
+        <ViewTabs viewTabs={viewTabs} onClose={onCloseTab} />
         <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>

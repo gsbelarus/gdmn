@@ -20,6 +20,14 @@
   padding: 2px 4px 0px 4px;
   text-align: center;
   min-height: 27px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.ViewTabText > * {
+  cursor: default;
 }
 
 .ViewActiveColor {
@@ -62,4 +70,13 @@
   border-bottom: 1px solid #404040;
   flex: 1 1 auto;
   justify-self: flex-end;
+}
+
+.ViewTabCross {
+  margin-left: 6px;
+  font-weight: bold;
+}
+
+.ViewTabCross:hover {
+  color: lightblue;
 }
