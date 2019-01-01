@@ -18,6 +18,7 @@ import styles from './styles.css';
 import { TGdmnActions } from './actions';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import { IViewTab } from './types';
+import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
@@ -98,38 +99,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           barHeight={4}
           description={this.props.loadingMessage}
         />
-        {
-          viewTabs.length ?
-            <div styleName="ViewTabs">
-              <div styleName="ViewTabSpace" />
-              {viewTabs.map(vt =>
-                vt.url === location.pathname ? (
-                  <Fragment key={vt.url}>
-                    <div styleName="ViewTab">
-                      <div styleName="ViewActiveColor" />
-                        <Link to={vt.url}>
-                          <div styleName="ViewTabText ViewActiveTab">{vt.caption}</div>
-                        </Link>
-                    </div>
-                    <div styleName="ViewTabSpace" />
-                  </Fragment>
-                ) : (
-                  <Fragment key={vt.url}>
-                    <div styleName="ViewTab">
-                      <Link to={vt.url}>
-                        <div styleName="ViewTabText ViewInactiveTab">{vt.caption}</div>
-                      </Link>
-                      <div styleName="ViewInactiveShadow" />
-                    </div>
-                    <div styleName="ViewTabSpace" />
-                  </Fragment>
-                )
-              )}
-              <div styleName="ViewRestSpace" />
-            </div>
-          :
-            undefined
-        }
+        <ViewTabs viewTabs={viewTabs} />
         <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>
