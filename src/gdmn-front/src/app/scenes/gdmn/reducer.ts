@@ -1,9 +1,14 @@
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { ERModel } from 'gdmn-orm';
 import { getType } from 'typesafe-actions';
-import { TGdmnViewStateProps } from '@src/app/scenes/gdmn/component';
+import { IViewTab } from './types';
 
-type TGdmnState = TGdmnViewStateProps;
+type TGdmnState = {
+  erModel: ERModel;
+  loading: boolean;
+  loadingMessage?: string;
+  viewTabs: IViewTab[];
+};
 
 const initialState: TGdmnState = {
   erModel: new ERModel(),
