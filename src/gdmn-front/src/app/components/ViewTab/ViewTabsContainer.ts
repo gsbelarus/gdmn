@@ -9,6 +9,7 @@ import { deleteRecordSet } from "gdmn-recordset";
 
 export const ViewTabsContainer = connect(
   (state: IState) => ({
+    recordSet: state.recordSet,
     viewTabs: selectGdmnState(state).viewTabs,
   }),
   dispatch => ({

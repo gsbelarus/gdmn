@@ -35,55 +35,20 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
     return !!(data && data.rs);
   }
 
-  /*
-  public componentDidMount() {
-    const { viewTabs, addToTabList, match, loadData } = this.props;
-
-    if (!match || !match.url) {
-      throw new Error(`Invalid view ${this.getViewCaption()}`);
-    }
-
-    if (this.isDataLoaded()) {
-      super.componentDidMount();
-    } else {
-      const viewTab = viewTabs.find( vt => vt.url === match.url );
-
-      if (viewTab && viewTab.loading) {
-        return;
-      }
-
-      addToTabList({
-        caption: this.getViewCaption(),
-        url: match.url,
-        loading: true
-      });
-
-      loadData();
-    }
-  }
-
   public componentDidUpdate() {
-    const { viewTabs, addToTabList, match } = this.props;
+    const { data, loadData } = this.props;
 
-    if (!match || !match.url) {
-      throw new Error(`Invalid view ${this.getViewCaption()}`);
+    if (!data || !data.rs) {
+      loadData();
+      return false;
+    } else {
+      if (data.detail && data.detail.length) {
+
+      }
     }
 
-    const viewTab = viewTabs.find( vt => vt.url === match.url );
-
-    if (!viewTab) {
-      throw new Error(`No viewTab for view ${this.getViewCaption()}`);
-    }
-
-    if (viewTab.loading && this.isDataLoaded()) {
-      addToTabList({
-        caption: this.getViewCaption(),
-        url: match.url,
-        loading: false
-      });
-    }
+    return true;
   }
-  */
 
   public renderMD() {
     const {
