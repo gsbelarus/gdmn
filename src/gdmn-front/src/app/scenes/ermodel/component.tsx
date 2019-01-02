@@ -15,6 +15,21 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
     return 'ER Model';
   }
 
+  public componentDidMount() {
+    const { addToTabList, match } = this.props;
+
+    if (!match || !match.url) {
+      throw new Error(`Invalid view ${this.getViewCaption()}`);
+    }
+
+    addToTabList({
+      caption: this.getViewCaption(),
+      url: match.url,
+      loading: false,
+      rs: ['entities', 'attributes']
+    });
+  }
+
   public getCommandBarItems(): ICommandBarItemProps[] {
     const { apiGetSchema, data, match } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {

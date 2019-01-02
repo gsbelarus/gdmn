@@ -11,6 +11,8 @@ import { selectGdmnState } from '@src/app/store/selectors';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { bindViewDispatch } from '@src/app/components/bindViewDispatch';
 import { withRouter, RouteComponentProps } from 'react-router';
+import { deleteRecordSet } from 'gdmn-recordset';
+import { IViewTab } from './types';
 
 // fixme: compose<any, TGdmnViewProps>
 
@@ -39,17 +41,25 @@ const getGdmnContainer = () =>
           const { match, history } = ownProps;
           const { viewTabs } = stateProps;
           const { dispatch } = dispatchProps;
+          let tabToDelete: IViewTab | undefined = undefined;
 
           if (match && viewTabs.length) {
             if (viewTabs.length === 1) {
               history.push(match.path);
-              dispatch(gdmnActions.deleteViewTab(viewTabs[0]));
+              tabToDelete = viewTabs[0];
             } else {
               const foundIdx = viewTabs.findIndex( vt => vt.url === url );
               if (foundIdx >= 0) {
                 history.push(foundIdx > 0 ? viewTabs[foundIdx - 1].url : viewTabs[foundIdx + 1].url);
-                dispatch(gdmnActions.deleteViewTab(viewTabs[foundIdx]));
+                tabToDelete = viewTabs[foundIdx];
               }
+            }
+          }
+
+          if (tabToDelete) {
+            dispatch(gdmnActions.deleteViewTab(tabToDelete));
+            if (tabToDelete.rs) {
+              tabToDelete.rs.forEach( name => dispatch(deleteRecordSet({ name })) );
             }
           }
         }
