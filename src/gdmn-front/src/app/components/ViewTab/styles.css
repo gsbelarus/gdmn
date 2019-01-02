@@ -80,3 +80,7 @@
 .ViewTabCross:hover {
   color: lightblue;
 }
+
+.ViewTabSpinner {
+  margin-right: 6px;
+}

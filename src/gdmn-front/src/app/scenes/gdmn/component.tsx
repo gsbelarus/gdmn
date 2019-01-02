@@ -19,6 +19,7 @@ import { TGdmnActions } from './actions';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import { IViewTab } from './types';
 import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
+import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
@@ -40,8 +41,8 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount,
-      loading, onError, addToTabList, viewTabs, onCloseTab } = this.props;
+    const { match, history, location, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount,
+      loading, onError, addToTabList, viewTabs } = this.props;
     if (!match) return null; // todo
 
     // console.log(`MATCH -- ${location.pathname}`);
@@ -101,7 +102,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           barHeight={4}
           description={this.props.loadingMessage}
         />
-        <ViewTabs viewTabs={viewTabs} onClose={onCloseTab} />
+        <ViewTabsContainer history={history} match={match} location={location} />
         <main styleName="WorkArea">
           <ErrBoundary>
             <Switch>

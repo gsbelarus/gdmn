@@ -35,6 +35,7 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
     return !!(data && data.rs);
   }
 
+  /*
   public componentDidMount() {
     const { viewTabs, addToTabList, match, loadData } = this.props;
 
@@ -82,6 +83,7 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
       });
     }
   }
+  */
 
   public renderMD() {
     const {

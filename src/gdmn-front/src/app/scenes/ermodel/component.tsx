@@ -25,7 +25,6 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
     addToTabList({
       caption: this.getViewCaption(),
       url: match.url,
-      loading: false,
       rs: ['entities', 'attributes']
     });
   }
