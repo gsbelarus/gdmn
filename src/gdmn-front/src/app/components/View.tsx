@@ -39,18 +39,7 @@ export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P,
     return <CommandBar items={this.getCommandBarItems()} />;
   }
 
-  public getCommandBarItems(): ICommandBarItemProps[] {
-    return [
-      {
-        key: 'test',
-        text: 'Test...'
-      },
-      {
-        key: 'test2',
-        text: 'Test 2...'
-      }
-    ];
-  }
+  public getCommandBarItems(): ICommandBarItemProps[] { return []; }
 
   public componentDidMount() {
     const { addToTabList, match } = this.props;

@@ -1006,7 +1006,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       searchStr: undefined,
       foundRows: undefined,
       groups: undefined,
-      aggregates: undefined
+      aggregates: undefined,
+      masterLink: masterLink || this.params.masterLink
     });
 
     this._subject.next({ event: 'AfterScroll', rs });

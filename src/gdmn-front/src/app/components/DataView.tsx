@@ -23,12 +23,25 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   onToggleGroup: (rs: RecordSet, rowIdx: number) => void;
 }
 
+export interface IDataViewState {
+  counter: number;
+}
+
 export interface IGridRef {
   [name: string]: GDMNGrid | undefined;
 }
 
-export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S, R> {
+export class DataView<P extends IDataViewProps<R>, S extends IDataViewState = IDataViewState, R = any> extends View<P, IDataViewState, R> {
   private _gridRef: IGridRef = {};
+  private _lockUpdate: boolean = false;
+
+  public state: IDataViewState;
+
+  constructor(props: P) {
+    super(props);
+    this.state = { counter: 0 };
+    this.props.loadData();
+  }
 
   public isDataLoaded(): boolean {
     const { data } = this.props;
@@ -36,18 +49,27 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
   }
 
   public componentDidUpdate() {
-    const { data, loadData } = this.props;
-
-    if (!data || !data.rs) {
-      loadData();
-      return false;
+    if (!this.isDataLoaded()) {
+      this.props.loadData();
     } else {
-      if (data.detail && data.detail.length) {
-
+      const { data, loadData } = this.props;
+      if (data && data.rs && data.detail && data.detail.length) {
+        const masterLink = data.detail[0].rs.masterLink!;
+        const detailValue = masterLink.values[0].value;
+        const masterValue = data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName);
+        if (detailValue !== masterValue) {
+          if (!this._lockUpdate) {
+            this._lockUpdate = true;
+            loadData();
+          }
+        } else {
+          if (this._lockUpdate) {
+            this._lockUpdate = false;
+            this.setState(this.state);
+          }
+        }
       }
     }
-
-    return true;
   }
 
   public renderMD() {
