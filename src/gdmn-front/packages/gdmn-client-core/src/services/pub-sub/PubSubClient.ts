@@ -7,6 +7,7 @@ import {
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus
 } from './bridges/BasePubSubBridge';
+import { debugFnType } from '@stomp/stompjs';
 
 interface IPubSubMessageMeta {
   [key: string]: string | undefined;
@@ -24,11 +25,20 @@ interface IQueuedPublishMessage {
 }
 
 class PubSubClient {
+
   private readonly bridge: BasePubSubBridge;
-  public connectionDisconnectedObservable: Observable<TPubSubConnectStatus>;
   /* locally queued messages when broker is not connected or message not receipted*/
   private queuedPublishMessages: IQueuedPublishMessage[] = [];
 
+  private readonly maxAbnormallyReconnectCount: number | undefined;
+  private abnormallyReconnectCounter: number = 0;
+
+  public onMaxCountAbnormallyReconnect: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void;
+
+  public connectionDisconnectedObservable: Observable<TPubSubConnectStatus>;
+
+  public readonly activateConnection: () => void;
+  public readonly deactivateConnection: () => void;
   public readonly connect: (meta?: IPubSubMessageMeta) => void | never;
   public readonly disconnect: (meta?: IPubSubMessageMeta) => void;
   public readonly subscribe: <TMessage extends IPubSubMessage = IPubSubMessage>(
@@ -36,9 +46,14 @@ class PubSubClient {
     meta?: IPubSubMessageMeta
   ) => Observable<TMessage> | never; // fixme: type ts 3.2
 
-  constructor(bridge: BasePubSubBridge) {
+  constructor(
+    bridge: BasePubSubBridge,
+    maxAbnormallyReconnectCount?: number,
+    onMaxCountAbnormallyReconnect?: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void
+  ) {
     this.bridge = bridge;
 
+    // todo tmp
     this.bridge.connectionStatusObservable.subscribe(value => console.log('connectionStatusObservable: ' + value));
 
     this.connectionDisconnectedObservable = this.bridge.connectionStatusObservable.pipe(
@@ -47,6 +62,10 @@ class PubSubClient {
     this.connect = this.bridge.connect.bind(this.bridge);
     this.disconnect = this.bridge.disconnect.bind(this.bridge);
     this.subscribe = this.bridge.subscribe.bind(this.bridge);
+    this.activateConnection = this.bridge.activateConnection.bind(this.bridge);
+    this.deactivateConnection = this.bridge.deactivateConnection.bind(this.bridge);
+
+    this.bridge.onAbnormallyDeactivate = this.onAbnormallyDeactivate;
 
     this.bridge.connectionConnectedObservable.subscribe(
       // todo connectedMessage
@@ -60,6 +79,7 @@ class PubSubClient {
       }
     );
     this.connectionDisconnectedObservable.subscribe(() => {
+      this.abnormallyReconnectCounter = 0;
       this.queuedPublishMessages = []; // todo complete
     });
 
@@ -69,7 +89,26 @@ class PubSubClient {
         this.connectedMessageObservable = new Subject();
       }
     });
+
+    this.maxAbnormallyReconnectCount = maxAbnormallyReconnectCount;
+    this.onMaxCountAbnormallyReconnect = onMaxCountAbnormallyReconnect || (() => {});
   }
+
+  /*
+   * connection was closed abnormally
+   */
+  private onAbnormallyDeactivate: () => void = () => {
+    if (this.maxAbnormallyReconnectCount !== undefined) {
+      console.log('onAbnormallyDeactivate');
+      if (this.abnormallyReconnectCounter < this.maxAbnormallyReconnectCount) {
+        this.abnormallyReconnectCounter++;
+      } else {
+        console.log('[PUB-SUB] onAbnormallyDeactivate -> onMaxCountAbnormallyReconnect ');
+        this.onMaxCountAbnormallyReconnect(this.maxAbnormallyReconnectCount, this);
+        this.abnormallyReconnectCounter = 0;
+      }
+    }
+  };
 
   public publish<TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
@@ -106,6 +145,10 @@ class PubSubClient {
 
   public get reconnectMeta(): IPubSubMessageMeta {
     return this.bridge.reconnectMeta;
+  }
+
+  public set debug(fn: debugFnType) {
+    this.bridge.debug = fn;
   }
 
   private queuePublish(): void {

@@ -1,8 +1,9 @@
 .SignInBackground {
   background-color: #808080;
-  width: 100vw;
+  /*width: 100vw;*/
   height: 100vh;
   display: flex;
+  flex: 1;
   flex-direction: column;
   justify-content: center;
   align-items: center;

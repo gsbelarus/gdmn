@@ -14,6 +14,14 @@ const gdmnActions = {
     return () => resolve();
   }),
 
+  apiActivate: createAction('gdmn/API_ACTIVATE', resolve => {
+    return () => resolve();
+  }),
+
+  apiDeactivate: createAction('gdmn/API_DEACTIVATE', resolve => {
+    return () => resolve();
+  }),
+
   apiPing: createAction('gdmn/API_PING', resolve => {
     return (cmd: TPingTaskCmd) => resolve(cmd);
   }),

@@ -1,6 +1,6 @@
 import { empty, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
-import { Versions } from '@stomp/stompjs'; // todo
+import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
 
 import {
@@ -81,7 +81,11 @@ class GdmnPubSubApi {
   private taskProgressResultSubscription?: Subscription;
   private taskStatusResultSubscription?: Subscription;
 
-  constructor(endpointUrl: string) {
+  constructor(
+    endpointUrl: string,
+    debug?: debugFnType,
+    onMaxCountAbnormallyReconnect?: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void
+  ) {
     // todo authScheme: TAuthScheme
 
     this.pubSubClient = new PubSubClient(
@@ -91,9 +95,17 @@ class GdmnPubSubApi {
         heartbeatIncoming: 2000,
         heartbeatOutgoing: 2000,
         reconnectDelay: 5000,
-        stompVersions: new Versions([Versions.V1_2]) // todo
-      })
+        stompVersions: new Versions([Versions.V1_2]), // todo
+        logRawCommunication: true,
+        debug
+      }),
+      5,
+      onMaxCountAbnormallyReconnect
     );
+  }
+
+  public set onMaxCountAbnormallyReconnect(fn: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void) {
+   this.pubSubClient.onMaxCountAbnormallyReconnect = fn;
   }
 
   public async signUp(cmd: TSignUpCmd): Promise<TSignUpCmdResult> {

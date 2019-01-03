@@ -14,10 +14,10 @@ import {
   RecordSetAction,
   selectRow,
   setAllRowsSelected,
+  setRecordSet,
   SortFields,
   sortRecordSet,
-  toggleGroup,
-  setRecordSet
+  toggleGroup
 } from 'gdmn-recordset';
 import { bindViewDispatch } from './bindViewDispatch';
 

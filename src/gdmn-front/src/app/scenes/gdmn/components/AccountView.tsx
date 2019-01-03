@@ -2,7 +2,7 @@ import React from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 
-import { View, IViewProps } from '@src/app/components/View';
+import { IViewProps, View } from '@src/app/components/View';
 
 export interface IAccountViewProps extends IViewProps {
   apiDeleteAccount: () => void;

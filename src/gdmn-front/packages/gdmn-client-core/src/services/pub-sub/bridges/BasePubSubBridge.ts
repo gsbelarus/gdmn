@@ -2,6 +2,7 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
+import { debugFnType } from '@stomp/stompjs';
 
 const enum TPubSubConnectStatus {
   CONNECTED,
@@ -37,20 +38,24 @@ abstract class BasePubSubBridge<
 
   public connectedMessageObservable: Subject<IPubSubMessage> = new Subject();
   public errorMessageObservable: Subject<TErrorMessage> = new Subject();
+  public onAbnormallyDeactivate: () => void = () => {};
 
   public abstract set reconnectMeta(meta: IPubSubMessageMeta);
   public abstract get reconnectMeta(): IPubSubMessageMeta;
-
+  public abstract set debug(fn: debugFnType);
+  public abstract activateConnection(): void;
+  public abstract deactivateConnection(): void;
   public abstract connect(meta?: TConnectMeta): void | never;
-
   public abstract disconnect(meta?: TDisconnectMeta): void;
-
   public abstract publish(topic: string, message: IPubSubMessage): Subject<IPubSubMsgPublishState> | never;
-
   public abstract subscribe<TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
     meta?: TSubcribeMeta
   ): Observable<TMessage> | never;
+
+  protected constructor(onAbnormallyDeactivate?: () => void) {
+    if (onAbnormallyDeactivate) this.onAbnormallyDeactivate = onAbnormallyDeactivate;
+  }
 
   public isConnected(): boolean {
     return this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED;

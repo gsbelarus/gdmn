@@ -1,4 +1,4 @@
-import React, { ErrorInfo } from 'react';
+import React from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
@@ -6,7 +6,7 @@ import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 
-import { View, IViewProps } from '@src/app/components/View';
+import { IViewProps, View } from '@src/app/components/View';
 import { ICommand } from 'gdmn-nlp-agent/dist/definitions';
 
 interface IStompDemoViewState {

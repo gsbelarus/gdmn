@@ -1,6 +1,12 @@
-import { IComponentAsProps, ICommandBarItemProps, BaseComponent, IButtonProps, CommandBarButton } from "office-ui-fabric-react";
-import React from "react";
-import { Link } from "react-router-dom";
+import {
+  BaseComponent,
+  CommandBarButton,
+  IButtonProps,
+  ICommandBarItemProps,
+  IComponentAsProps
+} from 'office-ui-fabric-react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 export interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;

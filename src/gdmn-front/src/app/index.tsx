@@ -13,11 +13,17 @@ import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
 
 import config from 'config.json';
 import { apiService } from './services/apiService';
+import { rootActions } from '@src/app/scenes/root/actions';
 
 const clientRootPath = config.server.paths.clientRoot;
 const domContainerNode = config.webpack.appMountNodeId;
 
 const { store, persistor } = getStore(apiService);
+
+apiService.pubSubClient.debug = (message) => store.dispatch(rootActions.addStompLogMessage(message));
+apiService.pubSubClient.onMaxCountAbnormallyReconnect = (maxAbnormallyReconnectCount, context) => {
+  store.dispatch(rootActions.setLostConnectWarnOpened(true));
+};
 
 const AuthContainer = getSignInBoxContainer(apiService);
 const GdmnContainer = (getGdmnContainer as any)(apiService);

@@ -20,6 +20,7 @@ import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewCon
 import { IViewTab } from './types';
 import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
+import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
@@ -41,14 +42,25 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 @CSSModules(styles, { allowMultiple: true })
 class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const { match, history, location, dispatch, erModel, apiGetData, apiPing, apiDeleteAccount,
-      loading, onError, addToTabList, viewTabs } = this.props;
+    const {
+      match,
+      history,
+      dispatch,
+      erModel,
+      apiGetData,
+      apiPing,
+      apiDeleteAccount,
+      loading,
+      onError,
+      addToTabList,
+      location,
+      viewTabs
+    } = this.props;
     if (!match) return null; // todo
 
-    // console.log(`MATCH -- ${location.pathname}`);
-
     return (
-      <div className="App">
+      <div className="App" style={{ height: '100%', overflow: 'auto' }}>
+        <Sticky stickyPosition={StickyPositionType.Header}>
         <div className="Header">
           <Link to={`${match.path}`}>
             <Icon iconName="Home" className="RoundIcon" />
@@ -72,6 +84,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               <span className="NotificationsCount">4</span>
             </span>
             <IconButton
+              style={{ backgroundColor: 'transparent' }}
               iconProps={{ iconName: 'Contact' }}
               styles={{ menuIcon: { display: 'none' } }}
               className="RoundIcon"
@@ -102,8 +115,10 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
           barHeight={4}
           description={this.props.loadingMessage}
         />
+      </Sticky>
         <ViewTabsContainer history={history} match={match} location={location} />
-        <main styleName="WorkArea">
+        {/*<ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>*/}
+        <main styleName="WorkArea" style={{ padding: 16 }}>
           <ErrBoundary>
             <Switch>
               <Route
@@ -132,6 +147,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   />
                 )}
               />
+              <div style={{ margin: -16 }}>
               <Route
                 path={`${match.path}/er-model`}
                 render={props =>
@@ -148,10 +164,12 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   />
                 }
               />
+              </div>
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
         </main>
+        {/*</ScrollablePane>*/}
       </div>
     );
   }

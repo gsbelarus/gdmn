@@ -16,7 +16,12 @@ const devMiddlewares: Middleware[] = [
   createLogger({
     collapsed: () => true,
     predicate: (getState, action) =>
-      !(action.type.slice(0, 'RECORDSET'.length) === 'RECORDSET' || action.type.slice(0, 'GRID'.length) === 'GRID')
+      !(
+        action.type.slice(0, 'RECORDSET'.length) === 'RECORDSET' ||
+        action.type.slice(0, 'GRID'.length) === 'GRID' ||
+        action.type.slice(0, 'root/stompLogPanel/ADD_MESSAGE'.length) ===
+          'root/stompLogPanel/ADD_MESSAGE'
+      )
   })
 ];
 

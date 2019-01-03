@@ -8,7 +8,7 @@ import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus } from '@gdmn/server-api
 
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
-import { rootActions } from '@src/app/scenes/root/actions';
+import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
 
@@ -96,7 +96,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             ////
 
             dispatch(gdmnActions.apiGetSchema());
-
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
             console.log('[GDMN] auth error: ', error);
@@ -149,7 +148,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
                 internalErrorCounter++;
                 dispatch(gdmnActions.apiConnect(true));
               } else {
-                rootActions.onError(new Error('[GDMN] Исчерпано максимальное кол-во попыток соединения с сервером. Попробуйте позже.'))
+                rootActions.onError(
+                  new Error('[GDMN] Исчерпано максимальное кол-во попыток соединения с сервером. Попробуйте позже.')
+                );
               }
             } else {
               // dispatch(rootActions.onError(new Error('ОБНОВИТЕ СТРАНИЦУ!')));
@@ -259,6 +260,16 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       }
+
+      case getType(gdmnActions.apiActivate): {
+        apiService.pubSubClient.activateConnection();
+        break;
+      }
+
+      case getType(gdmnActions.apiDeactivate): {
+        apiService.pubSubClient.deactivateConnection();
+        break;
+      }
     }
 
     return next(action);
@@ -287,7 +298,23 @@ const loadingMiddleware: Middleware = ({ dispatch, getState }) => next => action
   return next(action);
 };
 
+const abortNetReconnectMiddleware: Middleware = ({ dispatch, getState }) => next => async (action: TRootActions) => {
+  switch (action.type) {
+    case getType(rootActions.abortNetReconnect): {
+      dispatch(gdmnActions.apiDeactivate());
+      break;
+    }
+    case getType(rootActions.netReconnect): {
+      dispatch(gdmnActions.apiActivate());
+      break;
+    }
+  }
+
+  return next(action);
+};
+
 const getGdmnMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
+  abortNetReconnectMiddleware,
   getApiMiddleware(apiService),
   loadingMiddleware
 ];

@@ -7,7 +7,8 @@ import {
   messageCallbackType,
   StompHeaders,
   StompSubscription,
-  Versions
+  Versions,
+  wsErrorCallbackType
 } from '@stomp/stompjs';
 import { Observable, Subject, Subscriber, Subscription } from 'rxjs';
 import { filter, first, share } from 'rxjs/operators';
@@ -65,6 +66,14 @@ interface IStompServiceConfig {
    */
   beforeConnect?: () => void;
   /**
+   * See [Client#onWebSocketError]{@link Client#onWebSocketError}.
+   */
+  // onWebSocketError?: wsErrorCallbackType;
+  /**
+   * See [Client#logRawCommunication]{@link Client#logRawCommunication}.
+   */
+  logRawCommunication?: boolean;
+  /**
    * See [Client#debug]{@link Client#debug}.
    */
   debug?: debugFnType;
@@ -73,7 +82,7 @@ interface IStompServiceConfig {
 /*
  feat: auto unsubscribe
  feat: auto resubscribe
- note: явное использование receipt только для StompFrame - PublishMessage
+ note: явное использование receipt только для PublishMessage
 */
 class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends BasePubSubBridge<
   TErrorMessage,
@@ -84,10 +93,11 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   private client: Client | null = null;
   private clientConfig: IStompServiceConfig;
 
-  constructor(clientConfig: IStompServiceConfig) {
-    super();
+  constructor(clientConfig: IStompServiceConfig, onAbnormallyDeactivate?: ()=>void) {
+    super(onAbnormallyDeactivate);
 
     this.clientConfig = clientConfig;
+    this.onAbnormallyDeactivate = onAbnormallyDeactivate || (()=>{});
   }
 
   public connect(meta?: Partial<TStompFrameHeaders>): void | never {
@@ -236,9 +246,19 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     return publishStateObservable;
   }
 
+  public activateConnection(): void {
+    if (this.client) this.client.activate();
+  }
+
+  public deactivateConnection(): void {
+    console.log('deactivateConnection')
+    if (this.client) this.client.deactivate();
+  }
+
   private initClient(): void {
     this.client = new Client(this.clientConfig);
-    if (!this.clientConfig.debug) this.client.debug = (...params) => console.log('[PUB-SUB][BRIDGE][STOMP][CLIENT]', ...params);
+    if (!this.clientConfig.debug)
+      this.client.debug = (...params) => console.log('[PUB-SUB][BRIDGE][STOMP][CLIENT]', ...params);
 
     // if (this.connectedMessageObservable.hasError) {
     //   this.connectedMessageObservable = new Subject();
@@ -250,15 +270,24 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     this.client.onStompError = this.onErrorFrame;
     this.client.onUnhandledMessage = this.onUnhandledMessageFrame;
     this.client.onUnhandledReceipt = this.onUnhandledReceiptFrame;
+    this.client.onWebSocketError = this.onWebSocketError;
   }
 
+  private onWebSocketError: wsErrorCallbackType = (evt: Event) => {
+    console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketError', evt);
+  };
+
   private onWebSocketClose: closeEventCallbackType = (evt: CloseEvent) => {
-    console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose');
+    console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose', evt);
+
+    if (!evt.wasClean) {
+      this.onAbnormallyDeactivate();
+    }
+``
     // if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) {
     //   // todo
     //   this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting
     // }
-
     if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
       console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose: DISCONNECTING');
       this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
@@ -309,6 +338,13 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
 
   get reconnectMeta(): Partial<TStompFrameHeaders> {
     return this.client!.connectHeaders;
+  }
+
+  set debug(fn: debugFnType) {
+    if (this.client) {
+      this.client.debug = fn;
+    }
+    this.clientConfig.debug = fn;
   }
 }
 

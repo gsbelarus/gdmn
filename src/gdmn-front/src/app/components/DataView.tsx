@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, IViewProps } from './View';
+import { IViewProps, View } from './View';
 import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState } from 'gdmn-grid';
 

@@ -6,28 +6,70 @@ import { Provider } from 'react-redux';
 import { Store } from 'redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { Persistor } from 'redux-persist/lib/types';
+import {
+  Fabric,
+  MessageBar,
+  MessageBarButton,
+  MessageBarType,
+  ScrollablePane,
+  ScrollbarVisibility,
+  Sticky,
+  StickyPositionType,
+  Customizer,
+  CommandBarButton,
+  DefaultButton
+} from 'office-ui-fabric-react';
+import { FluentCustomizations } from '@uifabric/fluent-theme';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
-
-export interface IRootProps {
-  readonly store: Store;
-  readonly persistor: Persistor;
-  readonly routes: ReactNode;
-  readonly renderMessageBarContainer: ReactType;
-}
 
 // TODO const history = browserHistory; // syncHistoryWithStore(browserHistory, store)
 
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
-export const Root: SFC<IRootProps> = ({ store, persistor, routes, renderMessageBarContainer: MessageBarContainer }) => (
+interface IRootProps {
+  readonly store: Store;
+  readonly persistor: Persistor;
+  readonly routes: ReactNode;
+  readonly renderErrorMsgBarContainer: ReactType;
+  readonly renderStompLogPanelContainer: ReactType;
+  readonly renderLostConnectWarnMsgContainer: ReactType;
+  readonly renderConnectBtnContainer: ReactType;
+}
+
+const Root: SFC<IRootProps> = ({
+  store,
+  persistor,
+  routes,
+  renderLostConnectWarnMsgContainer: LostConnectWarnMsgContainer,
+  renderErrorMsgBarContainer: ErrorMsgBarContainer,
+  renderStompLogPanelContainer: StompLogPanelContainer,
+  renderConnectBtnContainer: ConnectBtnContainer
+}) => (
   <ErrBoundary>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Fragment>
-          <BrowserRouter>{routes}</BrowserRouter>
-          <MessageBarContainer />
+          <Fabric style={{ height: '100%' }}>
+            <Customizer {...FluentCustomizations}>
+              <ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>
+                <BrowserRouter>{routes}</BrowserRouter>
+                <Sticky stickyPosition={StickyPositionType.Footer}>
+                  <ErrorMsgBarContainer />
+                  <LostConnectWarnMsgContainer />
+                  <footer style={{ backgroundColor: 'lightgray', padding: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'stretch' }}>
+                      <StompLogPanelContainer />
+                      <ConnectBtnContainer />
+                    </div>
+                  </footer>
+                </Sticky>
+              </ScrollablePane>
+            </Customizer>
+          </Fabric>
         </Fragment>
       </PersistGate>
     </Provider>
   </ErrBoundary>
 );
+
+export { Root, IRootProps };
