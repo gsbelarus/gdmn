@@ -389,8 +389,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
         onSetCursorPos(newCol, newRow);
 
-        console.log(`${offsetTop} - ${offsetLeft}`);
-
         if (offsetTop || offsetLeft) {
           onScroll({
             scrollLeft: scrollLeft + offsetLeft,
