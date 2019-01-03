@@ -20,7 +20,7 @@ import {
   TStompFrameHeaders,
   TSubcribeFrameHeaders
 } from '../protocols/stomp-protocol-v1.2';
-import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
+import { IPubSubMessage } from '../PubSubClient';
 import {
   BasePubSubBridge,
   IPubSubMsgPublishState,

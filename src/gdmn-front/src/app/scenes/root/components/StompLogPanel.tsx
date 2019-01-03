@@ -1,12 +1,11 @@
-import React, { Component, Fragment, PureComponent } from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import {
   DefaultButton,
   DetailsList,
   DetailsListLayoutMode,
   Panel,
   PanelType,
-  SelectionMode,
-  Toggle
+  SelectionMode
 } from 'office-ui-fabric-react';
 
 interface IStompPanelStateProps {

@@ -1,4 +1,4 @@
-import { IEntityQueryInspector, IERModel, IEntityQueryResponse } from 'gdmn-orm';
+import { IEntityQueryInspector, IEntityQueryResponse, IERModel } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 

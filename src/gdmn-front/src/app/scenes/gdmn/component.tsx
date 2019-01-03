@@ -18,7 +18,6 @@ import styles from './styles.css';
 import { TGdmnActions } from './actions';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import { IViewTab } from './types';
-import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
 

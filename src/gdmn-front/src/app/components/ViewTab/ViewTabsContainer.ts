@@ -1,11 +1,11 @@
-import { connect } from "react-redux";
-import { selectGdmnState } from "@src/app/store/selectors";
-import { IState } from "@src/app/store/reducer";
-import { IViewTab } from "@src/app/scenes/gdmn/types";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { IViewTabsProps, ViewTabs } from "./ViewTabs";
-import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { deleteRecordSet } from "gdmn-recordset";
+import { connect } from 'react-redux';
+import { selectGdmnState } from '@src/app/store/selectors';
+import { IState } from '@src/app/store/reducer';
+import { IViewTab } from '@src/app/scenes/gdmn/types';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { IViewTabsProps, ViewTabs } from './ViewTabs';
+import { gdmnActions } from '@src/app/scenes/gdmn/actions';
+import { deleteRecordSet } from 'gdmn-recordset';
 
 export const ViewTabsContainer = connect(
   (state: IState) => ({

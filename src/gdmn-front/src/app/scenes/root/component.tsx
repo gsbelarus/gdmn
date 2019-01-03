@@ -7,17 +7,12 @@ import { Store } from 'redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { Persistor } from 'redux-persist/lib/types';
 import {
+  Customizer,
   Fabric,
-  MessageBar,
-  MessageBarButton,
-  MessageBarType,
   ScrollablePane,
   ScrollbarVisibility,
   Sticky,
-  StickyPositionType,
-  Customizer,
-  CommandBarButton,
-  DefaultButton
+  StickyPositionType
 } from 'office-ui-fabric-react';
 import { FluentCustomizations } from '@uifabric/fluent-theme';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';

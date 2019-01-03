@@ -1,5 +1,5 @@
 import { compose, mapProps, setDisplayName } from 'recompose';
-import { TextField as TextInput  } from 'office-ui-fabric-react/lib/components/TextField';
+import { TextField as TextInput } from 'office-ui-fabric-react/lib/components/TextField';
 
 // TODO types
 

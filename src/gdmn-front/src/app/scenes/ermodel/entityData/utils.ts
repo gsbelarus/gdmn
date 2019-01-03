@@ -1,5 +1,14 @@
-import { StringAttribute, IntegerAttribute, FloatAttribute, DateAttribute, NumberAttribute, Attribute, Entity, SequenceAttribute } from "gdmn-orm";
-import { IFieldDef, TFieldType } from "gdmn-recordset";
+import {
+  Attribute,
+  DateAttribute,
+  Entity,
+  FloatAttribute,
+  IntegerAttribute,
+  NumberAttribute,
+  SequenceAttribute,
+  StringAttribute
+} from 'gdmn-orm';
+import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
 export function attr2fd(fieldAlias: string, _entity: Entity, attr: Attribute): IFieldDef {
   let dataType;

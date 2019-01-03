@@ -1,4 +1,4 @@
-import React, { ComponentType, ReactElement, ReactNode } from 'react';
+import React, { ComponentType, ReactElement } from 'react';
 import { branch, compose, renderComponent, setDisplayName, setStatic, wrapDisplayName } from 'recompose';
 
 interface IWithEmptyProps {

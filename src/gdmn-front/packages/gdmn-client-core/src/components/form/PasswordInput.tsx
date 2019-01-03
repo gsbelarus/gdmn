@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, ITextFieldProps  } from 'office-ui-fabric-react/lib/components/TextField';
+import { ITextFieldProps, TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 
 interface IPasswordInputState {

@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { RecordSet, TFieldType, createRecordSet, RecordSetAction, IDataRow, setRecordSet } from 'gdmn-recordset';
+import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSet, TFieldType } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';

@@ -1,8 +1,8 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
-import { RecordSetAction, IFieldDef, RecordSet, IDataRow, createRecordSet, TFieldType } from 'gdmn-recordset';
-import { GridAction, createGrid } from 'gdmn-grid';
+import { createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType } from 'gdmn-recordset';
+import { createGrid, GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
 import { TTaskActionNames } from '@gdmn/server-api';
 import { List } from 'immutable';

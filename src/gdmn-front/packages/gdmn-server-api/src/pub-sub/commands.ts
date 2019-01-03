@@ -1,8 +1,6 @@
 import {
   IGdmnMessageError,
   ITaskProgress,
-  TGdmnPublishMessageMeta,
-  TGdmnReceivedMessageMeta,
   TTaskActionMessageData,
   TTaskActionNames,
   TTaskActionPayloadTypes,
