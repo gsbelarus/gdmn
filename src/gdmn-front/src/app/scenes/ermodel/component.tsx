@@ -10,7 +10,7 @@ export interface IERModelViewProps extends IDataViewProps<any> {
   apiGetSchema: () => void
 }
 
-export class ERModelView extends DataView<IERModelViewProps> {
+export class ERModelView extends DataView<IERModelViewProps, {}> {
   public getViewCaption(): string {
     return 'ER Model';
   }

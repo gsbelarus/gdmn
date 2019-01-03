@@ -23,23 +23,16 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   onToggleGroup: (rs: RecordSet, rowIdx: number) => void;
 }
 
-export interface IDataViewState {
-  counter: number;
-}
-
 export interface IGridRef {
   [name: string]: GDMNGrid | undefined;
 }
 
-export class DataView<P extends IDataViewProps<R>, S extends IDataViewState = IDataViewState, R = any> extends View<P, IDataViewState, R> {
+export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S, R> {
   private _gridRef: IGridRef = {};
   private _lockUpdate: boolean = false;
 
-  public state: IDataViewState;
-
   constructor(props: P) {
     super(props);
-    this.state = { counter: 0 };
     this.props.loadData();
   }
 
@@ -65,7 +58,6 @@ export class DataView<P extends IDataViewProps<R>, S extends IDataViewState = ID
         } else {
           if (this._lockUpdate) {
             this._lockUpdate = false;
-            this.setState(this.state);
           }
         }
       }
