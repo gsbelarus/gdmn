@@ -82,7 +82,7 @@ export class Result extends AResult {
         if (value === null || value === undefined) {
             return false;
         }
-        return Boolean(this._getValue(field));
+        return Boolean(value);
     }
 
     public getDate(i: number): null | Date;
@@ -110,7 +110,7 @@ export class Result extends AResult {
         if (value === null || value === undefined) {
             return 0;
         }
-        return Number.parseFloat(this._getValue(field));
+        return Number.parseFloat(value);
     }
 
     public getString(i: number): string;
@@ -122,7 +122,7 @@ export class Result extends AResult {
         if (value === null || value === undefined) {
             return "";
         }
-        return String(this._getValue(field));
+        return String(value);
     }
 
     public async getAny(i: number): Promise<any>;

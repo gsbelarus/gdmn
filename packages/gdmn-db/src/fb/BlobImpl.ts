@@ -23,7 +23,7 @@ export class BlobImpl extends ABlob {
                 const length = await blobStream.length;
 
                 for (let i = 0; i < length; i++) {
-                    const buffer = Buffer.alloc(1);
+                    const buffer = Buffer.alloc(1); // TODO
                     await blobStream.read(buffer);
                     await callback(buffer);
                 }
@@ -46,14 +46,10 @@ export class BlobImpl extends ABlob {
             const blobStream = await BlobStream.open(this.transaction, this.blobLink);
             try {
                 const length = await blobStream.length;
+                const buffer = Buffer.alloc(length);
+                await blobStream.read(buffer);
 
-                const buffers: Buffer[] = [];
-                for (let i = 0; i < length; i++) {
-                    const buffer = Buffer.alloc(1);
-                    buffers.push(buffer);
-                    await blobStream.read(buffer);
-                }
-                return Buffer.concat(buffers, length);
+                return buffer;
 
             } catch (error) {
                 if (blobStream) {
