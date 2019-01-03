@@ -20,7 +20,7 @@ const domContainerNode = config.webpack.appMountNodeId;
 const { store, persistor } = getStore(apiService);
 
 const AuthContainer = getSignInBoxContainer(apiService);
-const GdmnContainer = getGdmnContainer(apiService);
+const GdmnContainer = (getGdmnContainer as any)(apiService);
 const NotFoundView = () => <h2>404!</h2>;
 const rootRoutes = (
   <Switch>

@@ -7,8 +7,7 @@ import React from 'react';
 
 export interface IERModelViewProps extends IDataViewProps<any> {
   erModel?: ERModel,
-  apiGetSchema: () => void,
-  apiLoadEntityData: (entity: string) => void
+  apiGetSchema: () => void
 }
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
@@ -16,8 +15,22 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
     return 'ER Model';
   }
 
+  public componentDidMount() {
+    const { addToTabList, match } = this.props;
+
+    if (!match || !match.url) {
+      throw new Error(`Invalid view ${this.getViewCaption()}`);
+    }
+
+    addToTabList({
+      caption: this.getViewCaption(),
+      url: match.url,
+      rs: ['entities', 'attributes']
+    });
+  }
+
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const { apiGetSchema, apiLoadEntityData, data, history, match } = this.props;
+    const { apiGetSchema, data, match } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -30,15 +43,6 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
           iconName: 'Table'
         },
         commandBarButtonAs: btn(data ? `entity/Folder` : `${match!.url}`)
-
-        /*
-        onClick: () => {
-          if (data && data.rs) {
-            history.push(`/entity/${data.rs.getString(data.rs.currentRow, 'name')}`)
-            //apiLoadEntityData(data.rs.getString(data.rs.currentRow, 'name'));
-          }
-        }
-        */
       },
       {
         key: 'reloadERModel',

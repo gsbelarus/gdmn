@@ -61,8 +61,7 @@ export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P,
 
     addToTabList({
       caption: this.getViewCaption(),
-      url: match.url,
-      loading: false
+      url: match.url
     });
   }
 

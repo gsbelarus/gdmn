@@ -10,7 +10,7 @@ export interface IEntityLinkInspector {
 }
 
 export interface IEntityLinkInspectorOptions {
-  hasRoot: boolean;
+  hasRoot?: boolean;
 }
 
 export class EntityLink {

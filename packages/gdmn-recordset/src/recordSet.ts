@@ -1,4 +1,4 @@
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType, TFieldType, MasterLink } from "./types";
+import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType, TFieldType, IMasterLink } from "./types";
 import { IFilter } from "./filter";
 import { List } from "immutable";
 import equal from "fast-deep-equal";
@@ -24,7 +24,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   foundRows?: FoundRows,
   groups?: IDataGroup<R>[],
   aggregates?: R,
-  masterLink?: MasterLink,
+  masterLink?: IMasterLink,
   subject: Subject<RecordSetEventData<R>>
 }
 
@@ -43,7 +43,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _foundRows?: FoundRows;
   private _groups?: IDataGroup<R>[];
   private _aggregates?: R;
-  private _masterLink?: MasterLink;
+  private _masterLink?: IMasterLink;
   private _subject: Subject<RecordSetEventData<R>>;
 
   private constructor (params: IRecordSetParams<R>)
@@ -82,7 +82,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     name: string,
     fieldDefs: FieldDefs,
     data: Data<R>,
-    masterLink?: MasterLink): RecordSet<R>
+    masterLink?: IMasterLink): RecordSet<R>
   {
     const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
 
@@ -993,7 +993,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return [{ str: s }];
   }
 
-  public setData(data: Data<R>, masterLink?: MasterLink): RecordSet<R> {
+  public setData(data: Data<R>, masterLink?: IMasterLink): RecordSet<R> {
     const rs = new RecordSet<R>({
       ...this.params,
       data,
