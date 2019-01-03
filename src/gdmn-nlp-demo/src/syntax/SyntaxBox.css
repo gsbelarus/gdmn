@@ -222,6 +222,15 @@
   margin-right: 8px;
 }
 
+.commandAction {
+  display: flex;
+  flex-direction: column;
+}
+
+.commandAction > * {
+  margin-bottom: 8px;
+}
+
 .actionQUERY {
   background-color: rgb(152, 248, 181);
   padding: 2px 6px 2px 6px;
@@ -303,7 +312,7 @@
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .options > * {
@@ -319,7 +328,7 @@
 }
 
 .allOrs {
-  background-color: rgb(75, 148, 97);
+  background-color: rgb(179, 88, 163);
   padding: 2px 6px 2px 6px;
   border: 1px solid green;
   border-radius: 4px;
@@ -338,6 +347,75 @@
 }
 
 .or > * {
+  margin-right: 8px;
+}
+
+.allAnds {
+  background-color: rgb(5, 100, 67);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.allAnds > * {
+  margin-bottom: 8px;
+}
+
+.and {
+  display: flex;
+  flex-direction: row;
+}
+
+.and > * {
+  margin-right: 8px;
+}
+
+.allNots {
+  background-color: rgb(173, 78, 71);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.allNots > * {
+  margin-bottom: 8px;
+}
+
+.not {
+  display: flex;
+  flex-direction: row;
+}
+
+.not > * {
+  margin-right: 8px;
+}
+
+.allisNulls {
+  background-color: rgb(76, 35, 104);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.allisNulls > * {
+  margin-bottom: 8px;
+}
+
+.isNull {
+  display: flex;
+  flex-direction: row;
+}
+
+.isNull > * {
   margin-right: 8px;
 }
 
@@ -409,7 +487,88 @@
   box-shadow: 2px 2px rgba(0,0,0,0.2);
 }
 
-#scrollUp {
+.wheres {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.wheres > * {
+  margin-right: 8px;
+}
+
+.boxWhere {
+  background-color: rgb(0, 187, 91);
+  padding: 8px;
+  border: 1px solid darkred;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.boxWhere > * {
+  margin-right: 8px;
+}
+
+.skip{
+  background-color: rgb(40, 105, 245);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: row;
+}
+
+.skip > * {
+  margin-right: 8px;
+}
+
+.first{
+  background-color: rgb(131, 15, 199);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: row;
+}
+
+.first > * {
+  margin-right: 8px;
+}
+
+.orders {
+  background-color: rgb(233, 125, 36);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.orders > * {
+  margin-bottom: 8px;
+}
+
+.order {
+  background-color: rgb(250, 177, 18);
+  padding: 2px 6px 2px 6px;
+  border: 1px solid green;
+  border-radius: 4px;
+  box-shadow: 2px 2px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: row;
+}
+
+.order > * {
+  margin-right: 8px;
+}
+
+.scrollUp {
   display: none;
 }
 
@@ -420,7 +579,7 @@
   align-items: center;
 }
 
-#buttonForScroll {
+.buttonForScroll {
   display: flex;
   flex-direction: column;
   align-items: center;

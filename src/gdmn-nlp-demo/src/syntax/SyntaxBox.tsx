@@ -10,7 +10,7 @@ import { predefinedPhrases } from "./phrases";
 import { ICommand } from 'gdmn-nlp-agent';
 import { isMorphToken, IMorphToken } from "gdmn-nlp";
 import { Select } from "../query/Select";
-import { EntityQuery, EntityQueryField } from "gdmn-orm";
+import { EntityQuery, IEntityQueryWhere, IEntityQueryWhereValue, IEntityQueryAlias, ScalarAttribute, IEntityQueryOrder } from "gdmn-orm";
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -206,22 +206,146 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     );
   }
 
-  private collUpsFields(id: string) {
+  private collUpsFields(id: string, idButton: string) {
     var div = document.getElementById(id);
-    div.style.display = div.style.display !== "none" && div.style.display !== "block" ? "block" : div.style.display === "none" ? "block" : "none";
-    var button = document.getElementById("buttonForScroll");
+    div.style.display = div.style.display !== "none" 
+      && div.style.display !== "block" ? "block" : div.style.display === "none" ? "block" : "none";
+    var button = document.getElementById(idButton);
     button.innerHTML = div.style.display === "none" ? "..." : "^";
 }
+
+  private displaySKIP(skip: number) {
+    return <div className="skip">
+      <div>SKIP</div>
+      <div className="skipNumber">{skip}</div>
+    </div>
+  }
+
+  private displayFIRST(first: number) {
+    return <div className="first">
+      <div>FIRST</div>
+      <div className="firstNumber">{first}</div>
+    </div>
+  }
+
+  private displayORDER(orders: IEntityQueryOrder[]) {
+    return orders.map( (order) => 
+      <div className="order">
+        <div className="alias">{order.alias}</div>
+        <div className="attr">{order.attribute.name}</div>
+        <div className="typeOrder">{order.type}</div>
+      </div>
+    )
+  }
+
+  private displayWHERE(wheres: IEntityQueryWhere[]) {
+    return wheres.map( (where, idx1) => 
+      <div className="where">
+        {this.displayOR(where.or, idx1)}
+        {this.displayAND(where.and, idx1)}
+        {this.displayNOT(where.not, idx1)}
+        {this.displayISNULL(where.isNull, null)}
+        {this.displayEQUALS(where.equals, null)}
+      </div>
+    )
+  }
+
+  private displayAND(ands: IEntityQueryWhere[], idx: number | null) {
+    return ands && <div className="allAnds" key={idx}>
+            { ands.map( (and, idx1) =>
+              <div  key={`and${idx1}`}>
+                { idx1 !== 0 ? <div>AND</div> : undefined }
+                { and.or ? this.displayOR(and.or, null) : undefined }
+                { and.and ? this.displayAND(and.and, null) : undefined }
+                { and.not ? this.displayNOT(and.not, null) : undefined }
+                { and.isNull ? this.displayISNULL(and.isNull, null) : undefined }
+                <div className="and" key={idx1}>
+                  {this.displayEQUALS(and.equals, null)}
+              </div>
+            </div>
+          ) }</div>
+  }
+
+  private displayOR(ors: IEntityQueryWhere[], idx: number | null) {
+    return ors && <div className="allOrs" key={idx}>
+            { ors.map( (or, idx1) =>
+              <div  key={`or${idx1}`}>
+                { idx1 !== 0 ? <div>OR</div> : undefined }
+                { or.and ? this.displayAND(or.and, null) : undefined }
+                { or.or ? this.displayOR(or.or, null) : undefined }
+                { or.not ? this.displayNOT(or.not, null) : undefined }
+                { or.isNull ? this.displayISNULL(or.isNull, null) : undefined }
+                <div className="or" key={idx1}>
+                {this.displayEQUALS(or.equals, null)}
+              </div>
+            </div>
+          ) }</div>
+  }
+
+  private displayEQUALS(equals: IEntityQueryWhereValue[], idx: number | null) {
+    return equals && <div className="equals">
+            {equals.map((equal, idx1) => 
+              <div className="equal" key={idx1}>
+                <div className="alias">{equal.alias}</div>
+                <div className="attr">{equal.attribute.name}</div>
+                <div className="opEQ" />
+                <div className="value"> {equal.value} </div>
+              </div> 
+            )}
+          </div>
+  }
+
+  private displayISNULL(isNulls: IEntityQueryAlias<ScalarAttribute>[], idx: number | null) {
+    return isNulls && <div className="allisNulls" key={idx}>
+            { isNulls.map( (isNull, idx1) =>
+              <div  key={`isNull${idx1}`}>
+                { <div>IsNULL</div> }
+                <div className="isNull" key={idx1}>
+                  <div className="alias">{isNull.alias}</div>
+                  <div className="attr">{isNull.attribute.name}</div>
+                </div>
+              </div>
+             ) }</div>
+
+  }
+
+  private displayNOT(nots: IEntityQueryWhere[], idx: number | null) {
+    return nots && <div className="allNots" key={idx}>
+            { nots.map( (not, idx1) =>
+              <div  key={`not${idx1}`}>
+                { <div>NOT</div> }
+                { not.and ? this.displayAND(not.and, null) : undefined }
+                { not.or ? this.displayOR(not.or, null) : undefined }
+                { not.not ? this.displayNOT(not.not, null) : undefined }
+                { not.isNull ? this.displayISNULL(not.isNull, null) : undefined }
+                <div className="not" key={idx1}>
+                {this.displayEQUALS(not.equals, null)}
+              </div>
+            </div>
+          ) }</div>
+  }
 
   private _renderCommand(command: ICommand) {
     return (
       <div className="command">
-        <div className={`action${command.action}`} />
+        <div className="commandAction">
+         <div className={`action${command.action}`} />
+         <div>
+            {
+              command.payload.options.skip &&
+              this.displaySKIP(command.payload.options.skip)
+            }
+            {
+              command.payload.options.first &&
+              this.displayFIRST(command.payload.options.first)
+            }
+          </div>
+        </div>
         <div className="payload" >
         <div className="alias">{command.payload.link.alias}</div>
         <div className="entityName"> {command.payload.link.entity.name} </div>
         <div className="fields">
-          <div id="scrollUp">
+          <div id="scrollUp0" className="scrollUp">
             <div className="s">
               { command.payload.link.fields.map( (field, idx) =>
                 <div>
@@ -230,41 +354,49 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                     <div className="payload">
                       <div className="alias">{field.link.alias}</div>
                       <div className="entityName">{field.link.entity.name}</div>
-                      <div className="fields">{
-                        field.link.fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )
-                      }</div>
+                      { field.link.fields && <div className="fields">
+                        <div id={`scrollUp${field.link.alias}/${idx}`} className="scrollUp">
+                          <div className="s">
+                            {field.link.fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
+                          </div>
+                        </div>
+                        {console.log(document.getElementById(`scrollUp${field.link.alias}/${idx}`))}
+                        <button id={`buttonForScroll${field.link.alias}/${idx}`} className="buttonForScroll" 
+                          onClick={ () => 
+                            this.collUpsFields(
+                              `scrollUp${field.link.alias}/${idx}`,
+                              `buttonForScroll${field.link.alias}/${idx}`
+                            ) }>...</button>
+                      </div> }
                     </div>
                   } </div>
                 </div>
               ) }
               </div>
             </div>
-            <button id="buttonForScroll" onClick={ () => this.collUpsFields("scrollUp") }>...</button>
+            <button id="buttonForScroll0" className="buttonForScroll" 
+              onClick={ () => this.collUpsFields("scrollUp0", "buttonForScroll0") }>...</button>
           </div>
-        </div>  
-        {command.payload.options.where && command.payload.options.where.length && <div className="options" >
-          {command.payload.options.where.map( (m, idx1) => 
-            m.or && <div className="allOrs" key={idx1}>
-            { m.or.map( (or, idx2) =>
-              <div  key={`or${idx2}`}>
-                { idx2 !== 0 ? <div>OR</div> : undefined }
-                <div className="or" key={idx2}>
-                  { or.equals && <div className="equals">
-                      {or.equals.map((equal, idx3) => 
-                        <div className="equal" key={idx3}>
-                          <div className="alias">{equal.alias}</div>
-                          <div className="attr">{equal.attribute.name}</div>
-                          <div className="opEQ" />
-                          <div className="value"> {equal.value} </div>
-                        </div> 
-                      )}
-                    </div>
-                  }
+        </div>
+        {
+          command.payload.options &&
+          <div className="options">
+            {
+              command.payload.options.where && command.payload.options.where.length &&
+              <div className="boxWhere">
+                <div className="titleBoxWhere">WHERE</div>
+                <div className="wheres">{this.displayWHERE(command.payload.options.where)}</div>
               </div>
-            </div>
-            ) }</div>
-          ) } </div>
-        } 
+            }
+            {
+              command.payload.options.order &&
+              <div className="orders">
+                <div>ORDER BY</div>
+                {this.displayORDER(command.payload.options.order)}
+              </div>
+            }
+          </div>
+        }
       </div>
     );
   }
