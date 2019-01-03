@@ -31,14 +31,17 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
   private _gridRef: IGridRef = {};
   private _lockUpdate: boolean = false;
 
-  constructor(props: P) {
-    super(props);
-    this.props.loadData();
-  }
-
   public isDataLoaded(): boolean {
     const { data } = this.props;
     return !!(data && data.rs);
+  }
+
+  public componentDidMount() {
+    if (!this.isDataLoaded()) {
+      this.props.loadData();
+    }
+
+    super.componentDidMount();
   }
 
   public componentDidUpdate() {
