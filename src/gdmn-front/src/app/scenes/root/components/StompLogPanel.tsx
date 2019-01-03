@@ -47,7 +47,7 @@ class StompLogPanel extends PureComponent<IStompPanelStateProps, IStompLogPanelS
           toggle={true}
           checked={stompLogOpened}
           text={stompLogOpened ? 'hide stomp log' : 'show stomp log'}
-          onClick={()=>this.onTogglePanel(undefined)}
+          onClick={() => this.onTogglePanel(undefined)}
         />
         <Panel
           style={{ overflow: 'scroll' }}
@@ -72,7 +72,4 @@ class StompLogPanel extends PureComponent<IStompPanelStateProps, IStompLogPanelS
   }
 }
 
-export {
-  StompLogPanel,
-  IStompPanelStateProps
-}
+export { StompLogPanel, IStompPanelStateProps };

@@ -25,7 +25,6 @@ interface IQueuedPublishMessage {
 }
 
 class PubSubClient {
-
   private readonly bridge: BasePubSubBridge;
   /* locally queued messages when broker is not connected or message not receipted*/
   private queuedPublishMessages: IQueuedPublishMessage[] = [];

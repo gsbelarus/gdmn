@@ -104,8 +104,10 @@ class GdmnPubSubApi {
     );
   }
 
-  public set onMaxCountAbnormallyReconnect(fn: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void) {
-   this.pubSubClient.onMaxCountAbnormallyReconnect = fn;
+  public set onMaxCountAbnormallyReconnect(
+    fn: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void
+  ) {
+    this.pubSubClient.onMaxCountAbnormallyReconnect = fn;
   }
 
   public async signUp(cmd: TSignUpCmd): Promise<TSignUpCmdResult> {

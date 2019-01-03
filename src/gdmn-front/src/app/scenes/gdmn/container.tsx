@@ -20,7 +20,7 @@ const getGdmnContainer = () =>
         erModel: selectGdmnState(state).erModel,
         loading: selectGdmnState(state).loading,
         loadingMessage: selectGdmnState(state).loadingMessage,
-        viewTabs: selectGdmnState(state).viewTabs,
+        viewTabs: selectGdmnState(state).viewTabs
       }),
       dispatch => ({
         ...bindViewDispatch(dispatch),

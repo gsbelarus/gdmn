@@ -60,61 +60,61 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     return (
       <div className="App" style={{ height: '100%', overflow: 'auto' }}>
         <Sticky stickyPosition={StickyPositionType.Header}>
-        <div className="Header">
-          <Link to={`${match.path}`}>
-            <Icon iconName="Home" className="RoundIcon" />
-          </Link>
-          <Icon iconName="Chat" className="NoFrameIcon" />
-          <div className="SearchBox">
-            find something...
-            <span className="WhereToSearch">/</span>
-          </div>
-          <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
-          <div className="RightSideHeaderPart">
-            <span className="BigLogo">
-              <b>
-                <i>#GDMN</i>
-              </b>{' '}
-              &mdash; революционная платформа
-            </span>
-            <span className="WithNotificationsCount">
-              <Icon iconName="Ringer" className="NoFrameIcon" />
-              <span className="NotificationsCount">4</span>
-            </span>
-            <IconButton
-              style={{ backgroundColor: 'transparent' }}
-              iconProps={{ iconName: 'Contact' }}
-              styles={{ menuIcon: { display: 'none' } }}
-              className="RoundIcon"
-              menuProps={{
-                shouldFocusOnMount: true,
-                gapSpace: 2,
-                isBeakVisible: true,
-                contextualMenuItemAs: (props: IContextualMenuItemProps) => {
-                  return props.item.link ? (
-                    <Link to={props.item.link}>
+          <div className="Header">
+            <Link to={`${match.path}`}>
+              <Icon iconName="Home" className="RoundIcon" />
+            </Link>
+            <Icon iconName="Chat" className="NoFrameIcon" />
+            <div className="SearchBox">
+              find something...
+              <span className="WhereToSearch">/</span>
+            </div>
+            <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
+            <div className="RightSideHeaderPart">
+              <span className="BigLogo">
+                <b>
+                  <i>#GDMN</i>
+                </b>{' '}
+                &mdash; революционная платформа
+              </span>
+              <span className="WithNotificationsCount">
+                <Icon iconName="Ringer" className="NoFrameIcon" />
+                <span className="NotificationsCount">4</span>
+              </span>
+              <IconButton
+                style={{ backgroundColor: 'transparent' }}
+                iconProps={{ iconName: 'Contact' }}
+                styles={{ menuIcon: { display: 'none' } }}
+                className="RoundIcon"
+                menuProps={{
+                  shouldFocusOnMount: true,
+                  gapSpace: 2,
+                  isBeakVisible: true,
+                  contextualMenuItemAs: (props: IContextualMenuItemProps) => {
+                    return props.item.link ? (
+                      <Link to={props.item.link}>
+                        <ContextualMenuItem {...props} />
+                      </Link>
+                    ) : (
                       <ContextualMenuItem {...props} />
-                    </Link>
-                  ) : (
-                    <ContextualMenuItem {...props} />
-                  );
-                },
-                items: commandsToContextualMenuItems(
-                  ['userProfile', '-', 'logout'],
-                  (action: TAuthActions | TGdmnActions) => dispatch(action),
-                  (link: string) => history.push(`${match.url}${link}`)
-                )
-              }}
-            />
+                    );
+                  },
+                  items: commandsToContextualMenuItems(
+                    ['userProfile', '-', 'logout'],
+                    (action: TAuthActions | TGdmnActions) => dispatch(action),
+                    (link: string) => history.push(`${match.url}${link}`)
+                  )
+                }}
+              />
+            </div>
           </div>
-        </div>
-        <ProgressIndicator
-          styles={{ itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' } }}
-          barHeight={4}
-          description={this.props.loadingMessage}
-        />
-      </Sticky>
+          <ProgressIndicator
+            styles={{ itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' } }}
+            barHeight={4}
+            description={this.props.loadingMessage}
+          />
+        </Sticky>
         <ViewTabsContainer history={history} match={match} location={location} />
         {/*<ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>*/}
         <main styleName="WorkArea" style={{ padding: 16 }}>
@@ -122,15 +122,14 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             <Switch>
               <Route
                 path={`${match.path}/account`}
-                render={
-                  props =>
-                    <AccountView
-                      apiDeleteAccount={apiDeleteAccount}
-                      addToTabList={addToTabList}
-                      viewTabs={viewTabs}
-                      {...props}
-                    />
-                }
+                render={props => (
+                  <AccountView
+                    apiDeleteAccount={apiDeleteAccount}
+                    addToTabList={addToTabList}
+                    viewTabs={viewTabs}
+                    {...props}
+                  />
+                )}
               />
               <Route
                 path={`${match.path}/web-stomp`}
@@ -147,22 +146,11 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 )}
               />
               <div style={{ margin: -16 }}>
-              <Route
-                path={`${match.path}/er-model`}
-                render={props =>
-                  <ERModelViewContainer
-                    {...props}
-                  />
-                }
-              />
-              <Route
-                path={`${match.path}/entity/:entityName`}
-                render={props =>
-                  <EntityDataViewContainer
-                    {...props}
-                  />
-                }
-              />
+                <Route path={`${match.path}/er-model`} render={props => <ERModelViewContainer {...props} />} />
+                <Route
+                  path={`${match.path}/entity/:entityName`}
+                  render={props => <EntityDataViewContainer {...props} />}
+                />
               </div>
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

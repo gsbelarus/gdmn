@@ -13,7 +13,7 @@ const rootActions = {
   addStompLogMessage: createAction('root/stompLogPanel/ADD_MESSAGE', resolve => {
     return (message: string) => resolve(message);
   }),
-  setLostConnectWarnOpened:  createAction('root/lostConnectWarnMsgBar/SET_OPENED', resolve => {
+  setLostConnectWarnOpened: createAction('root/lostConnectWarnMsgBar/SET_OPENED', resolve => {
     return (opened: boolean) => resolve(opened);
   }),
   abortNetReconnect: createAction('root/lostConnectWarnMsgBar/ABORT_NET_RECONNECT', resolve => {
@@ -21,7 +21,7 @@ const rootActions = {
   }),
   netReconnect: createAction('root/connectBtn/NET_RECONNECT', resolve => {
     return () => resolve();
-  }),
+  })
   // onNotAuthorizedAccess: createAction('root/ON_NOT_AUTHORIZED_ACCESS', resolve => {
   //   return (refererPath: string) => resolve(refererPath);
   // }),

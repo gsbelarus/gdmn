@@ -3,10 +3,10 @@ import { getType } from 'typesafe-actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { IStompPanelStateProps } from '@src/app/scenes/root/components/StompLogPanel';
 
-interface IRootState extends IStompPanelStateProps  {
+interface IRootState extends IStompPanelStateProps {
   // refererPath?: string;
   errorMsgBarText?: string;
-  logItems: {message: string}[];
+  logItems: { message: string }[];
   lostConnectWarnOpened: boolean;
   disconnectedMode: boolean;
 }
@@ -42,14 +42,17 @@ function reducer(state: IRootState = initialState, action: TRootActions) {
     case getType(rootActions.addStompLogMessage): {
       return {
         ...state,
-        logItems: [...state.logItems, { message:action.payload.length > 1000 ? `${action.payload.substr(0, 1000)}...`: action.payload }]
+        logItems: [
+          ...state.logItems,
+          { message: action.payload.length > 1000 ? `${action.payload.substr(0, 1000)}...` : action.payload }
+        ]
       };
     }
     case getType(rootActions.setLostConnectWarnOpened): {
       return {
         ...state,
         lostConnectWarnOpened: action.payload
-      }
+      };
     }
     default:
       return state;

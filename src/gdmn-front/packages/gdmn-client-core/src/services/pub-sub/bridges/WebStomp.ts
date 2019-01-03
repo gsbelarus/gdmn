@@ -93,11 +93,11 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   private client: Client | null = null;
   private clientConfig: IStompServiceConfig;
 
-  constructor(clientConfig: IStompServiceConfig, onAbnormallyDeactivate?: ()=>void) {
+  constructor(clientConfig: IStompServiceConfig, onAbnormallyDeactivate?: () => void) {
     super(onAbnormallyDeactivate);
 
     this.clientConfig = clientConfig;
-    this.onAbnormallyDeactivate = onAbnormallyDeactivate || (()=>{});
+    this.onAbnormallyDeactivate = onAbnormallyDeactivate || (() => {});
   }
 
   public connect(meta?: Partial<TStompFrameHeaders>): void | never {
@@ -251,7 +251,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   }
 
   public deactivateConnection(): void {
-    console.log('deactivateConnection')
+    console.log('deactivateConnection');
     if (this.client) this.client.deactivate();
   }
 
@@ -283,7 +283,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     if (!evt.wasClean) {
       this.onAbnormallyDeactivate();
     }
-``
+    ``;
     // if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) {
     //   // todo
     //   this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting

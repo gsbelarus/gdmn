@@ -44,13 +44,16 @@ const StompLogPanelContainer = connect((state: IState) => ({
   logItems: selectRootState(state).logItems
 }))(StompLogPanel);
 
-const ConnectBtnContainer = connect((state: IState) => ({
-  disabled: false, // TODO !selectRootState(state).disconnectedMode,
-  iconProps: { iconName: 'Sync' },
-  text: 'connect to server'
-}), dispatch => ({
-  onClick: bindActionCreators(rootActions.netReconnect, dispatch)
-}))(DefaultButton);
+const ConnectBtnContainer = connect(
+  (state: IState) => ({
+    disabled: false, // TODO !selectRootState(state).disconnectedMode,
+    iconProps: { iconName: 'Sync' },
+    text: 'connect to server'
+  }),
+  dispatch => ({
+    onClick: bindActionCreators(rootActions.netReconnect, dispatch)
+  })
+)(DefaultButton);
 
 const RootContainer = compose<IRootProps, IRootProps>(
   withProps({

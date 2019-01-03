@@ -33,15 +33,27 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   public render() {
     return this.renderOneColumn(
-      <div className="ViewBody" style={{width: 'max-content'}}>
+      <div className="ViewBody" style={{ width: 'max-content' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <TextField label="delay"  value={this.state.pingDelay.toString()} onChange={(e) =>this.handlePingDelayChange(e)} />
-            <TextField label="steps" value={this.state.pingSteps.toString()} onChange={(e) =>this.handlePingStepsChange(e)} />
-            <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
-            <br/>
-            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
-            <br/>
-            <PrimaryButton onClick={this.handleSendNlpQueryClick} text="покажи все организации из минска и пинска" disabled={!this.props.erModel} />
+          <TextField
+            label="delay"
+            value={this.state.pingDelay.toString()}
+            onChange={e => this.handlePingDelayChange(e)}
+          />
+          <TextField
+            label="steps"
+            value={this.state.pingSteps.toString()}
+            onChange={e => this.handlePingStepsChange(e)}
+          />
+          <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
+          <br />
+          <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+          <br />
+          <PrimaryButton
+            onClick={this.handleSendNlpQueryClick}
+            text="покажи все организации из минска и пинска"
+            disabled={!this.props.erModel}
+          />
         </div>
       </div>
     );
@@ -103,7 +115,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     cmds.forEach(value => {
       this.props.apiGetData(value.payload.inspect());
     });
-  }
+  };
 }
 
 export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };
