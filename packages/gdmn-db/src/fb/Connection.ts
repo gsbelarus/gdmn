@@ -100,6 +100,9 @@ export class Connection extends AConnection {
             throw new Error("Need database connection");
         }
 
+        if (this.transactions.size) {
+            throw new Error("Not all transactions finished");   // TODO
+        }
         await this._closeChildren();
 
         await this.client.statusAction((status) => this.handler!.detachAsync(status));

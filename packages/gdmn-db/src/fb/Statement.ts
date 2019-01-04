@@ -77,6 +77,9 @@ export class Statement extends AStatement {
             throw new Error("Statement already disposed");
         }
 
+        if (this.resultSets.size) {
+            throw new Error("Not all resultSets closed");   // TODO
+        }
         await this._closeChildren();
 
         await this.source.inMetadata.releaseAsync();

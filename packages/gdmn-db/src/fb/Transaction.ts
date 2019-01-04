@@ -41,6 +41,9 @@ export class Transaction extends ATransaction {
             throw new Error("Need absolute open transaction");
         }
 
+        if (this.statements.size) {
+            throw new Error("Not all statements disposed");   // TODO
+        }
         await this._closeChildren();
 
         await this.connection.client.statusAction((status) => this.handler!.commitAsync(status));
@@ -53,6 +56,9 @@ export class Transaction extends ATransaction {
             throw new Error("Need absolute open transaction");
         }
 
+        if (this.statements.size) {
+            throw new Error("Not all statements disposed");   // TODO
+        }
         await this._closeChildren();
 
         await this.connection.client.statusAction((status) => this.handler!.rollbackAsync(status));
