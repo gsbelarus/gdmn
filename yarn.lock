@@ -9605,9 +9605,9 @@ obuf@^1.0.0, obuf@^1.1.1, obuf@^1.1.2:
     tslib "^1.7.1"
 
 office-ui-fabric-react@^6:
-  version "6.118.1"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.118.1.tgz#d568eeac975df0b45c45094fbb07916083de9f6d"
-  integrity sha512-7C0Fx4895L0Bgs+WJxRQzdKVLlmZ5tNjm9o7IU058BWhnf2xZYnh9floJSDzQ5RiJOOgjcPfbxL4Z4u7xIsIng==
+  version "6.119.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.119.0.tgz#227402c42ec32be81585ed5a941140fe3d581ac7"
+  integrity sha512-q9PLARkGm5cyS+MqHrKAyBN5XVrn1rdLLHx8D7TKzWpQ8MeWhf1sOu71RrmNo/PV75hWe3OpqM0/1T25Ls2T9A==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/icons" ">=6.3.0 <7.0.0"
