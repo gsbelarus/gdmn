@@ -178,10 +178,11 @@ describe("Firebird driver tests", async () => {
         it("preparation sql with an error", () => AConnection.executeTransaction({
             connection: globalConnection,
             callback: async (transaction) => {
-                await new Promise((resolve) => {
+                await new Promise((resolve, reject) => {
                     let rejects = 0;
                     for (let i = 0; i < count; i++) {
                         globalConnection.execute(transaction, "DROP TABLE TEST")
+                            .then(reject)
                             .catch((error) => {
                                 expect(error).toEqual(
                                     new Error("Error: unsuccessful metadata update\n" +
@@ -236,7 +237,7 @@ describe("Firebird driver tests", async () => {
                         id,
                         ref: id
                     });
-                    await new Promise((resolve) => {
+                    await new Promise((resolve, reject) => {
                         let rejects = 0;
                         for (let i = 0; i < count; i++) {
                             globalConnection.execute(transaction, `
@@ -244,6 +245,7 @@ describe("Firebird driver tests", async () => {
                                 FROM TEST2
                                 WHERE ID = :id
                             `, {id})
+                                .then(reject)
                                 .catch((error) => {
                                     expect(error).toEqual(
                                         new Error("Error: violation of FOREIGN KEY constraint \"INTEG_5\" on table" +

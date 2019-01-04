@@ -4,7 +4,7 @@ import {ResultMetadata} from "./ResultMetadata";
 import {Statement} from "./Statement";
 import {BlobLink} from "./utils/BlobLink";
 import {SQL_BLOB_SUB_TYPE} from "./utils/constants";
-import {bufferToValue, dataWrite, fixMetadata, IDescriptor} from "./utils/fb-utils";
+import {bufferToValue, dataWrite, IDescriptor} from "./utils/fb-utils";
 
 export interface IResultSource {
     metadata: ResultMetadata;
@@ -33,29 +33,23 @@ export class Result extends AResult {
     public static async get(statement: Statement, source: any): Promise<Result> {
         if (Array.isArray(source)) {
             source = await statement.transaction.connection.client.statusAction(async (status) => {
-                const outMetadata = fixMetadata(status, await statement.source!.handler.getOutputMetadataAsync(status));
-                const inBuffer = new Uint8Array(statement.source!.inMetadata.getMessageLengthSync(status));
-                const buffer = new Uint8Array(outMetadata!.getMessageLengthSync(status));
+                const {inMetadata, outMetadata, inDescriptors} = statement.source!;
+                const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
+                const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
-                try {
-                    await dataWrite(statement, statement.source!.inDescriptors, inBuffer, source);
+                await dataWrite(statement, inDescriptors, inBuffer, source);
 
-                    const newTransaction = await statement.source!.handler.executeAsync(status,
-                        statement.transaction.handler, statement.source!.inMetadata, inBuffer, outMetadata, buffer);
+                const newTransaction = await statement.source!.handler.executeAsync(status,
+                    statement.transaction.handler, inMetadata, inBuffer, outMetadata, buffer);
 
-                    if (newTransaction && statement.transaction.handler !== newTransaction) {
-                        //// FIXME: newTransaction.releaseSync();
-                    }
-
-                    return {
-                        metadata: await ResultMetadata.getMetadata(statement),
-                        buffer
-                    };
-                } finally {
-                    if (outMetadata) {
-                        await outMetadata!.releaseAsync();
-                    }
+                if (newTransaction && statement.transaction.handler !== newTransaction) {
+                    //// FIXME: newTransaction.releaseSync();
                 }
+
+                return {
+                    metadata: await ResultMetadata.getMetadata(statement),
+                    buffer
+                };
             });
         }
         return new Result(statement, source);
