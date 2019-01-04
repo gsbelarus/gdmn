@@ -145,13 +145,22 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   />
                 )}
               />
-              <div style={{ margin: -16 }}>
-                <Route path={`${match.path}/er-model`} render={props => <ERModelViewContainer {...props} />} />
-                <Route
-                  path={`${match.path}/entity/:entityName`}
-                  render={props => <EntityDataViewContainer {...props} />}
-                />
-              </div>
+              <Route
+                path={`${match.path}/er-model`}
+                render={props => (
+                  <div style={{ margin: -16 }}>
+                    <ERModelViewContainer {...props} />
+                  </div>
+                )}
+              />
+              <Route
+                path={`${match.path}/entity/:entityName`}
+                render={props => (
+                  <div style={{ margin: -16 }}>
+                    <EntityDataViewContainer {...props} />
+                  </div>
+                )}
+              />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
