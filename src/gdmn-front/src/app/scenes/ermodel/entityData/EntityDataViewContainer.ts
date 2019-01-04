@@ -26,18 +26,22 @@ export const EntityDataViewContainer = connect(
       viewTabs: state.gdmnState.viewTabs
     };
   },
+  (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({
+    ...bindDataViewDispatch(thunkDispatch),
+    loadData: () => thunkDispatch( (dispatch, getState) => {
+      const erModel = getState().gdmnState.erModel;
 
-  (dispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({
-    ...bindDataViewDispatch(dispatch),
-    loadFromERModel: (erModel: ERModel) => {
+      if (!erModel || !Object.keys(erModel.entities).length) return;
 
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
 
       console.log('[GDMN] LOADING ' + entityName);
 
-      const entity = erModel.entities['Folder'];
+      const entity = erModel.entities[entityName];
 
-      if (!entity) return;
+      if (!entity) {
+        throw new Error(`Entity ${entityName} not found in ER Model`);
+      };
 
       const q = new EntityQuery(new EntityLink(
         entity,
@@ -76,36 +80,26 @@ export const EntityDataViewContainer = connect(
 
             dispatch(createRecordSet({ name: rs.name, rs }));
 
-            dispatch(createGrid({
-              name: rs.name,
-              columns: rs.fieldDefs.map( fd => (
-                {
-                  name: fd.fieldName,
-                  caption: [fd.caption || fd.fieldName],
-                  fields: [{...fd}],
-                  width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                })),
-              leftSideColumns: 0,
-              rightSideColumns: 0,
-              hideFooter: true
-            }));
+            const gcs = getState().grid[entity.name];
+
+            if (!gcs) {
+              dispatch(createGrid({
+                name: rs.name,
+                columns: rs.fieldDefs.map( fd => (
+                  {
+                    name: fd.fieldName,
+                    caption: [fd.caption || fd.fieldName],
+                    fields: [{...fd}],
+                    width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                  })),
+                leftSideColumns: 0,
+                rightSideColumns: 0,
+                hideFooter: true
+              }));
+            }
           }
         });
-    }
+    })
   }),
-
-  (stateProps, dispatchProps) => {
-    const { erModel } = stateProps;
-    const { loadFromERModel } = dispatchProps;
-    return {
-      ...stateProps,
-      ...dispatchProps,
-      loadData: () => {
-        if (erModel && Object.entries(erModel.entities).length) {
-          loadFromERModel(erModel);
-        }
-      }
-    }
-  }
 )(withRouter(EntityDataView));
 
