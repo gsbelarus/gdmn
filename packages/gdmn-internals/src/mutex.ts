@@ -6,10 +6,15 @@ export class Mutex {
   private _pending: MutexCallbackFunc[] = [];
 
   private _release: MutexReleaseFunc = () => {
-    this._lockCount -= 1;
     const pending = this._pending.shift();
     if (pending) {
-      setTimeout(() => pending(this._release), 0);
+      setTimeout(
+        () => {
+          this._lockCount -= 1;
+          pending(this._release);
+        }, 0);
+    } else {
+      this._lockCount -= 1;
     }
   }
 

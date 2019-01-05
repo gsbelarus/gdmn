@@ -1,7 +1,7 @@
 import { Mutex } from "gdmn-internals";
 
 describe("mutex", () => {
-  test("sync", () => {
+  test("sync never release", () => {
     const mutex = new Mutex();
 
     expect(mutex.isLocked()).toBeFalsy();
@@ -17,6 +17,52 @@ describe("mutex", () => {
     expect(mutex.isLocked()).toBeTruthy();
   });
 
+  test("sync multiple", () => {
+    const mutex = new Mutex();
+
+    expect(mutex.isLocked()).toBeFalsy();
+    mutex.acquire( release => {
+      /* do some work */
+      release();
+    });
+    expect(mutex.isLocked()).toBeFalsy();
+    mutex.acquire( release => {
+      /* do some work */
+      release();
+    });
+    expect(mutex.isLocked()).toBeFalsy();
+  });
+
+  test("async nested", done => {
+    const mutex = new Mutex();
+
+    expect(mutex.isLocked()).toBeFalsy();
+    mutex.acquire( release => {
+      release();
+
+      expect(mutex.isLocked()).toBeFalsy();
+      mutex.acquire( release => {
+        mutex.acquire( r => {
+          r();
+        });
+        release();
+      })
+    });
+    expect(mutex.isLocked()).toBeTruthy();
+    mutex.acquire( release => {
+      /* do some work */
+      release();
+    });
+    expect(mutex.isLocked()).toBeTruthy();
+
+    setTimeout(
+      () => {
+        expect(mutex.isLocked()).toBeFalsy();
+        done();
+      },
+    50)
+  });
+
   test("async", done => {
     const mutex = new Mutex();
     const res: number[] = [];
@@ -26,6 +72,12 @@ describe("mutex", () => {
       setTimeout( () => {
         res.push(2);
         release();
+        expect(mutex.isLocked()).toBeTruthy();
+        mutex.acquire( r => {
+          res.push(14);
+          r();
+          res.push(15);
+        });
         res.push(3);
       }, 100);
     });
@@ -60,8 +112,8 @@ describe("mutex", () => {
 
     setTimeout( () => {
       expect(mutex.isLocked()).toBeFalsy();
-      expect(res).toEqual([1, 4, 13, 9, 12, 2, 3, 5, 6, 7, 8, 10, 11]);
+      expect(res).toEqual([1, 4, 13, 9, 12, 2, 3, 5, 6, 7, 8, 10, 11, 14, 15]);
       done();
-    }, 150);
+    }, 200);
   });
 });
