@@ -2,6 +2,8 @@ import React from 'react';
 import { IViewProps, View } from './View';
 import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState } from 'gdmn-grid';
+import { Mutex } from 'gdmn-internals';
+import { getMutex, disposeMutex } from './dataViewMutexes';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -11,7 +13,7 @@ export interface IRSAndGCS {
 
 export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
-  loadData: () => void;
+  loadData: (mutex: Mutex) => void;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
   onColumnResize: (gridName: string, columnIndex: number, newWidth: number) => void;
@@ -27,8 +29,10 @@ export interface IGridRef {
   [name: string]: GDMNGrid | undefined;
 }
 
-export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S, R> {
+export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S, R> {
   private _gridRef: IGridRef = {};
+
+  public abstract getDataViewKey(): string;
 
   public isDataLoaded(): boolean {
     const { data } = this.props;
@@ -37,7 +41,7 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
 
   public componentDidMount() {
     if (!this.isDataLoaded()) {
-      this.props.loadData();
+      this.props.loadData(getMutex(this.getDataViewKey()));
     }
 
     super.componentDidMount();
@@ -46,7 +50,7 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
   public componentDidUpdate() {
     const { loadData } = this.props;
     if (!this.isDataLoaded()) {
-      loadData();
+      loadData(getMutex(this.getDataViewKey()));
     } else {
       const { data } = this.props;
       if (data && data.rs && data.detail && data.detail.length) {
@@ -54,10 +58,14 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
         const detailValue = masterLink.values[0].value;
         const masterValue = data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName);
         if (detailValue !== masterValue) {
-          loadData();
+          loadData(getMutex(this.getDataViewKey()));
         }
       }
     }
+  }
+
+  public componentWillUnmount() {
+    disposeMutex(this.getDataViewKey());
   }
 
   public renderMD() {
@@ -174,8 +182,16 @@ export class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S
     const { data } = this.props;
 
     if (data!.detail && data!.detail![0].rs) {
+      if (!data!.gcs || !data!.detail![0].gcs) {
+        return this.renderLoading();
+      }
+
       return this.renderMD();
     } else {
+      if (!data!.gcs) {
+        return this.renderLoading();
+      }
+
       return this.renderS();
     }
   }

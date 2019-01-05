@@ -9,6 +9,7 @@ import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { gdmnActions, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';
+import { Mutex } from 'gdmn-internals';
 
 export const ERModelViewContainer = connect(
   (state: IState) => ({
@@ -29,7 +30,7 @@ export const ERModelViewContainer = connect(
 
   (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
     ...bindDataViewDispatch(thunkDispatch),
-    loadData: () => thunkDispatch( (dispatch, getState) => {
+    loadData: (_mutex: Mutex) => thunkDispatch( (dispatch, getState) => {
       const erModel = getState().gdmnState.erModel;
 
       if (!erModel || !Object.keys(erModel.entities).length) {

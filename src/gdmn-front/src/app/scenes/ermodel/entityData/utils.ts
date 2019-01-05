@@ -6,7 +6,8 @@ import {
   IntegerAttribute,
   NumberAttribute,
   SequenceAttribute,
-  StringAttribute
+  StringAttribute,
+  BooleanAttribute
 } from 'gdmn-orm';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
@@ -24,6 +25,8 @@ export function attr2fd(fieldAlias: string, _entity: Entity, attr: Attribute): I
     dataType = TFieldType.Date;
   } else if (attr instanceof NumberAttribute) {
     dataType = TFieldType.Currency;
+  } else if (attr instanceof BooleanAttribute) {
+    dataType = TFieldType.Boolean;
   } else {
     throw new Error(`Unsupported attribute type ${attr.type} of ${attr.name}`);
   }
