@@ -16,22 +16,19 @@ export interface IClient {
 
 export class Client {
 
-    private static CLIENT?: IClient; // TODO hack
     private _client?: IClient;
 
     get client(): IClient | undefined {
-        return Client.CLIENT;   // TODO hack
         return this._client;
     }
 
     public async create(): Promise<void> {
-        if (Client.CLIENT) {
-            return; // TODO hack
+        if (this._client) {
             throw new Error("Client already created");
         }
 
         const master = getMaster(getDefaultLibraryFilename());
-        Client.CLIENT = {
+        this._client = {
             master,
             dispatcher: (await master.getDispatcherAsync())!,
             util: (await master.getUtilInterfaceAsync())!
@@ -39,16 +36,15 @@ export class Client {
     }
 
     public async destroy(): Promise<void> {
-        return; // TODO hack
-        // if (!this._client) {
-        //     throw new Error("Need created client");
-        // }
-        //
-        // this._client.dispatcher!.releaseSync();
-        // if (process.platform !== "darwin") {    // FIXME mac os
-        //     disposeMaster(this._client.master);
-        // }
-        // this._client = undefined;
+        if (!this._client) {
+            throw new Error("Need created client");
+        }
+
+        this._client.dispatcher!.releaseSync();
+        if (process.platform !== "darwin") {    // FIXME mac os
+            disposeMaster(this._client.master);
+        }
+        this._client = undefined;
     }
 
     public async statusAction<T>(action: (status: Status) => Promise<T>): Promise<T> {
