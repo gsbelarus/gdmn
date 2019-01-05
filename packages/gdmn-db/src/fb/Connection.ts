@@ -55,10 +55,14 @@ export class Connection extends AConnection {
         await this.client.create();
         this.handler = await this.client.statusAction(async (status) => {
             const dpb = createDpb(options, this.client.client!.util, status);
-            return await this.client!.client!.dispatcher!.createDatabaseAsync(status,
-                Connection._optionsToUri(options),
-                dpb.getBufferLengthSync(status),
-                dpb.getBufferSync(status));
+            try {
+                return await this.client!.client!.dispatcher!.createDatabaseAsync(status,
+                    Connection._optionsToUri(options),
+                    dpb.getBufferLengthSync(status),
+                    dpb.getBufferSync(status));
+            } finally {
+                await dpb.disposeAsync();
+            }
         });
     }
 
@@ -82,8 +86,12 @@ export class Connection extends AConnection {
         await this.client.create();
         this.handler = await this.client.statusAction(async (status) => {
             const dpb = createDpb(options, this.client.client!.util, status);
-            return await this.client!.client!.dispatcher!.attachDatabaseAsync(status,
-                Connection._optionsToUri(options), dpb.getBufferLengthSync(status), dpb.getBufferSync(status));
+            try {
+                return await this.client!.client!.dispatcher!.attachDatabaseAsync(status,
+                    Connection._optionsToUri(options), dpb.getBufferLengthSync(status), dpb.getBufferSync(status));
+            } finally {
+                await dpb.disposeAsync();
+            }
         });
     }
 
