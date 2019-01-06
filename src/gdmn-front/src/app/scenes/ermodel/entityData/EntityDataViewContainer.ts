@@ -1,6 +1,6 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
+import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute, BlobAttribute } from 'gdmn-orm';
 import { createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
@@ -49,7 +49,9 @@ export const EntityDataViewContainer = connect(
       const q = new EntityQuery(new EntityLink(
         entity,
         'z',
-        Object.values(entity.attributes).filter( attr => attr instanceof ScalarAttribute ).map( attr => new EntityQueryField(attr) )
+        Object.values(entity.attributes)
+          .filter( attr => attr instanceof ScalarAttribute && !(attr instanceof BlobAttribute) )
+          .map( attr => new EntityQueryField(attr) )
       ));
 
       mutex.acquire( release => {
