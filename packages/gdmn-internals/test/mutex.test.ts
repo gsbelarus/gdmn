@@ -1,52 +1,39 @@
 import { Mutex } from "gdmn-internals";
 
 describe("mutex", () => {
-  test("sync never release", () => {
+  test("never release", done => {
     const mutex = new Mutex();
 
     expect(mutex.isLocked()).toBeFalsy();
     mutex.acquire( release => {
       /* do some work */
       release();
-    });
-    expect(mutex.isLocked()).toBeFalsy();
-    mutex.acquire( release => {
-      /* do some work */
-      /* and never release */
     });
     expect(mutex.isLocked()).toBeTruthy();
-  });
 
-  test("sync multiple", () => {
-    const mutex = new Mutex();
+    setTimeout( () => expect(mutex.isLocked()).toBeFalsy(), 100 );
 
-    expect(mutex.isLocked()).toBeFalsy();
-    mutex.acquire( release => {
-      /* do some work */
-      release();
-    });
-    expect(mutex.isLocked()).toBeFalsy();
-    mutex.acquire( release => {
-      /* do some work */
-      release();
-    });
-    expect(mutex.isLocked()).toBeFalsy();
-  });
-
-  test("async nested", done => {
-    const mutex = new Mutex();
-
-    expect(mutex.isLocked()).toBeFalsy();
-    mutex.acquire( release => {
-      release();
-
-      expect(mutex.isLocked()).toBeFalsy();
+    setTimeout( () => {
       mutex.acquire( release => {
-        mutex.acquire( r => {
-          r();
-        });
-        release();
-      })
+        /* do some work */
+        /* and never release */
+      });
+      expect(mutex.isLocked()).toBeTruthy();
+    }, 200);
+
+    setTimeout( () => {
+      expect(mutex.isLocked()).toBeTruthy();
+      done();
+    }, 300);
+  });
+
+  test("sync multiple", done => {
+    const mutex = new Mutex();
+
+    expect(mutex.isLocked()).toBeFalsy();
+    mutex.acquire( release => {
+      /* do some work */
+      release();
     });
     expect(mutex.isLocked()).toBeTruthy();
     mutex.acquire( release => {
@@ -59,8 +46,46 @@ describe("mutex", () => {
       () => {
         expect(mutex.isLocked()).toBeFalsy();
         done();
+      }, 100
+    )
+  });
+
+  test("async nested", done => {
+    const mutex = new Mutex();
+
+    expect(mutex.isLocked()).toBeFalsy();
+    mutex.acquire( release => {
+      release();
+
+      expect(mutex.isLocked()).toBeTruthy();
+
+      setTimeout(
+        () => {
+          expect(mutex.isLocked()).toBeFalsy();
+          mutex.acquire( release => {
+            mutex.acquire( r => {
+              r();
+            });
+            release();
+          })
+
+        }, 100
+      )
+    });
+
+    expect(mutex.isLocked()).toBeTruthy();
+    mutex.acquire( release => {
+      /* do some work */
+      release();
+    });
+    expect(mutex.isLocked()).toBeTruthy();
+
+    setTimeout(
+      () => {
+        expect(mutex.isLocked()).toBeFalsy();
+        done();
       },
-    50)
+    200)
   });
 
   test("async", done => {
@@ -112,7 +137,7 @@ describe("mutex", () => {
 
     setTimeout( () => {
       expect(mutex.isLocked()).toBeFalsy();
-      expect(res).toEqual([1, 4, 13, 9, 12, 2, 3, 5, 6, 7, 8, 10, 11, 14, 15]);
+      expect(res).toEqual([4, 13, 1, 9, 12, 2, 3, 5, 6, 7, 8, 10, 11, 14, 15]);
       done();
     }, 200);
   });

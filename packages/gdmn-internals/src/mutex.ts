@@ -25,7 +25,7 @@ export class Mutex {
   public acquire(callback: MutexCallbackFunc) {
     this._lockCount += 1;
     if (this._lockCount === 1) {
-      callback(this._release);
+      setTimeout(() => callback(this._release), 0);
     } else {
       this._pending.push(callback);
     }
