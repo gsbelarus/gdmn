@@ -28,11 +28,10 @@ export class Client {
         }
 
         const master = getMaster(getDefaultLibraryFilename());
-        this._client = {
-            master,
-            dispatcher: (await master.getDispatcherAsync())!,
-            util: (await master.getUtilInterfaceAsync())!
-        };
+        const dispatcher = master.getDispatcherSync()!;
+        const util = master.getUtilInterfaceSync()!;
+
+        this._client = {master, dispatcher, util};
     }
 
     public async destroy(): Promise<void> {
