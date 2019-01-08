@@ -104,7 +104,7 @@ describe("mutex", () => {
           res.push(15);
         });
         res.push(3);
-      }, 200);
+      }, 400);
     });
 
     res.push(4);
@@ -130,7 +130,7 @@ describe("mutex", () => {
         res.push(11);
       });
       res.push(12);
-    }, 100);
+    }, 200);
 
     res.push(13);
     expect(mutex.isLocked()).toBeTruthy();
@@ -139,6 +139,6 @@ describe("mutex", () => {
       expect(mutex.isLocked()).toBeFalsy();
       expect(res).toEqual([4, 13, 1, 9, 12, 2, 3, 5, 6, 7, 8, 10, 11, 14, 15]);
       done();
-    }, 400);
+    }, 800);
   });
 });
