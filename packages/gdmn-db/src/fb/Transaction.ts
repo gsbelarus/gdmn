@@ -27,13 +27,8 @@ export class Transaction extends ATransaction {
         options: ITransactionOptions = ATransaction.DEFAULT_OPTIONS
     ): Promise<Transaction> {
         const handler = await connection.client.statusAction(async (status) => {
-            const tpb = createTpb(options, connection.client.client!.util, status);
-            try {
-                return await connection.handler!.startTransactionAsync(
-                    status, tpb.getBufferLengthSync(status), tpb.getBufferSync(status));
-            } finally {
-                await tpb.disposeAsync();
-            }
+            const {buffer, length} = createTpb(options, connection.client.client!.util, status);
+            return await connection.handler!.startTransactionAsync(status, length, buffer);
         });
 
         return new Transaction(connection, options, handler!);

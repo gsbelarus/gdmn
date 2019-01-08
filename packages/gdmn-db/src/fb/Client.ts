@@ -28,11 +28,10 @@ export class Client {
         }
 
         const master = getMaster(getDefaultLibraryFilename());
-        this._client = {
-            master,
-            dispatcher: (await master.getDispatcherAsync())!,
-            util: (await master.getUtilInterfaceAsync())!
-        };
+        const dispatcher = master.getDispatcherSync()!;
+        const util = master.getUtilInterfaceSync()!;
+
+        this._client = {master, dispatcher, util};
     }
 
     public async destroy(): Promise<void> {
@@ -48,11 +47,11 @@ export class Client {
     }
 
     public async statusAction<T>(action: (status: Status) => Promise<T>): Promise<T> {
-        const status = (await this.client!.master.getStatusAsync())!;
+        const status = this.client!.master.getStatusSync()!;
         try {
             return await action(status);
         } finally {
-            await status.disposeAsync();
+            status.disposeSync();
         }
     }
 
