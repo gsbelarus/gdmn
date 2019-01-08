@@ -11,7 +11,7 @@ describe("mutex", () => {
     });
     expect(mutex.isLocked()).toBeTruthy();
 
-    setTimeout( () => expect(mutex.isLocked()).toBeFalsy(), 100 );
+    setTimeout( () => expect(mutex.isLocked()).toBeFalsy(), 200 );
 
     setTimeout( () => {
       mutex.acquire( release => {
@@ -19,12 +19,12 @@ describe("mutex", () => {
         /* and never release */
       });
       expect(mutex.isLocked()).toBeTruthy();
-    }, 200);
+    }, 400);
 
     setTimeout( () => {
       expect(mutex.isLocked()).toBeTruthy();
       done();
-    }, 300);
+    }, 600);
   });
 
   test("sync multiple", done => {
@@ -46,7 +46,7 @@ describe("mutex", () => {
       () => {
         expect(mutex.isLocked()).toBeFalsy();
         done();
-      }, 100
+      }, 200
     )
   });
 
@@ -69,7 +69,7 @@ describe("mutex", () => {
             release();
           })
 
-        }, 100
+        }, 200
       )
     });
 
@@ -85,7 +85,7 @@ describe("mutex", () => {
         expect(mutex.isLocked()).toBeFalsy();
         done();
       },
-    200)
+    400)
   });
 
   test("async", done => {
@@ -104,7 +104,7 @@ describe("mutex", () => {
           res.push(15);
         });
         res.push(3);
-      }, 100);
+      }, 200);
     });
 
     res.push(4);
@@ -130,7 +130,7 @@ describe("mutex", () => {
         res.push(11);
       });
       res.push(12);
-    }, 50);
+    }, 100);
 
     res.push(13);
     expect(mutex.isLocked()).toBeTruthy();
@@ -139,6 +139,6 @@ describe("mutex", () => {
       expect(mutex.isLocked()).toBeFalsy();
       expect(res).toEqual([4, 13, 1, 9, 12, 2, 3, 5, 6, 7, 8, 10, 11, 14, 15]);
       done();
-    }, 200);
+    }, 400);
   });
 });
