@@ -25,7 +25,7 @@ export class Statement extends AStatement {
     ];
     public static PLACEHOLDER_PATTERN = /(:[a-zA-Z0-9_$]+)/g;
 
-    public resultSets = new Set<ResultSet>();
+    public resultSetsCount = 0;
     public source?: IStatementSource;
     private readonly _paramsAnalyzer: CommonParamsAnalyzer;
 
@@ -36,7 +36,7 @@ export class Statement extends AStatement {
         this._paramsAnalyzer = paramsAnalyzer;
         this.source = source;
 
-        this.transaction.statements.add(this);
+        this.transaction.statementsCount++;
     }
 
     get transaction(): Transaction {
@@ -77,17 +77,16 @@ export class Statement extends AStatement {
             throw new Error("Statement already disposed");
         }
 
-        if (this.resultSets.size) {
-            throw new Error("Not all resultSets closed");   // TODO
+        if (this.resultSetsCount > 0) {
+            throw new Error("Not all resultSets closed");
         }
-        await this._closeChildren();
 
         await this.source.inMetadata.releaseAsync();
         await this.source.outMetadata.releaseAsync();
 
         await this.transaction.connection.client.statusAction((status) => this.source!.handler.freeAsync(status));
         this.source = undefined;
-        this.transaction.statements.delete(this);
+        this.transaction.statementsCount--;
     }
 
     public async executeQuery(params?: IParams, type?: CursorType): Promise<ResultSet> {
@@ -124,17 +123,5 @@ export class Statement extends AStatement {
                 //// FIXME: newTransaction.releaseSync();
             }
         });
-    }
-
-    private async _closeChildren(): Promise<void> {
-        if (this.resultSets.size) {
-            console.warn("Not all resultSets closed, they will be closed");
-        }
-
-        await Promise.all(Array.from(this.resultSets).reduceRight((promises, resultSet) => {
-            resultSet.disposeStatementOnClose = false;
-            promises.push(resultSet.close());
-            return promises;
-        }, [] as Array<Promise<void>>));
     }
 }

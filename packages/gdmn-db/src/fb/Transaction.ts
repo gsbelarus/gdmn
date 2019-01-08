@@ -1,18 +1,17 @@
 import {Transaction as NativeTransaction} from "node-firebird-native-api";
 import {ATransaction, ITransactionOptions} from "../ATransaction";
 import {Connection} from "./Connection";
-import {Statement} from "./Statement";
 import {createTpb} from "./utils/fb-utils";
 
 export class Transaction extends ATransaction {
 
-    public statements = new Set<Statement>();
+    public statementsCount = 0;
     public handler?: NativeTransaction;
 
     constructor(connection: Connection, options: ITransactionOptions, handler: NativeTransaction) {
         super(connection, options);
         this.handler = handler;
-        this.connection.transactions.add(this);
+        this.connection.transactionsCount++;
     }
 
     get connection(): Connection {
@@ -45,14 +44,13 @@ export class Transaction extends ATransaction {
             throw new Error("Need absolute open transaction");
         }
 
-        if (this.statements.size) {
-            throw new Error("Not all statements disposed");   // TODO
+        if (this.statementsCount > 0) {
+            throw new Error("Not all statements disposed");
         }
-        await this._closeChildren();
 
         await this.connection.client.statusAction((status) => this.handler!.commitAsync(status));
         this.handler = undefined;
-        this.connection.transactions.delete(this);
+        this.connection.transactionsCount--;
     }
 
     public async rollback(): Promise<void> {
@@ -60,23 +58,12 @@ export class Transaction extends ATransaction {
             throw new Error("Need absolute open transaction");
         }
 
-        if (this.statements.size) {
-            throw new Error("Not all statements disposed");   // TODO
+        if (this.statementsCount > 0) {
+            throw new Error("Not all statements disposed");
         }
-        await this._closeChildren();
 
         await this.connection.client.statusAction((status) => this.handler!.rollbackAsync(status));
         this.handler = undefined;
-        this.connection.transactions.delete(this);
-    }
-
-    private async _closeChildren(): Promise<void> {
-        if (this.statements.size) {
-            console.warn("Not all statements disposed, they will be disposed");
-        }
-        await Promise.all(Array.from(this.statements).reduceRight((promises, statement) => {
-            promises.push(statement.dispose());
-            return promises;
-        }, [] as Array<Promise<void>>));
+        this.connection.transactionsCount--;
     }
 }
