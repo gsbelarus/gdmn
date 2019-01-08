@@ -37,12 +37,12 @@ const reducer = combineReducers<IState>({
      workaround for nested persist
      see: https://stackoverflow.com/questions/35622588/how-to-reset-the-state-of-a-redux-store
     */
-    if (action.type === getType(authActions.signOut) || action.type === getType(gdmnActions.apiDeleteAccount)) {
+    if (action.type === getType(authActions.onSignOut) || action.type === getType(gdmnActions.onApiDeleteAccount)) {
       persistLocalStorage.removeItem(`persist:gdmn::root::authState`);
     }
 
     return authReducer(
-      action.type === getType(authActions.signOut) || action.type === getType(gdmnActions.apiDeleteAccount)
+      action.type === getType(authActions.onSignOut) || action.type === getType(gdmnActions.onApiDeleteAccount)
         ? undefined /* reset state to initial*/
         : state,
       action
@@ -54,7 +54,7 @@ const reducer = combineReducers<IState>({
 
 const enhacedReducer = (state: IState | undefined, action: TActions) =>
   reducer(
-    action.type === getType(authActions.signOut) || action.type === getType(gdmnActions.apiDeleteAccount)
+    action.type === getType(authActions.onSignOut) || action.type === getType(gdmnActions.onApiDeleteAccount)
       ? undefined /* reset state to initial*/
       : state,
     action

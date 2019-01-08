@@ -7,7 +7,7 @@ import { withRouter } from 'react-router';
 
 import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
-import { gdmnActions, TGdmnActions } from '../gdmn/actions';
+import { gdmnActionsAsync, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';
 import { Mutex } from 'gdmn-internals';
 
@@ -168,6 +168,6 @@ export const ERModelViewContainer = connect(
         }));
       }
     }),
-    apiGetSchema: () => thunkDispatch(gdmnActions.apiGetSchema()),
+    apiGetSchema: () => thunkDispatch(gdmnActionsAsync.apiGetSchema()),
   })
 )(withRouter(ERModelView));

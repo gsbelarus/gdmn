@@ -1,9 +1,9 @@
 import { getType } from 'typesafe-actions';
+import { PersistPartial } from 'redux-persist';
 import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 
 import { authActions } from '@src/app/scenes/auth/actions';
 import { ISignInBoxStateProps } from '@src/app/scenes/auth/components/SignInBox';
-import { PersistPartial } from 'redux-persist';
 import { TActions } from '@src/app/store/TActions';
 
 interface _IAuthState extends ISignInBoxStateProps {
@@ -15,6 +15,7 @@ interface _IAuthState extends ISignInBoxStateProps {
   // tmp
   signUpRequesting: boolean;
 }
+
 type IAuthState = _IAuthState & PersistPartial;
 
 const initialState: _IAuthState = {
@@ -26,20 +27,20 @@ const initialState: _IAuthState = {
 
 function reducer(state: _IAuthState = initialState, action: TActions) {
   switch (action.type) {
-    case getType(authActions.signInAsync.request): {
+    case getType(authActions.signIn.request): {
       return {
         ...state,
         signInRequesting: true
       };
     }
-    case getType(authActions.signUpAsync.request): {
+    case getType(authActions.signUp.request): {
       return {
         ...state,
         signUpRequesting: true
       };
     }
-    case getType(authActions.signUpAsync.success):
-    case getType(authActions.signInAsync.success): {
+    case getType(authActions.signUp.success):
+    case getType(authActions.signIn.success): {
       return {
         ...state,
         ...action.payload,
@@ -64,9 +65,9 @@ function reducer(state: _IAuthState = initialState, action: TActions) {
         signInRequesting: false
       };
     }
-    case getType(authActions.signUpAsync.failure):
-    case getType(authActions.signInAsync.failure):
-    case getType(authActions.signOut): {
+    case getType(authActions.signUp.failure):
+    case getType(authActions.signIn.failure):
+    case getType(authActions.onSignOut): {
       return {
         ...state,
         accessTokenPayload: undefined,

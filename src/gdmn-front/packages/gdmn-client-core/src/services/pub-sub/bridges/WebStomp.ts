@@ -251,7 +251,6 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   }
 
   public deactivateConnection(): void {
-    console.log('deactivateConnection');
     if (this.client) this.client.deactivate();
   }
 

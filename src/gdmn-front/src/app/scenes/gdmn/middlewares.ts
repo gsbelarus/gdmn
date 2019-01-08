@@ -1,20 +1,20 @@
-import { deserializeERModel } from 'gdmn-orm';
 import { Middleware } from 'redux';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { getType } from 'typesafe-actions';
 import { Auth, TPubSubConnectStatus } from '@gdmn/client-core';
-import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TTaskStatus } from '@gdmn/server-api';
 
-import { authActions } from '@src/app/scenes/auth/actions';
-import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
+import { authActionsAsync } from '@src/app/scenes/auth/actions';
+import { gdmnActions, gdmnActionsAsync, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
+import { TThunkMiddleware } from '@src/app/store/middlewares';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
-const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
+const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
   return ({ dispatch, getState }) => next => async (action: TGdmnActions) => {
     let errorSubscription: Subscription | undefined;
     let taskProgressResultSub: Subscription | undefined;
@@ -95,7 +95,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             });
             ////
 
-            dispatch(gdmnActions.apiGetSchema());
+            dispatch(gdmnActionsAsync.apiGetSchema());
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
             console.log('[GDMN] auth error: ', error);
@@ -123,7 +123,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
             // if (error instanceof GdmnPubSubError) {
             if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
-              dispatch(authActions.signOut());
+              dispatch(authActionsAsync.signOut());
             } else {
               dispatch(rootActions.onError(error));
             }
@@ -132,14 +132,14 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             // }
           }
         } else {
-          dispatch(authActions.signOut());
+          dispatch(authActionsAsync.signOut());
         }
 
         errorSubscription = apiService.errorMessageObservable.pipe(first()).subscribe(errMessage => {
           const error = new GdmnPubSubError(errMessage);
 
           if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
-            dispatch(authActions.signOut());
+            dispatch(authActionsAsync.signOut());
           } else {
             dispatch(rootActions.onError(error));
 
@@ -187,89 +187,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       }
-
-      case getType(gdmnActions.apiPing): {
-        apiService.ping(action.payload);
-
-        break;
-      }
-
-      case getType(gdmnActions.apiGetSchema): {
-        apiService
-          .getSchema({
-            payload: {
-              action: TTaskActionNames.GET_SCHEMA,
-              payload: undefined
-            }
-          })
-          .subscribe(value => {
-            if (!!value.payload.result) {
-              const erModel = deserializeERModel(value.payload.result);
-              dispatch(gdmnActions.setSchema(erModel));
-            }
-          });
-
-        break;
-      }
-
-      case getType(gdmnActions.apiGetData): {
-        apiService.getData({
-          payload: {
-            action: TTaskActionNames.QUERY,
-            payload: action.payload
-          }
-        });
-        // todo sub
-
-        break;
-      }
-
-      case getType(gdmnActions.buildCommandList): {
-        break;
-      }
-
-      case getType(gdmnActions.apiDeleteAccount): {
-        const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
-        const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
-        if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
-          const token = Auth.isFreshToken(accessTokenPayload)
-            ? selectAuthState(getState()).accessToken
-            : selectAuthState(getState()).refreshToken;
-
-          try {
-            await apiService.deleteAccount({
-              payload: {
-                authorization: token || '',
-                'delete-user': 1
-              }
-            });
-          } catch (error) {
-            // if (error instanceof GdmnPubSubError) {
-            if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
-              dispatch(authActions.signOut());
-            } else {
-              dispatch(rootActions.onError(error));
-            }
-            // } else {
-            //   dispatch(rootActions.onError(new Error(error)));
-            // }
-          }
-        } else {
-          dispatch(authActions.signOut());
-        }
-
-        break;
-      }
-
-      case getType(gdmnActions.apiActivate): {
-        apiService.pubSubClient.activateConnection();
-        break;
-      }
-
-      case getType(gdmnActions.apiDeactivate): {
-        apiService.pubSubClient.deactivateConnection();
-        break;
-      }
     }
 
     return next(action);
@@ -298,14 +215,16 @@ const loadingMiddleware: Middleware = ({ dispatch, getState }) => next => action
   return next(action);
 };
 
-const abortNetReconnectMiddleware: Middleware = ({ dispatch, getState }) => next => async (action: TRootActions) => {
+const abortNetReconnectMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => async (
+  action: TRootActions
+) => {
   switch (action.type) {
     case getType(rootActions.abortNetReconnect): {
-      dispatch(gdmnActions.apiDeactivate());
+      dispatch(gdmnActionsAsync.apiDeactivate());
       break;
     }
     case getType(rootActions.netReconnect): {
-      dispatch(gdmnActions.apiActivate());
+      dispatch(gdmnActionsAsync.apiActivate());
       break;
     }
   }

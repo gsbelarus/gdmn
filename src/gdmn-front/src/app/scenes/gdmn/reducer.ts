@@ -1,11 +1,13 @@
-import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
-import { ERModel } from 'gdmn-orm';
 import { getType } from 'typesafe-actions';
+import { ERModel } from 'gdmn-orm';
+
+import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 
 type TGdmnState = {
   erModel: ERModel;
   loading: boolean;
+  loadingCounter: number;
   loadingMessage?: string;
   viewTabs: IViewTab[];
 };
@@ -13,6 +15,7 @@ type TGdmnState = {
 const initialState: TGdmnState = {
   erModel: new ERModel(),
   loading: false,
+  loadingCounter: 0,
   viewTabs: []
 };
 
@@ -26,9 +29,24 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
     }
 
     case getType(gdmnActions.setLoading): {
+      let { loadingCounter, loading } = state;
+
+      // TODO TMP
+      // if (action.payload.loading) {
+      //   loadingCounter++;
+      // } else if (loadingCounter > 0) {
+      //   loadingCounter--;
+      // }
+      //
+      // loading = action.payload.loading;
+      // if (!action.payload.loading && loadingCounter > 0) {
+      //   loading = true;
+      // }
+
       return {
         ...state,
-        loading: action.payload.loading,
+        loading,
+        loadingCounter,
         loadingMessage: action.payload.message
       };
     }

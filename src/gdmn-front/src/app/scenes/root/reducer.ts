@@ -8,14 +8,14 @@ interface IRootState extends IStompPanelStateProps {
   errorMsgBarText?: string;
   logItems: { message: string }[];
   lostConnectWarnOpened: boolean;
-  disconnectedMode: boolean;
+  // disconnectedMode: boolean;
 }
 
 const initialState: IRootState = {
   errorMsgBarText: '',
   logItems: [],
-  lostConnectWarnOpened: false,
-  disconnectedMode: false
+  lostConnectWarnOpened: false
+  // disconnectedMode: false
 };
 
 function reducer(state: IRootState = initialState, action: TRootActions) {

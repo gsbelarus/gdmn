@@ -1,41 +1,93 @@
-import { ERModel, IEntityQueryInspector } from 'gdmn-orm';
+import { deserializeERModel, ERModel, IEntityQueryInspector } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
-import { TPingTaskCmd } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
+import { Auth } from '@gdmn/client-core';
+
+import { TThunkAction } from '@src/app/store/TActions';
+import { selectAuthState } from '@src/app/store/selectors';
+import { authActionsAsync } from '@src/app/scenes/auth/actions';
+import { rootActions } from '@src/app/scenes/root/actions';
 import { IViewTab } from './types';
+
+const gdmnActionsAsync = {
+  apiActivate: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    apiService.pubSubClient.activateConnection();
+  },
+  apiDeactivate: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    apiService.pubSubClient.deactivateConnection();
+  },
+  apiDeleteAccount: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
+    const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
+    if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
+      const token = Auth.isFreshToken(accessTokenPayload)
+        ? selectAuthState(getState()).accessToken
+        : selectAuthState(getState()).refreshToken;
+
+      try {
+        await apiService.deleteAccount({
+          payload: {
+            authorization: token || '',
+            'delete-user': 1
+          }
+        });
+      } catch (error) {
+        // if (error instanceof GdmnPubSubError) {
+        if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
+          dispatch(authActionsAsync.signOut());
+        } else {
+          dispatch(rootActions.onError(error));
+        }
+        // } else {
+        //   dispatch(rootActions.onError(new Error(error)));
+        // }
+      }
+    } else {
+      dispatch(authActionsAsync.signOut());
+    }
+
+    dispatch(gdmnActions.onApiDeleteAccount); // todo test
+  },
+  apiPing: (cmd: TPingTaskCmd): TThunkAction => async (dispatch, getState, { apiService }) => {
+    apiService.ping(cmd);
+  },
+  apiGetSchema: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    apiService
+      .getSchema({
+        payload: {
+          action: TTaskActionNames.GET_SCHEMA,
+          payload: undefined
+        }
+      })
+      .subscribe(value => {
+        if (!!value.payload.result) {
+          const erModel = deserializeERModel(value.payload.result);
+          dispatch(gdmnActions.setSchema(erModel));
+        }
+      });
+  },
+  apiGetData: (queryInspector: IEntityQueryInspector): TThunkAction => async (dispatch, getState, { apiService }) => {
+    apiService.getData({
+      payload: {
+        action: TTaskActionNames.QUERY,
+        payload: queryInspector
+      }
+    });
+    // todo sub
+  }
+};
 
 const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
-    // TODO async
     return (reconnect: boolean = false) => resolve(reconnect);
   }),
 
   apiDisconnect: createAction('gdmn/API_DISCONNECT', resolve => {
-    // TODO async
     return () => resolve();
   }),
 
-  apiActivate: createAction('gdmn/API_ACTIVATE', resolve => {
+  onApiDeleteAccount: createAction('gdmn/ON_API_DELETE_ACCOUNT', resolve => {
     return () => resolve();
-  }),
-
-  apiDeactivate: createAction('gdmn/API_DEACTIVATE', resolve => {
-    return () => resolve();
-  }),
-
-  apiPing: createAction('gdmn/API_PING', resolve => {
-    return (cmd: TPingTaskCmd) => resolve(cmd);
-  }),
-
-  apiGetSchema: createAction('gdmn/API_GET_SCHEMA', resolve => {
-    return () => resolve();
-  }),
-
-  apiDeleteAccount: createAction('gdmn/API_DELETE_ACCOUNT', resolve => {
-    return () => resolve();
-  }),
-
-  apiGetData: createAction('gdmn/API_GET_DATA', resolve => {
-    return (queryInspector: IEntityQueryInspector) => resolve(queryInspector);
   }),
 
   setSchema: createAction('gdmm/SET_SCHEMA', resolve => {
@@ -59,4 +111,4 @@ const gdmnActions = {
 
 type TGdmnActions = ActionType<typeof gdmnActions>;
 
-export { gdmnActions, TGdmnActions };
+export { gdmnActions, TGdmnActions, gdmnActionsAsync };
