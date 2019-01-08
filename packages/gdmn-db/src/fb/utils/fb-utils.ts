@@ -1,4 +1,4 @@
-import {MessageMetadata, Status, Util, XpbBuilder} from "node-firebird-native-api";
+import {MessageMetadata, Pointer, Status, Util, XpbBuilder} from "node-firebird-native-api";
 import {endianness} from "os";
 import {StringDecoder} from "string_decoder";
 import {IConnectionOptions} from "../../AConnection";
@@ -17,56 +17,73 @@ export function iscVaxInteger2(buffer: Buffer, startPos: number): number {
     /* tslint:enable */
 }
 
-export function createDpb(dbOptions: IConnectionOptions, util: Util, status: Status): XpbBuilder {
-    const dbParamBuffer = (util.getXpbBuilderSync(status, XpbBuilderParams.DPB, undefined, 0))!;
-    dbParamBuffer.insertIntSync(status, isc_dpb.page_size, 4 * 1024);
-
-    const dialect = 3;
-    dbParamBuffer.insertIntSync(status, isc_dpb.set_db_sql_dialect, dialect);
-
-    const charSet = "utf8";
-    dbParamBuffer.insertStringSync(status, isc_dpb.lc_ctype, charSet);
-
-    dbParamBuffer.insertStringSync(status, isc_dpb.user_name, dbOptions.username || "sysdba");
-    dbParamBuffer.insertStringSync(status, isc_dpb.password, dbOptions.password || "masterkey");
-    return dbParamBuffer;
+export interface XpbBuffer {
+    buffer: Pointer,
+    length: number
 }
 
-export function createTpb(options: ITransactionOptions, util: Util, status: Status): XpbBuilder {
-    const tnxParamBuffer = (util.getXpbBuilderSync(status, XpbBuilderParams.TPB, undefined, 0))!;
+export function createDpb(dbOptions: IConnectionOptions, util: Util, status: Status): XpbBuffer {
+    const dpbBuilder = (util.getXpbBuilderSync(status, XpbBuilderParams.DPB, undefined, 0))!;
+    try {
+        dpbBuilder.insertTagSync(status, isc_dpb.version1);
+        dpbBuilder.insertIntSync(status, isc_dpb.set_db_sql_dialect, 3);
+        dpbBuilder.insertStringSync(status, isc_dpb.lc_ctype, "utf8");
+        // dpbBuilder.insertIntSync(status, isc_dpb.page_size, 4 * 1024);
 
-    switch (options.accessMode) {
-        case AccessMode.READ_ONLY:
-            tnxParamBuffer.insertTagSync(status, isc_tpb.read);
-            break;
-        case AccessMode.READ_WRITE:
-            tnxParamBuffer.insertTagSync(status, isc_tpb.write);
-            break;
+        dpbBuilder.insertStringSync(status, isc_dpb.user_name, dbOptions.username || "sysdba");
+        dpbBuilder.insertStringSync(status, isc_dpb.password, dbOptions.password || "masterkey");
+
+        const buffer = dpbBuilder.getBufferSync(status)!;
+        const length = dpbBuilder.getBufferLengthSync(status);
+
+        return {buffer, length};
+    } finally {
+        dpbBuilder.disposeSync();
     }
+}
 
-    switch (options.isolation) {
-        case Isolation.SERIALIZABLE:
-            tnxParamBuffer.insertTagSync(status, isc_tpb.consistency);
-            tnxParamBuffer.insertTagSync(status, isc_tpb.nowait);
-            break;
-        case Isolation.REPEATABLE_READ:
-            tnxParamBuffer.insertTagSync(status, isc_tpb.concurrency);
-            tnxParamBuffer.insertTagSync(status, isc_tpb.nowait);
-            break;
-        case Isolation.READ_UNCOMMITED:
-            tnxParamBuffer.insertTagSync(status, isc_tpb.read_committed);
-            tnxParamBuffer.insertTagSync(status, isc_tpb.no_rec_version);
-            tnxParamBuffer.insertTagSync(status, isc_tpb.nowait);
-            break;
-        case Isolation.READ_COMMITED:
-        default:
-            tnxParamBuffer.insertTagSync(status, isc_tpb.read_committed);
-            tnxParamBuffer.insertTagSync(status, isc_tpb.rec_version);
-            tnxParamBuffer.insertTagSync(status, isc_tpb.nowait);
-            break;
+export function createTpb(options: ITransactionOptions, util: Util, status: Status): XpbBuffer {
+    const tpbBuilder = (util.getXpbBuilderSync(status, XpbBuilderParams.TPB, undefined, 0))!;
+
+    try {
+        switch (options.accessMode) {
+            case AccessMode.READ_ONLY:
+                tpbBuilder.insertTagSync(status, isc_tpb.read);
+                break;
+            case AccessMode.READ_WRITE:
+                tpbBuilder.insertTagSync(status, isc_tpb.write);
+                break;
+        }
+
+        switch (options.isolation) {
+            case Isolation.SERIALIZABLE:
+                tpbBuilder.insertTagSync(status, isc_tpb.consistency);
+                tpbBuilder.insertTagSync(status, isc_tpb.nowait);
+                break;
+            case Isolation.REPEATABLE_READ:
+                tpbBuilder.insertTagSync(status, isc_tpb.concurrency);
+                tpbBuilder.insertTagSync(status, isc_tpb.nowait);
+                break;
+            case Isolation.READ_UNCOMMITED:
+                tpbBuilder.insertTagSync(status, isc_tpb.read_committed);
+                tpbBuilder.insertTagSync(status, isc_tpb.no_rec_version);
+                tpbBuilder.insertTagSync(status, isc_tpb.nowait);
+                break;
+            case Isolation.READ_COMMITED:
+            default:
+                tpbBuilder.insertTagSync(status, isc_tpb.read_committed);
+                tpbBuilder.insertTagSync(status, isc_tpb.rec_version);
+                tpbBuilder.insertTagSync(status, isc_tpb.nowait);
+                break;
+        }
+
+        const buffer = tpbBuilder.getBufferSync(status)!;
+        const length = tpbBuilder.getBufferLengthSync(status);
+
+        return {buffer, length};
+    } finally {
+        tpbBuilder.disposeSync();
     }
-
-    return tnxParamBuffer;
 }
 
 /** Changes a number from a scale to another. */
@@ -333,12 +350,10 @@ export async function valueToBuffer(statement: Statement,
     }
 }
 
-export async function dataRead(statement: Statement,
-                               outDescriptors: IDescriptor[],
-                               outBuffer: Uint8Array): Promise<any[]> {
-    return await Promise.all(outDescriptors.map((descriptor) => (
-        bufferToValue(statement, descriptor, outBuffer))
-    ));
+export function dataRead(statement: Statement,
+                         outDescriptors: IDescriptor[],
+                         outBuffer: Uint8Array): any[] {
+    return outDescriptors.map((descriptor) => bufferToValue(statement, descriptor, outBuffer));
 }
 
 export async function dataWrite(statement: Statement,
@@ -350,9 +365,10 @@ export async function dataWrite(statement: Statement,
             `, received ${(values || []).length}.`);
     }
 
-    await Promise.all(inDescriptors.map((descriptor, index) => (
-        valueToBuffer(statement, descriptor, inBuffer, values[index]))
-    ));
+    for (let i = 0; i < inDescriptors.length; i++) {
+        const descriptor = inDescriptors[i];
+        await valueToBuffer(statement, descriptor, inBuffer, values[i]);
+    }
 }
 
 export function fixMetadata(status: Status, metadata?: MessageMetadata): MessageMetadata | undefined {

@@ -81,8 +81,8 @@ export class Statement extends AStatement {
             throw new Error("Not all resultSets closed");
         }
 
-        await this.source.inMetadata.releaseAsync();
-        await this.source.outMetadata.releaseAsync();
+        this.source.outMetadata.releaseSync();
+        this.source.inMetadata.releaseSync();
 
         await this.transaction.connection.client.statusAction((status) => this.source!.handler.freeAsync(status));
         this.source = undefined;
@@ -113,11 +113,12 @@ export class Statement extends AStatement {
         await this.transaction.connection.client.statusAction(async (status) => {
             const {inMetadata, outMetadata, inDescriptors} = this.source!;
             const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
+            const outBuffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
             await dataWrite(this, inDescriptors, inBuffer, this._paramsAnalyzer.prepareParams(params));
 
             const newTransaction = await this.source!.handler.executeAsync(status, this.transaction.handler,
-                inMetadata, inBuffer, outMetadata, undefined);
+                inMetadata, inBuffer, outMetadata, outBuffer);
 
             if (newTransaction && this.transaction.handler !== newTransaction) {
                 //// FIXME: newTransaction.releaseSync();

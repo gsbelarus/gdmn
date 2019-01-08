@@ -54,15 +54,9 @@ export class Connection extends AConnection {
 
         await this.client.create();
         this.handler = await this.client.statusAction(async (status) => {
-            const dpb = createDpb(options, this.client.client!.util, status);
-            try {
-                return await this.client!.client!.dispatcher!.createDatabaseAsync(status,
-                    Connection._optionsToUri(options),
-                    dpb.getBufferLengthSync(status),
-                    dpb.getBufferSync(status));
-            } finally {
-                await dpb.disposeAsync();
-            }
+            const {buffer, length} = createDpb(options, this.client.client!.util, status);
+            const uri = Connection._optionsToUri(options);
+            return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
         });
     }
 
@@ -87,13 +81,9 @@ export class Connection extends AConnection {
 
         await this.client.create();
         this.handler = await this.client.statusAction(async (status) => {
-            const dpb = createDpb(options, this.client.client!.util, status);
-            try {
-                return await this.client!.client!.dispatcher!.attachDatabaseAsync(status,
-                    Connection._optionsToUri(options), dpb.getBufferLengthSync(status), dpb.getBufferSync(status));
-            } finally {
-                await dpb.disposeAsync();
-            }
+            const {buffer, length} = createDpb(options, this.client.client!.util, status);
+            const uri = Connection._optionsToUri(options);
+            return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
         });
     }
 
