@@ -26,7 +26,7 @@ export class ResultSet extends AResultSet {
     protected constructor(statement: Statement, source: IResultSetSource, type?: CursorType) {
         super(statement, type);
         this.source = source;
-        this.statement.resultSets.add(this);
+        this.statement.resultSetsCount++;
     }
 
     get statement(): Statement {
@@ -115,7 +115,7 @@ export class ResultSet extends AResultSet {
         await this.statement.transaction.connection.client
             .statusAction((status) => this.source!.handler.closeAsync(status));
         this.source = undefined;
-        this.statement.resultSets.delete(this);
+        this.statement.resultSetsCount--;
 
         if (this.disposeStatementOnClose) {
             await this.statement.dispose();
