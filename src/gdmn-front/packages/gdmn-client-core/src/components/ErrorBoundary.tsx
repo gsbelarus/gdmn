@@ -1,4 +1,4 @@
-import React, { ErrorInfo, Fragment, ReactChild, ReactType, SFC } from 'react';
+import React, { ErrorInfo, FC, Fragment, ReactChild, ReactType } from 'react';
 
 interface IErrorBoundaryProps {
   children?: ReactChild | ReactChild[];
@@ -18,7 +18,7 @@ interface IDefaultErrorBoundaryComponentProps {
 
 // TODO test error state
 class ErrorBoundary extends React.Component<IErrorBoundaryProps, IErrorBoundaryState> {
-  private static renderDefaultErrorBoundary: SFC<IDefaultErrorBoundaryComponentProps> = ({ error, stack }) => (
+  private static renderDefaultErrorBoundary: FC<IDefaultErrorBoundaryComponentProps> = ({ error, stack }) => (
     <Fragment>
       <h1>Something went wrong! PLEASE, RELOAD THIS PAGE.</h1>
       <br />

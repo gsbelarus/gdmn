@@ -1,6 +1,6 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute, BlobAttribute } from 'gdmn-orm';
+import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute } from 'gdmn-orm';
 import { createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
@@ -44,7 +44,7 @@ export const EntityDataViewContainer = connect(
 
       if (!entity) {
         throw new Error(`Entity ${entityName} not found in ER Model`);
-      };
+      }
 
       const q = new EntityQuery(new EntityLink(
         entity,

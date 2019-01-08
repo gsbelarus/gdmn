@@ -1,4 +1,4 @@
-import React, { SFC } from 'react';
+import React, { FC } from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';
 import { TUserRoleType } from '@gdmn/server-api';
 
@@ -49,7 +49,7 @@ interface IProtectedRouteProps extends RouteProps, IProtectedRouteStateProps {
   accessLevel: RouteAccessLevelType;
 }
 
-const ProtectedRoute: SFC<IProtectedRouteProps> = ({
+const ProtectedRoute: FC<IProtectedRouteProps> = ({
   accessLevel,
   defaultAnonymPath,
   defaultUserPath,

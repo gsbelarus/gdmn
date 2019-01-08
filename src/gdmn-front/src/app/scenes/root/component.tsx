@@ -1,6 +1,6 @@
 import '@src/styles/global.css';
 
-import React, { Fragment, ReactNode, ReactType, SFC } from 'react';
+import React, { FC, Fragment, ReactNode, ReactType } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Store } from 'redux';
@@ -31,7 +31,7 @@ interface IRootProps {
   readonly renderConnectBtnContainer: ReactType;
 }
 
-const Root: SFC<IRootProps> = ({
+const Root: FC<IRootProps> = ({
   store,
   persistor,
   routes,

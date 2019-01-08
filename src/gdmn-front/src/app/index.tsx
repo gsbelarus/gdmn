@@ -10,7 +10,7 @@ import { getStore } from '@src/app/store/store';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
 import { SignInBoxContainer } from '@src/app/scenes/auth/container';
 import { RootContainer } from '@src/app/scenes/root/container';
-import { getGdmnContainer } from '@src/app/scenes/gdmn/container';
+import { GdmnContainer } from '@src/app/scenes/gdmn/container';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { apiService } from './services/apiService';
 
@@ -24,7 +24,6 @@ apiService.pubSubClient.onMaxCountAbnormallyReconnect = (maxAbnormallyReconnectC
   store.dispatch(rootActions.setLostConnectWarnOpened(true));
 };
 
-const GdmnContainer = (getGdmnContainer as any)(apiService);
 const NotFoundView = () => <h2>404!</h2>;
 const rootRoutes = (
   <Switch>
