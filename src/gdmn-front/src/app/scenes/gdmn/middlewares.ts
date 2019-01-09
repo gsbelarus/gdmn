@@ -39,28 +39,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
               }
             });
 
-            /// tmp
-            if (errorSubscription) {
-              errorSubscription.unsubscribe();
-              errorSubscription = undefined;
-            }
-            if (taskProgressResultSub) {
-              taskProgressResultSub.unsubscribe();
-              taskProgressResultSub = undefined;
-            }
-            if (taskStatusResultSub) {
-              taskStatusResultSub.unsubscribe();
-              taskStatusResultSub = undefined;
-            }
-            if (taskActionResultSub) {
-              taskActionResultSub.unsubscribe();
-              taskActionResultSub = undefined;
-            }
-            if (connectionStatusSub) {
-              connectionStatusSub.unsubscribe();
-              connectionStatusSub = undefined;
-            }
-
             //// PROGRESS
             taskProgressResultSub = apiService.taskProgressResultObservable!.subscribe(message => {
               if (!message.data) throw Error('[GDMN] Invalid server response');
@@ -91,6 +69,30 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
                 dispatch(gdmnActions.setLoading(true, 'Connecting...'));
               } else {
                 dispatch(gdmnActions.setLoading(false));
+
+                // todo
+                if (value == TPubSubConnectStatus.DISCONNECTING || value == TPubSubConnectStatus.DISCONNECTED) {
+                  if (errorSubscription) {
+                    errorSubscription.unsubscribe();
+                    errorSubscription = undefined;
+                  }
+                  if (taskProgressResultSub) {
+                    taskProgressResultSub.unsubscribe();
+                    taskProgressResultSub = undefined;
+                  }
+                  if (taskStatusResultSub) {
+                    taskStatusResultSub.unsubscribe();
+                    taskStatusResultSub = undefined;
+                  }
+                  if (taskActionResultSub) {
+                    taskActionResultSub.unsubscribe();
+                    taskActionResultSub = undefined;
+                  }
+                  if (connectionStatusSub) {
+                    connectionStatusSub.unsubscribe();
+                    connectionStatusSub = undefined;
+                  }
+                }
               }
             });
             ////
@@ -148,6 +150,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
                 internalErrorCounter++;
                 dispatch(gdmnActions.apiConnect(true));
               } else {
+                // TODO dialog
                 rootActions.onError(
                   new Error('[GDMN] Исчерпано максимальное кол-во попыток соединения с сервером. Попробуйте позже.')
                 );
