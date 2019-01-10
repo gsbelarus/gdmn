@@ -42,7 +42,7 @@ export class NumberTextField extends React.Component<INumberTextFieldProps, INum
 
   private onChange(ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, value?: string): void {
     return this.setState({
-      value: value || '0'
+      value: value || ''
     });
   }
 

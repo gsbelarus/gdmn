@@ -5,11 +5,12 @@ import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspect
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { ICommand } from 'gdmn-nlp-agent/dist/definitions';
-import { TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
+import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 
 import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
+import { filter, first } from 'rxjs/operators';
 
 interface IStompDemoViewState {
   /* ping */
@@ -61,8 +62,14 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             }
           }
         })
+        .pipe(
+          filter(value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE),
+          first()
+        )
         .subscribe(value => {
-          this.responseCount++;
+            console.log('[test] result', value);
+            this.responseCount++;
+            if (this.requestsCount < this.responseCount) this.requestsCount = this.responseCount; // todo tmp
         });
     });
   };
@@ -89,9 +96,15 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             payload: query.inspect()
           }
         })
+        .pipe(
+          filter(value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE),
+          first()
+        )
         .subscribe(value => {
+          console.log('[test] result', value);
           this.responseCount++;
-        });
+          if (this.requestsCount < this.responseCount) this.requestsCount = this.responseCount; // todo tmp
+        })
     });
   };
 
@@ -113,9 +126,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         const stepDuration: number = parseInt(this.stressStepDurationFieldRef.current!.state.value);
 
         this.stressIntervalId = window.setInterval((args: any) => {
-          console.log('setInterval');
-          if (this.responseCount < this.requestsCount)  {
-            console.log('setInterval: stop');
+          console.log('[test] setInterval');
+          if (this.responseCount < this.requestsCount) {
+            console.log('[test] setInterval: stop');
             this.setState({
               stressStarted: false
             });
@@ -123,21 +136,27 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             clearInterval(this.stressIntervalId);
             this.stressIntervalId = null;
           }
-        }, stepDuration * 100);
-
+        }, stepDuration * 1000);
 
         const f = () => {
+          console.log('[test] requestsCount: ', this.requestsCount);
+          console.log('[test] responseCount: ', this.responseCount);
+
           if (this.requestsCount < maxRequestsCount) {
             console.log('[test] do');
+
             cb();
 
-            // todo: delay ?
-            this.requestsCount++;
-
+            this.requestsCount++; // todo
           } else if (this.responseCount >= this.requestsCount) {
-            console.log('[test] add step');
             /* add step*/
             maxRequestsCount += incRequestsCount;
+
+            console.log(
+              '[test] step: ',
+              (maxRequestsCount - parseInt(this.stressStepInitRequestsCountFieldRef.current!.state.value)) /
+                incRequestsCount
+            );
           }
 
           if (this.state.stressStarted) {
@@ -204,11 +223,19 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               initialValue={this.initStressStepIncRequestsCount.toString()}
             />
             <br />
-            <PrimaryButton onClick={this.handleStressApi} text="STRESS API (PING-TASK)" />
+            <PrimaryButton
+              disabled={this.state.stressStarted}
+              onClick={this.handleStressApi}
+              text="STRESS API (PING-TASK)"
+            />
             <br />
-            <PrimaryButton onClick={this.handleStressDb} text="STRESS DB (QUERY-TASK)" disabled={!this.props.erModel} />
+            <PrimaryButton
+              disabled={this.state.stressStarted || !this.props.erModel}
+              onClick={this.handleStressDb}
+              text="STRESS DB (QUERY-TASK)"
+            />
             <br />
-            <PrimaryButton onClick={this.handleStopStress} text="STOP STRESS" />
+            <PrimaryButton disabled={!this.state.stressStarted} onClick={this.handleStopStress} text="STOP STRESS" />
           </div>
         </div>
       </div>
