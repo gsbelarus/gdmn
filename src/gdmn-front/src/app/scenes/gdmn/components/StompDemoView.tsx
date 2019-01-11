@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
+import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
@@ -41,7 +41,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   stressStepDurationFieldRef = React.createRef<NumberTextField>();
   stressStepInitRequestsCountFieldRef = React.createRef<NumberTextField>();
   stressStepIncRequestsCountFieldRef = React.createRef<NumberTextField>();
-
+  stressSchedulingDateFieldRef = React.createRef<ITextField>();
   // requestsCount: number = 0;
   // responseCount: number = 0;
 
@@ -93,13 +93,13 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
       const entity = Object.values(this.props.erModel.entities)[0];
       const query = new EntityQuery(
-        new EntityLink(
-          entity,
-          'alias',
-          Object.values(entity!.attributes)
-            .filter(value => value instanceof ScalarAttribute)
-            .map(value => new EntityQueryField(value))
-        )
+        new EntityLink(entity, 'alias', [
+          new EntityQueryField(
+            Object.values(entity!.attributes)
+              .filter(value => value instanceof ScalarAttribute)
+              .pop()!
+          )
+        ])
       );
 
       apiService
@@ -140,6 +140,48 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         const incRequestsCount: number = parseInt(this.stressStepIncRequestsCountFieldRef.current!.state.value);
         const stepDuration: number = parseInt(this.stressStepDurationFieldRef.current!.state.value) * 1000;
 
+        let schedulingDate;
+        try {
+          schedulingDate = new Date(this.stressSchedulingDateFieldRef.current!.value || '');
+        } catch (e) {
+          schedulingDate = new Date();
+        }
+
+        console.log(schedulingDate);
+
+        setTimeout(async () => {
+          let timeStart;
+
+          do {
+            // console.log('[test] do');
+            timeStart = window.performance.now();
+
+            await Promise.all(
+              new Array(maxRequestsCount).fill(0).map(
+                value =>
+                  new Promise((resolve, reject) => {
+                    //-//console.log('[test] Promise');
+                    setTimeout(() => cb(resolve, reject), 0);
+                  })
+              )
+            );
+
+            maxRequestsCount += incRequestsCount;
+          } while (window.performance.now() - timeStart < stepDuration);
+
+          const stressResultTime = window.performance.now() - timeStart;
+          const stressResultRequestsCount = maxRequestsCount - incRequestsCount;
+
+          // this.responseCount = 0;
+          // this.requestsCount = 0;
+
+          this.setState({
+            stressStarted: false,
+            stressResultTime,
+            stressResultRequestsCount
+          });
+        }, schedulingDate.getTime() - Date.now());
+
         // interval(stepDuration * 1000)
         //   .pipe(
         //     takeWhile(() => this.state.stressStarted),
@@ -154,38 +196,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         //       });
         //     }
         //   });
-
-        let timeStart;
-
-        do {
-          //-//console.log('[test] do');
-          timeStart = window.performance.now();
-
-          await Promise.all(
-            new Array(maxRequestsCount).fill(0).map(
-              value =>
-                new Promise((resolve, reject) => {
-                  //-//console.log('[test] Promise');
-                  // cb(resolve);
-                  setTimeout(() => cb(resolve, reject), 0);
-                })
-            )
-          );
-
-          maxRequestsCount += incRequestsCount;
-        } while (window.performance.now() - timeStart < stepDuration);
-
-        const stressResultTime = window.performance.now() - timeStart;
-        const stressResultRequestsCount = maxRequestsCount - incRequestsCount;
-
-        // this.responseCount = 0;
-        // this.requestsCount = 0;
-
-        this.setState({
-          stressStarted: false,
-          stressResultTime,
-          stressResultRequestsCount
-        });
 
         // const f = () => {
         //   //-//console.log('[test] requestsCount: ', this.requestsCount);
@@ -257,6 +267,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         </div>
         <div className="ViewBody" style={{ width: 'max-content', marginTop: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <TextField
+              componentRef={this.stressSchedulingDateFieldRef}
+              label="scheduling run datetime (YYYY-MM-DD HH:mm:ss)"
+            />
             <NumberTextField
               ref={this.stressStepDurationFieldRef}
               initialValue={this.initStressStepDuration.toString()}
@@ -344,7 +358,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     });
   };
 
-  // todo refs
 
   private handlePingDelayChange = (event: any) => {
     this.setState({
