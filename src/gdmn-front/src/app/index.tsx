@@ -21,7 +21,7 @@ const domContainerNode = config.webpack.appMountNodeId;
 const { store, persistor } = getStore(apiService);
 
 // apiService.pubSubClient.debug = message => store.dispatch(rootActions.addStompLogMessage(message));
-apiService.pubSubClient.debug = message => 0);
+apiService.pubSubClient.debug = message => 0;
 apiService.pubSubClient.onMaxCountAbnormallyReconnect = (maxAbnormallyReconnectCount, context) => {
   store.dispatch(rootActions.setLostConnectWarnOpened(true));
 };
