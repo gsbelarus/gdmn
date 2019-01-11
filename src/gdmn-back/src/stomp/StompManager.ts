@@ -46,19 +46,19 @@ export class StompManager {
       silly: (message, args) => {
         const receiverDataTemplate = /^StompWebSocketStreamLayer: received data %.$/g;
         if (receiverDataTemplate.test(message) && args !== "\n") {
-          this._logger.info("\n>>> %s", args.length > StompManager.MAX_LENGTH_MESSAGE
-            ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
-            : args);
+          // this._logger.info("\n>>> %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+          //   : args);
         }
         const sendingDataTemplate = /^StompFrameLayer: sending frame data %.$/g;
         if (sendingDataTemplate.test(message)) {
-          args.startsWith("ERROR")
-            ? this._logger.warn("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
-            ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
-            : args)
-            : this._logger.info("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
-            ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
-            : args);
+          // args.startsWith("ERROR")
+          //   ? this._logger.warn("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+          //   : args)
+          //   : this._logger.info("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+          //   : args);
         }
       },
       warn: console.log,
