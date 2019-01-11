@@ -14,7 +14,7 @@ const errorMiddleware: Middleware = ({ dispatch, getState }) => next => action =
     // if (action.payload instanceof SyntaxError) {
     //   // todo: custom response parse error
     //   errorMsg = '[client internal error]';
-    //   console.log(action.payload);
+    //   //-//console.log(action.payload);
     // }
     // todo: on server UnauthorizedError -> signOut
 

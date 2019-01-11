@@ -11,6 +11,10 @@ import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
 import { filter, first } from 'rxjs/operators';
+// import { queue } from 'rxjs/internal/scheduler/queue';
+// import { asyncScheduler, interval } from 'rxjs';
+// import { async } from 'rxjs/internal/scheduler/async';
+// import { asap } from 'rxjs/internal/scheduler/asap';
 
 interface IStompDemoViewState {
   /* ping */
@@ -18,6 +22,8 @@ interface IStompDemoViewState {
   pingSteps: string;
   /* stress */
   stressStarted: boolean;
+  stressResultTime: number;
+  stressResultRequestsCount: number;
 }
 
 interface IStompDemoViewProps extends IViewProps {
@@ -36,14 +42,15 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   stressStepInitRequestsCountFieldRef = React.createRef<NumberTextField>();
   stressStepIncRequestsCountFieldRef = React.createRef<NumberTextField>();
 
-  requestsCount: number = 0;
-  responseCount: number = 0;
-  stressIntervalId: any;
+  // requestsCount: number = 0;
+  // responseCount: number = 0;
 
   public state: IStompDemoViewState = {
     pingDelay: '3000',
     pingSteps: '2',
-    stressStarted: false
+    stressStarted: false,
+    stressResultTime: 0,
+    stressResultRequestsCount: 0
   };
 
   public getViewCaption(): string {
@@ -51,7 +58,8 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   }
 
   private handleStressApi = () => {
-    this.stressLoop(() => {
+    this.stressLoop((resolve: any) => {
+      //-//console.log('[test] stressLoop')
       apiService
         .ping({
           payload: {
@@ -65,18 +73,23 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         .pipe(
           filter(value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE),
           first()
+          // observeOn(async)
         )
         .subscribe(value => {
-            console.log('[test] result', value);
-            this.responseCount++;
-            if (this.requestsCount < this.responseCount) this.requestsCount = this.responseCount; // todo tmp
+          //-//console.log('[test] result', value);
+          // this.responseCount++;
+
+          resolve();
         });
     });
   };
 
   private handleStressDb = () => {
-    this.stressLoop(() => {
-      if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
+    this.stressLoop((resolve: any, reject: any) => {
+      if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) {
+        reject(new Error('[test] erModel empty!'));
+        return;
+      }
 
       const entity = Object.values(this.props.erModel.entities)[0];
       const query = new EntityQuery(
@@ -101,80 +114,117 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           first()
         )
         .subscribe(value => {
-          console.log('[test] result', value);
-          this.responseCount++;
-          if (this.requestsCount < this.responseCount) this.requestsCount = this.responseCount; // todo tmp
-        })
+          //-//console.log('[test] result', value);
+          // this.responseCount++;
+
+          resolve();
+        });
     });
   };
 
-  private handleStopStress = () => {
-    this.setState({
-      stressStarted: false
-    });
-    clearInterval(this.stressIntervalId);
-  };
+  // private handleStopStress = () => {
+  //   this.setState({
+  //     stressStarted: false
+  //   });
+  // };
 
   private stressLoop = (cb: Function) => {
     this.setState(
       {
-        stressStarted: true
+        stressStarted: true,
+        stressResultTime: 0,
+        stressResultRequestsCount: 0
       },
-      () => {
+      async () => {
         let maxRequestsCount: number = parseInt(this.stressStepInitRequestsCountFieldRef.current!.state.value);
         const incRequestsCount: number = parseInt(this.stressStepIncRequestsCountFieldRef.current!.state.value);
-        const stepDuration: number = parseInt(this.stressStepDurationFieldRef.current!.state.value);
+        const stepDuration: number = parseInt(this.stressStepDurationFieldRef.current!.state.value) * 1000;
 
-        this.stressIntervalId = window.setInterval((args: any) => {
-          console.log('[test] setInterval');
-          if (this.responseCount < this.requestsCount) {
-            console.log('[test] setInterval: stop');
-            this.setState({
-              stressStarted: false
-            });
+        // interval(stepDuration * 1000)
+        //   .pipe(
+        //     takeWhile(() => this.state.stressStarted),
+        //     observeOn(asap)
+        //   )
+        //   .subscribe(() => {
+        //     //-//console.log('[test] setInterval');
+        //     if (this.responseCount < this.requestsCount) {
+        //       //-//console.log('[test] setInterval: stop');
+        //       this.setState({
+        //         stressStarted: false
+        //       });
+        //     }
+        //   });
 
-            clearInterval(this.stressIntervalId);
-            this.stressIntervalId = null;
-          }
-        }, stepDuration * 1000);
+        let timeStart;
 
-        const f = () => {
-          console.log('[test] requestsCount: ', this.requestsCount);
-          console.log('[test] responseCount: ', this.responseCount);
+        do {
+          //-//console.log('[test] do');
+          timeStart = window.performance.now();
 
-          if (this.requestsCount < maxRequestsCount) {
-            console.log('[test] do');
+          await Promise.all(
+            new Array(maxRequestsCount).fill(0).map(
+              value =>
+                new Promise((resolve, reject) => {
+                  //-//console.log('[test] Promise');
+                  // cb(resolve);
+                  setTimeout(() => cb(resolve, reject), 0);
+                })
+            )
+          );
 
-            cb();
+          maxRequestsCount += incRequestsCount;
+        } while (window.performance.now() - timeStart < stepDuration);
 
-            this.requestsCount++; // todo
-          } else if (this.responseCount >= this.requestsCount) {
-            /* add step*/
-            maxRequestsCount += incRequestsCount;
+        const stressResultTime = window.performance.now() - timeStart;
+        const stressResultRequestsCount = maxRequestsCount - incRequestsCount;
 
-            console.log(
-              '[test] step: ',
-              (maxRequestsCount - parseInt(this.stressStepInitRequestsCountFieldRef.current!.state.value)) /
-                incRequestsCount
-            );
-          }
+        // this.responseCount = 0;
+        // this.requestsCount = 0;
 
-          if (this.state.stressStarted) {
-            setTimeout(() => {
-              f();
-            }, 0);
-          } else {
-            console.log('[test] clearInterval');
-            if (this.stressIntervalId) clearInterval(this.stressIntervalId);
-            this.responseCount = 0;
-            this.requestsCount = 0;
-            this.setState({
-              stressStarted: false
-            });
-          }
-        };
+        this.setState({
+          stressStarted: false,
+          stressResultTime,
+          stressResultRequestsCount
+        });
 
-        f();
+        // const f = () => {
+        //   //-//console.log('[test] requestsCount: ', this.requestsCount);
+        //   //-//console.log('[test] responseCount: ', this.responseCount);
+        //
+        //   if (this.requestsCount < maxRequestsCount) {
+        //     //-//console.log('[test] do');
+        //
+        //     cb();
+        //
+        //     this.requestsCount++; // todo
+        //   } else if (this.responseCount >= this.requestsCount) {
+        //     /* add step*/
+        //     maxRequestsCount += incRequestsCount;
+        //
+        //     //-//console.log(
+        //       '[test] step: ',
+        //       (maxRequestsCount - parseInt(this.stressStepInitRequestsCountFieldRef.current!.state.value)) /
+        //         incRequestsCount
+        //     );
+        //   }
+        //
+        //   if (this.state.stressStarted) {
+        //     setTimeout(() => {
+        //       f();
+        //     }, 0);
+        //   } else {
+        //     //-//console.log('[test] clearInterval');
+        //
+        //     this.responseCount = 0;
+        //     this.requestsCount = 0;
+        //
+        //     this.setState({
+        //       stressStarted: false
+        //     });
+        //   }
+        // };
+        //
+        // f();
       }
     );
   };
@@ -234,8 +284,14 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               onClick={this.handleStressDb}
               text="STRESS DB (QUERY-TASK)"
             />
+            {/*<br />*/}
+            {/*<PrimaryButton disabled={!this.state.stressStarted} onClick={this.handleStopStress} text="STOP STRESS" />*/}
+
             <br />
-            <PrimaryButton disabled={!this.state.stressStarted} onClick={this.handleStopStress} text="STOP STRESS" />
+            <span style={{ fontSize: 20 }}>Stress result:</span>
+            <br />
+            <span style={{ fontSize: 16 }}>Time (ms): {this.state.stressResultTime.toFixed()}</span>
+            <span style={{ fontSize: 16 }}>Requests count: {this.state.stressResultRequestsCount}</span>
           </div>
         </div>
       </div>

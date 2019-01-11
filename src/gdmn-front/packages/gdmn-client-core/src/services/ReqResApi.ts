@@ -81,7 +81,7 @@ class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IAp
     try {
       response = await fetch(uri, options);
     } catch (error) {
-      // console.log('[GDMN] Network request to server failed: ' + error.message);
+      // //-//console.log('[GDMN] Network request to server failed: ' + error.message);
       throw new FetchError(error);
     }
 
@@ -129,7 +129,7 @@ class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IAp
       body: method === THttpMethod.POST ? (!!query ? JSON.stringify(query) : undefined) : undefined
     });
 
-    // console.log('response: '+responseBody);
+    // //-//console.log('response: '+responseBody);
 
     return JSON.parse(responseBody); // TODO handle syntax error
   }
@@ -145,7 +145,7 @@ class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IAp
     );
 
     const responseBody = await this.fetchForm(uri, formData);
-    // console.log('[GDMN] fetchSignIn DONE.');
+    // //-//console.log('[GDMN] fetchSignIn DONE.');
     const res = <IAccountLoginResponse>JSON.parse(responseBody);
     await this.authService.storeTokens(res.access_token, res.refresh_token); // TODO extract
 
@@ -172,7 +172,7 @@ class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IAp
     } catch (error) {
       if (error instanceof SyntaxError) {
         // TODO
-        console.log('[GDMN] SyntaxError');
+        //-//console.log('[GDMN] SyntaxError');
         return;
       }
 
@@ -182,7 +182,7 @@ class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IAp
 
   protected static async parseResponseError(error: HttpStatusError): Promise<HttpError> {
     const responseErrorBody = <IResponseError | undefined>await ReqResApi.parseJson(error.response);
-    // console.log(
+    // //-//console.log(
     //   `[GDMN] HTTP Error (${responseErrorBody ? responseErrorBody.originalError.statusCode : ''}): ${responseErrorBody}`
     // );
 
