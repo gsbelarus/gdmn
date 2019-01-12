@@ -1,4 +1,4 @@
-import {MessageMetadata, Pointer, Status, Util, XpbBuilder} from "node-firebird-native-api";
+import {MessageMetadata, Pointer, Status, Util} from "node-firebird-native-api";
 import {endianness} from "os";
 import {StringDecoder} from "string_decoder";
 import {IConnectionOptions} from "../../AConnection";
@@ -51,6 +51,7 @@ export function createTpb(options: ITransactionOptions, util: Util, status: Stat
                 tpbBuilder.insertTagSync(status, isc_tpb.read);
                 break;
             case AccessMode.READ_WRITE:
+            default:
                 tpbBuilder.insertTagSync(status, isc_tpb.write);
                 break;
         }
