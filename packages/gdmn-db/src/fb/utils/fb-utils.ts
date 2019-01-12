@@ -17,12 +17,12 @@ export function iscVaxInteger2(buffer: Buffer, startPos: number): number {
     /* tslint:enable */
 }
 
-export interface XpbBuffer {
-    buffer: Pointer,
-    length: number
-}
+export type XpbBufferCallback<T> = (buffer: Pointer, length: number) => Promise<T>;
 
-export function createDpb(dbOptions: IConnectionOptions, util: Util, status: Status): XpbBuffer {
+export async function createDpb<T>(dbOptions: IConnectionOptions,
+                                   util: Util,
+                                   status: Status,
+                                   callback: XpbBufferCallback<T>): Promise<T> {
     const dpbBuilder = (util.getXpbBuilderSync(status, XpbBuilderParams.DPB, undefined, 0))!;
     try {
         dpbBuilder.insertTagSync(status, isc_dpb.version1);
@@ -36,13 +36,16 @@ export function createDpb(dbOptions: IConnectionOptions, util: Util, status: Sta
         const buffer = dpbBuilder.getBufferSync(status)!;
         const length = dpbBuilder.getBufferLengthSync(status);
 
-        return {buffer, length};
+        return await callback(buffer, length);
     } finally {
         dpbBuilder.disposeSync();
     }
 }
 
-export function createTpb(options: ITransactionOptions, util: Util, status: Status): XpbBuffer {
+export async function createTpb<T>(options: ITransactionOptions,
+                                   util: Util,
+                                   status: Status,
+                                   callback: XpbBufferCallback<T>): Promise<T> {
     const tpbBuilder = (util.getXpbBuilderSync(status, XpbBuilderParams.TPB, undefined, 0))!;
 
     try {
@@ -81,7 +84,7 @@ export function createTpb(options: ITransactionOptions, util: Util, status: Stat
         const buffer = tpbBuilder.getBufferSync(status)!;
         const length = tpbBuilder.getBufferLengthSync(status);
 
-        return {buffer, length};
+        return await callback(buffer, length);
     } finally {
         tpbBuilder.disposeSync();
     }

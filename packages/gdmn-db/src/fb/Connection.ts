@@ -53,11 +53,12 @@ export class Connection extends AConnection {
         }
 
         await this.client.create();
-        this.handler = await this.client.statusAction(async (status) => {
-            const {buffer, length} = createDpb(options, this.client.client!.util, status);
-            const uri = Connection._optionsToUri(options);
-            return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
-        });
+        this.handler = await this.client.statusAction((status) => (
+            createDpb(options, this.client.client!.util, status, async (buffer, length) => {
+                const uri = Connection._optionsToUri(options);
+                return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
+            })
+        ));
     }
 
     public async dropDatabase(): Promise<void> {
@@ -80,11 +81,12 @@ export class Connection extends AConnection {
         }
 
         await this.client.create();
-        this.handler = await this.client.statusAction(async (status) => {
-            const {buffer, length} = createDpb(options, this.client.client!.util, status);
-            const uri = Connection._optionsToUri(options);
-            return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
-        });
+        this.handler = await this.client.statusAction((status) => (
+            createDpb(options, this.client.client!.util, status, async (buffer, length) => {
+                const uri = Connection._optionsToUri(options);
+                return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
+            })
+        ));
     }
 
     public async startTransaction(options?: ITransactionOptions): Promise<Transaction> {
