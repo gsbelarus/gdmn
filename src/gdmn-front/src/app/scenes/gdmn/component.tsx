@@ -4,22 +4,21 @@ import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
-import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
-import { ERModel } from 'gdmn-orm';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
+import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
 import { Dispatch } from 'redux';
+import { ERModel } from 'gdmn-orm';
+import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 
 import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
 import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
-import { TAuthActions } from '@src/app/scenes/auth/actions';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
-import styles from './styles.css';
-import { TGdmnActions } from './actions';
-import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
-import { IViewTab } from './types';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
-import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
+
+import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
+import styles from './styles.css';
+import { IViewTab } from './types';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
@@ -102,7 +101,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   },
                   items: commandsToContextualMenuItems(
                     ['userProfile', '-', 'logout'],
-                    (action: TAuthActions | TGdmnActions) => dispatch(action),
+                    action => dispatch(action),
                     (link: string) => history.push(`${match.url}${link}`)
                   )
                 }}

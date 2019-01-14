@@ -1,7 +1,7 @@
 import {AResultMetadata, Types} from "../AResultMetadata";
 import {Statement} from "./Statement";
 import {SQLTypes} from "./utils/constants";
-import {createDescriptors, fixMetadata, IDescriptor} from "./utils/fb-utils";
+import {createDescriptors, IDescriptor} from "./utils/fb-utils";
 
 export interface IResultSetMetadataSource {
     descriptors: IDescriptor[];
@@ -29,16 +29,16 @@ export class ResultMetadata extends AResultMetadata {
         const result: IResultSetMetadataSource = await statement.transaction.connection.client
             .statusAction(async (status) => {
                 const metadata = await statement.source!.handler.getOutputMetadataAsync(status);
-                const descriptors = createDescriptors(status, metadata!);
+                try {
+                    const descriptors = createDescriptors(status, metadata!);
 
-                const fixedHandler = fixMetadata(status, metadata)!;
-                const fixedDescriptors = createDescriptors(status, fixedHandler);
-                await fixedHandler.releaseAsync();
-
-                return {
-                    descriptors,
-                    fixedDescriptors
-                };
+                    return {
+                        descriptors,
+                        fixedDescriptors: statement.source!.outDescriptors
+                    };
+                } finally {
+                    await metadata!.releaseAsync();
+                }
             });
         return new ResultMetadata(result);
     }

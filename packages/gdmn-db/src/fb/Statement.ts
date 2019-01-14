@@ -10,7 +10,9 @@ import {createDescriptors, dataWrite, fixMetadata, IDescriptor} from "./utils/fb
 export interface IStatementSource {
     handler: NativeStatement;
     inMetadata: MessageMetadata;
+    outMetadata: MessageMetadata;
     inDescriptors: IDescriptor[];
+    outDescriptors: IDescriptor[];
 }
 
 export class Statement extends AStatement {
@@ -23,7 +25,7 @@ export class Statement extends AStatement {
     ];
     public static PLACEHOLDER_PATTERN = /(:[a-zA-Z0-9_$]+)/g;
 
-    public resultSets = new Set<ResultSet>();
+    public resultSetsCount = 0;
     public source?: IStatementSource;
     private readonly _paramsAnalyzer: CommonParamsAnalyzer;
 
@@ -34,7 +36,7 @@ export class Statement extends AStatement {
         this._paramsAnalyzer = paramsAnalyzer;
         this.source = source;
 
-        this.transaction.statements.add(this);
+        this.transaction.statementsCount++;
     }
 
     get transaction(): Transaction {
@@ -54,12 +56,16 @@ export class Statement extends AStatement {
                 0, paramsAnalyzer.sql, 3, NativeStatement.PREPARE_PREFETCH_ALL);
 
             const inMetadata = fixMetadata(status, await handler!.getInputMetadataAsync(status))!;
+            const outMetadata = fixMetadata(status, await handler!.getOutputMetadataAsync(status))!;
             const inDescriptors = createDescriptors(status, inMetadata);
+            const outDescriptors = createDescriptors(status, outMetadata);
 
             return {
                 handler: handler!,
                 inMetadata,
-                inDescriptors
+                outMetadata,
+                inDescriptors,
+                outDescriptors
             };
         });
 
@@ -71,12 +77,16 @@ export class Statement extends AStatement {
             throw new Error("Statement already disposed");
         }
 
-        await this._closeChildren();
+        if (this.resultSetsCount > 0) {
+            throw new Error("Not all resultSets closed");
+        }
 
+        this.source.outMetadata.releaseSync();
         this.source.inMetadata.releaseSync();
+
         await this.transaction.connection.client.statusAction((status) => this.source!.handler.freeAsync(status));
         this.source = undefined;
-        this.transaction.statements.delete(this);
+        this.transaction.statementsCount--;
     }
 
     public async executeQuery(params?: IParams, type?: CursorType): Promise<ResultSet> {
@@ -101,35 +111,18 @@ export class Statement extends AStatement {
         }
 
         await this.transaction.connection.client.statusAction(async (status) => {
-            const outMetadata = fixMetadata(status, await this.source!.handler.getOutputMetadataAsync(status));
-            const inBuffer = new Uint8Array(this.source!.inMetadata.getMessageLengthSync(status));
+            const {inMetadata, outMetadata, inDescriptors} = this.source!;
+            const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
+            const outBuffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
-            try {
-                await dataWrite(this, this.source!.inDescriptors, inBuffer, this._paramsAnalyzer.prepareParams(params));
+            await dataWrite(this, inDescriptors, inBuffer, this._paramsAnalyzer.prepareParams(params));
 
-                const newTransaction = await this.source!.handler.executeAsync(status, this.transaction.handler,
-                    this.source!.inMetadata, inBuffer, outMetadata, undefined);
+            const newTransaction = await this.source!.handler.executeAsync(status, this.transaction.handler,
+                inMetadata, inBuffer, outMetadata, outBuffer);
 
-                if (newTransaction && this.transaction.handler !== newTransaction) {
-                    //// FIXME: newTransaction.releaseSync();
-                }
-            } finally {
-                if (outMetadata) {
-                    await outMetadata.releaseAsync();
-                }
+            if (newTransaction && this.transaction.handler !== newTransaction) {
+                //// FIXME: newTransaction.releaseSync();
             }
         });
-    }
-
-    private async _closeChildren(): Promise<void> {
-        if (this.resultSets.size) {
-            console.warn("Not all resultSets closed, they will be closed");
-        }
-
-        await Promise.all(Array.from(this.resultSets).reduceRight((promises, resultSet) => {
-            resultSet.disposeStatementOnClose = false;
-            promises.push(resultSet.close());
-            return promises;
-        }, [] as Array<Promise<void>>));
     }
 }

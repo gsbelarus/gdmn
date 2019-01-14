@@ -27,6 +27,7 @@
     "@uifabric/fluent-theme": "^0",
     "es6-error": "^4",
     "gdmn-grid": "1.0.0",
+    "gdmn-internals": "1.0.0",
     "gdmn-nlp": "1.0.0",
     "gdmn-nlp-agent": "1.0.0",
     "gdmn-orm": "1.0.0",

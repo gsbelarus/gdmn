@@ -11,6 +11,10 @@ export interface IERModelViewProps extends IDataViewProps<any> {
 }
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
+  public getDataViewKey() {
+    return 'ermodel';
+  }
+
   public getViewCaption(): string {
     return 'ER Model';
   }
@@ -42,7 +46,7 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
         iconProps: {
           iconName: 'Table'
         },
-        commandBarButtonAs: btn(data ? `entity/Folder` : `${match!.url}`)
+        commandBarButtonAs: btn(this.isDataLoaded() ? `entity/${data!.rs.getString(data!.rs.currentRow, 'name')}` : `${match!.url}`)
       },
       {
         key: 'reloadERModel',

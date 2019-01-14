@@ -1,3 +1,4 @@
+import childProcess from "child_process";
 import {AccessMode, AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
@@ -31,6 +32,7 @@ export abstract class Application extends ADatabase {
 
   public readonly erModel: ERModel = new ERModel();
   public readonly sessionManager = new SessionManager(this.connectionPool, this.sessionLogger);
+  public childProcess?: childProcess.ChildProcess;  // TODO pool
 
   protected constructor(dbDetail: IDBDetail) {
     super(dbDetail);
@@ -98,7 +100,7 @@ export abstract class Application extends ADatabase {
     const task = new Task({
       session,
       command,
-      level: Level.USER,
+      level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitProcess();
@@ -191,14 +193,26 @@ export abstract class Application extends ADatabase {
   protected async _onConnect(): Promise<void> {
     await super._onConnect();
 
+    // if (!process.send) {
+    // TODO send init params
+    // this.childProcess = childProcess.fork(__dirname + "/process/ProcessManager.js",
+    //   [JSON.stringify(this.dbDetail)]);
+    // this.childProcess.send(this.dbDetail);
+    // }
     await this._init();
   }
 
   protected async _onDisconnect(): Promise<void> {
     await super._onDisconnect();
 
+    const {alias, connectionOptions}: IDBDetail = this.dbDetail;
+
+    if (this.childProcess) {
+      this.childProcess.kill();
+      this._logger.info("alias#%s (%s) killed all ChildProcesses", alias, connectionOptions.path);
+    }
     await this.sessionManager.forceCloseAll();
-    this._logger.info("All session are closed");
+    this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
   }
 
   private async _init(): Promise<void> {

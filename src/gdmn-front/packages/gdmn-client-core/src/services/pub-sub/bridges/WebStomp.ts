@@ -108,7 +108,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     if (!this.client) throw new Error('[PUB-SUB][BRIDGE][STOMP] Connect failed: stomp client not initialized!');
 
     if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
-      console.log('[PUB-SUB][BRIDGE][STOMP] connect: DISCONNECTING');
+      //-//console.log('[PUB-SUB][BRIDGE][STOMP] connect: DISCONNECTING');
       this.connectionStatusObservable
         .pipe(
           filter(value => value === TPubSubConnectStatus.DISCONNECTED),
@@ -116,14 +116,14 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
         )
         .subscribe(() => {
           if (this.client) {
-            console.log('[PUB-SUB][BRIDGE][STOMP] connect: DISCONNECTING. DISCONNECTED->CONNECTING->activate');
+            //-//console.log('[PUB-SUB][BRIDGE][STOMP] connect: DISCONNECTING. DISCONNECTED->CONNECTING->activate');
             this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
             (<Partial<StompHeaders>>this.client.connectHeaders) = meta || this.clientConfig.connectHeaders || {};
             this.client.activate();
           }
         });
     } else {
-      console.log('[PUB-SUB][BRIDGE][STOMP] connect: NOT DISCONNECTING');
+      //-//console.log('[PUB-SUB][BRIDGE][STOMP] connect: NOT DISCONNECTING');
       this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING);
       (<Partial<StompHeaders>>this.client.connectHeaders) = meta || this.clientConfig.connectHeaders || {};
       this.client.activate();
@@ -132,7 +132,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
 
   public disconnect(meta?: Partial<TDisconnectFrameHeaders>): void {
     if (!this.client) {
-      console.log(`[PUB-SUB][BRIDGE][STOMP] Stomp not initialized, no need to disconnect.`);
+      //-//console.log(`[PUB-SUB][BRIDGE][STOMP] Stomp not initialized, no need to disconnect.`);
       return;
     }
 
@@ -163,7 +163,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     meta: Partial<TSubcribeFrameHeaders> = {}
   ): Observable<TMessage> | never {
     if (!this.client) throw new Error(`[PUB-SUB][BRIDGE][STOMP] Subscribe failed: stomp client not initialized!`);
-    console.log(`[PUB-SUB][BRIDGE][STOMP] Request to subscribe ${topic}.`);
+    //-//console.log(`[PUB-SUB][BRIDGE][STOMP] Request to subscribe ${topic}.`);
 
     if (!meta.ack) meta.ack = 'auto';
 
@@ -173,12 +173,12 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
       let subscription: StompSubscription | null | undefined;
       let connectionConnectedRxSubscription: Subscription;
 
-      // this.connectionConnectedRxSubscription.subscribe(value => console.log('test'))
+      // this.connectionConnectedRxSubscription.subscribe(value => //-//console.log('test'))
       // fixme init client after reconnect
       connectionConnectedRxSubscription = this.connectionConnectedObservable.subscribe(() => {
         // todo test on connected
         if (subscription !== null) {
-          console.log(`[PUB-SUB][BRIDGE][STOMP] Will subscribe to ${topic}...`);
+          //-//console.log(`[PUB-SUB][BRIDGE][STOMP] Will subscribe to ${topic}...`);
           subscription = this.client!.subscribe(
             topic,
             (messageFrame: Message) => {
@@ -203,15 +203,15 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
 
       /* TeardownLogic - will be called when no messageObservable subscribers are left */
       return () => {
-        console.log(`[PUB-SUB][BRIDGE][STOMP] Stop watching connection state (for ${topic}).`);
+        //-//console.log(`[PUB-SUB][BRIDGE][STOMP] Stop watching connection state (for ${topic}).`);
         connectionConnectedRxSubscription.unsubscribe();
 
         if (this.connectionStatusObservable.getValue() !== TPubSubConnectStatus.CONNECTED) {
-          console.log(`[PUB-SUB][BRIDGE][STOMP] Stomp not connected, no need to unsubscribe from ${topic}.`);
+          //-//console.log(`[PUB-SUB][BRIDGE][STOMP] Stomp not connected, no need to unsubscribe from ${topic}.`);
           return;
         }
         if (subscription) {
-          console.log(`[PUB-SUB][BRIDGE][STOMP] Will unsubscribe from ${topic}...`);
+          //-//console.log(`[PUB-SUB][BRIDGE][STOMP] Will unsubscribe from ${topic}...`);
           subscription.unsubscribe(); // todo headers
         }
       };
@@ -251,14 +251,13 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   }
 
   public deactivateConnection(): void {
-    console.log('deactivateConnection');
     if (this.client) this.client.deactivate();
   }
 
   private initClient(): void {
     this.client = new Client(this.clientConfig);
     if (!this.clientConfig.debug)
-      this.client.debug = (...params) => console.log('[PUB-SUB][BRIDGE][STOMP][CLIENT]', ...params);
+      this.client.debug = (...params) => {}//-//console.log('[PUB-SUB][BRIDGE][STOMP][CLIENT]', ...params);
 
     // if (this.connectedMessageObservable.hasError) {
     //   this.connectedMessageObservable = new Subject();
@@ -274,11 +273,11 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   }
 
   private onWebSocketError: wsErrorCallbackType = (evt: Event) => {
-    console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketError', evt);
+    //-//console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketError', evt);
   };
 
   private onWebSocketClose: closeEventCallbackType = (evt: CloseEvent) => {
-    console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose', evt);
+    //-//console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose', evt);
 
     if (!evt.wasClean) {
       this.onAbnormallyDeactivate();
@@ -289,7 +288,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     //   this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting
     // }
     if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.DISCONNECTING) {
-      console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose: DISCONNECTING');
+      //-//console.log('[PUB-SUB][BRIDGE][STOMP] onWebSocketClose: DISCONNECTING');
       this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
     }
   };
@@ -302,7 +301,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
   };
 
   private onDisconnectReceiptFrame: frameCallbackType = receiptFrame => {
-    console.log('[PUB-SUB][BRIDGE][STOMP] onDisconnectReceiptFrame');
+    //-//console.log('[PUB-SUB][BRIDGE][STOMP] onDisconnectReceiptFrame');
     this.connectionStatusObservable.next(TPubSubConnectStatus.DISCONNECTED);
   };
 

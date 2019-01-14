@@ -8,6 +8,7 @@ import {
   TExecutor
 } from "gdmn-db";
 import log4js, {Logger} from "log4js";
+import {performance} from "perf_hooks";
 import StrictEventEmitter from "strict-event-emitter-types";
 
 export interface IDBDetail<ConnectionOptions extends IConnectionOptions = IConnectionOptions> {
@@ -55,6 +56,7 @@ export abstract class ADatabase {
   protected readonly _logger: Logger = log4js.getLogger("database");
 
   private _status: DBStatus = DBStatus.IDLE;
+  private _time = performance.now();
 
   protected constructor(dbDetail: IDBDetail) {
     this.dbDetail = dbDetail;
@@ -234,12 +236,17 @@ export abstract class ADatabase {
       throw new Error("Database already has this status");
     }
 
+    const now = performance.now();
+    const elapsedTime = Math.floor(now - this._time);
+    this._time = now;
+
     this._status = status;
     if (server) {
-      this._logger.info("alias#%s (%s:%s/%s) is changed; Status: %s", alias, server.host, server.port, path,
-        DBStatus[this._status]);
+      this._logger.info("alias#%s (%s:%s/%s) is changed; Status: %s; Time: %s ms", alias, server.host, server.port,
+        path, DBStatus[this._status], elapsedTime);
     } else {
-      this._logger.info("alias#%s (%s) is changed; Status: %s", alias, path, DBStatus[this._status]);
+      this._logger.info("alias#%s (%s) is changed; Status: %s; Time: %s ms", alias, path, DBStatus[this._status],
+        elapsedTime);
     }
     this.emitter.emit("change", this);
   }

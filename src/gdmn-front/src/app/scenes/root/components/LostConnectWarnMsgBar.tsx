@@ -11,6 +11,11 @@ class LostConnectWarnMsgBar extends Component<ILostConnectWarnMsgBarProps> {
   public render() {
     return this.props.opened ? (
       <MessageBar
+        styles={{
+          root: {
+            background: 'rgb(255, 193, 168)'
+          }
+        }}
         messageBarType={MessageBarType.severeWarning}
         actions={
           <div>

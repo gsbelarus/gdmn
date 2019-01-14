@@ -1,6 +1,6 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
+import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute } from 'gdmn-orm';
 import { createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
@@ -12,6 +12,7 @@ import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
 import { withRouter } from 'react-router';
 import { attr2fd } from './utils';
+import { Mutex } from 'gdmn-internals';
 
 export const EntityDataViewContainer = connect(
   (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
@@ -26,86 +27,90 @@ export const EntityDataViewContainer = connect(
       viewTabs: state.gdmnState.viewTabs
     };
   },
+  (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({
+    ...bindDataViewDispatch(thunkDispatch),
+    loadData: (mutex: Mutex) => thunkDispatch( (dispatch, getState) => {
+      if (mutex.isLocked()) return;
 
-  (dispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({
-    ...bindDataViewDispatch(dispatch),
-    loadFromERModel: (erModel: ERModel) => {
+      const erModel = getState().gdmnState.erModel;
+
+      if (!erModel || !Object.keys(erModel.entities).length) return;
 
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
 
-      console.log('[GDMN] LOADING ' + entityName);
+      //-//console.log('[GDMN] LOADING ' + entityName);
 
-      const entity = erModel.entities['Folder'];
+      const entity = erModel.entities[entityName];
 
-      if (!entity) return;
+      if (!entity) {
+        throw new Error(`Entity ${entityName} not found in ER Model`);
+      }
 
       const q = new EntityQuery(new EntityLink(
         entity,
         'z',
-        Object.values(entity.attributes).filter( attr => attr instanceof ScalarAttribute ).map( attr => new EntityQueryField(attr) )
+        Object.values(entity.attributes)
+          .filter( attr => attr instanceof ScalarAttribute && !(attr instanceof BlobAttribute) )
+          .map( attr => new EntityQueryField(attr) )
       ));
 
-      apiService
-        .getData({
-          payload: {
-            action: TTaskActionNames.QUERY,
-            payload: q.inspect()
-          }
-        })
-        .subscribe( value => {
-          if (value.error) {
-            console.log(value.error.message);
-          } else if (value.payload.result) {
-            console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
-            console.log('QUERY response result: ', JSON.stringify(value.payload.result.aliases));
-            console.log('QUERY response result: ', JSON.stringify(value.payload.result.info));
+      mutex.acquire( release => {
+        apiService
+          .getData({
+            payload: {
+              action: TTaskActionNames.QUERY,
+              payload: q.inspect()
+            }
+          })
+          .subscribe( value => {
+            try {
+              if (value.error) {
+                //-//console.log(value.error.message);
+              } else if (value.payload.result) {
+                //-//console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
+                //-//console.log('QUERY response result: ', JSON.stringify(value.payload.result.aliases));
+                //-//console.log('QUERY response result: ', JSON.stringify(value.payload.result.info));
 
-            const fieldDefs = Object.entries(value.payload.result.aliases).map( ([fieldAlias, data]) => {
-              const attr = entity.attributes[data.attribute];
-              if (!attr) {
-                throw new Error(`Unknown attribute ${data.attribute}`);
+                const fieldDefs = Object.entries(value.payload.result.aliases).map( ([fieldAlias, data]) => {
+                  const attr = entity.attributes[data.attribute];
+                  if (!attr) {
+                    throw new Error(`Unknown attribute ${data.attribute}`);
+                  }
+                  return attr2fd(fieldAlias, entity, attr);
+                });
+
+                const rs = RecordSet.createWithData(
+                  entity.name,
+                  fieldDefs,
+                  List(value.payload.result.data as IDataRow[])
+                );
+
+                dispatch(createRecordSet({ name: rs.name, rs }));
+
+                const gcs = getState().grid[entity.name];
+
+                if (!gcs) {
+                  dispatch(createGrid({
+                    name: rs.name,
+                    columns: rs.fieldDefs.map( fd => (
+                      {
+                        name: fd.fieldName,
+                        caption: [fd.caption || fd.fieldName],
+                        fields: [{...fd}],
+                        width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                      })),
+                    leftSideColumns: 0,
+                    rightSideColumns: 0,
+                    hideFooter: true
+                  }));
+                }
               }
-              return attr2fd(fieldAlias, entity, attr);
-            });
-
-            const rs = RecordSet.createWithData(
-              entity.name,
-              fieldDefs,
-              List(value.payload.result.data as IDataRow[])
-            );
-
-            dispatch(createRecordSet({ name: rs.name, rs }));
-
-            dispatch(createGrid({
-              name: rs.name,
-              columns: rs.fieldDefs.map( fd => (
-                {
-                  name: fd.fieldName,
-                  caption: [fd.caption || fd.fieldName],
-                  fields: [{...fd}],
-                  width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                })),
-              leftSideColumns: 0,
-              rightSideColumns: 0,
-              hideFooter: true
-            }));
-          }
-        });
-    }
+            } finally {
+              release();
+            }
+          });
+      });
+    })
   }),
-
-  (stateProps, dispatchProps) => {
-    const { erModel } = stateProps;
-    const { loadFromERModel } = dispatchProps;
-    return {
-      ...stateProps,
-      ...dispatchProps,
-      loadData: () => {
-        if (erModel && Object.entries(erModel.entities).length) {
-          loadFromERModel(erModel);
-        }
-      }
-    }
-  }
 )(withRouter(EntityDataView));
 

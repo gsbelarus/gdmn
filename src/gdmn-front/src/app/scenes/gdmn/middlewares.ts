@@ -1,20 +1,20 @@
-import { deserializeERModel } from 'gdmn-orm';
 import { Middleware } from 'redux';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { getType } from 'typesafe-actions';
 import { Auth, TPubSubConnectStatus } from '@gdmn/client-core';
-import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TTaskStatus } from '@gdmn/server-api';
 
-import { authActions } from '@src/app/scenes/auth/actions';
-import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
+import { authActionsAsync } from '@src/app/scenes/auth/actions';
+import { gdmnActions, gdmnActionsAsync, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
+import { TThunkMiddleware } from '@src/app/store/middlewares';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
-const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
+const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
   return ({ dispatch, getState }) => next => async (action: TGdmnActions) => {
     let errorSubscription: Subscription | undefined;
     let taskProgressResultSub: Subscription | undefined;
@@ -39,33 +39,11 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               }
             });
 
-            /// tmp
-            if (errorSubscription) {
-              errorSubscription.unsubscribe();
-              errorSubscription = undefined;
-            }
-            if (taskProgressResultSub) {
-              taskProgressResultSub.unsubscribe();
-              taskProgressResultSub = undefined;
-            }
-            if (taskStatusResultSub) {
-              taskStatusResultSub.unsubscribe();
-              taskStatusResultSub = undefined;
-            }
-            if (taskActionResultSub) {
-              taskActionResultSub.unsubscribe();
-              taskActionResultSub = undefined;
-            }
-            if (connectionStatusSub) {
-              connectionStatusSub.unsubscribe();
-              connectionStatusSub = undefined;
-            }
-
             //// PROGRESS
             taskProgressResultSub = apiService.taskProgressResultObservable!.subscribe(message => {
               if (!message.data) throw Error('[GDMN] Invalid server response');
 
-              dispatch(gdmnActions.setLoading(true, JSON.parse(message.data).progress.description || ''));
+              // dispatch(gdmnActions.setLoading(true, JSON.parse(message.data).progress.description || ''));
             });
             taskStatusResultSub = apiService.taskStatusResultObservable!.subscribe(message => {
               if (!message.data) throw Error('[GDMN] Invalid server response');
@@ -73,9 +51,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
               const status: TTaskStatus = JSON.parse(message.data).status;
 
               if (status == TTaskStatus.RUNNING) {
-                dispatch(gdmnActions.setLoading(true, 'Task running...'));
+                // dispatch(gdmnActions.setLoading(true, 'Task running...'));
               } else {
-                dispatch(gdmnActions.setLoading(false));
+                // dispatch(gdmnActions.setLoading(false));
               }
             });
             taskActionResultSub = apiService.taskActionResultObservable!.subscribe(message => {
@@ -88,17 +66,41 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             connectionStatusSub = apiService.pubSubClient.connectionStatusObservable.subscribe(value => {
               if (value == TPubSubConnectStatus.CONNECTING) {
                 // todo: test
-                dispatch(gdmnActions.setLoading(true, 'Connecting...'));
+                // dispatch(gdmnActions.setLoading(true, 'Connecting...'));
               } else {
-                dispatch(gdmnActions.setLoading(false));
+                // dispatch(gdmnActions.setLoading(false));
+
+                // todo
+                if (value == TPubSubConnectStatus.DISCONNECTING || value == TPubSubConnectStatus.DISCONNECTED) {
+                  if (errorSubscription) {
+                    errorSubscription.unsubscribe();
+                    errorSubscription = undefined;
+                  }
+                  if (taskProgressResultSub) {
+                    taskProgressResultSub.unsubscribe();
+                    taskProgressResultSub = undefined;
+                  }
+                  if (taskStatusResultSub) {
+                    taskStatusResultSub.unsubscribe();
+                    taskStatusResultSub = undefined;
+                  }
+                  if (taskActionResultSub) {
+                    taskActionResultSub.unsubscribe();
+                    taskActionResultSub = undefined;
+                  }
+                  if (connectionStatusSub) {
+                    connectionStatusSub.unsubscribe();
+                    connectionStatusSub = undefined;
+                  }
+                }
               }
             });
             ////
 
-            dispatch(gdmnActions.apiGetSchema());
+            dispatch(gdmnActionsAsync.apiGetSchema());
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
-            console.log('[GDMN] auth error: ', error);
+            //-//console.log('[GDMN] auth error: ', error);
 
             if (errorSubscription) {
               errorSubscription.unsubscribe();
@@ -123,7 +125,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
             // if (error instanceof GdmnPubSubError) {
             if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
-              dispatch(authActions.signOut());
+              dispatch(authActionsAsync.signOut());
             } else {
               dispatch(rootActions.onError(error));
             }
@@ -132,14 +134,14 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
             // }
           }
         } else {
-          dispatch(authActions.signOut());
+          dispatch(authActionsAsync.signOut());
         }
 
         errorSubscription = apiService.errorMessageObservable.pipe(first()).subscribe(errMessage => {
           const error = new GdmnPubSubError(errMessage);
 
           if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
-            dispatch(authActions.signOut());
+            dispatch(authActionsAsync.signOut());
           } else {
             dispatch(rootActions.onError(error));
 
@@ -148,6 +150,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
                 internalErrorCounter++;
                 dispatch(gdmnActions.apiConnect(true));
               } else {
+                // TODO dialog
                 rootActions.onError(
                   new Error('[GDMN] Исчерпано максимальное кол-во попыток соединения с сервером. Попробуйте позже.')
                 );
@@ -187,89 +190,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): Middleware => {
 
         break;
       }
-
-      case getType(gdmnActions.apiPing): {
-        apiService.ping(action.payload);
-
-        break;
-      }
-
-      case getType(gdmnActions.apiGetSchema): {
-        apiService
-          .getSchema({
-            payload: {
-              action: TTaskActionNames.GET_SCHEMA,
-              payload: undefined
-            }
-          })
-          .subscribe(value => {
-            if (!!value.payload.result) {
-              const erModel = deserializeERModel(value.payload.result);
-              dispatch(gdmnActions.setSchema(erModel));
-            }
-          });
-
-        break;
-      }
-
-      case getType(gdmnActions.apiGetData): {
-        apiService.getData({
-          payload: {
-            action: TTaskActionNames.QUERY,
-            payload: action.payload
-          }
-        });
-        // todo sub
-
-        break;
-      }
-
-      case getType(gdmnActions.buildCommandList): {
-        break;
-      }
-
-      case getType(gdmnActions.apiDeleteAccount): {
-        const accessTokenPayload = selectAuthState(getState()).accessTokenPayload;
-        const refreshTokenPayload = selectAuthState(getState()).refreshTokenPayload;
-        if (!!accessTokenPayload && !!refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
-          const token = Auth.isFreshToken(accessTokenPayload)
-            ? selectAuthState(getState()).accessToken
-            : selectAuthState(getState()).refreshToken;
-
-          try {
-            await apiService.deleteAccount({
-              payload: {
-                authorization: token || '',
-                'delete-user': 1
-              }
-            });
-          } catch (error) {
-            // if (error instanceof GdmnPubSubError) {
-            if (error.errorData.code === TGdmnErrorCodes.UNAUTHORIZED) {
-              dispatch(authActions.signOut());
-            } else {
-              dispatch(rootActions.onError(error));
-            }
-            // } else {
-            //   dispatch(rootActions.onError(new Error(error)));
-            // }
-          }
-        } else {
-          dispatch(authActions.signOut());
-        }
-
-        break;
-      }
-
-      case getType(gdmnActions.apiActivate): {
-        apiService.pubSubClient.activateConnection();
-        break;
-      }
-
-      case getType(gdmnActions.apiDeactivate): {
-        apiService.pubSubClient.deactivateConnection();
-        break;
-      }
     }
 
     return next(action);
@@ -282,30 +202,32 @@ const loadingMiddleware: Middleware = ({ dispatch, getState }) => next => action
     /* support not fsa-compliant redux actions (without action.error) see: piotrwitek/typesafe-actions#52 */
     (action.error || action.payload instanceof Error)
   ) {
-    dispatch(gdmnActions.setLoading(false));
+    // dispatch(gdmnActions.setLoading(false));
   } else {
     // todo tmp
     if (action.type.slice(action.type.length, -'_REQUEST'.length) === '_REQUEST') {
-      dispatch(gdmnActions.setLoading(true));
+      // dispatch(gdmnActions.setLoading(true));
     } else if (
       action.type.slice(action.type.length, -'_OK'.length) === '_OK' ||
       action.type.slice(action.type.length, -'_ERROR'.length) === '_ERROR'
     ) {
-      dispatch(gdmnActions.setLoading(false));
+      // dispatch(gdmnActions.setLoading(false));
     }
   }
 
   return next(action);
 };
 
-const abortNetReconnectMiddleware: Middleware = ({ dispatch, getState }) => next => async (action: TRootActions) => {
+const abortNetReconnectMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => async (
+  action: TRootActions
+) => {
   switch (action.type) {
     case getType(rootActions.abortNetReconnect): {
-      dispatch(gdmnActions.apiDeactivate());
+      dispatch(gdmnActionsAsync.apiDeactivate());
       break;
     }
     case getType(rootActions.netReconnect): {
-      dispatch(gdmnActions.apiActivate());
+      dispatch(gdmnActionsAsync.apiActivate());
       break;
     }
   }

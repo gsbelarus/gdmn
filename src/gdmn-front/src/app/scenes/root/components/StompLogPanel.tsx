@@ -55,7 +55,8 @@ class StompLogPanel extends PureComponent<IStompPanelStateProps, IStompLogPanelS
           isOpen={stompLogOpened}
           type={PanelType.medium}
           headerText="STOMP log"
-          hasCloseButton={false}
+          hasCloseButton={true}
+          onDismiss={() => this.onTogglePanel(false)}
         >
           <DetailsList
             selectionMode={SelectionMode.none}

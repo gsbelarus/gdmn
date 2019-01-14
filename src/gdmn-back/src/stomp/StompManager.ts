@@ -2,11 +2,12 @@ import log4js from "log4js";
 import {createStompServerSession, setLoggingListeners} from "stomp-protocol";
 import WebSocket from "ws";
 import {MainApplication} from "../apps/MainApplication";
-import {StompSession} from "./StompSession";
 import {Constants} from "../Constants";
+import {StompSession} from "./StompSession";
 
 export class StompManager {
 
+  private static readonly MAX_LENGTH_MESSAGE = 1000;
   private readonly _logger = log4js.getLogger("STOMP");
   private readonly _mainApplication = new MainApplication();
 
@@ -45,13 +46,19 @@ export class StompManager {
       silly: (message, args) => {
         const receiverDataTemplate = /^StompWebSocketStreamLayer: received data %.$/g;
         if (receiverDataTemplate.test(message) && args !== "\n") {
-          this._logger.info("\n>>> %s", args);
+          // this._logger.info("\n>>> %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+          //   : args);
         }
         const sendingDataTemplate = /^StompFrameLayer: sending frame data %.$/g;
         if (sendingDataTemplate.test(message)) {
-          args.startsWith("ERROR")
-            ? this._logger.warn("\n<<< %s", args)
-            : this._logger.info("\n<<< %s", args);
+          // args.startsWith("ERROR")
+          //   ? this._logger.warn("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+          //   : args)
+          //   : this._logger.info("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+          //   : args);
         }
       },
       warn: console.log,

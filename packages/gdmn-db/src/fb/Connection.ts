@@ -14,7 +14,7 @@ import {createDpb} from "./utils/fb-utils";
 export class Connection extends AConnection {
 
     public client = new Client();
-    public transactions = new Set<Transaction>();
+    public transactionsCount = 0;
     public handler?: NativeConnection;
 
     get connected(): boolean {
@@ -53,13 +53,12 @@ export class Connection extends AConnection {
         }
 
         await this.client.create();
-        this.handler = await this.client.statusAction(async (status) => {
-            const dpb = createDpb(options, this.client.client!.util, status);
-            return await this.client!.client!.dispatcher!.createDatabaseAsync(status,
-                Connection._optionsToUri(options),
-                dpb.getBufferLengthSync(status),
-                dpb.getBufferSync(status));
-        });
+        this.handler = await this.client.statusAction((status) => (
+            createDpb(options, this.client.client!.util, status, async (buffer, length) => {
+                const uri = Connection._optionsToUri(options);
+                return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
+            })
+        ));
     }
 
     public async dropDatabase(): Promise<void> {
@@ -67,7 +66,9 @@ export class Connection extends AConnection {
             throw new Error("Need database connection");
         }
 
-        await this._closeChildren();
+        if (this.transactionsCount > 0) {
+            throw new Error("Not all transactions finished");
+        }
 
         await this.client.statusAction((status) => this.handler!.dropDatabaseAsync(status));
         this.handler = undefined;
@@ -80,11 +81,12 @@ export class Connection extends AConnection {
         }
 
         await this.client.create();
-        this.handler = await this.client.statusAction(async (status) => {
-            const dpb = createDpb(options, this.client.client!.util, status);
-            return await this.client!.client!.dispatcher!.attachDatabaseAsync(status,
-                Connection._optionsToUri(options), dpb.getBufferLengthSync(status), dpb.getBufferSync(status));
-        });
+        this.handler = await this.client.statusAction((status) => (
+            createDpb(options, this.client.client!.util, status, async (buffer, length) => {
+                const uri = Connection._optionsToUri(options);
+                return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
+            })
+        ));
     }
 
     public async startTransaction(options?: ITransactionOptions): Promise<Transaction> {
@@ -100,7 +102,9 @@ export class Connection extends AConnection {
             throw new Error("Need database connection");
         }
 
-        await this._closeChildren();
+        if (this.transactionsCount > 0) {
+            throw new Error("Not all transactions finished");
+        }
 
         await this.client.statusAction((status) => this.handler!.detachAsync(status));
         await this.client.destroy();
@@ -145,15 +149,5 @@ export class Connection extends AConnection {
         }
 
         return await Statement.prepare(transaction, sql);
-    }
-
-    private async _closeChildren(): Promise<void> {
-        if (this.transactions.size) {
-            console.warn("Not all transactions finished, they will be rollbacked");
-        }
-        await Promise.all(Array.from(this.transactions).reduceRight((promises, transaction) => {
-            promises.push(transaction.rollback());
-            return promises;
-        }, [] as Array<Promise<void>>));
     }
 }

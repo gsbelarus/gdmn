@@ -2,8 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ContextualMenuItemType, IContextualMenuItem } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 
-import { authActions, TAuthActions } from '../scenes/auth/actions';
-import { TGdmnActions } from '../scenes/gdmn/actions';
+import { authActionsAsync } from '@src/app/scenes/auth/actions';
+import { AnyAction } from 'redux';
+import { TThunkAction } from '@src/app/store/TActions';
 
 export const uiForms = [
   {
@@ -18,7 +19,7 @@ export interface IUICommand {
   caption?: string;
   iconName?: string;
   link?: string;
-  action?: () => TAuthActions | TGdmnActions;
+  action?: () => AnyAction | TThunkAction;
 }
 
 export const uiCommands: IUICommand[] = [
@@ -50,7 +51,7 @@ export const uiCommands: IUICommand[] = [
     group: 'userAccount',
     caption: 'Logout',
     iconName: 'SignOut',
-    action: authActions.signOut
+    action: authActionsAsync.signOut
   },
   {
     command: 'deleteAccount',
@@ -62,7 +63,7 @@ export const uiCommands: IUICommand[] = [
 
 export function commandsToContextualMenuItems(
   commands: string[],
-  dispatch: (action: TAuthActions | TGdmnActions) => void,
+  dispatch: (action: AnyAction | TThunkAction) => void,
   redirect: (link: string) => void
 ): IContextualMenuItem[] {
   return commands.map((c, idx) => {
@@ -91,7 +92,7 @@ export function commandsToContextualMenuItems(
 export function commandToLink(
   command: string,
   linkPrefix?: string,
-  dispatch?: (action: TAuthActions | TGdmnActions) => void
+  dispatch?: (action: AnyAction | TThunkAction) => void
 ): JSX.Element {
   const cmd = uiCommands.find(uic => uic.command === command);
 

@@ -4,7 +4,7 @@ import {BlobImpl} from "./BlobImpl";
 import {Result} from "./Result";
 import {ResultMetadata} from "./ResultMetadata";
 import {Statement} from "./Statement";
-import {dataWrite, fixMetadata} from "./utils/fb-utils";
+import {dataWrite} from "./utils/fb-utils";
 
 export interface IResultSetSource {
     handler: NativeResultSet;
@@ -26,7 +26,7 @@ export class ResultSet extends AResultSet {
     protected constructor(statement: Statement, source: IResultSetSource, type?: CursorType) {
         super(statement, type);
         this.source = source;
-        this.statement.resultSets.add(this);
+        this.statement.resultSetsCount++;
     }
 
     get statement(): Statement {
@@ -43,27 +43,20 @@ export class ResultSet extends AResultSet {
 
     public static async open(statement: Statement, params: any[], type?: CursorType): Promise<ResultSet> {
         const source: IResultSetSource = await statement.transaction.connection.client.statusAction(async (status) => {
-            const outMetadata = fixMetadata(status, await statement.source!.handler.getOutputMetadataAsync(status));
-            const inBuffer = new Uint8Array(statement.source!.inMetadata.getMessageLengthSync(status));
-            const buffer = new Uint8Array(outMetadata!.getMessageLengthSync(status));
+            const {inMetadata, outMetadata, inDescriptors} = statement.source!;
+            const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
+            const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
-            try {
-                await dataWrite(statement, statement.source!.inDescriptors, inBuffer, params);
+            await dataWrite(statement, inDescriptors, inBuffer, params);
 
-                const handler = await statement.source!.handler.openCursorAsync(status, statement.transaction.handler,
-                    statement.source!.inMetadata, inBuffer, outMetadata,
-                    type || AResultSet.DEFAULT_TYPE === CursorType.SCROLLABLE
-                        ? NativeStatement.CURSOR_TYPE_SCROLLABLE : 0);
+            const handler = await statement.source!.handler.openCursorAsync(status, statement.transaction.handler,
+                inMetadata, inBuffer, outMetadata, type || AResultSet.DEFAULT_TYPE === CursorType.SCROLLABLE
+                    ? NativeStatement.CURSOR_TYPE_SCROLLABLE : 0);
 
-                return {
-                    handler: handler!,
-                    result: await Result.get(statement, {metadata: await ResultMetadata.getMetadata(statement), buffer})
-                };
-            } finally {
-                if (outMetadata) {
-                    await outMetadata.releaseAsync();
-                }
-            }
+            return {
+                handler: handler!,
+                result: await Result.get(statement, {metadata: await ResultMetadata.getMetadata(statement), buffer})
+            };
         });
         return new ResultSet(statement, source, type);
     }
@@ -122,7 +115,7 @@ export class ResultSet extends AResultSet {
         await this.statement.transaction.connection.client
             .statusAction((status) => this.source!.handler.closeAsync(status));
         this.source = undefined;
-        this.statement.resultSets.delete(this);
+        this.statement.resultSetsCount--;
 
         if (this.disposeStatementOnClose) {
             await this.statement.dispose();
