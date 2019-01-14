@@ -44,7 +44,7 @@ onSignUp: async (formData: Partial<ISignUpFormData>) => {
       })
     );
   } catch (error) {
-    //-//console.log('[GDMN] ', error);
+    console.log('[GDMN] ', error);
     dispatch(authActions.signUp.failure(error));
   }
 }

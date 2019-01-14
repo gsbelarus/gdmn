@@ -53,7 +53,7 @@ class PubSubClient {
     this.bridge = bridge;
 
     // todo tmp
-    this.bridge.connectionStatusObservable.subscribe(value => {}) //-//console.log('connectionStatusObservable: ' + value));
+    this.bridge.connectionStatusObservable.subscribe(value => console.log('connectionStatusObservable: ' + value));
 
     this.connectionDisconnectedObservable = this.bridge.connectionStatusObservable.pipe(
       filter((currentState: TPubSubConnectStatus) => currentState === TPubSubConnectStatus.DISCONNECTED)
@@ -69,12 +69,12 @@ class PubSubClient {
     this.bridge.connectionConnectedObservable.subscribe(
       // todo connectedMessage
       () => {
-        // //-//console.log('connectedMessage');
+        // console.log('connectedMessage');
         this.queuePublish();
       },
       error => {
         // todo: resubscribe ?
-        // //-//console.log('connectedMessage error');
+        // console.log('connectedMessage error');
       }
     );
     this.connectionDisconnectedObservable.subscribe(() => {
@@ -98,11 +98,11 @@ class PubSubClient {
    */
   private onAbnormallyDeactivate: () => void = () => {
     if (this.maxAbnormallyReconnectCount !== undefined) {
-      //-//console.log('onAbnormallyDeactivate');
+      console.log('onAbnormallyDeactivate');
       if (this.abnormallyReconnectCounter < this.maxAbnormallyReconnectCount) {
         this.abnormallyReconnectCounter++;
       } else {
-        //-//console.log('[PUB-SUB] onAbnormallyDeactivate -> onMaxCountAbnormallyReconnect ');
+        console.log('[PUB-SUB] onAbnormallyDeactivate -> onMaxCountAbnormallyReconnect ');
         this.onMaxCountAbnormallyReconnect(this.maxAbnormallyReconnectCount, this);
         this.abnormallyReconnectCounter = 0;
       }
@@ -151,19 +151,19 @@ class PubSubClient {
   }
 
   private queuePublish(): void {
-    //-//console.log(`[PUB-SUB] Will try sending queued messages...`);
-    //-//console.log(this.queuedPublishMessages);
+    console.log(`[PUB-SUB] Will try sending queued messages...`);
+    console.log(this.queuedPublishMessages);
 
     this.queuedPublishMessages.forEach(queuedMessage => {
-      //-//console.log(`[PUB-SUB] Attempting to send...`);
-      //-//console.log(queuedMessage);
+      console.log(`[PUB-SUB] Attempting to send...`);
+      console.log(queuedMessage);
       this.queuedMessagePublish(queuedMessage);
     });
   }
 
   private queuedMessagePublish(queuedMessage: IQueuedPublishMessage): void {
     if (!this.bridge.isConnected()) {
-      //-//console.log(`[PUB-SUB] Not connected, queueing message...`);
+      console.log(`[PUB-SUB] Not connected, queueing message...`);
       return;
     }
 

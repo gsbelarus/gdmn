@@ -14,14 +14,12 @@ import { GdmnContainer } from '@src/app/scenes/gdmn/container';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { apiService } from './services/apiService';
 
-
 const clientRootPath = config.server.paths.clientRoot;
 const domContainerNode = config.webpack.appMountNodeId;
 
 const { store, persistor } = getStore(apiService);
 
-// apiService.pubSubClient.debug = message => store.dispatch(rootActions.addStompLogMessage(message));
-apiService.pubSubClient.debug = message => 0;
+apiService.pubSubClient.debug = message => store.dispatch(rootActions.addStompLogMessage(message));
 apiService.pubSubClient.onMaxCountAbnormallyReconnect = (maxAbnormallyReconnectCount, context) => {
   store.dispatch(rootActions.setLostConnectWarnOpened(true));
 };
@@ -45,7 +43,7 @@ const rootRoutes = (
 );
 
 async function start() {
-  //-//console.log('[GDMN] start');
+  console.log('[GDMN] start');
 }
 
 initializeIcons();
@@ -68,76 +66,6 @@ setConfig({
   //     String(type).indexOf('useEffect') > 0) &&
   //   cold(type)
 });
-
-
-// (async () => {
-//
-//   const initStressStepDuration: number = 2;
-//   const initStressStepInitRequestsCount: number = 10;
-//   const initStressStepIncRequestsCount: number = 10;
-//
-//   const handleStressApi = async () => {
-//     await stressLoop((resolve: any) => {
-//       // //-//console.log('[test] stressLoop')
-//       apiService
-//         .ping({
-//           payload: {
-//             action: TTaskActionNames.PING,
-//             payload: {
-//               delay: 0,
-//               steps: 0
-//             }
-//           }
-//         })
-//         .pipe(
-//           filter(value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE),
-//           first(),
-//           // observeOn(async)
-//         )
-//         .subscribe(value => {
-//
-//           //-//console.log('[test] result', value);
-//
-//           resolve();
-//         });
-//     });
-//   };
-//
-//   const stressLoop = async (cb: Function) => {
-//     let maxRequestsCount: number = initStressStepInitRequestsCount;
-//     const incRequestsCount: number =  initStressStepIncRequestsCount;
-//     const stepDuration: number = initStressStepDuration;
-//
-//
-//     let timeStart;
-//
-//     do {
-//       // //-//console.log('[test] do');
-//       timeStart = window.performance.now();
-//
-//       const parr = [];
-//       for (let i = 0; i < maxRequestsCount; i++) {
-//         parr.push(new Promise((resolve, reject) => {
-//           // //-//console.log('[test] Promise');
-//           cb(resolve);
-//         }));
-//       }
-//
-//       await Promise.all(parr);
-//
-//       maxRequestsCount += incRequestsCount;
-//
-//     } while (window.performance.now() - timeStart < stepDuration);
-//
-//     //-//console.log('[test] maxRequestsCount: ', maxRequestsCount - incRequestsCount);
-//     //-//console.log('[test] time: ', window.performance.now() - timeStart);
-//   };
-//
-//   await handleStressApi();
-//
-// })();
-
-
 
 (async () => {
   await start();

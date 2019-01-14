@@ -32,7 +32,7 @@ const authActionsAsync = {
         })
       );
     } catch (error) {
-      //-//console.log('[GDMN] ', error);
+      console.log('[GDMN] ', error);
       dispatch(authActions.signIn.failure(error));
     }
   },

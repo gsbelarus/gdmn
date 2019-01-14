@@ -175,14 +175,14 @@ class GdmnPubSubApi {
         this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) &&
       !reconnect
     ) {
-      // //-//console.log('AUTH');
+      // console.log('AUTH');
 
       this.subTasks();
 
       return empty().toPromise(); // todo test
     }
 
-    // //-//console.log('AUTH+connect');
+    // console.log('AUTH+connect');
 
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
@@ -252,17 +252,17 @@ class GdmnPubSubApi {
       }
     ); // fixme: type ts 3.2
 
-    // //-//console.log('SUBSCRIBE');
+    // console.log('SUBSCRIBE');
 
     // todo: test delete
-    this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value => {}
-      //-//console.log('[GDMN][PUB-SUB] taskProgressResult: ', value)
+    this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value =>
+      console.log('[GDMN][PUB-SUB] taskProgressResult: ', value)
     );
-    this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value => {}
-      //-//console.log('[GDMN][PUB-SUB] taskStatusResult: ', value)
+    this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value =>
+      console.log('[GDMN][PUB-SUB] taskStatusResult: ', value)
     );
-    this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value => {}
-      //-//console.log('[GDMN][PUB-SUB] taskActionResult: ', value)
+    this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value =>
+      console.log('[GDMN][PUB-SUB] taskActionResult: ', value)
     );
   }
 
