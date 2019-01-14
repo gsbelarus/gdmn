@@ -11,16 +11,10 @@ import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
 import { filter, first } from 'rxjs/operators';
-// import { queue } from 'rxjs/internal/scheduler/queue';
-// import { asyncScheduler, interval } from 'rxjs';
-// import { async } from 'rxjs/internal/scheduler/async';
-// import { asap } from 'rxjs/internal/scheduler/asap';
+import { IToggle, Toggle } from 'office-ui-fabric-react';
+import { Observable, throwError } from 'rxjs';
 
 interface IStompDemoViewState {
-  /* ping */
-  pingDelay: string;
-  pingSteps: string;
-  /* stress */
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
@@ -34,6 +28,12 @@ interface IStompDemoViewProps extends IViewProps {
 }
 
 class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
+  initPingDelay: number = 3000;
+  initPingSteps: number = 2;
+
+  pingDelayFieldRef = React.createRef<NumberTextField>();
+  pingStepsFieldRef = React.createRef<NumberTextField>();
+
   initStressStepDuration: number = 2;
   initStressStepInitRequestsCount: number = 10;
   initStressStepIncRequestsCount: number = 10;
@@ -42,12 +42,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   stressStepInitRequestsCountFieldRef = React.createRef<NumberTextField>();
   stressStepIncRequestsCountFieldRef = React.createRef<NumberTextField>();
   stressSchedulingDateFieldRef = React.createRef<ITextField>();
-  // requestsCount: number = 0;
-  // responseCount: number = 0;
+  stressSequentialModeFieldRef = React.createRef<IToggle & { checked?: boolean }>(); // todo
 
   public state: IStompDemoViewState = {
-    pingDelay: '3000',
-    pingSteps: '2',
     stressStarted: false,
     stressResultTime: 0,
     stressResultRequestsCount: 0
@@ -57,38 +54,26 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     return 'Stomp protocol';
   }
 
-  private handleStressApi = () => {
-    this.stressLoop((resolve: any) => {
-      //-//console.log('[test] stressLoop')
-      apiService
-        .ping({
-          payload: {
-            action: TTaskActionNames.PING,
-            payload: {
-              delay: 0,
-              steps: 0
-            }
-          }
-        })
-        .pipe(
-          filter(value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE),
-          first()
-          // observeOn(async)
-        )
-        .subscribe(value => {
-          //-//console.log('[test] result', value);
-          // this.responseCount++;
+  // stress test
 
-          resolve();
-        });
+  private handleStressApi = () => {
+    this.stressLoop(() => {
+      return apiService.ping({
+        payload: {
+          action: TTaskActionNames.PING,
+          payload: {
+            delay: 0,
+            steps: 0
+          }
+        }
+      });
     });
   };
 
   private handleStressDb = () => {
-    this.stressLoop((resolve: any, reject: any) => {
+    this.stressLoop(() => {
       if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) {
-        reject(new Error('[test] erModel empty!'));
-        return;
+        return throwError('[test] erModel empty!');
       }
 
       const entity = Object.values(this.props.erModel.entities)[0];
@@ -102,33 +87,16 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         ])
       );
 
-      apiService
-        .getData({
-          payload: {
-            action: TTaskActionNames.QUERY,
-            payload: query.inspect()
-          }
-        })
-        .pipe(
-          filter(value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE),
-          first()
-        )
-        .subscribe(value => {
-          //-//console.log('[test] result', value);
-          // this.responseCount++;
-
-          resolve();
-        });
+      return apiService.getData({
+        payload: {
+          action: TTaskActionNames.QUERY,
+          payload: query.inspect()
+        }
+      });
     });
   };
 
-  // private handleStopStress = () => {
-  //   this.setState({
-  //     stressStarted: false
-  //   });
-  // };
-
-  private stressLoop = (cb: Function) => {
+  private stressLoop = (getTaskResultObservable: () => Observable<any>) => {
     this.setState(
       {
         stressStarted: true,
@@ -139,7 +107,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         let maxRequestsCount: number = parseInt(this.stressStepInitRequestsCountFieldRef.current!.state.value);
         const incRequestsCount: number = parseInt(this.stressStepIncRequestsCountFieldRef.current!.state.value);
         const stepDuration: number = parseInt(this.stressStepDurationFieldRef.current!.state.value) * 1000;
-
+        const sequentialMode: boolean = this.stressSequentialModeFieldRef.current!.checked || false;
         let schedulingDate;
         try {
           schedulingDate = new Date(this.stressSchedulingDateFieldRef.current!.value || '');
@@ -147,22 +115,35 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           schedulingDate = new Date();
         }
 
-        console.log(schedulingDate);
-
         setTimeout(async () => {
           let timeStart;
 
           do {
-            // console.log('[test] do');
             timeStart = window.performance.now();
 
             await Promise.all(
-              new Array(maxRequestsCount).fill(0).map(
-                value =>
-                  new Promise((resolve, reject) => {
-                    //-//console.log('[test] Promise');
-                    setTimeout(() => cb(resolve, reject), 0);
-                  })
+              new Array(maxRequestsCount).fill(0).map(async () =>
+                sequentialMode
+                  ? await getTaskResultObservable()
+                      .pipe(
+                        filter(
+                          value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE
+                        ),
+                        first()
+                      )
+                      .toPromise()
+                  : new Promise((resolve, reject) => {
+                      getTaskResultObservable()
+                        .pipe(
+                          filter(
+                            value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE
+                          ),
+                          first()
+                        )
+                        .subscribe(value => {
+                          resolve();
+                        });
+                    })
               )
             );
 
@@ -172,153 +153,25 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           const stressResultTime = window.performance.now() - timeStart;
           const stressResultRequestsCount = maxRequestsCount - incRequestsCount;
 
-          // this.responseCount = 0;
-          // this.requestsCount = 0;
-
           this.setState({
             stressStarted: false,
             stressResultTime,
             stressResultRequestsCount
           });
         }, schedulingDate.getTime() - Date.now());
-
-        // interval(stepDuration * 1000)
-        //   .pipe(
-        //     takeWhile(() => this.state.stressStarted),
-        //     observeOn(asap)
-        //   )
-        //   .subscribe(() => {
-        //     //-//console.log('[test] setInterval');
-        //     if (this.responseCount < this.requestsCount) {
-        //       //-//console.log('[test] setInterval: stop');
-        //       this.setState({
-        //         stressStarted: false
-        //       });
-        //     }
-        //   });
-
-        // const f = () => {
-        //   //-//console.log('[test] requestsCount: ', this.requestsCount);
-        //   //-//console.log('[test] responseCount: ', this.responseCount);
-        //
-        //   if (this.requestsCount < maxRequestsCount) {
-        //     //-//console.log('[test] do');
-        //
-        //     cb();
-        //
-        //     this.requestsCount++; // todo
-        //   } else if (this.responseCount >= this.requestsCount) {
-        //     /* add step*/
-        //     maxRequestsCount += incRequestsCount;
-        //
-        //     //-//console.log(
-        //       '[test] step: ',
-        //       (maxRequestsCount - parseInt(this.stressStepInitRequestsCountFieldRef.current!.state.value)) /
-        //         incRequestsCount
-        //     );
-        //   }
-        //
-        //   if (this.state.stressStarted) {
-        //     setTimeout(() => {
-        //       f();
-        //     }, 0);
-        //   } else {
-        //     //-//console.log('[test] clearInterval');
-        //
-        //     this.responseCount = 0;
-        //     this.requestsCount = 0;
-        //
-        //     this.setState({
-        //       stressStarted: false
-        //     });
-        //   }
-        // };
-        //
-        // f();
       }
     );
   };
 
-  public render() {
-    return this.renderOneColumn(
-      <div>
-        <div className="ViewBody" style={{ width: 'max-content' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <TextField
-              label="delay"
-              value={this.state.pingDelay.toString()}
-              onChange={e => this.handlePingDelayChange(e)}
-            />
-            <TextField
-              label="steps"
-              value={this.state.pingSteps.toString()}
-              onChange={e => this.handlePingStepsChange(e)}
-            />
-            <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
-            <br />
-            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
-            <br />
-            <PrimaryButton
-              onClick={this.handleSendNlpQueryClick}
-              text="покажи все организации из минска и пинска"
-              disabled={!this.props.erModel}
-            />
-          </div>
-        </div>
-        <div className="ViewBody" style={{ width: 'max-content', marginTop: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <TextField
-              componentRef={this.stressSchedulingDateFieldRef}
-              label="scheduling run datetime (YYYY-MM-DD HH:mm:ss)"
-            />
-            <NumberTextField
-              ref={this.stressStepDurationFieldRef}
-              initialValue={this.initStressStepDuration.toString()}
-              label="step duration (seconds)"
-            />
-            <NumberTextField
-              ref={this.stressStepInitRequestsCountFieldRef}
-              label="initial requests count"
-              initialValue={this.initStressStepInitRequestsCount.toString()}
-            />
-            <NumberTextField
-              ref={this.stressStepIncRequestsCountFieldRef}
-              label="increment requests count"
-              initialValue={this.initStressStepIncRequestsCount.toString()}
-            />
-            <br />
-            <PrimaryButton
-              disabled={this.state.stressStarted}
-              onClick={this.handleStressApi}
-              text="STRESS API (PING-TASK)"
-            />
-            <br />
-            <PrimaryButton
-              disabled={this.state.stressStarted || !this.props.erModel}
-              onClick={this.handleStressDb}
-              text="STRESS DB (QUERY-TASK)"
-            />
-            {/*<br />*/}
-            {/*<PrimaryButton disabled={!this.state.stressStarted} onClick={this.handleStopStress} text="STOP STRESS" />*/}
-
-            <br />
-            <span style={{ fontSize: 20 }}>Stress result:</span>
-            <br />
-            <span style={{ fontSize: 16 }}>Time (ms): {this.state.stressResultTime.toFixed()}</span>
-            <span style={{ fontSize: 16 }}>Requests count: {this.state.stressResultRequestsCount}</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // api test
 
   private handlePingClick = () => {
     this.props.apiPing({
       payload: {
         action: TTaskActionNames.PING,
         payload: {
-          delay: parseInt(this.state.pingDelay),
-          steps: parseInt(this.state.pingSteps)
+          delay: parseInt(this.pingDelayFieldRef.current!.state.value),
+          steps: parseInt(this.pingStepsFieldRef.current!.state.value)
         }
       }
     });
@@ -358,18 +211,74 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     });
   };
 
-
-  private handlePingDelayChange = (event: any) => {
-    this.setState({
-      pingDelay: event.target.value
-    });
-  };
-
-  private handlePingStepsChange = (event: any) => {
-    this.setState({
-      pingSteps: event.target.value
-    });
-  };
+  public render() {
+    return this.renderOneColumn(
+      <div>
+        <div className="ViewBody" style={{ width: 'max-content' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <NumberTextField ref={this.pingDelayFieldRef} label="delay" initialValue={this.initPingDelay.toString()} />
+            <NumberTextField ref={this.pingStepsFieldRef} label="steps" initialValue={this.initPingSteps.toString()} />
+            <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
+            <br />
+            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+            <br />
+            <PrimaryButton
+              onClick={this.handleSendNlpQueryClick}
+              text="покажи все организации из минска и пинска"
+              disabled={!this.props.erModel}
+            />
+          </div>
+        </div>
+        <div className="ViewBody" style={{ width: 'max-content', marginTop: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <TextField
+              componentRef={this.stressSchedulingDateFieldRef}
+              label="scheduling run datetime (YYYY-MM-DD HH:mm:ss)"
+            />
+            <NumberTextField
+              ref={this.stressStepDurationFieldRef}
+              initialValue={this.initStressStepDuration.toString()}
+              label="step duration (seconds)"
+            />
+            <NumberTextField
+              ref={this.stressStepInitRequestsCountFieldRef}
+              label="initial requests count"
+              initialValue={this.initStressStepInitRequestsCount.toString()}
+            />
+            <NumberTextField
+              ref={this.stressStepIncRequestsCountFieldRef}
+              label="increment requests count"
+              initialValue={this.initStressStepIncRequestsCount.toString()}
+            />
+            <Toggle
+              componentRef={this.stressSequentialModeFieldRef}
+              label={' '}
+              defaultChecked={false}
+              onText="sequential mode ON"
+              offText="sequential mode OFF (concurrent requests)"
+            />
+            <br />
+            <PrimaryButton
+              disabled={this.state.stressStarted}
+              onClick={this.handleStressApi}
+              text="STRESS API (PING-TASK)"
+            />
+            <br />
+            <PrimaryButton
+              disabled={this.state.stressStarted || !this.props.erModel}
+              onClick={this.handleStressDb}
+              text="STRESS DB (QUERY-TASK)"
+            />
+            <br />
+            <span style={{ fontSize: 20 }}>Stress result:</span>
+            <br />
+            <span style={{ fontSize: 16 }}>Time (ms): {this.state.stressResultTime.toFixed()}</span>
+            <span style={{ fontSize: 16 }}>Requests count: {this.state.stressResultRequestsCount}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
 
 export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };
