@@ -1,9 +1,10 @@
 import { morphAnalyzer } from "../morphAnalyzer";
 import { RusAdjective, RusAdjectiveLexeme } from "../rusAdjective";
-import { RusCase, RusMood, Involvement, AdverbType, PrepositionType } from "../types";
+import { RusCase, RusMood, Involvement, AdverbType, PrepositionType, NumeralValue, NumeralStructure, NumeralCatagory, RusGender } from "../types";
 import { RusVerb } from "../rusVerb";
 import { RusAdverb } from "../rusAdverb";
 import { RusPreposition } from "../rusPreposition";
+import { RusNumeral } from "../rusNumeral";
 
 describe("существительные", () => {
   test("минск", () => {
@@ -137,5 +138,64 @@ describe('предлоги', () => {
     expect(result[1] instanceof RusPreposition).toBeTruthy();
     const v2 = result[1] as RusPreposition;
     expect(v2.lexeme.prepositionType).toEqual(PrepositionType.Reason);
+  });
+});
+
+describe('числительные', () => {
+  test("одному", () => {
+    const result = morphAnalyzer('одному');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("1");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Quantitative);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
+    expect(n.lexeme.catagory).toBeDefined();
+    expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("один", () => {
+    const result = morphAnalyzer('один');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("1");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Quantitative);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
+    expect(n.lexeme.catagory).toBeDefined();
+    expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("одно", () => {
+    const result = morphAnalyzer('одно');
+    expect(result.length).toEqual(3);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("1");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Quantitative);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
+    expect(n.lexeme.catagory).toBeDefined();
+    expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Neut);
+  });
+  test("двух", () => {
+    const result = morphAnalyzer('двух');
+    expect(result.length).toEqual(9);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("2");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Quantitative);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
+    expect(n.lexeme.catagory).toBeDefined();
+    expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
   });
 });

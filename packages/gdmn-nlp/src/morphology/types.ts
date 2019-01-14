@@ -192,3 +192,89 @@ export const ShortAdverbTypeNames = [
   'Cause',
   'Goal'
 ];
+
+export enum NumeralValue {
+  Quantitative = 0,
+  Orinal
+};
+
+export const RusNumeralValueNames = [
+  'количественное',
+  'порядковое'
+];
+
+export const ShortNumeralValueNames = [
+  'Quant',
+  'Ornl'
+];
+
+export enum NumeralStructure {
+  Simple = 0,
+  Complex,
+  Composite
+};
+
+export const RusNumeralStructureNames = [
+  'простое',
+  'сложное',
+  'составное'
+];
+
+export const ShortNumeralStructureNames = [
+  'Simp',
+  'Compl',
+  'Compo'
+];
+
+export enum NumeralCatagory {
+  ProperQuantitative = 0,
+  Collective,
+  Fractional
+};
+
+export const RusNumeralCatagoryNames = [
+  'собественно количественное',
+  'собирательное',
+  'дробное'
+];
+
+export const ShortNumeralCatagoryNames = [
+  'PrQu',
+  'Coll',
+  'Frac'
+];
+
+export type RusDeclensionNumeralZ  =
+  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6';
+
+  export type RusDeclensionNumeralZEnding = {
+    declensionZ: RusDeclensionNumeralZ,
+    endings: RusNumeralEnding[]
+};
+
+export interface RusNumeralInterface {
+  readonly stem: string;
+  readonly stem1: string;
+  readonly stem2: string;
+  readonly possiblePlural: boolean;
+  readonly digitalWrite: string,
+  readonly numeralValue: NumeralValue,
+  readonly structure: NumeralStructure,
+  readonly catagory?: NumeralCatagory,
+  readonly declensionZ: RusDeclensionNumeralZ;
+}
+
+export type RusNumeralEnding = {
+  ending: string,
+  c: RusCase;
+  singular: boolean;
+  gender?: RusGender;
+  animate?: boolean;
+};
+
+export interface RusNumeralMorphSigns {
+  c: RusCase;
+  singular: boolean;
+  gender?: RusGender;
+  animate?: boolean;
+}

@@ -39,6 +39,8 @@ export abstract class PronounLexeme extends Lexeme { }
 
 export abstract class AdverbLexeme extends Lexeme { }
 
+export abstract class NumeralLexeme extends Lexeme { }
+
 export abstract class Word<L extends Lexeme> {
   readonly id: number = getNextID();
   constructor (public readonly word: string, public readonly lexeme: L) { }
@@ -60,6 +62,8 @@ export abstract class Preposition<L extends PrepositionLexeme> extends Word<L> {
 export abstract class Pronoun<L extends PrepositionLexeme> extends Word<L> { }
 
 export abstract class Adverb<L extends AdverbLexeme> extends Word<L> { }
+
+export abstract class Numeral<L extends NumeralLexeme> extends Word<L> { }
 
 export type AnyWord = Word<Lexeme>;
 

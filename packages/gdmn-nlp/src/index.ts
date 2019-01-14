@@ -14,6 +14,8 @@ export * from './morphology/rusVerb';
 export * from './morphology/rusVerbEndings';
 export * from './morphology/rusVerbsData';
 export * from './morphology/rusAdverb';
+export * from './morphology/rusNumeral';
+export * from './morphology/rusNumeralData';
 export * from './morphology/rusMorphology';
 export * from './syntax/tokenizer';
 export * from './morphology/types';
