@@ -6,10 +6,10 @@ import {
   IAttributeAdapter,
   IDetailAttributeAdapter,
   ISetAttributeAdapter,
+  ParentAttribute,
   ScalarAttribute,
   SequenceAttribute,
-  SetAttribute,
-  ParentAttribute
+  SetAttribute
 } from "gdmn-orm";
 import {Constants} from "../Constants";
 import {IFieldProps} from "../DDLHelper";
@@ -36,6 +36,13 @@ export class EntityBuilder extends Builder {
     const tableName = Builder._getOwnRelationName(entity);
 
     if (attribute instanceof ScalarAttribute) {
+      // if (attribute.name === "RB") {
+      //   await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
+      // }
+      // if (attribute.name === "LB") {
+      //    await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
+      // }
+
       const fieldName = Builder._getFieldName(attribute);
       const domainName = Prefix.domain(await this.nextDDLUnique());
       await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attribute));
@@ -106,8 +113,9 @@ export class EntityBuilder extends Builder {
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
           await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
 
-          await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
-          await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
+          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
+          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
+
           // const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
           // await this.ddlHelper.createIndex(indexName, tableName,[lbField], {sortType: "ASC"});
           // const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());

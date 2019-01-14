@@ -87,6 +87,8 @@ describe("Query", () => {
 
             await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "TEST_STRING", lName: {}}));
             await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "TEST_STRING1", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "RB", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "LB", lName: {}}));
             await eBuilder.createAttribute(ChildEntity, new ParentAttribute({
               name: "PARENT",
               lName: {},
@@ -100,10 +102,45 @@ describe("Query", () => {
             }));
             await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "TEST_STRING", lName: {}}));
             await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "TEST_STRING2", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "RB", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "LB", lName: {}}));
             await eBuilder.createAttribute(ChildEntity2, new ParentAttribute({
               name: "PARENT",
               lName: {},
               entities: [ChildEntity2]
+            }));
+
+            const TestEntity2 = await erBuilder.create(erModel, new Entity({name: "TEST_ENTITY2", lName: {}}));
+            await eBuilder.createAttribute(TestEntity2, new StringAttribute({name: "TEST_STRING", lName: {}}));
+            await eBuilder.createAttribute(TestEntity2, new FloatAttribute({name: "TEST_FLOAT", lName: {}}));
+            await eBuilder.createAttribute(TestEntity2, new ParentAttribute({
+              name: "PARENT",
+              lName: {},
+              entities: [TestEntity2]
+            }));
+
+
+            const TestEntity5 = await erBuilder.create(erModel, new Entity({name: "TEST_ENTITY5", lName: {}}));
+            await eBuilder.createAttribute(TestEntity5, new StringAttribute({name: "TEST_STRING1", lName: {}}));
+            await eBuilder.createAttribute(TestEntity5, new ParentAttribute({
+              name: "PARENT",
+              lName: {},
+              entities: [TestEntity5]
+            }));
+
+            const ChildEntity5 = await erBuilder.create(erModel, new Entity({
+              name: "CHILD_ENTITY5",
+              lName: {},
+              parent: TestEntity5
+            }));
+            await eBuilder.createAttribute(ChildEntity5, new StringAttribute({name: "TEST_STRING", lName: {}}));
+
+            const MasterEntity6 = await erBuilder.create(erModel, new Entity({name: "MASTER_ENTITY6", lName: {}}));
+            await eBuilder.createAttribute(MasterEntity6, new StringAttribute({name: "TEST_STRING", lName: {}}));
+            await eBuilder.createAttribute(MasterEntity6, new EntityAttribute({
+              name: "LINK",
+              lName: {},
+              entities: [TestEntity5]
             }));
           }
         });
@@ -534,7 +571,7 @@ describe("Query", () => {
       "  T$1.ID AS F$1\n" +
       "FROM TEST_ENTITY T$2\n" +
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
-       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
+      "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$4.PARENT");
     await AConnection.executeTransaction({
       connection,
@@ -726,6 +763,140 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$1 ON T$1.LB <= T$4.LB AND T$1.RB >= T$4.RB");
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("simple tree", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY5",
+        alias: "child/parent",
+        fields: [
+          {
+            attribute: "PARENT",
+            link: {
+              entity: "TEST_ENTITY5",
+              alias: "parent",
+              fields: [
+                {attribute: "TEST_STRING1"}
+
+              ]
+            }
+          }
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM (\n" +
+      "  WITH RECURSIVE TREE AS (\n" +
+      "    SELECT\n" +
+      "      T$2.ID,\n" +
+      "      T$2.PARENT,\n" +
+      "      T$2.TEST_STRING1\n" +
+      "    FROM TEST_ENTITY5 T$2\n" +
+      "    WHERE T$2.PARENT = :P$1" +
+      "\n\n    UNION ALL\n\n" +
+      "    SELECT\n" +
+      "      T$3.ID,\n" +
+      "      T$3.PARENT,\n" +
+      "      T$3.TEST_STRING1\n" +
+      "    FROM TEST_ENTITY5 T$3\n" +
+      "      JOIN TREE T$4 ON T$4.ID = T$3.PARENT\n" +
+      "  )\n" +
+      "  SELECT\n" +
+      "    T$5.ID,\n" +
+      "    T$5.PARENT,\n" +
+      "    T$5.TEST_STRING1\n" +
+      "  FROM TREE T$5\n" +
+      ") T$1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("simple entity: string field", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY5",
+        alias: "se",
+        fields: [
+          {attribute: "TEST_STRING1"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM TEST_ENTITY5 T$1");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("ParentAttribute: link", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "MASTER_ENTITY6",
+        alias: "me",
+        fields: [
+          {
+            attribute: "LINK",
+            link: {
+              entity: "TEST_ENTITY5",
+              alias: "te",
+              fields: [
+                {attribute: "TEST_STRING1"}
+              ]
+            }
+          }
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM MASTER_ENTITY6 T$2\n" +
+      "  JOIN  (\n" +
+      "  WITH RECURSIVE TREE AS (\n" +
+      "    SELECT\n" +
+      "      T$3.ID,\n" +
+      "      T$3.PARENT,\n" +
+      "      T$3.TEST_STRING1\n" +
+      "    FROM TEST_ENTITY5 T$3\n" +
+      "    WHERE T$3.PARENT = :P$1" +
+      "\n\n    UNION ALL\n\n" +
+      "    SELECT\n" +
+      "      T$4.ID,\n" +
+      "      T$4.PARENT,\n" +
+      "      T$4.TEST_STRING1\n" +
+      "    FROM TEST_ENTITY5 T$4\n" +
+      "      JOIN TREE T$5 ON T$5.ID = T$4.PARENT\n" +
+      "  )\n" +
+      "  SELECT\n" +
+      "    T$6.ID,\n" +
+      "    T$6.PARENT,\n" +
+      "    T$6.TEST_STRING1\n" +
+      "  FROM TREE T$6\n" +
+      ")  T$1 ON T$1.ID = T$2.LINK");
+
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => AConnection.executeQueryResultSet({
