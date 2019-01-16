@@ -43,7 +43,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
             taskProgressResultSub = apiService.taskProgressResultObservable!.subscribe(message => {
               if (!message.data) throw Error('[GDMN] Invalid server response');
 
-              dispatch(gdmnActions.setLoading(null, JSON.parse(message.data).progress.description || ''));
+              // dispatch(gdmnActions.setLoading(true, JSON.parse(message.data).progress.description || ''));
             });
             taskStatusResultSub = apiService.taskStatusResultObservable!.subscribe(message => {
               if (!message.data) throw Error('[GDMN] Invalid server response');
@@ -51,9 +51,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
               const status: TTaskStatus = JSON.parse(message.data).status;
 
               if (status == TTaskStatus.RUNNING) {
-                dispatch(gdmnActions.setLoading(true, 'Task running...'));
+                // dispatch(gdmnActions.setLoading(true, 'Task running...'));
               } else {
-                dispatch(gdmnActions.setLoading(false));
+                // dispatch(gdmnActions.setLoading(false));
               }
             });
             taskActionResultSub = apiService.taskActionResultObservable!.subscribe(message => {
@@ -66,9 +66,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
             connectionStatusSub = apiService.pubSubClient.connectionStatusObservable.subscribe(value => {
               if (value == TPubSubConnectStatus.CONNECTING) {
                 // todo: test
-                dispatch(gdmnActions.setLoading(true, 'Connecting...'));
+                // dispatch(gdmnActions.setLoading(true, 'Connecting...'));
               } else {
-                dispatch(gdmnActions.setLoading(false, '', true));
+                // dispatch(gdmnActions.setLoading(false));
 
                 // todo
                 if (value == TPubSubConnectStatus.DISCONNECTING || value == TPubSubConnectStatus.DISCONNECTED) {
@@ -100,7 +100,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
             dispatch(gdmnActionsAsync.apiGetSchema());
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
-            console.log('[GDMN] auth error: ', error);
+            //-//console.log('[GDMN] auth error: ', error);
 
             if (errorSubscription) {
               errorSubscription.unsubscribe();
@@ -128,7 +128,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
               dispatch(authActionsAsync.signOut());
             } else {
               dispatch(rootActions.onError(error));
-              dispatch(gdmnActions.setLoading(false, '', true));
             }
             // } else {
             //   dispatch(rootActions.onError(new Error(error)));
@@ -145,7 +144,6 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
             dispatch(authActionsAsync.signOut());
           } else {
             dispatch(rootActions.onError(error));
-            dispatch(gdmnActions.setLoading(false, '', true));
 
             if (error.errorData.code === TGdmnErrorCodes.INTERNAL) {
               if (internalErrorCounter <= MAX_INTERNAL_ERROR_RECONNECT_COUNT) {
@@ -204,16 +202,16 @@ const loadingMiddleware: Middleware = ({ dispatch, getState }) => next => action
     /* support not fsa-compliant redux actions (without action.error) see: piotrwitek/typesafe-actions#52 */
     (action.error || action.payload instanceof Error)
   ) {
-    dispatch(gdmnActions.setLoading(false));
+    // dispatch(gdmnActions.setLoading(false));
   } else {
     // todo tmp
     if (action.type.slice(action.type.length, -'_REQUEST'.length) === '_REQUEST') {
-      dispatch(gdmnActions.setLoading(true));
+      // dispatch(gdmnActions.setLoading(true));
     } else if (
       action.type.slice(action.type.length, -'_OK'.length) === '_OK' ||
       action.type.slice(action.type.length, -'_ERROR'.length) === '_ERROR'
     ) {
-      dispatch(gdmnActions.setLoading(false));
+      // dispatch(gdmnActions.setLoading(false));
     }
   }
 

@@ -1,9 +1,6 @@
 import React from 'react';
 import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
-import { IToggle, Toggle } from 'office-ui-fabric-react';
-import { filter, first } from 'rxjs/operators';
-import { Observable, throwError } from 'rxjs';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
@@ -13,6 +10,9 @@ import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
+import { filter, first } from 'rxjs/operators';
+import { IToggle, Toggle } from 'office-ui-fabric-react';
+import { Observable, throwError } from 'rxjs';
 
 interface IStompDemoViewState {
   stressStarted: boolean;

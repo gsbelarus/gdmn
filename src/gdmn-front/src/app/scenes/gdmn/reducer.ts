@@ -31,20 +31,17 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
     case getType(gdmnActions.setLoading): {
       let { loadingCounter, loading } = state;
 
-      if (action.payload.loading !== null) {
-        if (action.payload.loading) {
-          loadingCounter++;
-        } else if (loadingCounter > 0) {
-          loadingCounter--;
-
-          if (action.payload.resetCounter) loadingCounter = 0;
-        }
-
-        loading = action.payload.loading;
-        if (!action.payload.loading && loadingCounter > 0) {
-          loading = true;
-        }
-      }
+      // TODO TMP
+      // if (action.payload.loading) {
+      //   loadingCounter++;
+      // } else if (loadingCounter > 0) {
+      //   loadingCounter--;
+      // }
+      //
+      // loading = action.payload.loading;
+      // if (!action.payload.loading && loadingCounter > 0) {
+      //   loading = true;
+      // }
 
       return {
         ...state,
