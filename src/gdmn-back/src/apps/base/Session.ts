@@ -1,18 +1,14 @@
 import {EventEmitter} from "events";
-import {AConnection, ITransactionOptions, TExecutor} from "gdmn-db";
-import {ERBridge} from "gdmn-er-bridge";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
-import {v1 as uuidV1} from "uuid";
 import {Constants} from "../../Constants";
-import {DBStatus} from "../../db/ADatabase";
+import {DBStatus} from "./ADatabase";
 import {Task, TaskStatus} from "./task/Task";
 import {TaskManager} from "./task/TaskManager";
 
 export interface IOptions {
   readonly id: string;
   readonly userKey: number;
-  readonly connection: AConnection;
   readonly logger?: Logger;
 }
 
@@ -27,6 +23,7 @@ export enum SessionStatus {
   FORCE_CLOSED
 }
 
+// TODO counter for limited max amount used connections
 export class Session {
 
   public static readonly DONE_SESSION_STATUSES = [
@@ -39,7 +36,6 @@ export class Session {
   protected readonly _logger: Logger | Console;
 
   private readonly _options: IOptions;
-  private readonly _bridges = new Map<string, ERBridge>();
   private readonly _taskManager = new TaskManager();
 
   private _status: SessionStatus = SessionStatus.OPENED;
@@ -59,37 +55,12 @@ export class Session {
     return this._options.userKey;
   }
 
-  get connection(): AConnection {
-    return this._options.connection;
-  }
-
   get status(): SessionStatus {
     return this._status;
   }
 
   get taskManager(): TaskManager {
     return this._taskManager;
-  }
-
-  public static async executeERBridge<Result>(uid: string | undefined,
-                                              session: Session,
-                                              callback: TExecutor<ERBridge, Result>): Promise<Result> {
-    if (uid === undefined) {
-      return await AConnection.executeTransaction({
-        connection: session.connection,
-        callback: (transaction) => ERBridge.executeSelf({
-          connection: session.connection,
-          transaction,
-          callback: (erBridge) => callback(erBridge)
-        })
-      });
-    } else {
-      const erBridge = session.getBridge(uid);
-      if (!erBridge) {
-        throw new Error("ERBridge is not found");
-      }
-      return await callback(erBridge);
-    }
   }
 
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
@@ -103,46 +74,6 @@ export class Session {
       clearTimeout(this._closeTimer);
       this._closeTimer = undefined;
     }
-  }
-
-  public async startBridge(options?: ITransactionOptions): Promise<string> {
-    const uid = uuidV1().toUpperCase();
-    const transaction = await this._options.connection.startTransaction(options);
-    const erBridge = new ERBridge(this._options.connection, transaction);
-    this._bridges.set(uid, erBridge);
-    return uid;
-  }
-
-  public async commitBridge(uid: string): Promise<void> {
-    const bridge = this._bridges.get(uid);
-    if (!bridge) {
-      throw new Error("Bridge is not found");
-    }
-    this._bridges.delete(uid);
-    if (!bridge.disposed) {
-      await bridge.dispose();
-    }
-    if (!bridge.transaction.finished) {
-      await bridge.transaction.commit();
-    }
-  }
-
-  public async rollbackBridge(uid: string): Promise<void> {
-    const bridge = this._bridges.get(uid);
-    if (!bridge) {
-      throw new Error("Bridge is not found");
-    }
-    this._bridges.delete(uid);
-    if (!bridge.disposed) {
-      await bridge.dispose();
-    }
-    if (!bridge.transaction.finished) {
-      await bridge.transaction.rollback();
-    }
-  }
-
-  public getBridge(uid: string): ERBridge | undefined {
-    return this._bridges.get(uid);
   }
 
   public close(): void {
@@ -160,10 +91,6 @@ export class Session {
       .filter((task) => task.options.session === this)
       .forEach((task) => task.interrupt());
     this._taskManager.clear();
-    for (const key of this._bridges.keys()) {
-      await this.rollbackBridge(key);
-    }
-    await this._options.connection.disconnect();
 
     this._updateStatus(SessionStatus.FORCE_CLOSED);
   }

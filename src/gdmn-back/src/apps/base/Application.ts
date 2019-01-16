@@ -1,29 +1,19 @@
-import childProcess from "child_process";
 import {AccessMode, AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
 import log4js from "log4js";
-import {ADatabase, DBStatus, IDBDetail} from "../../db/ADatabase";
+import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICmd, Level, Task} from "./task/Task";
 
-export type AppAction = "BEGIN_TRANSACTION" | "COMMIT_TRANSACTION" | "ROLLBACK_TRANSACTION" |
-  "PING" | "GET_SCHEMA" | "QUERY";
+export type AppAction = "PING" | "GET_SCHEMA" | "QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
-export interface ITPayload {
-  transactionKey?: string;
-}
-
-export type BeginTransCmd = AppCmd<"BEGIN_TRANSACTION">;
-export type CommitTransCmd = AppCmd<"COMMIT_TRANSACTION", { transactionKey: string; }>;
-export type RollbackTransCmd = AppCmd<"ROLLBACK_TRANSACTION", { transactionKey: string; }>;
-
-export type PingCmd = AppCmd<"PING", { steps: number; delay: number; } & ITPayload>;
+export type PingCmd = AppCmd<"PING", { steps: number; delay: number; }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA">;
-export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector & ITPayload>;
+export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
 
 export abstract class Application extends ADatabase {
 
@@ -31,69 +21,10 @@ export abstract class Application extends ADatabase {
   public taskLogger = log4js.getLogger("Task");
 
   public readonly erModel: ERModel = new ERModel();
-  public readonly sessionManager = new SessionManager(this.connectionPool, this.sessionLogger);
-  public childProcess?: childProcess.ChildProcess;  // TODO pool
+  public readonly sessionManager = new SessionManager(this.sessionLogger);
 
   protected constructor(dbDetail: IDBDetail) {
     super(dbDetail);
-  }
-
-  public pushBeginTransCmd(session: Session, command: BeginTransCmd): Task<BeginTransCmd, string> {
-    const task = new Task({
-      session,
-      command,
-      level: Level.SESSION,
-      logger: this.taskLogger,
-      worker: async (context) => {
-        await this.waitProcess();
-        this.checkSession(session);
-
-        return await context.session.startBridge();
-      }
-    });
-    session.taskManager.add(task);
-    this.sessionManager.syncTasks();
-    return task;
-  }
-
-  public pushCommitTransCmd(session: Session, command: CommitTransCmd): Task<CommitTransCmd, void> {
-    const task = new Task({
-      session,
-      command,
-      level: Level.SESSION,
-      logger: this.taskLogger,
-      worker: async (context) => {
-        await this.waitProcess();
-        this.checkSession(session);
-
-        const {transactionKey} = context.command.payload;
-
-        await context.session.commitBridge(transactionKey);
-      }
-    });
-    session.taskManager.add(task);
-    this.sessionManager.syncTasks();
-    return task;
-  }
-
-  public pushRollbackTransCmd(session: Session, command: RollbackTransCmd): Task<RollbackTransCmd, void> {
-    const task = new Task({
-      session,
-      command,
-      level: Level.SESSION,
-      logger: this.taskLogger,
-      worker: async (context) => {
-        await this.waitProcess();
-        this.checkSession(session);
-
-        const {transactionKey} = context.command.payload;
-
-        await context.session.rollbackBridge(transactionKey);
-      }
-    });
-    session.taskManager.add(task);
-    this.sessionManager.syncTasks();
-    return task;
   }
 
   public pushPingCmd(session: Session, command: PingCmd): Task<PingCmd, void> {
@@ -156,10 +87,15 @@ export abstract class Application extends ADatabase {
         await this.waitProcess();
         this.checkSession(session);
 
-        const {transactionKey} = context.command.payload;
-
-        const result = await Session.executeERBridge(transactionKey, context.session,
-          (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload)));
+        const result = await this.executeConnection((connection) => AConnection.executeTransaction({
+            connection,
+            callback: (transaction) => ERBridge.executeSelf({
+              connection,
+              transaction,
+              callback: (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload))
+            })
+          })
+        );
         await context.checkStatus();
         return result;
       }
@@ -173,10 +109,6 @@ export abstract class Application extends ADatabase {
     if (session.status !== SessionStatus.OPENED) {
       this._logger.warn("Session id#%s is not opened", session.id);
       throw new Error("Session is not opened");
-    }
-    if (!session.connection.connected) {
-      this._logger.warn("Session id#%s connection is not connected", session.id);
-      throw new Error("Session connection is not connected");
     }
     if (!this.sessionManager.includes(session)) {
       this._logger.warn("Session id#%s does not belong to the application", session.id);
@@ -193,12 +125,6 @@ export abstract class Application extends ADatabase {
   protected async _onConnect(): Promise<void> {
     await super._onConnect();
 
-    // if (!process.send) {
-    // TODO send init params
-    // this.childProcess = childProcess.fork(__dirname + "/process/ProcessManager.js",
-    //   [JSON.stringify(this.dbDetail)]);
-    // this.childProcess.send(this.dbDetail);
-    // }
     await this._init();
   }
 
@@ -207,10 +133,6 @@ export abstract class Application extends ADatabase {
 
     const {alias, connectionOptions}: IDBDetail = this.dbDetail;
 
-    if (this.childProcess) {
-      this.childProcess.kill();
-      this._logger.info("alias#%s (%s) killed all ChildProcesses", alias, connectionOptions.path);
-    }
     await this.sessionManager.forceCloseAll();
     this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
   }

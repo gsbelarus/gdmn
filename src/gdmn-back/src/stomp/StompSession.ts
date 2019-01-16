@@ -10,7 +10,7 @@ import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
 import {Actions, CommandProvider} from "../apps/CommandProvider";
 import {IUser, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
-import {DBStatus} from "../db/ADatabase";
+import {DBStatus} from "../apps/base/ADatabase";
 import {StompErrorCode, StompServerError} from "./StompServerError";
 
 export type Ack = "auto" | "client" | "client-individual";
