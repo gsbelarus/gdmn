@@ -12,7 +12,13 @@ import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
 import { filter, first } from 'rxjs/operators';
 import { IToggle, Toggle } from 'office-ui-fabric-react';
-import { Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
+
+const EndTaskStatuses = [
+  TTaskStatus.DONE,
+  TTaskStatus.ERROR,
+  TTaskStatus.INTERRUPTED
+];
 
 interface IStompDemoViewState {
   stressStarted: boolean;
@@ -71,12 +77,13 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   };
 
   private handleStressDb = () => {
-    this.stressLoop(() => {
-      if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) {
-        return throwError('[test] erModel empty!');
-      }
+    if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) {
+      console.log('[test] erModel empty!');
+      return;
+    }
 
-      const entity = Object.values(this.props.erModel.entities)[0];
+    this.stressLoop(() => {
+      const entity = Object.values(this.props.erModel!.entities)[0];
       const query = new EntityQuery(
         new EntityLink(entity, 'alias', [
           new EntityQueryField(
@@ -119,24 +126,26 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           let timeStart;
 
           do {
+            // console.log('do')
             timeStart = window.performance.now();
 
-            await Promise.all(
-              new Array(maxRequestsCount).fill(0).map(async () =>
-                sequentialMode
-                  ? await getTaskResultObservable()
+            try {
+              await Promise.all(
+                new Array(maxRequestsCount).fill(0).map(async () =>
+                  sequentialMode
+                    ? await getTaskResultObservable()
                       .pipe(
                         filter(
-                          value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE
+                          value => Reflect.has(value.payload, 'result') && EndTaskStatuses.includes(value.payload.status)
                         ),
                         first()
                       )
                       .toPromise()
-                  : new Promise((resolve, reject) => {
+                    : new Promise((resolve, reject) => {
                       getTaskResultObservable()
                         .pipe(
                           filter(
-                            value => Reflect.has(value.payload, 'result') && value.payload.status === TTaskStatus.DONE
+                            value =>  Reflect.has(value.payload, 'result') &&  EndTaskStatuses.includes(value.payload.status)
                           ),
                           first()
                         )
@@ -144,8 +153,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
                           resolve();
                         });
                     })
-              )
-            );
+                )
+              );
+            } catch (e) {
+              console.log('d1-> error', e)
+            }
+
 
             maxRequestsCount += incRequestsCount;
           } while (window.performance.now() - timeStart < stepDuration);

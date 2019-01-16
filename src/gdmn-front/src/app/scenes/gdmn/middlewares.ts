@@ -62,7 +62,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
               if (JSON.parse(message.data).error) {
                 console.log('[GDMN] task result error:', JSON.parse(message.data).error);
 
-                dispatch(rootActions.onError(new Error(JSON.stringify(JSON.parse(message.data).error.message))));
+                dispatch(rootActions.onError(new Error(JSON.parse(message.data).error.message)));
               }
             });
             connectionStatusSub = apiService.pubSubClient.connectionStatusObservable.subscribe(value => {
