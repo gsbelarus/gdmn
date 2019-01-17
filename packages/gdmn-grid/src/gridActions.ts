@@ -1,4 +1,4 @@
-import { Columns, GetConditionalStyle } from "./Grid";
+import { Columns } from "./Grid";
 import { createAction } from "typesafe-actions";
 import { SortFields } from "gdmn-recordset";
 
@@ -9,8 +9,7 @@ export const createGrid = createAction('GRID/CREATE', resolve => {
     columns: Columns,
     leftSideColumns: number,
     rightSideColumns: number,
-    hideFooter: boolean,
-    getConditionalStyle?: GetConditionalStyle 
+    hideFooter: boolean
   }>) => resolve(params);
 });
 
