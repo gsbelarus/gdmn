@@ -137,7 +137,7 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {alias, external, connectionOptions} = context.command.payload;
@@ -185,7 +185,7 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {uid} = context.command.payload;
@@ -223,7 +223,7 @@ export class MainApplication extends Application {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {userKey} = context.session;
@@ -243,7 +243,7 @@ export class MainApplication extends Application {
   public async getConnectedApplications(): Promise<Application[]> {
     const applications: Application[] = [];
     for (const application of this._applications.values()) {
-      await application.waitProcess();
+      await application.waitUnlock();
       if (application.status === DBStatus.CONNECTED) {
         applications.push(application);
       }
@@ -252,7 +252,7 @@ export class MainApplication extends Application {
   }
 
   public async getApplication(session: Session, uid: string): Promise<Application> {
-    await this.waitProcess();
+    await this.waitUnlock();
 
     if (this.status !== DBStatus.CONNECTED) {
       throw new Error("MainApplication is not created");
@@ -276,7 +276,7 @@ export class MainApplication extends Application {
         }
         if (changedSession.status === SessionStatus.FORCE_CLOSED) {
           if (!application.sessionManager.size()) {
-            await application.waitProcess();
+            await application.waitUnlock();
             if (application.status === DBStatus.CONNECTED) {
               try {
                 await application.disconnect();

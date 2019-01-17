@@ -7,6 +7,7 @@ import {
   IConnectionOptions,
   TExecutor
 } from "gdmn-db";
+import {Semaphore} from "gdmn-internals";
 import log4js, {Logger} from "log4js";
 import {performance} from "perf_hooks";
 import StrictEventEmitter from "strict-event-emitter-types";
@@ -55,6 +56,7 @@ export abstract class ADatabase {
 
   protected readonly _logger: Logger = log4js.getLogger("database");
 
+  private _lock = new Semaphore();
   private _status: DBStatus = DBStatus.IDLE;
   private _time = performance.now();
 
@@ -90,7 +92,7 @@ export abstract class ADatabase {
   }
 
   public async create(): Promise<void> {
-    await this.waitProcess();
+    await this._lock.acquire();
 
     if (this._status === DBStatus.CONNECTED) {
       this._logger.error("Database already created");
@@ -115,11 +117,13 @@ export abstract class ADatabase {
       }
       this._updateStatus(DBStatus.IDLE);
       throw error;
+    } finally {
+      this._lock.release();
     }
   }
 
   public async delete(): Promise<void> {
-    await this.waitProcess();
+    await this._lock.acquire();
 
     if (this._status === DBStatus.CONNECTED) {
       this._logger.info("Database is connected");
@@ -136,11 +140,12 @@ export abstract class ADatabase {
 
     } finally {
       this._updateStatus(DBStatus.IDLE);
+      this._lock.release();
     }
   }
 
   public async connect(): Promise<void> {
-    await this.waitProcess();
+    await this._lock.acquire();
 
     if (this._status === DBStatus.CONNECTED) {
       this._logger.error("Database already connected");
@@ -161,11 +166,13 @@ export abstract class ADatabase {
       }
       this._updateStatus(DBStatus.IDLE);
       throw error;
+    } finally {
+      this._lock.release();
     }
   }
 
   public async disconnect(): Promise<void> {
-    await this.waitProcess();
+    await this._lock.acquire();
 
     if (this._status !== DBStatus.CONNECTED) {
       this._logger.error("Database is not connected");
@@ -182,19 +189,20 @@ export abstract class ADatabase {
         await this.connectionPool.destroy();
       }
       this._updateStatus(DBStatus.IDLE);
+      await this._lock.release();
     }
   }
 
   public async executeConnection<R>(callback: TExecutor<AConnection, R>): Promise<R> {
-    await this.waitProcess();
+    await this.waitUnlock();
 
     return await this._executeConnection(callback);
   }
 
-  public async waitProcess(): Promise<void> {
-    if (ADatabase.PROCESS_STATUSES.includes(this._status)) {
-      await new Promise((resolve) => this.emitter.once("change", resolve));
-      await this.waitProcess();
+  public async waitUnlock(): Promise<void> {
+    if (!this._lock.permits) {
+      await this._lock.acquire();
+      this._lock.release();
     }
   }
 

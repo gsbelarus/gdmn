@@ -1,4 +1,5 @@
 import {EventEmitter} from "events";
+import {Semaphore} from "gdmn-internals";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
@@ -82,6 +83,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
   private readonly _progress: Progress;
   private readonly _log: ITaskLog[] = [];
 
+  private _processLock = new Semaphore();
   private _status: TaskStatus = TaskStatus.IDLE;
   private _result?: Result;
   private _error?: Error;
@@ -149,26 +151,38 @@ export class Task<Cmd extends ICmd<any>, Result> {
     }
   }
 
-  public async execute(): Promise<void> {
+  public execute(): void {
     if (this._status !== TaskStatus.IDLE) {
       this._logger.error("id#%s mast has %s status, but he has %s", this._id, TaskStatus[TaskStatus.IDLE],
         TaskStatus[this._status]);
       throw new Error(`Task mast has ${TaskStatus[TaskStatus.IDLE]} status, but he has ${TaskStatus[this._status]}`);
     }
-    this._updateStatus(TaskStatus.RUNNING);
-    try {
-      await this._checkStatus();
-      this._result = await this._options.worker({
+
+    this._processLock.acquire()
+      .then(() => this._updateStatus(TaskStatus.RUNNING))
+      .then(() => this._checkStatus())
+      .then(() => this._options.worker({
         command: this.options.command,
         session: this._options.session,
         checkStatus: this._checkStatus.bind(this),
         progress: this._progress
-      });
-      this._updateStatus(TaskStatus.SUCCESS);
-    } catch (error) {
-      this._logger.warn("id#%s throw error; Error: %s", this._id, error);
-      this._error = error;
-      this._updateStatus(TaskStatus.FAILED);
+      }))
+      .then((result) => {
+        this._result = result;
+        this._updateStatus(TaskStatus.SUCCESS)
+      })
+      .catch((error) => {
+        this._logger.warn("id#%s throw error; Error: %s", this._id, error);
+        this._error = error;
+        this._updateStatus(TaskStatus.FAILED);
+      })
+      .finally(() => this._processLock.release());
+  }
+
+  public async waitExecution(): Promise<void> {
+    if (!this._processLock.permits) {
+      await this._processLock.acquire();
+      this._processLock.release();
     }
   }
 

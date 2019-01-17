@@ -1,4 +1,5 @@
 import {EventEmitter} from "events";
+import {Semaphore} from "gdmn-internals";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {Constants} from "../../Constants";
@@ -23,7 +24,6 @@ export enum SessionStatus {
   FORCE_CLOSED
 }
 
-// TODO counter for limited max amount used connections
 export class Session {
 
   public static readonly DONE_SESSION_STATUSES = [
@@ -38,6 +38,7 @@ export class Session {
   private readonly _options: IOptions;
   private readonly _taskManager = new TaskManager();
 
+  private _connectionsLock = new Semaphore(Constants.SERVER.SESSION.MAX_CONNECTIONS);
   private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
 
@@ -61,6 +62,14 @@ export class Session {
 
   get taskManager(): TaskManager {
     return this._taskManager;
+  }
+
+  public async lockConnection(): Promise<void> {
+    await this._connectionsLock.acquire();
+  }
+
+  public unlockConnection(): void {
+    this._connectionsLock.release();
   }
 
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
@@ -87,9 +96,13 @@ export class Session {
     this._updateStatus(SessionStatus.FORCE_CLOSING);
 
     this.clearCloseTimer();
-    this._taskManager.find(...Task.PROCESS_STATUSES)
+    const waitPromises = this._taskManager.find(...Task.PROCESS_STATUSES)
       .filter((task) => task.options.session === this)
-      .forEach((task) => task.interrupt());
+      .map((task) => {
+        task.interrupt();
+        return task.waitExecution();
+      });
+    await Promise.all(waitPromises);
     this._taskManager.clear();
 
     this._updateStatus(SessionStatus.FORCE_CLOSED);
@@ -101,7 +114,8 @@ export class Session {
         .filter((task) => task.options.session === this);
       if (runningTasks.length) {
         this._logger.info("id#%s is waiting for task completion", this.id);
-        this._taskManager.emitter.once("change", () => this._internalClose());
+        const waitPromises = runningTasks.map((task) => task.waitExecution());
+        Promise.all(waitPromises).then(() => this._internalClose()).catch(this._logger.error);
       } else {
         this.forceClose().catch(this._logger.error);
       }

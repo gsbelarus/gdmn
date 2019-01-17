@@ -1,4 +1,4 @@
-import {AccessMode, AConnection} from "gdmn-db";
+import {AccessMode, AConnection, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
 import log4js from "log4js";
@@ -34,7 +34,7 @@ export abstract class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {steps, delay} = context.command.payload;
@@ -47,7 +47,7 @@ export abstract class Application extends ADatabase {
           await context.checkStatus();
         }
 
-        await this.waitProcess();
+        await this.waitUnlock();
         if (this.status !== DBStatus.CONNECTED) {
           this._logger.error("Application is not connected");
           throw new Error("Application is not connected");
@@ -66,7 +66,7 @@ export abstract class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async () => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         return this.erModel.serialize();
@@ -84,10 +84,10 @@ export abstract class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
-        const result = await this.executeConnection((connection) => AConnection.executeTransaction({
+        const result = await this.executeSessionConnection(session, (connection) => AConnection.executeTransaction({
             connection,
             callback: (transaction) => ERBridge.executeSelf({
               connection,
@@ -113,6 +113,15 @@ export abstract class Application extends ADatabase {
     if (!this.sessionManager.includes(session)) {
       this._logger.warn("Session id#%s does not belong to the application", session.id);
       throw new Error("Session does not belong to the application");
+    }
+  }
+
+  protected async executeSessionConnection<R>(session: Session, callback: TExecutor<AConnection, R>): Promise<R> {
+    await session.lockConnection();
+    try {
+      return await this.executeConnection(callback);
+    } finally {
+      session.unlockConnection();
     }
   }
 
