@@ -1,7 +1,7 @@
 import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {Entity, StringAttribute} from "gdmn-orm";
-import {IDBDetail} from "../db/ADatabase";
+import {IDBDetail} from "./base/ADatabase";
 import {Application} from "./base/Application";
 
 export class GDMNApplication extends Application {

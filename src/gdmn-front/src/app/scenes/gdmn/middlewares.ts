@@ -60,7 +60,9 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
               if (!message.data) throw Error('[GDMN] Invalid server response');
 
               if (JSON.parse(message.data).error) {
-                dispatch(rootActions.onError(new Error(JSON.parse(message.data).error)));
+                console.log('[GDMN] task result error:', JSON.parse(message.data).error);
+
+                dispatch(rootActions.onError(new Error(JSON.parse(message.data).error.message)));
               }
             });
             connectionStatusSub = apiService.pubSubClient.connectionStatusObservable.subscribe(value => {

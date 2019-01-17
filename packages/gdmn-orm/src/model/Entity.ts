@@ -68,8 +68,9 @@ export class Entity {
   }
 
   get isIntervalTree(): boolean {
-    return this.isTree && (Object.values(this.attributes).some((attr) => attr.name === "RB")
-      && Object.values(this.attributes).some((attr) => attr.name === "LB"));
+    return this.isTree
+      && Object.values(this.attributes).some((attr) => attr.name === "RB")
+      && Object.values(this.attributes).some((attr) => attr.name === "LB");
   }
 
   public attributesBySemCategory(cat: SemCategory): Attribute[] {

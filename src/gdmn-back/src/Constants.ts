@@ -25,7 +25,8 @@ export class Constants {
     },
     PUBLIC_DIR: (process.env.PUBLIC_DIR ? process.env.PUBLIC_DIR : config.get("server.publicDir")) as string,
     SESSION: {
-      TIMEOUT: ms(config.get("server.session.timeout") as string)
+      TIMEOUT: ms(config.get("server.session.timeout") as string),
+      MAX_CONNECTIONS: config.get("server.session.maxConnections") as number
     },
     TASK: {
       TIMEOUT: ms(config.get("server.task.timeout") as string)

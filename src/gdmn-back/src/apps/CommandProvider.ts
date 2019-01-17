@@ -1,13 +1,4 @@
-import {
-  AppAction,
-  Application,
-  BeginTransCmd,
-  CommitTransCmd,
-  GetSchemaCmd,
-  PingCmd,
-  QueryCmd,
-  RollbackTransCmd
-} from "./base/Application";
+import {AppAction, Application, GetSchemaCmd, PingCmd, QueryCmd} from "./base/Application";
 import {Session} from "./base/Session";
 import {ICmd, Task} from "./base/task/Task";
 import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, MainAction, MainApplication} from "./MainApplication";
@@ -36,20 +27,6 @@ export class CommandProvider {
       && "external" in command.payload
       && typeof command.payload.external === "boolean";
     // TODO
-  }
-
-  private static _verifyCommitTransCmd(command: ICmd<"COMMIT_TRANSACTION">): command is CommitTransCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "transactionKey" in command.payload
-      && typeof command.payload.transactionKey === "string";
-  }
-
-  private static _verifyRollbackTransCmd(command: ICmd<"ROLLBACK_TRANSACTION">): command is RollbackTransCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "transactionKey" in command.payload
-      && typeof command.payload.transactionKey === "string";
   }
 
   private static _verifyPingCmd(command: ICmd<"PING">): command is PingCmd {
@@ -95,21 +72,6 @@ export class CommandProvider {
         return this._application.pushGetAppsCmd(session, command as GetAppsCmd);
       }
       // ------------------------------For all application
-      case "BEGIN_TRANSACTION": {
-        return this._application.pushBeginTransCmd(session, command as BeginTransCmd);
-      }
-      case "COMMIT_TRANSACTION": {
-        if (!CommandProvider._verifyCommitTransCmd(command)) {
-          throw new Error(`Incorrect ${command.action} command`);
-        }
-        return this._application.pushCommitTransCmd(session, command);
-      }
-      case "ROLLBACK_TRANSACTION": {
-        if (!CommandProvider._verifyRollbackTransCmd(command)) {
-          throw new Error(`Incorrect ${command.action} command`);
-        }
-        return this._application.pushRollbackTransCmd(session, command);
-      }
       case "PING": {
         if (!CommandProvider._verifyPingCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);

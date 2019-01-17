@@ -15,7 +15,7 @@ import {
 import path from "path";
 import {v1 as uuidV1} from "uuid";
 import {Constants} from "../Constants";
-import {DBStatus, IDBDetail} from "../db/ADatabase";
+import {DBStatus, IDBDetail} from "./base/ADatabase";
 import {Application} from "./base/Application";
 import {Session, SessionStatus} from "./base/Session";
 import {ICmd, Level, Task} from "./base/task/Task";
@@ -137,35 +137,35 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
-        const connection = context.session.connection;
 
-        const userAppInfo = await AConnection.executeTransaction({
-          connection,
-          callback: async (transaction) => {
-            const user = await this._findUser(connection, transaction, {id: userKey});
-            if (external && (!user || !user.admin)) {
-              throw new Error("Permission denied");
+        const userAppInfo = await this.executeConnection((connection) => AConnection.executeTransaction({
+            connection,
+            callback: async (transaction) => {
+              const user = await this._findUser(connection, transaction, {id: userKey});
+              if (external && (!user || !user.admin)) {
+                throw new Error("Permission denied");
+              }
+              const {id, uid} = await this._addApplicationInfo(connection, transaction, {
+                ...connectionOptions,
+                ownerKey: userKey,
+                external
+              });
+
+              await this._addUserApplicationInfo(connection, transaction, {
+                alias,
+                userKey,
+                appKey: id
+              });
+
+              return await this._getUserApplicationInfo(connection, transaction, userKey, uid);
             }
-            const {id, uid} = await this._addApplicationInfo(connection, transaction, {
-              ...connectionOptions,
-              ownerKey: userKey,
-              external
-            });
-
-            await this._addUserApplicationInfo(connection, transaction, {
-              alias,
-              userKey,
-              appKey: id
-            });
-
-            return await this._getUserApplicationInfo(connection, transaction, userKey, uid);
-          }
-        });
+          })
+        );
 
         const application = await this.getApplication(context.session, userAppInfo.uid);
         await application.create();
@@ -185,29 +185,29 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {uid} = context.command.payload;
         const {userKey} = context.session;
-        const connection = context.session.connection;
 
-        await AConnection.executeTransaction({
-          connection,
-          callback: async (transaction) => {
-            const {ownerKey, external} = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
-            await this._deleteUserApplicationInfo(connection, transaction, userKey, uid);
+        await this.executeConnection((connection) => AConnection.executeTransaction({
+            connection,
+            callback: async (transaction) => {
+              const {ownerKey, external} = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
+              await this._deleteUserApplicationInfo(connection, transaction, userKey, uid);
 
-            if (ownerKey === userKey) {
-              await this._deleteApplicationInfo(connection, transaction, userKey, uid);
-              if (!external) {
-                const application = await this.getApplication(context.session, uid);
-                await application.delete();
-                this._applications.delete(uid);
+              if (ownerKey === userKey) {
+                await this._deleteApplicationInfo(connection, transaction, userKey, uid);
+                if (!external) {
+                  const application = await this.getApplication(context.session, uid);
+                  await application.delete();
+                  this._applications.delete(uid);
+                }
               }
             }
-          }
-        });
+          })
+        );
       }
     });
     session.taskManager.add(task);
@@ -223,16 +223,16 @@ export class MainApplication extends Application {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {userKey} = context.session;
-        const connection = context.session.connection;
 
-        return await AConnection.executeTransaction({
-          connection,
-          callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
-        });
+        return await this.executeConnection((connection) => AConnection.executeTransaction({
+            connection,
+            callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
+          })
+        );
       }
     });
     session.taskManager.add(task);
@@ -243,7 +243,7 @@ export class MainApplication extends Application {
   public async getConnectedApplications(): Promise<Application[]> {
     const applications: Application[] = [];
     for (const application of this._applications.values()) {
-      await application.waitProcess();
+      await application.waitUnlock();
       if (application.status === DBStatus.CONNECTED) {
         applications.push(application);
       }
@@ -252,17 +252,17 @@ export class MainApplication extends Application {
   }
 
   public async getApplication(session: Session, uid: string): Promise<Application> {
-    await this.waitProcess();
+    await this.waitUnlock();
 
     if (this.status !== DBStatus.CONNECTED) {
       throw new Error("MainApplication is not created");
     }
     let application = this._applications.get(uid);
-    const connection = session.connection;
-    const userAppInfo = await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => this._getUserApplicationInfo(connection, transaction, session.userKey, uid)
-    });
+    const userAppInfo = await this.executeConnection((connection) => AConnection.executeTransaction({
+        connection,
+        callback: (transaction) => this._getUserApplicationInfo(connection, transaction, session.userKey, uid)
+      })
+    );
     if (!application) {
       const alias = userAppInfo ? userAppInfo.alias : "Unknown";
       const dbDetail = MainApplication._createDBDetail(alias, MainApplication.getAppPath(uid), userAppInfo);
@@ -276,7 +276,7 @@ export class MainApplication extends Application {
         }
         if (changedSession.status === SessionStatus.FORCE_CLOSED) {
           if (!application.sessionManager.size()) {
-            await application.waitProcess();
+            await application.waitUnlock();
             if (application.status === DBStatus.CONNECTED) {
               try {
                 await application.disconnect();

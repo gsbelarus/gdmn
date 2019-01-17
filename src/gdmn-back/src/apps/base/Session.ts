@@ -1,18 +1,15 @@
 import {EventEmitter} from "events";
-import {AConnection, ITransactionOptions, TExecutor} from "gdmn-db";
-import {ERBridge} from "gdmn-er-bridge";
+import {Semaphore} from "gdmn-internals";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
-import {v1 as uuidV1} from "uuid";
 import {Constants} from "../../Constants";
-import {DBStatus} from "../../db/ADatabase";
+import {DBStatus} from "./ADatabase";
 import {Task, TaskStatus} from "./task/Task";
 import {TaskManager} from "./task/TaskManager";
 
 export interface IOptions {
   readonly id: string;
   readonly userKey: number;
-  readonly connection: AConnection;
   readonly logger?: Logger;
 }
 
@@ -39,9 +36,9 @@ export class Session {
   protected readonly _logger: Logger | Console;
 
   private readonly _options: IOptions;
-  private readonly _bridges = new Map<string, ERBridge>();
   private readonly _taskManager = new TaskManager();
 
+  private _connectionsLock = new Semaphore(Constants.SERVER.SESSION.MAX_CONNECTIONS);
   private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
 
@@ -59,10 +56,6 @@ export class Session {
     return this._options.userKey;
   }
 
-  get connection(): AConnection {
-    return this._options.connection;
-  }
-
   get status(): SessionStatus {
     return this._status;
   }
@@ -71,25 +64,12 @@ export class Session {
     return this._taskManager;
   }
 
-  public static async executeERBridge<Result>(uid: string | undefined,
-                                              session: Session,
-                                              callback: TExecutor<ERBridge, Result>): Promise<Result> {
-    if (uid === undefined) {
-      return await AConnection.executeTransaction({
-        connection: session.connection,
-        callback: (transaction) => ERBridge.executeSelf({
-          connection: session.connection,
-          transaction,
-          callback: (erBridge) => callback(erBridge)
-        })
-      });
-    } else {
-      const erBridge = session.getBridge(uid);
-      if (!erBridge) {
-        throw new Error("ERBridge is not found");
-      }
-      return await callback(erBridge);
-    }
+  public async lockConnection(): Promise<void> {
+    await this._connectionsLock.acquire();
+  }
+
+  public unlockConnection(): void {
+    this._connectionsLock.release();
   }
 
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
@@ -105,46 +85,6 @@ export class Session {
     }
   }
 
-  public async startBridge(options?: ITransactionOptions): Promise<string> {
-    const uid = uuidV1().toUpperCase();
-    const transaction = await this._options.connection.startTransaction(options);
-    const erBridge = new ERBridge(this._options.connection, transaction);
-    this._bridges.set(uid, erBridge);
-    return uid;
-  }
-
-  public async commitBridge(uid: string): Promise<void> {
-    const bridge = this._bridges.get(uid);
-    if (!bridge) {
-      throw new Error("Bridge is not found");
-    }
-    this._bridges.delete(uid);
-    if (!bridge.disposed) {
-      await bridge.dispose();
-    }
-    if (!bridge.transaction.finished) {
-      await bridge.transaction.commit();
-    }
-  }
-
-  public async rollbackBridge(uid: string): Promise<void> {
-    const bridge = this._bridges.get(uid);
-    if (!bridge) {
-      throw new Error("Bridge is not found");
-    }
-    this._bridges.delete(uid);
-    if (!bridge.disposed) {
-      await bridge.dispose();
-    }
-    if (!bridge.transaction.finished) {
-      await bridge.transaction.rollback();
-    }
-  }
-
-  public getBridge(uid: string): ERBridge | undefined {
-    return this._bridges.get(uid);
-  }
-
   public close(): void {
     this.clearCloseTimer();
     this._internalClose();
@@ -156,14 +96,14 @@ export class Session {
     this._updateStatus(SessionStatus.FORCE_CLOSING);
 
     this.clearCloseTimer();
-    this._taskManager.find(...Task.PROCESS_STATUSES)
+    const waitPromises = this._taskManager.find(...Task.PROCESS_STATUSES)
       .filter((task) => task.options.session === this)
-      .forEach((task) => task.interrupt());
+      .map((task) => {
+        task.interrupt();
+        return task.waitExecution();
+      });
+    await Promise.all(waitPromises);
     this._taskManager.clear();
-    for (const key of this._bridges.keys()) {
-      await this.rollbackBridge(key);
-    }
-    await this._options.connection.disconnect();
 
     this._updateStatus(SessionStatus.FORCE_CLOSED);
   }
@@ -174,7 +114,8 @@ export class Session {
         .filter((task) => task.options.session === this);
       if (runningTasks.length) {
         this._logger.info("id#%s is waiting for task completion", this.id);
-        this._taskManager.emitter.once("change", () => this._internalClose());
+        const waitPromises = runningTasks.map((task) => task.waitExecution());
+        Promise.all(waitPromises).then(() => this._internalClose()).catch(this._logger.error);
       } else {
         this.forceClose().catch(this._logger.error);
       }

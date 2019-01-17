@@ -10,7 +10,7 @@ import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
 import {Actions, CommandProvider} from "../apps/CommandProvider";
 import {IUser, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
-import {DBStatus} from "../db/ADatabase";
+import {DBStatus} from "../apps/base/ADatabase";
 import {StompErrorCode, StompServerError} from "./StompServerError";
 
 export type Ack = "auto" | "client" | "client-individual";
@@ -256,7 +256,7 @@ export class StompSession implements StompClientCommandListener {
         this._application = this.mainApplication;
       }
 
-      await this._application.waitProcess();
+      await this._application.waitUnlock();
       if (this._application.status !== DBStatus.CONNECTED) {
         await this._application.connect();
       }
@@ -393,11 +393,11 @@ export class StompSession implements StompClientCommandListener {
           let task;
           try {
             task = new CommandProvider(this.application).receive(this.session, command);
+            task.execute();
           } catch (error) {
             throw new StompServerError(StompErrorCode.INVALID, error.message);
           }
           this._sendReceipt(headers, {"task-id": task.id});
-          task.execute().catch(this.logger.error);
 
           break;
         default:
