@@ -2,7 +2,7 @@ import React from 'react';
 import { IViewProps, View } from './View';
 import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState } from 'gdmn-grid';
-import { Mutex } from 'gdmn-internals';
+import { Semaphore } from 'gdmn-internals';
 import { getMutex, disposeMutex } from './dataViewMutexes';
 
 export interface IRSAndGCS {
@@ -13,7 +13,7 @@ export interface IRSAndGCS {
 
 export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
-  loadData: (mutex: Mutex) => void;
+  loadData: (mutex: Semaphore) => void;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
   onColumnResize: (gridName: string, columnIndex: number, newWidth: number) => void;
