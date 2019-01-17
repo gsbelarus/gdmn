@@ -1,11 +1,13 @@
 import { AnyWord } from '../morphology/morphology';
-import { CyrillicWord, tokenize, Comma } from '../syntax/tokenizer';
+import { CyrillicWord, tokenize, Comma, Numeric } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
 import { morphTokens } from './rusMorphTokens';
 import { IMorphToken, isMorphToken } from './types';
 import { IToken } from 'chevrotain';
 import { RusNoun } from '../morphology/rusNoun';
 import { RusConjunction } from '../morphology/rusConjunction';
+import { RusNumeralLexemes } from '../morphology/rusNumeral';
+import { RusGender, RusCase } from '../morphology/types';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -45,6 +47,12 @@ export function combinatorialMorph(text: string): IToken[][]
       }
       else if (t.tokenType === Comma) {
         p.push([t]);
+      }
+      else if (t.tokenType === Numeric) {
+        const number = RusNumeralLexemes.filter(num => 
+          num.digitalWrite === t.image).reduce((p, l) => 
+            {p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false, singular: true})); return p;}, [] as AnyWord[])
+        p.push(number.map( w => createTokenInstance(w) ));
       }
       return p;
     },

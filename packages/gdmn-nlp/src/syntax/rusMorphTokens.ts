@@ -3,6 +3,7 @@ import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType } from "../mo
 import { RusNoun } from "../morphology/rusNoun";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
+import { RusNumeral } from "../morphology/rusNumeral";
 
 export interface ITokenTypes {
   [name: string]: TokenType
@@ -12,9 +13,11 @@ export const morphTokens = (() => {
 
   const signatures = [
     'VERBTranPerfSingImpr',
+    'VERBTranImpfSingImpr',
     'ADVBGoal',
     'Comma',
-    'CONJ'
+    'CONJ',
+    'Numeric'
   ];
 
   [true, false].forEach( an =>
@@ -59,6 +62,19 @@ export const morphTokens = (() => {
     PrepositionType.Comparative
   ].forEach( prepositionType =>
     signatures.push(RusPreposition.getSignature(prepositionType))
+  );
+
+/**
+ * Числительные
+ */
+  [true, false].forEach(singilar => 
+    [RusCase.Nomn, RusCase.Gent, RusCase.Datv, RusCase.Accs, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>
+      [true, false].forEach( animate => {
+        [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
+          signatures.push(RusNumeral.getSignature(singilar, grammCase, animate, gender));
+        })
+      })
+    )
   );
 
   return signatures.reduce(

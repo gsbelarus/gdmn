@@ -1,5 +1,5 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns } from "gdmn-nlp";
-import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryInspector, IEntityQueryWhereInspector, IEntityQueryWhere } from "gdmn-orm";
+import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP } from "gdmn-nlp";
+import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryWhere } from "gdmn-orm";
 import { ICommand, Action} from "./command";
 import accepts = require("accepts");
 import { equal } from "assert";
@@ -67,6 +67,8 @@ export class ERTranslatorRU {
     const objectANP = (() => {
       if (np.noun instanceof RusANP) {
         return (np.noun as RusANP).noun;
+      } else if (np.noun instanceof RusNNP) {
+        return (np.noun as RusNNP).noun;
       } else {
         return np.noun;
       }

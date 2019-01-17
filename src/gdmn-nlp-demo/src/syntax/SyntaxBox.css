@@ -57,6 +57,11 @@
   color: white;
 }
 
+.TokenNumeric {
+  background-color: coral;
+  color: white;
+}
+
 .TokenPunctuationMark {
   background-color: rebeccapurple;
   color: white;
@@ -101,6 +106,10 @@
 
 .ADJFColor {
   background-color: brown;
+}
+
+.NUMRColor {
+  background-color: midnightblue;
 }
 
 .NOUNColor {
