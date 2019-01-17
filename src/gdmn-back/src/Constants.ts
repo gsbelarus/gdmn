@@ -51,6 +51,12 @@ export class Constants {
     } : undefined,
     USER: config.get("db.user") as string,
     PASSWORD: config.get("db.password") as string,
-    DIR: path.resolve(config.get("db.dir"))
+    DIR: path.resolve(config.get("db.dir")),
+    POOL: {
+      MIN: config.get("db.pool.min") as number,
+      MAX: config.get("db.pool.max") as number,
+      ACQUIRE_TIMEOUT: ms(config.get("db.pool.acquireTimeout") as string),
+      IDLE_TIMEOUT: ms(config.get("db.pool.acquireTimeout") as string)
+    }
   };
 }

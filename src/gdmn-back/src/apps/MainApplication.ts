@@ -106,8 +106,10 @@ export class MainApplication extends Application {
       alias,
       driver: Factory.FBDriver,
       poolOptions: {
-        max: 100,
-        acquireTimeoutMillis: 60 * 1000
+        min: Constants.DB.POOL.MIN,
+        max: Constants.DB.POOL.MAX,
+        acquireTimeoutMillis: Constants.DB.POOL.ACQUIRE_TIMEOUT,
+        idleTimeoutMillis: Constants.DB.POOL.IDLE_TIMEOUT
       },
       connectionOptions: {
         server: appInfo && appInfo.server || Constants.DB.SERVER && {
