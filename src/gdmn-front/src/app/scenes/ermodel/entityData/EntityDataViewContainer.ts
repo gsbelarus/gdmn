@@ -106,7 +106,7 @@ export const EntityDataViewContainer = connect(
                 }
               }
             } finally {
-              release();
+              mutex.release();
             }
           });
       });
