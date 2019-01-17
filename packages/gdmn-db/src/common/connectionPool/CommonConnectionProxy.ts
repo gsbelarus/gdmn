@@ -24,6 +24,13 @@ export class CommonConnectionProxy extends AConnection {
         return this._connection.connected;
     }
 
+    get readTransaction(): ATransaction {
+        if (!this._connection) {
+            throw new Error("Need database connection");
+        }
+        return this._connection.readTransaction;
+    }
+
     get validate(): boolean {
         if (!this._connection) {
             return false;

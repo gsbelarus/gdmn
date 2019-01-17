@@ -118,7 +118,8 @@ export class MainApplication extends Application {
         },
         username: appInfo && appInfo.username || Constants.DB.USER,
         password: appInfo && appInfo.password || Constants.DB.PASSWORD,
-        path: appInfo && appInfo.path || dbPath
+        path: appInfo && appInfo.path || dbPath,
+        readTransaction: true
       }
     };
   }
@@ -230,11 +231,9 @@ export class MainApplication extends Application {
 
         const {userKey} = context.session;
 
-        return await this.executeConnection((connection) => AConnection.executeTransaction({
-            connection,
-            callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
-          })
-        );
+        return await this.executeConnection((connection) => (
+          this._getUserApplicationsInfo(connection, connection.readTransaction, userKey)
+        ));
       }
     });
     session.taskManager.add(task);
@@ -260,10 +259,9 @@ export class MainApplication extends Application {
       throw new Error("MainApplication is not created");
     }
     let application = this._applications.get(uid);
-    const userAppInfo = await this.executeConnection((connection) => AConnection.executeTransaction({
-        connection,
-        callback: (transaction) => this._getUserApplicationInfo(connection, transaction, session.userKey, uid)
-      })
+    const userAppInfo = await this.executeConnection((connection) => (
+        this._getUserApplicationInfo(connection, connection.readTransaction, session.userKey, uid)
+      )
     );
     if (!application) {
       const alias = userAppInfo ? userAppInfo.alias : "Unknown";
@@ -299,10 +297,9 @@ export class MainApplication extends Application {
   }
 
   public async getUserApplicationsInfo(userKey: number): Promise<IUserApplicationInfo[]> {
-    return await this.executeConnection((connection) => AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
-    }));
+    return await this.executeConnection((connection) => (
+      this._getUserApplicationsInfo(connection, connection.readTransaction, userKey)
+    ));
   }
 
   public async addUser(user: ICreateUser): Promise<IUser> {
@@ -330,10 +327,9 @@ export class MainApplication extends Application {
   }
 
   public async findUser(user: { id?: number, login?: string }): Promise<IUser | undefined> {
-    return await this.executeConnection((connection) => AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => this._findUser(connection, transaction, user)
-    }));
+    return await this.executeConnection((connection) => (
+      this._findUser(connection, connection.readTransaction, user)
+    ));
   }
 
   protected async _getUserApplicationInfo(connection: AConnection,

@@ -2,7 +2,7 @@ import {Attachment as NativeConnection} from "node-firebird-native-api";
 import {AConnection, IConnectionOptions} from "../AConnection";
 import {CursorType} from "../AResultSet";
 import {IParams} from "../AStatement";
-import {ITransactionOptions} from "../ATransaction";
+import {AccessMode, ATransaction, ITransactionOptions} from "../ATransaction";
 import {Client} from "./Client";
 import {Result} from "./Result";
 import {ResultSet} from "./ResultSet";
@@ -34,6 +34,13 @@ export class Connection extends AConnection {
         return false;
     }
 
+    get readTransaction(): ATransaction {
+        if (!this.handler) {
+            throw new Error("Need database connection");
+        }
+        return super.readTransaction;
+    }
+
     private static _optionsToUri(options: IConnectionOptions): string {
         let url = "";
         if (options.server) {
@@ -59,11 +66,20 @@ export class Connection extends AConnection {
                 return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
             })
         ));
+
+        if (options.readTransaction) {
+            this._readTransaction = await this.startTransaction({accessMode: AccessMode.READ_ONLY});
+        }
     }
 
     public async dropDatabase(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need database connection");
+        }
+
+        if (this._readTransaction) {
+            await this._readTransaction.commit();
+            this._readTransaction = undefined;
         }
 
         if (this.transactionsCount > 0) {
@@ -87,6 +103,10 @@ export class Connection extends AConnection {
                 return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
             })
         ));
+
+        if (options.readTransaction) {
+            this._readTransaction = await this.startTransaction({accessMode: AccessMode.READ_ONLY});
+        }
     }
 
     public async startTransaction(options?: ITransactionOptions): Promise<Transaction> {
@@ -100,6 +120,11 @@ export class Connection extends AConnection {
     public async disconnect(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need database connection");
+        }
+
+        if (this._readTransaction) {
+            await this._readTransaction.commit();
+            this._readTransaction = undefined;
         }
 
         if (this.transactionsCount > 0) {
