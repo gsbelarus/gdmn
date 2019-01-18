@@ -40,9 +40,10 @@ export class StompManager {
   }
 
   public async create(): Promise<void> {
+    const empty = () => {};
     setLoggingListeners({
-      error: console.log,
-      info: console.log,
+      error: empty,
+      info: empty,
       silly: (message, args) => {
         const receiverDataTemplate = /^StompWebSocketStreamLayer: received data %.$/g;
         if (receiverDataTemplate.test(message) && args !== "\n") {
@@ -61,8 +62,8 @@ export class StompManager {
           //   : args);
         }
       },
-      warn: console.log,
-      debug: () => ({})
+      warn: empty,
+      debug: empty
     });
 
     await this._mainApplication.createOrConnect();

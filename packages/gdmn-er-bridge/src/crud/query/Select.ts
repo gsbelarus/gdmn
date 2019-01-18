@@ -34,12 +34,6 @@ export class Select {
   constructor(query: EntityQuery) {
     this._query = query;
     this.sql = this._getSelect(this._query, true);
-    // console.debug("===================\n" +
-    //   "QUERY:\n" + this._query.serialize() + "\n" +
-    //   "SQL:\n" + this.sql + "\n" +
-    //   "PARAMS:\n" + JSON.stringify(this.params) + "\n" +
-    //   "==================="
-    // );
   }
 
   private static _arrayJoinWithBracket(array: string[], separator: string): string {

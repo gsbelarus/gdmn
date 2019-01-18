@@ -554,9 +554,6 @@ export class GDEntities {
     if (!input.isAbstract) {
       const found = Object.values(this._erModel.entities).find(
         (entity) => {
-          if (!entity.adapter) {
-            console.log(entity);
-          }
           return !entity.isAbstract && sameAdapter(input.adapter, entity.adapter!);
         }
       );

@@ -45,7 +45,10 @@ export class ERBridge {
     try {
       return await callback(erBridge);
     } finally {
-      console.debug(erBridge.ddlHelper.logs.join("\n"));
+      const logs = erBridge.ddlHelper.logs.join("\n");
+      if (logs) {
+        console.debug(logs);
+      }
       if (!erBridge.disposed) {
         await erBridge.dispose();
       }
