@@ -245,7 +245,7 @@ export const ShortNumeralCatagoryNames = [
 ];
 
 export type RusDeclensionNumeralZ  =
-  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6';
+  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6'     |'pqs7'     |'pqs8';
 
   export type RusDeclensionNumeralZEnding = {
     declensionZ: RusDeclensionNumeralZ,

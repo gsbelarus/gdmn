@@ -241,7 +241,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
                 <td>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })}</td>
                 <td>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Neut })}</td>
                 <td>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Femn })}</td>
-                <td>{l.possiblePlural
+                <td>{l.possiblePlural && l.declensionZ !== 'pqs8'
                   ? f({ c: RusCase.Nomn, singular: false })
                   : '-'}</td>
               </tr>
@@ -269,7 +269,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
                 <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: true })}</td>
                 <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Neut, animate: true })}</td>
                 <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Femn, animate: true })}</td>
-                <td>{l.possiblePlural
+                <td>{l.possiblePlural && l.declensionZ !== 'pqs8'
                   ? f({ c: RusCase.Accs, singular: false, animate: true })
                   : '-'}</td>
               </tr>
@@ -278,7 +278,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
                 <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: false })}</td>
                 <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Neut, animate: false })}</td>
                 <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Femn, animate: false })}</td>
-                <td>{l.possiblePlural
+                <td>{l.possiblePlural && l.declensionZ !== 'pqs8'
                   ? f({ c: RusCase.Accs, singular: false, animate: false })
                   : '-'}</td>
               </tr>

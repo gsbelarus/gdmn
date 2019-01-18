@@ -54,6 +54,12 @@ export class RusNumeralLexeme extends NumeralLexeme {
       } else {
         return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
       }
+    } else if (!morphSigns.singular && this.declensionZ === 'pqs8') {
+      if(morphSigns.c === RusCase.Gent) {
+        return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
+      } else {
+        return new RusNumeral(this.stem + ending.ending, this, morphSigns);
+      }
     } else {
       if(this.declensionZ === 'pqs') {
         return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
@@ -74,7 +80,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
         wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Femn, animate: false }));
         wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Neut, animate: true }));
         wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Neut, animate: false }));
-        if (this.possiblePlural) {
+        if (this.possiblePlural && this.declensionZ !== 'pqs8') {
           wordForms.push(this.getWordForm({ c, singular: false, animate: true }));
           wordForms.push(this.getWordForm({ c, singular: false, animate: false }));
         }
@@ -82,7 +88,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
         wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Masc }));
         wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Femn }));
         wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Neut }));
-        if (this.possiblePlural) {
+        if (this.possiblePlural && (this.declensionZ !== 'pqs8' && c !== RusCase.Nomn)) {
           wordForms.push(this.getWordForm({ c, singular: false }));
         }
       }
