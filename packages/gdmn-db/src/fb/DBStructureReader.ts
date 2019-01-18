@@ -7,13 +7,6 @@ import {Transaction} from "./Transaction";
 
 export class DBStructureReader {
 
-    /**
-     * Read the structure of database.
-     *
-     * @param {Connection} connection
-     * @param {Transaction} transaction
-     * @returns {Promise<DBStructure>}
-     */
     public static async readStructure(connection: Connection,
                                       transaction?: Transaction): Promise<DBStructure> {
         if (transaction) {
@@ -26,9 +19,18 @@ export class DBStructureReader {
         });
     }
 
-    // TODO blob reading is slow
     private static async read(connection: AConnection, transaction: ATransaction): Promise<DBStructure> {
-        const fields = await AConnection.executeQueryResultSet({
+        const fields = await DBStructureReader.readFields(connection, transaction);
+        const relationFields = await DBStructureReader.readRelationFields(connection, transaction);
+        const constraints = await DBStructureReader.readConstraints(connection, transaction);
+
+        const dbStructure = new DBStructure();
+        dbStructure.load(fields, relationFields, constraints);
+        return dbStructure;
+    }
+
+    private static async readFields(connection: AConnection, transaction: ATransaction): Promise<IRDB$FIELD[]> {
+        return await AConnection.executeQueryResultSet({
             connection,
             transaction,
             sql: `
@@ -68,8 +70,10 @@ export class DBStructureReader {
                 return array;
             }
         });
+    }
 
-        const relationFields = await AConnection.executeQueryResultSet({
+    private static async readRelationFields(connection: AConnection, transaction: ATransaction): Promise<IRDB$RELATIONFIELD[]> {
+        return await AConnection.executeQueryResultSet({
             connection,
             transaction,
             sql: `
@@ -100,8 +104,10 @@ export class DBStructureReader {
                 return array;
             }
         });
+    }
 
-        const constraints = await AConnection.executeQueryResultSet({
+    private static async readConstraints(connection: AConnection, transaction: ATransaction): Promise<IRDB$RELATIONCONSTRAINT[]> {
+        return await AConnection.executeQueryResultSet({
             connection,
             transaction,
             sql: `
@@ -136,9 +142,5 @@ export class DBStructureReader {
                 return array;
             }
         });
-
-        const dbStructure = new DBStructure();
-        dbStructure.load(fields, relationFields, constraints);
-        return dbStructure;
     }
 }

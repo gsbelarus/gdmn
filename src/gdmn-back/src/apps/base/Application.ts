@@ -1,4 +1,4 @@
-import {AccessMode, AConnection, TExecutor} from "gdmn-db";
+import {AConnection, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
 import log4js from "log4js";
@@ -87,13 +87,11 @@ export abstract class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(session);
 
-        const result = await this.executeSessionConnection(session, (connection) => AConnection.executeTransaction({
+        const result = await this.executeSessionConnection(session,
+          (connection) => ERBridge.executeSelf({
             connection,
-            callback: (transaction) => ERBridge.executeSelf({
-              connection,
-              transaction,
-              callback: (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload))
-            })
+            transaction: connection.readTransaction,
+            callback: (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload))
           })
         );
         await context.checkStatus();
@@ -149,12 +147,7 @@ export abstract class Application extends ADatabase {
   private async _init(): Promise<void> {
     await this._executeConnection(async (connection) => {
       await ERBridge.initDatabase(connection);
-
-      await AConnection.executeTransaction({
-        connection,
-        options: {accessMode: AccessMode.READ_ONLY},
-        callback: (transaction) => ERBridge.reloadERModel(connection, transaction, this.erModel)
-      });
+      await ERBridge.reloadERModel(connection, connection.readTransaction, this.erModel);
     });
   }
 }

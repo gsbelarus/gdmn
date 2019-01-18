@@ -14,6 +14,7 @@ export interface IConnectionOptions {
     username: string;
     password: string;
     path: string;
+    readTransaction?: boolean;
 }
 
 export interface IExecuteConnectionOptions<R> extends IBaseExecuteOptions<AConnection, R> {
@@ -42,6 +43,8 @@ export interface IExecuteQueryResultSetOptions<R> extends IBaseExecuteOptions<AR
 
 export abstract class AConnection {
 
+    protected _readTransaction?: ATransaction;
+
     /**
      * Is the database connected.
      *
@@ -50,6 +53,13 @@ export abstract class AConnection {
      * false if the database was disconnected or not connected yet
      */
     abstract get connected(): boolean;
+
+    get readTransaction(): ATransaction {
+        if (!this._readTransaction) {
+            throw new Error("Read Transaction is not found");
+        }
+        return this._readTransaction;
+    }
 
     public static async executeSelf<Opt, R>(selfReceiver: TExecutor<null, AConnection>,
                                             callback: TExecutor<AConnection, R>): Promise<R> {

@@ -38,6 +38,12 @@
     },
     "user": "SYSDBA",
     "password": "masterkey",
-    "dir": "./databases"
+    "dir": "./databases",
+    "pool": {
+      "min": 0,
+      "max": 1E3,
+      "acquireTimeout": "60s",
+      "idleTimeout": "60s"
+    }
   }
 }
