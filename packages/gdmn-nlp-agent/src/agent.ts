@@ -1,4 +1,4 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP } from "gdmn-nlp";
+import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP, RusNumeralLexeme, NumeralValue } from "gdmn-nlp";
 import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryWhere } from "gdmn-orm";
 import { ICommand, Action} from "./command";
 import accepts = require("accepts");
@@ -56,14 +56,6 @@ export class ERTranslatorRU {
 
     const np = imperativeVP.imperativeNP;
 
-    const objectPP = (() => {
-      if (np.pp instanceof RusPP) {
-        return (np.pp as RusPP).noun;
-      } else {
-        return undefined;
-      }
-    })();
-
     const objectANP = (() => {
       if (np.noun instanceof RusANP) {
         return (np.noun as RusANP).noun;
@@ -87,6 +79,7 @@ export class ERTranslatorRU {
         .map(attr => new EntityQueryField(attr));
 
       let options;
+      let first: number | undefined;
       const or: IEntityQueryWhere[] = [];
       const equals: IEntityQueryWhereValue[] = [];
       if (np.noun instanceof RusANP) {
@@ -123,6 +116,13 @@ export class ERTranslatorRU {
           } else {
             throw new Error(`Can't find semantic category place for noun ${objectANP.word}`);
           }
+        }
+      }
+
+      if (np.noun instanceof RusNNP) {
+        const numeral = (np.noun as RusNNP).numr;
+        if ((numeral.lexeme as RusNumeralLexeme).numeralValue === NumeralValue.Quantitative) {
+          first = Number((numeral.lexeme as RusNumeralLexeme).digitalWrite);
         }
       }
 
@@ -195,9 +195,9 @@ export class ERTranslatorRU {
         }
       }
       if (or) {
-        options = new EntityQueryOptions(undefined, undefined, [{or: or}]);
+        options = new EntityQueryOptions(first, undefined, [{or: or}]);
       } else {
-      options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+      options = new EntityQueryOptions(first, undefined, [{equals}]);
       }
 
       const entityLink = new EntityLink(entity, "alias1", fields);
