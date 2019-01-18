@@ -17,6 +17,10 @@ export class BlobStream {
         this.handler = handler;
     }
 
+    get active(): boolean {
+        return !!this.handler;
+    }
+
     get length(): Promise<number> {
         return this.connection.client.statusAction(async (status) => {
             const infoReq = new Uint8Array([blobInfo.totalLength]);

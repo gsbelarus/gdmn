@@ -29,12 +29,12 @@ export class BlobImpl extends ABlob {
                 }
 
             } catch (error) {
-                if (blobStream) {
+                if (blobStream.active) {
                     await blobStream.cancel();
                 }
                 throw error;
             } finally {
-                if (blobStream) {
+                if (blobStream.active) {
                     await blobStream.close();
                 }
             }
@@ -52,12 +52,12 @@ export class BlobImpl extends ABlob {
                 return buffer;
 
             } catch (error) {
-                if (blobStream) {
+                if (blobStream.active) {
                     await blobStream.cancel();
                 }
                 throw error;
             } finally {
-                if (blobStream) {
+                if (blobStream.active) {
                     await blobStream.close();
                 }
             }
