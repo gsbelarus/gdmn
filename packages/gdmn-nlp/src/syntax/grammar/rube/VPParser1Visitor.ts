@@ -83,10 +83,10 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public imperativeNNPNumr = (ctx: any) => {
-    return ctx.NUMRInanSingAccs ? ctx.NUMRInanSingAccs[0].word
+    return ctx.NUMRInanMascSingAccs ? ctx.NUMRInanMascSingAccs[0].word
     : ctx.NUMRInanFemnSingAccs ? ctx.NUMRInanFemnSingAccs[0].word
     : ctx.NUMRInanNeutSingAccs ? ctx.NUMRInanNeutSingAccs[0].word
-    : ctx.NUMRAnimSingAccs ? ctx.NUMRAnimSingAccs[0].word
+    : ctx.NUMRAnimMascSingAccs ? ctx.NUMRAnimMascSingAccs[0].word
     : ctx.NUMRAnimFemnSingAccs ? ctx.NUMRAnimFemnSingAccs[0].word
     : ctx.NUMRAnimNeutSingAccs ? ctx.NUMRAnimNeutSingAccs[0].word
     : undefined;

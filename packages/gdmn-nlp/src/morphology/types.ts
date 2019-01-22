@@ -245,7 +245,8 @@ export const ShortNumeralCatagoryNames = [
 ];
 
 export type RusDeclensionNumeralZ  =
-  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6'     |'pqs7'     |'pqs8';
+  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6'     |'pqs7'     |'pqs8'     |'pqs9'
+  |'pqc'      |'pqc1'      |'pqc2'      |'pqc3'      |'pqc4';
 
   export type RusDeclensionNumeralZEnding = {
     declensionZ: RusDeclensionNumeralZ,
@@ -256,12 +257,14 @@ export interface RusNumeralInterface {
   readonly stem: string;
   readonly stem1: string;
   readonly stem2: string;
+  readonly stem3: string;
   readonly possiblePlural: boolean;
   readonly digitalWrite: string,
   readonly numeralValue: NumeralValue,
   readonly structure: NumeralStructure,
   readonly catagory?: NumeralCatagory,
   readonly declensionZ: RusDeclensionNumeralZ;
+  readonly declensionZ1?: RusDeclensionNumeralZ;
 }
 
 export type RusNumeralEnding = {
