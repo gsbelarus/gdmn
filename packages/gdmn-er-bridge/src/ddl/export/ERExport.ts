@@ -417,6 +417,10 @@ export class ERExport {
     }
 
     switch (fieldSource.fieldType) {
+      case 23: {    // TODO BOOLEAN FB 3
+        const defaultValue = default2Boolean(defaultValueSource);
+        return new BooleanAttribute({name, lName, required, defaultValue, semCategories, adapter});
+      }
       case FieldType.SMALL_INTEGER: {
         if (isCheckForBoolean(fieldSource.validationSource)) {
           const defaultValue = default2Boolean(defaultValueSource);
@@ -557,7 +561,7 @@ export class ERExport {
         return new BlobAttribute({name, lName, required, semCategories, adapter});
       }
       default:
-        throw new Error(`Unknown data type ${fieldSource}=${fieldSource.fieldType} for field ${relation.name}.${name}`);
+        throw new Error(`Unknown data type ${fieldSource.fieldType} for field ${relation.name}.${name}`);
     }
   }
 

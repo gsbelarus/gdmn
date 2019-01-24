@@ -92,7 +92,10 @@ export class DDLHelper {
     try {
       return await callback(ddlHelper);
     } finally {
-      console.debug(ddlHelper.logs.join("\n"));
+      const logs = ddlHelper.logs.join("\n");
+      if (logs) {
+        console.debug(logs);
+      }
       if (!ddlHelper.disposed) {
         await ddlHelper.dispose();
       }
@@ -114,12 +117,13 @@ export class DDLHelper {
   public async addSequence(sequenceName: string,
                            skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (ignore && await this._cachedStatements.isSequenceExists(sequenceName)) {
-      return;
+    if (!(ignore && await this._cachedStatements.isSequenceExists(sequenceName))) {
+      await this._loggedExecute(`CREATE SEQUENCE ${sequenceName}`);
+      await this._loggedExecute(`ALTER SEQUENCE ${sequenceName} RESTART WITH 0`);
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(`CREATE SEQUENCE ${sequenceName}`);
-    await this._loggedExecute(`ALTER SEQUENCE ${sequenceName} RESTART WITH 0`);
-    if (!skipAT) {
+
+    if (!skipAT && !(ignore && await this._cachedStatements.isGeneratorATExists(sequenceName))) {
       await this._cachedStatements.addToATGenerator({generatorName: sequenceName});
     }
   }
@@ -129,27 +133,32 @@ export class DDLHelper {
       return;
     }
     await this._loggedExecute(`DROP SEQUENCE ${sequenceName}`);
+    await this._transaction.commitRetaining();
+    // TODO remove from AT
   }
 
   public async addTable(tableName: string,
                         scalarFields: IFieldProps[],
                         skipAT: boolean = this._skipAT,
                         ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isTableExists(tableName)) {
-      return tableName;
+    if (!(ignore && await this._cachedStatements.isTableExists(tableName))) {
+      const fields = scalarFields.map((item) => (
+        `${item.name.padEnd(31)} ${item.domain.padEnd(31)} ${DDLHelper._getColumnProps(item)}`.trim()
+      ));
+      await this._loggedExecute(`CREATE TABLE ${tableName} (\n  ` + fields.join(",\n  ") + `\n)`);
+      await this._transaction.commitRetaining();
     }
-    const fields = scalarFields.map((item) => (
-      `${item.name.padEnd(31)} ${item.domain.padEnd(31)} ${DDLHelper._getColumnProps(item)}`.trim()
-    ));
-    await this._loggedExecute(`CREATE TABLE ${tableName} (\n  ` + fields.join(",\n  ") + `\n)`);
-    if (!skipAT) {
+
+    if (!skipAT && !(ignore && await this._cachedStatements.isTableATExists(tableName))) {
       await this._cachedStatements.addToATRelations({relationName: tableName});
       for (const field of scalarFields) {
-        await this._cachedStatements.addToATRelationField({
-          fieldName: field.name,
-          relationName: tableName,
-          fieldSource: field.domain
-        });
+        if (!(ignore && await this._cachedStatements.isColumnATExists(tableName, field.name))) {
+          await this._cachedStatements.addToATRelationField({
+            fieldName: field.name,
+            relationName: tableName,
+            fieldSource: field.domain
+          });
+        }
       }
     }
     return tableName;
@@ -158,13 +167,13 @@ export class DDLHelper {
   public async dropTable(tableName: string,
                          skipAT: boolean = this._skipAT,
                          ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (ignore
-      && !(await this._cachedStatements.isTableExists(tableName))) {
+    if (ignore && !(await this._cachedStatements.isTableExists(tableName))) {
       return;
     }
     await this._loggedExecute(`DROP TABLE ${tableName}`);
+    await this._transaction.commitRetaining();
 
-    if (!skipAT) {
+    if (!skipAT && !(ignore && !(await this._cachedStatements.isTableATExists(tableName)))) {
       await this._cachedStatements.dropATRelations({relationName: tableName});
     }
   }
@@ -178,6 +187,7 @@ export class DDLHelper {
       return;
     }
     await this._loggedExecute(`ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} CHECK (${check})`);
+    await this._transaction.commitRetaining();
   }
 
   public async addColumns(tableName: string,
@@ -185,18 +195,22 @@ export class DDLHelper {
                           skipAT: boolean = this._skipAT,
                           ignore: boolean = this._defaultIgnore): Promise<void> {
     for (const field of fields) {
-      if (ignore && await this._cachedStatements.isColumnExists(tableName, field.name)) {
-        continue;
+      if (!(ignore && await this._cachedStatements.isColumnExists(tableName, field.name))) {
+        const column = field.name.padEnd(31) + " " + field.domain.padEnd(31);
+        await this._loggedExecute(`ALTER TABLE ${tableName} ADD ${column} ${DDLHelper._getColumnProps(field)}`.trim());
       }
-      const column = field.name.padEnd(31) + " " + field.domain.padEnd(31);
-      await this._loggedExecute(`ALTER TABLE ${tableName} ADD ${column} ${DDLHelper._getColumnProps(field)}`.trim());
+    }
+    await this._transaction.commitRetaining();
 
-      if (!skipAT) {
-        await this._cachedStatements.addToATRelationField({
-          fieldName: field.name,
-          relationName: tableName,
-          fieldSource: field.domain
-        });
+    if (!skipAT) {
+      for (const field of fields) {
+        if (!(ignore && await this._cachedStatements.isColumnATExists(tableName, field.name))) {
+          await this._cachedStatements.addToATRelationField({
+            fieldName: field.name,
+            relationName: tableName,
+            fieldSource: field.domain
+          });
+        }
       }
     }
   }
@@ -205,14 +219,18 @@ export class DDLHelper {
                            fieldNames: string[],
                            skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<void> {
-    for (const field of fieldNames) {
-      if (ignore && !(await this._cachedStatements.isColumnExists(tableName, field))) {
-        return;
+    for (const fieldName of fieldNames) {
+      if (!(ignore && !(await this._cachedStatements.isColumnExists(tableName, fieldName)))) {
+        await this._loggedExecute(`ALTER TABLE ${tableName} DROP ${fieldName}`);
       }
-      await this._loggedExecute(`ALTER TABLE ${tableName} DROP ${field}`);
+    }
+    await this._transaction.commitRetaining();
 
-      if (!skipAT) {
-        await this._cachedStatements.dropATRelationField(field);
+    if (!skipAT) {
+      for (const fieldName of fieldNames) {
+        if (!(ignore && !(await this._cachedStatements.isColumnATExists(tableName, fieldName)))) {
+          await this._cachedStatements.dropATRelationField(fieldName);
+        }
       }
     }
   }
@@ -223,15 +241,15 @@ export class DDLHelper {
                            options: IIndexOptions = {},
                            skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isIndexExists(indexName)) {
-      return indexName;
+    if (!(ignore && await this._cachedStatements.isIndexExists(indexName))) {
+      const sortType = options.sortType || "";
+      const unique = options.unique ? "UNIQUE" : "";
+      const opt = `${unique} ${sortType}`.trim();
+      await this._loggedExecute(`CREATE ${opt} INDEX ${indexName} ON ${tableName} (${fieldNames.join(", ")})`);
+      await this._transaction.commitRetaining();
     }
-    const sortType = options.sortType || "";
-    const unique = options.unique ? "UNIQUE" : "";
-    const opt = `${unique} ${sortType}`.trim();
-    await this._loggedExecute(`CREATE ${opt} INDEX ${indexName} ON ${tableName} (${fieldNames.join(", ")})`);
 
-    if (!skipAT) {
+    if (!skipAT && !(ignore && await this._cachedStatements.isIndexATExists(indexName))) {
       await this._cachedStatements.addToATIndices({indexName: indexName, relationName: tableName});
     }
     return indexName;
@@ -241,12 +259,12 @@ export class DDLHelper {
                          skipAT: boolean = this._skipAT,
                          ignore: boolean = this._defaultIgnore): Promise<void> {
 
-    if (ignore && !(await this._cachedStatements.isIndexExists(indexName))) {
-      return;
+    if (!(ignore && !(await this._cachedStatements.isIndexExists(indexName)))) {
+      await this._loggedExecute(`DROP INDEX ${indexName}`);
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(`DROP INDEX ${indexName}`);
 
-    if (!skipAT) {
+    if (!skipAT && !(ignore && !(await this._cachedStatements.isIndexATExists(indexName)))) {
       await this._cachedStatements.dropATIndices({indexName: indexName});
     }
   }
@@ -255,11 +273,12 @@ export class DDLHelper {
                          tableName: string,
                          fieldNames: string[],
                          ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isConstraintExists(constraintName)) {
-      return constraintName;
+    if (!(ignore && await this._cachedStatements.isConstraintExists(constraintName))) {
+      const f = fieldNames.join(", ");
+      await this._loggedExecute(`ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} UNIQUE (${f})`);
+      await this._transaction.commitRetaining();
     }
-    const f = fieldNames.join(", ");
-    await this._loggedExecute(`ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} UNIQUE (${f})`);
+
     return constraintName;
   }
 
@@ -267,21 +286,22 @@ export class DDLHelper {
                              tableName: string,
                              fieldNames: string[],
                              ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isConstraintExists(constraintName)) {
-      return constraintName;
+    if (!(ignore && await this._cachedStatements.isConstraintExists(constraintName))) {
+      const pk = fieldNames.join(", ");
+      await this._loggedExecute(`ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} PRIMARY KEY (${pk})`);
+      await this._transaction.commitRetaining();
     }
-    const pk = fieldNames.join(", ");
-    await this._loggedExecute(`ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} PRIMARY KEY (${pk})`);
+
     return constraintName;
   }
 
   public async dropConstraint(constraintName: string,
                               tableName: string,
                               ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (ignore && !(await this._cachedStatements.isConstraintExists(constraintName))) {
-      return;
+    if (!(ignore && !(await this._cachedStatements.isConstraintExists(constraintName)))) {
+      await this._loggedExecute(`ALTER TABLE ${tableName} DROP CONSTRAINT ${constraintName}`);
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(`ALTER TABLE ${tableName} DROP CONSTRAINT ${constraintName}`);
   }
 
   public async addForeignKey(constraintName: string,
@@ -289,15 +309,16 @@ export class DDLHelper {
                              to: IRelation,
                              options: IFKOptions = DDLHelper.DEFAULT_FK_OPTIONS,
                              ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isConstraintExists(constraintName)) {
-      return constraintName;
+    if (!(ignore && await this._cachedStatements.isConstraintExists(constraintName))) {
+      await this._loggedExecute(
+        `ALTER TABLE ${from.tableName} ADD CONSTRAINT ${constraintName} FOREIGN KEY (${from.fieldName}) ` +
+        `REFERENCES ${to.tableName} (${to.fieldName}) ` +
+        (options.onUpdate ? `ON UPDATE ${options.onUpdate} ` : "") +
+        (options.onDelete ? `ON DELETE ${options.onDelete} ` : "")
+      );
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(
-      `ALTER TABLE ${from.tableName} ADD CONSTRAINT ${constraintName} FOREIGN KEY (${from.fieldName}) ` +
-      `REFERENCES ${to.tableName} (${to.fieldName}) ` +
-      (options.onUpdate ? `ON UPDATE ${options.onUpdate} ` : "") +
-      (options.onDelete ? `ON DELETE ${options.onDelete} ` : "")
-    );
+
     return constraintName;
   }
 
@@ -305,13 +326,13 @@ export class DDLHelper {
                          props: IDomainProps,
                          skipAT: boolean = this._skipAT,
                          ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isDomainExists(domainName)) {
-      return domainName;
+    if (!(ignore && await this._cachedStatements.isDomainExists(domainName))) {
+      await this._loggedExecute(`CREATE DOMAIN ${domainName.padEnd(31)} AS ${props.type.padEnd(31)}` +
+        DDLHelper._getColumnProps(props));
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(`CREATE DOMAIN ${domainName.padEnd(31)} AS ${props.type.padEnd(31)}` +
-      DDLHelper._getColumnProps(props));
 
-    if (!skipAT) {
+    if (!skipAT && !(ignore && await this._cachedStatements.isDomainATExists(domainName))) {
       await this._cachedStatements.addToATFields({fieldName: domainName});
     }
     return domainName;
@@ -320,12 +341,12 @@ export class DDLHelper {
   public async dropDomain(domainName: string,
                           skipAT: boolean = this._skipAT,
                           ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (ignore && !(await this._cachedStatements.isDomainExists(domainName))) {
-      return;
+    if (!(ignore && !(await this._cachedStatements.isDomainExists(domainName)))) {
+      await this._loggedExecute(`DROP DOMAIN ${domainName}`);
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(`DROP DOMAIN ${domainName}`);
 
-    if (!skipAT) {
+    if (!skipAT && !(ignore && !(await this._cachedStatements.isDomainATExists(domainName)))) {
       await this._cachedStatements.dropATFields({fieldName: domainName});
     }
   }
@@ -336,10 +357,8 @@ export class DDLHelper {
                                        sequenceName: string,
                                        skipAT: boolean = this._skipAT,
                                        ignore: boolean = this._defaultIgnore): Promise<string> {
-    if (ignore && await this._cachedStatements.isTriggerExists(triggerName)) {
-      return triggerName;
-    }
-    await this._loggedExecute(`
+    if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
+      await this._loggedExecute(`
       CREATE TRIGGER ${triggerName} FOR ${tableName}
         ACTIVE BEFORE INSERT POSITION 0
       AS
@@ -347,8 +366,10 @@ export class DDLHelper {
         IF (NEW.${fieldName} IS NULL) THEN NEW.${fieldName} = NEXT VALUE FOR ${sequenceName};
       END
     `);
+      await this._transaction.commitRetaining();
+    }
 
-    if (!skipAT) {
+    if (!skipAT && !(ignore && await this._cachedStatements.isTriggerATExists(triggerName))) {
       await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
     }
     return triggerName;
@@ -357,13 +378,13 @@ export class DDLHelper {
   public async dropTrigger(triggerName: string,
                            skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (ignore && !(await this._cachedStatements.isTriggerExists(triggerName))) {
-      return;
+    if (!(ignore && !(await this._cachedStatements.isTriggerExists(triggerName)))) {
+      await this._loggedExecute(`DROP TRIGGER ${triggerName}`);
+      await this._transaction.commitRetaining();
     }
-    await this._loggedExecute(`DROP TRIGGER ${triggerName}`);
 
-    if (!skipAT) {
-      await this._cachedStatements.dropATTriggers({triggerName: triggerName});
+    if (!skipAT && !(ignore && !(await this._cachedStatements.isTriggerATExists(triggerName)))) {
+      await this._cachedStatements.dropATTriggers({triggerName});
     }
   }
 
