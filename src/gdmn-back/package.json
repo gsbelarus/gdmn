@@ -39,7 +39,7 @@
     "koa-send": "^5",
     "koa-static": "^5",
     "koa2-cors": "^2",
-    "log4js": "^3",
+    "log4js": "^4",
     "ms": "^2",
     "stomp-protocol": "^0",
     "strict-event-emitter-types": "^2",
