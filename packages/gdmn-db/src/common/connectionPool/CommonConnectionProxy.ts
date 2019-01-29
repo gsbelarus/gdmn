@@ -18,7 +18,7 @@ export class CommonConnectionProxy extends AConnection {
     }
 
     get connected(): boolean {
-        if (!this._connection || !this.isBorrowed()) {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
             return false;
         }
         return this._connection.connected;
@@ -70,20 +70,20 @@ export class CommonConnectionProxy extends AConnection {
             throw new Error("Need database connection");
         }
 
-        if (this.isBorrowed()) {
+        if (this._pool.isBorrowedResource(this)) {
             await this._pool.release(this);
         }
     }
 
     public async startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
-        if (!this._connection || !this.isBorrowed()) {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.startTransaction(options);
     }
 
     public async prepare(transaction: ATransaction, sql: string): Promise<AStatement> {
-        if (!this._connection || !this.isBorrowed()) {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.prepare(transaction, sql);
@@ -92,14 +92,14 @@ export class CommonConnectionProxy extends AConnection {
     public async executeQuery(transaction: ATransaction,
                               sql: string,
                               params?: IParams): Promise<AResultSet> {
-        if (!this._connection || !this.isBorrowed()) {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.executeQuery(transaction, sql, params);
     }
 
     public async execute(transaction: ATransaction, sql: string, params?: IParams): Promise<void> {
-        if (!this._connection || !this.isBorrowed()) {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         await this._connection.execute(transaction, sql, params);
@@ -108,13 +108,9 @@ export class CommonConnectionProxy extends AConnection {
     public async executeReturning(transaction: ATransaction,
                                   sql: string,
                                   params?: IParams): Promise<Result> {
-        if (!this._connection || !this.isBorrowed()) {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.executeReturning(transaction, sql, params);
-    }
-
-    private isBorrowed(): boolean {
-        return this._pool.isBorrowedResource(this);
     }
 }
