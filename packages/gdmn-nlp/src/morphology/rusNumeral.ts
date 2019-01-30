@@ -6,7 +6,7 @@ import { RusNumeralZEndings } from "./rusNumeralEndings";
 export class RusNumeralLexeme extends NumeralLexeme {
   public readonly stem3: string;
   public readonly possiblePlural: boolean;
-  public readonly digitalWrite: string;
+  public digitalWrite: string;
   public readonly numeralValue: NumeralValue;
   public readonly structure: NumeralStructure;
   public readonly declensionZ: RusDeclensionNumeralZ;

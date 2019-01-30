@@ -1,6 +1,6 @@
 import { VPParser1 } from "./VPParser1";
-import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusNNP } from "../../rusSyntax";
-import { tokenToWordOrHomogeneous } from "../../parser";
+import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusNNP, RusCN } from "../../rusSyntax";
+import { tokenToWordOrHomogeneous, tokenToWordOrCompositeNumerals } from "../../parser";
 
 export const vpParser1 = new VPParser1();
 
@@ -62,12 +62,21 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
   
   public qualImperativeNNPNoun = (ctx: any) => {
+      const impCN = this.visit(ctx.imperativeNNPNumr);
       const impN = this.visit(ctx.imperativeNNPNoun);
 
       if (Array.isArray(impN)) {
-        return new RusNNP(this.visit(ctx.imperativeNNPNumr), new RusHmNouns(impN));
+        if (Array.isArray(impCN)) {
+          return new RusNNP(new RusCN(impCN), new RusHmNouns(impN));
+        } else {
+          return new RusNNP( impCN, new RusHmNouns(impN));
+        }
       } else {
-        return new RusNNP(this.visit(ctx.imperativeNNPNumr), impN);
+        if (Array.isArray(impCN)) {
+          return new RusNNP(new RusCN(impCN), impN);
+        } else {
+          return new RusNNP(impCN, impN);
+        }
       };
   }
 
@@ -83,13 +92,14 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public imperativeNNPNumr = (ctx: any) => {
-    return ctx.NUMRInanMascSingAccs ? ctx.NUMRInanMascSingAccs[0].word
-    : ctx.NUMRInanFemnSingAccs ? ctx.NUMRInanFemnSingAccs[0].word
-    : ctx.NUMRInanNeutSingAccs ? ctx.NUMRInanNeutSingAccs[0].word
-    : ctx.NUMRAnimMascSingAccs ? ctx.NUMRAnimMascSingAccs[0].word
-    : ctx.NUMRAnimFemnSingAccs ? ctx.NUMRAnimFemnSingAccs[0].word
-    : ctx.NUMRAnimNeutSingAccs ? ctx.NUMRAnimNeutSingAccs[0].word
-    : undefined;
+    return tokenToWordOrCompositeNumerals(ctx.NUMRInanMascSingAccs ? ctx.NUMRInanMascSingAccs[0]
+    : ctx.NUMRInanFemnSingAccs ? ctx.NUMRInanFemnSingAccs[0]
+    : ctx.NUMRInanNeutSingAccs ? ctx.NUMRInanNeutSingAccs[0]
+    : ctx.NUMRAnimMascSingAccs ? ctx.NUMRAnimMascSingAccs[0]
+    : ctx.NUMRAnimFemnSingAccs ? ctx.NUMRAnimFemnSingAccs[0]
+    : ctx.NUMRAnimNeutSingAccs ? ctx.NUMRAnimNeutSingAccs[0]
+    : ctx.NUMRInanPlurGent ? ctx.NUMRInanPlurGent[0]
+    : undefined);
   }
   
   public imperativeNNPNoun = (ctx: any) => {

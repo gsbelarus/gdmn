@@ -1733,6 +1733,205 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
+    declensionZ: 'pqs10', 
+    endings: [
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // миллиона
+      {
+        ending: 'а',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // миллиону
+      {
+        ending: 'у',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: true,
+      },
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: false,
+      },
+      // миллионом
+      {
+        ending: 'ом',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // миллионе
+      {
+        ending: 'е',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // миллиона
+      {
+        ending: 'а',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // миллиону
+      {
+        ending: 'у',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: true,
+      },
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: false,
+      },
+      // миллионом
+      {
+        ending: 'ом',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // миллионе
+      {
+        ending: 'е',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // миллиона
+      {
+        ending: 'а',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // миллиону
+      {
+        ending: 'у',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // миллион
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: true,
+      },
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: false,
+      },
+      // миллионом
+      {
+        ending: 'ом',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // миллионе
+      {
+        ending: 'е',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // миллионы
+      {
+        ending: 'ы',
+        c: RusCase.Nomn,
+        singular: false,
+      },
+      // миллионов
+      {
+        ending: 'ов',
+        c: RusCase.Gent,
+        singular: false,
+      },
+      // миллионам
+      {
+        ending: 'ам',
+        c: RusCase.Datv,
+        singular: false,
+      },
+      // миллионы
+      {
+        ending: 'ы',
+        c: RusCase.Accs,
+        singular: false,
+        animate: true,
+      },
+      {
+        ending: 'ы',
+        c: RusCase.Accs,
+        singular: false,
+        animate: false,
+      },
+      // миллионами
+      {
+        ending: 'ами',
+        c: RusCase.Ablt,
+        singular: false,
+      },
+      // миллионах
+      {
+        ending: 'ах',
+        c: RusCase.Loct,
+        singular: false,
+      },
+    ]
+  },
+  {
     declensionZ: 'pqc', 
     endings:[
       // десят

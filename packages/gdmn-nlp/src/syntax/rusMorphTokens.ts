@@ -13,11 +13,11 @@ export const morphTokens = (() => {
 
   const signatures = [
     'VERBTranPerfSingImpr',
+    'Numeric',
     'VERBTranImpfSingImpr',
     'ADVBGoal',
     'Comma',
-    'CONJ',
-    'Numeric'
+    'CONJ'
   ];
 
   [true, false].forEach( an =>

@@ -19,5 +19,8 @@ test('tokenizer', () => {
   const tokens6 = tokenize('отсортируй по названию, затем по адресу');
   expect(tokens6.length).toEqual(12);
   expect(tokens6[5].tokenType!.name).toEqual('Comma');
-});
 
+  const tokens7 = tokenize('покажи 342 организации');
+  expect(tokens7.length).toEqual(5);
+  expect(tokens7[2].tokenType!.name).toEqual('Numeric');
+});

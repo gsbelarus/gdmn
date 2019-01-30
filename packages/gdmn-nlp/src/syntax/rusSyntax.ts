@@ -108,12 +108,16 @@ export class RusANP extends RusPhrase {
 }
 
 export class RusNNP extends RusPhrase {
-  constructor (numr: RusNumeral, noun: RusNoun | RusHmNouns) {
+  constructor (numr: RusNumeral | RusCN, noun: RusNoun | RusHmNouns) {
     super([numr, noun]);
   }
 
   get numr(): RusNumeral {
-    return this.items[0] as RusNumeral;
+    if (this.items[0] instanceof RusCN) {
+      return (this.items[0] as RusCN).items[0] as RusNumeral;
+    } else {
+      return this.items[0] as RusNumeral;
+    }
   }
 
   get noun(): RusNoun {
@@ -128,6 +132,23 @@ export class RusNNP extends RusPhrase {
     return {
       label: 'RusNNP',
       description: 'Словосочетание числительное-существительное'
+    }
+  }
+}
+
+export class RusCN extends RusPhrase {
+  constructor (numerals: AnyWord[]) {
+    if (!numerals.length || !(numerals[0] instanceof RusNumeral)) {
+      throw new Error(`Invalid composite numeral`);
+    }
+
+    super(numerals as RusWord[]);
+  }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusCN',
+      description: 'Составное числительное'
     }
   }
 }

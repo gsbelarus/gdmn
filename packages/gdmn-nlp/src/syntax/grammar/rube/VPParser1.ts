@@ -72,6 +72,7 @@ export class VPParser1 extends Parser implements IDescribedParser {
       { ALT: () => this.CONSUME(morphTokens.NUMRAnimMascSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRAnimFemnSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRAnimNeutSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRInanPlurGent)},
     ]);
   });
 

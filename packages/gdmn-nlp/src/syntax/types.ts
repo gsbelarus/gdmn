@@ -4,6 +4,7 @@ import { AnyWord } from "../morphology/morphology";
 export interface IMorphToken extends IToken {
   word: AnyWord;
   hsm?: AnyWord[][];
+  cn?: AnyWord[][];
 };
 
 export interface ParserName {
