@@ -1,6 +1,6 @@
-import config from "config";
-import ms from "ms";
-import path from "path";
+import config from 'config';
+import ms from 'ms';
+import path from 'path';
 
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
@@ -12,6 +12,10 @@ export class Constants {
   public static readonly NODE_ENV = process.env.NODE_ENV;
 
   public static readonly SERVER = {
+    CLUSTER: {
+      ENABLED: config.get("server.cluster.enabled") as boolean,
+      WORKERS_COUNT: config.get("server.cluster.workersCount") as number
+    },
     HTTP: {
       ENABLED: config.get("server.http.host") as boolean,
       HOST: (process.env.HTTP_HOST ? process.env.HTTP_HOST : config.get("server.http.host")) as string,

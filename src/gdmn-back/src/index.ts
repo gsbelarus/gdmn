@@ -1,19 +1,23 @@
-import http, {Server as HttpServer} from "http";
-import {Server as HttpsServer} from "https";
-import Koa from "koa";
-import koaBody from "koa-body";
-import errorHandler from "koa-error";
-import logger from "koa-logger";
-import Router from "koa-router";
-import send from "koa-send";
-import serve from "koa-static";
-import cors from "koa2-cors";
-import log4js from "log4js";
-import path from "path";
-import WebSocket from "ws";
-import {Constants} from "./Constants";
-import {checkHandledError, ErrorCodes, throwCtx} from "./ErrorCodes";
-import {StompManager} from "./stomp/StompManager";
+import url from 'url';
+import os from 'os';
+import cluster, { Worker } from 'cluster';
+import http, { Server as HttpServer } from 'http';
+import { Server as HttpsServer } from 'https';
+import Koa from 'koa';
+import koaBody from 'koa-body';
+import errorHandler from 'koa-error';
+import logger from 'koa-logger';
+import Router from 'koa-router';
+import send from 'koa-send';
+import serve from 'koa-static';
+import cors from 'koa2-cors';
+import log4js from 'log4js';
+import path from 'path';
+import WebSocket from 'ws';
+import { Constants } from './Constants';
+import { checkHandledError, ErrorCodes, throwCtx } from './ErrorCodes';
+import { StompManager } from './stomp/StompManager';
+import { StompSession } from './stomp/StompSession';
 
 interface IServer {
   stompManager: StompManager;
@@ -24,8 +28,14 @@ interface IServer {
 log4js.configure("./config/log4js.json");
 const defaultLogger = log4js.getLogger();
 
+
 async function create(): Promise<IServer> {
-  const stompManager = new StompManager();
+
+  const stompSessionMeta = Constants.SERVER.CLUSTER.ENABLED ? {
+    workerPid: process.pid.toString()
+  } : undefined;
+
+  const stompManager = new StompManager(stompSessionMeta);
   await stompManager.create();
 
   const serverApp = new Koa()
@@ -66,8 +76,16 @@ async function create(): Promise<IServer> {
     .use(router.allowedMethods())
     .use((ctx) => throwCtx(ctx, 404, "Not found", ErrorCodes.NOT_FOUND));
 
-  const httpServer = startHttpServer(serverApp);
-  const wsHttpServer = startWebSocketServer(stompManager, httpServer);
+  const httpServer = createHttpServer(serverApp);
+  if (!httpServer) throw new Error("Cluster mode need a http server");
+
+  let wsHttpServer;
+  if (!Constants.SERVER.CLUSTER.ENABLED) {
+    httpServer.listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST);
+    wsHttpServer = startWebSocketServer(stompManager, httpServer);
+  } else {
+    wsHttpServer = startClusterServer(httpServer, () => startWebSocketServer(stompManager));
+  }
 
   return {
     stompManager,
@@ -76,40 +94,181 @@ async function create(): Promise<IServer> {
   };
 }
 
-function startWebSocketServer(stompManager: StompManager,
-                              server?: HttpServer | HttpsServer): WebSocket.Server | undefined {
-  if (server) {
-    const wsServer = new WebSocket.Server({server});
-    wsServer.on("connection", (webSocket) => {
-      defaultLogger.info("WebSocket event: 'connection'");
-      if (stompManager.add(webSocket)) {
-        webSocket.on("close", () => {
-          defaultLogger.info("WebSocket event: 'close'");
-          stompManager.delete(webSocket);
-        });
-      }
-    });
-    return wsServer;
-  }
-}
-
-function startHttpServer(serverApp: Koa): HttpServer | undefined {
+function createHttpServer(serverApp: Koa): HttpServer | undefined {
   let httpServer: HttpServer | undefined;
   if (Constants.SERVER.HTTP.ENABLED) {
-    httpServer = http.createServer(serverApp.callback());
-    httpServer.listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST);
-    httpServer.on("error", serverErrorHandler);
-    httpServer.on("listening", () => {
-      const address = httpServer!.address();
-      if (typeof address === "string") {
-        defaultLogger.info(`Listening ${httpServer!.address()}`);
-      } else {
-        defaultLogger.info(`Listening on http://%s:%s;` +
-          ` env: %s`, address.address, address.port, process.env.NODE_ENV);
-      }
-    });
+    httpServer = http.createServer(serverApp.callback())
+      .on("error", serverErrorHandler)
+      .on("listening", () => {
+        const address = httpServer!.address();
+        if (typeof address === "string") {
+          defaultLogger.info(`Listening ${httpServer!.address()}`);
+        } else {
+          defaultLogger.info(`Listening on http://%s:%s;` +
+            ` env: %s`, address.address, address.port, process.env.NODE_ENV);
+        }
+      })
   }
   return httpServer;
+}
+
+function startWebSocketServer(stompManager: StompManager,
+                              server?: HttpServer | HttpsServer): WebSocket.Server {
+  const wsServer = new WebSocket.Server(server ? {
+    server
+  } : {
+    noServer: true,
+    perMessageDeflate: false // todo
+  });
+
+  return wsServer.on("connection", (webSocket) => {
+    defaultLogger.info("WebSocket event: 'connection'");
+
+    if (stompManager.add(webSocket)) {
+      webSocket.on("close", () => {
+        defaultLogger.info("WebSocket event: 'close'");
+        stompManager.delete(webSocket);
+      });
+    }
+  });
+}
+
+function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServer: ()=>WebSocket.Server): WebSocket.Server | undefined {
+  const MASTER_SEND_SOCKET_MSG_TYPE = "cluster:master:send-socket";
+
+  if (cluster.isMaster) {
+    // console.log(`Master ${process.pid} is running`);
+
+    const roundRobinIterator = (array: any[]) => {
+      let index = 0;
+      return () => {
+        if (index >= array.length) index = 0;
+        return array[index++];
+      }
+    };
+
+    let getNextWorker = ()=>({});
+
+    /* worker undefined - send to next worker */
+    const sendSocketToWorker = (socket: any, request: any, head: any, workerIndex: string | null = null) => {
+      const worker = <Worker>(workerIndex === null ? getNextWorker() : cluster.workers[workerIndex]);
+
+      console.log("workerId:", worker.id);
+
+      worker.send({ type: MASTER_SEND_SOCKET_MSG_TYPE, payload: { request, head } }, socket);
+    };
+
+    const createWorker = () => cluster.fork();
+
+    let clusterServerRunning = false;
+
+    clusterServer
+      .on("connection", socket => {
+      /* net.server pauseOnConnect */
+      socket.pause();
+    })
+      .on("upgrade", (request, socket, head) => {
+        request.pause(); // todo ?
+
+        /* choose a worker */
+
+        let workerIndex = null;
+        /* url = /?appId=1&userId=2&sessionId=3 */
+        const reqSearchParams = new URLSearchParams(url.parse(request.url, true).search);
+        if (reqSearchParams.has("session")) {
+          try {
+            const pidStr = StompSession.parseSessionMessageHeader(reqSearchParams.get("session") || '').meta.workerPid;
+            if (pidStr) {
+              console.log("->pid: ", pidStr);
+              const pid = Number.parseInt(pidStr);
+              for (const wid in cluster.workers) {
+                if (cluster.workers[wid]!.process.pid === pid) {
+                  workerIndex = wid;
+                  break;
+                }
+              }
+            }
+          } catch (e) {}
+        }
+
+        sendSocketToWorker(
+          socket,
+          {
+            headers: request.headers,
+            method: request.method
+          },
+          head,
+          workerIndex
+        );
+
+        request.resume();
+      })
+      .on("close", () => {
+        // console.log('Workers  stop..');
+        clusterServerRunning = false;
+        for (const wid in cluster.workers) {
+          cluster.workers[wid]!.kill(); // todo timeout force stop
+        }
+        // console.log('Master  ..stopped');
+      })
+      .listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST, () => {
+        // console.log('Http server started');
+
+        clusterServerRunning = true;
+
+        const workersCount = Constants.SERVER.CLUSTER.WORKERS_COUNT > 0
+          ? Constants.SERVER.CLUSTER.WORKERS_COUNT
+          : os.cpus().length;
+        new Array(workersCount).fill(0).forEach(() => createWorker());
+
+        getNextWorker = roundRobinIterator(Object.values(cluster.workers));
+      });
+
+    /* graceful shutdown */
+
+    const onExit = () => {
+      // console.log('onExit');
+      cluster.removeAllListeners("exit"); // todo
+    };
+    process.on("SIGINT", onExit);
+    process.on("SIGTERM", onExit);
+
+    cluster.on("exit", (worker, code, signal) => {
+      // console.log(`master<-[${worker.id}]-worker ${worker.process.pid} died`);
+
+      if (clusterServerRunning) {
+        createWorker(); // todo setTimeout(() => createWorker(), 1000);
+      }
+    });
+
+    return;
+  }
+
+  /* cluster.isWorker */
+
+  // console.log(`Worker [${cluster.worker.id}] ${process.pid} started`);
+
+  const wss = startWsServer();
+
+  process.on("message", (message, socket) => {
+    /* msgs from master */
+    if (!message.type || !socket) return;
+
+    if (message.type === MASTER_SEND_SOCKET_MSG_TYPE) {
+      // console.log(`[${cluster.worker.id}] on MASTER_SEND_SOCKET_MSG`);
+
+      /* emulate connection event */
+      wss.handleUpgrade(message.payload.request, socket, Buffer.from([]), ws => {
+        // todo message.payload.head
+        wss.emit("connection", ws, message.payload.request);
+      });
+
+      /* resume as we already catched connection */
+      socket.resume();
+    }
+  });
+
+  return wss;
 }
 
 const creating = create();
