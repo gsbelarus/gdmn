@@ -2721,4 +2721,616 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
       },
     ]
   },
+  // первый (перв)
+  {
+    declensionZ: '1a',
+    endings:
+      [
+      // перввый
+      {
+        ending: 'ый',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // первого
+      {
+        ending: 'ого',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // первому
+      {
+        ending: 'ому',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // первого
+      {
+        ending: 'ого',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: true,
+      },
+      // первый
+      {
+        ending: 'ый',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: false,
+      },
+      // первым
+      {
+        ending: 'ым',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // первом
+      {
+        ending: 'ом',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // первая
+      {
+        ending: 'ая',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // первой
+      {
+        ending: 'ой',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // первой
+      {
+        ending: 'ой',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // первую
+      {
+        ending: 'ую',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: true,
+      },
+      // первую
+      {
+        ending: 'ую',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: false,
+      },      
+      // первой
+      {
+        ending: 'ой',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // первой
+      {
+        ending: 'ой',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // первое
+      {
+        ending: 'ое',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // первого
+      {
+        ending: 'ого',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // первому
+      {
+        ending: 'ому',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // первое
+      {
+        ending: 'ое',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: true,
+      },
+      // первое
+      {
+        ending: 'ое',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: false,
+      },
+      // первым
+      {
+        ending: 'ым',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // первом
+      {
+        ending: 'ом',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // первые
+      {
+        ending: 'ые',
+        c: RusCase.Nomn,
+        singular: false,
+      },
+      // первых
+      {
+        ending: 'ых',
+        c: RusCase.Gent,
+        singular: false,
+      },
+      // первым
+      {
+        ending: 'ым',
+        c: RusCase.Datv,
+        singular: false,
+      },
+      // первых
+      {
+        ending: 'ых',
+        c: RusCase.Accs,
+        singular: false,
+        animate: true,
+      },
+      // первые
+      {
+        ending: 'ые',
+        c: RusCase.Accs,
+        singular: false,
+        animate: false,
+      },
+      // первыми
+      {
+        ending: 'ыми',
+        c: RusCase.Ablt,
+        singular: false,
+      },
+      // первых
+      {
+        ending: 'ых',
+        c: RusCase.Loct,
+        singular: false,
+      },
+      ]
+  },
+  // второй (втор)
+  {
+    declensionZ: '1b',
+    endings:
+      [
+      // второй
+      {
+        ending: 'ой',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // второго
+      {
+        ending: 'ого',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // второму
+      {
+        ending: 'ому',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // второго
+      {
+        ending: 'ого',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: true,
+      },
+      //второй
+      {
+        ending: 'ой',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: false,
+      },
+      // вторым
+      {
+        ending: 'ым',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // втором
+      {
+        ending: 'ом',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // вторая
+      {
+        ending: 'ая',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // второй
+      {
+        ending: 'ой',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // второй
+      {
+        ending: 'ой',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // вторую
+      {
+        ending: 'ую',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: true,
+      },
+      // вторю
+      {
+        ending: 'ую',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: false,
+      },
+      // второй
+      {
+        ending: 'ой',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // второй
+      {
+        ending: 'ой',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // второе
+      {
+        ending: 'ое',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // второго
+      {
+        ending: 'ого',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // второму
+      {
+        ending: 'ому',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // второе
+      {
+        ending: 'ое',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: true,
+      },
+      // второе
+      {
+        ending: 'ое',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: false,
+      },
+      // вторым
+      {
+        ending: 'ым',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // втором
+      {
+        ending: 'ом',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // вторые
+      {
+        ending: 'ые',
+        c: RusCase.Nomn,
+        singular: false,
+      },
+      // вторых
+      {
+        ending: 'ых',
+        c: RusCase.Gent,
+        singular: false,
+      },
+      // вторым
+      {
+        ending: 'ым',
+        c: RusCase.Datv,
+        singular: false,
+      },
+      // вторых
+      {
+        ending: 'ых',
+        c: RusCase.Accs,
+        singular: false,
+        animate: true,
+      },
+      // вторые
+      {
+        ending: 'ые',
+        c: RusCase.Accs,
+        singular: false,
+        animate: false,
+      },
+      // вторыми
+      {
+        ending: 'ыми',
+        c: RusCase.Ablt,
+        singular: false,
+      },
+      // вторых
+      {
+        ending: 'ых',
+        c: RusCase.Loct,
+        singular: false,
+      },
+    ]
+  },
+  // третий (трет)
+  {
+    declensionZ: '6*a',
+    endings:
+      [
+      // третий
+      {
+        ending: 'ий',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // третьего
+      {
+        ending: 'ьего',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // третьему
+      {
+        ending: 'ьему',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // третего
+      {
+        ending: 'его',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: true,
+      },
+      // третий
+      {
+        ending: 'ий',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Masc,
+        animate: false,
+      },
+      // третьим
+      {
+        ending: 'ьим',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // третьем
+      {
+        ending: 'ьем',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Masc,
+      },
+      // третье
+      {
+        ending: 'ье',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // третьего
+      {
+        ending: 'ьего',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // третьему
+      {
+        ending: 'ьему',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // третье
+      {
+        ending: 'ье',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: true,
+      },
+      // трет
+      {
+        ending: 'ье',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Neut,
+        animate: false,
+      },
+      // третьим
+      {
+        ending: 'ьим',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // третьем
+      {
+        ending: 'ьем',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Neut,
+      },
+      // третья
+      {
+        ending: 'ья',
+        c: RusCase.Nomn,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // третьей
+      {
+        ending: 'ьей',
+        c: RusCase.Gent,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // третьей
+      {
+        ending: 'ьей',
+        c: RusCase.Datv,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // третью
+      {
+        ending: 'ью',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: true,
+      },
+      // третью
+      {
+        ending: 'ью',
+        c: RusCase.Accs,
+        singular: true,
+        gender: RusGender.Femn,
+        animate: false,
+      },
+      // третьей
+      {
+        ending: 'ьей',
+        c: RusCase.Ablt,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // третом
+      {
+        ending: 'ом',
+        c: RusCase.Loct,
+        singular: true,
+        gender: RusGender.Femn,
+      },
+      // третьи
+      {
+        ending: 'ьи',
+        c: RusCase.Nomn,
+        singular: false,
+      },
+      // третьих
+      {
+        ending: 'ьих',
+        c: RusCase.Gent,
+        singular: false,
+      },
+      // третьим
+      {
+        ending: 'ьим',
+        c: RusCase.Datv,
+        singular: false,
+      },
+      // третьих
+      {
+        ending: 'ьих',
+        c: RusCase.Accs,
+        singular: false,
+        animate: true,
+      },
+      // третьи
+      {
+        ending: 'ьи',
+        c: RusCase.Accs,
+        singular: false,
+        animate: false,
+      },
+      // третьими
+      {
+        ending: 'ьими',
+        c: RusCase.Ablt,
+        singular: false,
+      },
+      // третьих
+      {
+        ending: 'ьих',
+        c: RusCase.Loct,
+        singular: false,
+      },
+      ]
+  },
 ];

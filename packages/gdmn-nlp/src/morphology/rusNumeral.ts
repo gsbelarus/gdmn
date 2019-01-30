@@ -61,6 +61,24 @@ export class RusNumeralLexeme extends NumeralLexeme {
         throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
       }
 
+      if (this.numeralValue === NumeralValue.Orinal) {
+        const endingOrinalNumeral = declZEnding.endings.find( e => e.c === RusCase.Gent
+          && e.gender === RusGender.Femn
+          && e.singular === true);
+        if (!endingOrinalNumeral) {
+          throw 'Numeral ending not found ';
+        }
+        if(this.declensionZ === 'pqs5' && this.stem1) {
+          if (this.stem3) {
+            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
+          } else {
+            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem2 + ending1.ending, this, morphSigns);
+          }
+        } else {
+          return new RusNumeral(this.stem + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
+        }
+      }
+
       if (morphSigns.singular && (this.declensionZ === 'pqs4' || this.declensionZ === 'pqs5') && this.declensionZ1 === 'pqc1') {
         if(morphSigns.c === RusCase.Datv || morphSigns.c === RusCase.Ablt || morphSigns.c === RusCase.Loct) {
           if(this.declensionZ === 'pqs5') {
