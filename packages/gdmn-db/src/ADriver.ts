@@ -7,6 +7,8 @@ import {DBStructure} from "./DBStructure";
 
 export abstract class ADriver<PoolOptions = any> {
 
+    public readonly abstract name: string;
+
     /** Reade database structure as DBStructure object */
     public async readDBStructure(connection: AConnection, transaction?: ATransaction): Promise<DBStructure> {
         throw new Error("Unsupported yet");

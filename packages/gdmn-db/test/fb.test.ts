@@ -5,11 +5,11 @@ import {Statement} from "../src/fb/Statement";
 import {connectionTest} from "./common/AConnection";
 import {connectionPoolTest} from "./common/AConnectionPool";
 import {resultSetTest} from "./common/AResultSet";
-import {serviceTest} from "./common/AService";
 import {statementTest} from "./common/AStatement";
 import {transactionTest} from "./common/ATransaction";
 
-const driver = Factory.FBDriver;
+const driver = Factory.getDriver("firebird");
+
 export const dbOptions: IConnectionOptions = {
     username: "SYSDBA",
     password: "masterkey",

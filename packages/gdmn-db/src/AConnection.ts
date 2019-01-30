@@ -1,3 +1,4 @@
+import {ADriver} from "./ADriver";
 import {AResultSet, CursorType} from "./AResultSet";
 import {AStatement, IParams} from "./AStatement";
 import {ATransaction, ITransactionOptions} from "./ATransaction";
@@ -43,7 +44,13 @@ export interface IExecuteQueryResultSetOptions<R> extends IBaseExecuteOptions<AR
 
 export abstract class AConnection {
 
+    public readonly driver: ADriver;
+
     protected _readTransaction?: ATransaction;
+
+    protected constructor(driver: ADriver) {
+        this.driver = driver;
+    }
 
     /**
      * Is the database connected.

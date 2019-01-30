@@ -4,6 +4,7 @@ import {CursorType} from "../AResultSet";
 import {IParams} from "../AStatement";
 import {AccessMode, ATransaction, ITransactionOptions} from "../ATransaction";
 import {Client} from "./Client";
+import {Driver} from "./Driver";
 import {Result} from "./Result";
 import {ResultSet} from "./ResultSet";
 import {Statement} from "./Statement";
@@ -16,6 +17,10 @@ export class Connection extends AConnection {
     public client = new Client();
     public transactionsCount = 0;
     public handler?: NativeConnection;
+
+    constructor(driver: Driver) {
+        super(driver);
+    }
 
     get connected(): boolean {
         if (this.handler) {

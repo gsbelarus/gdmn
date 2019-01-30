@@ -1,5 +1,6 @@
 import {Pool} from "generic-pool";
 import {AConnection, IConnectionOptions} from "../../AConnection";
+import {ADriver} from "../../ADriver";
 import {AResultSet} from "../../AResultSet";
 import {AStatement, IParams} from "../../AStatement";
 import {ATransaction, ITransactionOptions} from "../../ATransaction";
@@ -12,9 +13,20 @@ export class CommonConnectionProxy extends AConnection {
     private _connection: null | AConnection = null;
 
     constructor(pool: Pool<AConnection>, connectionCreator: () => AConnection) {
-        super();
+        super(null as any);
         this._pool = pool;
         this._connectionCreator = connectionCreator;
+    }
+
+    get driver(): ADriver {
+        if (!this._connection) {
+            throw new Error("Need database connection");
+        }
+        return this._connection.driver;
+    }
+
+    set driver(driver: ADriver) {
+        // empty
     }
 
     get connected(): boolean {
