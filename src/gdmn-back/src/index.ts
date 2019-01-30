@@ -134,7 +134,7 @@ function startWebSocketServer(stompManager: StompManager,
 }
 
 function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServer: ()=>WebSocket.Server): WebSocket.Server | undefined {
-  const MASTER_SEND_SOCKET_MSG_TYPE = 'cluster:master:send-socket';
+  const MASTER_SEND_SOCKET_MSG_TYPE = "cluster:master:send-socket";
 
   if (cluster.isMaster) {
     // console.log(`Master ${process.pid} is running`);
@@ -153,7 +153,7 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
     const sendSocketToWorker = (socket: any, request: any, head: any, workerIndex: string | null = null) => {
       const worker = <Worker>(workerIndex === null ? getNextWorker() : cluster.workers[workerIndex]);
 
-      console.log('workerId:', worker.id);
+      console.log("workerId:", worker.id);
 
       worker.send({ type: MASTER_SEND_SOCKET_MSG_TYPE, payload: { request, head } }, socket);
     };
@@ -163,11 +163,11 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
     let clusterServerRunning = false;
 
     clusterServer
-      .on('connection', socket => {
+      .on("connection", socket => {
       /* net.server pauseOnConnect */
       socket.pause();
     })
-      .on('upgrade', (request, socket, head) => {
+      .on("upgrade", (request, socket, head) => {
         request.pause(); // todo ?
 
         /* choose a worker */
@@ -175,11 +175,11 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
         let workerIndex = null;
         /* url = /?appId=1&userId=2&sessionId=3 */
         const reqSearchParams = new URLSearchParams(url.parse(request.url, true).search);
-        if (reqSearchParams.has('session')) {
+        if (reqSearchParams.has("session")) {
           try {
-            const pidStr = StompSession.parseSessionMessageHeader(reqSearchParams.get('session') || '').meta.workerPid;
+            const pidStr = StompSession.parseSessionMessageHeader(reqSearchParams.get("session") || '').meta.workerPid;
             if (pidStr) {
-              console.log('->pid: ', pidStr);
+              console.log("->pid: ", pidStr);
               const pid = Number.parseInt(pidStr);
               for (const wid in cluster.workers) {
                 if (cluster.workers[wid]!.process.pid === pid) {
@@ -228,12 +228,12 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
 
     const onExit = () => {
       // console.log('onExit');
-      cluster.removeAllListeners('exit'); // todo
+      cluster.removeAllListeners("exit"); // todo
     };
-    process.on('SIGINT', onExit);
-    process.on('SIGTERM', onExit);
+    process.on("SIGINT", onExit);
+    process.on("SIGTERM", onExit);
 
-    cluster.on('exit', (worker, code, signal) => {
+    cluster.on("exit", (worker, code, signal) => {
       // console.log(`master<-[${worker.id}]-worker ${worker.process.pid} died`);
 
       if (clusterServerRunning) {
@@ -250,7 +250,7 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
 
   const wss = startWsServer();
 
-  process.on('message', (message, socket) => {
+  process.on("message", (message, socket) => {
     /* msgs from master */
     if (!message.type || !socket) return;
 
@@ -260,7 +260,7 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
       /* emulate connection event */
       wss.handleUpgrade(message.payload.request, socket, Buffer.from([]), ws => {
         // todo message.payload.head
-        wss.emit('connection', ws, message.payload.request);
+        wss.emit("connection", ws, message.payload.request);
       });
 
       /* resume as we already catched connection */
