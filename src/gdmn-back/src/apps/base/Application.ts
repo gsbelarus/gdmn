@@ -20,7 +20,7 @@ export type AppAction = "PING" | "GET_SCHEMA" | "QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
-export type PingCmd = AppCmd<"PING", { steps: number; delay: number; }>;
+export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", boolean>;
 export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
 
@@ -48,14 +48,23 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(session);
 
-        const {steps, delay} = context.command.payload;
+        const {steps, delay, testChildProcesses} = context.command.payload;
 
-        const stepPercent = 100 / steps;
-        context.progress.increment(0, `Process ping...`);
-        for (let i = 0; i < steps; i++) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          context.progress.increment(stepPercent, `Process ping... Complete step: ${i + 1}`);
-          await context.checkStatus();
+        if (!ApplicationWorker.processIsWorker && testChildProcesses) {
+          await ApplicationWorkerPool.executeWorker({
+            pool: this.workerPool,
+            callback: (worker) => worker.executeCmd(session.userKey, context.command)
+          });
+        } else {
+          const stepPercent = 100 / steps;
+          context.progress.increment(0, `Process ping...`);
+          for (let i = 0; i < steps; i++) {
+            if (delay > 0) {
+              await new Promise((resolve) => setTimeout(resolve, delay));
+              await context.checkStatus();
+            }
+            context.progress.increment(stepPercent, `Process ping... Complete step: ${i + 1}`);
+          }
         }
 
         await this.waitUnlock();

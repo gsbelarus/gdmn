@@ -35,12 +35,12 @@ export class ApplicationWorkerPool {
           throw new Error("This error should never been happen");
         }
 
-        const proxy = new ApplicationWorker();
-        proxy.create(dbDetail);
-        return proxy;
+        const worker = new ApplicationWorker();
+        worker.create(dbDetail);
+        return worker;
       },
-      destroy: async (proxy) => {
-        proxy.destroy();
+      destroy: async (worker) => {
+        worker.destroy();
         return undefined;
       },
       validate: async (proxy) => proxy.created
@@ -60,7 +60,7 @@ export class ApplicationWorkerPool {
     const workers = Array.from((this._workerPool as any)._allObjects).map((item: any) => item.obj);
     const createdWorkers = workers.filter((worker: ApplicationWorker) => this._workerPool!.isBorrowedResource(worker));
     if (createdWorkers.length) {
-      console.warn("Not all workers killed, they will be killed");
+      console.warn("Not all workers destroyed, they will be destroyed");
       const promises = createdWorkers.map((worker: ApplicationWorker) => this._workerPool!.release(worker));
       await Promise.all(promises);
     }
