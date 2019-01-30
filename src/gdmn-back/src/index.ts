@@ -1,23 +1,22 @@
-import url from 'url';
-import os from 'os';
-import cluster, { Worker } from 'cluster';
-import http, { Server as HttpServer } from 'http';
-import { Server as HttpsServer } from 'https';
-import Koa from 'koa';
-import koaBody from 'koa-body';
-import errorHandler from 'koa-error';
-import logger from 'koa-logger';
-import Router from 'koa-router';
-import send from 'koa-send';
-import serve from 'koa-static';
-import cors from 'koa2-cors';
-import log4js from 'log4js';
-import path from 'path';
-import WebSocket from 'ws';
-import { Constants } from './Constants';
-import { checkHandledError, ErrorCodes, throwCtx } from './ErrorCodes';
-import { StompManager } from './stomp/StompManager';
-import { StompSession } from './stomp/StompSession';
+import cluster, {Worker} from "cluster";
+import http, {Server as HttpServer} from "http";
+import {Server as HttpsServer} from "https";
+import Koa from "koa";
+import koaBody from "koa-body";
+import errorHandler from "koa-error";
+import logger from "koa-logger";
+import Router from "koa-router";
+import send from "koa-send";
+import serve from "koa-static";
+import cors from "koa2-cors";
+import log4js from "log4js";
+import path from "path";
+import url from "url";
+import WebSocket from "ws";
+import {Constants} from "./Constants";
+import {checkHandledError, ErrorCodes, throwCtx} from "./ErrorCodes";
+import {StompManager} from "./stomp/StompManager";
+import {StompSession} from "./stomp/StompSession";
 
 interface IServer {
   stompManager: StompManager;
@@ -107,7 +106,7 @@ function createHttpServer(serverApp: Koa): HttpServer | undefined {
           defaultLogger.info(`Listening on http://%s:%s;` +
             ` env: %s`, address.address, address.port, process.env.NODE_ENV);
         }
-      })
+      });
   }
   return httpServer;
 }
@@ -133,7 +132,7 @@ function startWebSocketServer(stompManager: StompManager,
   });
 }
 
-function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServer: ()=>WebSocket.Server): WebSocket.Server | undefined {
+function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServer: () => WebSocket.Server): WebSocket.Server | undefined {
   const MASTER_SEND_SOCKET_MSG_TYPE = "cluster:master:send-socket";
 
   if (cluster.isMaster) {
@@ -144,10 +143,10 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
       return () => {
         if (index >= array.length) index = 0;
         return array[index++];
-      }
+      };
     };
 
-    let getNextWorker = ()=>({});
+    let getNextWorker = () => ({});
 
     /* worker undefined - send to next worker */
     const sendSocketToWorker = (socket: any, request: any, head: any, workerIndex: string | null = null) => {
@@ -155,7 +154,7 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
 
       console.log("workerId:", worker.id);
 
-      worker.send({ type: MASTER_SEND_SOCKET_MSG_TYPE, payload: { request, head } }, socket);
+      worker.send({type: MASTER_SEND_SOCKET_MSG_TYPE, payload: {request, head}}, socket);
     };
 
     const createWorker = () => cluster.fork();
@@ -164,9 +163,9 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
 
     clusterServer
       .on("connection", socket => {
-      /* net.server pauseOnConnect */
-      socket.pause();
-    })
+        /* net.server pauseOnConnect */
+        socket.pause();
+      })
       .on("upgrade", (request, socket, head) => {
         request.pause(); // todo ?
 
@@ -177,7 +176,7 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
         const reqSearchParams = new URLSearchParams(url.parse(request.url, true).search);
         if (reqSearchParams.has("session")) {
           try {
-            const pidStr = StompSession.parseSessionMessageHeader(reqSearchParams.get("session") || '').meta.workerPid;
+            const pidStr = StompSession.parseSessionMessageHeader(reqSearchParams.get("session") || "").meta.workerPid;
             if (pidStr) {
               console.log("->pid: ", pidStr);
               const pid = Number.parseInt(pidStr);
@@ -188,7 +187,9 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
                 }
               }
             }
-          } catch (e) {}
+          } catch (e) {
+            // ignore
+          }
         }
 
         sendSocketToWorker(
@@ -216,10 +217,7 @@ function startClusterServer(clusterServer: HttpServer | HttpsServer, startWsServ
 
         clusterServerRunning = true;
 
-        const workersCount = Constants.SERVER.CLUSTER.WORKERS_COUNT > 0
-          ? Constants.SERVER.CLUSTER.WORKERS_COUNT
-          : os.cpus().length;
-        new Array(workersCount).fill(0).forEach(() => createWorker());
+        new Array(Constants.SERVER.CLUSTER.WORKERS_COUNT).fill(0).forEach(() => createWorker());
 
         getNextWorker = roundRobinIterator(Object.values(cluster.workers));
       });
