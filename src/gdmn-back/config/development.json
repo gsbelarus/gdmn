@@ -1,5 +1,9 @@
 {
   "server": {
+    "cluster": {
+      "enabled": false,
+      "workersCount": 0
+    },
     "http": {
       "enabled": true,
       "host": "localhost",
