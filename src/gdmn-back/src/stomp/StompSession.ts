@@ -1,17 +1,17 @@
-import jwt from 'jsonwebtoken';
-import { Logger } from 'log4js';
-import ms from 'ms';
-import { StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer } from 'stomp-protocol';
-import { v1 as uuidV1 } from 'uuid';
-import { Application } from '../apps/base/Application';
-import { Session, SessionStatus } from '../apps/base/Session';
-import { ICmd, Task, TaskStatus } from '../apps/base/task/Task';
-import { ITaskManagerEvents } from '../apps/base/task/TaskManager';
-import { Actions, CommandProvider } from '../apps/CommandProvider';
-import { IUser, MainApplication } from '../apps/MainApplication';
-import { Constants } from '../Constants';
-import { DBStatus } from '../apps/base/ADatabase';
-import { StompErrorCode, StompServerError } from './StompServerError';
+import jwt from "jsonwebtoken";
+import {Logger} from "log4js";
+import ms from "ms";
+import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
+import {v1 as uuidV1} from "uuid";
+import {DBStatus} from "../apps/base/ADatabase";
+import {Application} from "../apps/base/Application";
+import {Session, SessionStatus} from "../apps/base/Session";
+import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
+import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
+import {Actions, MainCommandProvider} from "../apps/MainCommandProvider";
+import {IUser, MainApplication} from "../apps/MainApplication";
+import {Constants} from "../Constants";
+import {StompErrorCode, StompServerError} from "./StompServerError";
 
 export type Ack = "auto" | "client" | "client-individual";
 
@@ -404,14 +404,13 @@ export class StompSession implements StompClientCommandListener {
           };
 
           // TODO remove task-id from receipt; use command.id ?
-          let task;
           try {
-            task = new CommandProvider(this.application).receive(this.session, command);
+            const task = new MainCommandProvider(this.application).receive(this.session, command);
             task.execute();
+            this._sendReceipt(headers, {"task-id": task.id});
           } catch (error) {
             throw new StompServerError(StompErrorCode.INVALID, error.message);
           }
-          this._sendReceipt(headers, {"task-id": task.id});
 
           break;
         default:

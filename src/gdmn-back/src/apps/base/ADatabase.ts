@@ -55,8 +55,8 @@ export abstract class ADatabase {
   public readonly connectionPool: AConnectionPool<ICommonConnectionPoolOptions>;
 
   protected readonly _logger: Logger = log4js.getLogger("database");
+  protected readonly _lock = new Semaphore();
 
-  private _lock = new Semaphore();
   private _status: DBStatus = DBStatus.IDLE;
   private _time = performance.now();
 

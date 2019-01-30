@@ -1,29 +1,40 @@
 import {AConnection, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
-import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
+import {
+  deserializeERModel,
+  EntityQuery,
+  ERModel,
+  IEntityQueryInspector,
+  IEntityQueryResponse,
+  IERModel
+} from "gdmn-orm";
 import log4js from "log4js";
 import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICmd, Level, Task} from "./task/Task";
+import {ApplicationWorker} from "./worker/ApplicationWorker";
+import {ApplicationWorkerPool} from "./worker/ApplicationWorkerPool";
 
 export type AppAction = "PING" | "GET_SCHEMA" | "QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
 export type PingCmd = AppCmd<"PING", { steps: number; delay: number; }>;
-export type GetSchemaCmd = AppCmd<"GET_SCHEMA">;
+export type GetSchemaCmd = AppCmd<"GET_SCHEMA", boolean>;
 export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
 
-export abstract class Application extends ADatabase {
+export class Application extends ADatabase {
 
   public sessionLogger = log4js.getLogger("Session");
   public taskLogger = log4js.getLogger("Task");
 
-  public readonly erModel: ERModel = new ERModel();
   public readonly sessionManager = new SessionManager(this.sessionLogger);
+  public readonly workerPool = new ApplicationWorkerPool();
 
-  protected constructor(dbDetail: IDBDetail) {
+  public erModel: ERModel = new ERModel();
+
+  constructor(dbDetail: IDBDetail) {
     super(dbDetail);
   }
 
@@ -65,11 +76,11 @@ export abstract class Application extends ADatabase {
       command,
       level: Level.SESSION,
       logger: this.taskLogger,
-      worker: async () => {
+      worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(session);
 
-        return this.erModel.serialize();
+        return this.erModel.serialize(context.command.payload);
       }
     });
     session.taskManager.add(task);
@@ -114,6 +125,15 @@ export abstract class Application extends ADatabase {
     }
   }
 
+  public async reload(): Promise<void> {
+    await this._lock.acquire();
+    try {
+      await this._load();
+    } finally {
+      this._lock.release();
+    }
+  }
+
   protected async executeSessionConnection<R>(session: Session, callback: TExecutor<AConnection, R>): Promise<R> {
     await session.lockConnection();
     try {
@@ -126,17 +146,22 @@ export abstract class Application extends ADatabase {
   protected async _onCreate(): Promise<void> {
     await super._onCreate();
 
-    await this._init();
+    if (!ApplicationWorker.processIsWorker) {
+      await this.workerPool.create(this.dbDetail, { // TODO move to config
+        max: 1,
+        acquireTimeoutMillis: 60000,
+        idleTimeoutMillis: 60000
+      });
+    }
+    await this._load();
   }
 
-  protected async _onConnect(): Promise<void> {
-    await super._onConnect();
+  protected async _onDelete(): Promise<void> {
+    await super._onDelete();
 
-    await this._init();
-  }
-
-  protected async _onDisconnect(): Promise<void> {
-    await super._onDisconnect();
+    if (!ApplicationWorker.processIsWorker) {
+      await this.workerPool.destroy();
+    }
 
     const {alias, connectionOptions}: IDBDetail = this.dbDetail;
 
@@ -144,10 +169,47 @@ export abstract class Application extends ADatabase {
     this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
   }
 
-  private async _init(): Promise<void> {
-    await this._executeConnection(async (connection) => {
-      await ERBridge.initDatabase(connection);
-      await ERBridge.reloadERModel(connection, connection.readTransaction, this.erModel);
-    });
+  protected async _onConnect(): Promise<void> {
+    await super._onConnect();
+
+    if (!ApplicationWorker.processIsWorker) {
+      await this.workerPool.create(this.dbDetail, { // TODO move to config
+        max: 1,
+        acquireTimeoutMillis: 60000,
+        idleTimeoutMillis: 60000
+      });
+    }
+    await this._load();
+  }
+
+  protected async _onDisconnect(): Promise<void> {
+    await super._onDisconnect();
+
+    if (!ApplicationWorker.processIsWorker) {
+      await this.workerPool.destroy();
+    }
+
+    const {alias, connectionOptions}: IDBDetail = this.dbDetail;
+
+    await this.sessionManager.forceCloseAll();
+    this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
+  }
+
+  private async _load(): Promise<void> {
+    if (ApplicationWorker.processIsWorker) {
+      await this._executeConnection(async (connection) => {
+        await ERBridge.initDatabase(connection);
+        await ERBridge.reloadERModel(connection, connection.readTransaction, this.erModel);
+      });
+    } else {
+      this.erModel = await ApplicationWorkerPool.executeWorker({
+        pool: this.workerPool,
+        callback: async (worker) => {
+          const getSchemaCmd: GetSchemaCmd = {id: "id", action: "GET_SCHEMA", payload: true};
+          const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
+          return deserializeERModel(result, true);
+        }
+      });
+    }
   }
 }
