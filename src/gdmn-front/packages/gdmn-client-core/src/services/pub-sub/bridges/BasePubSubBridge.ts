@@ -1,8 +1,8 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { debugFnType } from '@stomp/stompjs';
 
 import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
-import { debugFnType } from '@stomp/stompjs';
 
 const enum TPubSubConnectStatus {
   CONNECTED,
