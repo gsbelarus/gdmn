@@ -27,7 +27,12 @@ export class AppCommandProvider {
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     switch (command.action) {
-      case "PING":
+      case "PING": {
+        if (!AppCommandProvider._verifyPingCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushPingCmd(session, command);
+      }
       case "RELOAD_SCHEMA": {
         return this._application.pushReloadSchemaCmd(session, command as ReloadSchemaCmd);
       }
