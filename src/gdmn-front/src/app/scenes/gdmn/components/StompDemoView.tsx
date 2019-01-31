@@ -14,11 +14,7 @@ import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
 
-const EndTaskStatuses = [
-  TTaskStatus.DONE,
-  TTaskStatus.ERROR,
-  TTaskStatus.INTERRUPTED
-];
+const EndTaskStatuses = [TTaskStatus.DONE, TTaskStatus.ERROR, TTaskStatus.INTERRUPTED];
 
 interface IStompDemoViewState {
   stressStarted: boolean;
@@ -132,35 +128,35 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             timeStart = window.performance.now();
 
             try {
-              await Promise.all(
-                new Array(maxRequestsCount).fill(0).map(async () =>
-                  sequentialMode
-                    ? await getTaskResultObservable()
+              if (sequentialMode) {
+                for (let i = 0; i < maxRequestsCount; i++) {
+                  await getTaskResultObservable()
+                    .pipe(
+                      filter(
+                        value => Reflect.has(value.payload, 'result') && EndTaskStatuses.includes(value.payload.status)
+                      ),
+                      first()
+                    )
+                    .toPromise();
+                }
+              } else {
+                await Promise.all(
+                  new Array(maxRequestsCount).fill(0).map(() =>
+                    getTaskResultObservable()
                       .pipe(
                         filter(
-                          value => Reflect.has(value.payload, 'result') && EndTaskStatuses.includes(value.payload.status)
+                          value =>
+                            Reflect.has(value.payload, 'result') && EndTaskStatuses.includes(value.payload.status)
                         ),
                         first()
                       )
                       .toPromise()
-                    : new Promise((resolve, reject) => {
-                      getTaskResultObservable()
-                        .pipe(
-                          filter(
-                            value =>  Reflect.has(value.payload, 'result') &&  EndTaskStatuses.includes(value.payload.status)
-                          ),
-                          first()
-                        )
-                        .subscribe(value => {
-                          resolve();
-                        });
-                    })
-                )
-              );
+                  )
+                );
+              }
             } catch (e) {
-              console.log('d1-> error', e)
+              console.log('d1-> error', e);
             }
-
 
             maxRequestsCount += incRequestsCount;
           } while (window.performance.now() - timeStart < stepDuration);
@@ -216,7 +212,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   public render() {
     return this.renderOneColumn(
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline'}}>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
         <div className="ViewBody" style={{ width: 'max-content', marginTop: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
@@ -247,14 +243,18 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             />
             <br />
             <div className="ViewBody" style={{ alignItems: 'stretch' }}>
-              <NumberTextField ref={this.pingDelayFieldRef} label="delay" initialValue={this.initPingDelay.toString()} />
-              <NumberTextField ref={this.pingStepsFieldRef} label="steps" initialValue={this.initPingSteps.toString()} />
-              <br />
-              <Checkbox
-                componentRef={this.testChildProcFieldRef}
-                label="test child-processes"
-                defaultChecked={true}
+              <NumberTextField
+                ref={this.pingDelayFieldRef}
+                label="delay"
+                initialValue={this.initPingDelay.toString()}
               />
+              <NumberTextField
+                ref={this.pingStepsFieldRef}
+                label="steps"
+                initialValue={this.initPingSteps.toString()}
+              />
+              <br />
+              <Checkbox componentRef={this.testChildProcFieldRef} label="test child-processes" defaultChecked={true} />
               <br />
               <PrimaryButton
                 disabled={this.state.stressStarted}
@@ -275,6 +275,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             <br />
             <span style={{ fontSize: 16 }}>Time (ms): {this.state.stressResultTime.toFixed()}</span>
             <span style={{ fontSize: 16 }}>Requests count: {this.state.stressResultRequestsCount}</span>
+            <span style={{ fontSize: 16 }}>
+              Requests count/sec:{' '}
+              {this.state.stressResultRequestsCount & this.state.stressResultTime
+                ? ((this.state.stressResultRequestsCount / this.state.stressResultTime) * 1000).toFixed()
+                : 0}
+            </span>
           </div>
         </div>
         <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
