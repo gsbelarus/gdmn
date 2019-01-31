@@ -1,18 +1,18 @@
 import React from 'react';
 import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+import { filter, first } from 'rxjs/operators';
+import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
+import { Observable } from 'rxjs';
+
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { ICommand } from 'gdmn-nlp-agent/dist/definitions';
 import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
-
 import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
-import { filter, first } from 'rxjs/operators';
-import { IToggle, Toggle } from 'office-ui-fabric-react';
-import { Observable } from 'rxjs';
 
 const EndTaskStatuses = [
   TTaskStatus.DONE,
@@ -34,8 +34,8 @@ interface IStompDemoViewProps extends IViewProps {
 }
 
 class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
-  initPingDelay: number = 3000;
-  initPingSteps: number = 2;
+  initPingDelay: number = 0;
+  initPingSteps: number = 0;
 
   pingDelayFieldRef = React.createRef<NumberTextField>();
   pingStepsFieldRef = React.createRef<NumberTextField>();
@@ -49,6 +49,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   stressStepIncRequestsCountFieldRef = React.createRef<NumberTextField>();
   stressSchedulingDateFieldRef = React.createRef<ITextField>();
   stressSequentialModeFieldRef = React.createRef<IToggle & { checked?: boolean }>(); // todo
+  testChildProcFieldRef = React.createRef<ICheckbox>();
 
   public state: IStompDemoViewState = {
     stressStarted: false,
@@ -68,8 +69,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         payload: {
           action: TTaskActionNames.PING,
           payload: {
-            delay: 0,
-            steps: 0
+            delay: parseInt(this.pingDelayFieldRef.current!.state.value),
+            steps: parseInt(this.pingStepsFieldRef.current!.state.value),
+            testChildProcesses: this.testChildProcFieldRef.current!.checked || false
           }
         }
       });
@@ -178,18 +180,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   // api test
 
-  private handlePingClick = () => {
-    this.props.apiPing({
-      payload: {
-        action: TTaskActionNames.PING,
-        payload: {
-          delay: parseInt(this.pingDelayFieldRef.current!.state.value),
-          steps: parseInt(this.pingStepsFieldRef.current!.state.value)
-        }
-      }
-    });
-  };
-
   private handleSendQueryClick = () => {
     if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
 
@@ -226,22 +216,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   public render() {
     return this.renderOneColumn(
-      <div>
-        <div className="ViewBody" style={{ width: 'max-content' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <NumberTextField ref={this.pingDelayFieldRef} label="delay" initialValue={this.initPingDelay.toString()} />
-            <NumberTextField ref={this.pingStepsFieldRef} label="steps" initialValue={this.initPingSteps.toString()} />
-            <PrimaryButton onClick={this.handlePingClick} text="SEND PING-TASK" />
-            <br />
-            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
-            <br />
-            <PrimaryButton
-              onClick={this.handleSendNlpQueryClick}
-              text="покажи все организации из минска и пинска"
-              disabled={!this.props.erModel}
-            />
-          </div>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline'}}>
         <div className="ViewBody" style={{ width: 'max-content', marginTop: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
@@ -266,27 +241,51 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             <Toggle
               componentRef={this.stressSequentialModeFieldRef}
               label={' '}
-              defaultChecked={false}
               onText="sequential mode ON"
               offText="sequential mode OFF (concurrent requests)"
+              defaultChecked={false}
             />
             <br />
-            <PrimaryButton
-              disabled={this.state.stressStarted}
-              onClick={this.handleStressApi}
-              text="STRESS API (PING-TASK)"
-            />
+            <div className="ViewBody" style={{ alignItems: 'stretch' }}>
+              <NumberTextField ref={this.pingDelayFieldRef} label="delay" initialValue={this.initPingDelay.toString()} />
+              <NumberTextField ref={this.pingStepsFieldRef} label="steps" initialValue={this.initPingSteps.toString()} />
+              <br />
+              <Checkbox
+                componentRef={this.testChildProcFieldRef}
+                label="test child-processes"
+                defaultChecked={true}
+              />
+              <br />
+              <PrimaryButton
+                disabled={this.state.stressStarted}
+                onClick={this.handleStressApi}
+                text="STRESS API (PING-TASK)"
+              />
+            </div>
             <br />
-            <PrimaryButton
-              disabled={this.state.stressStarted || !this.props.erModel}
-              onClick={this.handleStressDb}
-              text="STRESS DB (QUERY-TASK)"
-            />
+            <div className="ViewBody" style={{ alignItems: 'stretch' }}>
+              <PrimaryButton
+                disabled={this.state.stressStarted || !this.props.erModel}
+                onClick={this.handleStressDb}
+                text="STRESS DB (QUERY-TASK)"
+              />
+            </div>
             <br />
             <span style={{ fontSize: 20 }}>Stress result:</span>
             <br />
             <span style={{ fontSize: 16 }}>Time (ms): {this.state.stressResultTime.toFixed()}</span>
             <span style={{ fontSize: 16 }}>Requests count: {this.state.stressResultRequestsCount}</span>
+          </div>
+        </div>
+        <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+            <br />
+            <PrimaryButton
+              onClick={this.handleSendNlpQueryClick}
+              text="покажи все организации из минска и пинска"
+              disabled={!this.props.erModel}
+            />
           </div>
         </div>
       </div>
