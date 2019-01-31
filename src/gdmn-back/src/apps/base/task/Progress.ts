@@ -54,6 +54,7 @@ export class Progress {
     }
     this._value += i;
     this._description = description;
+
     if (notify) {
       this.emitter.emit("change", this);
     }
@@ -62,11 +63,12 @@ export class Progress {
   public reset(options: IProgressOptions = {}, notify: boolean = true): void {
     this._max = options.max !== undefined ? options.max : this.max;
     this._min = options.min !== undefined ? options.min : this.min;
-    if (this._min >= this._max) {
-      throw new Error(`Incorrect range: ${this._min} >= ${this._max}`);
+    if (this._min > this._max) {
+      throw new Error(`Incorrect range: ${this._min} > ${this._max}`);
     }
     this._value = this._min;
     this._description = "";
+
     if (notify) {
       this.emitter.emit("change", this);
     }
