@@ -89,6 +89,8 @@ export class StompSession implements StompClientCommandListener {
         this._stomp.message(headers, JSON.stringify({
           payload: task.options.command.payload,
           progress: {
+            min: task.progress.min,
+            max: task.progress.max,
             value: task.progress.value,
             description: task.progress.description
           }

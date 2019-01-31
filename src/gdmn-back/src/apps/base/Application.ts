@@ -69,14 +69,14 @@ export class Application extends ADatabase {
             callback: (worker) => worker.executeCmd(session.userKey, context.command)
           });
         } else {
-          const stepPercent = 100 / steps;
+          context.progress.reset({max: steps}, false);
           context.progress.increment(0, `Process ping...`);
           for (let i = 0; i < steps; i++) {
             if (delay > 0) {
               await new Promise((resolve) => setTimeout(resolve, delay));
               await context.checkStatus();
             }
-            context.progress.increment(stepPercent, `Process ping... Complete step: ${i + 1}`);
+            context.progress.increment(1, `Process ping... Complete step: ${i + 1}`);
           }
         }
 
