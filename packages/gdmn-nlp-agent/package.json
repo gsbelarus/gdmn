@@ -35,7 +35,7 @@
     "@types/jest": "^23",
     "@types/node": "^10",
     "gdmn-er-bridge": "^1",
-    "jest": "^24",
+    "jest": "^23",
     "jest-junit": "^6",
     "shx": "^0",
     "ts-jest": "^23",
