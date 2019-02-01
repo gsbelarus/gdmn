@@ -16,11 +16,12 @@ import {ICmd, Level, Task} from "./task/Task";
 import {ApplicationWorker} from "./worker/ApplicationWorker";
 import {ApplicationWorkerPool} from "./worker/ApplicationWorkerPool";
 
-export type AppAction = "PING" | "GET_SCHEMA" | "QUERY";
+export type AppAction = "PING" | "RELOAD_SCHEMA" | "GET_SCHEMA" | "QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
 export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
+export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", boolean>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", boolean>;
 export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
 
@@ -36,6 +37,18 @@ export class Application extends ADatabase {
 
   constructor(dbDetail: IDBDetail) {
     super(dbDetail);
+  }
+
+  private static async _reloadWorkerERModel(worker: ApplicationWorker, withAdapter?: boolean): Promise<ERModel> {
+    const reloadSchemaCmd: ReloadSchemaCmd = {id: "RELOAD_SCHEMA_ID", action: "RELOAD_SCHEMA", payload: true};
+    const result: IERModel = await worker.executeCmd(Number.NaN, reloadSchemaCmd);
+    return deserializeERModel(result, withAdapter);
+  }
+
+  private static async _getWorkerERModel(worker: ApplicationWorker, withAdapter?: boolean): Promise<ERModel> {
+    const getSchemaCmd: GetSchemaCmd = {id: "GET_SCHEMA_ID", action: "GET_SCHEMA", payload: true};
+    const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
+    return deserializeERModel(result, withAdapter);
   }
 
   public pushPingCmd(session: Session, command: PingCmd): Task<PingCmd, void> {
@@ -56,14 +69,14 @@ export class Application extends ADatabase {
             callback: (worker) => worker.executeCmd(session.userKey, context.command)
           });
         } else {
-          const stepPercent = 100 / steps;
+          context.progress.reset({max: steps}, false);
           context.progress.increment(0, `Process ping...`);
           for (let i = 0; i < steps; i++) {
             if (delay > 0) {
               await new Promise((resolve) => setTimeout(resolve, delay));
               await context.checkStatus();
             }
-            context.progress.increment(stepPercent, `Process ping... Complete step: ${i + 1}`);
+            context.progress.increment(1, `Process ping... Complete step: ${i + 1}`);
           }
         }
 
@@ -90,6 +103,34 @@ export class Application extends ADatabase {
         this.checkSession(session);
 
         return this.erModel.serialize(context.command.payload);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushReloadSchemaCmd(session: Session, command: ReloadSchemaCmd): Task<ReloadSchemaCmd, IERModel> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this._lock.acquire();
+        try {
+          if (!ApplicationWorker.processIsWorker) {
+            this.erModel = await ApplicationWorkerPool.executeWorker({
+              pool: this.workerPool,
+              callback: (worker) => Application._reloadWorkerERModel(worker, true)
+            });
+          } else {
+            this.erModel = await this._readERModel();
+          }
+          return this.erModel.serialize(context.command.payload);
+        } finally {
+          this._lock.release();
+        }
       }
     });
     session.taskManager.add(task);
@@ -134,15 +175,6 @@ export class Application extends ADatabase {
     }
   }
 
-  public async reload(): Promise<void> {
-    await this._lock.acquire();
-    try {
-      await this._load();
-    } finally {
-      this._lock.release();
-    }
-  }
-
   protected async executeSessionConnection<R>(session: Session, callback: TExecutor<AConnection, R>): Promise<R> {
     await session.lockConnection();
     try {
@@ -161,8 +193,13 @@ export class Application extends ADatabase {
         acquireTimeoutMillis: 60000,
         idleTimeoutMillis: 60000
       });
+      this.erModel = await ApplicationWorkerPool.executeWorker({
+        pool: this.workerPool,
+        callback: (worker) => Application._getWorkerERModel(worker, true)
+      });
+    } else {
+      this.erModel = await this._readERModel();
     }
-    await this._load();
   }
 
   protected async _onDelete(): Promise<void> {
@@ -187,8 +224,13 @@ export class Application extends ADatabase {
         acquireTimeoutMillis: 60000,
         idleTimeoutMillis: 60000
       });
+      this.erModel = await ApplicationWorkerPool.executeWorker({
+        pool: this.workerPool,
+        callback: (worker) => Application._getWorkerERModel(worker, true)
+      });
+    } else {
+      this.erModel = await this._readERModel();
     }
-    await this._load();
   }
 
   protected async _onDisconnect(): Promise<void> {
@@ -204,21 +246,10 @@ export class Application extends ADatabase {
     this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
   }
 
-  private async _load(): Promise<void> {
-    if (ApplicationWorker.processIsWorker) {
-      await this._executeConnection(async (connection) => {
-        await ERBridge.initDatabase(connection);
-        await ERBridge.reloadERModel(connection, connection.readTransaction, this.erModel);
-      });
-    } else {
-      this.erModel = await ApplicationWorkerPool.executeWorker({
-        pool: this.workerPool,
-        callback: async (worker) => {
-          const getSchemaCmd: GetSchemaCmd = {id: "id", action: "GET_SCHEMA", payload: true};
-          const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
-          return deserializeERModel(result, true);
-        }
-      });
-    }
+  private async _readERModel(): Promise<ERModel> {
+    return await this._executeConnection(async (connection) => {
+      await ERBridge.initDatabase(connection);
+      return await ERBridge.reloadERModel(connection, connection.readTransaction, new ERModel());
+    });
   }
 }

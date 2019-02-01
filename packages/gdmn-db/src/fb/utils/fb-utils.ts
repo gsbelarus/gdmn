@@ -380,7 +380,7 @@ export function fixMetadata(status: Status, metadata?: MessageMetadata): Message
         return undefined;
     }
 
-    let ret: MessageMetadata;
+    let ret: MessageMetadata | undefined;
 
     const outBuilder = metadata.getBuilderSync(status)!;
     try {

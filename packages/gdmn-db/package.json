@@ -35,7 +35,7 @@
     "@types/jest": "^23",
     "@types/node": "^10",
     "jest": "^23",
-    "jest-junit": "^5",
+    "jest-junit": "^6",
     "shx": "^0",
     "ts-jest": "^23",
     "tslint": "^5",

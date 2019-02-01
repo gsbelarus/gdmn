@@ -136,6 +136,8 @@ interface ITaskProgressMessageData<TActionName extends keyof TTaskActionPayloadT
 }
 
 interface ITaskProgress {
+  min: number;
+  max: number;
   value: number; // 0-100
   description: string;
 }

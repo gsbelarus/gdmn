@@ -17,20 +17,14 @@ export class Progress {
 
   public readonly emitter: StrictEventEmitter<EventEmitter, IProgressEvents> = new EventEmitter();
 
-  private readonly _max: number;
-  private readonly _min: number;
+  private _max: number = Progress.DEFAULT_MAX;
+  private _min: number = Progress.DEFAULT_MIN;
 
-  private _value: number;
-  private _description: string;
+  private _value: number = 0;
+  private _description: string = "";
 
-  constructor(options: IProgressOptions = {}) {
-    this._max = options.max !== undefined ? options.max : Progress.DEFAULT_MAX;
-    this._min = options.min !== undefined ? options.min : Progress.DEFAULT_MIN;
-    if (this._min >= this._max) {
-      throw new Error(`Incorrect range: ${this._min} >= ${this._max}`);
-    }
-    this._value = this._min;
-    this._description = "";
+  constructor(options?: IProgressOptions) {
+    this.reset(options, false);
   }
 
   get value(): number {
@@ -53,19 +47,30 @@ export class Progress {
     return this._value === this._max;
   }
 
-  public increment(step: number, description: string): void {
+  public increment(step: number, description: string, notify: boolean = true): void {
     const i = step !== undefined ? Math.abs(step) : 1;
     if (this._value + i > this._max) {
       throw new Error("Out of range");
     }
     this._value += i;
     this._description = description;
-    this.emitter.emit("change", this);
+
+    if (notify) {
+      this.emitter.emit("change", this);
+    }
   }
 
-  public reset(): void {
+  public reset(options: IProgressOptions = {}, notify: boolean = true): void {
+    this._max = options.max !== undefined ? options.max : this.max;
+    this._min = options.min !== undefined ? options.min : this.min;
+    if (this._min > this._max) {
+      throw new Error(`Incorrect range: ${this._min} > ${this._max}`);
+    }
     this._value = this._min;
     this._description = "";
-    this.emitter.emit("change", this);
+
+    if (notify) {
+      this.emitter.emit("change", this);
+    }
   }
 }

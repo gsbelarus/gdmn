@@ -48,10 +48,10 @@
     "@types/react": "^16",
     "@types/react-dom": "^16",
     "jest": "^23",
-    "jest-junit": "^5",
+    "jest-junit": "^6",
     "shx": "^0",
     "ts-jest": "^23",
-    "ts-node": "^7",
+    "ts-node": "^8",
     "tslint": "^5",
     "typescript": "^3"
   }

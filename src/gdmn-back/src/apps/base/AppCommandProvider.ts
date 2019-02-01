@@ -1,4 +1,4 @@
-import {AppAction, Application, GetSchemaCmd, PingCmd, QueryCmd} from "./Application";
+import {AppAction, Application, GetSchemaCmd, PingCmd, QueryCmd, ReloadSchemaCmd} from "./Application";
 import {Session} from "./Session";
 import {ICmd, Task} from "./task/Task";
 
@@ -32,6 +32,9 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushPingCmd(session, command);
+      }
+      case "RELOAD_SCHEMA": {
+        return this._application.pushReloadSchemaCmd(session, command as ReloadSchemaCmd);
       }
       case "GET_SCHEMA": {
         return this._application.pushGetSchemaCmd(session, command as GetSchemaCmd);
