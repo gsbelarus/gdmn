@@ -1610,9 +1610,9 @@
     "@types/node" "*"
 
 "@types/generic-pool@^3":
-  version "3.1.7"
-  resolved "https://registry.yarnpkg.com/@types/generic-pool/-/generic-pool-3.1.7.tgz#18d269370dcf4afc8e923f73507c9947f1872161"
-  integrity sha512-bij2JSTY7YaaTKbgh7F+uKM1t0lnH6eH/CMctHEROKgud8zEUTLWDzokqEVzr0m5e4xcAnPdXe6nBybGwq/O8A==
+  version "3.1.8"
+  resolved "https://registry.yarnpkg.com/@types/generic-pool/-/generic-pool-3.1.8.tgz#a8a19c8f00c20af9d2284f8a7f9c2e5d87b8aa88"
+  integrity sha512-VeUmvz+sSTIh+xl9mzlylw3yRa4Njnb51+SumTteccrrGZkuIc4TKyD4m9Y6136b8rbW1OLbLEMmdkA1kmEW9A==
   dependencies:
     "@types/node" "*"
 
@@ -1761,9 +1761,9 @@
     "@types/node" "*"
 
 "@types/node@*", "@types/node@^10":
-  version "10.12.18"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.18.tgz#1d3ca764718915584fcd9f6344621b7672665c67"
-  integrity sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==
+  version "10.12.21"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.21.tgz#7e8a0c34cf29f4e17a36e9bd0ea72d45ba03908e"
+  integrity sha512-CBgLNk4o3XMnqMc0rhb6lc77IwShMEglz05deDcn2lQxyXEZivfwgYJu7SMha9V5XcrP6qZuevTHV/QrN2vjKQ==
 
 "@types/node@^8.10.19":
   version "8.10.38"
@@ -8170,9 +8170,9 @@ kleur@^2.0.1:
   integrity sha512-77XF9iTllATmG9lSlIv0qdQ2BQ/h9t0bJllHlbvsQ0zUWfU7Yi0S8L5JXzPZgkefIiajLmBJJ4BsMJmqcf7oxQ==
 
 koa-body@^4:
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/koa-body/-/koa-body-4.0.6.tgz#1b0440ead525309ea80e3d81f73ea2889ce4313c"
-  integrity sha512-k03au8eI5FL48fA1YqnpDT9lcRaarHDEGUOes/ppaEbG6vhbU1xvegxP9QHvJz+UgQq75Vw8z3busd484I/PAA==
+  version "4.0.7"
+  resolved "https://registry.yarnpkg.com/koa-body/-/koa-body-4.0.7.tgz#99fb6ce3e5a77296e06e087386a88cb3c7cbf505"
+  integrity sha512-TKWoRHkMatXNw9oS6NRMp42ZQZ11WKbacc7MzXo7mRbcxx2ff2+BpgBiORz3dfGae6NvdfqCml7P+dOMswF6oQ==
   dependencies:
     "@types/formidable" "^1.0.31"
     co-body "^5.1.1"
@@ -8684,9 +8684,9 @@ log-symbols@^2.1.0:
     chalk "^2.0.1"
 
 log4js@^4:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/log4js/-/log4js-4.0.0.tgz#5b9cdb9a0ec742a28ea08e298655bff587418b32"
-  integrity sha512-XlxZfcFAvQjnjCJBIV/EpsPmrVC12n+TxNUKgrmQh6eeA+9X+6UqvaRNV8t6dpMtXszl1LAQimB4pqyp2Gsgfw==
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/log4js/-/log4js-4.0.1.tgz#34bd63d9a06fe98fc2f7df90506c8db7eb722625"
+  integrity sha512-rXta20AbapfmCYVIuSQf4+ET6XSXigflXblfJmCR/wwHnmhs4iKJmEwx2WeNTiuMaiA1+tqKxqQ/wkN5ZSaJmQ==
   dependencies:
     date-format "^2.0.0"
     debug "^3.1.0"
@@ -13300,9 +13300,9 @@ typescript@3.1.6:
   integrity sha512-tDMYfVtvpb96msS1lDX9MEdHrW4yOuZ4Kdc4Him9oU796XldPYF/t2+uKoX0BBa0hXXwDlqYQbXY5Rzjzc5hBA==
 
 typescript@^3:
-  version "3.2.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.2.4.tgz#c585cb952912263d915b462726ce244ba510ef3d"
-  integrity sha512-0RNDbSdEokBeEAkgNbxJ+BLwSManFy9TeXz8uW+48j/xhEXv1ePME60olyzw2XzUqUBNAYFeJadIqAgNqIACwg==
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.3.1.tgz#6de14e1db4b8a006ac535e482c8ba018c55f750b"
+  integrity sha512-cTmIDFW7O0IHbn1DPYjkiebHxwtCMU+eTy30ZtJNBPF9j2O1ITu5XH2YnBeVRKWHqF+3JQwWJv0Q0aUgX8W7IA==
 
 ua-parser-js@^0.7.18:
   version "0.7.19"
