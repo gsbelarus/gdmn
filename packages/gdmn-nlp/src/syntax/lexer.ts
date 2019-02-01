@@ -7,7 +7,7 @@ import { IToken } from 'chevrotain';
 import { RusNoun } from '../morphology/rusNoun';
 import { RusConjunction } from '../morphology/rusConjunction';
 import { RusNumeralLexemes, RusNumeral } from '../morphology/rusNumeral';
-import { RusGender, RusCase } from '../morphology/types';
+import { RusGender, RusCase, NumeralValue } from '../morphology/types';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -141,6 +141,7 @@ export function combinatorialMorph(text: string): IToken[][]
       } else {
         let endIdx = startIdx + 1;
         let found = false;
+        let foundOrinalNumreal = false;
   
         while (endIdx < parts.length) {
           const lastToken = parts[endIdx][0];
@@ -163,6 +164,31 @@ export function combinatorialMorph(text: string): IToken[][]
           if (!intersect.length) {
             break;
           }
+
+          if (!(isMorphToken(parts[endIdx][0]) && (parts[endIdx][0] as IMorphToken).word instanceof RusNumeral)) {
+            throw new Error(`Invalid numeral`);
+          }
+
+          if(isMorphToken(parts[endIdx + 1][0]) && (parts[endIdx + 1][0] as IMorphToken).word instanceof RusNumeral) {
+
+            const numural = (parts[endIdx][0] as IMorphToken).word as RusNumeral;
+            const nextNumeral = (parts[endIdx + 1][0] as IMorphToken).word as RusNumeral;
+
+            if (!foundOrinalNumreal) {
+              foundOrinalNumreal = nextNumeral.lexeme.numeralValue === NumeralValue.Orinal;
+            }
+
+            if(Number(nextNumeral.lexeme.digitalWrite) % 1000 !== 0) {
+              if(numural.lexeme.digitalWrite.length <= nextNumeral.lexeme.digitalWrite.length
+                && nextNumeral.lexeme.numeralValue !== NumeralValue.Orinal) {
+                  throw new Error(`Invalid structure numeral`);
+              }
+
+              if ( Number(numural.lexeme.digitalWrite) % 10 !== 0 && nextNumeral.lexeme.numeralValue !== NumeralValue.Orinal) {
+                  throw new Error(`Invalid structure numeral`);
+              }
+            }
+          }
   
           found = true;
   
@@ -176,33 +202,27 @@ export function combinatorialMorph(text: string): IToken[][]
           endIdx++;
         }
 
-        for(let i = startIdx; i < endIdx - 1; i++) {
-          if (!(isMorphToken(parts[i][0]) && (parts[i][0] as IMorphToken).word instanceof RusNumeral)) {
-            throw new Error(`Invalid numeral`);
-          }
-          const numural = (parts[i][0] as IMorphToken).word as RusNumeral;
-
-          if(Number(((parts[i + 1][0] as IMorphToken).word as RusNumeral).lexeme.digitalWrite) % 1000 !== 0) {
-            if(numural.lexeme.digitalWrite.length <= ((parts[i + 1][0] as IMorphToken).word as RusNumeral).lexeme.digitalWrite.length) {
-              throw new Error(`Invalid structure numeral`);
-            }
-
-            if (!( Number(numural.lexeme.digitalWrite) % 10 === 0)) {
-              throw new Error(`Invalid structure numeral`);
-            }
-          }
-        }
-  
         if (found && firstParts.length) {
           endIdx--;
-  
-          const cnt = endIdx - startIdx + 1;
+          
+          let idxON = -1;
+          if(foundOrinalNumreal) {
+            idxON = parts.findIndex(num => ((num[0] as IMorphToken).word as RusNumeral).lexeme.numeralValue === NumeralValue.Orinal)
+          }
+
+          if(idxON >= 0 && idxON !== startIdx && idxON !== endIdx) {
+            throw new Error(`Invalid structure numeral`);
+          }
+
+          const cnt = endIdx - startIdx + 1 - (idxON >= 0 ? 1 : 0);
+          startIdx = startIdx + (idxON === startIdx ? 1 : 0);
   
           if (cnt >= 2) {
 
             const cn = parts.splice(startIdx, cnt, parts[startIdx]).map(
               p => p.reduce( (prev, w) => isMorphToken(w) ? [...prev, w.word] : prev, [] as AnyWord[] )
             );
+
             const summ = String(cn.map(item => {
                 if (item[0] instanceof RusNumeral) {
                   return Number((item[0] as RusNumeral).lexeme.digitalWrite);
