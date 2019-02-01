@@ -3331,6 +3331,6 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
         c: RusCase.Loct,
         singular: false,
       },
-      ]
+    ]
   },
 ];

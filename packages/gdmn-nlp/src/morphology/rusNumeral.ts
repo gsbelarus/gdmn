@@ -37,6 +37,44 @@ export class RusNumeralLexeme extends NumeralLexeme {
     
     if (!declZEnding) { throw 'Unknown declensionZ ending'; }
 
+    if (this.structure === NumeralStructure.Complex) {
+
+      const declZEnding1 = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ1 );
+    
+      if (!declZEnding1) { throw 'Unknown declensionZ ending'; }
+      
+      const ending1 = declZEnding1.endings.find( e => e.c === morphSigns.c
+        && e.gender === morphSigns.gender
+        && e.singular === morphSigns.singular
+        && e.animate === morphSigns.animate );
+      
+      if (!ending1) {
+        throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
+      }
+
+      if (this.numeralValue === NumeralValue.Orinal) {
+        const endingOrinalNumeral = declZEnding.endings.find( e => e.c === RusCase.Gent
+          && e.gender === RusGender.Masc
+          && e.singular === true);
+        if (!endingOrinalNumeral) {
+          throw 'Numeral ending not found ';
+        }
+        if(this.declensionZ === 'pqs5' && this.stem1) {
+          if (this.stem3) {
+            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
+          } else {
+            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem2 + ending1.ending, this, morphSigns);
+          }
+        } else {
+          if (this.stem3) {
+            return new RusNumeral(this.stem + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
+          } else {
+            return new RusNumeral(this.stem + endingOrinalNumeral.ending + this.stem2 + ending1.ending, this, morphSigns);
+          }
+        }
+      }
+    }
+
     const ending = declZEnding.endings.find( e => e.c === morphSigns.c
       && e.gender === morphSigns.gender
       && e.singular === morphSigns.singular

@@ -184,6 +184,20 @@ describe('числительные', () => {
     expect(n.gender).toBeDefined();
     expect(n.gender).toEqual(RusGender.Neut);
   });
+  test("шестьюдесятью", () => {
+    const result = morphAnalyzer('шестьюдесятью');
+    expect(result.length).toEqual(3);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("60");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Quantitative);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.catagory).toBeDefined();
+    expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
   test("двух", () => {
     const result = morphAnalyzer('двух');
     expect(result.length).toEqual(9);
@@ -194,6 +208,72 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
     expect(n.lexeme.catagory).toBeDefined();
     expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("пятидесятый", () => {
+    const result = morphAnalyzer('пятидесятый');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("50");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Orinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.catagory).toBeUndefined();
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("пятидесяти", () => {
+    const result = morphAnalyzer('пятидесяти');
+    expect(result.length).toEqual(9);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("50");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Quantitative);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.catagory).toBeDefined();
+    expect(n.lexeme.catagory).toEqual(NumeralCatagory.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("трёхсотый", () => {
+    const result = morphAnalyzer('трёхсотый');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("300");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Orinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.catagory).toBeUndefined();
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("семнадцатому", () => {
+    const result = morphAnalyzer('семнадцатому');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("17");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Orinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
+    expect(n.lexeme.catagory).toBeUndefined();
+    expect(n.singular).toEqual(true);
+    expect(n.gender).toBeDefined();
+    expect(n.gender).toEqual(RusGender.Masc);
+  });
+  test("двадцатый", () => {
+    const result = morphAnalyzer('двадцатый');
+    expect(result.length).toEqual(2);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.digitalWrite).toEqual("20");
+    expect(n.lexeme.numeralValue).toEqual(NumeralValue.Orinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
+    expect(n.lexeme.catagory).toBeUndefined();
     expect(n.singular).toEqual(true);
     expect(n.gender).toBeDefined();
     expect(n.gender).toEqual(RusGender.Masc);
