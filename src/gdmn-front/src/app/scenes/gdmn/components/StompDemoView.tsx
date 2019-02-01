@@ -277,7 +277,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             <span style={{ fontSize: 16 }}>Requests count: {this.state.stressResultRequestsCount}</span>
             <span style={{ fontSize: 16 }}>
               Requests count/sec:{' '}
-              {this.state.stressResultRequestsCount & this.state.stressResultTime
+              {this.state.stressResultRequestsCount && this.state.stressResultTime
                 ? ((this.state.stressResultRequestsCount / this.state.stressResultTime) * 1000).toFixed()
                 : 0}
             </span>
