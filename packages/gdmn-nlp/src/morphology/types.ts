@@ -195,7 +195,7 @@ export const ShortAdverbTypeNames = [
 
 export enum NumeralValue {
   Quantitative = 0,
-  Orinal
+  Ordinal
 };
 
 export const RusNumeralValueNames = [
@@ -205,7 +205,7 @@ export const RusNumeralValueNames = [
 
 export const ShortNumeralValueNames = [
   'Quant',
-  'Ornl'
+  'Ordn'
 ];
 
 export enum NumeralStructure {
@@ -221,19 +221,19 @@ export const RusNumeralStructureNames = [
 ];
 
 export const ShortNumeralStructureNames = [
-  'Simp',
+  'Simpl',
   'Compl',
-  'Compo'
+  'Comps'
 ];
 
-export enum NumeralCatagory {
+export enum NumeralCategory {
   ProperQuantitative = 0,
   Collective,
   Fractional
 };
 
 export const RusNumeralCatagoryNames = [
-  'собественно количественное',
+  'собственно количественное',
   'собирательное',
   'дробное'
 ];
@@ -262,7 +262,7 @@ export interface RusNumeralInterface {
   readonly digitalWrite: string,
   readonly numeralValue: NumeralValue,
   readonly structure: NumeralStructure,
-  readonly catagory?: NumeralCatagory,
+  readonly catagory?: NumeralCategory,
   readonly declensionZ: RusDeclensionNumeralZ;
   readonly declensionZ1?: RusDeclensionNumeralZ;
 }

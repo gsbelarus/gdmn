@@ -1,6 +1,6 @@
 import { NumeralLexeme, Numeral } from "./morphology";
-import { RusCase, NumeralValue, NumeralCatagory, RusGender, ShortGenderNames, NumeralStructure, RusCaseNames, RusGenderNames, RusNumeralValueNames, RusNumeralStructureNames, RusNumeralCatagoryNames, RusDeclensionNumeralZ, RusNumeralMorphSigns, ShortCaseNames } from "./types";
-import { rusNumerals } from "./rusNumeralData";
+import { RusCase, NumeralValue, NumeralCategory, RusGender, ShortGenderNames, NumeralStructure, RusCaseNames, RusGenderNames, RusNumeralValueNames, RusNumeralStructureNames, RusNumeralCatagoryNames, RusDeclensionNumeralZ, RusNumeralMorphSigns, ShortCaseNames } from "./types";
+import { rusNumerals } from "./rusNumeralsData";
 import { RusNumeralZEndings } from "./rusNumeralEndings";
 
 export class RusNumeralLexeme extends NumeralLexeme {
@@ -11,16 +11,16 @@ export class RusNumeralLexeme extends NumeralLexeme {
   public readonly structure: NumeralStructure;
   public readonly declensionZ: RusDeclensionNumeralZ;
   public readonly declensionZ1?: RusDeclensionNumeralZ;
-  public readonly catagory?: NumeralCatagory;
+  public readonly category?: NumeralCategory;
 
   constructor (stem: string, stem1: string, stem2: string, stem3: string,
       possiblePlural: boolean,
       digitalWrite: string,
       numeralValue: NumeralValue,
       structure: NumeralStructure,
-      declensionZ: RusDeclensionNumeralZ, 
-      declensionZ1?: RusDeclensionNumeralZ, 
-      catagory?: NumeralCatagory) {
+      declensionZ: RusDeclensionNumeralZ,
+      declensionZ1?: RusDeclensionNumeralZ,
+      category?: NumeralCategory) {
     super(stem, stem1, stem2);
     this.stem3 = stem3;
     this.possiblePlural = possiblePlural;
@@ -29,30 +29,30 @@ export class RusNumeralLexeme extends NumeralLexeme {
     this.structure = structure;
     this.declensionZ = declensionZ;
     this.declensionZ1 = declensionZ1;
-    this.catagory = catagory;
+    this.category = category;
   }
 
   public getWordForm(morphSigns: RusNumeralMorphSigns): RusNumeral {
     const declZEnding = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ );
-    
+
     if (!declZEnding) { throw 'Unknown declensionZ ending'; }
 
     if (this.structure === NumeralStructure.Complex) {
 
       const declZEnding1 = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ1 );
-    
+
       if (!declZEnding1) { throw 'Unknown declensionZ ending'; }
-      
+
       const ending1 = declZEnding1.endings.find( e => e.c === morphSigns.c
         && e.gender === morphSigns.gender
         && e.singular === morphSigns.singular
         && e.animate === morphSigns.animate );
-      
+
       if (!ending1) {
         throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
       }
 
-      if (this.numeralValue === NumeralValue.Orinal) {
+      if (this.numeralValue === NumeralValue.Ordinal) {
         const endingOrinalNumeral = declZEnding.endings.find( e => e.c === RusCase.Gent
           && e.gender === RusGender.Masc
           && e.singular === true);
@@ -87,19 +87,19 @@ export class RusNumeralLexeme extends NumeralLexeme {
     if (this.structure === NumeralStructure.Complex) {
 
       const declZEnding1 = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ1 );
-    
+
       if (!declZEnding1) { throw 'Unknown declensionZ ending'; }
-      
+
       const ending1 = declZEnding1.endings.find( e => e.c === morphSigns.c
         && e.gender === morphSigns.gender
         && e.singular === morphSigns.singular
         && e.animate === morphSigns.animate );
-      
+
       if (!ending1) {
         throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
       }
 
-      if (this.numeralValue === NumeralValue.Orinal) {
+      if (this.numeralValue === NumeralValue.Ordinal) {
         const endingOrinalNumeral = declZEnding.endings.find( e => e.c === RusCase.Gent
           && e.gender === RusGender.Femn
           && e.singular === true);
@@ -147,7 +147,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
       } else {
         return new RusNumeral(this.stem + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
       }
-  
+
 
     } else {
 
@@ -222,7 +222,7 @@ export const RusNumeralLexemes: RusNumeralLexeme[] = rusNumerals.map(
 
 export class RusNumeral extends Numeral<RusNumeralLexeme> {
   public readonly singular: boolean;
-  public readonly grammCase: RusCase ;
+  public readonly grammCase: RusCase;
   public readonly gender?: RusGender;
   public readonly animate?: boolean;
 
@@ -233,16 +233,16 @@ export class RusNumeral extends Numeral<RusNumeralLexeme> {
     this.gender= morphSigns.gender;
     this.animate= morphSigns.animate;
     }
-  
+
   getDisplayText(): string {
     const lexeme = this.lexeme;
     const stem = this.word.startsWith(lexeme.stem) ? lexeme.stem :
       (this.word.startsWith(lexeme.stem1) ? lexeme.stem1 : '');
     const stem1 = this.word.indexOf(lexeme.stem2, stem.length) >= 0 ? lexeme.stem2 :
       (this.word.indexOf(lexeme.stem3, stem.length) >= 0 ? lexeme.stem3 : '');
-    const divided = stem + (this.word === stem 
-      ? '' 
-      : '-' + ((lexeme.structure === NumeralStructure.Complex) 
+    const divided = stem + (this.word === stem
+      ? ''
+      : '-' + ((lexeme.structure === NumeralStructure.Complex)
         ? this.word.slice(stem.length - this.word.length, this.word.indexOf(stem1)) + '-' + stem1 +
           ( (this.word.indexOf(stem1) + stem1.length) !== this.word.length ? '-' + this.word.slice(stem1.length + this.word.indexOf(stem1) - this.word.length) : '')
         : this.word.slice(stem.length - this.word.length)));
@@ -250,7 +250,7 @@ export class RusNumeral extends Numeral<RusNumeralLexeme> {
     return this.word + '; числительное; ' + (divided !== this.word ? divided + '; ' : '') +
       lexeme.digitalWrite + '; ' +
       RusNumeralValueNames[lexeme.numeralValue] + '; ' +
-      (lexeme.numeralValue === NumeralValue.Quantitative && lexeme.catagory ? RusNumeralCatagoryNames[lexeme.catagory]  + '; ' : '') +
+      (lexeme.numeralValue === NumeralValue.Quantitative && lexeme.category ? RusNumeralCatagoryNames[lexeme.category]  + '; ' : '') +
       RusNumeralStructureNames[lexeme.structure] + '; ' +
       (this.singular ? (this.gender ? RusGenderNames[this.gender] + ' род; ' : RusGenderNames[0] + ' род; ') : '') +
       num + '; ' + RusCaseNames[this.grammCase];
