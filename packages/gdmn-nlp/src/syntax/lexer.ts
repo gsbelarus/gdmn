@@ -49,7 +49,7 @@ export function combinatorialMorph(text: string): IToken[][]
         p.push([t]);
       }
       else if (t.tokenType === Numeric) {
-        const number = RusNumeralLexemes.filter(num => 
+        const number = RusNumeralLexemes.filter(num =>
           num.digitalWrite === t.image).reduce((p, l) => {
             p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false, singular: true}));
             return p;
@@ -110,7 +110,7 @@ export function combinatorialMorph(text: string): IToken[][]
           }
 
           function findStringNumber(digitalNumber: number) {
-            let findNumber = RusNumeralLexemes.filter(num => 
+            let findNumber = RusNumeralLexemes.filter(num =>
               num.digitalWrite === String(digitalNumber)).reduce((p, l) => {
                 p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false, singular: true}));
                 return p;
@@ -142,14 +142,14 @@ export function combinatorialMorph(text: string): IToken[][]
         let endIdx = startIdx + 1;
         let found = false;
         let foundOrinalNumreal = false;
-  
+
         while (endIdx < parts.length) {
           const lastToken = parts[endIdx][0];
-  
+
           if (!isMorphToken(lastToken)) {
             break;
           }
-  
+
           if (!(lastToken.word instanceof RusNumeral)) {
             break;
           }
@@ -160,7 +160,7 @@ export function combinatorialMorph(text: string): IToken[][]
                 && p.word instanceof RusNumeral && (p.word.grammCase === fp.word.grammCase || p.word.grammCase === RusCase.Gent)
             )
           );
-  
+
           if (!intersect.length) {
             break;
           }
@@ -175,39 +175,39 @@ export function combinatorialMorph(text: string): IToken[][]
             const nextNumeral = (parts[endIdx + 1][0] as IMorphToken).word as RusNumeral;
 
             if (!foundOrinalNumreal) {
-              foundOrinalNumreal = nextNumeral.lexeme.numeralValue === NumeralValue.Orinal;
+              foundOrinalNumreal = nextNumeral.lexeme.numeralValue === NumeralValue.Ordinal;
             }
 
             if(Number(nextNumeral.lexeme.digitalWrite) % 1000 !== 0) {
               if(numural.lexeme.digitalWrite.length <= nextNumeral.lexeme.digitalWrite.length
-                && nextNumeral.lexeme.numeralValue !== NumeralValue.Orinal) {
+                && nextNumeral.lexeme.numeralValue !== NumeralValue.Ordinal) {
                   throw new Error(`Invalid structure numeral`);
               }
 
-              if ( Number(numural.lexeme.digitalWrite) % 10 !== 0 && nextNumeral.lexeme.numeralValue !== NumeralValue.Orinal) {
+              if ( Number(numural.lexeme.digitalWrite) % 10 !== 0 && nextNumeral.lexeme.numeralValue !== NumeralValue.Ordinal) {
                   throw new Error(`Invalid structure numeral`);
               }
             }
           }
-  
+
           found = true;
-  
+
           firstParts = firstParts.filter(
             p => intersect.some(
               fp => isMorphToken(fp) && fp.word instanceof RusNumeral && isMorphToken(p)
                 && p.word instanceof RusNumeral && (p.word.grammCase === fp.word.grammCase || fp.word.grammCase === RusCase.Gent)
             )
           );
-  
+
           endIdx++;
         }
 
         if (found && firstParts.length) {
           endIdx--;
-          
+
           let idxON = -1;
           if(foundOrinalNumreal) {
-            idxON = parts.findIndex(num => ((num[0] as IMorphToken).word as RusNumeral).lexeme.numeralValue === NumeralValue.Orinal)
+            idxON = parts.findIndex(num => ((num[0] as IMorphToken).word as RusNumeral).lexeme.numeralValue === NumeralValue.Ordinal)
           }
 
           if(idxON >= 0 && idxON !== startIdx && idxON !== endIdx) {
@@ -216,7 +216,7 @@ export function combinatorialMorph(text: string): IToken[][]
 
           const cnt = endIdx - startIdx + 1 - (idxON >= 0 ? 1 : 0);
           startIdx = startIdx + (idxON === startIdx ? 1 : 0);
-  
+
           if (cnt >= 2) {
 
             const cn = parts.splice(startIdx, cnt, parts[startIdx]).map(
