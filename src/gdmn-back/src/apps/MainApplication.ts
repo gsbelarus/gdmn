@@ -567,7 +567,7 @@ export class MainApplication extends Application {
       }
       const dbDetails: IDBDetail[] = testConfig.dbDetails.map((dbDetail: any) => ({
         alias: dbDetail.alias,
-        driver: resolveDriver(dbDetail.driver),
+        driver: Factory.getDriver(dbDetail.driver === "FBDriver" ? "firebird" : dbDetail.driver),
         connectionOptions: {
           server: dbDetail.connectionOptions.server,
           username: dbDetail.connectionOptions.username,
@@ -664,14 +664,5 @@ export class MainApplication extends Application {
         }
       }
     });
-  }
-}
-
-function resolveDriver(driverName: string): ADriver {
-  switch (driverName) {
-    case "FBDriver":
-      return Factory.FBDriver;
-    default:
-      throw new Error(`Unknown driver name ${driverName}`);
   }
 }
