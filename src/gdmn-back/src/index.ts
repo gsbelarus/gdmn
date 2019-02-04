@@ -8,8 +8,8 @@ log4js.configure("./config/log4js.json");
 const defaultLogger = log4js.getLogger();
 
 const creating = Constants.SERVER.CLUSTER.ENABLED
-  ? start(defaultLogger, serverErrorHandler)
-  : clusterStart(defaultLogger, serverErrorHandler);
+  ? clusterStart(defaultLogger, serverErrorHandler)
+  : start(defaultLogger, serverErrorHandler);
 
 process.on("SIGINT", exit);
 process.on("SIGTERM", exit);

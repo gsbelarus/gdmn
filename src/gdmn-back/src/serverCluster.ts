@@ -10,7 +10,7 @@ import { StompSession } from "./stomp/StompSession";
 import { createHttpServer, IServer, startWsServer } from "./server";
 import { Constants } from "./Constants";
 
-async function serverCluster(
+async function createCluster(
   getHttpServer: () => Promise<HttpServer | HttpsServer>,
   getWsServer: () => Promise<{
     stompManager: StompManager;
@@ -181,7 +181,7 @@ export async function clusterStart(
   defaultLogger: Logger,
   serverErrorHandler: (error: NodeJS.ErrnoException) => Promise<void>
 ): Promise<IServer> {
-  return await serverCluster(
+  return await createCluster(
     async () => await createHttpServer(defaultLogger, serverErrorHandler),
     async () =>
       await startWsServer(defaultLogger, undefined, {

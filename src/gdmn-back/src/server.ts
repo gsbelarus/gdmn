@@ -10,12 +10,12 @@ import serve from "koa-static";
 import cors from "koa2-cors";
 import path from "path";
 import WebSocket from "ws";
+import { Logger } from "log4js";
 
 import { Constants } from "./Constants";
 import { checkHandledError, ErrorCodes, throwCtx } from "./ErrorCodes";
 import { StompManager } from "./stomp/StompManager";
 import { IStompSessionMeta } from "./stomp/StompSession";
-import { Logger } from "log4js";
 
 export interface IServer {
   stompManager?: StompManager;
