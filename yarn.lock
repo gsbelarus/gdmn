@@ -1766,9 +1766,9 @@
   integrity sha512-CBgLNk4o3XMnqMc0rhb6lc77IwShMEglz05deDcn2lQxyXEZivfwgYJu7SMha9V5XcrP6qZuevTHV/QrN2vjKQ==
 
 "@types/node@^8.10.19":
-  version "8.10.38"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.38.tgz#e05c201a668492e534b48102aca0294898f449f6"
-  integrity sha512-EibsnbJerd0hBFaDjJStFrVbVBAtOy4dgL8zZFw0uOvPqzBAX59Ci8cgjg3+RgJIWhsB5A4c+pi+D4P9tQQh/A==
+  version "8.10.39"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.39.tgz#e7e87ad00364dd7bc485c940926345b8ec1a26ca"
+  integrity sha512-rE7fktr02J8ybFf6eysife+WF+L4sAHWzw09DgdCebEu+qDwMvv4zl6Bc+825ttGZP73kCKxa3dhJOoGJ8+5mA==
 
 "@types/optimize-css-assets-webpack-plugin@^1":
   version "1.3.3"
@@ -3091,9 +3091,11 @@ binary-extensions@^1.0.0:
   integrity sha512-DYWGk01lDcxeS/K9IHPGWfT8PsJmbXRtRd2Sx72Tnb8pcYZQFF1oSDb8hJtS1vhp212q1Rzi5dUf9+nq0o9UIg==
 
 bindings@^1.2.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.3.1.tgz#21fc7c6d67c18516ec5aaa2815b145ff77b26ea5"
-  integrity sha512-i47mqjF9UbjxJhxGf+pZ6kSxrnI3wBLlnGI2ArWJ4r0VrvDS7ZYXkprq/pLaBWYq4GM0r4zdHY+NNRqEMU7uew==
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.4.0.tgz#909efa49f2ebe07ecd3cb136778f665052040127"
+  integrity sha512-7znEVX22Djn+nYjxCWKDne0RRloa9XfYa84yk3s+HkE3LpDYZmhArYr9O9huBoHY3/oXispx5LorIX7Sl2CgSQ==
+  dependencies:
+    file-uri-to-path "1.0.0"
 
 block-stream@*:
   version "0.0.9"
@@ -5691,6 +5693,11 @@ file-loader@2.0.0:
     loader-utils "^1.0.2"
     schema-utils "^1.0.0"
 
+file-uri-to-path@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz#553a7b8446ff6f684359c445f1e37a05dacc33dd"
+  integrity sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==
+
 filename-regex@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/filename-regex/-/filename-regex-2.0.1.tgz#c1c4b9bee3e09725ddb106b75c1e301fe2f18b26"
@@ -6030,9 +6037,9 @@ gauge@~2.7.3:
     wide-align "^1.1.0"
 
 generic-pool@^3:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-3.5.0.tgz#acac4fd743a175ff20574f380910036464cb61f7"
-  integrity sha512-dEkxmX+egB2o4NR80c/q+xzLLzLX+k68/K8xv81XprD+Sk7ZtP14VugeCz+fUwv5FzpWq40pPtAkzPRqT8ka9w==
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/generic-pool/-/generic-pool-3.6.0.tgz#34e3124d9af754c8bfee7c15906e7347dc543afc"
+  integrity sha512-9tRjIJzgW+ZyYeFBhfLRUefnQwF+IFfEsUkdZB5o75/gb4OZWnYb4ZjPcZc1bl9ofhWCN2rGhXa0SQwF64jTLw==
 
 genfun@^5.0.0:
   version "5.0.0"
@@ -8703,9 +8710,9 @@ log-symbols@^2.1.0:
     chalk "^2.0.1"
 
 log4js@^4:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/log4js/-/log4js-4.0.1.tgz#34bd63d9a06fe98fc2f7df90506c8db7eb722625"
-  integrity sha512-rXta20AbapfmCYVIuSQf4+ET6XSXigflXblfJmCR/wwHnmhs4iKJmEwx2WeNTiuMaiA1+tqKxqQ/wkN5ZSaJmQ==
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/log4js/-/log4js-4.0.2.tgz#0c73e623ca4448669653eb0e9f629beacc7fbbe3"
+  integrity sha512-KE7HjiieVDPPdveA3bJZSuu0n8chMkFl8mIoisBFxwEJ9FmXe4YzNuiqSwYUiR1K8q8/5/8Yd6AClENY1RA9ww==
   dependencies:
     date-format "^2.0.0"
     debug "^3.1.0"
@@ -9245,12 +9252,7 @@ n-readlines@^1:
   resolved "https://registry.yarnpkg.com/n-readlines/-/n-readlines-1.0.0.tgz#c353797f216c253fdfef7e91da4e8b17c29a91a6"
   integrity sha512-ISDqGcspVu6U3VKqtJZG1uR55SmNNF9uK0EMq1IvNVVZOui6MW6VR0+pIZhqz85ORAGp+4zW+5fJ/SE7bwEibA==
 
-nan@^2.6.2:
-  version "2.11.1"
-  resolved "https://registry.yarnpkg.com/nan/-/nan-2.11.1.tgz#90e22bccb8ca57ea4cd37cc83d3819b52eea6766"
-  integrity sha512-iji6k87OSXa0CcrLl9z+ZiYSuR2o+c0bGuNmXdrhTQTakxytAFsC56SArGYoiHlJlFoHSnvmhpceZJaXkVuOtA==
-
-nan@^2.9.2:
+nan@^2.6.2, nan@^2.9.2:
   version "2.12.1"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.12.1.tgz#7b1aa193e9aa86057e3c7bbd0ac448e770925552"
   integrity sha512-JY7V6lRkStKcKTvHO5NVSQRv+RV+FIL5pvDoLiAtSL9pKlC5x9PKQcZDsq7m4FO4d57mkhC6Z+QhAh3Jdk5JFw==
@@ -9336,9 +9338,9 @@ node-fetch@^2:
   integrity sha512-MOd8pV3fxENbryESLgVIeaGKrdl+uaYhCSSVkjeOb/31/njTpcis5aWfdqgNlHIrKOLRbMnfPINPOML2CIFeXA==
 
 node-firebird-native-api@^0:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-0.1.1.tgz#71b65f1c26180d2195d9eefce941f0953e463509"
-  integrity sha512-Gvh7wCCUMvm5TmyUTlf5Yp8uPWcb0DzuxubXREXX/5zkA2nzvJcKWDVnyfdnV0nRb1nWhpVYnH1uD3/x5b5opQ==
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-0.1.2.tgz#63ca9e1989b5045f0e41b2fff71d1d08b4de7f82"
+  integrity sha512-5Y8xWUl39YRjlhp6oT6MjhFfchuULT4qqthxVwQ28VZ56P9sk4GfX0DVqhjKhI6Gvd3FilG5ajEWzo0ii7ZsZw==
   dependencies:
     "@types/node" "^8.10.19"
     bindings "^1.2.1"
