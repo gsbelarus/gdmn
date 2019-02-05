@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import {existsSync, mkdirSync} from "fs";
-import {AConnection, ADriver, ATransaction, Factory, IConnectionServer} from "gdmn-db";
+import {AConnection, ATransaction, Factory, IConnectionServer} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {
   BlobAttribute,
@@ -468,19 +468,15 @@ export class MainApplication extends Application {
           }));
 
           await eBuilder.createAttribute(userEntity, appSet);
+
+          await transaction.commitRetaining();
+          await this._addUser(connection, transaction, {
+            login: "Administrator",
+            password: "Administrator",
+            admin: true
+          });
         }
       })
-    }));
-
-    await this._executeConnection((_connection) => AConnection.executeTransaction({
-      connection: _connection,
-      callback: async (transaction) => {
-        await this._addUser(_connection, transaction, {
-          login: "Administrator",
-          password: "Administrator",
-          admin: true
-        });
-      }
     }));
   }
 
