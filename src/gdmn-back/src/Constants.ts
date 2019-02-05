@@ -19,6 +19,14 @@ export class Constants {
         ? config.get("server.cluster.workersCount")
         : os.cpus().length) as number
     },
+    APP_PROCESS: {
+      POOL: {
+        MIN: config.get("server.appProcess.pool.min") as number,
+        MAX: config.get("server.appProcess.pool.max") as number,
+        ACQUIRE_TIMEOUT: ms(config.get("server.appProcess.pool.acquireTimeout") as string),
+        IDLE_TIMEOUT: ms(config.get("server.appProcess.pool.acquireTimeout") as string)
+      }
+    },
     HTTP: {
       ENABLED: config.get("server.http.host") as boolean,
       HOST: (process.env.HTTP_HOST ? process.env.HTTP_HOST : config.get("server.http.host")) as string,

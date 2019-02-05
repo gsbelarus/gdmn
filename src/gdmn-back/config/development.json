@@ -4,6 +4,14 @@
       "enabled": false,
       "workersCount": 0
     },
+    "appProcess": {
+      "pool": {
+        "min": 0,
+        "max": 3,
+        "acquireTimeout": "1m",
+        "idleTimeout": "1h"
+      }
+    },
     "http": {
       "enabled": true,
       "host": "localhost",
@@ -37,7 +45,7 @@
   },
   "db": {
     "server": {
-      "host": "0.0.0.0",
+      "host": "localhost",
       "port": 3050
     },
     "user": "SYSDBA",
@@ -46,8 +54,8 @@
     "pool": {
       "min": 0,
       "max": 1E3,
-      "acquireTimeout": "60s",
-      "idleTimeout": "60s"
+      "acquireTimeout": "1m",
+      "idleTimeout": "1m"
     }
   }
 }

@@ -9,12 +9,13 @@ import {
   IERModel
 } from "gdmn-orm";
 import log4js from "log4js";
+import {Constants} from "../../Constants";
 import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICmd, Level, Task} from "./task/Task";
-import {ApplicationWorker} from "./worker/ApplicationWorker";
-import {ApplicationWorkerPool} from "./worker/ApplicationWorkerPool";
+import {ApplicationProcess} from "./worker/ApplicationProcess";
+import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 
 export type AppAction = "PING" | "RELOAD_SCHEMA" | "GET_SCHEMA" | "QUERY";
 
@@ -31,7 +32,7 @@ export class Application extends ADatabase {
   public taskLogger = log4js.getLogger("Task");
 
   public readonly sessionManager = new SessionManager(this.sessionLogger);
-  public readonly workerPool = new ApplicationWorkerPool();
+  public readonly processPool = new ApplicationProcessPool();
 
   public erModel: ERModel = new ERModel();
 
@@ -39,13 +40,13 @@ export class Application extends ADatabase {
     super(dbDetail);
   }
 
-  private static async _reloadWorkerERModel(worker: ApplicationWorker, withAdapter?: boolean): Promise<ERModel> {
+  private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
     const reloadSchemaCmd: ReloadSchemaCmd = {id: "RELOAD_SCHEMA_ID", action: "RELOAD_SCHEMA", payload: true};
     const result: IERModel = await worker.executeCmd(Number.NaN, reloadSchemaCmd);
     return deserializeERModel(result, withAdapter);
   }
 
-  private static async _getWorkerERModel(worker: ApplicationWorker, withAdapter?: boolean): Promise<ERModel> {
+  private static async _getProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
     const getSchemaCmd: GetSchemaCmd = {id: "GET_SCHEMA_ID", action: "GET_SCHEMA", payload: true};
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
@@ -63,9 +64,9 @@ export class Application extends ADatabase {
 
         const {steps, delay, testChildProcesses} = context.command.payload;
 
-        if (!ApplicationWorker.processIsWorker && testChildProcesses) {
-          await ApplicationWorkerPool.executeWorker({
-            pool: this.workerPool,
+        if (!ApplicationProcess.isProcess && testChildProcesses) {
+          await ApplicationProcessPool.executeWorker({
+            pool: this.processPool,
             callback: (worker) => worker.executeCmd(session.userKey, context.command)
           });
         } else {
@@ -119,10 +120,10 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this._lock.acquire();
         try {
-          if (!ApplicationWorker.processIsWorker) {
-            this.erModel = await ApplicationWorkerPool.executeWorker({
-              pool: this.workerPool,
-              callback: (worker) => Application._reloadWorkerERModel(worker, true)
+          if (!ApplicationProcess.isProcess) {
+            this.erModel = await ApplicationProcessPool.executeWorker({
+              pool: this.processPool,
+              callback: (worker) => Application._reloadProcessERModel(worker, true)
             });
           } else {
             this.erModel = await this._readERModel();
@@ -187,15 +188,16 @@ export class Application extends ADatabase {
   protected async _onCreate(): Promise<void> {
     await super._onCreate();
 
-    if (!ApplicationWorker.processIsWorker) {
-      await this.workerPool.create(this.dbDetail, { // TODO move to config
-        max: 1,
-        acquireTimeoutMillis: 60000,
-        idleTimeoutMillis: 60000
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.create(this.dbDetail, {
+        min: Constants.SERVER.APP_PROCESS.POOL.MIN,
+        max: Constants.SERVER.APP_PROCESS.POOL.MAX,
+        acquireTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.ACQUIRE_TIMEOUT,
+        idleTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.IDLE_TIMEOUT
       });
-      this.erModel = await ApplicationWorkerPool.executeWorker({
-        pool: this.workerPool,
-        callback: (worker) => Application._getWorkerERModel(worker, true)
+      this.erModel = await ApplicationProcessPool.executeWorker({
+        pool: this.processPool,
+        callback: (worker) => Application._getProcessERModel(worker, true)
       });
     } else {
       this.erModel = await this._readERModel();
@@ -205,8 +207,8 @@ export class Application extends ADatabase {
   protected async _onDelete(): Promise<void> {
     await super._onDelete();
 
-    if (!ApplicationWorker.processIsWorker) {
-      await this.workerPool.destroy();
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.destroy();
     }
 
     const {alias, connectionOptions}: IDBDetail = this.dbDetail;
@@ -218,15 +220,16 @@ export class Application extends ADatabase {
   protected async _onConnect(): Promise<void> {
     await super._onConnect();
 
-    if (!ApplicationWorker.processIsWorker) {
-      await this.workerPool.create(this.dbDetail, { // TODO move to config
-        max: 1,
-        acquireTimeoutMillis: 60000,
-        idleTimeoutMillis: 60000
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.create(this.dbDetail, {
+        min: Constants.SERVER.APP_PROCESS.POOL.MIN,
+        max: Constants.SERVER.APP_PROCESS.POOL.MAX,
+        acquireTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.ACQUIRE_TIMEOUT,
+        idleTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.IDLE_TIMEOUT
       });
-      this.erModel = await ApplicationWorkerPool.executeWorker({
-        pool: this.workerPool,
-        callback: (worker) => Application._getWorkerERModel(worker, true)
+      this.erModel = await ApplicationProcessPool.executeWorker({
+        pool: this.processPool,
+        callback: (worker) => Application._getProcessERModel(worker, true)
       });
     } else {
       this.erModel = await this._readERModel();
@@ -236,8 +239,8 @@ export class Application extends ADatabase {
   protected async _onDisconnect(): Promise<void> {
     await super._onDisconnect();
 
-    if (!ApplicationWorker.processIsWorker) {
-      await this.workerPool.destroy();
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.destroy();
     }
 
     const {alias, connectionOptions}: IDBDetail = this.dbDetail;

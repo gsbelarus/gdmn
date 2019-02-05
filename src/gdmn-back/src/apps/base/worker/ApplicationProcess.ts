@@ -16,10 +16,12 @@ export interface AppWorkerResponse<R> {
   result: R;
 }
 
-export class ApplicationWorker {
+export class ApplicationProcess {
 
-  private static _ENV_IS_APP_WORKER = "IS_APP_WORKER";
-  public static processIsWorker = (ApplicationWorker._ENV_IS_APP_WORKER in process.env);
+  private static _ENV_IS_APP_PROCESS = "IS_APP_PROCESS";
+
+  public static isMainProcess = !(ApplicationProcess._ENV_IS_APP_PROCESS in process.env);
+  public static isProcess = (ApplicationProcess._ENV_IS_APP_PROCESS in process.env);
 
   private _process?: ChildProcess;
 
@@ -39,7 +41,7 @@ export class ApplicationWorker {
     this._process = childProcess.fork(__filename, ["child", argDBDetail], {
       silent: false,
       env: {
-        [ApplicationWorker._ENV_IS_APP_WORKER]: "1"
+        [ApplicationProcess._ENV_IS_APP_PROCESS]: "1"
       }
     });
   }
@@ -83,7 +85,7 @@ export class ApplicationWorker {
   }
 }
 
-if (ApplicationWorker.processIsWorker) {
+if (ApplicationProcess.isProcess) {
   const args = process.argv.slice(2, process.argv.length);
   const dbDetail = JSON.parse(args[1]);
   dbDetail.driver = Factory.getDriver(dbDetail.driver);
