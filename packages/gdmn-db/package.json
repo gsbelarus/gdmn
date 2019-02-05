@@ -32,9 +32,9 @@
   },
   "devDependencies": {
     "@types/generic-pool": "^3",
-    "@types/jest": "^23",
+    "@types/jest": "^24",
     "@types/node": "^10",
-    "jest": "^23",
+    "jest": "^24",
     "jest-junit": "^6",
     "shx": "^0",
     "ts-jest": "^23",
