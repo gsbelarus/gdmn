@@ -24,9 +24,6 @@
     "typesafe-actions": "^2",
     "typescript": "^3"
   },
-  "devDependencies": {
-    "webpack": "4.19.1"
-  },
   "scripts": {
     "start": "react-scripts start",
     "clean": "shx rm -rf ./build",
