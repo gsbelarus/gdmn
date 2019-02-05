@@ -1,1 +1,1 @@
-export * from './mutex';
+export * from './Semaphore';

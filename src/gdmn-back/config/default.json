@@ -1,5 +1,17 @@
 {
   "server": {
+    "cluster": {
+      "enabled": true,
+      "workersCount": 0
+    },
+    "appProcess": {
+      "pool": {
+        "min": 0,
+        "max": 3,
+        "acquireTimeout": "1m",
+        "idleTimeout": "1h"
+      }
+    },
     "http": {
       "enabled": true,
       "host": "localhost",
@@ -13,7 +25,8 @@
     },
     "publicDir": "./public",
     "session": {
-      "timeout": "1d"
+      "timeout": "1d",
+      "maxConnections": 10
     },
     "task": {
       "timeout": "1d"
@@ -37,6 +50,12 @@
     },
     "user": "SYSDBA",
     "password": "masterkey",
-    "dir": "./databases"
+    "dir": "./databases",
+    "pool": {
+      "min": 0,
+      "max": 1E3,
+      "acquireTimeout": "1m",
+      "idleTimeout": "1m"
+    }
   }
 }

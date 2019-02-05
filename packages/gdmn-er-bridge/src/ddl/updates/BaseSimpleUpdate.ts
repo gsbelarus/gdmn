@@ -10,11 +10,9 @@ export abstract class BaseSimpleUpdate extends BaseUpdate {
         transaction,
         defaultIgnore: true,
         callback: async (ddlHelper) => {
-          const flag = await ddlHelper.cachedStatements.isTableExists("AT_DATABASE");
-
           await this.internalRun(ddlHelper);
 
-          if (flag) {
+          if (await ddlHelper.cachedStatements.isTableExists("AT_DATABASE")) {
             await this._updateDatabaseVersion(transaction);
           }
         }

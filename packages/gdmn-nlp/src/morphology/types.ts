@@ -195,7 +195,7 @@ export const ShortAdverbTypeNames = [
 
 export enum NumeralValue {
   Quantitative = 0,
-  Orinal
+  Ordinal
 };
 
 export const RusNumeralValueNames = [
@@ -205,7 +205,7 @@ export const RusNumeralValueNames = [
 
 export const ShortNumeralValueNames = [
   'Quant',
-  'Ornl'
+  'Ordn'
 ];
 
 export enum NumeralStructure {
@@ -221,19 +221,19 @@ export const RusNumeralStructureNames = [
 ];
 
 export const ShortNumeralStructureNames = [
-  'Simp',
+  'Simpl',
   'Compl',
-  'Compo'
+  'Comps'
 ];
 
-export enum NumeralCatagory {
+export enum NumeralCategory {
   ProperQuantitative = 0,
   Collective,
   Fractional
 };
 
 export const RusNumeralCatagoryNames = [
-  'собественно количественное',
+  'собственно количественное',
   'собирательное',
   'дробное'
 ];
@@ -245,7 +245,8 @@ export const ShortNumeralCatagoryNames = [
 ];
 
 export type RusDeclensionNumeralZ  =
-  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6';
+  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6'     |'pqs7'     |'pqs8'     |'pqs9'
+  |'pqs10'    |'pqc'        |'pqc1'       |'pqc2'       |'pqc3'       |'pqc4'       |'1a'       |'1b'       |'1*a'      |'6*a';
 
   export type RusDeclensionNumeralZEnding = {
     declensionZ: RusDeclensionNumeralZ,
@@ -256,12 +257,14 @@ export interface RusNumeralInterface {
   readonly stem: string;
   readonly stem1: string;
   readonly stem2: string;
+  readonly stem3: string;
   readonly possiblePlural: boolean;
   readonly digitalWrite: string,
   readonly numeralValue: NumeralValue,
   readonly structure: NumeralStructure,
-  readonly catagory?: NumeralCatagory,
+  readonly catagory?: NumeralCategory,
   readonly declensionZ: RusDeclensionNumeralZ;
+  readonly declensionZ1?: RusDeclensionNumeralZ;
 }
 
 export type RusNumeralEnding = {

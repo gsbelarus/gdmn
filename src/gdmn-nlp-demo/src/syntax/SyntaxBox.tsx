@@ -360,7 +360,6 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                             {field.link.fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
                           </div>
                         </div>
-                        {console.log(document.getElementById(`scrollUp${field.link.alias}/${idx}`))}
                         <button id={`buttonForScroll${field.link.alias}/${idx}`} className="buttonForScroll" 
                           onClick={ () => 
                             this.collUpsFields(

@@ -81,6 +81,8 @@ class GdmnPubSubApi {
   private taskProgressResultSubscription?: Subscription;
   private taskStatusResultSubscription?: Subscription;
 
+  private reconnectUrlQuery?: string;
+
   constructor(
     endpointUrl: string,
     debug?: debugFnType,
@@ -92,6 +94,12 @@ class GdmnPubSubApi {
       new WebStomp({
         // todo: <IPubSubMessage<TGdmnReceivedErrorMeta>>
         brokerURL: endpointUrl,
+        webSocketFactory: () => {
+          return new WebSocket(
+            endpointUrl + (this.reconnectUrlQuery ? `/?${this.reconnectUrlQuery}` : ''),
+            Versions.default.protocolVersions()
+          );
+        },
         heartbeatIncoming: 2000,
         heartbeatOutgoing: 2000,
         reconnectDelay: 5000,
@@ -183,12 +191,13 @@ class GdmnPubSubApi {
     }
 
     // //-//console.log('AUTH+connect');
-
+    this.reconnectUrlQuery = '';
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
         tap(connectedMessage => {
+          this.reconnectUrlQuery = cmd.payload.session ? `session=${cmd.payload.session}` : ''; // todo
           this.pubSubClient.reconnectMeta.authorization = cmd.payload.authorization;
           this.updateReconnectMeta(connectedMessage);
           this.subTasks();
@@ -208,11 +217,14 @@ class GdmnPubSubApi {
   }
 
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {
+    this.reconnectUrlQuery = '';
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
         tap(connectedMessage => {
+          this.reconnectUrlQuery =
+            connectedMessage.meta && connectedMessage.meta.session ? `session=${connectedMessage.meta.session}` : ''; // todo
           this.updateReconnectMeta(connectedMessage);
         }),
         map<IPubSubMessage, ICmdResult<_ISignResponseMeta, null>>(connectedMessage => {
@@ -255,13 +267,16 @@ class GdmnPubSubApi {
     // //-//console.log('SUBSCRIBE');
 
     // todo: test delete
-    this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(value => {}
+    this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(
+      value => {}
       //-//console.log('[GDMN][PUB-SUB] taskProgressResult: ', value)
     );
-    this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(value => {}
+    this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(
+      value => {}
       //-//console.log('[GDMN][PUB-SUB] taskStatusResult: ', value)
     );
-    this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(value => {}
+    this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(
+      value => {}
       //-//console.log('[GDMN][PUB-SUB] taskActionResult: ', value)
     );
   }

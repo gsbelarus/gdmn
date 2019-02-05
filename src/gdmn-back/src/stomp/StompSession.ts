@@ -3,14 +3,14 @@ import {Logger} from "log4js";
 import ms from "ms";
 import {StompClientCommandListener, StompError, StompHeaders, StompServerSessionLayer} from "stomp-protocol";
 import {v1 as uuidV1} from "uuid";
+import {DBStatus} from "../apps/base/ADatabase";
 import {Application} from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
 import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
-import {Actions, CommandProvider} from "../apps/CommandProvider";
+import {Actions, MainCommandProvider} from "../apps/MainCommandProvider";
 import {IUser, MainApplication} from "../apps/MainApplication";
 import {Constants} from "../Constants";
-import {DBStatus} from "../apps/base/ADatabase";
 import {StompErrorCode, StompServerError} from "./StompServerError";
 
 export type Ack = "auto" | "client" | "client-individual";
@@ -19,6 +19,10 @@ export interface ISubscription {
   id: string;
   destination: string;
   ack: Ack;
+}
+
+export interface IStompSessionMeta {
+  [k: string]: string;
 }
 
 export class StompSession implements StompClientCommandListener {
@@ -37,6 +41,7 @@ export class StompSession implements StompClientCommandListener {
   private _application?: Application;
   private _mainApplication?: MainApplication;
   private _logger?: Logger;
+  private _meta?: IStompSessionMeta;
 
   constructor(session: StompServerSessionLayer) {
     this._stomp = session;
@@ -84,6 +89,8 @@ export class StompSession implements StompClientCommandListener {
         this._stomp.message(headers, JSON.stringify({
           payload: task.options.command.payload,
           progress: {
+            min: task.progress.min,
+            max: task.progress.max,
             value: task.progress.value,
             description: task.progress.description
           }
@@ -101,6 +108,14 @@ export class StompSession implements StompClientCommandListener {
 
   set logger(value: Logger) {
     this._logger = value;
+  }
+
+  get meta(): IStompSessionMeta | undefined {
+    return this._meta;
+  }
+
+  set meta(value: IStompSessionMeta | undefined) {
+    this._meta = value;
   }
 
   get application(): Application {
@@ -256,14 +271,15 @@ export class StompSession implements StompClientCommandListener {
         this._application = this.mainApplication;
       }
 
-      await this._application.waitProcess();
+      await this._application.waitUnlock();
       if (this._application.status !== DBStatus.CONNECTED) {
         await this._application.connect();
       }
 
       // create session for application
       if (session) {
-        this._session = await this.application.sessionManager.find(session, result.userKey);
+        const sessionId = StompSession.parseSessionMessageHeader(session).id;
+        this._session = await this.application.sessionManager.find(sessionId, result.userKey);
       } else {
         this._session = await this.application.sessionManager.open(result.userKey);
       }
@@ -390,14 +406,13 @@ export class StompSession implements StompClientCommandListener {
           };
 
           // TODO remove task-id from receipt; use command.id ?
-          let task;
           try {
-            task = new CommandProvider(this.application).receive(this.session, command);
+            const task = new MainCommandProvider(this.application).receive(this.session, command);
+            task.execute();
+            this._sendReceipt(headers, {"task-id": task.id});
           } catch (error) {
             throw new StompServerError(StompErrorCode.INVALID, error.message);
           }
-          this._sendReceipt(headers, {"task-id": task.id});
-          task.execute().catch(this.logger.error);
 
           break;
         default:
@@ -439,6 +454,11 @@ export class StompSession implements StompClientCommandListener {
     }, headers);
   }
 
+  public static parseSessionMessageHeader(session: string): { id: string, meta: IStompSessionMeta } {
+    // todo: _catch ?
+    return JSON.parse(decodeURIComponent(session));
+  }
+
   protected _getMessageHeaders(subscription: ISubscription, task: Task<any, any>, messageKey: string): StompHeaders {
     const headers: StompHeaders = {
       "content-type": "application/json;charset=utf-8",
@@ -454,10 +474,17 @@ export class StompSession implements StompClientCommandListener {
     return headers;
   }
 
+  protected _getSessionMessageHeader(): string {
+    return encodeURIComponent(JSON.stringify({
+      id: this.session.id,
+      meta: this.meta
+    }));
+  }
+
   protected _sendConnected(headers: StompHeaders): void {
     this._stomp.connected({
       server: `${Constants.NAME}/${Constants.VERSION}`,
-      session: this.session.id,
+      session: this._getSessionMessageHeader(),
       ...headers
     }).catch(this.logger.warn);
   }

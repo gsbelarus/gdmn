@@ -125,12 +125,12 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
             throw new Error("Connection pool need created");
         }
 
-        // disconnect all borrowed connection
+        // disconnect all borrowed connections
         const connections = Array.from((this._connectionPool as any)._allObjects).map((item: any) => item.obj);
         const connectedConnections = connections.filter((connection: CommonConnectionProxy) => connection.connected);
         if (connectedConnections.length) {
             console.warn("Not all connection disconnected, they will be disconnected");
-            const promises = connectedConnections.map((connection) => connection.disconnect());
+            const promises = connectedConnections.map((connection: CommonConnectionProxy) => connection.disconnect());
             await Promise.all(promises);
         }
 

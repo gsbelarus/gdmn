@@ -35,9 +35,22 @@ export class VPParser1 extends Parser implements IDescribedParser {
   });
 
   public qualImperativeNoun = this.RULE('qualImperativeNoun', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.qualImperativeANPNoun) },
+      { ALT: () => this.SUBRULE(this.qualImperativeNNPNoun) },
+    ]);
+  });
+
+  public qualImperativeANPNoun = this.RULE('qualImperativeANPNoun', () => {
     this.OPTION( () => this.SUBRULE(this.imperativeDets) );
     this.SUBRULE(this.imperativeNoun);
   });
+
+  public qualImperativeNNPNoun = this.RULE('qualImperativeNNPNoun', () => {
+    this.SUBRULE(this.imperativeNNPNumr);
+    this.SUBRULE(this.imperativeNNPNoun);
+  });
+
 
   public imperativeDets = this.RULE('imperativeDets', () => {
     this.SUBRULE(this.imperativeDet);
@@ -49,6 +62,44 @@ export class VPParser1 extends Parser implements IDescribedParser {
       { ALT: () => this.CONSUME(morphTokens.ADJFQualPlurAccs) },
       { ALT: () => this.CONSUME(morphTokens.ADJFRelvPlurAccs) },
     ]);
+  });
+
+  public imperativeNNPNumr = this.RULE('imperativeNNPNumr', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(morphTokens.NUMRInanMascSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRInanFemnSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRInanNeutSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRAnimMascSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRAnimFemnSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRAnimNeutSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRInanPlurGent)},
+    ]);
+  });
+
+  public imperativeNNPNoun = this.RULE('imperativeNNPNoun', () => {
+    this.OR([
+      { ALT: () => this.CONSUME(morphTokens.NOUNAnimMascSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNAnimFemnSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNAnimNeutSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNAnimMascPlurAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNAnimFemnPlurAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNAnimNeutPlurAccs) },
+
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanMascSingGent) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanFemnSingGent) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanNeutSingGent) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanMascPlurGent) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanFemnPlurGent) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanNeutPlurGent) },
+
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanMascSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanFemnSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanNeutSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanMascPlurAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanFemnPlurAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NOUNInanNeutPlurAccs) },
+    ]);
+
   });
 
   public imperativeNoun = this.RULE('imperativeNoun', () => this.SUBRULE(this.nounAccs) );
@@ -73,12 +124,6 @@ export class VPParser1 extends Parser implements IDescribedParser {
 
   public ppNoun = this.RULE('ppNoun', () => {
     this.SUBRULE(this.nounGent);
-    /*
-    this.OPTION( () => {
-      this.CONSUME(morphTokens.CONJ);
-      this.SUBRULE(this.ppNoun);
-    });
-    */
   });
 
   public nounGent = this.RULE('nounGent', () => {

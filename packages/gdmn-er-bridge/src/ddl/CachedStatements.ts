@@ -58,13 +58,20 @@ export interface IATIndicesInput {
 interface IStatements {
   sequenceExists?: AStatement;
   tableExists?: AStatement;
-  columnsExists?: AStatement;
+  columnExists?: AStatement;
   constraintExists?: AStatement;
   indexExists?: AStatement;
   domainExists?: AStatement;
   triggerExists?: AStatement;
 
   ddlUniqueSequence?: AStatement;
+
+  tableATExists?: AStatement;
+  columnATExists?: AStatement;
+  generatorATExists?: AStatement;
+  indexATExists?: AStatement;
+  domainATExists?: AStatement;
+  triggerATExists?: AStatement;
 
   addToATFields?: AStatement;
   addToATRelations?: AStatement;
@@ -157,8 +164,8 @@ export class CachedStatements {
   public async isColumnExists(tableName: string, fieldName: string): Promise<boolean> {
     this._checkDisposed();
 
-    if (!this._statements.columnsExists) {
-      this._statements.columnsExists = await this._connection.prepare(this._transaction, `
+    if (!this._statements.columnExists) {
+      this._statements.columnExists = await this._connection.prepare(this._transaction, `
         SELECT FIRST 1 0
         FROM RDB$RELATION_FIELDS rf
         WHERE rf.RDB$RELATION_NAME = :tableName
@@ -166,7 +173,7 @@ export class CachedStatements {
       `);
     }
     return await AStatement.executeQueryResultSet({
-      statement: this._statements.columnsExists,
+      statement: this._statements.columnExists,
       params: {tableName, fieldName},
       callback: (resultSet) => resultSet.next()
     });
@@ -250,6 +257,107 @@ export class CachedStatements {
     }
     const result = await this._statements.ddlUniqueSequence.executeReturning();
     return (await result.getAll())[0];
+  }
+
+  public async isTableATExists(tableName: string): Promise<boolean> {
+    this._checkDisposed();
+
+    if (!this._statements.tableATExists) {
+      this._statements.tableATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_RELATIONS
+        WHERE RELATIONNAME = :tableName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.tableATExists,
+      params: {tableName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }
+
+  public async isColumnATExists(tableName: string, columnName: string): Promise<boolean> {
+    this._checkDisposed();
+
+    if (!this._statements.columnATExists) {
+      this._statements.columnATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_RELATION_FIELDS
+        WHERE RELATIONNAME = :tableName
+          AND FIELDNAME = :columnName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.columnATExists,
+      params: {tableName, columnName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }
+
+  public async isGeneratorATExists(generatorName: string): Promise<boolean> {
+    this._checkDisposed();
+
+    if (!this._statements.generatorATExists) {
+      this._statements.generatorATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_GENERATORS
+        WHERE GENERATORNAME = :generatorName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.generatorATExists,
+      params: {generatorName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }
+
+  public async isIndexATExists(indexName: string): Promise<boolean> {
+    this._checkDisposed();
+
+    if (!this._statements.indexATExists) {
+      this._statements.indexATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_INDICES
+        WHERE INDEXNAME = :indexName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.indexATExists,
+      params: {indexName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }
+
+  public async isDomainATExists(domainName: string): Promise<boolean> {
+    this._checkDisposed();
+    if (!this._statements.domainATExists) {
+      this._statements.domainATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_FIELDS
+        WHERE FIELDNAME = :domainName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.domainATExists,
+      params: {domainName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }
+
+  public async isTriggerATExists(triggerName: string): Promise<boolean> {
+    this._checkDisposed();
+    if (!this._statements.triggerATExists) {
+      this._statements.triggerATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_TRIGGER
+        WHERE TRIGGERNAME = :triggerName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.triggerATExists,
+      params: {triggerName},
+      callback: (resultSet) => resultSet.next()
+    });
   }
 
   public async addToATFields(input: IATFieldsInput): Promise<number> {

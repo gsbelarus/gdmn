@@ -1,6 +1,6 @@
 import { parsePhrase } from "../parser";
 import { RusVerb } from "../../morphology/rusVerb";
-import { RusNP, RusPP, RusANP, RusPhrase } from "../rusSyntax";
+import { RusNP, RusPP, RusANP, RusPhrase, RusNNP, RusCN } from "../rusSyntax";
 import { RusWord } from "../../morphology/rusMorphology";
 import { RusNoun } from "../../morphology/rusNoun";
 import { RusConjunction } from "../../morphology/rusConjunction";
@@ -102,6 +102,57 @@ describe("vpparser1", () => {
     expect((anp!.items[0] as RusWord).word).toEqual('лучшие');
     expect((anp!.items[1] as RusWord).word).toEqual('организации');
   });
+  
+  test("покажи 100 организаций из минска", () => {
+    const result = parsePhrase('покажи 100 организаций из минска');
+    const vp = result.phrase;
+    expect(vp).toBeDefined();
+    const verb = vp!.items[0] as RusVerb;
+    expect(verb).toBeDefined();
+    expect(verb.word).toEqual('покажи');
+    const np = vp!.items[1] as RusNP;
+    const nnp = np!.items[0] as RusNNP;
+    const pp = np!.items[1] as RusPP;
+    expect((nnp!.items[0] as RusWord).word).toEqual('сто');
+    expect((nnp!.items[1] as RusWord).word).toEqual('организаций');
+    expect((pp!.items[0] as RusWord).word).toEqual('из');
+    expect((pp!.items[1] as RusWord).word).toEqual('минска');
+  });
+
+  test("покажи сто миллионов организаций из минска, пинска", () => {
+    const result = parsePhrase('покажи сто миллионов организаций из минска, пинска');
+    const vp = result.phrase;
+    expect(vp).toBeDefined();
+    const verb = vp!.items[0] as RusVerb;
+    expect(verb).toBeDefined();
+    expect(verb.word).toEqual('покажи');
+    const np = vp!.items[1] as RusNP;
+    const nnp = np!.items[0] as RusNNP;
+    const pp = np!.items[1] as RusPP;
+    const cn = nnp!.items[0] as RusCN;
+    expect((cn!.items[0] as RusWord).word).toEqual('сто');
+    expect((cn!.items[1] as RusWord).word).toEqual('миллионов');
+    expect((nnp!.items[1] as RusWord).word).toEqual('организаций');
+    expect((pp!.items[0] as RusWord).word).toEqual('из');
+    expect(((pp!.items[1] as RusPhrase).items[0] as RusNoun).word).toEqual('минска');
+    expect(((pp!.items[1] as RusPhrase).items[1] as RusNoun).word).toEqual('пинска');
+  });
+
+  test("покажи 100000000 организаций из минска", () => {
+    const result = parsePhrase('покажи 100000000 организаций из минска');
+    const vp = result.phrase;
+    expect(vp).toBeDefined();
+    const verb = vp!.items[0] as RusVerb;
+    expect(verb).toBeDefined();
+    expect(verb.word).toEqual('покажи');
+    const np = vp!.items[1] as RusNP;
+    const nnp = np!.items[0] as RusNNP;
+    const pp = np!.items[1] as RusPP;
+    const cn = nnp!.items[0] as RusCN;
+    expect((cn!.items[0] as RusWord).word).toEqual('сто');
+    expect((cn!.items[1] as RusWord).word).toEqual('миллион');
+    expect((nnp!.items[1] as RusWord).word).toEqual('организаций');
+    expect((pp!.items[0] as RusWord).word).toEqual('из');
+    expect((pp!.items[1] as RusWord).word).toEqual('минска');
+  });
 });
-
-

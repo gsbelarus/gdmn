@@ -1,5 +1,6 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { debugFnType } from '@stomp/stompjs';
 
 import {
   BasePubSubBridge,
@@ -7,7 +8,6 @@ import {
   TPubSubConnectStatus,
   TPubSubMsgPublishStatus
 } from './bridges/BasePubSubBridge';
-import { debugFnType } from '@stomp/stompjs';
 
 interface IPubSubMessageMeta {
   [key: string]: string | undefined;
@@ -43,7 +43,9 @@ class PubSubClient {
   public readonly subscribe: <TMessage extends IPubSubMessage = IPubSubMessage>(
     topic: string,
     meta?: IPubSubMessageMeta
-  ) => Observable<TMessage> | never; // fixme: type ts 3.2
+  ) => Observable<TMessage> | never;
+
+  // fixme: type ts 3.2
 
   constructor(
     bridge: BasePubSubBridge,
@@ -53,7 +55,7 @@ class PubSubClient {
     this.bridge = bridge;
 
     // todo tmp
-    this.bridge.connectionStatusObservable.subscribe(value => {}) //-//console.log('connectionStatusObservable: ' + value));
+    this.bridge.connectionStatusObservable.subscribe(value => {}); //-//console.log('connectionStatusObservable: ' + value));
 
     this.connectionDisconnectedObservable = this.bridge.connectionStatusObservable.pipe(
       filter((currentState: TPubSubConnectStatus) => currentState === TPubSubConnectStatus.DISCONNECTED)

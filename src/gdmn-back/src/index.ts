@@ -1,139 +1,38 @@
-import http, {Server as HttpServer} from "http";
-import {Server as HttpsServer} from "https";
-import Koa from "koa";
-import koaBody from "koa-body";
-import errorHandler from "koa-error";
-import logger from "koa-logger";
-import Router from "koa-router";
-import send from "koa-send";
-import serve from "koa-static";
-import cors from "koa2-cors";
 import log4js from "log4js";
-import path from "path";
-import WebSocket from "ws";
-import {Constants} from "./Constants";
-import {checkHandledError, ErrorCodes, throwCtx} from "./ErrorCodes";
-import {StompManager} from "./stomp/StompManager";
 
-interface IServer {
-  stompManager: StompManager;
-  httpServer?: HttpServer;
-  wsHttpServer?: WebSocket.Server;
-}
+import { Constants } from "./Constants";
+import { start } from "./server";
+import { clusterStart } from "./serverCluster";
 
 log4js.configure("./config/log4js.json");
 const defaultLogger = log4js.getLogger();
 
-async function create(): Promise<IServer> {
-  const stompManager = new StompManager();
-  await stompManager.create();
-
-  const serverApp = new Koa()
-    .use(logger())
-    .use(serve(Constants.SERVER.PUBLIC_DIR))
-    .use(koaBody({multipart: true}))
-    .use(cors())
-    .use(errorHandler())
-    .use(async (ctx, next) => {
-      try {
-        await next();
-      } catch (error) {
-        if (checkHandledError(error)) {
-          throw error;
-        }
-        throwCtx(ctx, 500, error, ErrorCodes.INTERNAL);
-      }
-    });
-
-  serverApp.use(async (ctx, next) => {
-    ctx.state.mainApplication = stompManager.mainApplication;
-    await next();
-  });
-
-  const router = new Router()
-  // TODO temp
-    .get("/", (ctx) => ctx.redirect("/spa"))
-    .get(/\/spa(\/*)?/g, async (ctx) => {
-      await send(ctx, "/", { // send(ctx, "/gs/ng/", {
-        root: path.resolve(process.cwd(), Constants.SERVER.PUBLIC_DIR),
-        index: "index",
-        extensions: ["html"]
-      });
-    });
-
-  serverApp
-    .use(router.routes())
-    .use(router.allowedMethods())
-    .use((ctx) => throwCtx(ctx, 404, "Not found", ErrorCodes.NOT_FOUND));
-
-  const httpServer = startHttpServer(serverApp);
-  const wsHttpServer = startWebSocketServer(stompManager, httpServer);
-
-  return {
-    stompManager,
-    httpServer,
-    wsHttpServer
-  };
-}
-
-function startWebSocketServer(stompManager: StompManager,
-                              server?: HttpServer | HttpsServer): WebSocket.Server | undefined {
-  if (server) {
-    const wsServer = new WebSocket.Server({server});
-    wsServer.on("connection", (webSocket) => {
-      defaultLogger.info("WebSocket event: 'connection'");
-      if (stompManager.add(webSocket)) {
-        webSocket.on("close", () => {
-          defaultLogger.info("WebSocket event: 'close'");
-          stompManager.delete(webSocket);
-        });
-      }
-    });
-    return wsServer;
-  }
-}
-
-function startHttpServer(serverApp: Koa): HttpServer | undefined {
-  let httpServer: HttpServer | undefined;
-  if (Constants.SERVER.HTTP.ENABLED) {
-    httpServer = http.createServer(serverApp.callback());
-    httpServer.listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST);
-    httpServer.on("error", serverErrorHandler);
-    httpServer.on("listening", () => {
-      const address = httpServer!.address();
-      if (typeof address === "string") {
-        defaultLogger.info(`Listening ${httpServer!.address()}`);
-      } else {
-        defaultLogger.info(`Listening on http://%s:%s;` +
-          ` env: %s`, address.address, address.port, process.env.NODE_ENV);
-      }
-    });
-  }
-  return httpServer;
-}
-
-const creating = create();
+const creating = Constants.SERVER.CLUSTER.ENABLED
+  ? clusterStart(defaultLogger, serverErrorHandler)
+  : start(defaultLogger, serverErrorHandler);
 
 process.on("SIGINT", exit);
 process.on("SIGTERM", exit);
 
 async function exit(): Promise<void> {
   try {
-    const {stompManager, httpServer, wsHttpServer} = await creating;
+    const { stompManager, httpServer, wsServer } = await creating;
 
-    if (wsHttpServer) {
-      wsHttpServer.clients.forEach((client) => client.removeAllListeners());
-      wsHttpServer.removeAllListeners();
-      await new Promise((resolve) => wsHttpServer.close(resolve));
+    if (wsServer) {
+      wsServer.clients.forEach(client => client.removeAllListeners());
+      wsServer.removeAllListeners();
+      await new Promise(resolve => wsServer.close(resolve));
       defaultLogger.info("WebSocket server is closed");
     }
     if (httpServer) {
       httpServer.removeAllListeners();
-      await new Promise((resolve) => httpServer.close(resolve));
+      await new Promise(resolve => httpServer.close(resolve));
       defaultLogger.info("Http server is closed");
     }
-    await stompManager.destroy();
-    defaultLogger.info("StompManager is destroyed");
+    if (stompManager) {
+      await stompManager.destroy();
+      defaultLogger.info("StompManager is destroyed");
+    }
   } catch (error) {
     switch (error.message) {
       case "connection shutdown":
@@ -170,5 +69,7 @@ async function serverErrorHandler(error: NodeJS.ErrnoException): Promise<void> {
 }
 
 async function logShutdown(): Promise<void> {
-  await new Promise((resolve, reject) => log4js.shutdown((error) => error ? reject(error) : resolve()));
+  await new Promise((resolve, reject) =>
+    log4js.shutdown(error => (error ? reject(error) : resolve()))
+  );
 }

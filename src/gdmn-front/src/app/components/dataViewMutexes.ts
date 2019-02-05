@@ -1,7 +1,7 @@
-import { Mutex } from 'gdmn-internals';
+import { Semaphore } from 'gdmn-internals';
 
 interface IMutexes {
-  [name: string]: Mutex
+  [name: string]: Semaphore
 }
 
 const mutexes: IMutexes = { }
@@ -12,7 +12,7 @@ export function getMutex(name: string) {
   if (mutex) {
     return mutex;
   } else {
-    mutex = new Mutex();
+    mutex = new Semaphore();
     mutexes[name] = mutex;
     return mutex;
   }

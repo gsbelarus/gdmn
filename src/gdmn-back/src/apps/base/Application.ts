@@ -1,30 +1,55 @@
-import {AccessMode, AConnection} from "gdmn-db";
+import {AConnection, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
-import {EntityQuery, ERModel, IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
+import {
+  deserializeERModel,
+  EntityQuery,
+  ERModel,
+  IEntityQueryInspector,
+  IEntityQueryResponse,
+  IERModel
+} from "gdmn-orm";
 import log4js from "log4js";
+import {Constants} from "../../Constants";
 import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
 import {ICmd, Level, Task} from "./task/Task";
+import {ApplicationProcess} from "./worker/ApplicationProcess";
+import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 
-export type AppAction = "PING" | "GET_SCHEMA" | "QUERY";
+export type AppAction = "PING" | "RELOAD_SCHEMA" | "GET_SCHEMA" | "QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
-export type PingCmd = AppCmd<"PING", { steps: number; delay: number; }>;
-export type GetSchemaCmd = AppCmd<"GET_SCHEMA">;
+export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
+export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", boolean>;
+export type GetSchemaCmd = AppCmd<"GET_SCHEMA", boolean>;
 export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
 
-export abstract class Application extends ADatabase {
+export class Application extends ADatabase {
 
   public sessionLogger = log4js.getLogger("Session");
   public taskLogger = log4js.getLogger("Task");
 
-  public readonly erModel: ERModel = new ERModel();
   public readonly sessionManager = new SessionManager(this.sessionLogger);
+  public readonly processPool = new ApplicationProcessPool();
 
-  protected constructor(dbDetail: IDBDetail) {
+  public erModel: ERModel = new ERModel();
+
+  constructor(dbDetail: IDBDetail) {
     super(dbDetail);
+  }
+
+  private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
+    const reloadSchemaCmd: ReloadSchemaCmd = {id: "RELOAD_SCHEMA_ID", action: "RELOAD_SCHEMA", payload: true};
+    const result: IERModel = await worker.executeCmd(Number.NaN, reloadSchemaCmd);
+    return deserializeERModel(result, withAdapter);
+  }
+
+  private static async _getProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
+    const getSchemaCmd: GetSchemaCmd = {id: "GET_SCHEMA_ID", action: "GET_SCHEMA", payload: true};
+    const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
+    return deserializeERModel(result, withAdapter);
   }
 
   public pushPingCmd(session: Session, command: PingCmd): Task<PingCmd, void> {
@@ -34,20 +59,29 @@ export abstract class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
-        const {steps, delay} = context.command.payload;
+        const {steps, delay, testChildProcesses} = context.command.payload;
 
-        const stepPercent = 100 / steps;
-        context.progress.increment(0, `Process ping...`);
-        for (let i = 0; i < steps; i++) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          context.progress.increment(stepPercent, `Process ping... Complete step: ${i + 1}`);
-          await context.checkStatus();
+        if (!ApplicationProcess.isProcess && testChildProcesses) {
+          await ApplicationProcessPool.executeWorker({
+            pool: this.processPool,
+            callback: (worker) => worker.executeCmd(session.userKey, context.command)
+          });
+        } else {
+          context.progress.reset({max: steps}, false);
+          context.progress.increment(0, `Process ping...`);
+          for (let i = 0; i < steps; i++) {
+            if (delay > 0) {
+              await new Promise((resolve) => setTimeout(resolve, delay));
+              await context.checkStatus();
+            }
+            context.progress.increment(1, `Process ping... Complete step: ${i + 1}`);
+          }
         }
 
-        await this.waitProcess();
+        await this.waitUnlock();
         if (this.status !== DBStatus.CONNECTED) {
           this._logger.error("Application is not connected");
           throw new Error("Application is not connected");
@@ -65,11 +99,39 @@ export abstract class Application extends ADatabase {
       command,
       level: Level.SESSION,
       logger: this.taskLogger,
-      worker: async () => {
-        await this.waitProcess();
+      worker: async (context) => {
+        await this.waitUnlock();
         this.checkSession(session);
 
-        return this.erModel.serialize();
+        return this.erModel.serialize(context.command.payload);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushReloadSchemaCmd(session: Session, command: ReloadSchemaCmd): Task<ReloadSchemaCmd, IERModel> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this._lock.acquire();
+        try {
+          if (!ApplicationProcess.isProcess) {
+            this.erModel = await ApplicationProcessPool.executeWorker({
+              pool: this.processPool,
+              callback: (worker) => Application._reloadProcessERModel(worker, true)
+            });
+          } else {
+            this.erModel = await this._readERModel();
+          }
+          return this.erModel.serialize(context.command.payload);
+        } finally {
+          this._lock.release();
+        }
       }
     });
     session.taskManager.add(task);
@@ -84,16 +146,14 @@ export abstract class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
-        const result = await this.executeConnection((connection) => AConnection.executeTransaction({
+        const result = await this.executeSessionConnection(session,
+          (connection) => ERBridge.executeSelf({
             connection,
-            callback: (transaction) => ERBridge.executeSelf({
-              connection,
-              transaction,
-              callback: (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload))
-            })
+            transaction: connection.readTransaction,
+            callback: (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload))
           })
         );
         await context.checkStatus();
@@ -116,20 +176,40 @@ export abstract class Application extends ADatabase {
     }
   }
 
+  protected async executeSessionConnection<R>(session: Session, callback: TExecutor<AConnection, R>): Promise<R> {
+    await session.lockConnection();
+    try {
+      return await this.executeConnection(callback);
+    } finally {
+      session.unlockConnection();
+    }
+  }
+
   protected async _onCreate(): Promise<void> {
     await super._onCreate();
 
-    await this._init();
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.create(this.dbDetail, {
+        min: Constants.SERVER.APP_PROCESS.POOL.MIN,
+        max: Constants.SERVER.APP_PROCESS.POOL.MAX,
+        acquireTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.ACQUIRE_TIMEOUT,
+        idleTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.IDLE_TIMEOUT
+      });
+      this.erModel = await ApplicationProcessPool.executeWorker({
+        pool: this.processPool,
+        callback: (worker) => Application._getProcessERModel(worker, true)
+      });
+    } else {
+      this.erModel = await this._readERModel();
+    }
   }
 
-  protected async _onConnect(): Promise<void> {
-    await super._onConnect();
+  protected async _onDelete(): Promise<void> {
+    await super._onDelete();
 
-    await this._init();
-  }
-
-  protected async _onDisconnect(): Promise<void> {
-    await super._onDisconnect();
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.destroy();
+    }
 
     const {alias, connectionOptions}: IDBDetail = this.dbDetail;
 
@@ -137,15 +217,42 @@ export abstract class Application extends ADatabase {
     this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
   }
 
-  private async _init(): Promise<void> {
-    await this._executeConnection(async (connection) => {
-      await ERBridge.initDatabase(connection);
+  protected async _onConnect(): Promise<void> {
+    await super._onConnect();
 
-      await AConnection.executeTransaction({
-        connection,
-        options: {accessMode: AccessMode.READ_ONLY},
-        callback: (transaction) => ERBridge.reloadERModel(connection, transaction, this.erModel)
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.create(this.dbDetail, {
+        min: Constants.SERVER.APP_PROCESS.POOL.MIN,
+        max: Constants.SERVER.APP_PROCESS.POOL.MAX,
+        acquireTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.ACQUIRE_TIMEOUT,
+        idleTimeoutMillis: Constants.SERVER.APP_PROCESS.POOL.IDLE_TIMEOUT
       });
+      this.erModel = await ApplicationProcessPool.executeWorker({
+        pool: this.processPool,
+        callback: (worker) => Application._getProcessERModel(worker, true)
+      });
+    } else {
+      this.erModel = await this._readERModel();
+    }
+  }
+
+  protected async _onDisconnect(): Promise<void> {
+    await super._onDisconnect();
+
+    if (!ApplicationProcess.isProcess) {
+      await this.processPool.destroy();
+    }
+
+    const {alias, connectionOptions}: IDBDetail = this.dbDetail;
+
+    await this.sessionManager.forceCloseAll();
+    this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
+  }
+
+  private async _readERModel(): Promise<ERModel> {
+    return await this._executeConnection(async (connection) => {
+      await ERBridge.initDatabase(connection);
+      return await ERBridge.reloadERModel(connection, connection.readTransaction, new ERModel());
     });
   }
 }

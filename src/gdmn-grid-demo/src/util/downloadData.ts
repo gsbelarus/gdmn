@@ -33,7 +33,7 @@ const downloadRates = (d: Date, endDate: Date, rates: NBRBRates): Promise<NBRBRa
 if (force || !fs.existsSync(PATH_NB_RB_RATES)) {
   downloadRates(startDate, endDate, [])
     .then(res => fs.writeFileSync(PATH_NB_RB_RATES, JSON.stringify(res, undefined, 2)))
-    .catch(console.log);
+    .catch(console.error);
 }
 
 if (force || !fs.existsSync(PATH_NB_RB_CUR)) {

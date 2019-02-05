@@ -106,8 +106,10 @@ export class MainApplication extends Application {
       alias,
       driver: Factory.FBDriver,
       poolOptions: {
-        max: 100,
-        acquireTimeoutMillis: 60 * 1000
+        min: Constants.DB.POOL.MIN,
+        max: Constants.DB.POOL.MAX,
+        acquireTimeoutMillis: Constants.DB.POOL.ACQUIRE_TIMEOUT,
+        idleTimeoutMillis: Constants.DB.POOL.IDLE_TIMEOUT
       },
       connectionOptions: {
         server: appInfo && appInfo.server || Constants.DB.SERVER && {
@@ -116,7 +118,8 @@ export class MainApplication extends Application {
         },
         username: appInfo && appInfo.username || Constants.DB.USER,
         password: appInfo && appInfo.password || Constants.DB.PASSWORD,
-        path: appInfo && appInfo.path || dbPath
+        path: appInfo && appInfo.path || dbPath,
+        readTransaction: true
       }
     };
   }
@@ -137,7 +140,7 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {alias, external, connectionOptions} = context.command.payload;
@@ -185,7 +188,7 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {uid} = context.command.payload;
@@ -223,16 +226,14 @@ export class MainApplication extends Application {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitProcess();
+        await this.waitUnlock();
         this.checkSession(session);
 
         const {userKey} = context.session;
 
-        return await this.executeConnection((connection) => AConnection.executeTransaction({
-            connection,
-            callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
-          })
-        );
+        return await this.executeConnection((connection) => (
+          this._getUserApplicationsInfo(connection, connection.readTransaction, userKey)
+        ));
       }
     });
     session.taskManager.add(task);
@@ -243,7 +244,7 @@ export class MainApplication extends Application {
   public async getConnectedApplications(): Promise<Application[]> {
     const applications: Application[] = [];
     for (const application of this._applications.values()) {
-      await application.waitProcess();
+      await application.waitUnlock();
       if (application.status === DBStatus.CONNECTED) {
         applications.push(application);
       }
@@ -252,16 +253,15 @@ export class MainApplication extends Application {
   }
 
   public async getApplication(session: Session, uid: string): Promise<Application> {
-    await this.waitProcess();
+    await this.waitUnlock();
 
     if (this.status !== DBStatus.CONNECTED) {
       throw new Error("MainApplication is not created");
     }
     let application = this._applications.get(uid);
-    const userAppInfo = await this.executeConnection((connection) => AConnection.executeTransaction({
-        connection,
-        callback: (transaction) => this._getUserApplicationInfo(connection, transaction, session.userKey, uid)
-      })
+    const userAppInfo = await this.executeConnection((connection) => (
+        this._getUserApplicationInfo(connection, connection.readTransaction, session.userKey, uid)
+      )
     );
     if (!application) {
       const alias = userAppInfo ? userAppInfo.alias : "Unknown";
@@ -276,7 +276,7 @@ export class MainApplication extends Application {
         }
         if (changedSession.status === SessionStatus.FORCE_CLOSED) {
           if (!application.sessionManager.size()) {
-            await application.waitProcess();
+            await application.waitUnlock();
             if (application.status === DBStatus.CONNECTED) {
               try {
                 await application.disconnect();
@@ -297,10 +297,9 @@ export class MainApplication extends Application {
   }
 
   public async getUserApplicationsInfo(userKey: number): Promise<IUserApplicationInfo[]> {
-    return await this.executeConnection((connection) => AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => this._getUserApplicationsInfo(connection, transaction, userKey)
-    }));
+    return await this.executeConnection((connection) => (
+      this._getUserApplicationsInfo(connection, connection.readTransaction, userKey)
+    ));
   }
 
   public async addUser(user: ICreateUser): Promise<IUser> {
@@ -328,10 +327,9 @@ export class MainApplication extends Application {
   }
 
   public async findUser(user: { id?: number, login?: string }): Promise<IUser | undefined> {
-    return await this.executeConnection((connection) => AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => this._findUser(connection, transaction, user)
-    }));
+    return await this.executeConnection((connection) => (
+      this._findUser(connection, connection.readTransaction, user)
+    ));
   }
 
   protected async _getUserApplicationInfo(connection: AConnection,
@@ -569,7 +567,7 @@ export class MainApplication extends Application {
       }
       const dbDetails: IDBDetail[] = testConfig.dbDetails.map((dbDetail: any) => ({
         alias: dbDetail.alias,
-        driver: resolveDriver(dbDetail.driver),
+        driver: Factory.getDriver(dbDetail.driver === "FBDriver" ? "firebird" : dbDetail.driver),
         connectionOptions: {
           server: dbDetail.connectionOptions.server,
           username: dbDetail.connectionOptions.username,
@@ -666,14 +664,5 @@ export class MainApplication extends Application {
         }
       }
     });
-  }
-}
-
-function resolveDriver(driverName: string): ADriver {
-  switch (driverName) {
-    case "FBDriver":
-      return Factory.FBDriver;
-    default:
-      throw new Error(`Unknown driver name ${driverName}`);
   }
 }

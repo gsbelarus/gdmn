@@ -8,12 +8,14 @@ import {Transaction} from "./Transaction";
 
 export class Driver extends ADriver {
 
+    public readonly name: string = "firebird";
+
     public async readDBStructure(connection: Connection, transaction: Transaction): Promise<DBStructure> {
         return await DBStructureReader.readStructure(connection, transaction);
     }
 
     public newConnection(): AConnection {
-        return new Connection();
+        return new Connection(this);
     }
 
     public newService(): Service {

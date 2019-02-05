@@ -2,7 +2,7 @@
   "dbDetails": [
     {
       "alias": "test",
-      "driver": "FBDriver",
+      "driver": "firebird",
       "connectionOptions": {
         "server": {
           "host": "localhost",

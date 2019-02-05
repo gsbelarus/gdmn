@@ -201,6 +201,14 @@ export const rusAdjectives: RusAdjectiveInterface[] = [
     category: RusAdjectiveCategory.Rel,
     declensionZ: '2*a'
   },
+  // последний
+  {
+    stem: 'последн',
+    stem1: 'последен',
+    stem2: '',
+    category: RusAdjectiveCategory.Rel,
+    declensionZ: '2*a'
+  },
   // весь
   {
     stem: 'вес',

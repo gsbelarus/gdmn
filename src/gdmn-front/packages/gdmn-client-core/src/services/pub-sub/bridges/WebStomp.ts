@@ -256,8 +256,7 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
 
   private initClient(): void {
     this.client = new Client(this.clientConfig);
-    if (!this.clientConfig.debug)
-      this.client.debug = (...params) => {}//-//console.log('[PUB-SUB][BRIDGE][STOMP][CLIENT]', ...params);
+    if (!this.clientConfig.debug) this.client.debug = (...params) => {}; //-//console.log('[PUB-SUB][BRIDGE][STOMP][CLIENT]', ...params);
 
     // if (this.connectedMessageObservable.hasError) {
     //   this.connectedMessageObservable = new Subject();
@@ -282,7 +281,6 @@ class WebStomp<TErrorMessage extends IPubSubMessage = IPubSubMessage> extends Ba
     if (!evt.wasClean) {
       this.onAbnormallyDeactivate();
     }
-    ``;
     // if (this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) {
     //   // todo
     //   this.connectionStatusObservable.next(TPubSubConnectStatus.CONNECTING); // reconnecting

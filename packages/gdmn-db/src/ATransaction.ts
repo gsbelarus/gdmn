@@ -72,6 +72,9 @@ export abstract class ATransaction {
     /** Commit the transaction. */
     public abstract async commit(): Promise<void>;
 
+    /** Commit retaining the transaction. */
+    public abstract async commitRetaining(): Promise<void>;
+
     /** Rollback the transaction. */
     public abstract async rollback(): Promise<void>;
 }

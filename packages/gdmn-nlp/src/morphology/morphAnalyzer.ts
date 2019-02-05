@@ -16,8 +16,8 @@ export function morphAnalyzer(word: string): AnyWords {
   const res: AnyWords = [];
   const resFunc = function (w: AnyWord): void { res.push(w); };
   const lw = word.toLowerCase();
-  const pos: Lexeme[][] = [RusNounLexemes, RusVerbLexemes, RusAdjectiveLexemes,
-    RusPronounLexemes, RusConjunctionLexemes, RusPrepositionLexemes, RusAdverbLexemes, RusNumeralLexemes];
+  const pos: Lexeme[][] = [RusNounLexemes, RusNumeralLexemes, RusVerbLexemes, RusAdjectiveLexemes,
+    RusPronounLexemes, RusConjunctionLexemes, RusPrepositionLexemes, RusAdverbLexemes];
   pos.forEach( lexemes => lexemes.forEach( l => l.analyze(lw, resFunc)) );
   return res;
 }

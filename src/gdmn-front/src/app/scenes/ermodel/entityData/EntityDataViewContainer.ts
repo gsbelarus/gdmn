@@ -12,7 +12,7 @@ import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
 import { withRouter } from 'react-router';
 import { attr2fd } from './utils';
-import { Mutex } from 'gdmn-internals';
+import { Semaphore } from 'gdmn-internals';
 
 export const EntityDataViewContainer = connect(
   (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
@@ -29,8 +29,8 @@ export const EntityDataViewContainer = connect(
   },
   (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({
     ...bindDataViewDispatch(thunkDispatch),
-    loadData: (mutex: Mutex) => thunkDispatch( (dispatch, getState) => {
-      if (mutex.isLocked()) return;
+    loadData: (mutex: Semaphore) => thunkDispatch( (dispatch, getState) => {
+      if (!mutex.permits) return;
 
       const erModel = getState().gdmnState.erModel;
 
@@ -54,7 +54,7 @@ export const EntityDataViewContainer = connect(
           .map( attr => new EntityQueryField(attr) )
       ));
 
-      mutex.acquire( release => {
+      mutex.acquire().then(() => {
         apiService
           .getData({
             payload: {
@@ -106,7 +106,7 @@ export const EntityDataViewContainer = connect(
                 }
               }
             } finally {
-              release();
+              mutex.release();
             }
           });
       });

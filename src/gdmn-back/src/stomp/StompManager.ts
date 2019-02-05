@@ -1,17 +1,22 @@
-import log4js from "log4js";
-import {createStompServerSession, setLoggingListeners} from "stomp-protocol";
-import WebSocket from "ws";
-import {MainApplication} from "../apps/MainApplication";
-import {Constants} from "../Constants";
-import {StompSession} from "./StompSession";
+import log4js from 'log4js';
+import { createStompServerSession, setLoggingListeners } from 'stomp-protocol';
+import WebSocket from 'ws';
+import { MainApplication } from '../apps/MainApplication';
+import { Constants } from '../Constants';
+import { IStompSessionMeta, StompSession } from './StompSession';
 
 export class StompManager {
 
   private static readonly MAX_LENGTH_MESSAGE = 1000;
   private readonly _logger = log4js.getLogger("STOMP");
   private readonly _mainApplication = new MainApplication();
+  private readonly _sessionMeta?: IStompSessionMeta;
 
   private _sessions = new Map<WebSocket, StompSession>();
+
+  constructor(sessionMeta?: IStompSessionMeta) {
+    this._sessionMeta = sessionMeta;
+  }
 
   get mainApplication(): MainApplication {
     return this._mainApplication;
@@ -27,6 +32,7 @@ export class StompManager {
     const session = stomp.listener as StompSession;
     session.mainApplication = this._mainApplication;
     session.logger = this._logger;
+    session.meta = this._sessionMeta;
     this._sessions.set(webSocket, session);
     return true;
   }
@@ -40,9 +46,10 @@ export class StompManager {
   }
 
   public async create(): Promise<void> {
+    const empty = () => {};
     setLoggingListeners({
-      error: console.log,
-      info: console.log,
+      error: empty,
+      info: empty,
       silly: (message, args) => {
         const receiverDataTemplate = /^StompWebSocketStreamLayer: received data %.$/g;
         if (receiverDataTemplate.test(message) && args !== "\n") {
@@ -61,8 +68,8 @@ export class StompManager {
           //   : args);
         }
       },
-      warn: console.log,
-      debug: () => ({})
+      warn: empty,
+      debug: empty
     });
 
     await this._mainApplication.createOrConnect();

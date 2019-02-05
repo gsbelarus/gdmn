@@ -1,5 +1,5 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns } from "gdmn-nlp";
-import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryInspector, IEntityQueryWhereInspector, IEntityQueryWhere } from "gdmn-orm";
+import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP, RusNumeralLexeme, NumeralValue, RusCN, RusNumeral } from "gdmn-nlp";
+import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryWhere } from "gdmn-orm";
 import { ICommand, Action} from "./command";
 import accepts = require("accepts");
 import { equal } from "assert";
@@ -56,22 +56,15 @@ export class ERTranslatorRU {
 
     const np = imperativeVP.imperativeNP;
 
-    const objectPP = (() => {
-      if (np.pp instanceof RusPP) {
-        return (np.pp as RusPP).noun;
-      } else {
-        return undefined;
-      }
-    })();
-
     const objectANP = (() => {
       if (np.noun instanceof RusANP) {
         return (np.noun as RusANP).noun;
+      } else if (np.noun instanceof RusNNP) {
+        return (np.noun as RusNNP).noun;
       } else {
         return np.noun;
       }
     })();
-
 
     const entities = this.neMap.get(objectANP.lexeme);
 
@@ -85,6 +78,7 @@ export class ERTranslatorRU {
         .map(attr => new EntityQueryField(attr));
 
       let options;
+      let first: number | undefined;
       const or: IEntityQueryWhere[] = [];
       const equals: IEntityQueryWhereValue[] = [];
       if (np.noun instanceof RusANP) {
@@ -120,6 +114,27 @@ export class ERTranslatorRU {
             }
           } else {
             throw new Error(`Can't find semantic category place for noun ${objectANP.word}`);
+          }
+        }
+      }
+
+      const cn = (np.noun instanceof RusNNP) && ((np.noun as RusNNP).items[0] instanceof RusCN) ? (np.noun as RusNNP).items[0] as RusCN : undefined;
+      if (np.noun instanceof RusNNP) {
+        const numeral = (np.noun as RusNNP).numr;
+        if ((numeral.lexeme as RusNumeralLexeme).numeralValue === NumeralValue.Quantitative) {
+          if (cn instanceof RusCN) {
+            first = cn.items.map(item => {
+              if (item instanceof RusNumeral) {
+              return Number(item.lexeme.digitalWrite)
+              }
+            }).reduce( (res, curr) => {
+              curr = (curr) ? curr : 0;
+              res = (res) ? res : 0;
+              const mid = (curr % 1000 === 0 && res % 1000 > 0) ? res % 1000 : 1;
+              return ((res !== 0 && mid !== 1) ? (res - mid) : res) + mid * curr;
+            }, 0)
+          } else {
+            first = Number((numeral.lexeme as RusNumeralLexeme).digitalWrite);
           }
         }
       }
@@ -193,9 +208,9 @@ export class ERTranslatorRU {
         }
       }
       if (or) {
-        options = new EntityQueryOptions(undefined, undefined, [{or: or}]);
+        options = new EntityQueryOptions(first, undefined, [{or: or}]);
       } else {
-      options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+        options = new EntityQueryOptions(first, undefined, [{equals}]);
       }
 
       const entityLink = new EntityLink(entity, "alias1", fields);
