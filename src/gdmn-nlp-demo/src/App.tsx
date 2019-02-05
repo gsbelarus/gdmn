@@ -10,6 +10,7 @@ import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { connect } from 'react-redux';
+import { ChatBoxContainer } from './nlpdialog/ChatBoxContainer';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
@@ -59,6 +60,7 @@ class InternalApp extends Component<IAppProps, {}> {
               <Route exact={false} path={`/morphology`} component={MorphBoxContainer} />
               <Route exact={false} path={`/syntax`} component={SyntaxBoxContainer} />
               <Route exact={false} path={`/ermodel`} component={ERModelBoxContainer} />
+              <Route exact={false} path={`/nlpdialog`} component={ChatBoxContainer} />
             </Switch>
           </div>
         </>
@@ -88,6 +90,12 @@ class InternalApp extends Component<IAppProps, {}> {
         disabled: !erModel,
         text: loadingERModel ? 'Loading ER Model...' : 'ERModel',
         commandBarButtonAs: btn('/ermodel', erModel ? Object.entries(erModel.entities).length.toString() : undefined)
+      },
+      {
+        key: 'nlpdialog',
+        disabled: !erModel,
+        text: loadingERModel ? 'Loading...' : 'NLP Dialog',
+        commandBarButtonAs: btn('/nlpdialog')
       }
     ];
   };

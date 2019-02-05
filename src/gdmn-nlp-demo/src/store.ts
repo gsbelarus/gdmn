@@ -5,9 +5,11 @@ import thunk, { ThunkMiddleware, ThunkDispatch } from 'redux-thunk';
 import { reducer as syntaxReducer, ISyntaxState, SyntaxAction } from "./syntax/reducer";
 import { reducer as ermodelReducer, IERModelState, ERModelAction } from "./ermodel/reducer";
 import { gridReducer, GridReducerState, GridAction } from 'gdmn-grid';
+import { reducer as nlpDialogReducer, NLPDialogAction } from './nlpdialog/reducer';
 import { RecordSetReducerState, recordSetReducer, RecordSetAction } from 'gdmn-recordset';
+import { NLPDialog } from "gdmn-nlp-agent";
 
-export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RecordSetAction | GridAction;
+export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RecordSetAction | GridAction | NLPDialogAction;
 
 export interface State {
   morphology: IMorphologyState;
@@ -15,6 +17,7 @@ export interface State {
   ermodel: IERModelState;
   grid: GridReducerState;
   recordSet: RecordSetReducerState;
+  nlpDialog: NLPDialog;
 };
 
 const rootReducer = combineReducers<State, Actions>(
@@ -23,7 +26,8 @@ const rootReducer = combineReducers<State, Actions>(
     syntax: syntaxReducer,
     ermodel: ermodelReducer,
     grid: gridReducer,
-    recordSet: recordSetReducer
+    recordSet: recordSetReducer,
+    nlpDialog: nlpDialogReducer
   }
 );
 
