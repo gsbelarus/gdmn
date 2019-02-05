@@ -5,6 +5,7 @@ import { ColumnSelector } from './ColumnSelector';
 import { Columns } from './Grid';
 import './GridPanel.css';
 import { RecordSet } from 'gdmn-recordset';
+import { ParamsDialog } from './ParamsDialog';
 
 export interface IGDMNGridPanelProps {
   rs: RecordSet,
@@ -17,13 +18,13 @@ export interface IGDMNGridPanelProps {
   hideFooter: boolean,
   hideHeader: boolean,
   sortDialog: boolean,
+  paramsDialog: boolean,
   searchIdx: number,
   onSortDialog: () => void,
   onScrollIntoView: () => void,
   onSetFixedColumns: (fixedColumns: number) => void,
   onSetFixedTailColumns: (fixedTailColumns: number) => void,
   onGoToRow: (rowNumber: number) => void,
-  onToggle: (columnName: string) => void,
   onSetSelectRows: (value: boolean) => void,
   onToggleHideFooter: () => void,
   onToggleHideHeader: () => void,
@@ -31,7 +32,10 @@ export interface IGDMNGridPanelProps {
   onSearch: (searchText: string) => void,
   onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => void,
   onCollapseAll: () => void,
-  onExpandAll: () => void
+  onExpandAll: () => void,
+  onParamsDialog: () => void,
+  onToggle: (columnName: string) => void,
+  onCancelParamsDialog: () => void    
 };
 
 export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
@@ -46,18 +50,18 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
 
   render() {
     const {
-      columns, onToggle, leftSideColumns, onSetFixedColumns,
+      columns, leftSideColumns, onSetFixedColumns,
       rightSideColumns, onSetFixedTailColumns, rs, currentCol,
       selectRows, onSetSelectRows, hideFooter, hideHeader,
       onToggleHideFooter, onToggleHideHeader, onSortDialog,
       onScrollIntoView, onGoToRow, searchIdx, onJumpToSearch,
-      onCollapseAll, onExpandAll } = this.props;
+      onCollapseAll, onExpandAll, paramsDialog, onParamsDialog, onCancelParamsDialog, onToggle } = this.props;
     const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     const searchStr = rs.searchStr || '';
     const currentRow = rs.currentRow;
     return (
       <div className="GDMNGridPanel">
-        <ColumnsListView columnsList={columns} onToggle={onToggle}/>
+        {/* <ColumnsListView columnsList={columns} onToggle={onToggle}/> */}
         <NumberInput value={leftSideColumns} label="Left side columns:" onChange={onSetFixedColumns} size={2} pattern="[0-9]*" name='leftSideColumns'/>
         <NumberInput value={rightSideColumns} label="Right side columns:" onChange={onSetFixedTailColumns} size={2} pattern="[0-9]*" name='rightSideColumns' />
         <NumberInput value={currentRow} label="Go to row:" onChange={onGoToRow} size={4} pattern="[0-9]*" name='gotoRow'/>
@@ -77,6 +81,15 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
         <button onClick={onExpandAll}>
           Expand
         </button>
+        <button onClick={onParamsDialog}>
+           Params dialog
+        </button>
+        { paramsDialog ? 
+          <ParamsDialog 
+          onCancel={onCancelParamsDialog}
+          columns={columns}
+          onToggle={onToggle}
+          /> : undefined }   
         <div>
           <label htmlFor="filter">
             Filter:

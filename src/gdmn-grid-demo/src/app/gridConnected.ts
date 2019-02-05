@@ -16,8 +16,10 @@ import {
   toggleHideFooter,
   toggleHideHeader,
   showSortDialog,
+  showParamsDialog,
   cancelSortDialog,
   applySortDialog,
+  cancelParamsDialog
 } from "gdmn-grid";
 import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
@@ -124,8 +126,12 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
             getGridRef().scrollIntoView(rowNumber);
           }
         }),
+      onParamsDialog:
+        () => thunkDispatch(showParamsDialog({name})),        
+      onCancelParamsDialog:
+        () => thunkDispatch(cancelParamsDialog({name})),         
       onToggle:
-        (columnName: string) => thunkDispatch(toggleColumn({name, columnName})),
+        (columnName: string) => thunkDispatch(toggleColumn({name, columnName})), 
       onSetSelectRows:
         (value: boolean) => thunkDispatch(setSelectRows({name, value})),
       onToggleHideFooter:

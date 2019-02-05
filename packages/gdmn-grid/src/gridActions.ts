@@ -81,6 +81,18 @@ export const showSortDialog = createAction('GRID/SHOW_SORT_DIALOG', resolve => {
 
 export type ShowSortDialog = typeof showSortDialog;
 
+export const showParamsDialog = createAction('GRID/SHOW_PARAMS_DIALOG', resolve => {
+  return (params: WithComponentName<{}>) => resolve(params);
+});
+
+export type ShowParamsDialog = typeof showParamsDialog;
+
+export const cancelParamsDialog = createAction('GRID/CANCEL_PARAMS_DIALOG', resolve => {
+  return (params: WithComponentName<{}>) => resolve(params);
+});
+
+export type CancelParamsDialog = typeof cancelParamsDialog;
+
 export const cancelSortDialog = createAction('GRID/CANCEL_SORT_DIALOG', resolve => {
   return (params: WithComponentName<{}>) => resolve(params);
 });

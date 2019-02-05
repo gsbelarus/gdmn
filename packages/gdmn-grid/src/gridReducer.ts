@@ -13,6 +13,7 @@ export interface GridComponentState {
   hideHeader: boolean;
   hideFooter: boolean;
   sortDialog: boolean;
+  paramsDialog: boolean;
   searchIdx: number;
 };
 
@@ -46,6 +47,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         hideHeader: false,
         hideFooter,
         sortDialog: false,
+        paramsDialog: false,
         searchIdx: 0
       }
     };
@@ -66,6 +68,12 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
   switch (action.type) {
     case getType(actions.showSortDialog):
       return {...state, [componentName]: {...componentState, sortDialog: true}};
+
+    case getType(actions.showParamsDialog): 
+      return {...state, [componentName]: {...componentState, paramsDialog: true}};
+
+    case getType(actions.cancelParamsDialog):
+      return {...state, [componentName]: {...componentState, paramsDialog: false}};      
 
     case getType(actions.cancelSortDialog):
       return {...state, [componentName]: {...componentState, sortDialog: false}};
