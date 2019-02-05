@@ -1,5 +1,8 @@
+// @ts-ignore
 import { persistReducer, persistStore } from 'redux-persist';
+// @ts-ignore
 import persistLocalStorage from 'redux-persist/lib/storage';
+// @ts-ignore
 import { PersistConfig } from 'redux-persist/es/types';
 
 import { configureStore } from '@src/app/store/configureStore';

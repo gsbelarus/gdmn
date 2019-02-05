@@ -4,7 +4,9 @@ import React, { FC, Fragment, ReactNode, ReactType } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Store } from 'redux';
+// @ts-ignore
 import { PersistGate } from 'redux-persist/integration/react';
+// @ts-ignore
 import { Persistor } from 'redux-persist/lib/types';
 import {
   Customizer,

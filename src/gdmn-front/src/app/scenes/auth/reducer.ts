@@ -1,4 +1,5 @@
 import { getType } from 'typesafe-actions';
+// @ts-ignore
 import { PersistPartial } from 'redux-persist';
 import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
 

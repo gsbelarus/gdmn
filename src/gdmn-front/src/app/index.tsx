@@ -51,7 +51,7 @@ async function start() {
 initializeIcons();
 
 function render(Root: ReactType) {
-  const HotRoot = hot(module)(Root); // fixme: type ts 3.2
+  const HotRoot = hot(module)(Root);
   const rootComponent = <HotRoot store={store} persistor={persistor} routes={rootRoutes} />;
 
   ReactDOM.render(rootComponent, document.getElementById(domContainerNode));

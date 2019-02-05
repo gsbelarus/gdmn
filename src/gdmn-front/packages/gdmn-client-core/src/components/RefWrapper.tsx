@@ -11,7 +11,7 @@ interface IRefWrapperProps {
 }
 
 class RefWrapper extends PureComponent<IRefWrapperProps, any> {
-  public render(): JSX.Element {
+  public render() {
     return Children.only(this.props.children);
   }
 }

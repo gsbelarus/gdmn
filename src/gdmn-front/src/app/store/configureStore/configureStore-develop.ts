@@ -1,9 +1,12 @@
 import { applyMiddleware, compose, createStore, Middleware } from 'redux';
 import { createLogger } from 'redux-logger';
+// @ts-ignore
 import { persistReducer } from 'redux-persist';
-
+// @ts-ignore
 import { IState, TReducer } from '@src/app/store/reducer';
+// @ts-ignore
 import { TActions } from '@src/app/store/TActions';
+// @ts-ignore
 import { persistConfig } from '@src/app/store/store';
 
 // https://github.com/zalmoxisus/redux-devtools-extension
@@ -25,7 +28,7 @@ const devMiddlewares: Middleware[] = [
 ];
 
 function configureStore(persistedReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {
-  const store = createStore(
+  const store = createStore<IState, TActions, any, any>(
     persistedReducer,
     initialState!,
     devCompose(applyMiddleware(...middlewares, ...devMiddlewares))

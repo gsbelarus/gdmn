@@ -45,8 +45,6 @@ class PubSubClient {
     meta?: IPubSubMessageMeta
   ) => Observable<TMessage> | never;
 
-  // fixme: type ts 3.2
-
   constructor(
     bridge: BasePubSubBridge,
     maxAbnormallyReconnectCount?: number,

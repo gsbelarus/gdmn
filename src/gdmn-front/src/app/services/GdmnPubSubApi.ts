@@ -46,7 +46,6 @@ import {
 } from '@gdmn/server-api';
 import {
   IPubSubMessage,
-  IPubSubMsgPublishState,
   PubSubClient,
   stringfyValues,
   TPubSubConnectStatus,
@@ -131,7 +130,7 @@ class GdmnPubSubApi {
 
     return await this.pubSubClient.connectionDisconnectedObservable
       .pipe(
-        map<TPubSubConnectStatus, TSignOutCmdResult>(connectStatus => ({
+        map(connectStatus => ({
           payload: null
         })),
         first()
@@ -202,7 +201,7 @@ class GdmnPubSubApi {
           this.updateReconnectMeta(connectedMessage);
           this.subTasks();
         }),
-        map<IPubSubMessage, TAuthCmdResult>(connectedMessage => {
+        map(connectedMessage => {
           const meta = connectedMessage.meta || {};
           return {
             payload: {
@@ -227,7 +226,7 @@ class GdmnPubSubApi {
             connectedMessage.meta && connectedMessage.meta.session ? `session=${connectedMessage.meta.session}` : ''; // todo
           this.updateReconnectMeta(connectedMessage);
         }),
-        map<IPubSubMessage, ICmdResult<_ISignResponseMeta, null>>(connectedMessage => {
+        map(connectedMessage => {
           const meta = connectedMessage.meta || {};
           return {
             payload: {
@@ -253,16 +252,16 @@ class GdmnPubSubApi {
 
     this.taskProgressResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK_PROGRESS
-    ); // fixme: type ts 3.2
+    );
     this.taskStatusResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK_STATUS
-    ); // fixme: type ts 3.2
+    );
     this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK,
       {
         ack: 'client-individual'
       }
-    ); // fixme: type ts 3.2
+    );
 
     // //-//console.log('SUBSCRIBE');
 
@@ -301,9 +300,9 @@ class GdmnPubSubApi {
         },
         data: JSON.stringify({ payload: taskCmd.payload.payload })
       })
-      .pipe<IPubSubMsgPublishState, TTaskCmdResult<TActionName>>(
+      .pipe(
         filter(msgPublishState => msgPublishState.status === TPubSubMsgPublishStatus.PUBLISHED),
-        mergeMap<IPubSubMsgPublishState, TTaskCmdResult<TActionName>>(msgPublishState => {
+        mergeMap(msgPublishState => {
           const taskIdFilterOperator = filter<IPubSubMessage<TGdmnReceivedMessageMeta>>(
             message =>
               !!msgPublishState.meta && !!message.meta && message.meta['task-id'] === msgPublishState.meta['task-id'] // todo
@@ -336,10 +335,10 @@ class GdmnPubSubApi {
             taskIdFilterOperator,
             first(),
             parseMsgDataMapOperator,
-            map<IGdmnMessageData, TTaskResultMessageData<TActionName>>(
+            map(
               resultMsgData => <TTaskResultMessageData<TActionName>>resultMsgData
             ),
-            map<TTaskResultMessageData<TActionName>, TTaskCmdResult<TActionName>>(resultMsgData => ({
+            map(resultMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
                 status: resultMsgData.status,
@@ -367,10 +366,10 @@ class GdmnPubSubApi {
           const taskProgressResult = this.taskProgressResultObservable!.pipe(
             taskIdFilterOperator,
             parseMsgDataMapOperator,
-            map<IGdmnMessageData, ITaskProgressMessageData<TActionName>>(
+            map(
               resultMsgData => <ITaskProgressMessageData<TActionName>>resultMsgData
             ),
-            map<ITaskProgressMessageData<TActionName>, TTaskCmdResult<TActionName>>(progressMsgData => ({
+            map(progressMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
                 progress: progressMsgData.progress
@@ -395,10 +394,10 @@ class GdmnPubSubApi {
           const taskStatusResult = this.taskStatusResultObservable!.pipe(
             taskIdFilterOperator,
             parseMsgDataMapOperator,
-            map<IGdmnMessageData, ITaskStatusMessageData<TActionName>>(
+            map(
               resultMsgData => <ITaskStatusMessageData<TActionName>>resultMsgData
             ),
-            map<ITaskStatusMessageData<TActionName>, TTaskCmdResult<TActionName>>(statusMsgData => ({
+            map(statusMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
                 status: statusMsgData.status

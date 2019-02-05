@@ -7,7 +7,9 @@ import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer
 import { authActions } from '@src/app/scenes/auth/actions';
 import { recordSetReducer, RecordSetReducerState } from 'gdmn-recordset';
 import { gridReducer, GridReducerState } from 'gdmn-grid';
+// @ts-ignore
 import persistLocalStorage from 'redux-persist/lib/storage';
+// @ts-ignore
 import { PersistPartial, persistReducer } from 'redux-persist';
 
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
