@@ -76,7 +76,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-#.env
+.env
 
 .DS_Store
 .vscode/*
