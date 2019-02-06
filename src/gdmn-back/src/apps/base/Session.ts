@@ -72,6 +72,10 @@ export class Session {
     this._connectionsLock.release();
   }
 
+  public connectionsExists(): boolean {
+    return this._connectionsLock.permits !== 0;
+  }
+
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
     this.clearCloseTimer();
     this._logger.info("id#%s is lost and will be closed after %s minutes", this.id, timeout / (60 * 1000));
