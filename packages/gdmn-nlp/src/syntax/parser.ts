@@ -138,38 +138,3 @@ export function tokenToWordOrHomogeneous(
     [word as RusNoun]
   );
 }
-
-export function tokenToWordOrCompositeNumerals(
-  t?: IMorphToken
-): AnyWord | AnyWord[] | undefined {
-  if (!t) {
-    return undefined;
-  }
-
-  const word = t.word;
-
-  if (!(word instanceof RusNumeral)) {
-    throw new Error(
-      `Only rus numerals supported. Word ${word.getText()} encountered.`
-    );
-  }
-
-  if (!t.cn || !t.cn.length) {
-    return word as RusNumeral;
-  }
-
-  return t.cn.reduce(
-    (prev, w) => {
-      const found = w.find(
-        n => (n as RusNumeral).grammCase === (word as RusNumeral).grammCase || (n as RusNumeral).grammCase === RusCase.Gent
-      );
-
-      if (found) {
-        return [...prev, found as RusNumeral];
-      }
-
-      throw new Error(`Invalid composite numerals structure`);
-    },
-    []
-  );
-}
