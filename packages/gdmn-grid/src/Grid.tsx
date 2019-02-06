@@ -1098,7 +1098,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const adjustedIndex = adjustFunc(index);
     return (!fixed && ((columns.length - rightSideColumns) === adjustedIndex)) 
       ? deltaWidth 
-      : (columns[adjustedIndex].width ? columns[adjustedIndex].width!  : columnWidth);
+      : (columns[adjustedIndex] && columns[adjustedIndex].width ? columns[adjustedIndex].width!  : columnWidth);
   }
 };
 

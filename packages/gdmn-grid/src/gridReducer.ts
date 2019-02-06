@@ -199,13 +199,13 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
 
       let newCurrentCol = currentCol;
       if (currentCol >= 0) {
-        const currentColWithHiddenColumns = columns.findIndex( c => c.name === columns.filter((f) => f.hidden === false)[currentCol].name);
+        const currentColWithHiddenColumns = columns.findIndex( c => c.name === columns.filter((f) => !f.hidden)[currentCol].name);
         if (!newColumns[columnIndex].hidden)  {
           if (currentColWithHiddenColumns > columnIndex)
             newCurrentCol = newCurrentCol + 1;
         }
         else {
-          if (currentColWithHiddenColumns > columnIndex || currentCol === (countVisibleColumns + rightSideColumns))
+          if ((currentColWithHiddenColumns + leftSideColumns > columnIndex) || currentCol === (countVisibleColumns + rightSideColumns))
             newCurrentCol = newCurrentCol - 1;
         } 
       }
@@ -243,7 +243,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
     case getType(actions.setCursorCol): {
       const { columns, leftSideColumns, rightSideColumns } = componentState;
       const { cursorCol } = action.payload;
-      if (cursorCol >= leftSideColumns && cursorCol < columns.filter((f) => f.hidden === false).length - rightSideColumns) {
+      if (cursorCol >= leftSideColumns && cursorCol < columns.filter((f) => !f.hidden).length - rightSideColumns) {
         return {
           ...state,
           [componentName]: {
