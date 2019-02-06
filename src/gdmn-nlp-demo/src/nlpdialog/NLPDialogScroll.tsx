@@ -10,7 +10,7 @@ interface INLPDialogScrollStateProps {
 }
 
 interface INLPDialogScrollActionsProps {
-  addNlpMessage: (text: string) => void;
+  addNLPMessage: (text: string) => void;
 }
 
 type TNLPDialogScrollProps = INLPDialogScrollStateProps & INLPDialogScrollActionsProps;
@@ -59,7 +59,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
   private onInputPressEnter(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (!(e.key === 'Enter' && this.state.text.trim())) return;
 
-    const { nlpDialog, addNlpMessage } = this.props;
+    const { nlpDialog, addNLPMessage: addNlpMessage } = this.props;
 
     addNlpMessage(this.state.text.trim());
     this.setState({

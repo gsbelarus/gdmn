@@ -6,8 +6,12 @@ export type NLPDialogAction = ActionType<typeof actions>;
 
 export function reducer(state: NLPDialog = [], action: NLPDialogAction): NLPDialog {
   switch (action.type) {
-    case getType(actions.clearChat): {
+    case getType(actions.clearNLPDialog): {
       return [];
+    }
+
+    case getType(actions.addNLPItem): {
+      return [...state, action.payload];
     }
   }
 

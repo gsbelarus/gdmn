@@ -10,7 +10,7 @@ import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { connect } from 'react-redux';
-import { ChatBoxContainer } from './nlpdialog/ChatBoxContainer';
+import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
