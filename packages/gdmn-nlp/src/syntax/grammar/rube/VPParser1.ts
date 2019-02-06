@@ -66,13 +66,15 @@ export class VPParser1 extends Parser implements IDescribedParser {
 
   public imperativeNNPNumr = this.RULE('imperativeNNPNumr', () => {
     this.OR([
+      { ALT: () => this.CONSUME(morphTokens.NUMRInanSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRInanMascSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRInanFemnSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRInanNeutSingAccs) },
+      { ALT: () => this.CONSUME(morphTokens.NUMRAnimSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRAnimMascSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRAnimFemnSingAccs) },
       { ALT: () => this.CONSUME(morphTokens.NUMRAnimNeutSingAccs) },
-      { ALT: () => this.CONSUME(morphTokens.NUMRInanPlurGent)},
+      { ALT: () => this.CONSUME(morphTokens.NUMRPlurGent)},
     ]);
   });
 

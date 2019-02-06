@@ -1,8 +1,6 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP, RusNumeralLexeme, NumeralValue, RusCN, RusNumeral } from "gdmn-nlp";
+import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP } from "gdmn-nlp";
 import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryWhere } from "gdmn-orm";
 import { ICommand, Action} from "./command";
-import accepts = require("accepts");
-import { equal } from "assert";
 
 export class ERTranslatorRU {
 
@@ -118,26 +116,26 @@ export class ERTranslatorRU {
         }
       }
 
-      const cn = (np.noun instanceof RusNNP) && ((np.noun as RusNNP).items[0] instanceof RusCN) ? (np.noun as RusNNP).items[0] as RusCN : undefined;
-      if (np.noun instanceof RusNNP) {
-        const numeral = (np.noun as RusNNP).numr;
-        if ((numeral.lexeme as RusNumeralLexeme).numeralValue === NumeralValue.Quantitative) {
-          if (cn instanceof RusCN) {
-            first = cn.items.map(item => {
-              if (item instanceof RusNumeral) {
-              return Number(item.lexeme.digitalWrite)
-              }
-            }).reduce( (res, curr) => {
-              curr = (curr) ? curr : 0;
-              res = (res) ? res : 0;
-              const mid = (curr % 1000 === 0 && res % 1000 > 0) ? res % 1000 : 1;
-              return ((res !== 0 && mid !== 1) ? (res - mid) : res) + mid * curr;
-            }, 0)
-          } else {
-            first = Number((numeral.lexeme as RusNumeralLexeme).digitalWrite);
-          }
-        }
-      }
+      //const cn = (np.noun instanceof RusNNP) && ((np.noun as RusNNP).items[0] instanceof RusCN) ? (np.noun as RusNNP).items[0] as RusCN : undefined;
+      //if (np.noun instanceof RusNNP) {
+      //  const numeral = (np.noun as RusNNP).numr;
+      //  if ((numeral.lexeme as RusNumeralLexeme).numeralValue === NumeralValue.Quantitative) {
+      //    if (cn instanceof RusCN) {
+      //      first = cn.items.map(item => {
+      //        if (item instanceof RusNumeral) {
+      //        return Number(item.lexeme.digitalWrite)
+      //        }
+      //      }).reduce( (res, curr) => {
+      //        curr = (curr) ? curr : 0;
+      //        res = (res) ? res : 0;
+      //        const mid = (curr % 1000 === 0 && res % 1000 > 0) ? res % 1000 : 1;
+      //        return ((res !== 0 && mid !== 1) ? (res - mid) : res) + mid * curr;
+      //      }, 0)
+      //    } else {
+      //      first = Number((numeral.lexeme as RusNumeralLexeme).digitalWrite);
+      //    }
+      //  }
+      //}
 
       const hsm = (np.pp instanceof RusPP) && ((np.pp as RusPP).items[1] instanceof RusHmNouns) ? (np.pp as RusPP).items[1] as RusHmNouns : undefined;
 

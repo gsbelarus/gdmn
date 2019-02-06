@@ -1,189 +1,61 @@
-import { NumeralLexeme, Numeral } from "./morphology";
-import { RusCase, NumeralValue, NumeralCategory, RusGender, ShortGenderNames, NumeralStructure, RusCaseNames, RusGenderNames, RusNumeralValueNames, RusNumeralStructureNames, RusNumeralCatagoryNames, RusDeclensionNumeralZ, RusNumeralMorphSigns, ShortCaseNames } from "./types";
+import { NumeralRank, NumeralStructure, NumeralType, RusDeclensionNumeralZ, RusCase, RusGender, RusNumeralMorphSigns, ShortGenderNames, ShortCaseNames, RusGenderNames, RusCaseNames, RusNumeralTypeNames, RusNumeralStructureNames, RusNumeralRankNames } from "./types";
+import { Numeral, NumeralLexeme } from "./morphology";
 import { rusNumerals } from "./rusNumeralsData";
 import { RusNumeralZEndings } from "./rusNumeralEndings";
 
 export class RusNumeralLexeme extends NumeralLexeme {
-  public readonly stem3: string;
-  public readonly possiblePlural: boolean;
-  public digitalWrite: string;
-  public readonly numeralValue: NumeralValue;
+  public readonly type: NumeralType;
   public readonly structure: NumeralStructure;
+  public readonly value: number;
   public readonly declensionZ: RusDeclensionNumeralZ;
-  public readonly declensionZ1?: RusDeclensionNumeralZ;
-  public readonly category?: NumeralCategory;
+  public readonly gender?: RusGender;
+  public readonly rank?: NumeralRank;
 
-  constructor (stem: string, stem1: string, stem2: string, stem3: string,
-      possiblePlural: boolean,
-      digitalWrite: string,
-      numeralValue: NumeralValue,
-      structure: NumeralStructure,
-      declensionZ: RusDeclensionNumeralZ,
-      declensionZ1?: RusDeclensionNumeralZ,
-      category?: NumeralCategory) {
-    super(stem, stem1, stem2);
-    this.stem3 = stem3;
-    this.possiblePlural = possiblePlural;
-    this.digitalWrite = digitalWrite;
-    this.numeralValue = numeralValue;
-    this.structure = structure;
-    this.declensionZ = declensionZ;
-    this.declensionZ1 = declensionZ1;
-    this.category = category;
+  constructor(stem: string, stem1: string, stem2: string,
+    type: NumeralType,
+    structure: NumeralStructure,
+    value: number,
+    declensionZ: RusDeclensionNumeralZ,
+    gender?: RusGender,
+    rank?: NumeralRank
+    ) {
+      super(stem, stem1, stem2);
+      this.type = type;
+      this.structure = structure;
+      this.value = value;
+      this.declensionZ = declensionZ;
+      this.gender = gender;
+      this.rank = rank;
   }
 
   public getWordForm(morphSigns: RusNumeralMorphSigns): RusNumeral {
     const declZEnding = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ );
-
+    
     if (!declZEnding) { throw 'Unknown declensionZ ending'; }
 
-    if (this.structure === NumeralStructure.Complex) {
-
-      const declZEnding1 = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ1 );
-
-      if (!declZEnding1) { throw 'Unknown declensionZ ending'; }
-
-      const ending1 = declZEnding1.endings.find( e => e.c === morphSigns.c
-        && e.gender === morphSigns.gender
-        && e.singular === morphSigns.singular
-        && e.animate === morphSigns.animate );
-
-      if (!ending1) {
-        throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
-      }
-
-      if (this.numeralValue === NumeralValue.Ordinal) {
-        const endingOrinalNumeral = declZEnding.endings.find( e => e.c === RusCase.Gent
-          && e.gender === RusGender.Masc
-          && e.singular === true);
-        if (!endingOrinalNumeral) {
-          throw 'Numeral ending not found ';
-        }
-        if(this.declensionZ === 'pqs5' && this.stem1) {
-          if (this.stem3) {
-            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
-          } else {
-            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem2 + ending1.ending, this, morphSigns);
-          }
-        } else {
-          if (this.stem3) {
-            return new RusNumeral(this.stem + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
-          } else {
-            return new RusNumeral(this.stem + endingOrinalNumeral.ending + this.stem2 + ending1.ending, this, morphSigns);
-          }
-        }
-      }
-    }
-
-    const ending = declZEnding.endings.find( e => e.c === morphSigns.c
+    let ending = declZEnding.endings.find( e => e.c === morphSigns.c
       && e.gender === morphSigns.gender
       && e.singular === morphSigns.singular
       && e.animate === morphSigns.animate );
-
+    
     if (!ending) {
-      throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
+      throw new Error(`Numeral ending not found for numeral ${this.value} ${JSON.stringify(morphSigns)}`);
     }
 
-    if (this.structure === NumeralStructure.Complex) {
-
-      const declZEnding1 = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ1 );
-
-      if (!declZEnding1) { throw 'Unknown declensionZ ending'; }
-
-      const ending1 = declZEnding1.endings.find( e => e.c === morphSigns.c
-        && e.gender === morphSigns.gender
-        && e.singular === morphSigns.singular
-        && e.animate === morphSigns.animate );
-
-      if (!ending1) {
-        throw 'Numeral ending not found ' + JSON.stringify(morphSigns);
-      }
-
-      if (this.numeralValue === NumeralValue.Ordinal) {
-        const endingOrinalNumeral = declZEnding.endings.find( e => e.c === RusCase.Gent
-          && e.gender === RusGender.Femn
-          && e.singular === true);
-        if (!endingOrinalNumeral) {
-          throw 'Numeral ending not found ';
-        }
-        if(this.declensionZ === 'pqs5' && this.stem1) {
-          if (this.stem3) {
-            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
-          } else {
-            return new RusNumeral(this.stem1 + endingOrinalNumeral.ending + this.stem2 + ending1.ending, this, morphSigns);
-          }
-        } else {
-          return new RusNumeral(this.stem + endingOrinalNumeral.ending + this.stem3 + ending1.ending, this, morphSigns);
-        }
-      }
-
-      if (morphSigns.singular && (this.declensionZ === 'pqs4' || this.declensionZ === 'pqs5') && this.declensionZ1 === 'pqc1') {
-        if(morphSigns.c === RusCase.Datv || morphSigns.c === RusCase.Ablt || morphSigns.c === RusCase.Loct) {
-          if(this.declensionZ === 'pqs5') {
-            return new RusNumeral(this.stem1 + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
-          } else {
-            return new RusNumeral(this.stem + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
-          }
-        } else {
-          if(this.declensionZ === 'pqs5' && morphSigns.c === RusCase.Gent) {
-            return new RusNumeral(this.stem1 + ending.ending + this.stem3 + ending1.ending, this, morphSigns);
-          } else {
-            return new RusNumeral(this.stem + ending.ending + this.stem3 + ending1.ending, this, morphSigns);
-          }
-        }
-
-      } else if(morphSigns.singular && this.declensionZ === 'pqs5' && this.declensionZ1 === 'pqc') {
-        if(morphSigns.c === RusCase.Nomn || morphSigns.c === RusCase.Accs) {
-          return new RusNumeral(this.stem + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem1 + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
-        }
-      } else if(morphSigns.singular && (this.declensionZ1 === 'pqc2' || this.declensionZ1 === 'pqc3')) {
-        if(morphSigns.c === RusCase.Gent) {
-          return new RusNumeral(this.stem + ending.ending + this.stem3 + ending1.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
-        }
+    if (morphSigns.singular && this.stem1 && this.declensionZ === 'pqs1') {
+      if(this.gender === RusGender.Masc && (morphSigns.c === RusCase.Nomn || (morphSigns.c === RusCase.Accs && !morphSigns.animate))) {
+        return new RusNumeral(this.stem + ending.ending, this, morphSigns);
       } else {
-        return new RusNumeral(this.stem + ending.ending + this.stem2 + ending1.ending, this, morphSigns);
+        return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
       }
-
-
+    } else if (morphSigns.singular && this.stem1 && this.declensionZ === 'pqs8') {
+      if(morphSigns.c === RusCase.Nomn || morphSigns.c === RusCase.Accs) {
+        return new RusNumeral(this.stem + ending.ending, this, morphSigns);
+      } else {
+        return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
+      }
     } else {
-
-
-      if (morphSigns.singular && this.stem1 && this.declensionZ === 'pqs') {
-        if(morphSigns.gender === RusGender.Masc
-          && (morphSigns.c === RusCase.Nomn || (morphSigns.c === RusCase.Accs && !morphSigns.animate))) {
-          return new RusNumeral(this.stem + ending.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
-        }
-      } else if(this.declensionZ === 'pqs5') {
-        if(morphSigns.c === RusCase.Nomn || morphSigns.c === RusCase.Accs) {
-          return new RusNumeral(this.stem + ending.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
-        }
-      } else if (!morphSigns.singular && this.declensionZ === 'pqs8') {
-        if(morphSigns.c === RusCase.Gent) {
-          return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem + ending.ending, this, morphSigns);
-        }
-      }  else if (morphSigns.singular && this.declensionZ === 'pqc1') {
-        if(morphSigns.c === RusCase.Datv || morphSigns.c === RusCase.Ablt || morphSigns.c === RusCase.Loct) {
-          return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem + ending.ending, this, morphSigns);
-        }
-      } else {
-        if(this.declensionZ === 'pqs') {
-          return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
-        } else {
-          return new RusNumeral(this.stem + ending.ending, this, morphSigns);
-        }
-      }
+      return new RusNumeral(this.stem + ending.ending, this, morphSigns);
     }
   }
 
@@ -191,25 +63,11 @@ export class RusNumeralLexeme extends NumeralLexeme {
     const wordForms: RusNumeral[] = [];
 
     for (let c = RusCase.Nomn; c <= RusCase.Loct; c++) {
-      if (c === RusCase.Accs) {
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Masc, animate: true }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Masc, animate: false }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Femn, animate: true }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Femn, animate: false }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Neut, animate: true }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Neut, animate: false }));
-        if (this.possiblePlural && this.declensionZ !== 'pqs8') {
-          wordForms.push(this.getWordForm({ c, singular: false, animate: true }));
-          wordForms.push(this.getWordForm({ c, singular: false, animate: false }));
-        }
-      } else {
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Masc }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Femn }));
-        wordForms.push(this.getWordForm({ c, singular: true, gender: RusGender.Neut }));
-        if (this.possiblePlural && (this.declensionZ !== 'pqs8' && c !== RusCase.Nomn)) {
-          wordForms.push(this.getWordForm({ c, singular: false }));
-        }
-      }
+      c !== RusCase.Accs
+        ? wordForms.push(this.getWordForm({ c, gender: this.gender, singular: true }))
+        : [true, false].forEach( animate => {
+          wordForms.push(this.getWordForm({ c, gender: this.gender, singular: true, animate: animate }))
+        })
     }
 
     return wordForms;
@@ -217,7 +75,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
 }
 
 export const RusNumeralLexemes: RusNumeralLexeme[] = rusNumerals.map(
-  (v) => new RusNumeralLexeme(v.stem, v.stem1, v.stem2, v.stem3, v.possiblePlural, v.digitalWrite, v.numeralValue, v.structure, v.declensionZ, v.declensionZ1, v.catagory)
+  v => new RusNumeralLexeme(v.stem, v.stem1, v.stem2, v.type, v.structure, v.value, v.declensionZ, v.gender, v.rank)
 );
 
 export class RusNumeral extends Numeral<RusNumeralLexeme> {
@@ -230,41 +88,37 @@ export class RusNumeral extends Numeral<RusNumeralLexeme> {
     super(word, lexeme);
     this.grammCase = morphSigns.c;
     this.singular = morphSigns.singular;
-    this.gender= morphSigns.gender;
+    this.gender= this.gender;
     this.animate= morphSigns.animate;
     }
 
-  getDisplayText(): string {
-    const lexeme = this.lexeme;
-    const stem = this.word.startsWith(lexeme.stem) ? lexeme.stem :
-      (this.word.startsWith(lexeme.stem1) ? lexeme.stem1 : '');
-    const stem1 = this.word.indexOf(lexeme.stem2, stem.length) >= 0 ? lexeme.stem2 :
-      (this.word.indexOf(lexeme.stem3, stem.length) >= 0 ? lexeme.stem3 : '');
-    const divided = stem + (this.word === stem
-      ? ''
-      : '-' + ((lexeme.structure === NumeralStructure.Complex)
-        ? this.word.slice(stem.length - this.word.length, this.word.indexOf(stem1)) + '-' + stem1 +
-          ( (this.word.indexOf(stem1) + stem1.length) !== this.word.length ? '-' + this.word.slice(stem1.length + this.word.indexOf(stem1) - this.word.length) : '')
-        : this.word.slice(stem.length - this.word.length)));
-    const num = this.singular ? 'ед.ч.' : 'мн.ч.';
-    return this.word + '; числительное; ' + (divided !== this.word ? divided + '; ' : '') +
-      lexeme.digitalWrite + '; ' +
-      RusNumeralValueNames[lexeme.numeralValue] + '; ' +
-      (lexeme.numeralValue === NumeralValue.Quantitative && lexeme.category ? RusNumeralCatagoryNames[lexeme.category]  + '; ' : '') +
-      RusNumeralStructureNames[lexeme.structure] + '; ' +
-      (this.singular ? (this.gender ? RusGenderNames[this.gender] + ' род; ' : RusGenderNames[0] + ' род; ') : '') +
-      num + '; ' + RusCaseNames[this.grammCase];
-  }
+    getDisplayText(): string {
+      const lexeme = this.lexeme;
+      const cs = typeof this.grammCase !== 'undefined' ? RusCaseNames[this.grammCase] : '';
+      const an = typeof this.animate === 'undefined' ? '' : (this.animate ? 'одуш.' : 'неодуш.');
+      const gd = typeof lexeme.gender === 'undefined' ? '' : RusGenderNames[lexeme.gender] + ' род';
+      const num = this.singular ? 'ед. ч.' : 'мн. ч.';
+      const rank = typeof lexeme.rank === 'undefined' ? '' : RusNumeralRankNames[lexeme.rank];
+      return this.word + '; числительное; ' +
+        lexeme.value + '; ' +
+        RusNumeralTypeNames[lexeme.type] + '; ' +
+        RusNumeralStructureNames[lexeme.structure] + '; ' +
+        rank + '; ' +
+        cs + '; ' +
+        an + '; ' +
+        gd + '; ' +
+        num;
+    }
 
   static getSignature(singular: boolean, grammCase: RusCase, animate?: boolean, gender?: RusGender): string {
-                  const an = animate ? 'Anim' : 'Inan';
-                  const gd = singular ? (gender ? ShortGenderNames[gender] : 'Masc') : '';
-                  const num = singular ? 'Sing' : 'Plur';
-                  const cs = ShortCaseNames[grammCase];
-    return 'NUMR' + an + gd + num + cs;
-  }
+    const cs = typeof grammCase !== 'undefined' ? ShortCaseNames[grammCase] : '';
+    const an = typeof animate === 'undefined' ? '' : (animate ? 'Anim' : 'Inan');
+    const gd = typeof gender === 'undefined' ? '' : ShortGenderNames[gender];
+    const num = singular ? 'Sing' : 'Plur';
+  return 'NUMR' + an + gd + num + cs;
+}
 
   getSignature(): string {
-    return RusNumeral.getSignature(this.singular, this.grammCase, this.animate, this.gender, );
+    return RusNumeral.getSignature(this.singular, this.grammCase, this.animate, this.gender );
   }
 }

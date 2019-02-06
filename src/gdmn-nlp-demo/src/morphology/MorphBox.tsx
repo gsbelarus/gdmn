@@ -71,7 +71,15 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Pron', () => RusPronounLexemes.reduce((p, l) => {p.push(l.getWordForm(RusCase.Nomn)); return p;}, [] as AnyWord[])],
       ['Conj', () => RusConjunctionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
-      ['Nums', () => RusNumeralLexemes.reduce((p, l) => {p.push(l.getWordForm({c: RusCase.Nomn, gender: RusGender.Masc, singular: true})); return p;}, [] as AnyWord[])]
+      ['Nums', () => RusNumeralLexemes.reduce((p, l) => {
+        const wf = l.gender !== undefined ? l.getWordForm({ c: RusCase.Nomn, singular: true, gender: l.gender }) 
+        : l.getWordForm({ c: RusCase.Nomn, singular: true }); 
+
+        if (wf) {
+          p.push(wf);
+        }
+        return p;
+      }, [] as AnyWord[])]
     ];
 
     this._allWords = this._allWordsByPOS.reduce(
@@ -106,7 +114,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             style={{maxWidth: '200px'}}
             value={text}
             onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              const foundWords: AnyWord[] = this._allWords.filter( f => (f.word).indexOf(e.target.value) >= 0 );
+              const foundWords: AnyWord[] = this._allWords.filter( f => f.word.indexOf(e.target.value) >= 0 );
               onSetText(e.target.value);
               this.setState({ vocabulary: foundWords });
             }
@@ -223,84 +231,76 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
           <table>
             <thead>
               <tr>
-                <th rowSpan={2} colSpan={2}>
-                  падеж
-                </th>
-                <th colSpan={3}>ед. ч.</th>
-                <th rowSpan={2}>мн. ч.</th>
-              </tr>
-              <tr>
-                <th>муж.р.</th>
-                <th>ср.р.</th>
-                <th>жен.р.</th>
+                <th colSpan={2}>падеж</th>
+                <th>формы</th>
               </tr>
             </thead>
-            <tbody>
+              {
+                l.value === 1 || l.value === 2 ? 
+                <tbody>
+                <tr>
+                  <th colSpan={2}>Им.</th>
+                  <td>{f({ c: RusCase.Nomn, singular: true, gender: l.gender })}</td>
+                </tr>
+                <tr>
+                  <th colSpan={2}>Рд.</th>
+                  <td>{f({ c: RusCase.Gent, singular: true, gender: l.gender })}</td>
+                </tr>
+                <tr>
+                  <th colSpan={2}>Дт.</th>
+                  <td>{f({ c: RusCase.Datv, singular: true, gender: l.gender })}</td>
+                </tr>
+                <tr>
+                  <th rowSpan={2}>Вн.</th>
+                  <th>одуш.</th>
+                  <td>{f({ c: RusCase.Accs, singular: true, gender: l.gender, animate: true })}</td>
+                </tr>
+                <tr>
+                  <th>неодуш.</th>
+                  <td>{f({ c: RusCase.Accs, singular: true, gender: l.gender, animate: false })}</td>
+                </tr>
+                <tr>
+                  <th colSpan={2}>Тв.</th>
+                  <td>{f({ c: RusCase.Ablt, singular: true, gender: l.gender })}</td>
+                </tr>
+                <tr>
+                  <th colSpan={2}>Пр.</th>
+                  <td>{f({ c: RusCase.Loct, singular: true, gender: l.gender })}</td>
+                </tr>
+              </tbody>
+              :
+              <tbody>
               <tr>
                 <th colSpan={2}>Им.</th>
-                <td>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })}</td>
-                <td>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Neut })}</td>
-                <td>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Femn })}</td>
-                <td>{l.possiblePlural && l.declensionZ !== 'pqs8'
-                  ? f({ c: RusCase.Nomn, singular: false })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Nomn, singular: true })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Рд.</th>
-                <td>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Masc })}</td>
-                <td>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Neut })}</td>
-                <td>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Femn })}</td>
-                <td>{l.possiblePlural
-                  ? f({ c: RusCase.Gent, singular: false })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Gent, singular: true })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Дт.</th>
-                <td>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Masc })}</td>
-                <td>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Neut })}</td>
-                <td>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Femn })}</td>
-                <td>{l.possiblePlural
-                  ? f({ c: RusCase.Datv, singular: false })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Datv, singular: true })}</td>
               </tr>
               <tr>
                 <th rowSpan={2}>Вн.</th>
                 <th>одуш.</th>
-                <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: true })}</td>
-                <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Neut, animate: true })}</td>
-                <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Femn, animate: true })}</td>
-                <td>{l.possiblePlural && l.declensionZ !== 'pqs8'
-                  ? f({ c: RusCase.Accs, singular: false, animate: true })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Accs, singular: true, animate: true })}</td>
               </tr>
               <tr>
                 <th>неодуш.</th>
-                <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: false })}</td>
-                <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Neut, animate: false })}</td>
-                <td>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Femn, animate: false })}</td>
-                <td>{l.possiblePlural && l.declensionZ !== 'pqs8'
-                  ? f({ c: RusCase.Accs, singular: false, animate: false })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Accs, singular: true, animate: false })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Тв.</th>
-                <td>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Masc })}</td>
-                <td>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Neut })}</td>
-                <td>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Femn })}</td>
-                <td>{l.possiblePlural
-                  ? f({ c: RusCase.Ablt, singular: false })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Ablt, singular: true })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Пр.</th>
-                <td>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Masc })}</td>
-                <td>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Neut })}</td>
-                <td>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Femn })}</td>
-                <td>{l.possiblePlural
-                  ? f({ c: RusCase.Loct, singular: false })
-                  : '-'}</td>
+                <td>{f({ c: RusCase.Loct, singular: true })}</td>
               </tr>
             </tbody>
+              }
           </table>
         </div>
       );

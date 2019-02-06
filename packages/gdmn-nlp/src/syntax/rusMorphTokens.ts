@@ -1,5 +1,5 @@
 import { Lexer, createToken, TokenType } from "chevrotain";
-import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType, NumeralValue } from "../morphology/types";
+import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType } from "../morphology/types";
 import { RusNoun } from "../morphology/rusNoun";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
@@ -67,14 +67,21 @@ export const morphTokens = (() => {
 /**
  * Числительные
  */
-  [true, false].forEach(singilar =>
-      [RusCase.Nomn, RusCase.Gent, RusCase.Datv, RusCase.Accs, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>
-        [true, false].forEach( animate => {
-          [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
-            signatures.push(RusNumeral.getSignature(singilar, grammCase, animate, gender));
-          })
-        })
-      )
+  [true, false].forEach( animate => {
+    signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, undefined));
+  });
+
+    [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
+      [true, false].forEach( animate => {
+        signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, gender));
+    }) 
+  });
+
+
+  [RusCase.Nomn, RusCase.Gent, RusCase.Datv, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>
+    [true, false].forEach( singular => {
+      signatures.push(RusNumeral.getSignature(singular, grammCase, undefined, undefined));
+    })
   );
 
   return signatures.reduce(

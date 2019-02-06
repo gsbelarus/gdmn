@@ -5,6 +5,6 @@ import { RusConjunction } from "./rusConjunction";
 import { RusVerb } from "./rusVerb";
 import { RusNoun } from "./rusNoun";
 import {RusAdverb} from "./rusAdverb";
-import { RusNumeral } from "./RusNumeral";
+import { RusNumeral } from "./rusNumeral";
 
 export type RusWord = RusVerb | RusNoun | RusAdjective | RusPronoun | RusPreposition | RusConjunction | RusAdverb | RusNumeral;

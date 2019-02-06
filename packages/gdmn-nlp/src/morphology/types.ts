@@ -193,18 +193,18 @@ export const ShortAdverbTypeNames = [
   'Goal'
 ];
 
-export enum NumeralValue {
-  Quantitative = 0,
+export enum NumeralType {
+  Cardinal = 0,
   Ordinal
 };
 
-export const RusNumeralValueNames = [
+export const RusNumeralTypeNames = [
   'количественное',
   'порядковое'
 ];
 
-export const ShortNumeralValueNames = [
-  'Quant',
+export const ShortNumeralTypeNames = [
+  'Crdn',
   'Ordn'
 ];
 
@@ -226,45 +226,49 @@ export const ShortNumeralStructureNames = [
   'Comps'
 ];
 
-export enum NumeralCategory {
+export enum NumeralRank {
   ProperQuantitative = 0,
   Collective,
   Fractional
 };
 
-export const RusNumeralCatagoryNames = [
+export const RusNumeralRankNames = [
   'собственно количественное',
   'собирательное',
   'дробное'
 ];
 
-export const ShortNumeralCatagoryNames = [
+export const ShortNumeralRankNames = [
   'PrQu',
   'Coll',
   'Frac'
 ];
 
 export type RusDeclensionNumeralZ  =
-  'pqs'       |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5'       |'pqs6'     |'pqs7'     |'pqs8'     |'pqs9'
-  |'pqs10'    |'pqc'        |'pqc1'       |'pqc2'       |'pqc3'       |'pqc4'       |'1a'       |'1b'       |'1*a'      |'6*a';
+  'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5-7,9,10'       |'pqs8'       |'pqs0';
 
-  export type RusDeclensionNumeralZEnding = {
-    declensionZ: RusDeclensionNumeralZ,
-    endings: RusNumeralEnding[]
+export type RusDeclensionNumeralZEnding = {
+  declensionZ: RusDeclensionNumeralZ,
+  endings: RusNumeralEnding[]
 };
+
+export interface RusNumeralMorphSigns {
+  c: RusCase;
+  singular: boolean;
+  gender?: RusGender;
+  animate?: boolean;
+}
 
 export interface RusNumeralInterface {
   readonly stem: string;
   readonly stem1: string;
   readonly stem2: string;
-  readonly stem3: string;
-  readonly possiblePlural: boolean;
-  readonly digitalWrite: string,
-  readonly numeralValue: NumeralValue,
-  readonly structure: NumeralStructure,
-  readonly catagory?: NumeralCategory,
+  readonly type: NumeralType;
+  readonly structure: NumeralStructure;
+  readonly gender?: RusGender; 
+  readonly value: number;
   readonly declensionZ: RusDeclensionNumeralZ;
-  readonly declensionZ1?: RusDeclensionNumeralZ;
+  readonly rank?: NumeralRank;
 }
 
 export type RusNumeralEnding = {
@@ -274,10 +278,3 @@ export type RusNumeralEnding = {
   gender?: RusGender;
   animate?: boolean;
 };
-
-export interface RusNumeralMorphSigns {
-  c: RusCase;
-  singular: boolean;
-  gender?: RusGender;
-  animate?: boolean;
-}
