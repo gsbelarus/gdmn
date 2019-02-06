@@ -282,6 +282,7 @@ describe("erModel", () => {
     expect(commands[0].payload.options!.where![0].or![1].equals![0].value).toEqual("пинск");
   });
 
+   /*
    it("phrase9", () => {
     const company = erModel.entities.Company;
     expect(company).toBeDefined();
@@ -313,7 +314,7 @@ describe("erModel", () => {
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
    });
-   
+
    it("phrase10", () => {
     const company = erModel.entities.Company;
     expect(company).toBeDefined();
@@ -345,7 +346,7 @@ describe("erModel", () => {
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
    });
-   
+
    it("phrase11", () => {
     const company = erModel.entities.Company;
     expect(company).toBeDefined();
@@ -441,7 +442,7 @@ describe("erModel", () => {
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
    });
-   
+
    it("phrase14", () => {
     const company = erModel.entities.Company;
     expect(company).toBeDefined();
@@ -473,4 +474,5 @@ describe("erModel", () => {
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].or![0].equals![0].value).toEqual("минск");
    });
+   */
 });

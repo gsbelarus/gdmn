@@ -1,6 +1,6 @@
 import { VPParser1 } from "./VPParser1";
 import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusNNP, RusCN } from "../../rusSyntax";
-import { tokenToWordOrHomogeneous, tokenToWordOrCompositeNumerals } from "../../parser";
+import { tokenToWordOrHomogeneous } from "../../parser";
 
 export const vpParser1 = new VPParser1();
 
@@ -60,7 +60,7 @@ export class VPVisitor1 extends BaseVPVisitor1 {
       return this.visit(ctx.imperativeNoun);
     };
   }
-  
+
   public qualImperativeNNPNoun = (ctx: any) => {
       const impCN = this.visit(ctx.imperativeNNPNumr);
       const impN = this.visit(ctx.imperativeNNPNoun);
@@ -92,16 +92,16 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public imperativeNNPNumr = (ctx: any) => {
-    return tokenToWordOrCompositeNumerals(ctx.NUMRInanMascSingAccs ? ctx.NUMRInanMascSingAccs[0]
+    return ctx.NUMRInanMascSingAccs ? ctx.NUMRInanMascSingAccs[0]
     : ctx.NUMRInanFemnSingAccs ? ctx.NUMRInanFemnSingAccs[0]
     : ctx.NUMRInanNeutSingAccs ? ctx.NUMRInanNeutSingAccs[0]
     : ctx.NUMRAnimMascSingAccs ? ctx.NUMRAnimMascSingAccs[0]
     : ctx.NUMRAnimFemnSingAccs ? ctx.NUMRAnimFemnSingAccs[0]
     : ctx.NUMRAnimNeutSingAccs ? ctx.NUMRAnimNeutSingAccs[0]
     : ctx.NUMRInanPlurGent ? ctx.NUMRInanPlurGent[0]
-    : undefined);
+    : undefined;
   }
-  
+
   public imperativeNNPNoun = (ctx: any) => {
     return tokenToWordOrHomogeneous(ctx.NOUNAnimMascSingAccs ? ctx.NOUNAnimMascSingAccs[0]
       : ctx.NOUNAnimFemnSingAccs ? ctx.NOUNAnimFemnSingAccs[0]

@@ -17,11 +17,17 @@ import {ICmd, Level, Task} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 
-export type AppAction = "PING" | "RELOAD_SCHEMA" | "GET_SCHEMA" | "QUERY";
+export type AppAction =
+  "PING"
+  | "INTERRUPT"
+  | "RELOAD_SCHEMA"
+  | "GET_SCHEMA"
+  | "QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
 export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
+export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", boolean>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", boolean>;
 export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
@@ -75,9 +81,9 @@ export class Application extends ADatabase {
           for (let i = 0; i < steps; i++) {
             if (delay > 0) {
               await new Promise((resolve) => setTimeout(resolve, delay));
-              await context.checkStatus();
             }
             context.progress.increment(1, `Process ping... Complete step: ${i + 1}`);
+            await context.checkStatus();
           }
         }
 
@@ -86,6 +92,33 @@ export class Application extends ADatabase {
           this._logger.error("Application is not connected");
           throw new Error("Application is not connected");
         }
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushInterruptCmd(session: Session, command: InterruptCmd): Task<InterruptCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(session);
+
+        const {taskKey} = context.command.payload;
+
+        const task = context.session.taskManager.find(taskKey);
+        if (!task) {
+          throw new Error("Task is not found");
+        }
+        if (task.options.session !== context.session) {
+          throw new Error("No permissions");
+        }
+        task.interrupt();
       }
     });
     session.taskManager.add(task);

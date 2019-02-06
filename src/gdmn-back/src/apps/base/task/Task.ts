@@ -169,7 +169,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
       }))
       .then((result) => {
         this._result = result;
-        this._updateStatus(TaskStatus.SUCCESS)
+        this._updateStatus(TaskStatus.SUCCESS);
       })
       .catch((error) => {
         this._logger.warn("id#%s throw error; Error: %s", this._id, error);

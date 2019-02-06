@@ -102,7 +102,8 @@ describe("vpparser1", () => {
     expect((anp!.items[0] as RusWord).word).toEqual('лучшие');
     expect((anp!.items[1] as RusWord).word).toEqual('организации');
   });
-  
+
+  /*
   test("покажи 100 организаций из минска", () => {
     const result = parsePhrase('покажи 100 организаций из минска');
     const vp = result.phrase;
@@ -155,4 +156,5 @@ describe("vpparser1", () => {
     expect((pp!.items[0] as RusWord).word).toEqual('из');
     expect((pp!.items[1] as RusWord).word).toEqual('минска');
   });
+  */
 });

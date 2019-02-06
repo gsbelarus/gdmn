@@ -1,5 +1,10 @@
 import { createAction } from 'typesafe-actions';
+import { INLPDialogItem } from 'gdmn-nlp-agent';
 
-export const clearChat = createAction('CHAT/CLEAR', resolve => () => resolve() );
+export const clearNLPDialog = createAction('NLPDIALOG/CLEAR', resolve => () => resolve() );
 
-export type ClearChat = typeof clearChat;
+export type ClearNLPDialog = typeof clearNLPDialog;
+
+export const addNLPItem = createAction('NLPDIALOG/ADD', resolve => (item: INLPDialogItem) => resolve(item) );
+
+export type AddNLPItem = typeof addNLPItem;
