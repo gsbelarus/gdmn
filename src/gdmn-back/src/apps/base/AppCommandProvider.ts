@@ -1,4 +1,4 @@
-import {AppAction, Application, GetSchemaCmd, PingCmd, QueryCmd, ReloadSchemaCmd} from "./Application";
+import {AppAction, Application, GetSchemaCmd, InterruptCmd, PingCmd, QueryCmd, ReloadSchemaCmd} from "./Application";
 import {Session} from "./Session";
 import {ICmd, Task} from "./task/Task";
 
@@ -19,6 +19,13 @@ export class AppCommandProvider {
       && typeof command.payload.delay === "number";
   }
 
+  private static _verifyInterruptCmd(command: ICmd<AppAction, any>): command is InterruptCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "taskKey" in command.payload
+      && typeof command.payload.taskKey === "string";
+  }
+
   private static _verifyQueryCmd(command: ICmd<AppAction, any>): command is QueryCmd {
     return typeof command.payload === "object"
       && !!command.payload;
@@ -26,12 +33,21 @@ export class AppCommandProvider {
   }
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
+    if (!command.payload) {
+      (command.payload as any) = {};
+    }
     switch (command.action) {
       case "PING": {
         if (!AppCommandProvider._verifyPingCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushPingCmd(session, command);
+      }
+      case "INTERRUPT": {
+        if (!AppCommandProvider._verifyInterruptCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushInterruptCmd(session, command);
       }
       case "RELOAD_SCHEMA": {
         return this._application.pushReloadSchemaCmd(session, command as ReloadSchemaCmd);
