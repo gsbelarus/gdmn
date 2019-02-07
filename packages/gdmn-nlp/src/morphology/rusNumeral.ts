@@ -1,13 +1,13 @@
-import { NumeralRank, NumeralStructure, NumeralType, RusDeclensionNumeralZ, RusCase, RusGender, RusNumeralMorphSigns, ShortGenderNames, ShortCaseNames, RusGenderNames, RusCaseNames, RusNumeralTypeNames, RusNumeralStructureNames, RusNumeralRankNames } from "./types";
+import { NumeralRank, NumeralStructure, NumeralType, RusDeclensionNumeral, RusCase, RusGender, RusNumeralMorphSigns, ShortGenderNames, ShortCaseNames, RusGenderNames, RusCaseNames, RusNumeralTypeNames, RusNumeralStructureNames, RusNumeralRankNames } from "./types";
 import { Numeral, NumeralLexeme } from "./morphology";
 import { rusNumerals } from "./rusNumeralsData";
-import { RusNumeralZEndings } from "./rusNumeralEndings";
+import { RusNumeralEndings } from "./rusNumeralEndings";
 
 export class RusNumeralLexeme extends NumeralLexeme {
   public readonly type: NumeralType;
   public readonly structure: NumeralStructure;
   public readonly value: number;
-  public readonly declensionZ: RusDeclensionNumeralZ;
+  public readonly declension: RusDeclensionNumeral;
   public readonly gender?: RusGender;
   public readonly rank?: NumeralRank;
 
@@ -15,7 +15,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
     type: NumeralType,
     structure: NumeralStructure,
     value: number,
-    declensionZ: RusDeclensionNumeralZ,
+    declension: RusDeclensionNumeral,
     gender?: RusGender,
     rank?: NumeralRank
     ) {
@@ -23,17 +23,17 @@ export class RusNumeralLexeme extends NumeralLexeme {
       this.type = type;
       this.structure = structure;
       this.value = value;
-      this.declensionZ = declensionZ;
+      this.declension = declension;
       this.gender = gender;
       this.rank = rank;
   }
 
   public getWordForm(morphSigns: RusNumeralMorphSigns): RusNumeral {
-    const declZEnding = RusNumeralZEndings.find( (e) => e.declensionZ === this.declensionZ );
+    const declEnding = RusNumeralEndings.find( (e) => e.declension === this.declension );
     
-    if (!declZEnding) { throw 'Unknown declensionZ ending'; }
+    if (!declEnding) { throw 'Unknown declensionZ ending'; }
 
-    let ending = declZEnding.endings.find( e => e.c === morphSigns.c
+    let ending = declEnding.endings.find( e => e.c === morphSigns.c
       && e.gender === morphSigns.gender
       && e.singular === morphSigns.singular
       && e.animate === morphSigns.animate );
@@ -42,16 +42,24 @@ export class RusNumeralLexeme extends NumeralLexeme {
       throw new Error(`Numeral ending not found for numeral ${this.value} ${JSON.stringify(morphSigns)}`);
     }
 
-    if (morphSigns.singular && this.stem1 && this.declensionZ === 'pqs1') {
+    if (morphSigns.singular && this.stem1 && this.declension === 'pqs1') {
       if(this.gender === RusGender.Masc && (morphSigns.c === RusCase.Nomn || (morphSigns.c === RusCase.Accs && !morphSigns.animate))) {
         return new RusNumeral(this.stem + ending.ending, this, morphSigns);
       } else {
         return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
       }
-    } else if (morphSigns.singular && this.stem1 && this.declensionZ === 'pqs8') {
+    } else if (morphSigns.singular && this.stem1 && this.declension === 'pqs8') {
       if(morphSigns.c === RusCase.Nomn || morphSigns.c === RusCase.Accs) {
         return new RusNumeral(this.stem + ending.ending, this, morphSigns);
       } else {
+        return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
+      }
+    } else if (morphSigns.singular && this.declension === 'pqc50,60,70,80') {
+      if(morphSigns.c === RusCase.Nomn || morphSigns.c === RusCase.Accs) {
+        return new RusNumeral(this.stem + ending.ending, this, morphSigns);
+      } else if(morphSigns.c === RusCase.Ablt) {
+        return new RusNumeral(this.stem2 + ending.ending, this, morphSigns);
+      } else{
         return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
       }
     } else {
@@ -75,7 +83,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
 }
 
 export const RusNumeralLexemes: RusNumeralLexeme[] = rusNumerals.map(
-  v => new RusNumeralLexeme(v.stem, v.stem1, v.stem2, v.type, v.structure, v.value, v.declensionZ, v.gender, v.rank)
+  v => new RusNumeralLexeme(v.stem, v.stem1, v.stem2, v.type, v.structure, v.value, v.declension, v.gender, v.rank)
 );
 
 export class RusNumeral extends Numeral<RusNumeralLexeme> {

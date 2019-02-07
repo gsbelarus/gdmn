@@ -1,9 +1,9 @@
-import { RusDeclensionNumeralZEnding, RusGender, RusCase } from './types';
+import { RusDeclensionNumeralEnding, RusGender, RusCase } from './types';
 
-export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
+export const RusNumeralEndings: RusDeclensionNumeralEnding[] =
 [
   {
-    declensionZ: 'pqs0', 
+    declension: 'pqs0', 
     endings: [
       // ноль
       {
@@ -52,7 +52,7 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
-    declensionZ: 'pqs1', 
+    declension: 'pqs1', 
     endings: [
       // один
       {
@@ -208,7 +208,7 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
-    declensionZ: 'pqs2', 
+    declension: 'pqs2', 
     endings:[
       // два
       {
@@ -366,7 +366,7 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
-    declensionZ: 'pqs3', 
+    declension: 'pqs3', 
     endings:[
       // три
       {
@@ -415,7 +415,7 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
-    declensionZ: 'pqs4', 
+    declension: 'pqs4', 
     endings:[
       // четыре
       {
@@ -464,7 +464,7 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
-    declensionZ: 'pqs5-7,9,10',
+    declension: 'pqs5-7,9-20,30',
     endings:[
       // пять
       {
@@ -513,7 +513,7 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
     ]
   },
   {
-    declensionZ: 'pqs8', 
+    declension: 'pqs8', 
     endings:[
       // восемь
       {
@@ -560,5 +560,152 @@ export const RusNumeralZEndings: RusDeclensionNumeralZEnding[] =
         singular: true,
       },
     ]
-  }
+  },
+  {
+    declension: 'pqs40', 
+    endings:[
+      // сорок
+      {
+        ending: '',
+        c: RusCase.Nomn,
+        singular: true,
+      },
+      // сорока
+      {
+        ending: 'а',
+        c: RusCase.Gent,
+        singular: true,
+      },
+      // сорока
+      {
+        ending: 'а',
+        c: RusCase.Datv,
+        singular: true,
+      },
+      // сорок
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        animate: true,
+      },
+      // сорок
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        animate: false,
+      },
+      // сорока
+      {
+        ending: 'а',
+        c: RusCase.Ablt,
+        singular: true,
+      },
+      // сорока
+      {
+        ending: 'а',
+        c: RusCase.Loct,
+        singular: true,
+      },
+    ]
+  },
+  {
+    declension: 'pqs90,100', 
+    endings:[
+      // девяносто
+      {
+        ending: 'о',
+        c: RusCase.Nomn,
+        singular: true,
+      },
+      // девяноста
+      {
+        ending: 'а',
+        c: RusCase.Gent,
+        singular: true,
+      },
+      // девяноста
+      {
+        ending: 'а',
+        c: RusCase.Datv,
+        singular: true,
+      },
+      // девяносто
+      {
+        ending: 'о',
+        c: RusCase.Accs,
+        singular: true,
+        animate: true,
+      },
+      // девяносто
+      {
+        ending: 'о',
+        c: RusCase.Accs,
+        singular: true,
+        animate: false,
+      },
+      // девяноста
+      {
+        ending: 'а',
+        c: RusCase.Ablt,
+        singular: true,
+      },
+      // девяноста
+      {
+        ending: 'а',
+        c: RusCase.Loct,
+        singular: true,
+      },
+    ]
+  },
+  {
+    declension: 'pqc50,60,70,80', 
+    endings:[
+      // десят
+      {
+        ending: '',
+        c: RusCase.Nomn,
+        singular: true,
+      },
+      // десяти
+      {
+        ending: 'и',
+        c: RusCase.Gent,
+        singular: true,
+      },
+      // десяти
+      {
+        ending: 'и',
+        c: RusCase.Datv,
+        singular: true,
+      },
+      // десят
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        animate: true,
+      },
+      // десят
+      {
+        ending: '',
+        c: RusCase.Accs,
+        singular: true,
+        animate: false,
+      },
+      // десятью
+      {
+        ending: 'ью',
+        c: RusCase.Ablt,
+        singular: true,
+      },
+      // десяти
+      {
+        ending: 'и',
+        c: RusCase.Loct,
+        singular: true,
+      },
+    ]
+  },
 ];

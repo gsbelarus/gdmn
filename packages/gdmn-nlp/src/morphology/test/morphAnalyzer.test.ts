@@ -211,4 +211,31 @@ describe('числительные', () => {
     expect(n.singular).toEqual(true);
     expect(n.lexeme.gender).toBeUndefined();
   });
+  test("шестьюдесятью", () => {
+    const result = morphAnalyzer('шестьюдесятью');
+    expect(result.length).toEqual(1);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.value).toEqual(60);
+    expect(n.lexeme.type).toEqual(NumeralType.Cardinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.rank).toBeDefined();
+    expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.lexeme.gender).toBeUndefined();
+  });
+  test("пятидесяти", () => {
+    const result = morphAnalyzer('пятидесяти');
+    expect(result.length).toEqual(3);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.value).toEqual(50);
+    expect(n.lexeme.type).toEqual(NumeralType.Cardinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.rank).toBeDefined();
+    expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.lexeme.gender).toBeUndefined();
+  });
+
 });

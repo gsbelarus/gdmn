@@ -244,11 +244,12 @@ export const ShortNumeralRankNames = [
   'Frac'
 ];
 
-export type RusDeclensionNumeralZ  =
-  'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5-7,9,10'       |'pqs8'       |'pqs0';
+export type RusDeclensionNumeral  =
+'pqs0'      |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5-7,9-20,30'       |'pqs8'
+|'pqs40'    |'pqs90,100'  |'pqc50,60,70,80';
 
-export type RusDeclensionNumeralZEnding = {
-  declensionZ: RusDeclensionNumeralZ,
+export type RusDeclensionNumeralEnding = {
+  declension: RusDeclensionNumeral,
   endings: RusNumeralEnding[]
 };
 
@@ -267,7 +268,7 @@ export interface RusNumeralInterface {
   readonly structure: NumeralStructure;
   readonly gender?: RusGender; 
   readonly value: number;
-  readonly declensionZ: RusDeclensionNumeralZ;
+  readonly declension: RusDeclensionNumeral;
   readonly rank?: NumeralRank;
 }
 
