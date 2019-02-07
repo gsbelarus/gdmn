@@ -72,8 +72,8 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Conj', () => RusConjunctionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Nums', () => RusNumeralLexemes.reduce((p, l) => {
-        const wf = l.gender !== undefined ? l.getWordForm({ c: RusCase.Nomn, singular: true, gender: l.gender }) 
-        : l.getWordForm({ c: RusCase.Nomn, singular: true }); 
+        const wf = l.gender !== undefined ? l.getWordForm({ c: RusCase.Nomn, singular: true, gender: l.gender })
+        : l.getWordForm({ c: RusCase.Nomn, singular: true });
 
         if (wf) {
           p.push(wf);
@@ -95,7 +95,14 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
         text={i[0]}
         onClick={() => {
           this.props.onSetText("");
-          this.setState({ vocabulary: i[1]().sort( (a, b) => a.word.localeCompare(b.word)) })
+          const rawWords = i[1]();
+          let vocabulary;
+          if (rawWords[0] instanceof RusNumeral) {
+            vocabulary = rawWords.sort( (a, b) => (a as RusNumeral).lexeme.value - (b as RusNumeral).lexeme.value );
+          } else {
+            vocabulary = rawWords.sort( (a, b) => a.word.localeCompare(b.word) );
+          }
+          this.setState({ vocabulary });
         }}
       />
     );
@@ -236,7 +243,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
               </tr>
             </thead>
               {
-                l.value === 1 || l.value === 2 ? 
+                l.value === 1 || l.value === 2 ?
                 <tbody>
                 <tr>
                   <th colSpan={2}>Им.</th>
