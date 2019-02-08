@@ -237,4 +237,17 @@ describe('числительные', () => {
     expect(n.singular).toEqual(true);
     expect(n.lexeme.gender).toBeUndefined();
   });
+  test("двухсот", () => {
+    const result = morphAnalyzer('двухсот');
+    expect(result.length).toEqual(1);
+    expect(result[0] instanceof RusNumeral).toBeTruthy();
+    const n = result[0] as RusNumeral;
+    expect(n.lexeme.value).toEqual(200);
+    expect(n.lexeme.type).toEqual(NumeralType.Cardinal);
+    expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
+    expect(n.lexeme.rank).toBeDefined();
+    expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
+    expect(n.singular).toEqual(true);
+    expect(n.lexeme.gender).toBeUndefined();
+  });
 });

@@ -10,9 +10,9 @@ export class RusNumeralLexeme extends NumeralLexeme {
   public readonly gender?: RusGender;
   public readonly rank?: NumeralRank;
 
-  constructor(value: number, 
-    stem: string, 
-    stem1: string, 
+  constructor(value: number,
+    stem: string,
+    stem1: string,
     stem2: string,
     type: NumeralType,
     structure: NumeralStructure,
@@ -30,14 +30,14 @@ export class RusNumeralLexeme extends NumeralLexeme {
 
   public getWordForm(morphSigns: RusNumeralMorphSigns): RusNumeral {
     const declEnding = RusNumeralEndings.find( (e) => e.declension === this.declension );
-    
+
     if (!declEnding) { throw 'Unknown declensionZ ending'; }
 
     let ending = declEnding.endings.find( e => e.c === morphSigns.c
       && e.gender === morphSigns.gender
       && e.singular === morphSigns.singular
       && e.animate === morphSigns.animate );
-    
+
     if (!ending) {
       throw new Error(`Numeral ending not found for numeral ${this.value} ${JSON.stringify(morphSigns)}`);
     }
@@ -63,7 +63,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
         } else{
           return new RusNumeral(this.stem1 + ending.ending, this, morphSigns);
         }
-      } 
+      }
     }
 
     return new RusNumeral(this.stem + ending.ending, this, morphSigns);
@@ -86,7 +86,7 @@ export class RusNumeralLexeme extends NumeralLexeme {
 
 export class RusNumeralLexemeSot extends RusNumeralLexeme {
   constructor(value: number) {
-    super(value, '', '', '', NumeralType.Cardinal, NumeralStructure.Complex);
+    super(value, '', '', '', NumeralType.Cardinal, NumeralStructure.Complex, undefined, undefined, NumeralRank.ProperQuantitative);
   }
 
   public getWordForm(morphSigns: RusNumeralMorphSigns): RusNumeral {
