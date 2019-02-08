@@ -237,5 +237,4 @@ describe('числительные', () => {
     expect(n.singular).toEqual(true);
     expect(n.lexeme.gender).toBeUndefined();
   });
-
 });

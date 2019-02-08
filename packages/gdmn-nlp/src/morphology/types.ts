@@ -245,8 +245,8 @@ export const ShortNumeralRankNames = [
 ];
 
 export type RusDeclensionNumeral  =
-'pqs0'      |'pqs1'       |'pqs2'       |'pqs3'       |'pqs4'       |'pqs5-7,9-20,30'       |'pqs8'
-|'pqs40'    |'pqs90,100'  |'pqc50,60,70,80';
+'pqs0'          |'pqs1'         |'pqs2'            |'pqs3'            |'pqs4'            |'pqs5-7,9-20,30'  |'pqs8'
+|'pqs40'        |'pqs90,100'    |'pqc50,60,70,80'  |'pqc50,60,70,80';
 
 export type RusDeclensionNumeralEnding = {
   declension: RusDeclensionNumeral,
@@ -268,7 +268,7 @@ export interface RusNumeralInterface {
   readonly structure: NumeralStructure;
   readonly gender?: RusGender; 
   readonly value: number;
-  readonly declension: RusDeclensionNumeral;
+  readonly declension?: RusDeclensionNumeral;
   readonly rank?: NumeralRank;
 }
 

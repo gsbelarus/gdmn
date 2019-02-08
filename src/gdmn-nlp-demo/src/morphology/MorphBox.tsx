@@ -229,7 +229,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       const l = (w as RusNumeral).lexeme as RusNumeralLexeme;
       const f = (morphSigns: RusNumeralMorphSigns) => (
         <div onClick={(e: MouseEvent<HTMLDivElement>) => onSetText(e.currentTarget.innerText)}>
-          {l.getWordForm(morphSigns).word}
+        {l.getWordForm(morphSigns).word}
         </div>
       );
 

@@ -39,7 +39,19 @@ export abstract class PronounLexeme extends Lexeme { }
 
 export abstract class AdverbLexeme extends Lexeme { }
 
-export abstract class NumeralLexeme extends Lexeme { }
+export abstract class NumeralLexeme extends Lexeme { 
+  public readonly value: number;
+
+  constructor (
+    value: number,
+    stem: string = '',
+    stem1: string = '',
+    stem2: string = '',
+  ) { 
+    super(stem, stem1, stem2);
+    this.value = value;
+  }  
+}
 
 export abstract class Word<L extends Lexeme> {
   readonly id: number = getNextID();
