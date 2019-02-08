@@ -1,6 +1,6 @@
 import { getType, ActionType } from 'typesafe-actions';
 import * as actions from './actions';
-import { ERModel } from 'gdmn-orm';
+import { ERModel, IERModel } from 'gdmn-orm';
 import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
 
 export type ERModelAction = ActionType<typeof actions>;
@@ -13,62 +13,90 @@ export interface IERModelState {
   commandError?: string;
 };
 
-const initialState: IERModelState = {
-  loading: false
-};
+export interface IERModels {
+  [name: string]: IERModelState;
+}
 
-export function reducer(state: IERModelState = initialState, action: ERModelAction): IERModelState {
+export function reducer(state: IERModels = {}, action: ERModelAction): IERModels {
   switch (action.type) {
     case getType(actions.loadERModel): {
-      const erModel = action.payload;
+      const { name, erModel } = action.payload;
       return {
         ...state,
-        erModel,
-        erTranslatorRU: new ERTranslatorRU(erModel),
-        loading: false
-      }
+        [name]: {
+          loading: false,
+          erModel,
+          erTranslatorRU: new ERTranslatorRU(erModel)
+        }
+      };
     }
 
     case getType(actions.setERModelLoading): {
-      const loading = action.payload;
+      const { name, loading } = action.payload;
       return {
         ...state,
-        loading
+        [name]: {
+          ...state[name],
+          loading
+        }
       }
     }
 
     case getType(actions.clearCommand): {
-      return {
-        ...state,
-        command: undefined,
-        commandError: undefined
+      const { name } = action.payload;
+
+      if (state[name]) {
+        return {
+          ...state,
+          [name]: {
+            ...state[name],
+            command: undefined,
+            commandError: undefined
+          }
+        }
       }
+
+      return state;
     }
 
     case getType(actions.processPhrase): {
-      const phrase = action.payload;
-      const { erTranslatorRU } = state;
+      const { name, phrase } = action.payload;
+
+      if (!state[name]) {
+        return state;
+      }
+
+      const { erTranslatorRU } = state[name];
 
       if (!erTranslatorRU) {
         return {
           ...state,
-          command: undefined,
-          commandError: 'ER model is not loaded...'
+          [name]: {
+            ...state[name],
+            command: undefined,
+            commandError: 'ER model is not loaded...'
+          }
         }
       }
 
       try {
         return {
           ...state,
-          command: erTranslatorRU.process(phrase),
-          commandError: undefined
+          [name]: {
+            ...state[name],
+            command: erTranslatorRU.process(phrase),
+            commandError: undefined
+          }
         }
       }
       catch(err) {
         return {
           ...state,
-          command: undefined,
-          commandError: err.message
+          [name]: {
+            ...state[name],
+            command: undefined,
+            commandError: err.message
+          }
         }
       }
     }

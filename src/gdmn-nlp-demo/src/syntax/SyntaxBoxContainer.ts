@@ -9,20 +9,26 @@ import { ERModelAction } from '../ermodel/reducer';
 import { RusPhrase } from 'gdmn-nlp';
 
 export const SyntaxBoxContainer = connect(
-  (state: State) => ({
-    ...state.syntax,
-    commandError: state.ermodel.commandError,
-    command: state.ermodel.command
-  }),
+  (state: State) => {
+    if (state.ermodel['db']) {
+      return {
+        ...state.syntax,
+        commandError: state.ermodel['db'].commandError,
+        command: state.ermodel['db'].command
+      }
+    }
+
+    return {...state.syntax};
+  },
   (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>) => ({
     onSetText: (text: string) => dispatch(
       (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
         dispatch(syntaxActions.setSyntaxText(text));
         const parsedText = getState().syntax.parsedText;
         if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
-          dispatch(erModelActions.processPhrase(parsedText.phrase as RusPhrase));
+          dispatch(erModelActions.processPhrase({ name: 'db', phrase: parsedText.phrase as RusPhrase }));
         } else {
-          dispatch(erModelActions.clearCommand(true));
+          dispatch(erModelActions.clearCommand({ name: 'db', clear: true }));
         }
       }
     )

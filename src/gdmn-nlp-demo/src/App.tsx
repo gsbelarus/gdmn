@@ -102,22 +102,30 @@ class InternalApp extends Component<IAppProps, {}> {
 };
 
 export default connect(
-  (state: State) => ({
-    erModel: state.ermodel.erModel,
-    loadingERModel: state.ermodel.loading
-  }),
+  (state: State) => {
+    if (state.ermodel['db']) {
+      return {
+        erModel: state.ermodel['db'].erModel,
+        loadingERModel: state.ermodel['db'].loading
+      }
+    }
+
+    return {
+      loadingERModel: false
+    }
+  },
   (dispatch: ThunkDispatch<State, never, Actions>) => ({
     onLoadERModel: () => dispatch(
       (dispatch: ThunkDispatch<State, never, Actions>, _getState: () => State) => {
-        dispatch(setERModelLoading(true));
+        dispatch(setERModelLoading({ name: 'db', loading: true }));
 
         fetch(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`)
         .then( res => res.text() )
         .then( res => JSON.parse(res) )
-        .then( res => dispatch(loadERModel(deserializeERModel(res, true))) )
-        .then( _res => dispatch(setERModelLoading(false)) )
+        .then( res => dispatch(loadERModel({ name: 'db', erModel: deserializeERModel(res, true) })) )
+        .then( _res => dispatch(setERModelLoading({ name: 'db', loading: false })) )
         .catch( err => {
-          dispatch(setERModelLoading(false));
+          dispatch(setERModelLoading({ name: 'db', loading: false }));
           console.log(err);
          });
       }
