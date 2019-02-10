@@ -1,0 +1,42 @@
+{
+  "name": "gdmn-nlp-back",
+  "version": "1.0.0",
+  "description": "gdmn-nlp-back",
+  "private": true,
+  "main": "./dist/src/index.js",
+  "types": "./dist/definitions/index.d.ts",
+  "scripts": {
+    "start": "yarn build && node ./dist/src/index.js",
+    "nodemon": "nodemon",
+    "clean": "shx rm -rf ./dist",
+    "build": "tsc",
+    "rebuild": "yarn clean && yarn build",
+    "watch": "tsc -w",
+    "tslint": "tslint --project ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gsbelarus/gdmn.git"
+  },
+  "keywords": [
+    "gdmn"
+  ],
+  "author": "Golden Software of Belarus, Ltd",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/gsbelarus/gdmn/issues"
+  },
+  "homepage": "https://github.com/gsbelarus/gdmn#readme",
+  "dependencies": {
+    "gdmn-er-bridge": "^1",
+    "koa": "^2"
+  },
+  "devDependencies": {
+    "@types/koa": "^2",
+    "@types/node": "^10",
+    "nodemon": "^1",
+    "ts-node": "^8",
+    "tslint": "^5",
+    "typescript": "^3"
+  }
+}
