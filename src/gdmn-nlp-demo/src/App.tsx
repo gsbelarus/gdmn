@@ -35,7 +35,7 @@ class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
 interface IAppProps {
   erModel?: ERModel;
   loadingERModel: boolean;
-  onLoadERModel: () => void;
+  onLoadERModel: (srcFile: string, name: string) => void;
 };
 
 class InternalApp extends Component<IAppProps, {}> {
@@ -44,7 +44,7 @@ class InternalApp extends Component<IAppProps, {}> {
     const { erModel, onLoadERModel, loadingERModel } = this.props;
 
     if (!erModel && !loadingERModel) {
-      onLoadERModel();
+      onLoadERModel('/data/ermodel.serialized.json', 'db');
     }
   }
 
@@ -115,17 +115,16 @@ export default connect(
     }
   },
   (dispatch: ThunkDispatch<State, never, Actions>) => ({
-    onLoadERModel: () => dispatch(
+    onLoadERModel: (srcFile: string, name: string) => dispatch(
       (dispatch: ThunkDispatch<State, never, Actions>, _getState: () => State) => {
-        dispatch(setERModelLoading({ name: 'db', loading: true }));
-
-        fetch(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`)
+        dispatch(setERModelLoading({ name, loading: true }));
+        fetch(`${process.env.PUBLIC_URL}${srcFile}`)
         .then( res => res.text() )
         .then( res => JSON.parse(res) )
-        .then( res => dispatch(loadERModel({ name: 'db', erModel: deserializeERModel(res, true) })) )
-        .then( _res => dispatch(setERModelLoading({ name: 'db', loading: false })) )
+        .then( res => dispatch(loadERModel({ name, erModel: deserializeERModel(res, true) })) )
+        .then( _res => dispatch(setERModelLoading({ name, loading: false })) )
         .catch( err => {
-          dispatch(setERModelLoading({ name: 'db', loading: false }));
+          dispatch(setERModelLoading({ name, loading: false }));
           console.log(err);
          });
       }
