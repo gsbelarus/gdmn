@@ -1,12 +1,15 @@
 import { connect } from 'react-redux';
 import { State } from '../store';
 import { ERModelBox } from './ERModelBox';
+import { RouteComponentProps } from 'react-router';
 
 export const ERModelBoxContainer = connect(
-  (state: State) => {
-    if (state.ermodel['db']) {
+  (state: State, ownProps: RouteComponentProps<{ name: string }>) => {
+    const name = ownProps.match.params.name;
+
+    if (state.ermodel[name]) {
       return {
-        ...state.ermodel['db']
+        ...state.ermodel[name]
       }
     }
 

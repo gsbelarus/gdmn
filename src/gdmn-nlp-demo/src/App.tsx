@@ -11,6 +11,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { connect } from 'react-redux';
 import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
+import { IERModels } from './ermodel/reducer';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
@@ -33,18 +34,21 @@ class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
 };
 
 interface IAppProps {
-  erModel?: ERModel;
-  loadingERModel: boolean;
+  erModel: IERModels;
   onLoadERModel: (srcFile: string, name: string) => void;
 };
 
 class InternalApp extends Component<IAppProps, {}> {
 
   componentDidMount() {
-    const { erModel, onLoadERModel, loadingERModel } = this.props;
+    const { erModel, onLoadERModel } = this.props;
 
-    if (!erModel && !loadingERModel) {
+    if (!erModel['db']) {
       onLoadERModel('/data/ermodel.serialized.json', 'db');
+    }
+
+    if (!erModel['nbrb']) {
+      onLoadERModel('/data/nbrbmodel.serialized.json', 'nbrb');
     }
   }
 
@@ -59,7 +63,7 @@ class InternalApp extends Component<IAppProps, {}> {
             <Switch>
               <Route exact={false} path={`/morphology`} component={MorphBoxContainer} />
               <Route exact={false} path={`/syntax`} component={SyntaxBoxContainer} />
-              <Route exact={false} path={`/ermodel`} component={ERModelBoxContainer} />
+              <Route exact={false} path={`/ermodel/:name`} component={ERModelBoxContainer} />
               <Route exact={false} path={`/nlpdialog`} component={ChatBoxContainer} />
             </Switch>
           </div>
@@ -69,7 +73,7 @@ class InternalApp extends Component<IAppProps, {}> {
   }
 
   private getItems = (): ICommandBarItemProps[] => {
-    const { loadingERModel, erModel } = this.props;
+    const { erModel } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -85,16 +89,17 @@ class InternalApp extends Component<IAppProps, {}> {
         text: 'Syntax',
         commandBarButtonAs: btn('/syntax')
       },
-      {
-        key: 'ermodel',
-        disabled: !erModel,
-        text: loadingERModel ? 'Loading ER Model...' : 'ERModel',
-        commandBarButtonAs: btn('/ermodel', erModel ? Object.entries(erModel.entities).length.toString() : undefined)
-      },
+      ...Object.entries(erModel).map( ([name, m]) => (
+        {
+          key: `ermodel-${name}`,
+          disabled: !m.erModel,
+          text: m.loading ? 'Loading ER Model...' : `ERModel-${name}`,
+          commandBarButtonAs: btn(`/ermodel/${name}`, m.erModel ? Object.entries(m.erModel.entities).length.toString() : undefined)
+        }
+      )),
       {
         key: 'nlpdialog',
-        disabled: !erModel,
-        text: loadingERModel ? 'Loading...' : 'NLP Dialog',
+        text: 'NLP Dialog',
         commandBarButtonAs: btn('/nlpdialog')
       }
     ];
@@ -103,15 +108,8 @@ class InternalApp extends Component<IAppProps, {}> {
 
 export default connect(
   (state: State) => {
-    if (state.ermodel['db']) {
-      return {
-        erModel: state.ermodel['db'].erModel,
-        loadingERModel: state.ermodel['db'].loading
-      }
-    }
-
     return {
-      loadingERModel: false
+      erModel: state.ermodel
     }
   },
   (dispatch: ThunkDispatch<State, never, Actions>) => ({
