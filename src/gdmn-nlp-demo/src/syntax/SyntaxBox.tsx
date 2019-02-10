@@ -208,7 +208,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   private collUpsFields(id: string, idButton: string) {
     var div = document.getElementById(id);
-    div.style.display = div.style.display !== "none" 
+    div.style.display = div.style.display !== "none"
       && div.style.display !== "block" ? "block" : div.style.display === "none" ? "block" : "none";
     var button = document.getElementById(idButton);
     button.innerHTML = div.style.display === "none" ? "..." : "^";
@@ -229,8 +229,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayORDER(orders: IEntityQueryOrder[]) {
-    return orders.map( (order) => 
-      <div className="order">
+    return orders.map( (order, idx) =>
+      <div className="order" key={idx}>
         <div className="alias">{order.alias}</div>
         <div className="attr">{order.attribute.name}</div>
         <div className="typeOrder">{order.type}</div>
@@ -239,8 +239,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayWHERE(wheres: IEntityQueryWhere[]) {
-    return wheres.map( (where, idx1) => 
-      <div className="where">
+    return wheres.map( (where, idx1) =>
+      <div className="where" key={idx1}>
         {this.displayOR(where.or, idx1)}
         {this.displayAND(where.and, idx1)}
         {this.displayNOT(where.not, idx1)}
@@ -284,13 +284,13 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   private displayEQUALS(equals: IEntityQueryWhereValue[], idx: number | null) {
     return equals && <div className="equals">
-            {equals.map((equal, idx1) => 
+            {equals.map((equal, idx1) =>
               <div className="equal" key={idx1}>
                 <div className="alias">{equal.alias}</div>
                 <div className="attr">{equal.attribute.name}</div>
                 <div className="opEQ" />
                 <div className="value"> {equal.value} </div>
-              </div> 
+              </div>
             )}
           </div>
   }
@@ -348,8 +348,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           <div id="scrollUp0" className="scrollUp">
             <div className="s">
               { command.payload.link.fields.map( (field, idx) =>
-                <div>
-                  <div className="field" key={idx}>{field.attribute.name}
+                <div key={idx}>
+                  <div className="field">{field.attribute.name}
                   {field.link &&
                     <div className="payload">
                       <div className="alias">{field.link.alias}</div>
@@ -360,8 +360,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                             {field.link.fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
                           </div>
                         </div>
-                        <button id={`buttonForScroll${field.link.alias}/${idx}`} className="buttonForScroll" 
-                          onClick={ () => 
+                        <button id={`buttonForScroll${field.link.alias}/${idx}`} className="buttonForScroll"
+                          onClick={ () =>
                             this.collUpsFields(
                               `scrollUp${field.link.alias}/${idx}`,
                               `buttonForScroll${field.link.alias}/${idx}`
@@ -373,7 +373,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
               ) }
               </div>
             </div>
-            <button id="buttonForScroll0" className="buttonForScroll" 
+            <button id="buttonForScroll0" className="buttonForScroll"
               onClick={ () => this.collUpsFields("scrollUp0", "buttonForScroll0") }>...</button>
           </div>
         </div>

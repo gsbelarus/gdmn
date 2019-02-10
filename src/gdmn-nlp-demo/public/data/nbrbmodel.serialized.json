@@ -13,7 +13,7 @@
       "attributes": [
         {
           "name": "Cur_ID",
-          "type": "Sequence",
+          "type": "Integer",
           "lName": {
             "ru": {
               "name": "Идентификатор"
@@ -49,6 +49,80 @@
           "semCategories": "",
           "maxLength": 60,
           "autoTrim": true
+        }
+      ]
+    },
+    {
+      "name": "Rate",
+      "lName": {
+        "ru": {
+          "name": "Курс"
+        }
+      },
+      "isAbstract": false,
+      "semCategories": "",
+      "unique": [],
+      "attributes": [
+        {
+          "name": "Cur_ID",
+          "type": "Integer",
+          "lName": {
+            "ru": {
+              "name": "Идентификатор"
+            }
+          },
+          "required": true,
+          "semCategories": ""
+        },
+        {
+          "name": "Date",
+          "type": "Date",
+          "lName": {
+            "ru": {
+              "name": "Дата"
+            }
+          },
+          "required": true,
+          "semCategories": ""
+        },
+        {
+          "name": "Cur_Abbreviation",
+          "type": "String",
+          "lName": {
+            "ru": {
+              "name": "Код",
+              "fullName": "Код"
+            }
+          },
+          "required": true,
+          "semCategories": "",
+          "maxLength": 3,
+          "autoTrim": true
+        },
+        {
+          "name": "Cur_Name",
+          "type": "String",
+          "lName": {
+            "ru": {
+              "name": "Наименование",
+              "fullName": "Наименование"
+            }
+          },
+          "required": true,
+          "semCategories": "",
+          "maxLength": 60,
+          "autoTrim": true
+        },
+        {
+          "name": "Cur_OfficialRate",
+          "type": "Float",
+          "lName": {
+            "ru": {
+              "name": "Курс"
+            }
+          },
+          "required": true,
+          "semCategories": ""
         }
       ]
     }
