@@ -9,6 +9,7 @@ export interface IERModelBoxProps {
 };
 
 export interface IERModelBoxState {
+  erModel?: ERModel;
   text: string;
   searchInEntity: boolean;
   searchInAttribute: boolean;
@@ -25,9 +26,23 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
     searchInEntity: true,
     searchInAttribute: true,
     viewMode: 'L',
-    maxCount: 200,
+    maxCount: 40,
     foundEntities: [],
     filtering: false
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    if (state.erModel !== props.erModel) {
+      return {
+        ...state,
+        erModel: props.erModel,
+        text: '',
+        foundEntities: [],
+        filtering: false
+      }
+    }
+
+    return state;
   }
 
   componentDidUpdate() {
