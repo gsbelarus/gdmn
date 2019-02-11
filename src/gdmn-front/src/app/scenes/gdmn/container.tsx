@@ -26,7 +26,6 @@ const GdmnContainer = compose<any, TGdmnViewProps>(
       dispatch,
       apiPing: bindActionCreators(gdmnActionsAsync.apiPing, dispatch),
       apiDeleteAccount: bindActionCreators(gdmnActionsAsync.apiDeleteAccount, dispatch),
-      apiGetData: bindActionCreators(gdmnActionsAsync.apiGetData, dispatch),
       signOut: bindActionCreators(authActionsAsync.signOut, dispatch),
       onError: bindActionCreators(rootActions.onError, dispatch)
     })

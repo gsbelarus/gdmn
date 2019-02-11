@@ -45,7 +45,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
       history,
       dispatch,
       erModel,
-      apiGetData,
       apiPing,
       apiDeleteAccount,
       loading,
@@ -135,7 +134,6 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => (
                   <StompDemoView
                     apiPing={apiPing}
-                    apiGetData={apiGetData}
                     erModel={erModel}
                     addToTabList={addToTabList}
                     viewTabs={viewTabs}

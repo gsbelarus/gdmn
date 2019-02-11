@@ -24,9 +24,10 @@ interface ICmd<TPayload> {
   payload: TPayload;
 }
 
-interface ICmdResult<TPayload, IError = IGdmnMessageError> {
+interface ICmdResult<TPayload, IError = IGdmnMessageError, IMeta = { [key: string]: string | undefined }> {
   payload: TPayload;
   error?: IError;
+  meta?: IMeta;
 }
 
 type TTaskCmd<TActionName extends keyof TTaskActionPayloadTypes> = ICmd<
@@ -41,9 +42,8 @@ type TTaskCmdResult<
   result?: TTaskActionResultTypes[TActionName];
   status?: TTaskStatus;
   progress?: ITaskProgress;
-
   action: TTaskActionNames; // todo: tmp
-}>;
+}, IGdmnMessageError, { taskId: string | undefined }>;
 
 // sign up
 
@@ -80,6 +80,18 @@ type TRefreshAuthCmdResult = ICmdResult<TRefreshAuthResponseMeta, null>; // only
 type TDeleteAccountCmd = ICmd<TAccountDeleteRequestMeta>;
 
 type TDeleteAccountCmdResult = ICmdResult<TAccountDeleteResponseMeta, null>; // only protocol errors
+
+// interrupt
+
+type TInterruptTaskCmd = TTaskCmd<TTaskActionNames.INTERRUPT>;
+
+type TInterruptTaskCmdResult = TTaskCmdResult<TTaskActionNames.INTERRUPT>;
+
+// reload schema
+
+type TReloadSchemaTaskCmd  = TTaskCmd<TTaskActionNames.RELOAD_SCHEMA>;
+
+type TReloadSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.RELOAD_SCHEMA>;
 
 // ping task
 
@@ -132,6 +144,10 @@ export {
   TRefreshAuthCmdResult,
   TDeleteAccountCmd,
   TDeleteAccountCmdResult,
+  TInterruptTaskCmd,
+  TInterruptTaskCmdResult,
+  TReloadSchemaTaskCmd,
+  TReloadSchemaTaskCmdResult,
   TPingTaskCmd,
   TPingTaskCmdResult,
   TGetSchemaTaskCmd,

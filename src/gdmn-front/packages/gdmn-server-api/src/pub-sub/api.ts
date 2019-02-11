@@ -26,6 +26,8 @@ const enum TGdmnErrorCodes {
 }
 // -- task
 const enum TTaskActionNames {
+  INTERRUPT = 'INTERRUPT',
+  RELOAD_SCHEMA = 'RELOAD_SCHEMA',
   PING = 'PING',
   GET_SCHEMA = 'GET_SCHEMA',
   QUERY = 'QUERY',
@@ -58,6 +60,12 @@ type TTaskActionMessageData<TActionName extends keyof TTaskActionPayloadTypes> =
 >;
 
 interface TTaskActionPayloadTypes {
+  [TTaskActionNames.INTERRUPT]: {
+    taskKey: string;
+  };
+  [TTaskActionNames.RELOAD_SCHEMA]: {
+    withAdapter: boolean;
+  };
   [TTaskActionNames.PING]: {
     steps: number;
     delay: number;
@@ -91,6 +99,8 @@ type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = 
 };
 
 interface TTaskActionResultTypes {
+  [TTaskActionNames.INTERRUPT]: undefined;
+  [TTaskActionNames.RELOAD_SCHEMA]: IERModel;
   [TTaskActionNames.PING]: undefined;
   [TTaskActionNames.GET_SCHEMA]: IERModel;
   [TTaskActionNames.QUERY]: IEntityQueryResponse;

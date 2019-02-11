@@ -1,11 +1,11 @@
 import React from 'react';
 import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
-import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { filter, first } from 'rxjs/operators';
 import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
 import { Observable } from 'rxjs';
 
-import { EntityLink, EntityQuery, EntityQueryField, ERModel, IEntityQueryInspector, ScalarAttribute } from 'gdmn-orm';
+import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { ICommand } from 'gdmn-nlp-agent/dist/definitions';
@@ -20,12 +20,13 @@ interface IStompDemoViewState {
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
+  sendQueryLoading: boolean;
+  loadingQueryTaskId: string | undefined;
 }
 
 interface IStompDemoViewProps extends IViewProps {
   erModel?: ERModel;
   apiPing: (cmd: TPingTaskCmd) => void;
-  apiGetData: (queryInspector: IEntityQueryInspector) => void;
   onError: (error: Error, meta?: any) => void;
 }
 
@@ -50,7 +51,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   public state: IStompDemoViewState = {
     stressStarted: false,
     stressResultTime: 0,
-    stressResultRequestsCount: 0
+    stressResultRequestsCount: 0,
+    sendQueryLoading: false,
+    loadingQueryTaskId: undefined
   };
 
   public getViewCaption(): string {
@@ -176,7 +179,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   // api test
 
-  private handleSendQueryClick = () => {
+  private handleSendQuery = () => {
     if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
 
     const entity = Object.values(this.props.erModel.entities)[0];
@@ -189,7 +192,39 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           .map(value => new EntityQueryField(value))
       )
     );
-    this.props.apiGetData(query.inspect());
+
+    apiService.getData({
+      payload: {
+        action: TTaskActionNames.QUERY,
+        payload: query.inspect()
+      }
+    }).subscribe(value => {
+      if (value.error || value.payload.status === TTaskStatus.RUNNING) {
+        this.setState({
+          sendQueryLoading: true,
+          loadingQueryTaskId:  value.meta && value.meta.taskId ? value.meta.taskId : undefined
+        });
+      } else if (!!value.payload.status) {
+        this.setState({
+          sendQueryLoading: false,
+          loadingQueryTaskId: undefined
+        });
+      }
+    });
+
+  };
+
+  private handleInterruptQueryTask = () => {
+    if (!!!this.state.loadingQueryTaskId) return;
+
+    apiService.interruptTask({
+      payload: {
+        action: TTaskActionNames.INTERRUPT,
+        payload: {
+          taskKey: this.state.loadingQueryTaskId
+        }
+      }
+    })
   };
 
   private handleSendNlpQueryClick = () => {
@@ -206,7 +241,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     }
 
     cmds.forEach(value => {
-      this.props.apiGetData(value.payload.inspect());
+      apiService.getData({
+        payload: {
+          action: TTaskActionNames.QUERY,
+          payload: value.payload.inspect()
+        }
+      });
     });
   };
 
@@ -285,7 +325,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         </div>
         <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <PrimaryButton onClick={this.handleSendQueryClick} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+            <PrimaryButton onClick={this.handleSendQuery} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+            <br />
+            <DefaultButton onClick={this.handleInterruptQueryTask} text="INTERRUPT QUERY-TASK" disabled={!!!this.state.loadingQueryTaskId} />
+            <br />
             <br />
             <PrimaryButton
               onClick={this.handleSendNlpQueryClick}

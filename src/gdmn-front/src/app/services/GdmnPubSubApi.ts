@@ -26,12 +26,16 @@ import {
   TGetAppsTaskCmdResult,
   TGetSchemaTaskCmd,
   TGetSchemaTaskCmdResult,
+  TInterruptTaskCmd,
+  TInterruptTaskCmdResult,
   TPingTaskCmd,
   TPingTaskCmdResult,
   TQueryTaskCmd,
   TQueryTaskCmdResult,
   TRefreshAuthCmd,
   TRefreshAuthCmdResult,
+  TReloadSchemaTaskCmd,
+  TReloadSchemaTaskCmdResult,
   TSignInCmd,
   TSignInCmdResult,
   TSignOutCmd,
@@ -145,6 +149,14 @@ class GdmnPubSubApi {
 
   public async deleteAccount(cmd: TDeleteAccountCmd): Promise<TAuthCmdResult> {
     return this.auth(cmd, true);
+  }
+
+  public interruptTask(cmd: TInterruptTaskCmd): Promise<TInterruptTaskCmdResult> {
+    return this.runTaskCmd<TTaskActionNames.INTERRUPT>(cmd).pipe(first()).toPromise();
+  }
+
+  public reloadSchema(cmd: TReloadSchemaTaskCmd): Observable<TReloadSchemaTaskCmdResult> {
+    return this.runTaskCmd<TTaskActionNames.RELOAD_SCHEMA>(cmd);
   }
 
   public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {
@@ -313,6 +325,10 @@ class GdmnPubSubApi {
             return JSON.parse(message.data);
           });
 
+          const meta = {
+            taskId: msgPublishState && msgPublishState.meta ? msgPublishState.meta['task-id'] : undefined
+          };
+
           /*
 
              <<< MESSAGE
@@ -373,7 +389,8 @@ class GdmnPubSubApi {
               payload: {
                 action: taskCmd.payload.action,
                 progress: progressMsgData.progress
-              }
+              },
+              meta
             }))
           );
 
@@ -401,7 +418,8 @@ class GdmnPubSubApi {
               payload: {
                 action: taskCmd.payload.action,
                 status: statusMsgData.status
-              }
+              },
+              meta
             }))
           );
 

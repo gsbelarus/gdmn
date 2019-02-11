@@ -1,4 +1,4 @@
-import { deserializeERModel, ERModel, IEntityQueryInspector } from 'gdmn-orm';
+import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TGdmnErrorCodes, TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
@@ -65,15 +65,6 @@ const gdmnActionsAsync = {
           dispatch(gdmnActions.setSchema(erModel));
         }
       });
-  },
-  apiGetData: (queryInspector: IEntityQueryInspector): TThunkAction => async (dispatch, getState, { apiService }) => {
-    apiService.getData({
-      payload: {
-        action: TTaskActionNames.QUERY,
-        payload: queryInspector
-      }
-    });
-    // todo sub
   }
 };
 
