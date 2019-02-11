@@ -180,27 +180,16 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   // api test
 
   private handleSendQuery = () => {
-    if (!this.props.erModel || Object.keys(this.props.erModel.entities).length === 0) return;
 
-    const entity = Object.values(this.props.erModel.entities)[0];
-    const query = new EntityQuery(
-      new EntityLink(
-        entity,
-        'alias',
-        Object.values(entity!.attributes)
-          .filter(value => value instanceof ScalarAttribute)
-          .map(value => new EntityQueryField(value))
-      )
-    );
-
-    apiService
-      .getData({
+    return apiService.ping({
+      payload: {
+        action: TTaskActionNames.PING,
         payload: {
-          action: TTaskActionNames.QUERY,
-          payload: query.inspect()
+          delay: 3000,
+          steps: 3
         }
-      })
-      .subscribe(value => {
+      }
+    }).subscribe(value => {
         if (value.error || value.payload.status === TTaskStatus.RUNNING) {
           this.setState({
             sendQueryLoading: true,
@@ -215,10 +204,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       });
   };
 
-  private handleInterruptQueryTask = async () => {
+  private handleInterruptQueryTask = () => {
     if (!!!this.state.loadingQueryTaskId) return;
 
-    await apiService.interruptTask({
+    apiService.interruptTask({
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
@@ -227,10 +216,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       }
     });
 
-    this.setState({
-      sendQueryLoading: false,
-      loadingQueryTaskId: undefined
-    });
+    // this.setState({
+    //   sendQueryLoading: false,
+    //   loadingQueryTaskId: undefined
+    // });
   };
 
   private handleSendNlpQueryClick = () => {
@@ -331,11 +320,11 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         </div>
         <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <PrimaryButton onClick={this.handleSendQuery} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
+            <PrimaryButton onClick={this.handleSendQuery} text="SEND TASK" disabled={!this.props.erModel || this.state.sendQueryLoading} />
             <br />
             <DefaultButton
               onClick={this.handleInterruptQueryTask}
-              text="INTERRUPT QUERY-TASK"
+              text="INTERRUPT TASK"
               disabled={!!!this.state.loadingQueryTaskId}
             />
             <br />

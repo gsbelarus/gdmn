@@ -37,9 +37,9 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
     return [
       {
         key: 'editEntityItem',
-        text: 'Edit item',
+        text: 'Edit',
         iconProps: {
-          iconName: 'Table'
+          iconName: 'Edit'
         },
         commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`)
       }
