@@ -1,6 +1,9 @@
+import React from 'react';
 import { ERModel } from 'gdmn-orm';
+import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
+import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 
 export interface IEntityMatchParams {
   entityName: string
@@ -12,6 +15,8 @@ export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams>
 
 export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMatchParams> {
   public getDataViewKey() {
+
+    console.log('match', this.props.match.params.entityName);
     const key = this.props.match ? this.props.match.params.entityName : '';
 
     if (!key) {
@@ -23,5 +28,23 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
 
   public getViewCaption(): string {
     return this.props.match ? this.props.match.params.entityName : '';
+  }
+
+  public getCommandBarItems(): ICommandBarItemProps[] {
+    const { data, match } = this.props;
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
+
+    return [
+      {
+        key: 'editEntityData',
+        text: 'Edit entity data',
+        iconProps: {
+          iconName: 'Table'
+        },
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`)
+      }
+    ];
   }
 }

@@ -214,17 +214,22 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   };
 
-  private handleInterruptQueryTask = () => {
+  private handleInterruptQueryTask = async () => {
     if (!!!this.state.loadingQueryTaskId) return;
 
-    apiService.interruptTask({
+    await apiService.interruptTask({
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
           taskKey: this.state.loadingQueryTaskId
         }
       }
-    })
+    });
+
+    this.setState({
+      sendQueryLoading: false,
+      loadingQueryTaskId: undefined
+    });
   };
 
   private handleSendNlpQueryClick = () => {

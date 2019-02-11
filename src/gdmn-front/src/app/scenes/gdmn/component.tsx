@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
+import { Link, Route, RouteComponentProps, Switch, withRouter } from 'react-router-dom';
 import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
@@ -19,6 +19,7 @@ import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import styles from './styles.css';
 import { IViewTab } from './types';
+import { TmpEditView } from '@src/app/scenes/ermodel/entityData/TmpEditView';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
@@ -54,6 +55,8 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
       viewTabs
     } = this.props;
     if (!match) return null; // todo
+
+    const EditView = withRouter(TmpEditView);
 
     return (
       <div className="App" style={{ height: '100%', overflow: 'auto' }}>
@@ -151,12 +154,17 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 )}
               />
               <Route
+                exact={true}
                 path={`${match.path}/entity/:entityName`}
                 render={props => (
                   <div style={{ margin: -16 }}>
                     <EntityDataViewContainer {...props} />
                   </div>
                 )}
+              />
+              <Route
+                path={`${match.path}/entity/:entityName/edit/:currentRow`}
+                render={props => <TmpEditView {...props} addToTabList={addToTabList} viewTabs={viewTabs}/>}
               />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
@@ -167,6 +175,8 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     );
   }
 }
+
+
 
 export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
 
