@@ -55,12 +55,6 @@ export class ERBridge {
     }
   }
 
-  public static async openQueryCursor(connection: AConnection,
-                                      transaction: ATransaction,
-                                      query: EntityQuery): Promise<EQueryCursor> {
-    return await EQueryCursor.open(connection, transaction, query);
-  }
-
   public static async initDatabase(connection: AConnection): Promise<void> {
     await new DBSchemaUpdater(connection).run();
   }
@@ -76,20 +70,26 @@ export class ERBridge {
     return await new ERExport(connection, transaction, dbStructure, erModel).execute();
   }
 
-  public async dispose(): Promise<void> {
-    await this.ddlHelper.dispose();
+  public static async openQueryCursor(connection: AConnection,
+                                      transaction: ATransaction,
+                                      query: EntityQuery): Promise<EQueryCursor> {
+    return await EQueryCursor.open(connection, transaction, query);
   }
 
-  public async query(query: EntityQuery): Promise<IEntityQueryResponse> {
-    const {connection, transaction} = this.ddlHelper;
-
+  public static async query(connection: AConnection,
+                            transaction: ATransaction,
+                            query: EntityQuery): Promise<IEntityQueryResponse> {
     const cursor = await EQueryCursor.open(connection, transaction, query);
-    let result: any[] = [];
+    let data: any[] = [];
     let rows;
     while (!(rows = await cursor.fetch(1)).finished) {
-      result = result.concat(rows);
+      data = data.concat(rows.data);
     }
 
-    return cursor.makeEntityQueryResponse(result);
+    return cursor.makeEntityQueryResponse(data);
+  }
+
+  public async dispose(): Promise<void> {
+    await this.ddlHelper.dispose();
   }
 }

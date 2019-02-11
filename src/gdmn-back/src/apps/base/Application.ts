@@ -201,13 +201,10 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(session);
 
-        const result = await this.executeSessionConnection(session,
-          (connection) => ERBridge.executeSelf({
-            connection,
-            transaction: connection.readTransaction,
-            callback: (erBridge) => erBridge.query(EntityQuery.inspectorToObject(this.erModel, context.command.payload))
-          })
-        );
+        const result = await this.executeSessionConnection(session, async (connection) => {
+          const query = EntityQuery.inspectorToObject(this.erModel, context.command.payload);
+          return await ERBridge.query(connection, connection.readTransaction, query);
+        });
         await context.checkStatus();
         return result;
       }
