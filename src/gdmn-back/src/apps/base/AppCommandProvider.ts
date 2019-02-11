@@ -1,4 +1,14 @@
-import {AppAction, Application, GetSchemaCmd, InterruptCmd, PingCmd, QueryCmd, ReloadSchemaCmd} from "./Application";
+import {
+  AppAction,
+  Application,
+  FetchQueryCmd,
+  GetSchemaCmd,
+  InterruptCmd,
+  MakeQueryCmd,
+  PingCmd,
+  QueryCmd,
+  ReloadSchemaCmd
+} from "./Application";
 import {Session} from "./Session";
 import {ICmd, Task} from "./task/Task";
 
@@ -32,6 +42,23 @@ export class AppCommandProvider {
     // TODO
   }
 
+  private static _verifyMakeQueryCmd(command: ICmd<AppAction, any>): command is MakeQueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "query" in command.payload
+      && typeof command.payload.query === "object";
+    // TODO
+  }
+
+  private static _verifyFetchQueryCmd(command: ICmd<AppAction, any>): command is FetchQueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "taskKey" in command.payload
+      && typeof command.payload.taskKey === "string"
+      && "rowsCount" in command.payload
+      && typeof command.payload.rowsCount === "number";
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -60,6 +87,18 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushQueryCmd(session, command);
+      }
+      case "MAKE_QUERY": {
+        if (!AppCommandProvider._verifyMakeQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushMakeQueryCmd(session, command);
+      }
+      case "FETCH_QUERY": {
+        if (!AppCommandProvider._verifyFetchQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushFetchQueryCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");

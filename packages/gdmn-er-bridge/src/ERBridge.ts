@@ -1,11 +1,11 @@
 import {AConnection, ATransaction, DBStructure, Factory, IBaseExecuteOptions} from "gdmn-db";
-import {EntityQuery, ERModel, IEntityQueryResponse, IEntityQueryResponseFieldAliases} from "gdmn-orm";
-import {Select} from "./crud/query/Select";
+import {EntityQuery, ERModel, IEntityQueryResponse} from "gdmn-orm";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
 import {DDLHelper} from "./ddl/DDLHelper";
 import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
+import {EQueryCursor} from "./EQueryCursor";
 
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
@@ -55,6 +55,12 @@ export class ERBridge {
     }
   }
 
+  public static async openQueryCursor(connection: AConnection,
+                                      transaction: ATransaction,
+                                      query: EntityQuery): Promise<EQueryCursor> {
+    return await EQueryCursor.open(connection, transaction, query);
+  }
+
   public static async initDatabase(connection: AConnection): Promise<void> {
     await new DBSchemaUpdater(connection).run();
   }
@@ -76,51 +82,14 @@ export class ERBridge {
 
   public async query(query: EntityQuery): Promise<IEntityQueryResponse> {
     const {connection, transaction} = this.ddlHelper;
-    const {sql, params, fieldAliases} = new Select(query);
 
-    const data = await AConnection.executeQueryResultSet({
-      connection,
-      transaction,
-      sql,
-      params,
-      callback: async (resultSet) => {
-        const result = [];
-        while (await resultSet.next()) {
-          const row: { [key: string]: any } = {};
-          for (let i = 0; i < resultSet.metadata.columnCount; i++) {
-            // TODO binary blob support
-            row[resultSet.metadata.getColumnLabel(i)] = await resultSet.getAny(i);
-          }
-          result.push(row);
-        }
-        return result;
-      }
-    });
+    const cursor = await EQueryCursor.open(connection, transaction, query);
+    let result: any[] = [];
+    let rows;
+    while (!(rows = await cursor.fetch(1)).finished) {
+      result = result.concat(rows);
+    }
 
-    return {
-      data,
-      aliases: Array.from(fieldAliases).reduce((aliases, [field, values]) => (
-        Array.from(values).reduce((map, [attribute, fieldAlias]) => {
-            const link = query.link.deepFindLink(field);
-            if (!link) {
-              throw new Error("Field not found");
-            }
-            return {
-              ...aliases,
-              [fieldAlias]: {
-                linkAlias: link.alias,
-                attribute: field.attribute.name,
-                setAttribute: field.attribute.type === "Set" && field.attribute !== attribute
-                  ? attribute.name : undefined
-              }
-            };
-          }, aliases
-        )
-      ), {} as IEntityQueryResponseFieldAliases),
-      info: {
-        select: sql,
-        params
-      }
-    };
+    return cursor.makeEntityQueryResponse(result);
   }
 }

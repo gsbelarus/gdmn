@@ -22,15 +22,19 @@ export type AppAction =
   | "INTERRUPT"
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
-  | "QUERY";
+  | "QUERY"
+  | "MAKE_QUERY"
+  | "FETCH_QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
 export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
-export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", boolean>;
-export type GetSchemaCmd = AppCmd<"GET_SCHEMA", boolean>;
+export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
+export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
 export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
+export type MakeQueryCmd = AppCmd<"MAKE_QUERY", { query: IEntityQueryInspector }>;
+export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 
 export class Application extends ADatabase {
 
@@ -47,13 +51,21 @@ export class Application extends ADatabase {
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
-    const reloadSchemaCmd: ReloadSchemaCmd = {id: "RELOAD_SCHEMA_ID", action: "RELOAD_SCHEMA", payload: true};
+    const reloadSchemaCmd: ReloadSchemaCmd = {
+      id: "RELOAD_SCHEMA_ID",
+      action: "RELOAD_SCHEMA",
+      payload: {withAdapter}
+    };
     const result: IERModel = await worker.executeCmd(Number.NaN, reloadSchemaCmd);
     return deserializeERModel(result, withAdapter);
   }
 
   private static async _getProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
-    const getSchemaCmd: GetSchemaCmd = {id: "GET_SCHEMA_ID", action: "GET_SCHEMA", payload: true};
+    const getSchemaCmd: GetSchemaCmd = {
+      id: "GET_SCHEMA_ID",
+      action: "GET_SCHEMA",
+      payload: {withAdapter}
+    };
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
   }
@@ -111,14 +123,14 @@ export class Application extends ADatabase {
 
         const {taskKey} = context.command.payload;
 
-        const task = context.session.taskManager.find(taskKey);
-        if (!task) {
+        const findTask = context.session.taskManager.find(taskKey);
+        if (!findTask) {
           throw new Error("Task is not found");
         }
-        if (task.options.session !== context.session) {
+        if (findTask.options.session !== context.session) {
           throw new Error("No permissions");
         }
-        task.interrupt();
+        findTask.interrupt();
       }
     });
     session.taskManager.add(task);
@@ -136,7 +148,9 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(session);
 
-        return this.erModel.serialize(context.command.payload);
+        const {withAdapter} = context.command.payload;
+
+        return this.erModel.serialize(withAdapter);
       }
     });
     session.taskManager.add(task);
@@ -151,6 +165,11 @@ export class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(session);
+
+        const {withAdapter} = context.command.payload;
+
         await this._lock.acquire();
         try {
           if (!ApplicationProcess.isProcess) {
@@ -161,7 +180,7 @@ export class Application extends ADatabase {
           } else {
             this.erModel = await this._readERModel();
           }
-          return this.erModel.serialize(context.command.payload);
+          return this.erModel.serialize(withAdapter);
         } finally {
           this._lock.release();
         }
@@ -198,6 +217,88 @@ export class Application extends ADatabase {
     return task;
   }
 
+  public pushMakeQueryCmd(session: Session, command: MakeQueryCmd): Task<MakeQueryCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(session);
+
+        const {query} = context.command.payload;
+
+        const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
+        await this.executeSessionConnection(session, async (connection) => {
+          const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
+          try {
+            session.cursors.set(task.id, cursor);
+
+            await new Promise((resolve) => {
+              let isResolve = false;
+              cursor.waitClose().then(() => {
+                if (!isResolve) {
+                  isResolve = true;
+                  resolve();
+                }
+              });
+              task.emitter.on("change", (t) => {
+                if (!isResolve && Task.DONE_STATUSES.includes(t.status)) {
+                  isResolve = true;
+                  resolve();
+                }
+              });
+            });
+
+            session.cursors.delete(task.id);
+            await context.checkStatus();
+
+          } finally {
+            if (cursor.closed) {
+              await cursor.close();
+            }
+          }
+        });
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushFetchQueryCmd(
+    session: Session,
+    command: FetchQueryCmd
+  ): Task<FetchQueryCmd, { finished: boolean, result: IEntityQueryResponse }> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(session);
+
+        const {taskKey, rowsCount} = context.command.payload;
+
+        const cursor = session.cursors.get(taskKey);
+        if (!cursor) {
+          throw new Error("Unknown taskKey");
+        }
+
+        const result = await cursor.fetch(rowsCount);
+        if (result.finished) {
+          await cursor.close();
+        }
+        return {finished: result.finished, result: cursor.makeEntityQueryResponse(result.data)};
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   public checkSession(session: Session): void | never {
     if (session.status !== SessionStatus.OPENED) {
       this._logger.warn("Session id#%s is not opened", session.id);
@@ -210,6 +311,7 @@ export class Application extends ADatabase {
   }
 
   protected async executeSessionConnection<R>(session: Session, callback: TExecutor<AConnection, R>): Promise<R> {
+    // TODO
     await session.lockConnection();
     try {
       return await this.executeConnection(callback);

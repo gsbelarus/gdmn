@@ -1,4 +1,5 @@
 import {EventEmitter} from "events";
+import {EQueryCursor} from "gdmn-er-bridge";
 import {Semaphore} from "gdmn-internals";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
@@ -39,6 +40,7 @@ export class Session {
   private readonly _taskManager = new TaskManager();
 
   private _connectionsLock = new Semaphore(Constants.SERVER.SESSION.MAX_CONNECTIONS);
+  private _cursors = new Map<string, EQueryCursor>();
   private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
 
@@ -62,6 +64,10 @@ export class Session {
 
   get taskManager(): TaskManager {
     return this._taskManager;
+  }
+
+  get cursors(): Map<string, EQueryCursor> {
+    return this._cursors;
   }
 
   public async lockConnection(): Promise<void> {
@@ -107,6 +113,17 @@ export class Session {
         return task.waitExecution();
       });
     await Promise.all(waitPromises);
+
+    if (this._cursors.size) {
+      this._logger.warn("id#%s has opened cursors, they will be closed", this.id);
+      for (const cursor of this._cursors.values()) {
+        if (cursor.closed) {
+          await cursor.close();
+        }
+      }
+      this._cursors.clear();
+    }
+
     this._taskManager.clear();
 
     this._updateStatus(SessionStatus.FORCE_CLOSED);
