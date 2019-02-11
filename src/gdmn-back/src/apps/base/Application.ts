@@ -270,7 +270,7 @@ export class Application extends ADatabase {
   public pushFetchQueryCmd(
     session: Session,
     command: FetchQueryCmd
-  ): Task<FetchQueryCmd, { finished: boolean, result: IEntityQueryResponse }> {
+  ): Task<FetchQueryCmd, IEntityQueryResponse> {
     const task = new Task({
       session,
       command,
@@ -291,7 +291,7 @@ export class Application extends ADatabase {
         if (result.finished) {
           await cursor.close();
         }
-        return {finished: result.finished, result: cursor.makeEntityQueryResponse(result.data)};
+        return cursor.makeEntityQueryResponse(result.data);
       }
     });
     session.taskManager.add(task);
