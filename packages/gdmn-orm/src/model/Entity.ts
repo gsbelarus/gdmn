@@ -142,6 +142,22 @@ export class Entity {
     return this._attributes[attribute.name] = attribute;
   }
 
+  public addMultiple<T extends Attribute>(attributes: T[]) {
+    const initPK = !this._pk.length;
+
+    attributes.forEach( attribute => {
+      if (this.hasOwnAttribute(attribute.name)) {
+        throw new Error(`Attribute ${attribute.name} of entity ${this.name} already exists`);
+      }
+
+      if (initPK) {
+        this._pk.push(attribute);
+      }
+
+      this._attributes[attribute.name] = attribute;
+    });
+  }
+
   public remove(attribute: Attribute): void {
     if (!this.hasOwnAttribute(attribute.name)) {
       throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
