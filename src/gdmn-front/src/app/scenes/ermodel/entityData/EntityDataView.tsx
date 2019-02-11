@@ -6,17 +6,15 @@ import { DataView, IDataViewProps } from '@src/app/components/DataView';
 import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 
 export interface IEntityMatchParams {
-  entityName: string
+  entityName: string;
 }
 
 export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  erModel?: ERModel
+  erModel?: ERModel;
 }
 
 export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMatchParams> {
   public getDataViewKey() {
-
-    console.log('match', this.props.match.params.entityName);
     const key = this.props.match ? this.props.match.params.entityName : '';
 
     if (!key) {
@@ -38,8 +36,8 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
 
     return [
       {
-        key: 'editEntityData',
-        text: 'Edit entity data',
+        key: 'editEntityItem',
+        text: 'Edit item',
         iconProps: {
           iconName: 'Table'
         },

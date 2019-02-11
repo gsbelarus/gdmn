@@ -193,25 +193,26 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       )
     );
 
-    apiService.getData({
-      payload: {
-        action: TTaskActionNames.QUERY,
-        payload: query.inspect()
-      }
-    }).subscribe(value => {
-      if (value.error || value.payload.status === TTaskStatus.RUNNING) {
-        this.setState({
-          sendQueryLoading: true,
-          loadingQueryTaskId:  value.meta && value.meta.taskId ? value.meta.taskId : undefined
-        });
-      } else if (!!value.payload.status) {
-        this.setState({
-          sendQueryLoading: false,
-          loadingQueryTaskId: undefined
-        });
-      }
-    });
-
+    apiService
+      .getData({
+        payload: {
+          action: TTaskActionNames.QUERY,
+          payload: query.inspect()
+        }
+      })
+      .subscribe(value => {
+        if (value.error || value.payload.status === TTaskStatus.RUNNING) {
+          this.setState({
+            sendQueryLoading: true,
+            loadingQueryTaskId: value.meta && value.meta.taskId ? value.meta.taskId : undefined
+          });
+        } else if (!!value.payload.status) {
+          this.setState({
+            sendQueryLoading: false,
+            loadingQueryTaskId: undefined
+          });
+        }
+      });
   };
 
   private handleInterruptQueryTask = async () => {
@@ -332,7 +333,11 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <PrimaryButton onClick={this.handleSendQuery} text="SEND QUERY-TASK" disabled={!this.props.erModel} />
             <br />
-            <DefaultButton onClick={this.handleInterruptQueryTask} text="INTERRUPT QUERY-TASK" disabled={!!!this.state.loadingQueryTaskId} />
+            <DefaultButton
+              onClick={this.handleInterruptQueryTask}
+              text="INTERRUPT QUERY-TASK"
+              disabled={!!!this.state.loadingQueryTaskId}
+            />
             <br />
             <br />
             <PrimaryButton
