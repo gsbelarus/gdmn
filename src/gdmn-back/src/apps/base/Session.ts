@@ -69,16 +69,16 @@ export class Session {
     return this._cursors;
   }
 
-  public async lockConnection(): Promise<void> {
-    await this._connectionsLock.acquire();
-  }
-
-  public unlockConnection(): void {
-    this._connectionsLock.release();
-  }
-
-  public connectionsExists(): boolean {
-    return this._connectionsLock.permits !== 0;
+  public async executeConnection<R>(callback: () => Promise<R>): Promise<R> {
+    if (!this._connectionsLock.permits) {
+      try {
+        await this._connectionsLock.acquire();
+        return await callback();
+      } finally {
+        this._connectionsLock.release();
+      }
+    }
+    return await callback();
   }
 
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {

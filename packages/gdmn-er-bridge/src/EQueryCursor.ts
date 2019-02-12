@@ -29,7 +29,9 @@ export class EQueryCursor {
     const select = new Select(query);
 
     const resultSet = await connection.executeQuery(transaction, select.sql, select.params);
-    return new EQueryCursor(connection, transaction, query, select, resultSet);
+    const cursor = new EQueryCursor(connection, transaction, query, select, resultSet);
+    await cursor._lock.acquire();
+    return cursor;
   }
 
   public async fetch(count: number): Promise<{ finished: boolean, data: any[] }> {
@@ -48,6 +50,7 @@ export class EQueryCursor {
 
   public async close(): Promise<void> {
     await this._resultSet.close();
+    this._lock.release();
   }
 
   public async waitClose(): Promise<void> {

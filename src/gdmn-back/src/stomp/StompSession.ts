@@ -8,8 +8,8 @@ import {Application} from "../apps/base/Application";
 import {Session, SessionStatus} from "../apps/base/Session";
 import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
-import {Actions, MainCommandProvider} from "../apps/MainCommandProvider";
 import {IUser, MainApplication} from "../apps/MainApplication";
+import {Actions, MainCommandProvider} from "../apps/MainCommandProvider";
 import {Constants} from "../Constants";
 import {StompErrorCode, StompServerError} from "./StompServerError";
 
@@ -155,6 +155,10 @@ export class StompSession implements StompClientCommandListener {
 
   get subscriptions(): ISubscription[] {
     return this._subscriptions;
+  }
+
+  public static parseSessionMessageHeader(session: string): { id: string, meta: IStompSessionMeta } {
+    return JSON.parse(decodeURIComponent(session));
   }
 
   public onProtocolError(error: StompError): void {
@@ -452,11 +456,6 @@ export class StompSession implements StompClientCommandListener {
     this._try(() => {
       throw new StompServerError(StompErrorCode.UNSUPPORTED, "Unsupported yet");
     }, headers);
-  }
-
-  public static parseSessionMessageHeader(session: string): { id: string, meta: IStompSessionMeta } {
-    // todo: _catch ?
-    return JSON.parse(decodeURIComponent(session));
   }
 
   protected _getMessageHeaders(subscription: ISubscription, task: Task<any, any>, messageKey: string): StompHeaders {

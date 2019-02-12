@@ -1,4 +1,3 @@
-import {AConnection, TExecutor} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {
   deserializeERModel,
@@ -203,32 +202,29 @@ export class Application extends ADatabase {
         const {query, sequentially} = context.command.payload;
         const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
 
-        if (sequentially) {
-          await this.executeSessionConnection(session, async (connection) => {
-            const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
-            try {
-              await new Promise((resolve, reject) => {
-                // wait for closing cursor
-                cursor.waitClose().then(() => resolve()).catch(reject);
-                // or wait for interrupt task
-                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
-              });
-
-              await context.checkStatus();
-
-            } finally {
-              if (cursor.closed) {
-                await cursor.close();
+        const result = await session.executeConnection(() => (
+          this.executeConnection(async (connection) => {
+            if (sequentially) {
+              const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
+              try {
+                await new Promise((resolve, reject) => {
+                  // wait for closing cursor
+                  cursor.waitClose().then(() => resolve()).catch(reject);
+                  // or wait for interrupt task
+                  task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+                });
+              } finally {
+                if (cursor.closed) {
+                  await cursor.close();
+                }
               }
+            } else {
+              return await ERBridge.query(connection, connection.readTransaction, entityQuery);
             }
-          });
-        } else {
-          const result = await this.executeSessionConnection(session, async (connection) => {
-            return await ERBridge.query(connection, connection.readTransaction, entityQuery);
-          });
-          await context.checkStatus();
-          return result;
-        }
+          })
+        ));
+        await context.checkStatus();
+        return result;
       }
     });
     session.taskManager.add(task);
@@ -276,16 +272,6 @@ export class Application extends ADatabase {
     if (!this.sessionManager.includes(session)) {
       this._logger.warn("Session id#%s does not belong to the application", session.id);
       throw new Error("Session does not belong to the application");
-    }
-  }
-
-  protected async executeSessionConnection<R>(session: Session, callback: TExecutor<AConnection, R>): Promise<R> {
-    // TODO
-    await session.lockConnection();
-    try {
-      return await this.executeConnection(callback);
-    } finally {
-      session.unlockConnection();
     }
   }
 
