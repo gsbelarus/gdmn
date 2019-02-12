@@ -13,7 +13,7 @@ import {Constants} from "../../Constants";
 import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
 import {Session, SessionStatus} from "./Session";
 import {SessionManager} from "./SessionManager";
-import {ICmd, Level, Task} from "./task/Task";
+import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 
@@ -32,7 +32,7 @@ export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildPr
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
-export type QueryCmd = AppCmd<"QUERY", IEntityQueryInspector>;
+export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector }>;
 export type MakeQueryCmd = AppCmd<"MAKE_QUERY", { query: IEntityQueryInspector }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 
@@ -201,9 +201,11 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(session);
 
+        const {query} = context.command.payload;
+        const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
+
         const result = await this.executeSessionConnection(session, async (connection) => {
-          const query = EntityQuery.inspectorToObject(this.erModel, context.command.payload);
-          return await ERBridge.query(connection, connection.readTransaction, query);
+          return await ERBridge.query(connection, connection.readTransaction, entityQuery);
         });
         await context.checkStatus();
         return result;
@@ -225,30 +227,18 @@ export class Application extends ADatabase {
         this.checkSession(session);
 
         const {query} = context.command.payload;
-
         const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
+
         await this.executeSessionConnection(session, async (connection) => {
           const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
           try {
-            session.cursors.set(task.id, cursor);
-
-            await new Promise((resolve) => {
-              let isResolve = false;
-              cursor.waitClose().then(() => {
-                if (!isResolve) {
-                  isResolve = true;
-                  resolve();
-                }
-              });
-              task.emitter.on("change", (t) => {
-                if (!isResolve && Task.DONE_STATUSES.includes(t.status)) {
-                  isResolve = true;
-                  resolve();
-                }
-              });
+            await new Promise((resolve, reject) => {
+              // wait for closing cursor
+              cursor.waitClose().then(() => resolve()).catch(reject);
+              // or wait for interrupt task
+              task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
             });
 
-            session.cursors.delete(task.id);
             await context.checkStatus();
 
           } finally {

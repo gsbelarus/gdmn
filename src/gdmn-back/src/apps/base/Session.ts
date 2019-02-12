@@ -4,7 +4,6 @@ import {Semaphore} from "gdmn-internals";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {Constants} from "../../Constants";
-import {DBStatus} from "./ADatabase";
 import {Task, TaskStatus} from "./task/Task";
 import {TaskManager} from "./task/TaskManager";
 
@@ -146,7 +145,7 @@ export class Session {
   private _updateStatus(status: SessionStatus): void {
     if (this._status === status && this._status !== SessionStatus.OPENED) {
       this._logger.error("id#%s already has this status; Status: %s; new Status: %s", this._options.id,
-        DBStatus[this._status], DBStatus[status]);
+        SessionStatus[this._status], SessionStatus[status]);
       throw new Error("Session already has this status");
     }
     this._status = status;

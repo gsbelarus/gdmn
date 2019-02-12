@@ -172,7 +172,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
         this._updateStatus(TaskStatus.SUCCESS);
       })
       .catch((error) => {
-        this._logger.warn("id#%s throw error; Error: %s", this._id, error);
+        this._logger.warn("id#%s throw error; %s", this._id, error);
         this._error = error;
         this._updateStatus(TaskStatus.FAILED);
       })

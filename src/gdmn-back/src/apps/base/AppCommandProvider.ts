@@ -38,7 +38,9 @@ export class AppCommandProvider {
 
   private static _verifyQueryCmd(command: ICmd<AppAction, any>): command is QueryCmd {
     return typeof command.payload === "object"
-      && !!command.payload;
+      && !!command.payload
+      && "query" in command.payload
+      && typeof command.payload.query === "object";
     // TODO
   }
 

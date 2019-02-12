@@ -6,22 +6,22 @@ import {AppCommandProvider} from "../AppCommandProvider";
 import {Application} from "../Application";
 import {ICmd, Task} from "../task/Task";
 
-export interface AppWorkerRequest {
+export interface IAppWorkerRequest {
   userKey: number;
   command: ICmd<any, any>;
 }
 
-export interface AppWorkerResponse<R> {
+export interface IAppWorkerResponse<R> {
   command: ICmd<any, any>;
   result: R;
 }
 
+const ENV_IS_APP_PROCESS = "IS_APP_PROCESS";
+
 export class ApplicationProcess {
 
-  private static _ENV_IS_APP_PROCESS = "IS_APP_PROCESS";
-
-  public static isMainProcess = !(ApplicationProcess._ENV_IS_APP_PROCESS in process.env);
-  public static isProcess = (ApplicationProcess._ENV_IS_APP_PROCESS in process.env);
+  public static isMainProcess = !(ENV_IS_APP_PROCESS in process.env);
+  public static isProcess = (ENV_IS_APP_PROCESS in process.env);
 
   private _process?: ChildProcess;
 
@@ -41,7 +41,7 @@ export class ApplicationProcess {
     this._process = childProcess.fork(__filename, ["child", argDBDetail], {
       silent: false,
       env: {
-        [ApplicationProcess._ENV_IS_APP_PROCESS]: "1"
+        [ENV_IS_APP_PROCESS]: "1"
       }
     });
   }
@@ -61,7 +61,7 @@ export class ApplicationProcess {
         throw new Error("Process worker need created");
       }
 
-      const callback = (data: AppWorkerResponse<R>) => {
+      const callback = (data: IAppWorkerResponse<R>) => {
         if (!this._process) {
           throw new Error("Process worker need created");
         }
@@ -76,7 +76,7 @@ export class ApplicationProcess {
       this._process.addListener("error", reject);
       this._process.addListener("message", callback);
 
-      const request: AppWorkerRequest = {
+      const request: IAppWorkerRequest = {
         userKey,
         command: cmd
       };
@@ -98,7 +98,7 @@ if (ApplicationProcess.isProcess) {
 
   process.addListener("message", messageCallback);
 
-  async function messageCallback(data: AppWorkerRequest): Promise<void> {
+  async function messageCallback(data: IAppWorkerRequest): Promise<void> {
     await creating;
     const session = await application.sessionManager.open(data.userKey);
     try {
@@ -107,12 +107,12 @@ if (ApplicationProcess.isProcess) {
 
         const callback = () => {
           if (Task.DONE_STATUSES.includes(task.status)) {
-            const response: AppWorkerResponse<any> = {
+            const res: IAppWorkerResponse<any> = {
               command: data.command,
               result: task.result
             };
             task.emitter.removeListener("change", callback);
-            resolve(response);
+            resolve(res);
           }
         };
         task.emitter.addListener("change", callback);
