@@ -8,7 +8,7 @@ import { ERModelBoxContainer } from './ermodel/ERModelBoxContainer';
 import { Actions, State } from './store';
 import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
-import { deserializeERModel, ERModel } from 'gdmn-orm';
+import { deserializeERModel, ERModel, Entity, IntegerAttribute, StringAttribute } from 'gdmn-orm';
 import { connect } from 'react-redux';
 import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
 import { IERModels } from './ermodel/reducer';
@@ -36,20 +36,77 @@ class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
 interface IAppProps {
   erModel: IERModels;
   onLoadERModel: (srcFile: string, name: string) => void;
+  onLoadERModel2: (erModel: ERModel, name: string) => void;
 };
 
 class InternalApp extends Component<IAppProps, {}> {
 
   componentDidMount() {
-    const { erModel, onLoadERModel } = this.props;
+    const { erModel, onLoadERModel, onLoadERModel2 } = this.props;
 
     if (!erModel['db']) {
       onLoadERModel('/data/ermodel.serialized.json', 'db');
     }
 
+    const erm = new ERModel();
+
+    const currency = new Entity({
+      name: 'Currency',
+      lName: {
+        ru: {
+          name: 'Валюта'
+        }
+      }
+    });
+
+    currency.add(
+      new IntegerAttribute({
+        name: 'Curr_ID',
+        lName: {
+          ru: {
+            name: 'Идентификатор'
+          }
+        }
+      })
+    );
+
+    currency.add(
+      new StringAttribute({
+        name: 'Curr_Abbreviation',
+        lName: {
+          ru: {
+            name: 'Код'
+          }
+        },
+        required: true,
+        maxLength: 3,
+        autoTrim: true
+      })
+    );
+
+    currency.add(
+      new StringAttribute({
+        name: 'Curr_Name',
+        lName: {
+          ru: {
+            name: 'Наименование'
+          }
+        },
+        required: true,
+        maxLength: 60,
+        autoTrim: true
+      })
+    );
+
+    erm.add(currency);
+
+    onLoadERModel2(erm, 'nbrb');
+
+    /*
     if (!erModel['nbrb']) {
       onLoadERModel('/data/nbrbmodel.serialized.json', 'nbrb');
     }
+    */
   }
 
   render() {
@@ -126,7 +183,8 @@ export default connect(
           console.log(err);
          });
       }
-    )
+    ),
+    onLoadERModel2: (erModel: ERModel, name: string) => dispatch(loadERModel({ name, erModel }))
   })
 )(InternalApp);
 
