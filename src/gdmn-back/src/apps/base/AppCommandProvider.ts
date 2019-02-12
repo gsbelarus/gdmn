@@ -6,7 +6,6 @@ import {
   InterruptCmd,
   MakeQueryCmd,
   PingCmd,
-  QueryCmd,
   ReloadSchemaCmd
 } from "./Application";
 import {Session} from "./Session";
@@ -34,14 +33,6 @@ export class AppCommandProvider {
       && !!command.payload
       && "taskKey" in command.payload
       && typeof command.payload.taskKey === "string";
-  }
-
-  private static _verifyQueryCmd(command: ICmd<AppAction, any>): command is QueryCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "query" in command.payload
-      && typeof command.payload.query === "object";
-    // TODO
   }
 
   private static _verifyMakeQueryCmd(command: ICmd<AppAction, any>): command is MakeQueryCmd {
@@ -83,12 +74,6 @@ export class AppCommandProvider {
       }
       case "GET_SCHEMA": {
         return this._application.pushGetSchemaCmd(session, command as GetSchemaCmd);
-      }
-      case "QUERY": {
-        if (!AppCommandProvider._verifyQueryCmd(command)) {
-          throw new Error(`Incorrect ${command.action} command`);
-        }
-        return this._application.pushQueryCmd(session, command);
       }
       case "MAKE_QUERY": {
         if (!AppCommandProvider._verifyMakeQueryCmd(command)) {

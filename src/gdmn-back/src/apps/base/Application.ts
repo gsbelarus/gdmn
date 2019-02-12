@@ -22,7 +22,6 @@ export type AppAction =
   | "INTERRUPT"
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
-  | "QUERY"
   | "MAKE_QUERY"
   | "FETCH_QUERY";
 
@@ -32,8 +31,7 @@ export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildPr
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
-export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector }>;
-export type MakeQueryCmd = AppCmd<"MAKE_QUERY", { query: IEntityQueryInspector }>;
+export type MakeQueryCmd = AppCmd<"MAKE_QUERY", { query: IEntityQueryInspector, sequentially?: boolean }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 
 export class Application extends ADatabase {
@@ -191,7 +189,8 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IEntityQueryResponse> {
+  public pushMakeQueryCmd(session: Session,
+                          command: MakeQueryCmd): Task<MakeQueryCmd, IEntityQueryResponse | undefined> {
     const task = new Task({
       session,
       command,
@@ -201,52 +200,35 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(session);
 
-        const {query} = context.command.payload;
+        const {query, sequentially} = context.command.payload;
         const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
 
-        const result = await this.executeSessionConnection(session, async (connection) => {
-          return await ERBridge.query(connection, connection.readTransaction, entityQuery);
-        });
-        await context.checkStatus();
-        return result;
-      }
-    });
-    session.taskManager.add(task);
-    this.sessionManager.syncTasks();
-    return task;
-  }
+        if (sequentially) {
+          await this.executeSessionConnection(session, async (connection) => {
+            const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
+            try {
+              await new Promise((resolve, reject) => {
+                // wait for closing cursor
+                cursor.waitClose().then(() => resolve()).catch(reject);
+                // or wait for interrupt task
+                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+              });
 
-  public pushMakeQueryCmd(session: Session, command: MakeQueryCmd): Task<MakeQueryCmd, void> {
-    const task = new Task({
-      session,
-      command,
-      level: Level.SESSION,
-      logger: this.taskLogger,
-      worker: async (context) => {
-        await this.waitUnlock();
-        this.checkSession(session);
+              await context.checkStatus();
 
-        const {query} = context.command.payload;
-        const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
-
-        await this.executeSessionConnection(session, async (connection) => {
-          const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
-          try {
-            await new Promise((resolve, reject) => {
-              // wait for closing cursor
-              cursor.waitClose().then(() => resolve()).catch(reject);
-              // or wait for interrupt task
-              task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
-            });
-
-            await context.checkStatus();
-
-          } finally {
-            if (cursor.closed) {
-              await cursor.close();
+            } finally {
+              if (cursor.closed) {
+                await cursor.close();
+              }
             }
-          }
-        });
+          });
+        } else {
+          const result = await this.executeSessionConnection(session, async (connection) => {
+            return await ERBridge.query(connection, connection.readTransaction, entityQuery);
+          });
+          await context.checkStatus();
+          return result;
+        }
       }
     });
     session.taskManager.add(task);
