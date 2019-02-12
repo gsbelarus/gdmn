@@ -22,7 +22,7 @@ export type AppAction =
   | "INTERRUPT"
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
-  | "MAKE_QUERY"
+  | "QUERY"
   | "FETCH_QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
@@ -31,7 +31,7 @@ export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildPr
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
-export type MakeQueryCmd = AppCmd<"MAKE_QUERY", { query: IEntityQueryInspector, sequentially?: boolean }>;
+export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector, sequentially?: boolean }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 
 export class Application extends ADatabase {
@@ -189,8 +189,8 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushMakeQueryCmd(session: Session,
-                          command: MakeQueryCmd): Task<MakeQueryCmd, IEntityQueryResponse | undefined> {
+  public pushQueryCmd(session: Session,
+                      command: QueryCmd): Task<QueryCmd, IEntityQueryResponse | undefined> {
     const task = new Task({
       session,
       command,
