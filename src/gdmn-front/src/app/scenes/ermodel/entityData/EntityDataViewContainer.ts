@@ -56,10 +56,12 @@ export const EntityDataViewContainer = connect(
 
       mutex.acquire().then(() => {
         apiService
-          .getData({
+          .makeDataCursor({
             payload: {
               action: TTaskActionNames.QUERY,
-              payload: q.inspect()
+              payload: {
+                query: q.inspect()
+              }
             }
           })
           .subscribe( value => {

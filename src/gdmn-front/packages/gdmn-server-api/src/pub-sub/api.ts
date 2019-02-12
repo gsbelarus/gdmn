@@ -26,11 +26,12 @@ const enum TGdmnErrorCodes {
 }
 // -- task
 const enum TTaskActionNames {
+  QUERY = 'QUERY',
+  FETCH_QUERY = 'FETCH_QUERY',
   INTERRUPT = 'INTERRUPT',
   RELOAD_SCHEMA = 'RELOAD_SCHEMA',
   PING = 'PING',
   GET_SCHEMA = 'GET_SCHEMA',
-  QUERY = 'QUERY',
   DELETE_APP = 'DELETE_APP',
   CREATE_APP = 'CREATE_APP',
   GET_APPS = 'GET_APPS'
@@ -60,6 +61,14 @@ type TTaskActionMessageData<TActionName extends keyof TTaskActionPayloadTypes> =
 >;
 
 interface TTaskActionPayloadTypes {
+  [TTaskActionNames.QUERY]: {
+    query: IEntityQueryInspector;
+    sequentially?: boolean;
+  };
+  [TTaskActionNames.FETCH_QUERY]: {
+    taskKey: string;
+    rowsCount: number;
+  };
   [TTaskActionNames.INTERRUPT]: {
     taskKey: string;
   };
@@ -71,7 +80,6 @@ interface TTaskActionPayloadTypes {
     delay: number;
   };
   [TTaskActionNames.GET_SCHEMA]: undefined;
-  [TTaskActionNames.QUERY]: IEntityQueryInspector;
   [TTaskActionNames.CREATE_APP]: {
     alias: string;
     connectionOptions?: {
@@ -99,11 +107,12 @@ type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = 
 };
 
 interface TTaskActionResultTypes {
+  [TTaskActionNames.QUERY]: IEntityQueryResponse | undefined;
+  [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse;
   [TTaskActionNames.INTERRUPT]: undefined;
   [TTaskActionNames.RELOAD_SCHEMA]: IERModel;
   [TTaskActionNames.PING]: undefined;
   [TTaskActionNames.GET_SCHEMA]: IERModel;
-  [TTaskActionNames.QUERY]: IEntityQueryResponse;
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];

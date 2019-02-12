@@ -20,8 +20,9 @@ interface IStompDemoViewState {
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
-  sendQueryLoading: boolean;
-  loadingQueryTaskId: string | undefined;
+  interruptTaskLoading: boolean;
+  interruptTaskId: string | undefined;
+  cursorTaskId: string | undefined;
 }
 
 interface IStompDemoViewProps extends IViewProps {
@@ -52,8 +53,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     stressStarted: false,
     stressResultTime: 0,
     stressResultRequestsCount: 0,
-    sendQueryLoading: false,
-    loadingQueryTaskId: undefined
+    interruptTaskLoading: false,
+    interruptTaskId: undefined,
+    cursorTaskId: undefined
   };
 
   public getViewCaption(): string {
@@ -95,10 +97,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         ])
       );
 
-      return apiService.getData({
+      return apiService.makeDataCursor({
         payload: {
           action: TTaskActionNames.QUERY,
-          payload: query.inspect()
+          payload: {
+            query: query.inspect()
+          }
         }
       });
     });
@@ -179,46 +183,47 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   // api test
 
-  private handleSendQuery = () => {
-
-    return apiService.ping({
-      payload: {
-        action: TTaskActionNames.PING,
+  private handleSendTask = () => {
+    return apiService
+      .ping({
         payload: {
-          delay: 3000,
-          steps: 3
+          action: TTaskActionNames.PING,
+          payload: {
+            delay: 3000,
+            steps: 3
+          }
         }
-      }
-    }).subscribe(value => {
+      })
+      .subscribe(value => {
         if (value.error || value.payload.status === TTaskStatus.RUNNING) {
           this.setState({
-            sendQueryLoading: true,
-            loadingQueryTaskId: value.meta && value.meta.taskId ? value.meta.taskId : undefined
+            interruptTaskLoading: true,
+            interruptTaskId: value.meta && value.meta.taskId ? value.meta.taskId : undefined
           });
         } else if (!!value.payload.status) {
           this.setState({
-            sendQueryLoading: false,
-            loadingQueryTaskId: undefined
+            interruptTaskLoading: false,
+            interruptTaskId: undefined
           });
         }
       });
   };
 
-  private handleInterruptQueryTask = () => {
-    if (!!!this.state.loadingQueryTaskId) return;
+  private handleInterruptTask = () => {
+    if (!!!this.state.interruptTaskId) return;
 
     apiService.interruptTask({
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
-          taskKey: this.state.loadingQueryTaskId
+          taskKey: this.state.interruptTaskId
         }
       }
     });
 
     // this.setState({
-    //   sendQueryLoading: false,
-    //   loadingQueryTaskId: undefined
+    //   interruptTaskLoading: false,
+    //   interruptTaskId: undefined
     // });
   };
 
@@ -236,13 +241,71 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     }
 
     cmds.forEach(value => {
-      apiService.getData({
+      apiService.makeDataCursor({
         payload: {
           action: TTaskActionNames.QUERY,
-          payload: value.payload.inspect()
+          payload: {
+            query: value.payload.inspect()
+          }
         }
       });
     });
+  };
+
+  private handleMakeCursor = () => {
+    this.setState({
+      cursorTaskId: undefined
+    });
+
+    const entity = Object.values(this.props.erModel!.entities)[0];
+    const query = new EntityQuery(
+      new EntityLink(entity, 'alias', [
+        new EntityQueryField(
+          Object.values(entity!.attributes)
+            .filter(value => value instanceof ScalarAttribute)
+            .pop()!
+        )
+      ])
+    );
+
+    apiService.makeDataCursor({
+      payload: {
+        action: TTaskActionNames.QUERY,
+        payload: {
+          query: query.inspect(),
+          sequentially: true
+        }
+      }
+    }).subscribe(value => {
+      console.log('QUERY result', value);
+      if (value.payload.status === TTaskStatus.DONE && value.meta) {
+        console.log('taskId', value.meta.taskId);
+        this.setState({
+          cursorTaskId: value.meta.taskId
+        })
+      }
+    })
+  };
+
+  private handleCursorNext = () => {
+    if (!this.state.cursorTaskId) return;
+
+    apiService
+      .getNextData({
+        payload: {
+          action: TTaskActionNames.FETCH_QUERY,
+          payload: {
+            taskKey: this.state.cursorTaskId,
+            rowsCount: 1
+          }
+        }
+      })
+      .subscribe(value => {
+        console.log('result', value);
+        if (value.payload.status === TTaskStatus.DONE && value.payload.result) {
+          console.log('data.length', value.payload.result.data.length);
+        }
+      });
   };
 
   public render() {
@@ -320,13 +383,22 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         </div>
         <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <PrimaryButton onClick={this.handleSendQuery} text="SEND TASK" disabled={!this.props.erModel || this.state.sendQueryLoading} />
+            <PrimaryButton
+              onClick={this.handleSendTask}
+              text="SEND TASK"
+              disabled={!this.props.erModel || this.state.interruptTaskLoading}
+            />
             <br />
             <DefaultButton
-              onClick={this.handleInterruptQueryTask}
+              onClick={this.handleInterruptTask}
               text="INTERRUPT TASK"
-              disabled={!!!this.state.loadingQueryTaskId}
+              disabled={!!!this.state.interruptTaskId}
             />
+            <br />
+            <br />
+            <PrimaryButton onClick={this.handleMakeCursor} text="MAKE CURSOR" />
+            <br />
+            <DefaultButton onClick={this.handleCursorNext} text="CURSOR NEXT" />
             <br />
             <br />
             <PrimaryButton

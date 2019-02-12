@@ -17,6 +17,8 @@ import {
   TDeleteAccountCmd,
   TDeleteAppTaskCmd,
   TDeleteAppTaskCmdResult,
+  TFetchQueryTaskCmd,
+  TFetchQueryTaskCmdResult,
   TGdmnErrorCodes,
   TGdmnPublishMessageMeta,
   TGdmnReceivedErrorMeta,
@@ -151,8 +153,8 @@ class GdmnPubSubApi {
     return this.auth(cmd, true);
   }
 
-  public interruptTask(cmd: TInterruptTaskCmd): Promise<TInterruptTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.INTERRUPT>(cmd).pipe(first()).toPromise();
+  public interruptTask(cmd: TInterruptTaskCmd): Observable<TInterruptTaskCmdResult> {
+    return this.runTaskCmd<TTaskActionNames.INTERRUPT>(cmd);
   }
 
   public reloadSchema(cmd: TReloadSchemaTaskCmd): Observable<TReloadSchemaTaskCmdResult> {
@@ -167,8 +169,12 @@ class GdmnPubSubApi {
     return this.runTaskCmd<TTaskActionNames.GET_SCHEMA>(cmd);
   }
 
-  public getData(cmd: TQueryTaskCmd): Observable<TQueryTaskCmdResult> {
+  public makeDataCursor(cmd: TQueryTaskCmd): Observable<TQueryTaskCmdResult> {
     return this.runTaskCmd<TTaskActionNames.QUERY>(cmd);
+  }
+
+  public getNextData(cmd: TFetchQueryTaskCmd): Observable<TFetchQueryTaskCmdResult> {
+    return this.runTaskCmd<TTaskActionNames.FETCH_QUERY>(cmd);
   }
 
   public createApp(cmd: TCreateAppTaskCmd): Observable<TCreateAppTaskCmdResult> {
@@ -360,7 +366,8 @@ class GdmnPubSubApi {
                 status: resultMsgData.status,
                 result: resultMsgData.result
               },
-              error: resultMsgData.error
+              error: resultMsgData.error,
+              meta
             }))
           );
 

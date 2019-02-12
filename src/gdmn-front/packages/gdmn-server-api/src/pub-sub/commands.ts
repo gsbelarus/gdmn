@@ -105,11 +105,17 @@ type TGetSchemaTaskCmd = TTaskCmd<TTaskActionNames.GET_SCHEMA>;
 
 type TGetSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_SCHEMA>;
 
-// query task
+// query
 
 type TQueryTaskCmd = TTaskCmd<TTaskActionNames.QUERY>;
 
 type TQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY>;
+
+// fetch query
+
+type TFetchQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_QUERY>;
+
+type TFetchQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.FETCH_QUERY>;
 
 // create app task
 
@@ -154,6 +160,8 @@ export {
   TGetSchemaTaskCmdResult,
   TQueryTaskCmd,
   TQueryTaskCmdResult,
+  TFetchQueryTaskCmd,
+  TFetchQueryTaskCmdResult,
   TCreateAppTaskCmd,
   TCreateAppTaskCmdResult,
   TDeleteAppTaskCmd,
