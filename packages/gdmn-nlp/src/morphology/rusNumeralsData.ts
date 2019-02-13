@@ -323,7 +323,7 @@ export const rusNumerals: RusNumeralInterface[] = [
     stem1: '',
     stem2: '',
     type: NumeralType.Cardinal,
-    structure: NumeralStructure.Simple,
+    structure: NumeralStructure.Complex,
     value: 90,
     declension: 'pqs90,100',
     rank: NumeralRank.ProperQuantitative,
