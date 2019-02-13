@@ -1,14 +1,14 @@
-import cluster, { Worker } from "cluster";
-import { Server as HttpServer } from "http";
-import { Server as HttpsServer } from "https";
+import cluster, {Worker} from "cluster";
+import {Server as HttpServer} from "http";
+import {Server as HttpsServer} from "https";
+import {Logger} from "log4js";
 import url from "url";
 import WebSocket from "ws";
-import { Logger } from "log4js";
+import {Constants} from "./Constants";
+import {createHttpServer, IServer, startWsServer} from "./server";
 
-import { StompManager } from "./stomp/StompManager";
-import { StompSession } from "./stomp/StompSession";
-import { createHttpServer, IServer, startWsServer } from "./server";
-import { Constants } from "./Constants";
+import {StompManager} from "./stomp/StompManager";
+import {StompSession} from "./stomp/StompSession";
 
 async function createCluster(
   getHttpServer: () => Promise<HttpServer | HttpsServer>,
@@ -28,7 +28,9 @@ async function createCluster(
     const roundRobinIterator = (array: any[]) => {
       let index = 0;
       return () => {
-        if (index >= array.length) index = 0;
+        if (index >= array.length) {
+          index = 0;
+        }
         return array[index++];
       };
     };
@@ -42,14 +44,14 @@ async function createCluster(
       head: any,
       workerIndex: string | null = null
     ) => {
-      const worker = <Worker>(
+      const worker = (
         (workerIndex === null ? getNextWorker() : cluster.workers[workerIndex])
-      );
+      ) as Worker;
 
       console.log("workerId:", worker.id);
 
       worker.send(
-        { type: MASTER_SEND_SOCKET_MSG_TYPE, payload: { request, head } },
+        {type: MASTER_SEND_SOCKET_MSG_TYPE, payload: {request, head}},
         socket
       );
     };
@@ -60,7 +62,7 @@ async function createCluster(
 
     const httpServer = await getHttpServer();
     httpServer
-      .on("connection", socket => {
+      .on("connection", (socket) => {
         /* net.server pauseOnConnect */
         socket.pause();
       })
@@ -142,18 +144,20 @@ async function createCluster(
       }
     });
 
-    return { httpServer };
+    return {httpServer};
   }
 
   /* cluster.isWorker */
 
   // console.log(`Worker [${cluster.worker.id}] ${process.pid} started`);
 
-  const { stompManager, wsServer } = await getWsServer();
+  const {stompManager, wsServer} = await getWsServer();
 
   process.on("message", (message, socket) => {
     /* msgs from master */
-    if (!message.type || !socket) return;
+    if (!message.type || !socket) {
+      return;
+    }
 
     if (message.type === MASTER_SEND_SOCKET_MSG_TYPE) {
       // console.log(`[${cluster.worker.id}] on MASTER_SEND_SOCKET_MSG`);
@@ -163,7 +167,7 @@ async function createCluster(
         message.payload.request,
         socket,
         Buffer.from([]),
-        ws => {
+        (ws) => {
           // todo message.payload.head
           wsServer.emit("connection", ws, message.payload.request);
         }
@@ -174,7 +178,7 @@ async function createCluster(
     }
   });
 
-  return { stompManager, wsServer };
+  return {stompManager, wsServer};
 }
 
 export async function clusterStart(

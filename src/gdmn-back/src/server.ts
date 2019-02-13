@@ -1,5 +1,5 @@
-import http, { Server as HttpServer } from "http";
-import { Server as HttpsServer } from "https";
+import http, {Server as HttpServer} from "http";
+import {Server as HttpsServer} from "https";
 import Koa from "koa";
 import koaBody from "koa-body";
 import errorHandler from "koa-error";
@@ -8,14 +8,14 @@ import Router from "koa-router";
 import send from "koa-send";
 import serve from "koa-static";
 import cors from "koa2-cors";
+import {Logger} from "log4js";
 import path from "path";
 import WebSocket from "ws";
-import { Logger } from "log4js";
 
-import { Constants } from "./Constants";
-import { checkHandledError, ErrorCodes, throwCtx } from "./ErrorCodes";
-import { StompManager } from "./stomp/StompManager";
-import { IStompSessionMeta } from "./stomp/StompSession";
+import {Constants} from "./Constants";
+import {checkHandledError, ErrorCodes, throwCtx} from "./ErrorCodes";
+import {StompManager} from "./stomp/StompManager";
+import {IStompSessionMeta} from "./stomp/StompSession";
 
 export interface IServer {
   stompManager?: StompManager;
@@ -32,7 +32,7 @@ export async function createHttpServer(
   const serverApp = new Koa()
     .use(logger())
     .use(serve(Constants.SERVER.PUBLIC_DIR))
-    .use(koaBody({ multipart: true }))
+    .use(koaBody({multipart: true}))
     .use(cors())
     .use(errorHandler())
     .use(async (ctx, next) => {
@@ -54,9 +54,9 @@ export async function createHttpServer(
   /* create router */
 
   const router = new Router()
-    // TODO temp
-    .get("/", ctx => ctx.redirect("/spa"))
-    .get(/\/spa(\/*)?/g, async ctx => {
+  // TODO temp
+    .get("/", (ctx) => ctx.redirect("/spa"))
+    .get(/\/spa(\/*)?/g, async (ctx) => {
       await send(ctx, "/", {
         // send(ctx, "/gs/ng/", {
         root: path.resolve(process.cwd(), Constants.SERVER.PUBLIC_DIR),
@@ -68,7 +68,7 @@ export async function createHttpServer(
   serverApp
     .use(router.routes())
     .use(router.allowedMethods())
-    .use(ctx => throwCtx(ctx, 404, "Not found", ErrorCodes.NOT_FOUND));
+    .use((ctx) => throwCtx(ctx, 404, "Not found", ErrorCodes.NOT_FOUND));
 
   /* create http server */
 
@@ -78,7 +78,7 @@ export async function createHttpServer(
       .createServer(serverApp.callback())
       .on("error", serverErrorHandler)
       .on("listening", () => {
-        const address = httpServer!.address();
+        const address = httpServer!.address()!;
         if (typeof address === "string") {
           defaultLogger.info(`Listening ${httpServer!.address()}`);
         } else {
@@ -92,7 +92,9 @@ export async function createHttpServer(
       });
   }
 
-  if (!httpServer) throw new Error("Cluster mode need a http server");
+  if (!httpServer) {
+    throw new Error("Cluster mode need a http server");
+  }
   return httpServer;
 }
 
@@ -107,13 +109,13 @@ export async function startWsServer(
   const wsServer = new WebSocket.Server(
     server
       ? {
-          server
-        }
+        server
+      }
       : {
-          noServer: true,
-          perMessageDeflate: false // todo
-        }
-  ).on("connection", webSocket => {
+        noServer: true,
+        perMessageDeflate: false // todo
+      }
+  ).on("connection", (webSocket) => {
     defaultLogger.info("WebSocket event: 'connection'");
 
     if (stompManager.add(webSocket)) {
@@ -137,7 +139,7 @@ export async function start(
   const httpServer = await createHttpServer(defaultLogger, serverErrorHandler);
   httpServer.listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST);
 
-  const { stompManager, wsServer } = await startWsServer(
+  const {stompManager, wsServer} = await startWsServer(
     defaultLogger,
     httpServer
   );

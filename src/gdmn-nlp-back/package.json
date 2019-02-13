@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/koa": "^2",
-    "@types/node": "^10",
+    "@types/node": "^11",
     "nodemon": "^1",
     "ts-node": "^8",
     "tslint": "^5",
