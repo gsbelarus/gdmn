@@ -173,8 +173,10 @@ export class Task<Cmd extends ICmd<any>, Result> {
       })
       .catch((error) => {
         this._logger.warn("id#%s throw error; %s", this._id, error);
-        this._error = error;
-        this._updateStatus(TaskStatus.FAILED);
+        if (this._status !== TaskStatus.INTERRUPTED) {
+          this._error = error;
+          this._updateStatus(TaskStatus.FAILED);
+        }
       })
       .finally(() => this._processLock.release());
   }

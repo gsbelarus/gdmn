@@ -216,7 +216,7 @@ export class Application extends ADatabase {
               });
             } finally {
               context.session.cursors.delete(task.id);
-              if (cursor.closed) {
+              if (!cursor.closed) {
                 await cursor.close();
               }
             }
@@ -253,7 +253,7 @@ export class Application extends ADatabase {
         }
 
         const result = await cursor.fetch(rowsCount);
-        if (result.finished) {
+        if (result.finished && !cursor.closed) {
           await cursor.close();
         }
         return cursor.makeEntityQueryResponse(result.data);

@@ -81,9 +81,12 @@ export class ERBridge {
                             query: EntityQuery): Promise<IEntityQueryResponse> {
     const cursor = await EQueryCursor.open(connection, transaction, query);
     let data: any[] = [];
-    let rows;
-    while (!(rows = await cursor.fetch(1)).finished) {
+    while (true) {
+      const rows = await cursor.fetch(100);
       data = data.concat(rows.data);
+      if (rows.finished) {
+        break;
+      }
     }
 
     return cursor.makeEntityQueryResponse(data);

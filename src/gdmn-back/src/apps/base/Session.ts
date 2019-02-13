@@ -95,6 +95,8 @@ export class Session {
       const usesConnection = {connection: await this._options.connectionPool.get(), uses: 0};
       this._usesConnections.push(usesConnection);
       usesConnection.uses++;
+      this._logger.info("id#%s acquire connection; Total count acquired connection: %s", this.id,
+        this._usesConnections.length);
       try {
         return await callback(usesConnection.connection);
       } finally {
@@ -104,6 +106,8 @@ export class Session {
           if (index >= 0) {
             this._usesConnections.splice(index, 1);
           }
+          this._logger.info("id#%s release connection; Total count acquired connection: %s", this.id,
+            this._usesConnections.length);
           await usesConnection.connection.disconnect();
         }
       }
@@ -123,6 +127,8 @@ export class Session {
           if (index >= 0) {
             this._usesConnections.splice(index, 1);
           }
+          this._logger.info("id#%s release connection; Total count acquired connection: %s", this.id,
+            this._usesConnections.length);
           await minUsesConnection.connection.disconnect();
         }
       }

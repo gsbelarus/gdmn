@@ -556,7 +556,6 @@ export class Select {
               });
               break;
             }
-            ;
 
             const attr = field.attribute as EntityAttribute;
             joins.push(

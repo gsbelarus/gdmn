@@ -35,17 +35,16 @@ export class EQueryCursor {
   }
 
   public async fetch(count: number): Promise<{ finished: boolean, data: any[] }> {
-    let isNext = true;
     const data = [];
-    for (let i = 0; i < count && (isNext = await this._resultSet.next()); i++) {
+    for (let i = 0; i < count && await this._resultSet.next(); i++) {
       const row: { [key: string]: any } = {};
-      for (let i = 0; i < this._resultSet.metadata.columnCount; i++) {
+      for (let j = 0; j < this._resultSet.metadata.columnCount; j++) {
         // TODO binary blob support
-        row[this._resultSet.metadata.getColumnLabel(i)] = await this._resultSet.getAny(i);
+        row[this._resultSet.metadata.getColumnLabel(j)] = await this._resultSet.getAny(j);
       }
       data.push(row);
     }
-    return {finished: !isNext, data};
+    return {finished: await this._resultSet.isEof(), data};
   }
 
   public async close(): Promise<void> {
