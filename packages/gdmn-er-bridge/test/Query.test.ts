@@ -142,6 +142,16 @@ describe("Query", () => {
               lName: {},
               entities: [TestEntity5]
             }));
+
+            const TestEntity10 = await erBuilder.create(erModel, new Entity({name: "TEST_ENTITY10", lName: {}}));
+            await eBuilder.createAttribute(TestEntity10, new StringAttribute({name: "TEST_STRING10", lName: {}}));
+            await eBuilder.createAttribute(TestEntity10, new StringAttribute({name: "TEST_FLOAT10", lName: {}}));
+            await eBuilder.createAttribute(TestEntity10, new ParentAttribute({
+              name: "PARENT",
+              lName: {},
+              entities: [TestEntity10]
+            }));
+
           }
         });
       }
@@ -896,6 +906,32 @@ describe("Query", () => {
       "    T$6.TEST_STRING1\n" +
       "  FROM TREE T$6\n" +
       ")  T$1 ON T$1.ID = T$2.LINK");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => AConnection.executeQueryResultSet({
+        connection, transaction, sql, params,
+        callback: () => 0
+      })
+    });
+  });
+
+  it("Tree: two string filed", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY10",
+        alias: "ce",
+        fields: [
+          {attribute: "TEST_STRING10"},
+          {attribute: "TEST_FLOAT10"}
+        ]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING10 AS F$1,\n" +
+      "  T$1.TEST_FLOAT10 AS F$2\n" +
+      "FROM TEST_ENTITY10 T$1");
 
     await AConnection.executeTransaction({
       connection,

@@ -19,7 +19,7 @@ export interface IEntityAttrValue {
 }
 
 // Set attribute (add applications to user).
-// insert in cross table:
+// fromUpdate in cross table:
 // (userId, appID, alias, another_column, ...)
 // (1, 12, alias1, anothercrosscolumnvalue1, ...)
 // (1, 23, alias2, anothercrosscolumnvalue2, ...)

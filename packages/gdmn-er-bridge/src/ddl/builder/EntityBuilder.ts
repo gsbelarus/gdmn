@@ -86,6 +86,9 @@ export class EntityBuilder extends Builder {
           }, {
             tableName,
             fieldName
+          }, {
+            onUpdate: "CASCADE",
+            onDelete: "CASCADE"
           });
           await this._updateATAttr(dAttr, {
             relationName: detailTableName,
@@ -251,6 +254,9 @@ export class EntityBuilder extends Builder {
           }, {
             tableName: Builder._getOwnRelationName(entity),
             fieldName: Builder._getFieldName(entity.pk[0])
+          }, {
+            onUpdate: "CASCADE",
+            onDelete: "CASCADE"
           });
           const crossFKRefConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKRefConstName, {

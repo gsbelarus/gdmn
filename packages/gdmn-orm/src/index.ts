@@ -27,3 +27,11 @@ export * from "./query-models/EntityLink";
 export * from "./query-models/EntityQuery";
 export * from "./query-models/EntityQueryField";
 export * from "./query-models/EntityQueryOptions";
+
+export * from "./delete-models/EntityDelete";
+
+export * from "./insert-models/EntityInsert";
+export * from "./insert-models/EntityInsertField";
+
+export * from "./update-models/EntityUpdate";
+export * from "./update-models/EntityUpdateField";

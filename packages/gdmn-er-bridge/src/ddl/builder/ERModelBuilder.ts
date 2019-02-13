@@ -105,6 +105,9 @@ export class ERModelBuilder extends Builder {
             }, {
               tableName: Builder._getOwnRelationName(_attr.entities[0]),
               fieldName: Builder._getFieldName(_attr.entities[0].pk[0])
+            }, {
+              onUpdate: "CASCADE",
+              onDelete: "CASCADE"
             });
             break;
           }

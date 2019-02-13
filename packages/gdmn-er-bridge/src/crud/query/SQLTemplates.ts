@@ -1,16 +1,43 @@
 export type JoinType = "LEFT" | "RIGHT" | "";
 
 export abstract class SQLTemplates {
+  /* SQLTemplates for Insert  */
+  public static fieldInsert(fieldName: string): string {
+    return `${fieldName}`;
+  }
+
+  public static valueInsert(fieldName: string): string {
+    return `${fieldName}`;
+  }
+
+  public static fromInsert(tableName: string): string {
+    return `${tableName}`;
+  }
+
+  /* SQLTemplates for Update  */
+  public static fieldUpdate(fieldName: string, value?: string): string {
+    return `${fieldName} = ${value}`;
+  }
+
+  public static fromUpdate(tableName: string): string {
+    return `${tableName}`;
+  }
+
+  /* SQLTemplates for Delete  */
+  public static fromDelete(tableName: string): string {
+    return `FROM ${tableName}`;
+  }
+
+  /* SQLTemplates for Common  */
+  public static from(alias: string, tableName: string): string {
+    return `FROM ${tableName} ${alias}`;
+  }
 
   public static field(alias: string, fieldAlias: string, fieldName: string, withoutFieldAlias?: boolean): string {
     if (withoutFieldAlias) {
       return `  ${alias && `${alias}.`}${fieldName}`;
     }
     return `  ${alias && `${alias}.`}${fieldName} AS ${fieldAlias}`;
-  }
-
-  public static from(alias: string, tableName: string): string {
-    return `FROM ${tableName} ${alias}`;
   }
 
   public static fromWithTree(alias: string, tableName: string, Query1: string, Query2: string, Query3: string): string {
@@ -23,7 +50,6 @@ export abstract class SQLTemplates {
       Query3.split("\n").map((str) => "  " + str).join("\n") +
       `\n) ${alias}`;
   }
-
 
   public static joinWithSimpleTree(alias: string, tableName: string, Query1: string, Query2: string, Query3: string): string {
     return ` (\n` +
@@ -68,8 +94,20 @@ export abstract class SQLTemplates {
     return `${alias && `${alias}.`}${fieldName} ${operator} ${value}`;
   }
 
+  public static conditionUpdate(fieldName: string, operator: string, value: string): string {
+    return `${fieldName} ${operator} ${value}`;
+  }
+
   public static equals(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "=", value);
+  }
+
+  public static equalsUpdate(fieldName: string, value: string): string {
+    return SQLTemplates.conditionUpdate(fieldName, "=", value);
+  }
+
+  public static isNullUpdate(fieldName: string): string {
+    return `${fieldName} IS NULL`;
   }
 
   public static greater(alias: string, fieldName: string, value: string): string {
@@ -87,5 +125,4 @@ export abstract class SQLTemplates {
   public static greaterOrEquals(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, ">=", value);
   }
-
 }

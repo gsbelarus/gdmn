@@ -1,3 +1,11 @@
+import {
+  EntityDelete,
+  EntityInsert, EntityUpdate,
+  IEntityDeleteInspector,
+  IEntityInsertInspector,
+  IEntityUpdateInspector,
+  ParentAttribute
+} from "../src";
 import {Entity} from "../src/model/Entity";
 import {ERModel} from "../src/model/ERModel";
 import {DetailAttribute} from "../src/model/link/DetailAttribute";
@@ -54,9 +62,13 @@ describe("EntityQuery", () => {
     }));
     childEntity.add(new StringAttribute({name: "TEST_STRING", lName: {}}));
     childEntity.add(new StringAttribute({name: "TEST_STRING1", lName: {}}));
+    childEntity.add(new ParentAttribute({name: "PARENT",lName: {}, entities: [childEntity]}));
+    childEntity.add( new EntityAttribute({name: "LINK", lName: {}, entities: [testEntity]}));
+    childEntity.add(setAttr);
+
   });
 
-  it("serialize/deserialize", () => {
+  it("Query: serialize/deserialize", () => {
     const inspectorQuery: IEntityQueryInspector = {
       link: {
         entity: "MASTER_ENTITY",
@@ -141,5 +153,73 @@ describe("EntityQuery", () => {
     };
 
     expect(inspectorQuery).toEqual(EntityQuery.inspectorToObject(erModel, inspectorQuery).inspect());
+  });
+
+  it("Insert: serialize/deserialize", () => {
+    const inspectorInsert: IEntityInsertInspector = {
+      entity: "CHILD_ENTITY",
+      fields: [
+        {
+          attribute: "TEST_STRING1",
+          value: "dfdfd"
+        },
+        {
+          attribute: "PARENT",
+          value: 36
+        },
+        {
+          attribute: "LINK",
+          value: 36
+        },
+        {
+          attribute: "SET_LINK",
+          value: [
+            {
+              value: 36,
+              setAttributes: [{attribute: "TOTAL", value: "111"}]
+            }
+          ]
+        }
+      ]
+    };
+
+    expect(inspectorInsert).toEqual(EntityInsert.inspectorToObject(erModel, inspectorInsert).inspect());
+  });
+
+  it("Delete: serialize/deserialize", () => {
+    const inspectorDelete: IEntityDeleteInspector = {
+      entity: "CHILD_ENTITY",
+      pkValue: [36]
+    };
+
+    expect(inspectorDelete).toEqual(EntityDelete.inspectorToObject(erModel, inspectorDelete).inspect());
+  });
+
+  it("Update: serialize/deserialize", () => {
+    const inspectorUpdate: IEntityUpdateInspector = {
+      entity: "CHILD_ENTITY",
+      fields: [
+        {
+          attribute: "TEST_STRING1",
+          value: "dfdfd"
+        },
+        {
+          attribute: "PARENT",
+          value: 36
+        },
+        {
+          attribute: "SET_LINK",
+          value: [
+            {
+              value: 36,
+              setAttributes: [{attribute: "TEST_INTEGER", value: "111"}]
+            }
+          ]
+        }
+      ],
+      pkValue: 36
+    };
+
+    expect(inspectorUpdate).toEqual(EntityUpdate.inspectorToObject(erModel, inspectorUpdate).inspect());
   });
 });

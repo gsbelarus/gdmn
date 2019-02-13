@@ -14,6 +14,7 @@ import {
   SetAttribute,
   StringAttribute
 } from "gdmn-orm";
+import {IParams} from "../..";
 import {Builder} from "../../ddl/builder/Builder";
 import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "./SQLTemplates";
@@ -34,6 +35,12 @@ export class Select {
   constructor(query: EntityQuery) {
     this._query = query;
     this.sql = this._getSelect(this._query, true);
+    // console.debug("===================\n" +
+    //   "QUERY:\n" + this._query.serialize() + "\n" +
+    //   "SQL:\n" + this.sql + "\n" +
+    //   "PARAMS:\n" + JSON.stringify(this.params) + "\n" +
+    //   "==================="
+    // );
   }
 
   private static _arrayJoinWithBracket(array: string[], separator: string): string {
@@ -391,7 +398,7 @@ export class Select {
           const virtualTree =  this._query.link.fields
             .filter((field) => field.attribute.type === "Parent")
             .map((field) => {
-         //   if (field.attribute.type === "Parent") {
+            //if (field.attribute.type === "Parent") {
               const virtualQuery = this._makeVirtualQuery(query);
               const virtualQuery2 = this._makeSecondVirtualQuery(query, true);
               const virtualQuery3 = this._makeThirdVirtualQuery(query, false);
@@ -409,9 +416,11 @@ export class Select {
                 }
               });
               return from.join("\n");
-            //}
-         //   return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
+           // }
+
+          //  return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
           });
+
           if (virtualTree.length > 0) {
             return virtualTree
           }
