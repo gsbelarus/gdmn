@@ -67,18 +67,18 @@ export const morphTokens = (() => {
 /**
  * Числительные
  */
+
   [true, false].forEach( animate => {
     signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, undefined));
   });
 
-    [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
-      [true, false].forEach( animate => {
-        signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, gender));
+  [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
+    [true, false].forEach( animate => {
+      signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, gender));
     }) 
   });
 
-
-  [RusCase.Nomn, RusCase.Gent, RusCase.Datv, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>
+  [RusCase.Nomn, RusCase.Gent, RusCase.Accs, RusCase.Datv, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>
     [true, false].forEach( singular => {
       signatures.push(RusNumeral.getSignature(singular, grammCase, undefined, undefined));
     })

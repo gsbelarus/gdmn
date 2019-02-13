@@ -1,7 +1,8 @@
 import { NumeralRank, NumeralStructure, NumeralType, RusDeclensionNumeral, RusCase, RusGender, RusNumeralMorphSigns, ShortGenderNames, ShortCaseNames, RusGenderNames, RusCaseNames, RusNumeralTypeNames, RusNumeralStructureNames, RusNumeralRankNames } from "./types";
-import { Numeral, NumeralLexeme } from "./morphology";
+import { Numeral, NumeralLexeme, AnyWords } from "./morphology";
 import { rusNumerals } from "./rusNumeralsData";
 import { RusNumeralEndings } from "./rusNumeralEndings";
+import { number } from 'prop-types';
 
 export class RusNumeralLexeme extends NumeralLexeme {
   public readonly type: NumeralType;
