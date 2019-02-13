@@ -8,7 +8,7 @@ import { ERModelBoxContainer } from './ermodel/ERModelBoxContainer';
 import { Actions, State } from './store';
 import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
-import { deserializeERModel, ERModel, Entity, IntegerAttribute, StringAttribute, DateAttribute, FloatAttribute } from 'gdmn-orm';
+import { deserializeERModel, ERModel, Entity, IntegerAttribute, StringAttribute, DateAttribute, FloatAttribute, EntityAttribute } from 'gdmn-orm';
 import { connect } from 'react-redux';
 import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
 import { IERModels } from './ermodel/reducer';
@@ -110,14 +110,15 @@ class InternalApp extends Component<IAppProps, {}> {
     });
 
     rate.addMultiple([
-      new IntegerAttribute({
+      new EntityAttribute({
         name: 'Cur_ID',
         lName: {
           ru: {
-            name: 'Идентификатор'
+            name: 'Валюта'
           }
         },
-        required: true
+        required: true,
+        entities: [currency]
       }),
       new DateAttribute({
         name: 'Date',
