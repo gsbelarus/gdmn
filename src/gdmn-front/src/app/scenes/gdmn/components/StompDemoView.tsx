@@ -7,8 +7,7 @@ import { Observable } from 'rxjs';
 
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
-import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { ICommand } from 'gdmn-nlp-agent/dist/definitions';
+import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
 import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
@@ -20,8 +19,6 @@ interface IStompDemoViewState {
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
-  interruptTaskLoading: boolean;
-  interruptTaskId: string | undefined;
   cursorTaskId: string | undefined;
 }
 
@@ -53,13 +50,11 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     stressStarted: false,
     stressResultTime: 0,
     stressResultRequestsCount: 0,
-    interruptTaskLoading: false,
-    interruptTaskId: undefined,
     cursorTaskId: undefined
   };
 
   public getViewCaption(): string {
-    return 'Stomp protocol';
+    return 'Stomp API';
   }
 
   // stress test
@@ -183,76 +178,20 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   // api test
 
-  private handleSendTask = () => {
-    return apiService
-      .ping({
-        payload: {
-          action: TTaskActionNames.PING,
-          payload: {
-            delay: 3000,
-            steps: 3
-          }
-        }
-      })
-      .subscribe(value => {
-        if (value.error || value.payload.status === TTaskStatus.RUNNING) {
-          this.setState({
-            interruptTaskLoading: true,
-            interruptTaskId: value.meta && value.meta.taskId ? value.meta.taskId : undefined
-          });
-        } else if (!!value.payload.status) {
-          this.setState({
-            interruptTaskLoading: false,
-            interruptTaskId: undefined
-          });
-        }
-      });
-  };
-
-  private handleInterruptTask = () => {
-    if (!!!this.state.interruptTaskId) return;
+  private handleDestroyCursor = () => {
+    if (!!!this.state.cursorTaskId) return;
 
     apiService.interruptTask({
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
-          taskKey: this.state.interruptTaskId
+          taskKey: this.state.cursorTaskId
         }
       }
     });
-
-    // this.setState({
-    //   interruptTaskLoading: false,
-    //   interruptTaskId: undefined
-    // });
   };
 
-  private handleSendNlpQueryClick = () => {
-    const phrase = 'покажи всех организации из минска и пинска';
-    const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
-
-    if (!parsedPhrase || !this.props.erModel) return;
-
-    let cmds: ICommand[] = [];
-    try {
-      cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase);
-    } catch (e) {
-      this.props.onError(e);
-    }
-
-    cmds.forEach(value => {
-      apiService.makeDataCursor({
-        payload: {
-          action: TTaskActionNames.QUERY,
-          payload: {
-            query: value.payload.inspect()
-          }
-        }
-      });
-    });
-  };
-
-  private handleMakeCursor = () => {
+  private handleCreateCursor = () => {
     this.setState({
       cursorTaskId: undefined
     });
@@ -278,11 +217,20 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       }
     }).subscribe(value => {
       console.log('QUERY result', value);
-      if (value.payload.status === TTaskStatus.DONE && value.meta) {
-        console.log('taskId', value.meta.taskId);
+
+      if (value.payload.status === TTaskStatus.RUNNING) {
+
+        if (value.meta) {
+          console.log('taskId', value.meta.taskId);
+
+          this.setState({
+            cursorTaskId: value.meta.taskId
+          });
+        }
+      } else {
         this.setState({
-          cursorTaskId: value.meta.taskId
-        })
+          cursorTaskId: undefined
+        });
       }
     })
   };
@@ -303,9 +251,35 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       .subscribe(value => {
         console.log('result', value);
         if (value.payload.status === TTaskStatus.DONE && value.payload.result) {
+          //  todo: set state
           console.log('data.length', value.payload.result.data.length);
         }
       });
+  };
+
+  private handleSendNlpQuery = () => {
+    const phrase = 'покажи всех организации из минска и пинска';
+    const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
+
+    if (!parsedPhrase || !this.props.erModel) return;
+
+    let cmds: ICommand[] = [];
+    try {
+      cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase);
+    } catch (e) {
+      this.props.onError(e);
+    }
+
+    cmds.forEach(value => {
+      apiService.makeDataCursor({
+        payload: {
+          action: TTaskActionNames.QUERY,
+          payload: {
+            query: value.payload.inspect()
+          }
+        }
+      });
+    });
   };
 
   public render() {
@@ -384,25 +358,26 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <PrimaryButton
-              onClick={this.handleSendTask}
-              text="SEND TASK"
-              disabled={!this.props.erModel || this.state.interruptTaskLoading}
+              onClick={this.handleCreateCursor}
+              text="CREATE CURSOR"
+              disabled={!this.props.erModel || !!this.state.cursorTaskId}
             />
             <br />
             <DefaultButton
-              onClick={this.handleInterruptTask}
-              text="INTERRUPT TASK"
-              disabled={!!!this.state.interruptTaskId}
+              onClick={this.handleCursorNext}
+              text="CURSOR NEXT"
+              disabled={!!!this.state.cursorTaskId}
+            />
+            <br />
+            <DefaultButton
+              onClick={this.handleDestroyCursor}
+              text="DESTROY CURSOR (interrupt)"
+              disabled={!!!this.state.cursorTaskId}
             />
             <br />
             <br />
-            <PrimaryButton onClick={this.handleMakeCursor} text="MAKE CURSOR" />
-            <br />
-            <DefaultButton onClick={this.handleCursorNext} text="CURSOR NEXT" />
-            <br />
-            <br />
             <PrimaryButton
-              onClick={this.handleSendNlpQueryClick}
+              onClick={this.handleSendNlpQuery}
               text="покажи все организации из минска и пинска"
               disabled={!this.props.erModel}
             />
