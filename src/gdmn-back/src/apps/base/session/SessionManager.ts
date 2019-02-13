@@ -3,8 +3,8 @@ import {AConnectionPool, ICommonConnectionPoolOptions} from "gdmn-db";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
+import {Level, TaskStatus} from "../task/Task";
 import {Session, SessionStatus} from "./Session";
-import {Level, TaskStatus} from "./task/Task";
 
 export interface ISessionManagerEvents {
   change: (session: Session) => void;

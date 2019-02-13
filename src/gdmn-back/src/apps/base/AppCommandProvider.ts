@@ -8,7 +8,7 @@ import {
   PingCmd,
   ReloadSchemaCmd
 } from "./Application";
-import {Session} from "./Session";
+import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
 
 export class AppCommandProvider {

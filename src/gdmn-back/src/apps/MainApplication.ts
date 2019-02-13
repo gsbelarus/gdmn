@@ -17,7 +17,7 @@ import {v1 as uuidV1} from "uuid";
 import {Constants} from "../Constants";
 import {DBStatus, IDBDetail} from "./base/ADatabase";
 import {Application} from "./base/Application";
-import {Session, SessionStatus} from "./base/Session";
+import {Session, SessionStatus} from "./base/session/Session";
 import {ICmd, Level, Task} from "./base/task/Task";
 import {GDMNApplication} from "./GDMNApplication";
 

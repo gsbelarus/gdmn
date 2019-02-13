@@ -10,8 +10,8 @@ import {
 import log4js from "log4js";
 import {Constants} from "../../Constants";
 import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
-import {Session, SessionStatus} from "./Session";
-import {SessionManager} from "./SessionManager";
+import {Session, SessionStatus} from "./session/Session";
+import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";

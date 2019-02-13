@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
-import {Session} from "../Session";
+import {Session} from "../session/Session";
 import {ICmd, ITaskEvents, Task, TaskStatus} from "./Task";
 
 export interface ITaskManagerEvents extends ITaskEvents<any, any> {

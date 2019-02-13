@@ -13,7 +13,7 @@ export class EQueryCursor {
 
   private _lock = new Semaphore();
 
-  constructor(connection: AConnection, transaction: ATransaction, query: EntityQuery, select: Select, resultSet: AResultSet) {
+  protected constructor(connection: AConnection, transaction: ATransaction, query: EntityQuery, select: Select, resultSet: AResultSet) {
     this._connection = connection;
     this._transaction = transaction;
     this._query = query;

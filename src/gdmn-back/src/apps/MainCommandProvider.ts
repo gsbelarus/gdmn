@@ -1,6 +1,6 @@
 import {AppCommandProvider} from "./base/AppCommandProvider";
 import {AppAction} from "./base/Application";
-import {Session} from "./base/Session";
+import {Session} from "./base/session/Session";
 import {ICmd, Task} from "./base/task/Task";
 import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, MainAction, MainApplication} from "./MainApplication";
 

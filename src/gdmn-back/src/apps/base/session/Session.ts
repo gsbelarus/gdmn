@@ -3,9 +3,9 @@ import {AConnection, AConnectionPool, ICommonConnectionPoolOptions, TExecutor} f
 import {EQueryCursor} from "gdmn-er-bridge";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
-import {Constants} from "../../Constants";
-import {Task, TaskStatus} from "./task/Task";
-import {TaskManager} from "./task/TaskManager";
+import {Constants} from "../../../Constants";
+import {Task, TaskStatus} from "../task/Task";
+import {TaskManager} from "../task/TaskManager";
 
 export interface IOptions {
   readonly id: string;
@@ -25,6 +25,11 @@ export enum SessionStatus {
   FORCE_CLOSED
 }
 
+interface IUsesConnections {
+  waitConnection: Promise<AConnection>;
+  uses: number;
+}
+
 export class Session {
 
   public static readonly DONE_SESSION_STATUSES = [
@@ -38,7 +43,7 @@ export class Session {
 
   private readonly _options: IOptions;
   private readonly _taskManager = new TaskManager();
-  private readonly _usesConnections: Array<{ connection: AConnection, uses: number }> = [];
+  private readonly _usesConnections: IUsesConnections[] = [];
   private readonly _cursors = new Map<string, EQueryCursor>();
 
   private _status: SessionStatus = SessionStatus.OPENED;
@@ -91,48 +96,23 @@ export class Session {
   }
 
   public async executeConnection<R>(callback: TExecutor<AConnection, R>): Promise<R> {
+    let usesConnection: IUsesConnections;
     if (this._usesConnections.length < Constants.SERVER.SESSION.MAX_CONNECTIONS) {
-      const usesConnection = {connection: await this._options.connectionPool.get(), uses: 0};
+      usesConnection = {waitConnection: this._options.connectionPool.get(), uses: 0};
       this._usesConnections.push(usesConnection);
-      usesConnection.uses++;
       this._logger.info("id#%s acquire connection; Total count acquired connection: %s", this.id,
         this._usesConnections.length);
-      try {
-        return await callback(usesConnection.connection);
-      } finally {
-        usesConnection.uses--;
-        if (!usesConnection.uses) {
-          const index = this._usesConnections.indexOf(usesConnection);
-          if (index >= 0) {
-            this._usesConnections.splice(index, 1);
-          }
-          this._logger.info("id#%s release connection; Total count acquired connection: %s", this.id,
-            this._usesConnections.length);
-          await usesConnection.connection.disconnect();
-        }
-      }
+
     } else {
       const minUses = Math.min(...this._usesConnections.map(({uses}) => uses));
       const minUsesConnection = this._usesConnections.find(({uses}) => uses === minUses);
       if (!minUsesConnection) {
         throw new Error("minUsesConnection is undefined");
       }
-      minUsesConnection.uses++;
-      try {
-        return await callback(minUsesConnection.connection);
-      } finally {
-        minUsesConnection.uses--;
-        if (!minUsesConnection.uses) {
-          const index = this._usesConnections.indexOf(minUsesConnection);
-          if (index >= 0) {
-            this._usesConnections.splice(index, 1);
-          }
-          this._logger.info("id#%s release connection; Total count acquired connection: %s", this.id,
-            this._usesConnections.length);
-          await minUsesConnection.connection.disconnect();
-        }
-      }
+      usesConnection = minUsesConnection;
     }
+
+    return await this._executeConnection(usesConnection, callback);
   }
 
   public async forceClose(): Promise<void> {
@@ -160,6 +140,33 @@ export class Session {
     this._taskManager.clear();
 
     this._updateStatus(SessionStatus.FORCE_CLOSED);
+  }
+
+  private async _executeConnection<R>(usesConnection: IUsesConnections,
+                                      callback: TExecutor<AConnection, R>): Promise<R> {
+    usesConnection.uses++;
+
+    let connection: AConnection | undefined;
+    try {
+      connection = await usesConnection.waitConnection;
+      return await callback(connection);
+
+    } finally {
+      usesConnection.uses--;
+
+      if (!usesConnection.uses) {
+        const index = this._usesConnections.indexOf(usesConnection);
+        if (index >= 0) {
+          this._usesConnections.splice(index, 1);
+        }
+        this._logger.info("id#%s release connection; Total count acquired connection: %s", this.id,
+          this._usesConnections.length);
+
+        if (connection && connection.connected) {
+          await connection.disconnect();
+        }
+      }
+    }
   }
 
   private _internalClose(): void {

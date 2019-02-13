@@ -5,7 +5,7 @@ import {StompClientCommandListener, StompError, StompHeaders, StompServerSession
 import {v1 as uuidV1} from "uuid";
 import {DBStatus} from "../apps/base/ADatabase";
 import {Application} from "../apps/base/Application";
-import {Session, SessionStatus} from "../apps/base/Session";
+import {Session, SessionStatus} from "../apps/base/session/Session";
 import {ICmd, Task, TaskStatus} from "../apps/base/task/Task";
 import {ITaskManagerEvents} from "../apps/base/task/TaskManager";
 import {IUser, MainApplication} from "../apps/MainApplication";

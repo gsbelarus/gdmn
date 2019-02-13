@@ -4,7 +4,7 @@ import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {v1 as uuidV1} from "uuid";
 import {Constants} from "../../../Constants";
-import {Session} from "../Session";
+import {Session} from "../session/Session";
 import {IProgressOptions, Progress} from "./Progress";
 
 export enum TaskStatus {
