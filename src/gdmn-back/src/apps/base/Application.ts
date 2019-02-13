@@ -38,7 +38,7 @@ export class Application extends ADatabase {
   public sessionLogger = log4js.getLogger("Session");
   public taskLogger = log4js.getLogger("Task");
 
-  public readonly sessionManager = new SessionManager(this.sessionLogger);
+  public readonly sessionManager = new SessionManager(this.connectionPool, this.sessionLogger);
   public readonly processPool = new ApplicationProcessPool();
 
   public erModel: ERModel = new ERModel();
@@ -75,14 +75,14 @@ export class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {steps, delay, testChildProcesses} = context.command.payload;
 
         if (!ApplicationProcess.isProcess && testChildProcesses) {
           await ApplicationProcessPool.executeWorker({
             pool: this.processPool,
-            callback: (worker) => worker.executeCmd(session.userKey, context.command)
+            callback: (worker) => worker.executeCmd(context.session.userKey, context.command)
           });
         } else {
           context.progress.reset({max: steps}, false);
@@ -116,7 +116,7 @@ export class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {taskKey} = context.command.payload;
 
@@ -143,7 +143,7 @@ export class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {withAdapter} = context.command.payload;
 
@@ -163,7 +163,7 @@ export class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {withAdapter} = context.command.payload;
 
@@ -189,7 +189,8 @@ export class Application extends ADatabase {
   }
 
   public pushQueryCmd(session: Session,
-                      command: QueryCmd): Task<QueryCmd, IEntityQueryResponse | undefined> {
+                      command: QueryCmd
+  ): Task<QueryCmd, IEntityQueryResponse | undefined> {
     const task = new Task({
       session,
       command,
@@ -197,32 +198,32 @@ export class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {query, sequentially} = context.command.payload;
         const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
 
-        const result = await session.executeConnection(() => (
-          this.executeConnection(async (connection) => {
-            if (sequentially) {
-              const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
-              try {
-                await new Promise((resolve, reject) => {
-                  // wait for closing cursor
-                  cursor.waitClose().then(() => resolve()).catch(reject);
-                  // or wait for interrupt task
-                  task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
-                });
-              } finally {
-                if (cursor.closed) {
-                  await cursor.close();
-                }
+        const result = await context.session.executeConnection(async (connection) => {
+          if (sequentially) {
+            const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
+            context.session.cursors.set(task.id, cursor);
+            try {
+              await new Promise((resolve, reject) => {
+                // wait for closing cursor
+                cursor.waitClose().then(() => resolve()).catch(reject);
+                // or wait for interrupt task
+                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+              });
+            } finally {
+              context.session.cursors.delete(task.id);
+              if (cursor.closed) {
+                await cursor.close();
               }
-            } else {
-              return await ERBridge.query(connection, connection.readTransaction, entityQuery);
             }
-          })
-        ));
+          } else {
+            return await ERBridge.query(connection, connection.readTransaction, entityQuery);
+          }
+        });
         await context.checkStatus();
         return result;
       }
@@ -232,9 +233,8 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushFetchQueryCmd(
-    session: Session,
-    command: FetchQueryCmd
+  public pushFetchQueryCmd(session: Session,
+                           command: FetchQueryCmd
   ): Task<FetchQueryCmd, IEntityQueryResponse> {
     const task = new Task({
       session,
@@ -243,11 +243,11 @@ export class Application extends ADatabase {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {taskKey, rowsCount} = context.command.payload;
 
-        const cursor = session.cursors.get(taskKey);
+        const cursor = context.session.cursors.get(taskKey);
         if (!cursor) {
           throw new Error("Unknown taskKey");
         }

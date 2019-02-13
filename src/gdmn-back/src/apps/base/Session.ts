@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
+import {AConnection, AConnectionPool, ICommonConnectionPoolOptions, TExecutor} from "gdmn-db";
 import {EQueryCursor} from "gdmn-er-bridge";
-import {Semaphore} from "gdmn-internals";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {Constants} from "../../Constants";
@@ -10,6 +10,7 @@ import {TaskManager} from "./task/TaskManager";
 export interface IOptions {
   readonly id: string;
   readonly userKey: number;
+  readonly connectionPool: AConnectionPool<ICommonConnectionPoolOptions>;
   readonly logger?: Logger;
 }
 
@@ -37,9 +38,9 @@ export class Session {
 
   private readonly _options: IOptions;
   private readonly _taskManager = new TaskManager();
+  private readonly _usesConnections: Array<{ connection: AConnection, uses: number }> = [];
+  private readonly _cursors = new Map<string, EQueryCursor>();
 
-  private _connectionsLock = new Semaphore(Constants.SERVER.SESSION.MAX_CONNECTIONS);
-  private _cursors = new Map<string, EQueryCursor>();
   private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
 
@@ -69,18 +70,6 @@ export class Session {
     return this._cursors;
   }
 
-  public async executeConnection<R>(callback: () => Promise<R>): Promise<R> {
-    if (!this._connectionsLock.permits) {
-      try {
-        await this._connectionsLock.acquire();
-        return await callback();
-      } finally {
-        this._connectionsLock.release();
-      }
-    }
-    return await callback();
-  }
-
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
     this.clearCloseTimer();
     this._logger.info("id#%s is lost and will be closed after %s minutes", this.id, timeout / (60 * 1000));
@@ -99,6 +88,45 @@ export class Session {
     this._internalClose();
 
     this._updateStatus(SessionStatus.CLOSED);
+  }
+
+  public async executeConnection<R>(callback: TExecutor<AConnection, R>): Promise<R> {
+    if (this._usesConnections.length < Constants.SERVER.SESSION.MAX_CONNECTIONS) {
+      const usesConnection = {connection: await this._options.connectionPool.get(), uses: 0};
+      this._usesConnections.push(usesConnection);
+      usesConnection.uses++;
+      try {
+        return await callback(usesConnection.connection);
+      } finally {
+        usesConnection.uses--;
+        if (!usesConnection.uses) {
+          const index = this._usesConnections.indexOf(usesConnection);
+          if (index >= 0) {
+            this._usesConnections.splice(index, 1);
+          }
+          await usesConnection.connection.disconnect();
+        }
+      }
+    } else {
+      const minUses = Math.min(...this._usesConnections.map(({uses}) => uses));
+      const minUsesConnection = this._usesConnections.find(({uses}) => uses === minUses);
+      if (!minUsesConnection) {
+        throw new Error("minUsesConnection is undefined");
+      }
+      minUsesConnection.uses++;
+      try {
+        return await callback(minUsesConnection.connection);
+      } finally {
+        minUsesConnection.uses--;
+        if (!minUsesConnection.uses) {
+          const index = this._usesConnections.indexOf(minUsesConnection);
+          if (index >= 0) {
+            this._usesConnections.splice(index, 1);
+          }
+          await minUsesConnection.connection.disconnect();
+        }
+      }
+    }
   }
 
   public async forceClose(): Promise<void> {

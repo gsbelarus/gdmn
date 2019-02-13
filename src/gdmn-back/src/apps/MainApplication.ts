@@ -141,7 +141,7 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
@@ -189,7 +189,7 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {uid} = context.command.payload;
         const {userKey} = context.session;
@@ -227,7 +227,7 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        this.checkSession(session);
+        this.checkSession(context.session);
 
         const {userKey} = context.session;
 
