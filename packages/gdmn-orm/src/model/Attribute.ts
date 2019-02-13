@@ -41,7 +41,7 @@ export abstract class Attribute<Adapter = any> {
     sn.set("String", "S");
     sn.set("Set", "<->");
     sn.set("Parent", "-^");
-    sn.set("Sequence", "PK");
+    sn.set("Sequence", "Seq");
     sn.set("Integer", "I");
     sn.set("Numeric", "N");
     sn.set("Float", "F");

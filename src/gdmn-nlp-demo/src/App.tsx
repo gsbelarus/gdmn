@@ -8,7 +8,7 @@ import { ERModelBoxContainer } from './ermodel/ERModelBoxContainer';
 import { Actions, State } from './store';
 import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
-import { deserializeERModel, ERModel, Entity, IntegerAttribute, StringAttribute } from 'gdmn-orm';
+import { deserializeERModel, ERModel, Entity, IntegerAttribute, StringAttribute, DateAttribute, FloatAttribute } from 'gdmn-orm';
 import { connect } from 'react-redux';
 import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
 import { IERModels } from './ermodel/reducer';
@@ -61,7 +61,7 @@ class InternalApp extends Component<IAppProps, {}> {
 
     currency.add(
       new IntegerAttribute({
-        name: 'Curr_ID',
+        name: 'Cur_ID',
         lName: {
           ru: {
             name: 'Идентификатор'
@@ -99,6 +99,50 @@ class InternalApp extends Component<IAppProps, {}> {
     );
 
     erm.add(currency);
+
+    const rate = new Entity({
+      name: 'Rate',
+      lName: {
+        ru: {
+          name: 'Курс'
+        }
+      }
+    });
+
+    rate.addMultiple([
+      new IntegerAttribute({
+        name: 'Cur_ID',
+        lName: {
+          ru: {
+            name: 'Идентификатор'
+          }
+        },
+        required: true
+      }),
+      new DateAttribute({
+        name: 'Date',
+        lName: {
+          ru: {
+            name: 'Дата'
+          }
+        },
+        required: true
+      })
+    ]);
+
+    rate.addMultiple([
+      new FloatAttribute({
+        name: 'Cur_OfficialRate',
+        lName: {
+          ru: {
+            name: 'Курс'
+          }
+        },
+        required: true
+      }),
+    ]);
+
+    erm.add(rate);
 
     onLoadERModel2(erm, 'nbrb');
 

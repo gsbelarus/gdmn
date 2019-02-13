@@ -119,7 +119,9 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
               const desc = attr.lName.ru ? attr.lName.ru.name : attr.name;
               return (
                 <div key={attr.name} className={'Attr' + (idx % 2 === 0 ? ' OddRow' : '')}>
-                  <span className={'AttrName' + (attr.name.length > 20 ? ' SmallText' : '')}>{attr.name}</span>
+                  <span className={'AttrName' + (attr.name.length > 20 ? ' SmallText' : '')}>
+                    {entity.pk.find( pk => pk.name === attr.name ) ? <strong>{attr.name}*</strong> : attr.name}
+                  </span>
                   <span className={'AttrDesc' + (desc.length > 20 ? ' SmallText' : '')}>{desc}</span>
                   <span className="AttrType">{attr.inspectDataType()}</span>
                 </div>
