@@ -1,8 +1,7 @@
 import log4js from "log4js";
-
-import { Constants } from "./Constants";
-import { start } from "./server";
-import { clusterStart } from "./serverCluster";
+import {Constants} from "./Constants";
+import {start} from "./server";
+import {clusterStart} from "./serverCluster";
 
 log4js.configure("./config/log4js.json");
 const defaultLogger = log4js.getLogger();
@@ -16,17 +15,17 @@ process.on("SIGTERM", exit);
 
 async function exit(): Promise<void> {
   try {
-    const { stompManager, httpServer, wsServer } = await creating;
+    const {stompManager, httpServer, wsServer} = await creating;
 
     if (wsServer) {
-      wsServer.clients.forEach(client => client.removeAllListeners());
+      wsServer.clients.forEach((client) => client.removeAllListeners());
       wsServer.removeAllListeners();
-      await new Promise(resolve => wsServer.close(resolve));
+      await new Promise((resolve) => wsServer.close(resolve));
       defaultLogger.info("WebSocket server is closed");
     }
     if (httpServer) {
       httpServer.removeAllListeners();
-      await new Promise(resolve => httpServer.close(resolve));
+      await new Promise((resolve) => httpServer.close(resolve));
       defaultLogger.info("Http server is closed");
     }
     if (stompManager) {
@@ -70,6 +69,6 @@ async function serverErrorHandler(error: NodeJS.ErrnoException): Promise<void> {
 
 async function logShutdown(): Promise<void> {
   await new Promise((resolve, reject) =>
-    log4js.shutdown(error => (error ? reject(error) : resolve()))
+    log4js.shutdown((error) => (error ? reject(error) : resolve()))
   );
 }

@@ -1,9 +1,9 @@
-import log4js from 'log4js';
-import { createStompServerSession, setLoggingListeners } from 'stomp-protocol';
-import WebSocket from 'ws';
-import { MainApplication } from '../apps/MainApplication';
-import { Constants } from '../Constants';
-import { IStompSessionMeta, StompSession } from './StompSession';
+import log4js from "log4js";
+import {createStompServerSession, setLoggingListeners} from "stomp-protocol";
+import WebSocket from "ws";
+import {MainApplication} from "../apps/MainApplication";
+import {Constants} from "../Constants";
+import {IStompSessionMeta, StompSession} from "./StompSession";
 
 export class StompManager {
 
@@ -46,26 +46,26 @@ export class StompManager {
   }
 
   public async create(): Promise<void> {
-    const empty = () => {};
+    const empty = () => 0;
     setLoggingListeners({
       error: empty,
       info: empty,
       silly: (message, args) => {
         const receiverDataTemplate = /^StompWebSocketStreamLayer: received data %.$/g;
         if (receiverDataTemplate.test(message) && args !== "\n") {
-          // this._logger.info("\n>>> %s", args.length > StompManager.MAX_LENGTH_MESSAGE
-          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
-          //   : args);
+          this._logger.info("\n>>> %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+            ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+            : args);
         }
         const sendingDataTemplate = /^StompFrameLayer: sending frame data %.$/g;
         if (sendingDataTemplate.test(message)) {
-          // args.startsWith("ERROR")
-          //   ? this._logger.warn("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
-          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
-          //   : args)
-          //   : this._logger.info("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
-          //   ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
-          //   : args);
+          args.startsWith("ERROR")
+            ? this._logger.warn("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+            ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+            : args)
+            : this._logger.info("\n<<< %s", args.length > StompManager.MAX_LENGTH_MESSAGE
+            ? args.substring(0, StompManager.MAX_LENGTH_MESSAGE - 3) + "..."
+            : args);
         }
       },
       warn: empty,

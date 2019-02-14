@@ -110,9 +110,9 @@ async function createCluster(
       .on("close", () => {
         // console.log('Workers  stop..');
         clusterServerRunning = false;
-        for (const wid in cluster.workers) {
-          cluster.workers[wid]!.kill(); // todo timeout force stop
-        }
+        Object.values(cluster.workers)
+          .filter((worker) => !!worker)
+          .forEach((worker) => worker!.kill()); // todo timeout force stop
         // console.log('Master  ..stopped');
       })
       .listen(Constants.SERVER.HTTP.PORT, Constants.SERVER.HTTP.HOST, () => {
@@ -199,7 +199,7 @@ export async function clusterStart(
         ).meta.workerPid;
       }
 
-      return pidStr ? Number.parseInt(pidStr) : undefined;
+      return pidStr ? Number.parseInt(pidStr, 10) : undefined;
     }
   );
 }

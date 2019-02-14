@@ -95,8 +95,8 @@ export class Task<Cmd extends ICmd<any>, Result> {
     this._logger = options.logger || console;
     this._progress = new Progress(options.progress);
     this._progress.emitter.on("change", () => {
-      // this._logger.info("id#%s in progress; Value: %s; Description: %s", this._id, this._progress.value,
-      //   this._progress.description);
+      this._logger.info("id#%s in progress; Value: %s; Description: %s", this._id, this._progress.value,
+        this._progress.description);
       if (this.status === TaskStatus.RUNNING) {
         this.emitter.emit("progress", this);
       }
@@ -205,8 +205,8 @@ export class Task<Cmd extends ICmd<any>, Result> {
     if (this._status === TaskStatus.RUNNING) {
       this._timer = setTimeout(() => this.interrupt(), Constants.SERVER.TASK.TIMEOUT);
     }
-    // this._logger.info("id#%s is changed; Action: %s; Status: %s", this._id, this._options.command.action,
-    //   TaskStatus[this._status]);
+    this._logger.info("id#%s is changed; Action: %s; Status: %s", this._id, this._options.command.action,
+      TaskStatus[this._status]);
     this.emitter.emit("change", this);
   }
 
