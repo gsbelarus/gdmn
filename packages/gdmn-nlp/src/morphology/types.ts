@@ -245,7 +245,7 @@ export const ShortNumeralRankNames = [
 ];
 
 export type RusDeclensionNumeral  =
-'pqs0'          |'pqs1'         |'pqs2'            |'pqs3'            |'pqs4'            |'pqs5-7,9-20,30'  |'pqs8'
+'pqs1'         |'pqs2'            |'pqs3'            |'pqs4'            |'pqs5-7,9-20,30'  |'pqs8'
 |'pqs40'        |'pqs90,100'    |'pqc50,60,70,80'  |'pqc50,60,70,80';
 
 export type RusDeclensionNumeralEnding = {
@@ -255,7 +255,7 @@ export type RusDeclensionNumeralEnding = {
 
 export interface RusNumeralMorphSigns {
   c: RusCase;
-  singular: boolean;
+  singular?: boolean;
   gender?: RusGender;
   animate?: boolean;
 }
@@ -275,7 +275,7 @@ export interface RusNumeralInterface {
 export type RusNumeralEnding = {
   ending: string,
   c: RusCase;
-  singular: boolean;
+  singular?: boolean;
   gender?: RusGender;
   animate?: boolean;
 };

@@ -52,8 +52,8 @@ export function combinatorialMorph(text: string): IToken[][]
         const number = RusNumeralLexemes.filter(num => 
           num.value === Number(t.image)).reduce((p, l) => {
             Number(t.image) === 1 || Number(t.image) === 2
-            ? p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false, singular: true}))
-            : p.push(l.getWordForm({c: RusCase.Accs, animate: true, singular: true}));
+            ? p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false}))
+            : p.push(l.getWordForm({c: RusCase.Accs, animate: true}));
             return p;
           }, [] as AnyWord[]);
         if(number.length !== 0) {
@@ -115,8 +115,8 @@ export function combinatorialMorph(text: string): IToken[][]
             let findNumber = RusNumeralLexemes.filter(num => 
               num.value === value).reduce((p, l) => {
                 value === 1 || value === 2
-                ? p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false, singular: true}))
-                : p.push(l.getWordForm({c: RusCase.Accs, animate: true, singular: true}));
+                ? p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false}))
+                : p.push(l.getWordForm({c: RusCase.Accs, animate: true}));
                 return p;
               }, [] as AnyWord[]);
             p.push(findNumber.map( w => createTokenInstance(w) ));

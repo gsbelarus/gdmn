@@ -69,19 +69,17 @@ export const morphTokens = (() => {
  */
 
   [true, false].forEach( animate => {
-    signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, undefined));
+    signatures.push(RusNumeral.getSignature(RusCase.Accs, undefined, animate, undefined));
   });
 
   [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
     [true, false].forEach( animate => {
-      signatures.push(RusNumeral.getSignature(true, RusCase.Accs, animate, gender));
+      signatures.push(RusNumeral.getSignature(RusCase.Accs, undefined, animate, gender));
     }) 
   });
 
   [RusCase.Nomn, RusCase.Gent, RusCase.Accs, RusCase.Datv, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>
-    [true, false].forEach( singular => {
-      signatures.push(RusNumeral.getSignature(singular, grammCase, undefined, undefined));
-    })
+    signatures.push(RusNumeral.getSignature(grammCase, undefined, undefined, undefined))
   );
 
   return signatures.reduce(

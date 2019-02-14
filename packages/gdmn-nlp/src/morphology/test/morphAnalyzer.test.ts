@@ -152,7 +152,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeDefined();
     expect(n.lexeme.gender).toEqual(RusGender.Masc);
   });
@@ -166,7 +166,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeDefined();
     expect(n.lexeme.gender).toEqual(RusGender.Masc);
   });
@@ -180,7 +180,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeDefined();
     expect(n.lexeme.gender).toEqual(RusGender.Neut);
   });
@@ -194,7 +194,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeDefined();
     expect(n.lexeme.gender).toEqual(RusGender.Masc);
   });
@@ -208,7 +208,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Simple);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeUndefined();
   });
   test("шестьюдесятью", () => {
@@ -221,7 +221,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeUndefined();
   });
   test("пятидесяти", () => {
@@ -234,7 +234,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeUndefined();
   });
   test("двухсот", () => {
@@ -247,7 +247,7 @@ describe('числительные', () => {
     expect(n.lexeme.structure).toEqual(NumeralStructure.Complex);
     expect(n.lexeme.rank).toBeDefined();
     expect(n.lexeme.rank).toEqual(NumeralRank.ProperQuantitative);
-    expect(n.singular).toEqual(true);
+    expect(n.singular).toBeUndefined();
     expect(n.lexeme.gender).toBeUndefined();
   });
 });

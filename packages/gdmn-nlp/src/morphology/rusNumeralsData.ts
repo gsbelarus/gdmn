@@ -2,16 +2,6 @@ import { RusNumeralInterface, NumeralType, NumeralStructure, NumeralRank, RusGen
 
 export const rusNumerals: RusNumeralInterface[] = [
   {
-    stem: 'нол',
-    stem1: '',
-    stem2: '',
-    type: NumeralType.Cardinal,
-    structure: NumeralStructure.Simple,
-    value: 0,
-    declension: 'pqs0',
-    rank: NumeralRank.ProperQuantitative,
-  },
-  {
     stem: 'один',
     stem1: 'одн',
     stem2: '',

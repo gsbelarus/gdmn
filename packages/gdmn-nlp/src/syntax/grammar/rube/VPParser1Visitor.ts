@@ -92,16 +92,15 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public imperativeNNPNumr = (ctx: any) => {
-    return tokenToWordOrCompositeNumerals( ctx.NUMRSingAccs ? ctx.NUMRSingAccs[0]
-    : ctx.NUMRInanSingAccs ? ctx.NUMRInanSingAccs[0]
-    : ctx.NUMRAnimSingAccs ? ctx.NUMRAnimSingAccs[0]
-    : ctx.NUMRInanMascSingAccs ? ctx.NUMRInanMascSingAccs[0]
-    : ctx.NUMRInanFemnSingAccs ? ctx.NUMRInanFemnSingAccs[0]
-    : ctx.NUMRInanNeutSingAccs ? ctx.NUMRInanNeutSingAccs[0]
-    : ctx.NUMRAnimMascSingAccs ? ctx.NUMRAnimMascSingAccs[0]
-    : ctx.NUMRAnimFemnSingAccs ? ctx.NUMRAnimFemnSingAccs[0]
-    : ctx.NUMRAnimNeutSingAccs ? ctx.NUMRAnimNeutSingAccs[0]
-    : ctx.NUMRPlurGent ? ctx.NUMRPlurGent[0]
+    return tokenToWordOrCompositeNumerals( ctx.NUMRAccs ? ctx.NUMRAccs[0]
+    : ctx.NUMRInanAccs ? ctx.NUMRInanAccs[0]
+    : ctx.NUMRAnimAccs ? ctx.NUMRAnimAccs[0]
+    : ctx.NUMRInanMascAccs ? ctx.NUMRInanMascAccs[0]
+    : ctx.NUMRInanFemnAccs ? ctx.NUMRInanFemnAccs[0]
+    : ctx.NUMRInanNeutAccs ? ctx.NUMRInanNeutAccs[0]
+    : ctx.NUMRAnimMascAccs ? ctx.NUMRAnimMascAccs[0]
+    : ctx.NUMRAnimFemnAccs ? ctx.NUMRAnimFemnAccs[0]
+    : ctx.NUMRAnimNeutAccs ? ctx.NUMRAnimNeutAccs[0]
     : undefined);
   }
   

@@ -72,8 +72,8 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Conj', () => RusConjunctionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Nums', () => RusNumeralLexemes.reduce((p, l) => {
-        const wf = l.gender !== undefined ? l.getWordForm({ c: RusCase.Nomn, singular: true, gender: l.gender })
-        : l.getWordForm({ c: RusCase.Nomn, singular: true });
+        const wf = l.gender !== undefined ? l.getWordForm({ c: RusCase.Nomn, gender: l.gender })
+        : l.getWordForm({ c: RusCase.Nomn });
 
         if (wf) {
           p.push(wf);
@@ -247,64 +247,64 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
                 <tbody>
                 <tr>
                   <th colSpan={2}>Им.</th>
-                  <td>{f({ c: RusCase.Nomn, singular: true, gender: l.gender })}</td>
+                  <td>{f({ c: RusCase.Nomn, gender: l.gender })}</td>
                 </tr>
                 <tr>
                   <th colSpan={2}>Рд.</th>
-                  <td>{f({ c: RusCase.Gent, singular: true, gender: l.gender })}</td>
+                  <td>{f({ c: RusCase.Gent, gender: l.gender })}</td>
                 </tr>
                 <tr>
                   <th colSpan={2}>Дт.</th>
-                  <td>{f({ c: RusCase.Datv, singular: true, gender: l.gender })}</td>
+                  <td>{f({ c: RusCase.Datv, gender: l.gender })}</td>
                 </tr>
                 <tr>
                   <th rowSpan={2}>Вн.</th>
                   <th>одуш.</th>
-                  <td>{f({ c: RusCase.Accs, singular: true, gender: l.gender, animate: true })}</td>
+                  <td>{f({ c: RusCase.Accs, gender: l.gender, animate: true })}</td>
                 </tr>
                 <tr>
                   <th>неодуш.</th>
-                  <td>{f({ c: RusCase.Accs, singular: true, gender: l.gender, animate: false })}</td>
+                  <td>{f({ c: RusCase.Accs, gender: l.gender, animate: false })}</td>
                 </tr>
                 <tr>
                   <th colSpan={2}>Тв.</th>
-                  <td>{f({ c: RusCase.Ablt, singular: true, gender: l.gender })}</td>
+                  <td>{f({ c: RusCase.Ablt, gender: l.gender })}</td>
                 </tr>
                 <tr>
                   <th colSpan={2}>Пр.</th>
-                  <td>{f({ c: RusCase.Loct, singular: true, gender: l.gender })}</td>
+                  <td>{f({ c: RusCase.Loct, gender: l.gender })}</td>
                 </tr>
               </tbody>
               :
               <tbody>
               <tr>
                 <th colSpan={2}>Им.</th>
-                <td>{f({ c: RusCase.Nomn, singular: true })}</td>
+                <td>{f({ c: RusCase.Nomn })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Рд.</th>
-                <td>{f({ c: RusCase.Gent, singular: true })}</td>
+                <td>{f({ c: RusCase.Gent })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Дт.</th>
-                <td>{f({ c: RusCase.Datv, singular: true })}</td>
+                <td>{f({ c: RusCase.Datv })}</td>
               </tr>
               <tr>
                 <th rowSpan={2}>Вн.</th>
                 <th>одуш.</th>
-                <td>{f({ c: RusCase.Accs, singular: true, animate: true })}</td>
+                <td>{f({ c: RusCase.Accs, animate: true })}</td>
               </tr>
               <tr>
                 <th>неодуш.</th>
-                <td>{f({ c: RusCase.Accs, singular: true, animate: false })}</td>
+                <td>{f({ c: RusCase.Accs, animate: false })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Тв.</th>
-                <td>{f({ c: RusCase.Ablt, singular: true })}</td>
+                <td>{f({ c: RusCase.Ablt })}</td>
               </tr>
               <tr>
                 <th colSpan={2}>Пр.</th>
-                <td>{f({ c: RusCase.Loct, singular: true })}</td>
+                <td>{f({ c: RusCase.Loct })}</td>
               </tr>
             </tbody>
               }
