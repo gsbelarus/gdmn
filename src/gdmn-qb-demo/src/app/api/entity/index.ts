@@ -1,12 +1,14 @@
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 
 import config from '../../../configs/config.json';
+
 import { entityList } from './mockData';
 
 // console.log('test', entityList);
 const baseURL = `${config.server.http.host}:${config.server.http.port}`;
 
 const fetchMockData = async (): Promise<ERModel> => {
+  console.log(entityList);
   console.log(deserializeERModel(entityList));
   return deserializeERModel(entityList);
 };
