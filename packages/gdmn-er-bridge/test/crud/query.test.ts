@@ -13,8 +13,8 @@ import {
   StringAttribute
 } from "gdmn-orm";
 import {resolve} from "path";
-import {ERBridge} from "../src";
-import {Select} from "../src/crud/query/Select";
+import {ERBridge} from "../../src";
+import {Select} from "../../src/crud/query/Select";
 
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",

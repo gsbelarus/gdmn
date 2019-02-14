@@ -11,8 +11,8 @@ import {
   StringAttribute
 } from "gdmn-orm";
 import {resolve} from "path";
-import {ERBridge} from "../src";
-import {Delete} from "../src/crud/delete/Delete";
+import {ERBridge} from "../../src";
+import {Delete} from "../../src/crud/delete/Delete";
 
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
