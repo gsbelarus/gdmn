@@ -133,24 +133,28 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               />
               <Route
                 path={`${match.path}/web-stomp`}
-                render={props => (
-                  <StompDemoView
-                    apiPing={apiPing}
-                    erModel={erModel}
-                    addToTabList={addToTabList}
-                    viewTabs={viewTabs}
-                    {...props}
-                    onError={onError}
-                  />
-                )}
+                render={props => {
+                  return (
+                    <StompDemoView
+                      apiPing={apiPing}
+                      erModel={erModel}
+                      addToTabList={addToTabList}
+                      viewTabs={viewTabs}
+                      {...props}
+                      onError={onError}
+                    />
+                  );
+                }}
               />
               <Route
                 path={`${match.path}/er-model`}
-                render={props => (
-                  <div style={{ margin: -16 }}>
-                    <ERModelViewContainer {...props} />
-                  </div>
-                )}
+                render={props => {
+                  return (
+                    <div style={{ margin: -16 }}>
+                      <ERModelViewContainer {...props} />
+                    </div>
+                  );
+                }}
               />
               <Route
                 exact={true}

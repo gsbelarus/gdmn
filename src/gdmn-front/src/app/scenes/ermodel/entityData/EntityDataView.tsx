@@ -40,8 +40,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
 
     addToTabList({
       caption: this.getViewCaption(),
-      url: match.url,
-      rs: ['entities', 'attributes']
+      url: match.url
     });
   }
 

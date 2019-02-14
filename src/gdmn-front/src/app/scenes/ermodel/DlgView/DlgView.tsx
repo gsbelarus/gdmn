@@ -48,8 +48,7 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
 
     addToTabList({
       caption: this.getViewCaption(),
-      url: match.url,
-      rs: ['entities', 'attributes']
+      url: match.url
     });
   }
 
