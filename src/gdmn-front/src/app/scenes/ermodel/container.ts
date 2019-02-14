@@ -3,7 +3,7 @@ import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSet, TF
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
-import { withRouter } from 'react-router';
+import { withRouter, RouteComponentProps } from 'react-router';
 
 import { IState } from '@src/app/store/reducer';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
@@ -12,7 +12,7 @@ import { ERModelView } from './component';
 import { Semaphore } from 'gdmn-internals';
 
 export const ERModelViewContainer = connect(
-  (state: IState) => ({
+  (state: IState, ownProps: RouteComponentProps<any>) => ({
     data:
       {
         rs: state.recordSet.entities,
@@ -25,7 +25,7 @@ export const ERModelViewContainer = connect(
         ]
       },
     erModel: state.gdmnState.erModel,
-    viewTabs: state.gdmnState.viewTabs
+    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.match.url )
   }),
 
   (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({

@@ -126,7 +126,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   <AccountView
                     apiDeleteAccount={apiDeleteAccount}
                     addToTabList={addToTabList}
-                    viewTabs={viewTabs}
+                    viewTab={viewTabs.find( vt => vt.url === props.match.url )}
                     {...props}
                   />
                 )}
@@ -139,7 +139,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                       apiPing={apiPing}
                       erModel={erModel}
                       addToTabList={addToTabList}
-                      viewTabs={viewTabs}
+                      viewTab={viewTabs.find( vt => vt.url === props.match.url )}
                       {...props}
                       onError={onError}
                     />
@@ -172,9 +172,9 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => (
                   <div style={{ margin: -16 }}>
                     <DlgViewContainer {...props}
-                     addToTabList={addToTabList}
-                     viewTabs={viewTabs}
-                     dlgState={IDlgState.dsEdit}
+                      addToTabList={addToTabList}
+                      viewTab={viewTabs.find( vt => vt.url === props.match.url )}
+                      dlgState={IDlgState.dsEdit}
                     />
                   </div>
                 )}
@@ -184,9 +184,9 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => (
                   <div style={{ margin: -16 }}>
                     <DlgViewContainer {...props}
-                     addToTabList={addToTabList}
-                     viewTabs={viewTabs}
-                     dlgState={IDlgState.dsInsert}
+                      addToTabList={addToTabList}
+                      viewTab={viewTabs.find( vt => vt.url === props.match.url )}
+                      dlgState={IDlgState.dsInsert}
                     />
                   </div>
                 )}

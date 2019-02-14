@@ -4,7 +4,7 @@ import { RouteComponentProps } from 'react-router';
 import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IViewProps<R = any> extends RouteComponentProps<R> {
-  viewTabs: IViewTab[];
+  viewTab?: IViewTab;
   addToTabList: (viewTab: IViewTab) => void;
 }
 
