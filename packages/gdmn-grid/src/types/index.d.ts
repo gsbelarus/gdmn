@@ -26,7 +26,7 @@ declare module 'dom-helpers' {
   // utils
   function requestAnimationFrame(callback: FrameRequestCallback): number;
   namespace requestAnimationFrame {
-     function cancel(id: number): void;
+    function cancel(id: number): void;
   }
 }
 
@@ -46,14 +46,13 @@ interface IEventsModule {
   listen(node: Node, eventName: string, handler: Function, capture: any): () => void;
 }
 
-type TBox = { top: number, left: number, height: number, width: number };
+type TBox = { top: number; left: number; height: number; width: number };
 
 interface IQueryModule {
   // query
   matches(node: Node, selector: string): boolean;
   height(node: Element, client?: any): number;
   width(node: Element, client?: any): number;
-
 
   offset(node: Node): TBox | undefined;
   offsetParent(node: Node): HTMLElement;

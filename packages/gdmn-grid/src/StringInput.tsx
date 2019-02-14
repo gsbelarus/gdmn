@@ -10,7 +10,6 @@ interface IProps {
 }
 
 export class StringInput extends React.PureComponent<IProps> {
-
   private handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     this.props.onChange(e.target.value);
   }
@@ -18,18 +17,16 @@ export class StringInput extends React.PureComponent<IProps> {
   public render() {
     return (
       <span>
-        <label htmlFor={this.props.name}>
-          {this.props.label}
-        </label>
+        <label htmlFor={this.props.name}>{this.props.label}</label>
         <input
           type="text"
-          pattern={this.props.pattern}           
+          pattern={this.props.pattern}
           onInput={this.handleChange.bind(this)}
           defaultValue={this.props.value.toString()}
           size={this.props.size}
-          name={this.props.name}          
+          name={this.props.name}
         />
       </span>
-    )
+    );
   }
 }

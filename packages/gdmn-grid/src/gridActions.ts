@@ -1,16 +1,18 @@
-import { Columns } from "./Grid";
-import { createAction } from "typesafe-actions";
-import { SortFields } from "gdmn-recordset";
+import { Columns } from './Grid';
+import { createAction } from 'typesafe-actions';
+import { SortFields } from 'gdmn-recordset';
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
 
 export const createGrid = createAction('GRID/CREATE', resolve => {
-  return (params: WithComponentName<{
-    columns: Columns,
-    leftSideColumns: number,
-    rightSideColumns: number,
-    hideFooter: boolean
-  }>) => resolve(params);
+  return (
+    params: WithComponentName<{
+      columns: Columns;
+      leftSideColumns: number;
+      rightSideColumns: number;
+      hideFooter: boolean;
+    }>
+  ) => resolve(params);
 });
 
 export type CreateGrid = typeof createGrid;
@@ -28,13 +30,13 @@ export const setFixedTailColumns = createAction('GRID/SET_FIXED_TAIL_COLUMNS', r
 export type SetFixedTailColumns = typeof setFixedTailColumns;
 
 export const resizeColumn = createAction('GRID/RESIZE_COLUMN', resolve => {
-  return (params: WithComponentName<{columnIndex: number, newWidth: number}>) => resolve(params);
+  return (params: WithComponentName<{ columnIndex: number; newWidth: number }>) => resolve(params);
 });
 
 export type ResizeColumn = typeof resizeColumn;
 
 export const columnMove = createAction('GRID/COLUMN_MOVE', resolve => {
-  return (params: WithComponentName<{oldIndex: number, newIndex: number}>) => resolve(params);
+  return (params: WithComponentName<{ oldIndex: number; newIndex: number }>) => resolve(params);
 });
 
 export type ColumnMove = typeof columnMove;
@@ -110,6 +112,3 @@ export const setSearchIdx = createAction('GRID/SET_SEARCH_IDX', resolve => {
 });
 
 export type SetSearchIdx = typeof setSearchIdx;
-
-
-

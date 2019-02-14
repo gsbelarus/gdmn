@@ -18,10 +18,8 @@ export class ColumnSelector extends React.PureComponent<IProps> {
           checked={this.props.isChecked}
           onChange={this.props.onToggle}
         />
-        <label htmlFor={this.props.name}>
-          {this.props.name}
-        </label>
+        <label htmlFor={this.props.name}>{this.props.name}</label>
       </div>
-    )
+    );
   }
 }

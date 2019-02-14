@@ -4,9 +4,9 @@ import { ColumnSelector } from './ColumnSelector';
 import { Columns } from './Grid';
 
 interface IProps {
-  columnsList: Columns,
+  columnsList: Columns;
   onToggle: (columnName: string) => void;
-};
+}
 
 export class ColumnsListView extends React.PureComponent<IProps, {}> {
   public render() {
@@ -14,21 +14,19 @@ export class ColumnsListView extends React.PureComponent<IProps, {}> {
       return (
         <div className="Container">
           <div className="FlexContainer">
-            {
-              this.props.columnsList.map( c => (
-                <ColumnSelector key={c.name} isChecked={!c.hidden} name={c.name} onToggle={() => this.props.onToggle(c.name)}/>
-              ))
-            }
+            {this.props.columnsList.map(c => (
+              <ColumnSelector
+                key={c.name}
+                isChecked={!c.hidden}
+                name={c.name}
+                onToggle={() => this.props.onToggle(c.name)}
+              />
+            ))}
           </div>
         </div>
-      )
+      );
     } else {
-      return (
-        <div>
-          Loading...
-        </div>
-      )
+      return <div>Loading...</div>;
     }
   }
-};
-
+}
