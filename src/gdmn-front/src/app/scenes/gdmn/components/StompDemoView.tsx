@@ -282,6 +282,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     });
   };
 
+  public componentWillUnmount(): void {
+    this.handleDestroyCursor();
+  }
+
   public render() {
     return this.renderOneColumn(
       <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline' }}>
