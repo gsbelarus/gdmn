@@ -1,5 +1,8 @@
 import {AConnection, ATransaction, DBStructure, Factory, IBaseExecuteOptions} from "gdmn-db";
-import {EntityQuery, ERModel, IEntityQueryResponse} from "gdmn-orm";
+import {EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse} from "gdmn-orm";
+import {Delete} from "./crud/delete/Delete";
+import {Insert} from "./crud/insert/Insert";
+import {Update} from "./crud/update/Update";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
 import {DDLHelper} from "./ddl/DDLHelper";
@@ -90,6 +93,30 @@ export class ERBridge {
     }
 
     return cursor.makeEntityQueryResponse(data);
+  }
+
+  public static async insert(connection: AConnection,
+                             transaction: ATransaction,
+                             entityInsert: EntityInsert): Promise<void> {
+    const insert = new Insert(entityInsert);
+
+    await connection.execute(transaction, insert.sql, insert.params);
+  }
+
+  public static async update(connection: AConnection,
+                             transaction: ATransaction,
+                             entityUpdate: EntityUpdate): Promise<void> {
+    const update = new Update(entityUpdate);
+
+    await connection.execute(transaction, update.sql, update.params);
+  }
+
+  public static async delete(connection: AConnection,
+                             transaction: ATransaction,
+                             entityDelete: EntityDelete): Promise<void> {
+    const delete1 = new Delete(entityDelete);
+
+    await connection.execute(transaction, delete1.sql, delete1.params);
   }
 
   public async dispose(): Promise<void> {

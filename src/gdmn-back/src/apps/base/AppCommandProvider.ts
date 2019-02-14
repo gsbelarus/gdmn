@@ -1,12 +1,15 @@
 import {
   AppAction,
   Application,
+  CreateCmd,
+  DeleteCmd,
   FetchQueryCmd,
   GetSchemaCmd,
   InterruptCmd,
-  QueryCmd,
   PingCmd,
-  ReloadSchemaCmd
+  QueryCmd,
+  ReloadSchemaCmd,
+  UpdateCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -19,7 +22,7 @@ export class AppCommandProvider {
     this._application = application;
   }
 
-  private static _verifyPingCmd(command: ICmd<AppAction, any>): command is PingCmd {
+  private static _verifyPingCmd(command: ICmd<AppAction, any>): command is PingCmd | never {
     return typeof command.payload === "object"
       && !!command.payload
       && "steps" in command.payload
@@ -50,6 +53,30 @@ export class AppCommandProvider {
       && typeof command.payload.taskKey === "string"
       && "rowsCount" in command.payload
       && typeof command.payload.rowsCount === "number";
+  }
+
+  private static _verifyCreateCmd(command: ICmd<AppAction, any>): command is CreateCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "create" in command.payload
+      && typeof command.payload.query === "object";
+    // TODO
+  }
+
+  private static _verifyUpdateCmd(command: ICmd<AppAction, any>): command is UpdateCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "update" in command.payload
+      && typeof command.payload.query === "object";
+    // TODO
+  }
+
+  private static _verifyDeleteCmd(command: ICmd<AppAction, any>): command is DeleteCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "delete" in command.payload
+      && typeof command.payload.query === "object";
+    // TODO
   }
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
@@ -86,6 +113,24 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushFetchQueryCmd(session, command);
+      }
+      case "CREATE": {
+        if (!AppCommandProvider._verifyCreateCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushCreateCmd(session, command);
+      }
+      case "UPDATE": {
+        if (!AppCommandProvider._verifyUpdateCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushUpdateCmd(session, command);
+      }
+      case "DELETE": {
+        if (!AppCommandProvider._verifyDeleteCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushDeleteCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");

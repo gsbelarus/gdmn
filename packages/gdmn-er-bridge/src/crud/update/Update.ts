@@ -10,10 +10,10 @@ export class Update {
 
   public readonly sql: string = "";
   public readonly params: IParamsUpdate = {};
-  public readonly paramsBlock: IParamsUpdate = {};
   public readonly fieldAliases = new Map<EntityUpdateField, Map<Attribute, string>>();
 
   private readonly _update: EntityUpdate;
+  private readonly _paramsBlock: IParamsUpdate = {};
 
   constructor(update: EntityUpdate) {
     this._update = update;
@@ -219,9 +219,9 @@ export class Update {
   }
 
   private _addToParamsBlock(value: any, typeSQL?: string): string {
-    const length = Object.keys(this.paramsBlock).length;
+    const length = Object.keys(this._paramsBlock).length;
     const placeholder = `P$${length + 1}`;
-    this.paramsBlock[placeholder] = value;
+    this._paramsBlock[placeholder] = value;
     return typeSQL ? `${placeholder} ${typeSQL} :${placeholder}` : `:${placeholder}`;
   }
 }

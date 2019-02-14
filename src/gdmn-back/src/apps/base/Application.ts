@@ -1,10 +1,17 @@
+import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {
   deserializeERModel,
+  EntityDelete,
+  EntityInsert,
   EntityQuery,
+  EntityUpdate,
   ERModel,
+  IEntityDeleteInspector,
+  IEntityInsertInspector,
   IEntityQueryInspector,
   IEntityQueryResponse,
+  IEntityUpdateInspector,
   IERModel
 } from "gdmn-orm";
 import log4js from "log4js";
@@ -22,7 +29,10 @@ export type AppAction =
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
   | "QUERY"
-  | "FETCH_QUERY";
+  | "FETCH_QUERY"
+  | "CREATE"
+  | "UPDATE"
+  | "DELETE";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -32,6 +42,9 @@ export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
 export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector, sequentially?: boolean }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
+export type CreateCmd = AppCmd<"CREATE", { create: IEntityInsertInspector }>;
+export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
+export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 
 export class Application extends ADatabase {
 
@@ -257,6 +270,81 @@ export class Application extends ADatabase {
           await cursor.close();
         }
         return cursor.makeEntityQueryResponse(result.data);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushCreateCmd(session: Session, command: CreateCmd): Task<CreateCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {create} = context.command.payload;
+
+        const entityInsert = EntityInsert.inspectorToObject(this.erModel, create);
+
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.insert(connection, transaction, entityInsert)
+        }));
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushUpdateCmd(session: Session, command: UpdateCmd): Task<UpdateCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {update} = context.command.payload;
+
+        const entityUpdate = EntityUpdate.inspectorToObject(this.erModel, update);
+
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.update(connection, transaction, entityUpdate)
+        }));
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushDeleteCmd(session: Session, command: DeleteCmd): Task<DeleteCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {delete: delete1} = context.command.payload;
+
+        const entityDelete = EntityDelete.inspectorToObject(this.erModel, delete1);
+
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.delete(connection, transaction, entityDelete)
+        }));
       }
     });
     session.taskManager.add(task);

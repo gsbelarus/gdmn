@@ -17,10 +17,10 @@ export class Insert {
 
   public readonly sql: string = "";
   public readonly params: IParamsInsert = {};
-  public readonly paramsBlock: IParamsInsert = {};
   public readonly fieldAliases = new Map<EntityInsertField, Map<Attribute, string>>();
 
   private readonly _query: EntityInsert;
+  private readonly _paramsBlock: IParamsInsert = {};
 
   constructor(query: EntityInsert) {
     this._query = query;
@@ -209,9 +209,9 @@ export class Insert {
   }
 
   private _addToParamsBlock(value: any, typeSQL?: string): string {
-    const length = Object.keys(this.paramsBlock).length;
+    const length = Object.keys(this._paramsBlock).length;
     const placeholder = `P$${length + 1}`;
-    this.paramsBlock[placeholder] = value;
+    this._paramsBlock[placeholder] = value;
     return typeSQL ? `${placeholder} ${typeSQL} :${placeholder}` : `:${placeholder}`;
   }
 
