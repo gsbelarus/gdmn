@@ -294,8 +294,9 @@ export class StompSession implements StompClientCommandListener {
   }
 
   public disconnect(headers: StompHeaders): void {
-    this._try(() => {
-      this.session.close();
+    this._try(async () => {
+      // TODO ???
+      await this.session.forceClose();
 
       this._sendReceipt(headers);
     }, headers);
