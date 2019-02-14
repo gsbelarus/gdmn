@@ -1,16 +1,19 @@
-import React from 'react';
 import { ERModel } from 'gdmn-orm';
-import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
+import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
+import React from 'react';
 import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 
 export interface IEntityMatchParams {
-  entityName: string;
+  entityName: string
 }
 
 export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  erModel?: ERModel;
+  erModel?: ERModel,
+  // deleteRecord: () => void,
+  // setDlgStateInsert: () => void,
+  // setDlgStateEdit: () => void
 }
 
 export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMatchParams> {
@@ -28,21 +31,54 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
     return this.props.match ? this.props.match.params.entityName : '';
   }
 
+  public componentDidMount() {
+    const { addToTabList, match } = this.props;
+
+    if (!match || !match.url) {
+      throw new Error(`Invalid view ${this.getViewCaption()}`);
+    }
+
+    addToTabList({
+      caption: this.getViewCaption(),
+      url: match.url,
+      rs: ['entities', 'attributes']
+    });
+  }
+
   public getCommandBarItems(): ICommandBarItemProps[] {
     const { data, match } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
-
     return [
       {
-        key: 'editEntityItem',
+        key: `addRecord${data!.rs.name}`,
+        text: 'Add',
+        iconProps: {
+          iconName: 'Add'
+        },
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/add` : `${match!.url}`),
+        // onClick: setDlgStateInsert
+      },
+      {
+        key: `editRecord${data!.rs.name}${data!.rs.currentRow}`,
         text: 'Edit',
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`)
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`),
+        // onClick: setDlgStateEdit
+      },
+      {
+        key: `deleteRecord${data!.rs.name}${data!.rs.currentRow}`,
+        text: 'Delete',
+        iconProps: {
+          iconName: 'Delete'
+        },
+        // onClick: deleteRecord
       }
     ];
+
   }
+
 }

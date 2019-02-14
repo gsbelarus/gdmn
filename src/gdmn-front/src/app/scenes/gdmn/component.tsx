@@ -19,7 +19,8 @@ import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import styles from './styles.css';
 import { IViewTab } from './types';
-import { TmpEditView } from '@src/app/scenes/ermodel/entityData/TmpEditView';
+import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
+import { IDlgState } from '../ermodel/DlgView/DlgView';
 
 type TGdmnViewStateProps = {
   erModel: ERModel;
@@ -156,13 +157,35 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 path={`${match.path}/entity/:entityName`}
                 render={props => (
                   <div style={{ margin: -16 }}>
-                    <EntityDataViewContainer {...props} />
+                    <EntityDataViewContainer
+                      {...props}
+                    />
                   </div>
                 )}
               />
               <Route
                 path={`${match.path}/entity/:entityName/edit/:currentRow`}
-                render={props => <TmpEditView {...props} addToTabList={addToTabList} viewTabs={viewTabs} />}
+                render={props => (
+                  <div style={{ margin: -16 }}>
+                    <DlgViewContainer {...props}
+                     addToTabList={addToTabList}
+                     viewTabs={viewTabs}
+                     dlgState={IDlgState.dsEdit}
+                    />
+                  </div>
+                )}
+              />
+              <Route
+                path={`${match.path}/entity/:entityName/add`}
+                render={props => (
+                  <div style={{ margin: -16 }}>
+                    <DlgViewContainer {...props}
+                     addToTabList={addToTabList}
+                     viewTabs={viewTabs}
+                     dlgState={IDlgState.dsInsert}
+                    />
+                  </div>
+                )}
               />
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

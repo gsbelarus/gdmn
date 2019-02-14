@@ -6,7 +6,7 @@ import { createGrid, GridAction } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
 import { TTaskActionNames } from '@gdmn/server-api';
 import { List } from 'immutable';
-import { TGdmnActions } from '../../gdmn/actions';
+import { TGdmnActions, gdmnActionsAsync } from '../../gdmn/actions';
 import { EntityDataView, IEntityDataViewProps } from './EntityDataView';
 import { bindDataViewDispatch } from '@src/app/components/bindDataViewDispatch';
 import { apiService } from '@src/app/services/apiService';
@@ -112,7 +112,10 @@ export const EntityDataViewContainer = connect(
             }
           });
       });
-    })
+    }),
+    // deleteRecord: () => thunkDispatch(gdmnActionsAsync.saveRecord()),
+    // setDlgStateInsert: () => thunkDispatch(gdmnActions.setDlgState(IDlgState.dsInsert)),
+    // setDlgStateEdit: () => thunkDispatch(gdmnActions.setDlgState(IDlgState.dsEdit))
   }),
 )(withRouter(EntityDataView));
 
