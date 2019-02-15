@@ -6,7 +6,8 @@ import { IMorphToken, isMorphToken } from './types';
 import { IToken } from 'chevrotain';
 import { RusNoun } from '../morphology/rusNoun';
 import { RusConjunction } from '../morphology/rusConjunction';
-import { RusNumeral } from '../morphology/rusNumeral';
+import { RusNumeral, RusNumeralLexemes } from '../morphology/rusNumeral';
+import { RusCase, RusGender } from '..';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -46,7 +47,52 @@ export function combinatorialMorph(text: string): IToken[][]
       }
       else if (t.tokenType === Comma) {
         p.push([t]);
-      }
+      } else if (t.tokenType === Numeric) {
+        const number = RusNumeralLexemes.filter(num => 
+          num.value === Number(t.image)).reduce((p, l) => {
+            Number(t.image) === 1 || Number(t.image) === 2
+            ? p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false}))
+            : p.push(l.getWordForm({c: RusCase.Accs, animate: true}));
+            return p;
+          }, [] as AnyWord[]);
+          if(number.length !== 0) {
+            p.push(number.map( w => createTokenInstance(w) ));
+          } else {
+            let tokenImage = Number(t.image);
+
+            if (String(tokenImage).length <= 3 && tokenImage > 0) {
+              analysisOneDigitNumber(tokenImage);
+            }
+
+            function analysisOneDigitNumber (digit: number) {
+              if(digit >= 100) {
+                findStringNumber(digit - (digit % 100));
+                digit = digit % 100;
+              }
+              if (digit !== 0) {
+                if (digit < 20 && digit > 0) {
+                  findStringNumber(digit);
+                } else {
+                  findStringNumber(digit - (digit % 10));
+                  if (digit % 10 > 0) {
+                    findStringNumber(digit % 10);
+                  }
+                }
+              }
+            }
+  
+            function findStringNumber(value: number) {
+              let findNumber = RusNumeralLexemes.filter(num => 
+                num.value === value).reduce((p, l) => {
+                  value === 1 || value === 2
+                  ? p.push(l.getWordForm({c: RusCase.Accs, gender: RusGender.Masc, animate: false}))
+                  : p.push(l.getWordForm({c: RusCase.Accs, animate: true}));
+                  return p;
+                }, [] as AnyWord[]);
+              p.push(findNumber.map( w => createTokenInstance(w) ));
+            }
+          }
+        }
       return p;
     },
     [] as IToken[][]);
