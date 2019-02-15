@@ -31,19 +31,6 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
     return this.props.match ? this.props.match.params.entityName : '';
   }
 
-  public componentDidMount() {
-    const { updateViewTab, match } = this.props;
-
-    if (!match || !match.url) {
-      throw new Error(`Invalid view ${this.getViewCaption()}`);
-    }
-
-    updateViewTab({
-      caption: this.getViewCaption(),
-      url: match.url
-    });
-  }
-
   public getCommandBarItems(): ICommandBarItemProps[] {
     const { data, match } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {

@@ -39,19 +39,6 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
     }
   }
 
-  public componentDidMount() {
-    const { updateViewTab, match } = this.props;
-
-    if (!match || !match.url) {
-      throw new Error(`Invalid view ${this.getViewCaption()}`);
-    }
-
-    updateViewTab({
-      caption: this.getViewCaption(),
-      url: match.url
-    });
-  }
-
   public getCommandBarItems(): ICommandBarItemProps[] {
     const { rs } = this.props;
     return [
