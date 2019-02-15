@@ -14,8 +14,6 @@ export interface IDlgViewProps extends IViewProps {
   rs: RecordSet<IDataRow>;
   erModel?: ERModel,
   dlgState: IDlgState,
-  // saveRecord: () => void;
-  // cancelRecord: () => void
 }
 
 export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> {
@@ -48,7 +46,6 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
         iconProps: {
           iconName: 'Save'
         },
-        // onClick: saveRecord
       },
       {
         key: `cancelRecord${rs.name}`,
@@ -56,7 +53,6 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
         iconProps: {
           iconName: 'Cancel'
         },
-        // onClick: cancelRecord
       }
     ];
 

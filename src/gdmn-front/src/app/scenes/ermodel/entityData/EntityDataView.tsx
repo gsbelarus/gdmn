@@ -1,5 +1,3 @@
-import { ERModel } from 'gdmn-orm';
-
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 import React from 'react';
@@ -9,12 +7,7 @@ export interface IEntityMatchParams {
   entityName: string
 }
 
-export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  erModel?: ERModel,
-  // deleteRecord: () => void,
-  // setDlgStateInsert: () => void,
-  // setDlgStateEdit: () => void
-}
+export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> { }
 
 export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMatchParams> {
   public getDataViewKey() {
@@ -44,7 +37,6 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
           iconName: 'Add'
         },
         commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/add` : `${match!.url}`),
-        // onClick: setDlgStateInsert
       },
       {
         key: `editRecord${data!.rs.name}${data!.rs.currentRow}`,
@@ -53,7 +45,6 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
           iconName: 'Edit'
         },
         commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`),
-        // onClick: setDlgStateEdit
       },
       {
         key: `deleteRecord${data!.rs.name}${data!.rs.currentRow}`,
@@ -61,10 +52,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
         iconProps: {
           iconName: 'Delete'
         },
-        // onClick: deleteRecord
       }
     ];
-
   }
-
 }

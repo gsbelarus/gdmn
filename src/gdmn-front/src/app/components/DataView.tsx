@@ -4,7 +4,6 @@ import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState, IGridState } from 'gdmn-grid';
 import { Semaphore } from 'gdmn-internals';
 import { getMutex, disposeMutex } from './dataViewMutexes';
-import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IRSAndGCS {
   rs: RecordSet;
