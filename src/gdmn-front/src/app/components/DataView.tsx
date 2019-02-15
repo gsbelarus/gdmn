@@ -1,9 +1,10 @@
 import React from 'react';
 import { IViewProps, View } from './View';
 import { RecordSet, SortFields } from 'gdmn-recordset';
-import { GDMNGrid, GridComponentState } from 'gdmn-grid';
+import { GDMNGrid, GridComponentState, IGridState } from 'gdmn-grid';
 import { Semaphore } from 'gdmn-internals';
 import { getMutex, disposeMutex } from './dataViewMutexes';
+import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -66,6 +67,44 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public componentWillUnmount() {
     disposeMutex(this.getDataViewKey());
+
+    const { updateViewTab, viewTab } = this.props;
+
+    if (viewTab) {
+      const savedState = Object.entries(this._gridRef).reduce(
+        (p, [name, g]) => {
+          if (g) {
+            return {...p, [name]: g.state}
+          } else {
+            return p;
+          }
+        }, {}
+      );
+
+      updateViewTab({...viewTab, savedState});
+    }
+  }
+
+  public getMasterSavedState() {
+    const { viewTab, data } = this.props;
+    const masterRS = data!.rs;
+
+    if (viewTab && viewTab.savedState && viewTab.savedState[masterRS.name]) {
+      return viewTab.savedState[masterRS.name] as IGridState;
+    }
+
+    return undefined;
+  }
+
+  public getDetailSavedState() {
+    const { viewTab, data } = this.props;
+    const detailRS = data!.detail![0].rs;
+
+    if (viewTab && viewTab.savedState && viewTab.savedState[detailRS.name]) {
+      return viewTab.savedState[detailRS.name] as IGridState;
+    }
+
+    return undefined;
   }
 
   public renderMD() {
@@ -107,6 +146,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
           onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[masterGridName])}
           onToggleGroup={(rowIdx: number) => onToggleGroup(masterRS, rowIdx)}
           ref={(grid: GDMNGrid) => grid && (this._gridRef[masterGridName] = grid)}
+          savedState={this.getMasterSavedState()}
         />
         <GDMNGrid
           {...data!.detail![0].gcs}
@@ -127,6 +167,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
           onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[detailGridName])}
           onToggleGroup={(rowIdx: number) => onToggleGroup(detailRS, rowIdx)}
           ref={(grid: GDMNGrid) => grid && (this._gridRef[detailGridName] = grid)}
+          savedState={this.getDetailSavedState()}
         />
       </div>
     );
@@ -169,6 +210,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
           onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[masterGridName])}
           onToggleGroup={(rowIdx: number) => onToggleGroup(masterRS, rowIdx)}
           ref={(grid: GDMNGrid) => grid && (this._gridRef[masterGridName] = grid)}
+          savedState={this.getMasterSavedState()}
         />
       </div>
     );

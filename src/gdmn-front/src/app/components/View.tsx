@@ -5,7 +5,7 @@ import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IViewProps<R = any> extends RouteComponentProps<R> {
   viewTab?: IViewTab;
-  addToTabList: (viewTab: IViewTab) => void;
+  updateViewTab: (viewTab: IViewTab) => void;
 }
 
 export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
@@ -42,13 +42,13 @@ export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P,
   public getCommandBarItems(): ICommandBarItemProps[] { return []; }
 
   public componentDidMount() {
-    const { addToTabList, match } = this.props;
+    const { updateViewTab, match } = this.props;
 
     if (!match || !match.url) {
       throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
-    addToTabList({
+    updateViewTab({
       caption: this.getViewCaption(),
       url: match.url
     });

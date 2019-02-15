@@ -40,13 +40,13 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
   }
 
   public componentDidMount() {
-    const { addToTabList, match } = this.props;
+    const { updateViewTab, match } = this.props;
 
     if (!match || !match.url) {
       throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
-    addToTabList({
+    updateViewTab({
       caption: this.getViewCaption(),
       url: match.url
     });

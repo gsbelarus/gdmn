@@ -51,7 +51,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
       apiDeleteAccount,
       loading,
       onError,
-      addToTabList,
+      updateViewTab,
       location,
       viewTabs
     } = this.props;
@@ -125,7 +125,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => (
                   <AccountView
                     apiDeleteAccount={apiDeleteAccount}
-                    addToTabList={addToTabList}
+                    updateViewTab={updateViewTab}
                     viewTab={viewTabs.find( vt => vt.url === props.match.url )}
                     {...props}
                   />
@@ -138,7 +138,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                     <StompDemoView
                       apiPing={apiPing}
                       erModel={erModel}
-                      addToTabList={addToTabList}
+                      updateViewTab={updateViewTab}
                       viewTab={viewTabs.find( vt => vt.url === props.match.url )}
                       {...props}
                       onError={onError}
@@ -172,7 +172,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => (
                   <div style={{ margin: -16 }}>
                     <DlgViewContainer {...props}
-                      addToTabList={addToTabList}
+                      updateViewTab={updateViewTab}
                       viewTab={viewTabs.find( vt => vt.url === props.match.url )}
                       dlgState={IDlgState.dsEdit}
                     />
@@ -184,7 +184,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => (
                   <div style={{ margin: -16 }}>
                     <DlgViewContainer {...props}
-                      addToTabList={addToTabList}
+                      updateViewTab={updateViewTab}
                       viewTab={viewTabs.find( vt => vt.url === props.match.url )}
                       dlgState={IDlgState.dsInsert}
                     />

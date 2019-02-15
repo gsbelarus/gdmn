@@ -32,13 +32,13 @@ export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMa
   }
 
   public componentDidMount() {
-    const { addToTabList, match } = this.props;
+    const { updateViewTab, match } = this.props;
 
     if (!match || !match.url) {
       throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
-    addToTabList({
+    updateViewTab({
       caption: this.getViewCaption(),
       url: match.url
     });
