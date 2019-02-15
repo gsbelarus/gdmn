@@ -2,7 +2,6 @@ import {Entity} from "../model/Entity";
 import {ERModel} from "../model/ERModel";
 import {EntityUpdateField, IEntityUpdateFieldInspector} from "./EntityUpdateField";
 
-
 export interface IEntityUpdateInspector {
   entity: string;
   fields: IEntityUpdateFieldInspector[];

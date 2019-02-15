@@ -27,6 +27,8 @@ describe("Insert", () => {
     const erModel = new ERModel();
     const connection = Factory.FBDriver.newConnection();
     let linkKey = 0;
+    let setAttributeTableName = '';
+    let ParentKey = 0;
 
     beforeAll(async () => {
         if (existsSync(dbOptions.path)) {
@@ -95,7 +97,9 @@ describe("Insert", () => {
                             lName: {}
                         }));
 
-                        await eBuilder.createAttribute(ChildEntity, setAttr);
+                      const setAttribute =   await eBuilder.createAttribute(ChildEntity, setAttr);
+                      const setAttr1 = setAttribute as SetAttribute;
+                      setAttributeTableName = setAttr1.adapter!.crossRelation;
 
                         await eBuilder.createAttribute(ChildEntity, new DetailAttribute({
                             name: "DETAIL_ENTITY",
@@ -107,15 +111,14 @@ describe("Insert", () => {
             }
         });
         const sql = "EXECUTE BLOCK\n" +
-            "RETURNS (ID int)\n" +
+            "RETURNS (ID int, ParentID int)\n" +
             "AS\n" +
             "DECLARE Key1Value int;\n" +
-            "DECLARE ParentID int;\n" +
             "BEGIN\n" +
             " INSERT INTO\n" +
             " MAIN_ENTITY\n" +
             "   DEFAULT VALUES\n" +
-            "   RETURNING id INTO :ParentID;\n" +
+            "   RETURNING ID INTO :ParentID;\n" +
             " INSERT INTO\n" +
             " CHILD_ENTITY\n" +
             "   (INHERITEDKEY)\n" +
@@ -124,12 +127,12 @@ describe("Insert", () => {
             "SUSPEND;\n" +
             "END";
 
-
         const result = await AConnection.executeTransaction({
             connection,
             callback: (transaction) => connection.executeReturning(transaction, sql)
         });
         linkKey = result.getNumber("ID");
+        ParentKey = result.getNumber("PARENTID");
     });
 
     afterAll(async () => {
@@ -212,7 +215,7 @@ describe("Insert", () => {
             fields: [
                 {
                     attribute: "LINK",
-                    value: linkKey
+                    value: ParentKey
                 },
                 {
                     attribute: "TEST_STRING2",
@@ -267,7 +270,7 @@ describe("Insert", () => {
                     attribute: "SET_LINK",
                     value: [
                         {
-                            value: linkKey,
+                            value: ParentKey,
                             setAttributes: [{attribute: "TOTAL", value: "111"}]
                         }
                     ]
@@ -288,7 +291,7 @@ describe("Insert", () => {
             "  VALUES(:ParentID)\n" +
             "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
             "\n" +
-            "  INSERT INTO TABLE_18(KEY1, KEY2, TOTAL)\n" +
+            `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
             "  VALUES(:Key1Value, :P$1, :P$2);\n" +
             "END");
         await AConnection.executeTransaction({
@@ -373,11 +376,11 @@ describe("Insert", () => {
                 },
                 {
                     attribute: "LINK",
-                    value: linkKey
+                    value: ParentKey
                 },
                 {
                     attribute: "SET_LINK",
-                    value: [linkKey]
+                    value: [ParentKey]
                 }
             ]
         }));
@@ -396,7 +399,7 @@ describe("Insert", () => {
             "  VALUES(:P$1, :P$2, :P$3, :ParentID)\n" +
             "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
             "\n" +
-            "  INSERT INTO TABLE_18(KEY1, KEY2)\n" +
+            `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2)\n` +
             "  VALUES(:Key1Value, :P$4);\n" +
             "END");
 

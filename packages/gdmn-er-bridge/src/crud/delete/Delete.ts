@@ -1,4 +1,5 @@
-import {Entity, EntityDelete, IRelation, ScalarAttribute} from "gdmn-orm";
+import {EntityDelete} from "gdmn-orm";
+import {Builder} from "../../ddl/builder/Builder";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsDelete {
@@ -17,41 +18,6 @@ export class Delete {
     this.sql = this._getDelete(this._query);
   }
 
-  private static _getMainRelationName(entity: Entity): IRelation {
-    return entity.adapter!.relation[0];
-  }
-
-  private static _getOwnRelationName(entity: Entity): string {
-    if (entity.adapter) {
-      const relations = entity.adapter.relation.filter((rel) => !rel.weak);
-      if (relations.length) {
-        return relations[relations.length - 1].relationName;
-      }
-    }
-    return entity.name;
-  }
-
-  private static _getPKFieldName(entity: Entity, relationName: string): string {
-
-    if (entity.adapter) {
-      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
-      if (relation && relation.pk && relation.pk.length) {
-        return relation.pk[0];
-      }
-    }
-    const mainRelationName = Delete._getOwnRelationName(entity);
-    if (mainRelationName === relationName) {
-      const pkAttr = entity.pk[0];
-      if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
-        return pkAttr.adapter.field;
-      }
-    }
-    if (entity.parent) {
-      return this._getPKFieldName(entity.parent, relationName);
-    }
-    throw new Error(`Primary key is not found for ${relationName} relation`);
-  }
-
   private _getDelete(query: EntityDelete): string {
     const {entity, pkValue} = query;
 
@@ -59,9 +25,9 @@ export class Delete {
 
     sql += `\n${this._makeFrom(query)}`;
 
-    const mainRelationName = Delete._getMainRelationName(entity);
+    const mainRelationName = Builder._getMainRelation(entity);
 
-    const PKFieldName = Delete._getPKFieldName(entity, mainRelationName.relationName);
+    const PKFieldName = Builder._getPKFieldName(entity, mainRelationName.relationName);
 
     sql += `\nWHERE ${PKFieldName} = ${this._addToParams(pkValue)}`;
 
@@ -70,7 +36,7 @@ export class Delete {
 
   private _makeFrom(query: EntityDelete): string {
     const {entity} = query;
-    return SQLTemplates.fromDelete(Delete._getMainRelationName(entity).relationName);
+    return SQLTemplates.fromDelete(Builder._getMainRelation(entity).relationName);
   }
 
   private _addToParams(value: any): string {

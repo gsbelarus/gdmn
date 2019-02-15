@@ -1,4 +1,5 @@
-import {Attribute, Entity, EntityAttribute, EnumAttribute, ScalarAttribute, SetAttribute} from "gdmn-orm";
+import {Attribute, Entity, EntityAttribute, EnumAttribute, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
+import {Constants} from "../Constants";
 import {DDLHelper} from "../DDLHelper";
 
 interface IATAttrOptions {
@@ -43,6 +44,34 @@ export abstract class Builder {
       if (attr.adapter) return attr.adapter.field;
     }
     return attr.name;
+  }
+
+  public static _getPKFieldName(entity: Entity, relationName: string): string {
+    if (entity.adapter) {
+      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
+      if (relation && relation.pk && relation.pk.length) {
+        return relation.pk[0];
+      }
+    }
+    const mainRelation = Builder._getMainRelation(entity);
+    if (mainRelation.relationName === relationName) {
+      const pkAttr = entity.pk[0];
+      if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
+        return pkAttr.adapter.field;
+      }
+    }
+    if (entity.parent) {
+      return Constants.DEFAULT_INHERITED_KEY_NAME;
+    }
+    throw new Error(`Primary key is not found for ${relationName} relation`);
+  }
+
+  public static _getMainRelation(entity: Entity): IRelation {
+    return entity.adapter!.relation[0];
+  }
+
+  public static _getMainCrossRelationName(attribute: Attribute): [] {
+    return attribute.adapter!.crossRelation;
   }
 
   protected async nextDDLUnique(): Promise<number> {

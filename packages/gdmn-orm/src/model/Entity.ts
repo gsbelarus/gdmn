@@ -36,6 +36,9 @@ export class Entity {
   }
 
   get pk(): Attribute[] {
+    if (this.parent) {
+      return [...this.parent.pk];
+    }
     return this._pk;
   }
 
@@ -136,26 +139,14 @@ export class Entity {
       throw new Error(`Attribute ${attribute.name} of entity ${this.name} already exists`);
     }
 
-    if (!this._pk.length) {
+    if (!this.pk.length) {
       this._pk.push(attribute);
     }
     return this._attributes[attribute.name] = attribute;
   }
 
-  public addMultiple<T extends Attribute>(attributes: T[]) {
-    const initPK = !this._pk.length;
-
-    attributes.forEach( attribute => {
-      if (this.hasOwnAttribute(attribute.name)) {
-        throw new Error(`Attribute ${attribute.name} of entity ${this.name} already exists`);
-      }
-
-      if (initPK) {
-        this._pk.push(attribute);
-      }
-
-      this._attributes[attribute.name] = attribute;
-    });
+  public addMultiple<T extends Attribute>(attributes: T[]): void {
+    attributes.forEach((attribute) => this.add(attribute));
   }
 
   public remove(attribute: Attribute): void {

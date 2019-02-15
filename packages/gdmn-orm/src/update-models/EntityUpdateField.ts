@@ -8,17 +8,17 @@ import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 
 export interface IEntityUpdateSetAttributesInspector {
   attribute: string;
-  value: any
+  value: any;
 }
 
 export interface IEntityUpdateSetAttributes {
   attribute: ScalarAttribute;
-  value: any
+  value: any;
 }
 
 export interface IEntityUpdateFieldInspector {
   attribute: string;
-  value: any
+  value: any;
   setAttributes?: IEntityUpdateSetAttributesInspector[];
 }
 

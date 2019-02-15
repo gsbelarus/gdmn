@@ -52,41 +52,6 @@ export class Select {
     return "";
   }
 
-  private static _getMainRelationName(entity: Entity): IRelation {
-    return entity.adapter!.relation[0];
-  }
-
-  private static _getOwnRelationName(entity: Entity): string {
-    if (entity.adapter) {
-      const relations = entity.adapter.relation.filter((rel) => !rel.weak);
-      if (relations.length) {
-        return relations[relations.length - 1].relationName;
-      }
-    }
-    return entity.name;
-  }
-
-  private static _getPKFieldName(entity: Entity, relationName: string): string {
-
-    if (entity.adapter) {
-      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
-      if (relation && relation.pk && relation.pk.length) {
-        return relation.pk[0];
-      }
-    }
-    const mainRelationName = Select._getOwnRelationName(entity);
-    if (mainRelationName === relationName) {
-      const pkAttr = entity.pk[0];
-      if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
-        return pkAttr.adapter.field;
-      }
-    }
-    if (entity.parent) {
-      return this._getPKFieldName(entity.parent, relationName);
-    }
-    throw new Error(`Primary key is not found for ${relationName} relation`);
-  }
-
   private _getSelect(query: EntityQuery, first?: boolean, withoutAlies?: boolean): string {
     const {options, link} = query;
 
@@ -123,14 +88,14 @@ export class Select {
     return sql;
   }
 
-  private _makeFields(link: EntityLink, withoutAlies?: boolean): string[] {
+  private _makeFields(link: EntityLink, withoutAlias?: boolean): string[] {
     const fields = link.fields
       .filter((field) => !field.link)
       .map((field) => {
         const attribute = field.attribute as ScalarAttribute;
         const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
         const fieldAlias = this._getFieldAlias(field);
-        return SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field, withoutAlies);
+        return SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field, withoutAlias);
       });
 
     const joinedFields = link.fields.reduce((items, field) => {
@@ -389,21 +354,20 @@ export class Select {
   private _makeFrom(query: EntityQuery, first?: boolean): string {
     const {link} = query;
 
-    const mainRelation = Select._getMainRelationName(link.entity);
+    const mainRelation = Builder._getMainRelation(link.entity);
     const from = link.entity.adapter!.relation.map((rel) => {
       if (rel.relationName == mainRelation.relationName) {
 
         if (!link.entity.isIntervalTree && link.entity.isTree && first) {
 
-          const virtualTree =  this._query.link.fields
+          const virtualTree = this._query.link.fields
             .filter((field) => field.attribute.type === "Parent")
             .map((field) => {
-            //if (field.attribute.type === "Parent") {
               const virtualQuery = this._makeVirtualQuery(query);
               const virtualQuery2 = this._makeSecondVirtualQuery(query, true);
               const virtualQuery3 = this._makeThirdVirtualQuery(query, false);
 
-              const mainRelation = Select._getMainRelationName(virtualQuery.link.entity);
+              const mainRelation = Builder._getMainRelation(virtualQuery.link.entity);
               const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
                 if (rel.relationName == mainRelation.relationName) {
@@ -416,13 +380,10 @@ export class Select {
                 }
               });
               return from.join("\n");
-           // }
-
-          //  return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
-          });
+            });
 
           if (virtualTree.length > 0) {
-            return virtualTree
+            return virtualTree;
           }
         }
         return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
@@ -430,9 +391,9 @@ export class Select {
         return SQLTemplates.join(
           rel.relationName,
           this._getTableAlias(link, rel.relationName),
-          Select._getPKFieldName(link.entity, rel.relationName),
+          Builder._getPKFieldName(link.entity, rel.relationName),
           this._getTableAlias(link, mainRelation.relationName),
-          Select._getPKFieldName(link.entity, mainRelation.relationName),
+          Builder._getPKFieldName(link.entity, mainRelation.relationName),
           rel.weak ? "LEFT" : ""
         );
       }
@@ -447,7 +408,7 @@ export class Select {
       existsRelations.push(link.entity.adapter!.relation[0]);
     }
     const firstRelationName = existsRelations[0].relationName;
-    const firstPKFieldName = Select._getPKFieldName(link.entity, firstRelationName);
+    const firstPKFieldName = Builder._getPKFieldName(link.entity, firstRelationName);
 
     return link.fields.reduce((joins, field) => {
       if (field.link) {
@@ -456,7 +417,7 @@ export class Select {
           linkExistsRelations.push(field.link.entity.adapter!.relation[0]);
         }
         const linkFirstRelationName = linkExistsRelations[0].relationName;
-        const linkFirstPKFieldName = Select._getPKFieldName(field.link.entity, linkFirstRelationName);
+        const linkFirstPKFieldName = Builder._getPKFieldName(field.link.entity, linkFirstRelationName);
 
         switch (field.attribute.type) {
           case "Parent": {
@@ -495,7 +456,7 @@ export class Select {
                 this._getTableAlias(link, attr.adapter!.crossRelation),
                 attr.adapter!.crossPk[0],
                 this._getTableAlias(link, firstRelationName),
-                Select._getPKFieldName(link.entity, firstRelationName),
+                Builder._getPKFieldName(link.entity, firstRelationName),
                 "LEFT"
               )
             );
@@ -539,7 +500,7 @@ export class Select {
               const virtualQuery2 = this._makeSecondVirtualQuery(forTreeQuery, true);
               const virtualQuery3 = this._makeThirdVirtualQuery(forTreeQuery, false);
 
-              const mainRelation = Select._getMainRelationName(virtualQuery.link.entity);
+              const mainRelation = Builder._getMainRelation(virtualQuery.link.entity);
               const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
                 if (rel.relationName == mainRelation.relationName) {
@@ -584,9 +545,9 @@ export class Select {
             relJoins.push(SQLTemplates.join(
               rel.relationName,
               this._getTableAlias(link, rel.relationName),
-              Select._getPKFieldName(field.link.entity, rel.relationName),
+              Builder._getPKFieldName(field.link.entity, rel.relationName),
               this._getTableAlias(link, linkFirstRelationName),
-              Select._getPKFieldName(field.link.entity, linkFirstRelationName),
+              Builder._getPKFieldName(field.link.entity, linkFirstRelationName),
               rel.weak ? "LEFT" : ""
             ));
           }

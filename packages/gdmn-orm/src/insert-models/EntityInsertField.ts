@@ -14,12 +14,12 @@ export interface IEntityInsertFieldInspector {
 
 export interface IEntityInsertSetAttributesInspector {
   attribute: string;
-  value: any
+  value: any;
 }
 
 export interface IEntityInsertSetAttributes {
   attribute: ScalarAttribute;
-  value: any
+  value: any;
 }
 
 export class EntityInsertField {

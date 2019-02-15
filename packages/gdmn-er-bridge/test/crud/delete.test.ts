@@ -22,7 +22,6 @@ const dbOptions: IConnectionOptions = {
 
 jest.setTimeout(60 * 1000);
 
-
 describe("Delete", () => {
 
   const erModel = new ERModel();

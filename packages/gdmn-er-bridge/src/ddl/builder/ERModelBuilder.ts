@@ -1,5 +1,6 @@
 import {
   appendAdapter,
+  Attribute,
   Entity,
   EntityAttribute,
   ERModel,
@@ -34,35 +35,40 @@ export class ERModelBuilder extends Builder {
 
     } else if (source instanceof Entity) {
       const entity = source;
+      let pkAttrs: Attribute[] = [];
       if (entity.parent) {
         if (!entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME)) {
-          entity.add(new EntityAttribute({
-            name: Constants.DEFAULT_INHERITED_KEY_NAME,
-            required: true,
-            lName: {ru: {name: "Родитель"}},
-            entities: [entity.parent],
+          pkAttrs.push(
+            entity.add(new EntityAttribute({
+              name: Constants.DEFAULT_INHERITED_KEY_NAME,
+              required: true,
+              lName: {ru: {name: "Родитель"}},
+              entities: [entity.parent],
+              adapter: {
+                relation: Builder._getOwnRelationName(entity),
+                field: Constants.DEFAULT_INHERITED_KEY_NAME
+              }
+            }))
+          );
+        }
+      } else {
+        if (!entity.hasOwnAttribute(Constants.DEFAULT_ID_NAME)) {
+          entity.add(new SequenceAttribute({
+            name: Constants.DEFAULT_ID_NAME,
+            lName: {ru: {name: "Идентификатор"}},
+            sequence: erModel.sequence(Constants.GLOBAL_GENERATOR),
             adapter: {
               relation: Builder._getOwnRelationName(entity),
-              field: Constants.DEFAULT_INHERITED_KEY_NAME
+              field: Constants.DEFAULT_ID_NAME
             }
           }));
+          pkAttrs = entity.pk;
         }
-
-      } else if (!entity.hasOwnAttribute(Constants.DEFAULT_ID_NAME)) {
-        entity.add(new SequenceAttribute({
-          name: Constants.DEFAULT_ID_NAME,
-          lName: {ru: {name: "Идентификатор"}},
-          sequence: erModel.sequence(Constants.GLOBAL_GENERATOR),
-          adapter: {
-            relation: Builder._getOwnRelationName(entity),
-            field: Constants.DEFAULT_ID_NAME
-          }
-        }));
       }
 
       const tableName = Builder._getOwnRelationName(entity);
       const fields: IFieldProps[] = [];
-      for (const pkAttr of entity.pk) {
+      for (const pkAttr of pkAttrs) {
         const fieldName = Builder._getFieldName(pkAttr);
         const domainName = Prefix.domain(await this.nextDDLUnique());
         await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
@@ -84,7 +90,7 @@ export class ERModelBuilder extends Builder {
         semCategory: entity.semCategories
       });
 
-      for (const pkAttr of entity.pk) {
+      for (const pkAttr of pkAttrs) {
         switch (pkAttr.type) {
           case "Sequence": {
             const _attr = pkAttr as SequenceAttribute;
@@ -104,7 +110,8 @@ export class ERModelBuilder extends Builder {
               fieldName
             }, {
               tableName: Builder._getOwnRelationName(_attr.entities[0]),
-              fieldName: Builder._getFieldName(_attr.entities[0].pk[0])
+              fieldName: Builder._getPKFieldName(_attr.entities[0], Builder._getOwnRelationName(_attr.entities[0]))
+              //fieldName: Builder._getFieldName(_attr.entities[0].pk[0])
             }, {
               onUpdate: "CASCADE",
               onDelete: "CASCADE"
@@ -113,14 +120,20 @@ export class ERModelBuilder extends Builder {
           }
         }
       }
-
-      for (const attr of Object.values(entity.ownAttributes)) {
-        if (!entity.pk.includes(attr)) {
+      const pk = [...entity.pk];
+      const attributes = Object.values(entity.ownAttributes);
+      attributes.forEach((attr) => entity.remove(attr));
+      for (const attr of attributes) {
+        if (pk.includes(attr) || pkAttrs.includes(attr)) {
+          entity.add(attr);
+        } else {
           await this.eBuilder.createAttribute(entity, attr);
         }
       }
 
-      for (const unique of entity.ownUnique) {
+      const uniques = entity.unique;
+      uniques.forEach((unq) => entity.removeUnique(unq));
+      for (const unique of uniques) {
         await this.eBuilder.addUnique(entity, unique);
       }
 

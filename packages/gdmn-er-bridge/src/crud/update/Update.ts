@@ -1,4 +1,5 @@
-import {Attribute, Entity, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
+import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
+import {Builder} from "../../ddl/builder/Builder";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsUpdate {
@@ -21,41 +22,6 @@ export class Update {
     this.params["ParentID"] = update.pkValue;
   }
 
-  private static _getOwnRelationName(entity: Entity): string {
-    if (entity.adapter) {
-      const relations = entity.adapter.relation.filter((rel) => !rel.weak);
-      if (relations.length) {
-        return relations[relations.length - 1].relationName;
-      }
-    }
-    return entity.name;
-  }
-
-  private static _getPKFieldName(entity: Entity, relationName: string): string {
-
-    if (entity.adapter) {
-      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
-      if (relation && relation.pk && relation.pk.length) {
-        return relation.pk[0];
-      }
-    }
-    const mainRelationName = Update._getOwnRelationName(entity);
-    if (mainRelationName === relationName) {
-      const pkAttr = entity.pk[0];
-      if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
-        return pkAttr.adapter.field;
-      }
-    }
-    if (entity.parent) {
-      return this._getPKFieldName(entity.parent, relationName);
-    }
-    throw new Error(`Primary key is not found for ${relationName} relation`);
-  }
-
-  private static _getMainCrossRelationName(attribute: Attribute): [] {
-    return attribute.adapter!.crossRelation;
-  }
-
   private static _getFirstSetAttr(fields: EntityUpdateField[]): EntityUpdateField | undefined {
     return fields.find((l) => l.attribute.type === "Set");
   }
@@ -63,8 +29,8 @@ export class Update {
   private _makeWhere(query: EntityUpdate, rel: IRelation): string {
     const {entity} = query;
 
-    const mainRelationName = Update._getOwnRelationName(entity);
-    const PKFieldName = Update._getPKFieldName(entity, rel.relationName);
+    const mainRelationName = Builder._getOwnRelationName(entity);
+    const PKFieldName = Builder._getPKFieldName(entity, rel.relationName);
     const lineBreak = mainRelationName === rel.relationName ? "\n" : "\n";
     return `\n  WHERE ${PKFieldName} = :ParentID;${lineBreak}`;
   }
@@ -103,7 +69,7 @@ export class Update {
 
   private _makeFrom(update: EntityUpdate, rel?: IRelation): string {
     const {entity} = update;
-    const ownRelation = Update._getOwnRelationName(entity);
+    const ownRelation = Builder._getOwnRelationName(entity);
 
     if (rel) {
       return SQLTemplates.fromUpdate(rel.relationName);
@@ -138,7 +104,7 @@ export class Update {
 
     const attribute = _getFirstSetAttr!.attribute as SetAttribute;
 
-    const MainCrossRelationName = Update._getMainCrossRelationName(attribute);
+    const MainCrossRelationName = Builder._getMainCrossRelationName(attribute);
 
     const values = _getFirstSetAttr!.value;
 

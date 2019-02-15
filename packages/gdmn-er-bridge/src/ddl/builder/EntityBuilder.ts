@@ -65,7 +65,7 @@ export class EntityBuilder extends Builder {
       switch (attribute.type) {
         case "Detail": {
           const dAttr = attribute as DetailAttribute;
-          const fieldName = Builder._getFieldName(entity.pk[0]);
+          const fieldName = Builder._getPKFieldName(entity, Builder._getOwnRelationName(entity));
           let detailTableName: string;
           let detailLinkFieldName: string;
           if (dAttr.adapter && dAttr.adapter.masterLinks.length) {
@@ -133,7 +133,7 @@ export class EntityBuilder extends Builder {
             fieldName
           }, {
             tableName: Builder._getOwnRelationName(pAttr.entities[0]),
-            fieldName: Builder._getFieldName(pAttr.entities[0].pk[0])
+            fieldName: Builder._getPKFieldName(pAttr.entities[0], Builder._getOwnRelationName(pAttr.entities[0]))
           }, {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"
@@ -160,7 +160,7 @@ export class EntityBuilder extends Builder {
             fieldName
           }, {
             tableName: Builder._getOwnRelationName(eAttr.entities[0]),
-            fieldName: Builder._getFieldName(eAttr.entities[0].pk[0])
+            fieldName:Builder._getPKFieldName(eAttr.entities[0], Builder._getOwnRelationName(eAttr.entities[0]))
           });
 
           if (!attribute.adapter) {
@@ -247,13 +247,16 @@ export class EntityBuilder extends Builder {
           });
 
           // add foreign keys for cross table
+          console.log(entity.pk[0])
+          console.log(entity)
+          console.log(Builder._getOwnRelationName(entity))
           const crossFKOwnConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKOwnConstName, {
             tableName: relationName,
             fieldName: ownPKName
           }, {
             tableName: Builder._getOwnRelationName(entity),
-            fieldName: Builder._getFieldName(entity.pk[0])
+            fieldName: Builder._getPKFieldName(entity, Builder._getOwnRelationName(entity))
           }, {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"
@@ -264,7 +267,7 @@ export class EntityBuilder extends Builder {
             fieldName: refPKName
           }, {
             tableName: Builder._getOwnRelationName(setAttr.entities[0]),
-            fieldName: Builder._getFieldName(setAttr.entities[0].pk[0])
+            fieldName: Builder._getPKFieldName(setAttr.entities[0], Builder._getOwnRelationName(setAttr.entities[0]))
           });
 
           if (!attribute.adapter) {
