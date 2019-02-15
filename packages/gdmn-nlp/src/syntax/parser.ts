@@ -158,12 +158,19 @@ export function tokenToWordOrCompositeNumerals(
     return word as RusNumeral;
   }
 
+  t.cn.reduce( (prev, curr) => {
+    if((prev[0] as RusNumeral).lexeme.value.toString().length <= (curr[0] as RusNumeral).lexeme.value.toString().length) {
+      throw new Error(`Invalid composite numerals structure`);
+    }
+    return curr;
+  })
+
   return t.cn.reduce(
     (prev, w) => {
       const found = w.find(
-        n => (n as RusNumeral).grammCase === (word as RusNumeral).grammCase || (n as RusNumeral).grammCase === RusCase.Gent
+        n => (n as RusNumeral).grammCase === (word as RusNumeral).grammCase
+          || (n as RusNumeral).grammCase === RusCase.Gent
       );
-
       if (found) {
         return [...prev, found as RusNumeral];
       }
