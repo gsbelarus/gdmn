@@ -247,9 +247,6 @@ export class EntityBuilder extends Builder {
           });
 
           // add foreign keys for cross table
-          console.log(entity.pk[0])
-          console.log(entity)
-          console.log(Builder._getOwnRelationName(entity))
           const crossFKOwnConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKOwnConstName, {
             tableName: relationName,

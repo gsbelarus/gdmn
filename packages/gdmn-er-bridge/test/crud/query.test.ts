@@ -224,7 +224,7 @@ describe("Query", () => {
     });
 
     afterAll(async () => {
-        // await connection.dropDatabase();
+        await connection.dropDatabase();
     });
 
     it("simple entity", async () => {
