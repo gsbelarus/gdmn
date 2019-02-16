@@ -4,6 +4,8 @@ import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState, IGridState } from 'gdmn-grid';
 import { Semaphore } from 'gdmn-internals';
 import { getMutex, disposeMutex } from './dataViewMutexes';
+import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
+import { LinkCommandBarButton } from './LinkCommandBarButton';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -82,6 +84,40 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
       updateViewTab({...viewTab, savedState});
     }
+  }
+
+  public getCommandBarItems(): ICommandBarItemProps[] {
+    const { data, match } = this.props;
+
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
+
+    return [
+      {
+        key: `add`,
+        text: 'Add',
+        iconProps: {
+          iconName: 'Add'
+        },
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/add` : `${match!.url}`),
+      },
+      {
+        key: `edit`,
+        text: 'Edit',
+        iconProps: {
+          iconName: 'Edit'
+        },
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`),
+      },
+      {
+        key: `delete`,
+        text: 'Delete',
+        iconProps: {
+          iconName: 'Delete'
+        },
+      }
+    ];
   }
 
   public getMasterSavedState() {

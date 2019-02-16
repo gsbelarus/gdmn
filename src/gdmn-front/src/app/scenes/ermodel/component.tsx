@@ -39,7 +39,7 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
 
-    return [
+    return [...super.getCommandBarItems(),
       {
         key: 'loadEntity',
         text: 'Load entity',

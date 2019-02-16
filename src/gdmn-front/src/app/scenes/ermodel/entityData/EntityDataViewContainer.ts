@@ -38,8 +38,6 @@ export const EntityDataViewContainer = connect(
 
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
 
-      //-//console.log('[GDMN] LOADING ' + entityName);
-
       const entity = erModel.entities[entityName];
 
       if (!entity) {
@@ -67,12 +65,8 @@ export const EntityDataViewContainer = connect(
           .subscribe( value => {
             try {
               if (value.error) {
-                //-//console.log(value.error.message);
+                console.log(value.error.message);
               } else if (value.payload.result) {
-                //-//console.log('QUERY response result: ', JSON.stringify(value.payload.result.data));
-                //-//console.log('QUERY response result: ', JSON.stringify(value.payload.result.aliases));
-                //-//console.log('QUERY response result: ', JSON.stringify(value.payload.result.info));
-
                 const fieldDefs = Object.entries(value.payload.result.aliases).map( ([fieldAlias, data]) => {
                   const attr = entity.attributes[data.attribute];
                   if (!attr) {
@@ -112,10 +106,7 @@ export const EntityDataViewContainer = connect(
             }
           });
       });
-    }),
-    // deleteRecord: () => thunkDispatch(gdmnActionsAsync.saveRecord()),
-    // setDlgStateInsert: () => thunkDispatch(gdmnActions.setDlgState(IDlgState.dsInsert)),
-    // setDlgStateEdit: () => thunkDispatch(gdmnActions.setDlgState(IDlgState.dsEdit))
+    })
   }),
 )(withRouter(EntityDataView));
 
