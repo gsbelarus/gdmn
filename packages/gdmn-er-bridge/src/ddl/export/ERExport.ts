@@ -1,4 +1,4 @@
-import {AConnection, ATransaction, DBStructure, FieldType, Relation, RelationField} from "gdmn-db";
+import {AConnection, ATransaction, DBSchema, FieldType, Relation, RelationField} from "gdmn-db";
 import {
   appendAdapter,
   Attribute,
@@ -63,17 +63,17 @@ export class ERExport {
 
   private readonly _connection: AConnection;
   private readonly _transaction: ATransaction;
-  private readonly _dbStructure: DBStructure;
+  private readonly _dbSchema: DBSchema;
   private readonly _erModel: ERModel;
   private readonly _gdEntities: GDEntities;
   private _atResult: IATLoadResult | undefined;
 
-  constructor(connection: AConnection, transaction: ATransaction, dbStructure: DBStructure, erModel: ERModel) {
+  constructor(connection: AConnection, transaction: ATransaction, dbSchema: DBSchema, erModel: ERModel) {
     this._connection = connection;
     this._transaction = transaction;
-    this._dbStructure = dbStructure;
+    this._dbSchema = dbSchema;
     this._erModel = erModel;
-    this._gdEntities = new GDEntities(this._connection, transaction, erModel, dbStructure);
+    this._gdEntities = new GDEntities(this._connection, transaction, dbSchema, erModel);
   }
 
   public async execute(): Promise<ERModel> {
@@ -105,13 +105,13 @@ export class ERExport {
 
   private _createEntities(): void {
     Object.entries(this._getATResult().atRelations).forEach(([atRelationName, atRelation]) => {
-      const relation = this._dbStructure.relations[atRelationName];
+      const relation = this._dbSchema.relations[atRelationName];
       if (!this._isCrossRelation(relation)) {
         const inheritedFk = Object.values(relation.foreignKeys)
           .find((fk) => fk.fields.includes(Constants.DEFAULT_INHERITED_KEY_NAME));
         let parent: Entity | undefined;
         if (inheritedFk) {
-          const refRelation = this._dbStructure.relationByUqConstraint(inheritedFk.constNameUq);
+          const refRelation = this._dbSchema.relationByUqConstraint(inheritedFk.constNameUq);
           const refEntities = this._findEntities(refRelation.name);
           parent = refEntities[0];
         }
@@ -160,7 +160,7 @@ export class ERExport {
   private _createAttributes(entity: Entity): void {
     const ownRelationName = Builder._getOwnRelationName(entity);
     entity.adapter!.relation.forEach(rel => {
-      const relation = this._dbStructure.relations[rel.relationName];
+      const relation = this._dbSchema.relations[rel.relationName];
       const atRelation = this._getATResult().atRelations[relation.name];
 
       if (!atRelation) {
@@ -220,7 +220,7 @@ export class ERExport {
     Object.entries(this._getATResult().atRelations).forEach(([atRelationName, atRelation]) => {
       Object.entries(atRelation.relationFields).forEach(([atRelationFieldName, atRelationField]) => {
         if (atRelationField.masterEntityName) {
-          const relation = this._dbStructure.relations[atRelationName];
+          const relation = this._dbSchema.relations[atRelationName];
           const relationField = relation.relationFields[atRelationFieldName];
           const detailEntityName = atRelation && atRelation.entityName ? atRelation.entityName : relation.name;
           const detailEntity = this._erModel.entity(detailEntityName);
@@ -228,7 +228,7 @@ export class ERExport {
 
           const name = atRelationField && atRelationField.attrName !== undefined ? atRelationField.attrName : relationField.name;
           const atField = this._getATResult().atFields[relationField.fieldSource];
-          const fieldSource = this._dbStructure.fields[relationField.fieldSource];
+          const fieldSource = this._dbSchema.fields[relationField.fieldSource];
           const required: boolean = relationField.notNull || fieldSource.notNull;
           const lName = atRelationField ? atRelationField.lName : (atField ? atField.lName : {});
           const detailAdapter = {
@@ -258,7 +258,7 @@ export class ERExport {
    * 5. Reference in this context is an Entity(s) a Set attribute contains objects of which type.
    */
   private _createSetAttributes(): void {
-    Object.entries(this._dbStructure.relations).forEach(([crossName, crossRelation]) => { // TODO correct ordering
+    Object.entries(this._dbSchema.relations).forEach(([crossName, crossRelation]) => { // TODO correct ordering
       if (this._isCrossRelation(crossRelation)) {
         const fkOwner = Object
           .values(crossRelation.foreignKeys)
@@ -272,7 +272,7 @@ export class ERExport {
 
         if (!fkReference) return;
 
-        const relOwner = this._dbStructure.relationByUqConstraint(fkOwner.constNameUq);
+        const relOwner = this._dbSchema.relationByUqConstraint(fkOwner.constNameUq);
         const atRelOwner = this._getATResult().atRelations[relOwner.name];
 
         if (!atRelOwner) return;
@@ -292,7 +292,7 @@ export class ERExport {
           return;
         }
 
-        const relReference = this._dbStructure.relationByUqConstraint(fkReference.constNameUq);
+        const relReference = this._dbSchema.relationByUqConstraint(fkReference.constNameUq);
 
         let cond: IEntitySelector[] | undefined;
         const atSetField = Object.entries(atRelOwner.relationFields).find(
@@ -310,7 +310,7 @@ export class ERExport {
         }
 
         const setField = atSetField ? relOwner.relationFields[atSetField[0]] : undefined;
-        const setFieldSource = setField ? this._dbStructure.fields[setField.fieldSource] : undefined;
+        const setFieldSource = setField ? this._dbSchema.fields[setField.fieldSource] : undefined;
         const atCrossRelation = this._getATResult().atRelations[crossName];
 
         entitiesOwner.forEach((entity) => {
@@ -363,7 +363,7 @@ export class ERExport {
     const atRelation = this._getATResult().atRelations[relation.name];
     const atRelationField = atRelation ? atRelation.relationFields[relationField.name] : undefined;
     const atField = this._getATResult().atFields[relationField.fieldSource];
-    const fieldSource = this._dbStructure.fields[relationField.fieldSource];
+    const fieldSource = this._dbSchema.fields[relationField.fieldSource];
 
     const name = atRelationField && atRelationField.attrName !== undefined ? atRelationField.attrName : relationField.name;
     const required: boolean = relationField.notNull || fieldSource.notNull;
@@ -463,7 +463,7 @@ export class ERExport {
         const fk = Object.values(relation.foreignKeys).find((fk) => fk.fields.includes(adapter.field));
 
         if (fk && fk.fields.length) {
-          const refRelationName = this._dbStructure.relationByUqConstraint(fk.constNameUq).name;
+          const refRelationName = this._dbSchema.relationByUqConstraint(fk.constNameUq).name;
           const cond = atField && atField.refCondition ? condition2Selectors(atField.refCondition) : undefined;
           const refEntities = this._findEntities(refRelationName, cond);
 

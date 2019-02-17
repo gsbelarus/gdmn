@@ -1,4 +1,4 @@
-import {IRDB$RELATIONCONSTRAINT, IRDB$RELATIONFIELD} from "./DBStructure";
+import {IRDB$RELATIONCONSTRAINT, IRDB$RELATIONFIELD} from "./DBSchema";
 import {FKConstraint} from "./FKConstraint";
 import {RelationConstraint} from "./RelationConstraint";
 import {RelationField} from "./RelationField";

@@ -428,9 +428,7 @@ export class Application extends ADatabase {
   }
 
   private async _readERModel(): Promise<ERModel> {
-    return await this._executeConnection(async (connection) => {
-      await ERBridge.initDatabase(connection);
-      return await ERBridge.reloadERModel(connection, connection.readTransaction, new ERModel());
-    });
+    await this._executeConnection(async (connection) => ERBridge.initDatabase(connection));
+    return await ERBridge.reloadERModel(this.connectionPool, new ERModel());
   }
 }

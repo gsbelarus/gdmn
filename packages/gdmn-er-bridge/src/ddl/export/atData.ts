@@ -15,12 +15,12 @@ import {ILName, ITName} from "gdmn-orm";
  */
 export interface IATField {
   lName: ILName;
-  refTable: string | undefined;
-  refCondition: string | undefined;
-  setTable: string | undefined;
-  setListField: string | undefined;
-  setCondition: string | undefined;
-  numeration: string | undefined;
+  refTable?: string;
+  refCondition?: string;
+  setTable?: string;
+  setListField?: string;
+  setCondition?: string;
+  numeration?: string;
 }
 
 export interface IATFields {
@@ -31,14 +31,14 @@ export interface IATFields {
  * Дополнительная информация по полям таблиц.
  */
 export interface IATRelationField {
-  attrName: string | undefined;
-  masterEntityName: string | undefined;
+  attrName?: string;
+  masterEntityName?: string;
   lName: ILName;
   fieldSource: string;
   fieldSourceKey: number;
-  crossTable: string | undefined;
-  crossTableKey: number | undefined;
-  crossField: string | undefined;
+  crossTable?: string;
+  crossTableKey?: number;
+  crossField?: string;
   semCategories: SemCategory[];
 }
 
@@ -51,7 +51,7 @@ export interface IATRelationFields {
  */
 export interface IATRelation {
   lName: ILName;
-  entityName: string | undefined;
+  entityName?: string;
   semCategories: SemCategory[];
   relationFields: IATRelationFields;
 }

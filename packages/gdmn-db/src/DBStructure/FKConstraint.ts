@@ -1,4 +1,4 @@
-import {DeleteRule, UpdateRule} from "./DBStructure";
+import {DeleteRule, UpdateRule} from "./DBSchema";
 import {RelationConstraint} from "./RelationConstraint";
 
 export class FKConstraint extends RelationConstraint {

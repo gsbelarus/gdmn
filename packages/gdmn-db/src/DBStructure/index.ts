@@ -1,4 +1,4 @@
-export * from "./DBStructure";
+export * from "./DBSchema";
 export * from "./Field";
 export * from "./FKConstraint";
 export * from "./RelationConstraint";

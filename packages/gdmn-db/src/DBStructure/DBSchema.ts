@@ -62,7 +62,7 @@ export interface IRelations {
 }
 
 /**
- * Объект DBStructure хранит информацию о структуре реляционной базы данных,
+ * Объект DBSchema хранит информацию о структуре реляционной базы данных,
  * а также позволяет выполнять операции над ее метаданными.
  *
  * Объект не обращается к базе напрямую.
@@ -89,7 +89,7 @@ export interface IRelations {
  *    (Внимание! нельзя использовать агрегатную функцию LIST, так как она не
  *    сохраняет правильный порядок полей)
  */
-export class DBStructure {
+export class DBSchema {
 
     private _fields: IFields = {};
     private _relations: IRelations = {};

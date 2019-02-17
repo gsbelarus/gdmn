@@ -1,4 +1,4 @@
-import {IRDB$RELATIONCONSTRAINT} from "./DBStructure";
+import {IRDB$RELATIONCONSTRAINT} from "./DBSchema";
 
 export class RelationConstraint {
 

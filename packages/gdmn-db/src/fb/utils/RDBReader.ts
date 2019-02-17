@@ -1,35 +1,12 @@
-import {AConnection} from "../AConnection";
-import {ATransaction} from "../ATransaction";
-import {DBStructure, IRDB$FIELD, IRDB$RELATIONCONSTRAINT, IRDB$RELATIONFIELD, NullFlag} from "../DBStructure";
-import {ConstraintType, DeleteRule, UpdateRule} from "../DBStructure/DBStructure";
-import {Connection} from "./Connection";
-import {Transaction} from "./Transaction";
+import {AConnection} from "../../AConnection";
+import {AConnectionPool} from "../../AConnectionPool";
+import {ATransaction} from "../../ATransaction";
+import {IRDB$FIELD, IRDB$RELATIONCONSTRAINT, IRDB$RELATIONFIELD, NullFlag} from "../../DBStructure";
+import {ConstraintType, DeleteRule, UpdateRule} from "../../DBStructure/DBSchema";
 
-export class DBStructureReader {
+export class RDBReader {
 
-    public static async readStructure(connection: Connection,
-                                      transaction?: Transaction): Promise<DBStructure> {
-        if (transaction) {
-            return await DBStructureReader.read(connection, transaction);
-        }
-
-        return await AConnection.executeTransaction({
-            connection,
-            callback: (newTransaction) => DBStructureReader.read(connection, newTransaction)
-        });
-    }
-
-    private static async read(connection: AConnection, transaction: ATransaction): Promise<DBStructure> {
-        const fields = await DBStructureReader.readFields(connection, transaction);
-        const relationFields = await DBStructureReader.readRelationFields(connection, transaction);
-        const constraints = await DBStructureReader.readConstraints(connection, transaction);
-
-        const dbStructure = new DBStructure();
-        dbStructure.load(fields, relationFields, constraints);
-        return dbStructure;
-    }
-
-    private static async readFields(connection: AConnection, transaction: ATransaction): Promise<IRDB$FIELD[]> {
+    public static async readFields(connection: AConnection, transaction: ATransaction): Promise<IRDB$FIELD[]> {
         return await AConnection.executeQueryResultSet({
             connection,
             transaction,
@@ -72,7 +49,8 @@ export class DBStructureReader {
         });
     }
 
-    private static async readRelationFields(connection: AConnection, transaction: ATransaction): Promise<IRDB$RELATIONFIELD[]> {
+    public static async readRelationFields(connection: AConnection,
+                                           transaction: ATransaction): Promise<IRDB$RELATIONFIELD[]> {
         return await AConnection.executeQueryResultSet({
             connection,
             transaction,
@@ -106,7 +84,8 @@ export class DBStructureReader {
         });
     }
 
-    private static async readConstraints(connection: AConnection, transaction: ATransaction): Promise<IRDB$RELATIONCONSTRAINT[]> {
+    public static async readConstraints(connection: AConnection,
+                                        transaction: ATransaction): Promise<IRDB$RELATIONCONSTRAINT[]> {
         return await AConnection.executeQueryResultSet({
             connection,
             transaction,
@@ -142,5 +121,43 @@ export class DBStructureReader {
                 return array;
             }
         });
+    }
+
+    public static async readByConnection(
+        connection: AConnection,
+        transaction: ATransaction
+    ): Promise<[IRDB$FIELD[], IRDB$RELATIONFIELD[], IRDB$RELATIONCONSTRAINT[]]> {
+        const promises: [Promise<IRDB$FIELD[]>, Promise<IRDB$RELATIONFIELD[]>, Promise<IRDB$RELATIONCONSTRAINT[]>] = [
+            RDBReader.readFields(connection, transaction),
+            RDBReader.readRelationFields(connection, transaction),
+            RDBReader.readConstraints(connection, transaction)
+        ];
+
+        return await Promise.all(promises);
+    }
+
+    public static async readConnectionPool(
+        connectionPool: AConnectionPool<any>
+    ): Promise<[IRDB$FIELD[], IRDB$RELATIONFIELD[], IRDB$RELATIONCONSTRAINT[]]> {
+        const promises: [
+            Promise<IRDB$FIELD[]>,
+            Promise<IRDB$RELATIONFIELD[]>,
+            Promise<IRDB$RELATIONCONSTRAINT[]>
+            ] = [
+            (async () => await AConnectionPool.executeConnection({
+                connectionPool,
+                callback: (connection) => RDBReader.readFields(connection, connection.readTransaction)
+            }))(),
+            (async () => AConnectionPool.executeConnection({
+                connectionPool,
+                callback: (connection) => RDBReader.readRelationFields(connection, connection.readTransaction)
+            }))(),
+            (async () => AConnectionPool.executeConnection({
+                connectionPool,
+                callback: (connection) => RDBReader.readConstraints(connection, connection.readTransaction)
+            }))()
+        ];
+
+        return await Promise.all(promises);
     }
 }

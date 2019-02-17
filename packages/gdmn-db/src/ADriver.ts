@@ -3,14 +3,17 @@ import {AConnectionPool} from "./AConnectionPool";
 import {AService} from "./AService";
 import {ATransaction} from "./ATransaction";
 import {CommonConnectionPool, ICommonConnectionPoolOptions} from "./common/connectionPool/CommonConnectionPool";
-import {DBStructure} from "./DBStructure";
+import {DBSchema} from "./DBStructure";
 
 export abstract class ADriver<PoolOptions = any> {
 
     public readonly abstract name: string;
 
-    /** Reade database structure as DBStructure object */
-    public async readDBStructure(connection: AConnection, transaction?: ATransaction): Promise<DBStructure> {
+    /** Reade database schema as DBSchema object */
+    public async readDBSchema(connectionPool: AConnectionPool<PoolOptions>): Promise<DBSchema>;
+    public async readDBSchema(connection: AConnection, transaction?: ATransaction): Promise<DBSchema>;
+    public async readDBSchema(source: AConnectionPool<PoolOptions> | AConnection,
+                              transaction?: ATransaction): Promise<DBSchema> {
         throw new Error("Unsupported yet");
     }
 

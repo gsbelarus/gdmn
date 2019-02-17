@@ -1,4 +1,4 @@
-import {AConnection, ATransaction, DBStructure, Factory, IBaseExecuteOptions} from "gdmn-db";
+import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions} from "gdmn-db";
 import {EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse} from "gdmn-orm";
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
@@ -62,15 +62,45 @@ export class ERBridge {
     await new DBSchemaUpdater(connection).run();
   }
 
+  public static async reloadERModel(connectionPool: AConnectionPool<any>, erModel: ERModel): Promise<ERModel>;
   public static async reloadERModel(connection: AConnection,
                                     transaction: ATransaction,
-                                    erModel: ERModel,
-                                    dbStructure?: DBStructure): Promise<ERModel> {
-    if (!dbStructure) {
-      dbStructure = await Factory.FBDriver.readDBStructure(connection, transaction);
+                                    erModel: ERModel): Promise<ERModel>;
+  public static async reloadERModel(param1: AConnection | AConnectionPool<any>,
+                                    param2: ATransaction | ERModel,
+                                    param3?: ERModel): Promise<ERModel> {
+    if (param1 instanceof AConnection &&
+      param2 instanceof ATransaction &&
+      param3 instanceof ERModel) {
+      param3.clear();
+
+      const dbSchema = await Factory.FBDriver.readDBSchema(param1, param2);
+      return await new ERExport(param1, param2, dbSchema, param3).execute();
+
     }
-    erModel.clear();
-    return await new ERExport(connection, transaction, dbStructure, erModel).execute();
+    if (param1 instanceof AConnectionPool &&
+      param2 instanceof ERModel) {
+      param2.clear();
+
+      const dbSchema = await Factory.FBDriver.readDBSchema(param1);
+      return await AConnectionPool.executeConnection({
+        connectionPool: param1,
+        callback: async (connection) => {
+          try {
+            return await new ERExport(connection, connection.readTransaction, dbSchema, param2).execute();
+          } catch (error) {
+            return await AConnection.executeTransaction({
+              connection,
+              options: {accessMode: AccessMode.READ_ONLY},
+              callback: async (transaction) => {
+                return await new ERExport(connection, transaction, dbSchema, param2).execute();
+              }
+            });
+          }
+        }
+      });
+    }
+    throw new Error("Incorrect arguments");
   }
 
   public static async openQueryCursor(connection: AConnection,

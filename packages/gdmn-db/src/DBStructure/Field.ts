@@ -1,4 +1,4 @@
-import {FieldType} from "./DBStructure";
+import {FieldType} from "./DBSchema";
 
 export class Field {
 

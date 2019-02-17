@@ -1,4 +1,4 @@
-import {AConnection, ATransaction, DBStructure, Relation} from "gdmn-db";
+import {AConnection, ATransaction, DBSchema, Relation} from "gdmn-db";
 import {SemCategory} from "gdmn-nlp";
 import {
   adjustName,
@@ -48,24 +48,24 @@ export class GDEntities {
 
   private readonly _connection: AConnection;
   private readonly _transaction: ATransaction;
+  private readonly _dbSchema: DBSchema;
   private readonly _erModel: ERModel;
-  private readonly _dbStructure: DBStructure;
 
   private _atResult: IATLoadResult | undefined;
   private _documentClasses: { [ruid: string]: { header: Entity, line?: Entity } } = {};
   private _documentABC: { [name: string]: Entity } = {};
 
-  constructor(connection: AConnection, transaction: ATransaction, erModel: ERModel, dbStructure: DBStructure) {
+  constructor(connection: AConnection, transaction: ATransaction, dbSchema: DBSchema, erModel: ERModel) {
     this._connection = connection;
     this._transaction = transaction;
+    this._dbSchema = dbSchema;
     this._erModel = erModel;
-    this._dbStructure = dbStructure;
   }
 
   public async create(atResult: IATLoadResult): Promise<void> {
     this._atResult = atResult;
 
-    if (this._dbStructure.findRelation((rel) => rel.name === "GD_CONTACT")) {
+    if (this._dbSchema.findRelation((rel) => rel.name === "GD_CONTACT")) {
 
       /**
        * Папка из справочника контактов.
@@ -401,7 +401,7 @@ export class GDEntities {
       );
 
       gedeminTables.forEach((t) => {
-        if (this._dbStructure.findRelation((rel) => rel.name === t)) {
+        if (this._dbSchema.findRelation((rel) => rel.name === t)) {
           this._createEntity({
             name: t,
             adapter: relationName2Adapter(t)
@@ -441,7 +441,7 @@ export class GDEntities {
 
       await loadDocument(this._connection, this._transaction, this._createDocument.bind(this));
 
-      this._dbStructure.forEachRelation((r) => {
+      this._dbSchema.forEachRelation((r) => {
         if (r.primaryKey!.fields.join() === Constants.DEFAULT_ID_NAME && /^USR\$.+$/.test(r.name)
           && !Object.entries(r.foreignKeys).find(fk => fk[1].fields.join() === Constants.DEFAULT_ID_NAME)) {
           if (GDEntities.ABSTRACT_BASE_RELATIONS[r.name]) {
@@ -516,7 +516,7 @@ export class GDEntities {
           link2masterField: Constants.DEFAULT_PARENT_KEY_NAME
         }
       ];
-      if (this._dbStructure.relations[setLR] && this._dbStructure.relations[setLR].relationFields[Constants.DEFAULT_MASTER_KEY_NAME]) {
+      if (this._dbSchema.relations[setLR] && this._dbSchema.relations[setLR].relationFields[Constants.DEFAULT_MASTER_KEY_NAME]) {
         masterLinks.push({
           detailRelation: setLR,
           link2masterField: Constants.DEFAULT_MASTER_KEY_NAME
@@ -529,10 +529,10 @@ export class GDEntities {
   }
 
   private _recursInherited(parentRelation: Relation[], parentEntity?: Entity): void {
-    this._dbStructure.forEachRelation((inherited) => {
+    this._dbSchema.forEachRelation((inherited) => {
       if (Object.entries(inherited.foreignKeys).find(
         ([, f]) => f.fields.join() === inherited.primaryKey!.fields.join()
-          && this._dbStructure.relationByUqConstraint(f.constNameUq) === parentRelation[parentRelation.length - 1])) {
+          && this._dbSchema.relationByUqConstraint(f.constNameUq) === parentRelation[parentRelation.length - 1])) {
         const newParent = [...parentRelation, inherited];
         const parentAdapter = parentEntity
           ? parentEntity.adapter!
