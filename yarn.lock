@@ -1859,9 +1859,9 @@
   integrity sha512-jRgAsH//g6BHS/cINR90HE2GJWGZe5tLYilxFMY1zTns4BvQ8DUXMQg5333HVSGoj7bjkDLK/whrgfzdAattHg==
 
 "@types/react-dom@^16":
-  version "16.8.1"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-16.8.1.tgz#e43810a5e44b37854a9c7cd99e6c43e4f522c7c6"
-  integrity sha512-Vyo4LqUvpjNC9RMXV6kXcsvW6U/WKOuHbz+mtY43Fu8AslHjQ5/Yx+sj0agGLkbnqOlQgyIgosewcxdjMirVXA==
+  version "16.8.2"
+  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-16.8.2.tgz#9bd7d33f908b243ff0692846ef36c81d4941ad12"
+  integrity sha512-MX7n1wq3G/De15RGAAqnmidzhr2Y9O/ClxPxyqaNg96pGyeXUYPSvujgzEVpLo9oIP4Wn1UETl+rxTN02KEpBw==
   dependencies:
     "@types/react" "*"
 
@@ -2038,15 +2038,25 @@
     "@types/node" "*"
 
 "@uifabric/fluent-theme@^0":
-  version "0.14.0"
-  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-0.14.0.tgz#713cc3d5b96906b784b2df1e184ba5862682e74a"
-  integrity sha512-Gzc9EOcPMuMr4SyNIm2d6xvX+uiRxUzxgREfArpivot1tRHYMTVTIhIK7m7lsF0gGlnIBVdmWEweiVXUaQlQsg==
+  version "0.14.1"
+  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-0.14.1.tgz#fc64d1486582d0b4b5944c6525d57062314831b6"
+  integrity sha512-HQZxnpcSMejMES2uuw4iFgjVAFWbjatxuYEho0sb7NXWEeCO9JME2MKJJ1XWM4/G4tul8sKByMX4NoDss4OSPA==
   dependencies:
     "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
     "@uifabric/styling" ">=6.41.0 <7.0.0"
     "@uifabric/variants" ">=6.14.0 <7.0.0"
-    office-ui-fabric-react ">=6.138.0 <7.0.0"
+    office-ui-fabric-react ">=6.139.1 <7.0.0"
+    tslib "^1.7.1"
+
+"@uifabric/foundation@>=0.7.1 <1.0.0":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@uifabric/foundation/-/foundation-0.7.1.tgz#aad00e9985d3d4e82dfe7362471c1722541e1b93"
+  integrity sha512-YrdaJXAe4x7whaj7/x1fhFsBGao0vAec6mVIAYCvC09AK+puEYDahIloVWA6vLTRlWzzOZWsvN3S3Z1tzfhIRw==
+  dependencies:
+    "@uifabric/set-version" ">=1.1.3 <2.0.0"
+    "@uifabric/styling" ">=6.41.0 <7.0.0"
+    "@uifabric/utilities" ">=6.29.0 <7.0.0"
     tslib "^1.7.1"
 
 "@uifabric/icons@>=6.3.0 <7.0.0":
@@ -10088,17 +10098,18 @@ octokit-pagination-methods@^1.1.0:
   resolved "https://registry.yarnpkg.com/octokit-pagination-methods/-/octokit-pagination-methods-1.1.0.tgz#cf472edc9d551055f9ef73f6e42b4dbb4c80bea4"
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
-"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.138.0 <7.0.0":
-  version "6.138.1"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.138.1.tgz#f69db67b8b4219d367fe9ce56e57681790bf1dc1"
-  integrity sha512-O+j7QKLfRiTKwVS6L7JGnVR7U7L+ceHXBWhruk5VJP5DYPfRAHByTv7YXKONtuzwcAnP4TgNaG6hf/B1MHLwpw==
+"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.139.1 <7.0.0":
+  version "6.140.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.140.0.tgz#00e6602e64e117b5dff3759aa84eea2845dd9d65"
+  integrity sha512-fYW9LnB+JYCCHC56gtA1T6wIj3owElLaiYwlJuRmve7MU/1u73cxCLhKfBojXcD9cK+aIsjYMN/IJCJga119Zg==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/foundation" ">=0.7.1 <1.0.0"
     "@uifabric/icons" ">=6.3.0 <7.0.0"
     "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
     "@uifabric/styling" ">=6.41.0 <7.0.0"
-    "@uifabric/utilities" ">=6.29.0 <7.0.0"
+    "@uifabric/utilities" ">=6.29.1 <7.0.0"
     prop-types "^15.5.10"
     tslib "^1.7.1"
 
@@ -14781,7 +14792,14 @@ ws@^5.2.0:
   dependencies:
     async-limiter "~1.0.0"
 
-ws@^6, ws@^6.0.0:
+ws@^6:
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-6.1.4.tgz#5b5c8800afab925e94ccb29d153c8d02c1776ef9"
+  integrity sha512-eqZfL+NE/YQc1/ZynhojeV8q+H050oR8AZ2uIev7RU10svA9ZnJUddHcOUZTJLinZ9yEfdA2kSATS2qZK5fhJA==
+  dependencies:
+    async-limiter "~1.0.0"
+
+ws@^6.0.0:
   version "6.1.3"
   resolved "https://registry.yarnpkg.com/ws/-/ws-6.1.3.tgz#d2d2e5f0e3c700ef2de89080ebc0ac6e1bf3a72d"
   integrity sha512-tbSxiT+qJI223AP4iLfQbkbxkwdFcneYinM2+x46Gx2wgvbaOMO36czfdfVUBRTHvzAMRhDd98sA5d/BuWbQdg==
