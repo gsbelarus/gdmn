@@ -20,7 +20,7 @@ export class Driver extends ADriver {
         let result;
         if (source instanceof AConnection) {
             if (transaction) {
-                result = await RDBReader.readByConnection(source, source.readTransaction);
+                result = await RDBReader.readByConnection(source, transaction);
             } else {
                 try {
                     result = await RDBReader.readByConnection(source, source.readTransaction);
