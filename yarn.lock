@@ -2038,15 +2038,15 @@
     "@types/node" "*"
 
 "@uifabric/fluent-theme@^0":
-  version "0.14.1"
-  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-0.14.1.tgz#fc64d1486582d0b4b5944c6525d57062314831b6"
-  integrity sha512-HQZxnpcSMejMES2uuw4iFgjVAFWbjatxuYEho0sb7NXWEeCO9JME2MKJJ1XWM4/G4tul8sKByMX4NoDss4OSPA==
+  version "0.14.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-0.14.2.tgz#e16ea7eaab2a2c5ff4765df18f3efc22bb8abd6c"
+  integrity sha512-56jp/hL5ToDMvHuEETkFgxacdyDFEspgPZTJ82unGIVeg1oIjpZNvPE9cl3vktSyIjEWabwkgi/OpbYSuNMqoQ==
   dependencies:
     "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
     "@uifabric/styling" ">=6.41.0 <7.0.0"
     "@uifabric/variants" ">=6.14.0 <7.0.0"
-    office-ui-fabric-react ">=6.139.1 <7.0.0"
+    office-ui-fabric-react ">=6.141.0 <7.0.0"
     tslib "^1.7.1"
 
 "@uifabric/foundation@>=0.7.1 <1.0.0":
@@ -2059,13 +2059,13 @@
     "@uifabric/utilities" ">=6.29.0 <7.0.0"
     tslib "^1.7.1"
 
-"@uifabric/icons@>=6.3.0 <7.0.0":
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/@uifabric/icons/-/icons-6.3.0.tgz#746ab60e24912cfb019edb7db8c38be3f4421778"
-  integrity sha512-jMCa/liL7YCvu0xJRudQsU3oR1O7NuCwkFe392y4ZEXFlTsPpe1LeE4iZr6UbhJLHiEWKw5Uep8pMCuAcCXQdg==
+"@uifabric/icons@>=6.4.0 <7.0.0":
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/icons/-/icons-6.4.0.tgz#ede79049bebef5f3c44c8d0ec4f460745da324b0"
+  integrity sha512-pbKu3OnWaRIeDqMFhicDrrcqicxNqoHpJpknZR9N2xxoPnYMnt2ZOhBNnAxoVVcxHlWkFNg0rvFrOAQGn+S5/Q==
   dependencies:
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
-    "@uifabric/styling" ">=6.35.0 <7.0.0"
+    "@uifabric/styling" ">=6.41.0 <7.0.0"
     tslib "^1.7.1"
 
 "@uifabric/merge-styles@>=6.15.0 <7.0.0", "@uifabric/merge-styles@>=6.15.2 <7.0.0":
@@ -2083,7 +2083,7 @@
   dependencies:
     tslib "^1.7.1"
 
-"@uifabric/styling@>=6.35.0 <7.0.0", "@uifabric/styling@>=6.41.0 <7.0.0":
+"@uifabric/styling@>=6.41.0 <7.0.0":
   version "6.41.0"
   resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-6.41.0.tgz#e5b2bf0ab37dad6fd2dfe2a86667b38891f1e35e"
   integrity sha512-BDYpErXhMFEeQ3Unqyh+euRsjllqIHsGPOJQv7VB8lsAEUUoWkWp3l9HMZbphLaxcS56mOoI0Ouxik3aWGyjeg==
@@ -10107,28 +10107,14 @@ octokit-pagination-methods@^1.1.0:
   resolved "https://registry.yarnpkg.com/octokit-pagination-methods/-/octokit-pagination-methods-1.1.0.tgz#cf472edc9d551055f9ef73f6e42b4dbb4c80bea4"
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
-"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.139.1 <7.0.0":
-  version "6.140.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.140.0.tgz#00e6602e64e117b5dff3759aa84eea2845dd9d65"
-  integrity sha512-fYW9LnB+JYCCHC56gtA1T6wIj3owElLaiYwlJuRmve7MU/1u73cxCLhKfBojXcD9cK+aIsjYMN/IJCJga119Zg==
+"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.141.0 <7.0.0", office-ui-fabric-react@^6:
+  version "6.141.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.141.0.tgz#7846d9efdac3d3641bc7f74b3f1d5ca3bc85870e"
+  integrity sha512-IDt/d2CnmD1z13QBtEUGApgnfBQCSqhDbZdxERujurqUEeGTgRcVIMNGdQcDDntB2vL0TYIFWdtpc/ZRKPNnNQ==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/foundation" ">=0.7.1 <1.0.0"
-    "@uifabric/icons" ">=6.3.0 <7.0.0"
-    "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
-    "@uifabric/set-version" ">=1.1.3 <2.0.0"
-    "@uifabric/styling" ">=6.41.0 <7.0.0"
-    "@uifabric/utilities" ">=6.29.1 <7.0.0"
-    prop-types "^15.5.10"
-    tslib "^1.7.1"
-
-office-ui-fabric-react@^6:
-  version "6.139.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.139.0.tgz#cc2abd7bbad94961c7873e28118a775259e1a0a8"
-  integrity sha512-zE3igyXgW3fuT4mGpgPyPYMhx8i7h/oxw0BGdXX6GScJZRtwCk1j0CobSxh7PE4whhY0mvPdVbo8Mo1/I9wcmw==
-  dependencies:
-    "@microsoft/load-themed-styles" "^1.7.13"
-    "@uifabric/icons" ">=6.3.0 <7.0.0"
+    "@uifabric/icons" ">=6.4.0 <7.0.0"
     "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
     "@uifabric/styling" ">=6.41.0 <7.0.0"
