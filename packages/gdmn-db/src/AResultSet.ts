@@ -1,3 +1,4 @@
+import {Semaphore} from "gdmn-internals";
 import {AResult} from "./AResult";
 import {AStatement} from "./AStatement";
 import {TExecutor} from "./types";
@@ -13,6 +14,8 @@ export abstract class AResultSet extends AResult {
 
     protected readonly _type: CursorType;
 
+    private readonly _lock = new Semaphore();
+
     protected constructor(statement: AStatement, type: CursorType = AResultSet.DEFAULT_TYPE) {
         super(statement);
         this._type = type;
@@ -20,6 +23,10 @@ export abstract class AResultSet extends AResult {
 
     get type(): CursorType {
         return this._type;
+    }
+
+    get isLock(): boolean {
+        return !!this._lock.permits;
     }
 
     /**
@@ -46,22 +53,101 @@ export abstract class AResultSet extends AResult {
         }
     }
 
-    public abstract async next(): Promise<boolean>;
-
-    public abstract async previous(): Promise<boolean>;
-
-    public abstract async absolute(i: number): Promise<boolean>;
-
-    public abstract async relative(i: number): Promise<boolean>;
-
-    public abstract async first(): Promise<boolean>;
-
-    public abstract async last(): Promise<boolean>;
-
-    public abstract async isBof(): Promise<boolean>;
-
-    public abstract async isEof(): Promise<boolean>;
-
     /** Releases this ResultSet object's database and resources. */
-    public abstract async close(): Promise<void>;
+    public async close(): Promise<void> {
+        await this._executeWithLock(() => this._close());
+    }
+
+    public async next(): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._next();
+    }
+
+    public async previous(): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._previous();
+    }
+
+    public async absolute(i: number): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._absolute(i);
+    }
+
+    public async relative(i: number): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._relative(i);
+    }
+
+    public async first(): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._first();
+    }
+
+    public async last(): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._last();
+    }
+
+    public async isBof(): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._isBof();
+    }
+
+    public async isEof(): Promise<boolean> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._isEof();
+    }
+
+    /**
+     * Wait unlock statement. Lock occurs when disposing
+     */
+    public async waitUnlock(): Promise<void> {
+        if (!this.isLock) {
+            await this._lock.acquire();
+            this._lock.release();
+        }
+    }
+
+    protected async _executeWithLock<R>(callback: TExecutor<void, R>): Promise<R> {
+        await this._lock.acquire();
+        try {
+            return await callback();
+        } finally {
+            this._lock.release();
+        }
+    }
+
+    protected abstract async _close(): Promise<void>;
+
+    protected abstract async _next(): Promise<boolean>;
+
+    protected abstract async _previous(): Promise<boolean>;
+
+    protected abstract async _absolute(i: number): Promise<boolean>;
+
+    protected abstract async _relative(i: number): Promise<boolean>;
+
+    protected abstract async _first(): Promise<boolean>;
+
+    protected abstract async _last(): Promise<boolean>;
+
+    protected abstract async _isBof(): Promise<boolean>;
+
+    protected abstract async _isEof(): Promise<boolean>;
 }

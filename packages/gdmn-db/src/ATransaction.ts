@@ -1,3 +1,4 @@
+import {Semaphore} from "gdmn-internals";
 import {AConnection} from "./AConnection";
 import {TExecutor} from "./types";
 
@@ -31,6 +32,8 @@ export abstract class ATransaction {
     protected readonly _connection: AConnection;
     protected readonly _options: ITransactionOptions;
 
+    private readonly _lock = new Semaphore();
+
     protected constructor(connection: AConnection, options?: ITransactionOptions) {
         this._connection = connection;
         this._options = {...ATransaction.DEFAULT_OPTIONS, ...options};
@@ -43,6 +46,10 @@ export abstract class ATransaction {
     /** Transaction type */
     get options(): ITransactionOptions {
         return this._options;
+    }
+
+    get isLock(): boolean {
+        return !!this._lock.permits;
     }
 
     /**
@@ -70,11 +77,32 @@ export abstract class ATransaction {
     }
 
     /** Commit the transaction. */
-    public abstract async commit(): Promise<void>;
+    public async commit(): Promise<void> {
+        await this._executeWithLock(() => this._commit());
+    }
 
     /** Commit retaining the transaction. */
-    public abstract async commitRetaining(): Promise<void>;
+    public async commitRetaining(): Promise<void> {
+        await this._executeWithLock(() => this._commitRetaining());
+    }
 
     /** Rollback the transaction. */
-    public abstract async rollback(): Promise<void>;
+    public async rollback(): Promise<void> {
+        await this._executeWithLock(() => this._rollback());
+    }
+
+    protected async _executeWithLock<R>(callback: TExecutor<void, R>): Promise<R> {
+        await this._lock.acquire();
+        try {
+            return await callback();
+        } finally {
+            this._lock.release();
+        }
+    }
+
+    protected abstract async _commit(): Promise<void>;
+
+    protected abstract async _commitRetaining(): Promise<void>;
+
+    protected abstract async _rollback(): Promise<void>;
 }

@@ -4,11 +4,14 @@ import {AService, IRestoreOptions, IServiceOptions} from "../AService";
 import {Client} from "./Client";
 import {
     isc_action_svc,
-    isc_info, isc_info_svc, isc_spb, isc_spb_bkp, isc_spb_res, XpbBuilderParams} from "./utils/constants";
+    isc_info,
+    isc_info_svc,
+    isc_spb,
+    isc_spb_bkp,
+    isc_spb_res,
+    XpbBuilderParams
+} from "./utils/constants";
 import {iscVaxInteger2} from "./utils/fb-utils";
-
-type ServiceRequestBuffer = XpbBuilder;
-type ServiceParameterBuffer = XpbBuilder;
 
 function createServiceAttachmentBuffer(svcOptions: IServiceOptions, util: Util, status: Status): XpbBuilder {
     const svcAttachB = (util.getXpbBuilderSync(status, XpbBuilderParams.SPB_ATTACH, undefined, 0))!;
@@ -23,10 +26,11 @@ function createServiceRequestBuffer(status: Status, util: Util): XpbBuilder {
 
 export class Service implements AService {
 
-    public svc?: NativeService;
-    public BUFFER_SIZE = 1024;
+    public static readonly BUFFER_SIZE = 1024;
 
-    private client = new Client();
+    public readonly client = new Client();
+
+    public svc?: NativeService;
 
     public async attach(options: IServiceOptions): Promise<void> {
         if (this.svc) {
@@ -97,7 +101,7 @@ export class Service implements AService {
         });
     }
 
-    private async executeServicesAction(srb: ServiceRequestBuffer): Promise<void> {
+    private async executeServicesAction(srb: XpbBuilder): Promise<void> {
         await this.client.statusAction(async (status) => {
             await this.svc!.startAsync(status, srb.getBufferLengthSync(status)!, srb.getBufferSync(status)!);
         });
@@ -110,7 +114,7 @@ export class Service implements AService {
             const infoSRB = createServiceRequestBuffer(status, util);
             infoSRB.insertTagSync(status, isc_info_svc.to_eof);
 
-            let bufferSize = this.BUFFER_SIZE;
+            let bufferSize = Service.BUFFER_SIZE;
 
             let processing = true;
             while (processing) {
@@ -145,21 +149,19 @@ export class Service implements AService {
 
     private async getServiceInfo(
         maxBufferLength: number,
-        spb?: ServiceParameterBuffer,
-        srb?: ServiceRequestBuffer
+        spb?: XpbBuilder,
+        srb?: XpbBuilder
     ): Promise<Buffer> {
         const responseBuffer = Buffer.alloc(maxBufferLength);
 
-        await this.client.statusAction(async (status) => {
-            await this.svc!.queryAsync(status,
-                spb === undefined ? 0 : spb.getBufferLengthSync(status),
-                spb === undefined ? undefined : spb.getBufferSync(status),
-                srb === undefined ? 0 : srb.getBufferLengthSync(status),
-                srb === undefined ? undefined : srb.getBufferSync(status),
-                responseBuffer.byteLength,
-                responseBuffer
-            );
-        });
+        await this.client.statusAction((status) => this.svc!.queryAsync(status,
+            spb ? spb.getBufferLengthSync(status) : 0,
+            spb && spb.getBufferSync(status),
+            srb ? srb.getBufferLengthSync(status) : 0,
+            srb && srb.getBufferSync(status),
+            responseBuffer.byteLength,
+            responseBuffer
+        ));
 
         return responseBuffer;
     }

@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
+    "gdmn-internals": "^1",
     "generic-pool": "^3",
     "node-firebird-native-api": "^0"
   },

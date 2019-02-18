@@ -9,6 +9,7 @@ export interface IRestoreOptions {
     replace?: boolean;
 }
 
+// TODO reviewing, refactoring, improving
 export abstract class AService {
 
     public abstract async attach(options: IServiceOptions): Promise<void>;

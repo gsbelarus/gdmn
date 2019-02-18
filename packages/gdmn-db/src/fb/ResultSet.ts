@@ -3,7 +3,7 @@ import {AResultSet, CursorType} from "../AResultSet";
 import {BlobImpl} from "./BlobImpl";
 import {Result} from "./Result";
 import {ResultMetadata} from "./ResultMetadata";
-import {Statement} from "./Statement";
+import {IStatementSource, Statement} from "./Statement";
 import {dataWrite} from "./utils/fb-utils";
 
 export interface IResultSetSource {
@@ -43,7 +43,7 @@ export class ResultSet extends AResultSet {
 
     public static async open(statement: Statement, params: any[], type?: CursorType): Promise<ResultSet> {
         const source: IResultSetSource = await statement.transaction.connection.client.statusAction(async (status) => {
-            const {inMetadata, outMetadata, inDescriptors} = statement.source!;
+            const {inMetadata, outMetadata, inDescriptors}: IStatementSource = statement.source!;
             const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
             const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
@@ -59,83 +59,6 @@ export class ResultSet extends AResultSet {
             };
         });
         return new ResultSet(statement, source, type);
-    }
-
-    public async next(): Promise<boolean> {
-        this._checkClosed();
-
-        return await this._executeMove((status) => (
-            this.source!.handler.fetchNextAsync(status, this.source!.result.source.buffer)
-        ));
-    }
-
-    public async previous(): Promise<boolean> {
-        this._checkClosed();
-
-        return await this._executeMove((status) => (
-            this.source!.handler.fetchPriorAsync(status, this.source!.result.source.buffer)
-        ));
-    }
-
-    public async absolute(i: number): Promise<boolean> {
-        this._checkClosed();
-
-        return await this._executeMove((status) => (
-            this.source!.handler.fetchAbsoluteAsync(status, i, this.source!.result.source.buffer)
-        ));
-    }
-
-    public async relative(i: number): Promise<boolean> {
-        this._checkClosed();
-
-        return await this._executeMove((status) => (
-            this.source!.handler.fetchRelativeAsync(status, i, this.source!.result.source.buffer)
-        ));
-    }
-
-    public async first(): Promise<boolean> {
-        this._checkClosed();
-
-        return await this._executeMove((status) => (
-            this.source!.handler.fetchFirstAsync(status, this.source!.result.source.buffer)
-        ));
-    }
-
-    public async last(): Promise<boolean> {
-        this._checkClosed();
-
-        return await this._executeMove((status) => (
-            this.source!.handler.fetchLastAsync(status, this.source!.result.source.buffer)
-        ));
-    }
-
-    public async close(): Promise<void> {
-        this._checkClosed();
-
-        await this.statement.transaction.connection.client
-            .statusAction((status) => this.source!.handler.closeAsync(status));
-        this.source = undefined;
-        this.statement.resultSetsCount--;
-
-        if (this.disposeStatementOnClose) {
-            await this.statement.dispose();
-        }
-    }
-
-    public async isBof(): Promise<boolean> {
-        this._checkClosed();
-
-        return await this.statement.transaction.connection.client.statusAction(async (status) => {
-            return await this.source!.handler.isBofAsync(status);
-        });
-    }
-
-    public async isEof(): Promise<boolean> {
-        this._checkClosed();
-
-        return await this.statement.transaction.connection.client.statusAction(async (status) => {
-            return await this.source!.handler.isEofAsync(status);
-        });
     }
 
     public getBlob(i: number): BlobImpl;
@@ -190,6 +113,83 @@ export class ResultSet extends AResultSet {
     public isNull(field: any): boolean {
         this._checkClosed();
         return this.source!.result.isNull(field);
+    }
+
+    protected async _close(): Promise<void> {
+        this._checkClosed();
+
+        await this.statement.transaction.connection.client
+            .statusAction((status) => this.source!.handler.closeAsync(status));
+        this.source = undefined;
+        this.statement.resultSetsCount--;
+
+        if (this.disposeStatementOnClose) {
+            await this.statement.dispose();
+        }
+    }
+
+    protected async _next(): Promise<boolean> {
+        this._checkClosed();
+
+        return await this._executeMove((status) => (
+            this.source!.handler.fetchNextAsync(status, this.source!.result.source.buffer)
+        ));
+    }
+
+    protected async _previous(): Promise<boolean> {
+        this._checkClosed();
+
+        return await this._executeMove((status) => (
+            this.source!.handler.fetchPriorAsync(status, this.source!.result.source.buffer)
+        ));
+    }
+
+    protected async _absolute(i: number): Promise<boolean> {
+        this._checkClosed();
+
+        return await this._executeMove((status) => (
+            this.source!.handler.fetchAbsoluteAsync(status, i, this.source!.result.source.buffer)
+        ));
+    }
+
+    protected async _relative(i: number): Promise<boolean> {
+        this._checkClosed();
+
+        return await this._executeMove((status) => (
+            this.source!.handler.fetchRelativeAsync(status, i, this.source!.result.source.buffer)
+        ));
+    }
+
+    protected async _first(): Promise<boolean> {
+        this._checkClosed();
+
+        return await this._executeMove((status) => (
+            this.source!.handler.fetchFirstAsync(status, this.source!.result.source.buffer)
+        ));
+    }
+
+    protected async _last(): Promise<boolean> {
+        this._checkClosed();
+
+        return await this._executeMove((status) => (
+            this.source!.handler.fetchLastAsync(status, this.source!.result.source.buffer)
+        ));
+    }
+
+    protected async _isBof(): Promise<boolean> {
+        this._checkClosed();
+
+        return await this.statement.transaction.connection.client.statusAction(async (status) => {
+            return await this.source!.handler.isBofAsync(status);
+        });
+    }
+
+    protected async _isEof(): Promise<boolean> {
+        this._checkClosed();
+
+        return await this.statement.transaction.connection.client.statusAction(async (status) => {
+            return await this.source!.handler.isEofAsync(status);
+        });
     }
 
     private _checkClosed(): void {

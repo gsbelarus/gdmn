@@ -14,7 +14,8 @@ import {createDpb} from "./utils/fb-utils";
 
 export class Connection extends AConnection {
 
-    public client = new Client();
+    public readonly client = new Client();
+
     public transactionsCount = 0;
     public handler?: NativeConnection;
 
@@ -59,7 +60,7 @@ export class Connection extends AConnection {
         return url;
     }
 
-    public async createDatabase(options: IConnectionOptions): Promise<void> {
+    protected async _createDatabase(options: IConnectionOptions): Promise<void> {
         if (this.handler) {
             throw new Error("Database already connected");
         }
@@ -77,7 +78,7 @@ export class Connection extends AConnection {
         }
     }
 
-    public async dropDatabase(): Promise<void> {
+    protected async _dropDatabase(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need database connection");
         }
@@ -96,7 +97,7 @@ export class Connection extends AConnection {
         await this.client.destroy();
     }
 
-    public async connect(options: IConnectionOptions): Promise<void> {
+    protected async _connect(options: IConnectionOptions): Promise<void> {
         if (this.handler) {
             throw new Error("Database already connected");
         }
@@ -114,15 +115,7 @@ export class Connection extends AConnection {
         }
     }
 
-    public async startTransaction(options?: ITransactionOptions): Promise<Transaction> {
-        if (!this.handler) {
-            throw new Error("Need database connection");
-        }
-
-        return await Transaction.create(this, options);
-    }
-
-    public async disconnect(): Promise<void> {
+    protected async _disconnect(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need database connection");
         }
@@ -141,7 +134,15 @@ export class Connection extends AConnection {
         this.handler = undefined;
     }
 
-    public async execute(transaction: Transaction, sql: string, params?: IParams): Promise<void> {
+    protected async _startTransaction(options?: ITransactionOptions): Promise<Transaction> {
+        if (!this.handler) {
+            throw new Error("Need database connection");
+        }
+
+        return await Transaction.create(this, options);
+    }
+
+    protected async _execute(transaction: Transaction, sql: string, params?: IParams): Promise<void> {
         const statement = await Statement.prepare(transaction, sql);
         try {
             await statement.execute(params);
@@ -150,7 +151,7 @@ export class Connection extends AConnection {
         }
     }
 
-    public async executeReturning(transaction: Transaction, sql: string, params?: IParams): Promise<Result> {
+    protected async _executeReturning(transaction: Transaction, sql: string, params?: IParams): Promise<Result> {
         const statement = await Statement.prepare(transaction, sql);
         try {
             return await statement.executeReturning(params);
@@ -159,21 +160,21 @@ export class Connection extends AConnection {
         }
     }
 
-    public async executeQuery(transaction: Transaction,
-                              sql: string,
-                              params?: IParams,
-                              type?: CursorType): Promise<ResultSet> {
+    protected async _executeQuery(transaction: Transaction,
+                                  sql: string,
+                                  params?: IParams,
+                                  type?: CursorType): Promise<ResultSet> {
         if (transaction.finished) {
             throw new Error("Need to open transaction");
         }
 
         const statement = await Statement.prepare(transaction, sql);
-        const resultSet = await statement.executeQuery(params, type);
+        const resultSet = await statement.executeQuery(params, type) as ResultSet;
         resultSet.disposeStatementOnClose = true;
         return resultSet;
     }
 
-    public async prepare(transaction: Transaction, sql: string): Promise<Statement> {
+    protected async _prepare(transaction: Transaction, sql: string): Promise<Statement> {
         if (transaction.finished) {
             throw new Error("Need to open transaction");
         }

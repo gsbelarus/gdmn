@@ -72,7 +72,7 @@ export class Statement extends AStatement {
         return new Statement(transaction, paramsAnalyzer, source);
     }
 
-    public async dispose(): Promise<void> {
+    protected async _dispose(): Promise<void> {
         if (!this.source) {
             throw new Error("Statement already disposed");
         }
@@ -89,7 +89,7 @@ export class Statement extends AStatement {
         this.transaction.statementsCount--;
     }
 
-    public async executeQuery(params?: IParams, type?: CursorType): Promise<ResultSet> {
+    protected async _executeQuery(params?: IParams, type?: CursorType): Promise<ResultSet> {
         if (!this.source) {
             throw new Error("Statement already disposed");
         }
@@ -97,7 +97,7 @@ export class Statement extends AStatement {
         return ResultSet.open(this, this._paramsAnalyzer.prepareParams(params), type);
     }
 
-    public async executeReturning(params?: IParams): Promise<Result> {
+    protected async _executeReturning(params?: IParams): Promise<Result> {
         if (!this.source) {
             throw new Error("Statement already disposed");
         }
@@ -105,13 +105,13 @@ export class Statement extends AStatement {
         return Result.get(this, this._paramsAnalyzer.prepareParams(params));
     }
 
-    public async execute(params?: IParams): Promise<void> {
+    protected async _execute(params?: IParams): Promise<void> {
         if (!this.source) {
             throw new Error("Statement already disposed");
         }
 
         await this.transaction.connection.client.statusAction(async (status) => {
-            const {inMetadata, outMetadata, inDescriptors} = this.source!;
+            const {inMetadata, outMetadata, inDescriptors}: IStatementSource = this.source!;
             const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
             const outBuffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 

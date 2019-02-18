@@ -10,7 +10,7 @@ export class CommonConnectionProxy extends AConnection {
 
     private readonly _pool: Pool<AConnection>;
     private readonly _connectionCreator: () => AConnection;
-    private _connection: null | AConnection = null;
+    private _connection?: AConnection;
 
     constructor(pool: Pool<AConnection>, connectionCreator: () => AConnection) {
         super(null as any);
@@ -63,21 +63,22 @@ export class CommonConnectionProxy extends AConnection {
             throw new Error("Need database connection");
         }
         await this._connection.disconnect();
+        this._connection = undefined;
     }
 
-    public async createDatabase(options: IConnectionOptions): Promise<void> {
+    protected async _createDatabase(options: IConnectionOptions): Promise<void> {
         throw new Error("Invalid operation for connection from the pool");
     }
 
-    public async dropDatabase(): Promise<void> {
+    protected async _dropDatabase(): Promise<void> {
         throw new Error("Invalid operation for connection from the pool");
     }
 
-    public async connect(options: IConnectionOptions): Promise<void> {
+    protected async _connect(options: IConnectionOptions): Promise<void> {
         throw new Error("Invalid operation for connection from the pool");
     }
 
-    public async disconnect(): Promise<void> {
+    protected async _disconnect(): Promise<void> {
         if (!this._connection) {
             throw new Error("Need database connection");
         }
@@ -87,39 +88,39 @@ export class CommonConnectionProxy extends AConnection {
         }
     }
 
-    public async startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
+    protected async _startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
         if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.startTransaction(options);
     }
 
-    public async prepare(transaction: ATransaction, sql: string): Promise<AStatement> {
+    protected async _prepare(transaction: ATransaction, sql: string): Promise<AStatement> {
         if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.prepare(transaction, sql);
     }
 
-    public async executeQuery(transaction: ATransaction,
-                              sql: string,
-                              params?: IParams): Promise<AResultSet> {
+    protected async _executeQuery(transaction: ATransaction,
+                                  sql: string,
+                                  params?: IParams): Promise<AResultSet> {
         if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         return await this._connection.executeQuery(transaction, sql, params);
     }
 
-    public async execute(transaction: ATransaction, sql: string, params?: IParams): Promise<void> {
+    protected async _execute(transaction: ATransaction, sql: string, params?: IParams): Promise<void> {
         if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
         await this._connection.execute(transaction, sql, params);
     }
 
-    public async executeReturning(transaction: ATransaction,
-                                  sql: string,
-                                  params?: IParams): Promise<Result> {
+    protected async _executeReturning(transaction: ATransaction,
+                                      sql: string,
+                                      params?: IParams): Promise<Result> {
         if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }

@@ -1,3 +1,4 @@
+import {Semaphore} from "gdmn-internals";
 import {AConnection, IConnectionOptions} from "./AConnection";
 import {IBaseExecuteOptions, TExecutor} from "./types";
 
@@ -13,6 +14,8 @@ export interface IExecuteGetConnectionOptions<Opt, R> extends IBaseExecuteOption
 
 export abstract class AConnectionPool<Options, ConOptions extends IConnectionOptions = IConnectionOptions> {
 
+    private readonly _lock = new Semaphore();
+
     /**
      * Is the connection pool prepared?
      *
@@ -21,6 +24,10 @@ export abstract class AConnectionPool<Options, ConOptions extends IConnectionOpt
      * false if the connection pool destroyed or not created
      */
     abstract get created(): boolean;
+
+    get isLock(): boolean {
+        return !!this._lock.permits;
+    }
 
     public static async executeSelf<Opt, ConOpt, R>(selfReceiver: TExecutor<null, AConnectionPool<Opt>>,
                                                     callback: TExecutor<AConnectionPool<Opt>, R>): Promise<R> {
@@ -52,23 +59,57 @@ export abstract class AConnectionPool<Options, ConOptions extends IConnectionOpt
 
     /**
      * Prepare the connection pool for use with some database.
-     * After work you need absolute call {@link AConnectionPool.destroy()} method.
+     * After work you need to call {@link AConnectionPool.destroy()} method.
      *
      * @param {ConOptions} connectionOptions
      * the type for opening database connection
      * @param {Options} options
      * the type for creating connection pool
      */
-    public abstract create(connectionOptions: ConOptions, options: Options): Promise<void>;
+    public async create(connectionOptions: ConOptions, options: Options): Promise<void> {
+        await this._executeWithLock(() => this._create(connectionOptions, options));
+    }
 
     /** Release resources occupied by the connection pool. */
-    public abstract destroy(): Promise<void>;
+    public async destroy(): Promise<void> {
+        await this._executeWithLock(() => this._destroy());
+    }
 
     /**
      * Get free database connection. With this connection you
-     * need absolute work as usual. i.e close it is also necessary
+     * need to work as usual. i.e close it is also necessary
      *
      * @returns {Promise<AConnection>}
      */
-    public abstract get(): Promise<AConnection>;
+    public async get(): Promise<AConnection> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        return await this._get();
+    }
+
+    /**
+     * Wait unlock connection pool. Lock occurs when creating, destroying
+     */
+    public async waitUnlock(): Promise<void> {
+        if (!this.isLock) {
+            await this._lock.acquire();
+            this._lock.release();
+        }
+    }
+
+    protected async _executeWithLock<R>(callback: TExecutor<void, R>): Promise<R> {
+        await this._lock.acquire();
+        try {
+            return await callback();
+        } finally {
+            this._lock.release();
+        }
+    }
+
+    protected abstract async _create(connectionOptions: ConOptions, options: Options): Promise<void>;
+
+    protected abstract async _destroy(): Promise<void>;
+
+    protected abstract async _get(): Promise<AConnection>;
 }

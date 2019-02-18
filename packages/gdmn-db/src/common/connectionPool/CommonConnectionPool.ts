@@ -82,7 +82,7 @@ export type ConnectionCreator<Connection> = () => Connection;
 export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolOptions> {
 
     private readonly _connectionCreator: ConnectionCreator<AConnection>;
-    private _connectionPool: null | Pool<AConnection> = null;
+    private _connectionPool?: Pool<AConnection>;
 
     constructor(connectionCreator: ConnectionCreator<AConnection>) {
         super();
@@ -93,7 +93,7 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         return Boolean(this._connectionPool);
     }
 
-    public async create(dbOptions: IConnectionOptions, options: ICommonConnectionPoolOptions): Promise<void> {
+    public async _create(dbOptions: IConnectionOptions, options: ICommonConnectionPoolOptions): Promise<void> {
         if (this._connectionPool) {
             throw new Error("Connection pool already created");
         }
@@ -120,7 +120,7 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         this._connectionPool.start();
     }
 
-    public async destroy(): Promise<void> {
+    public async _destroy(): Promise<void> {
         if (!this._connectionPool) {
             throw new Error("Connection pool need created");
         }
@@ -143,10 +143,10 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         await this._connectionPool.clear();
         this._connectionPool.removeListener("factoryCreateError", console.error);
         this._connectionPool.removeListener("factoryDestroyError", console.error);
-        this._connectionPool = null;
+        this._connectionPool = undefined;
     }
 
-    public async get(): Promise<AConnection> {
+    public async _get(): Promise<AConnection> {
         if (!this._connectionPool) {
             throw new Error("Connection pool need created");
         }

@@ -35,7 +35,7 @@ export class Transaction extends ATransaction {
         return new Transaction(connection, options, handler!);
     }
 
-    public async commit(): Promise<void> {
+    protected async _commit(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need to open transaction");
         }
@@ -49,14 +49,14 @@ export class Transaction extends ATransaction {
         this.connection.transactionsCount--;
     }
 
-    public async commitRetaining(): Promise<void> {
+    protected async _commitRetaining(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need to open transaction");
         }
         await this.connection.client.statusAction((status) => this.handler!.commitRetainingAsync(status));
     }
 
-    public async rollback(): Promise<void> {
+    protected async _rollback(): Promise<void> {
         if (!this.handler) {
             throw new Error("Need to open transaction");
         }
