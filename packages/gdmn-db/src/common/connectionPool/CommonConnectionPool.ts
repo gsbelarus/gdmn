@@ -93,7 +93,7 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         return Boolean(this._connectionPool);
     }
 
-    public async _create(dbOptions: IConnectionOptions, options: ICommonConnectionPoolOptions): Promise<void> {
+    protected async _create(dbOptions: IConnectionOptions, options: ICommonConnectionPoolOptions): Promise<void> {
         if (this._connectionPool) {
             throw new Error("Connection pool already created");
         }
@@ -120,7 +120,7 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         this._connectionPool.start();
     }
 
-    public async _destroy(): Promise<void> {
+    protected async _destroy(): Promise<void> {
         if (!this._connectionPool) {
             throw new Error("Connection pool need created");
         }
@@ -146,7 +146,7 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
         this._connectionPool = undefined;
     }
 
-    public async _get(): Promise<AConnection> {
+    protected async _get(): Promise<AConnection> {
         if (!this._connectionPool) {
             throw new Error("Connection pool need created");
         }
