@@ -9,7 +9,7 @@ import { List } from 'immutable';
 import { TGdmnActions } from '../../gdmn/actions';
 import { EntityDataView, IEntityDataViewProps, IEntityMatchParams } from './EntityDataView';
 import { apiService } from '@src/app/services/apiService';
-import { withRouter, RouteComponentProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { attr2fd } from './utils';
 import { Semaphore } from 'gdmn-internals';
 import { compose } from 'recompose';
@@ -110,5 +110,5 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
       })
     })
   )
-)(withRouter(EntityDataView));
+)(EntityDataView);
 

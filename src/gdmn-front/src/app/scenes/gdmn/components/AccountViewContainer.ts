@@ -1,5 +1,5 @@
 import { bindActionCreators } from "redux";
-import { withRouter, RouteComponentProps } from "react-router";
+import { RouteComponentProps } from "react-router";
 import { connectView } from "@src/app/components/connectView";
 import { connect } from "react-redux";
 import { gdmnActionsAsync } from "../actions";
@@ -14,4 +14,4 @@ export const AccountViewContainer = compose<any, RouteComponentProps<any>>(
       apiDeleteAccount: bindActionCreators(gdmnActionsAsync.apiDeleteAccount, dispatch),
     })
   )
-)(withRouter(AccountView));
+)(AccountView);

@@ -1,6 +1,6 @@
 import { StompDemoView } from "./StompDemoView";
 import { bindActionCreators } from "redux";
-import { withRouter, RouteComponentProps } from "react-router";
+import { RouteComponentProps } from "react-router";
 import { connectView } from "@src/app/components/connectView";
 import { connect } from "react-redux";
 import { IState } from "@src/app/store/reducer";
@@ -20,4 +20,4 @@ export const StompDemoViewContainer = compose<any, RouteComponentProps<any>>(
       onError: bindActionCreators(rootActions.onError, dispatch)
     })
   )
-)(withRouter(StompDemoView));
+)(StompDemoView);

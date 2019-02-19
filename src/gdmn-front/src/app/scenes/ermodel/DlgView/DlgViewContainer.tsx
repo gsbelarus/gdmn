@@ -1,10 +1,7 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { ThunkDispatch } from 'redux-thunk';
-import { TGdmnActions } from '../../gdmn/actions';
-import { withRouter } from 'react-router';
 import { DlgView, IDlgViewProps } from './DlgView';
-import { compose } from 'redux';
+import { compose } from 'recompose';
 
 export const DlgViewContainer = compose(
   connect(
@@ -21,5 +18,5 @@ export const DlgViewContainer = compose(
       // cancelRecord: () => thunkDispatch(gdmnActionsAsync.cancelRecord()),
     }),
   )
-)(withRouter(DlgView));
+)(DlgView);
 

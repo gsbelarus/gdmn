@@ -3,7 +3,7 @@ import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSet, TF
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
-import { withRouter, RouteComponentProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { IState } from '@src/app/store/reducer';
 import { gdmnActionsAsync, TGdmnActions } from '../gdmn/actions';
 import { ERModelView } from './component';
@@ -171,4 +171,4 @@ export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
       apiGetSchema: () => thunkDispatch(gdmnActionsAsync.apiGetSchema()),
     })
   )
-)(withRouter(ERModelView));
+)(ERModelView);
