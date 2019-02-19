@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
-import { RecordSet, SortFields, IDataRow } from 'gdmn-recordset';
+import { RecordSet, IDataRow } from 'gdmn-recordset';
 import { IViewProps, View } from '@src/app/components/View';
-import { TextField, ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
+import { TextField, ICommandBarItemProps } from 'office-ui-fabric-react';
 import { ERModel } from 'gdmn-orm';
 
 export enum IDlgState {
