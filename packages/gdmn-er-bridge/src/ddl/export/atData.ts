@@ -113,7 +113,6 @@ export async function load(connection: AConnection, transaction: ATransaction): 
     transaction,
     sql: `
       SELECT
-        ID,
         RELATIONNAME,
         LNAME,
         DESCRIPTION,
