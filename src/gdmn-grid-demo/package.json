@@ -41,7 +41,7 @@
     "@types/node-fetch": "^2",
     "@types/react": "^16",
     "@types/react-dom": "^16",
-    "css-loader": "^1",
+    "css-loader": "^2",
     "html-webpack-plugin": "^3",
     "node-fetch": "^2",
     "redux-devtools-extension": "^2",
