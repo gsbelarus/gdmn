@@ -1,22 +1,27 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
-import { DlgView, IDlgViewProps } from './DlgView';
+import { DlgView, IDlgViewProps, DlgState, IDlgViewMatchParams } from './DlgView';
 import { compose } from 'recompose';
+import { connectView } from '@src/app/components/connectView';
+import { RouteComponentProps } from 'react-router';
 
-export const DlgViewContainer = compose(
+export const DlgViewContainer = compose<any, RouteComponentProps<IDlgViewMatchParams>>(
+  connectView,
   connect(
-    (state: IState, ownProps: Partial<IDlgViewProps>) => {
+    (state: IState, ownProps: RouteComponentProps<IDlgViewMatchParams>) => {
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
       return {
-        rs: state.recordSet[entityName],
-        erModel: state.gdmnState.erModel
-        //  viewTabs: state.gdmnState.viewTabs
+        src: state.recordSet[entityName],
+        erModel: state.gdmnState.erModel,
+        dlgState: DlgState.dsEdit
       };
-    },
+    }
+    /*
     () => ({
-      // saveRecord: () => thunkDispatch(gdmnActionsAsync.saveRecord()),
-      // cancelRecord: () => thunkDispatch(gdmnActionsAsync.cancelRecord()),
+      saveRecord: () => thunkDispatch(gdmnActionsAsync.saveRecord()),
+      cancelRecord: () => thunkDispatch(gdmnActionsAsync.cancelRecord()),
     }),
+    */
   )
 )(DlgView);
 

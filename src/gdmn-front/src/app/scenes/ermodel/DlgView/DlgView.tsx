@@ -4,51 +4,55 @@ import { IViewProps, View } from '@src/app/components/View';
 import { TextField, ICommandBarItemProps } from 'office-ui-fabric-react';
 import { ERModel } from 'gdmn-orm';
 
-export enum IDlgState {
+export enum DlgState {
   dsBrowse,
   dsInsert,
   dsEdit
 }
 
-export interface IDlgViewProps extends IViewProps {
-  rs: RecordSet;
-  erModel?: ERModel,
-  dlgState: IDlgState,
+export interface IDlgViewMatchParams {
+  entityName: string,
+  id: string
 }
 
-export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> {
+export interface IDlgViewProps extends IViewProps<IDlgViewMatchParams> {
+  src?: RecordSet,
+  erModel?: ERModel,
+  dlgState: DlgState,
+}
 
-  public getDataViewKey() {
-    const key = this.props.match ? this.props.match.params.entityName : '';
+export interface IDlgViewState {
+  rs: RecordSet
+}
 
-    if (!key) {
-      throw new Error(`Invalid data view key`);
-    }
+export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchParams> {
 
-    return key;
+  /*
+  static getDerivedStateFromProps(props: IDlgViewProps, state: IDlgViewState) {
+    return state;
   }
+  */
 
   public getViewCaption(): string {
     if (this.props.match) {
       const entityName = this.props.match.params.entityName;
-      return this.props.dlgState === IDlgState.dsInsert ? `add ${entityName}`  : `edit ${entityName}`;
+      return this.props.dlgState === DlgState.dsInsert ? `add ${entityName}`  : `edit ${entityName}`;
     } else {
       return ''
     }
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const { rs } = this.props;
     return [
       {
-        key: `saveRecord${rs.name}`,
+        key: 'save',
         text: 'Save',
         iconProps: {
           iconName: 'Save'
         },
       },
       {
-        key: `cancelRecord${rs.name}`,
+        key: 'cancel',
         text: 'Cancel',
         iconProps: {
           iconName: 'Cancel'
@@ -59,10 +63,14 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
   }
 
   public render() {
-    const { rs } = this.props;
+    const { rs } = this.state;
 
-    if (rs)  {
-      console.log(rs.get(this.props.match.params.currentRow));
+    if (!rs) {
+      return this.renderLoading();
+    }
+
+      /*
+      console.log(rs.get(this.props.match.params.id));
       return this.renderWide( (
         <div className="dlgView">
           {rs.fieldDefs.map((f, idx) =>
@@ -71,16 +79,17 @@ export class DlgView<P extends IDlgViewProps, S, R = any> extends View<P, S, R> 
               {f.caption}
             </span>
             <TextField
-              value={this.props.dlgState === IDlgState.dsEdit ? rs.getString(this.props.match.params.currentRow, f.fieldName, '') : ''}
+              value={this.props.dlgState === DlgState.dsEdit ? rs.getString(this.props.match.params.currentRow, f.fieldName, '') : ''}
             />
           </Fragment>
           )}
         </div>
       )
-      )}
-    else {
-      return this.renderLoading();
+      )
     }
+    */
+
+    return this.renderLoading();
   }
 }
 

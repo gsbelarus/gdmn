@@ -20,7 +20,7 @@ import {
   sortRecordSet,
   toggleGroup
 } from 'gdmn-recordset';
-import { compose } from "redux";
+import { compose } from "recompose";
 import { connectView } from "./connectView";
 
 export const connectDataView = compose(

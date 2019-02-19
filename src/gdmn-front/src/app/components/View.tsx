@@ -8,7 +8,7 @@ export interface IViewProps<R = any> extends RouteComponentProps<R> {
   updateViewTab: (viewTab: IViewTab) => void;
 }
 
-export class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
+export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
   public getViewCaption(): string {
     return 'The View...';
   }
