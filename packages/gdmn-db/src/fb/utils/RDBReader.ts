@@ -1,8 +1,15 @@
 import {AConnection} from "../../AConnection";
 import {AConnectionPool} from "../../AConnectionPool";
 import {ATransaction} from "../../ATransaction";
-import {IRDB$FIELD, IRDB$RELATIONCONSTRAINT, IRDB$RELATIONFIELD, NullFlag} from "../../DBStructure";
-import {ConstraintType, DeleteRule, UpdateRule} from "../../DBStructure/DBSchema";
+import {
+    ConstraintType,
+    DeleteRule,
+    IRDB$FIELD,
+    IRDB$RELATIONCONSTRAINT,
+    IRDB$RELATIONFIELD,
+    NullFlag,
+    UpdateRule
+} from "../../DBSchema";
 
 export class RDBReader {
 
