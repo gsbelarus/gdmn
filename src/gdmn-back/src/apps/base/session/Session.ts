@@ -44,7 +44,7 @@ export class Session {
   private readonly _options: IOptions;
   private readonly _taskManager = new TaskManager();
   private readonly _usesConnections: IUsesConnections[] = [];
-  private readonly _cursors = new Map<string, EQueryCursor>();
+  private readonly _cursorsPromises = new Map<string, Promise<EQueryCursor>>();
 
   private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
@@ -71,8 +71,8 @@ export class Session {
     return this._taskManager;
   }
 
-  get cursors(): Map<string, EQueryCursor> {
-    return this._cursors;
+  get cursorsPromises(): Map<string, Promise<EQueryCursor>> {
+    return this._cursorsPromises;
   }
 
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {
@@ -127,14 +127,15 @@ export class Session {
       });
     await Promise.all(waitPromises);
 
-    if (this._cursors.size) {
+    if (this._cursorsPromises.size) {
       this._logger.warn("id#%s has opened cursors, they will be closed", this.id);
-      for (const cursor of this._cursors.values()) {
+      for (const waitCursor of this._cursorsPromises.values()) {
+        const cursor = await waitCursor;
         if (cursor.closed) {
           await cursor.close();
         }
       }
-      this._cursors.clear();
+      this._cursorsPromises.clear();
     }
 
     this._taskManager.clear();
