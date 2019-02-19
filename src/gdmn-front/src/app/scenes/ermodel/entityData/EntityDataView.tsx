@@ -1,13 +1,10 @@
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
-import { ERModel } from 'gdmn-orm';
 
 export interface IEntityMatchParams {
   entityName: string
 }
 
-export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  erModel: ERModel
-}
+export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> { }
 
 export class EntityDataView extends DataView<IEntityDataViewProps, {}, IEntityMatchParams> {
   public getDataViewKey() {

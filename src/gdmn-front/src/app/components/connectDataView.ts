@@ -26,7 +26,9 @@ import { connectView } from "./connectView";
 export const connectDataView = compose(
   connectView,
   connect(
-    undefined,
+    (state: IState) => ({
+      erModel: state.gdmnState.erModel
+    }),
     (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
       onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
 

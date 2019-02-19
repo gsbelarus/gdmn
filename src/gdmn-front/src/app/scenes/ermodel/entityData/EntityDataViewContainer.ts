@@ -25,8 +25,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
           {
             rs: state.recordSet[entityName],
             gcs: state.grid[entityName]
-          },
-        erModel: state.gdmnState.erModel
+          }
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction>, ownProps: Partial<IEntityDataViewProps>) => ({

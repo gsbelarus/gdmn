@@ -6,6 +6,7 @@ import { Semaphore } from 'gdmn-internals';
 import { getMutex, disposeMutex } from './dataViewMutexes';
 import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 import { LinkCommandBarButton } from './LinkCommandBarButton';
+import { ERModel } from 'gdmn-orm';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -15,6 +16,7 @@ export interface IRSAndGCS {
 
 export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
+  erModel?: ERModel;
   loadData: (mutex: Semaphore) => void;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;

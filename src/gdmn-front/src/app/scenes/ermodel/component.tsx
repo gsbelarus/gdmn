@@ -6,7 +6,6 @@ import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import React from 'react';
 
 export interface IERModelViewProps extends IDataViewProps<any> {
-  erModel?: ERModel,
   apiGetSchema: () => void
 }
 

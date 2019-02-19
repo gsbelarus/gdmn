@@ -25,8 +25,7 @@ export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
               gcs: state.grid.attributes
             }
           ]
-        },
-      erModel: state.gdmnState.erModel
+        }
     }),
 
     (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
