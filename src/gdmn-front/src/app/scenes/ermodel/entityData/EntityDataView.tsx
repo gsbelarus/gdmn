@@ -1,7 +1,4 @@
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
-import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
-import React from 'react';
-import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { ERModel } from 'gdmn-orm';
 
 export interface IEntityMatchParams {

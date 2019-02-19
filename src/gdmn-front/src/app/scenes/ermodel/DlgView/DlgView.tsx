@@ -11,7 +11,7 @@ export enum IDlgState {
 }
 
 export interface IDlgViewProps extends IViewProps {
-  rs: RecordSet<IDataRow>;
+  rs: RecordSet;
   erModel?: ERModel,
   dlgState: IDlgState,
 }

@@ -7,34 +7,23 @@ import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-r
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
 import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
 import { Dispatch } from 'redux';
-import { ERModel } from 'gdmn-orm';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 
-import { IStompDemoViewProps, StompDemoView } from '@src/app/scenes/gdmn/components/StompDemoView';
-import { AccountView, IAccountViewProps } from '@src/app/scenes/gdmn/components/AccountView';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import styles from './styles.css';
-import { IViewTab } from './types';
-import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
-import { IDlgState } from '../ermodel/DlgView/DlgView';
+import { StompDemoViewContainer } from './components/StompDemoViewContainer';
+import { AccountViewContainer } from './components/AccountViewContainer';
 
 type TGdmnViewStateProps = {
-  erModel: ERModel;
   loading: boolean;
   loadingMessage?: string;
-  viewTabs: IViewTab[];
-  onCloseTab: (url: string) => void;
 };
 
-type TGdmnViewProps = IStompDemoViewProps &
-  IAccountViewProps &
-  TGdmnViewStateProps & {
-    dispatch: Dispatch<any>; // TODO
-  };
+type TGdmnViewProps = TGdmnViewStateProps & { dispatch: Dispatch<any> }; // TODO
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
@@ -46,15 +35,8 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
       match,
       history,
       dispatch,
-      erModel,
-      apiPing,
-      apiDeleteAccount,
       loading,
-      onError,
-      updateViewTab,
-      location,
-      viewTabs
-    } = this.props;
+      location    } = this.props;
     if (!match) return null;
 
     return (
@@ -123,10 +105,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               <Route
                 path={`${match.path}/account`}
                 render={props => (
-                  <AccountView
-                    apiDeleteAccount={apiDeleteAccount}
-                    updateViewTab={updateViewTab}
-                    viewTab={viewTabs.find( vt => vt.url === props.match.url )}
+                  <AccountViewContainer
                     {...props}
                   />
                 )}
@@ -135,13 +114,8 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 path={`${match.path}/web-stomp`}
                 render={props => {
                   return (
-                    <StompDemoView
-                      apiPing={apiPing}
-                      erModel={erModel}
-                      updateViewTab={updateViewTab}
-                      viewTab={viewTabs.find( vt => vt.url === props.match.url )}
+                    <StompDemoViewContainer
                       {...props}
-                      onError={onError}
                     />
                   );
                 }}
@@ -167,6 +141,8 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   </div>
                 )}
               />
+              {
+                /*
               <Route
                 path={`${match.path}/entity/:entityName/edit/:currentRow`}
                 render={props => (
@@ -191,6 +167,8 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                   </div>
                 )}
               />
+                */
+              }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
