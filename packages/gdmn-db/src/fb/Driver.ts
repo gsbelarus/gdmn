@@ -2,7 +2,7 @@ import {AConnection} from "../AConnection";
 import {AConnectionPool} from "../AConnectionPool";
 import {ADriver} from "../ADriver";
 import {AccessMode, ATransaction} from "../ATransaction";
-import {DBSchema} from "../DBStructure";
+import {DBSchema} from "../DBSchema";
 import {Connection} from "./Connection";
 import {Service} from "./Service";
 import {RDBReader} from "./utils/RDBReader";

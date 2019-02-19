@@ -3,7 +3,7 @@ import {AConnectionPool} from "./AConnectionPool";
 import {AService} from "./AService";
 import {ATransaction} from "./ATransaction";
 import {CommonConnectionPool, ICommonConnectionPoolOptions} from "./common/connectionPool/CommonConnectionPool";
-import {DBSchema} from "./DBStructure";
+import {DBSchema} from "./DBSchema";
 
 export abstract class ADriver<PoolOptions = any> {
 

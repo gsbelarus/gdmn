@@ -15,10 +15,10 @@ export class RDBReader {
                     TRIM(f.RDB$FIELD_NAME)                            AS "fieldName",
                     f.RDB$FIELD_TYPE                                  AS "fieldType",
                     f.RDB$NULL_FLAG                                   AS "nullFlag",
-                    CAST(f.RDB$DEFAULT_SOURCE AS VARCHAR(4000))       AS "defaultSource",
+                    f.RDB$DEFAULT_SOURCE                              AS "defaultSource",
                     f.RDB$FIELD_LENGTH                                AS "fieldLength",
                     f.RDB$FIELD_SCALE                                 AS "fieldScale",
-                    CAST(f.RDB$VALIDATION_SOURCE AS VARCHAR(4000))    AS "validationSource",
+                    f.RDB$VALIDATION_SOURCE                           AS "validationSource",
                     f.RDB$FIELD_SUB_TYPE                              AS "fieldSubType",
                     f.RDB$FIELD_PRECISION                             AS "fieldPrecision"
                 FROM RDB$FIELDS f
@@ -31,11 +31,11 @@ export class RDBReader {
                         RDB$FIELD_TYPE: resultSet.getNumber("fieldType"),
                         RDB$NULL_FLAG: resultSet.getNumber("nullFlag") as NullFlag,
                         RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource") ? null
-                            : resultSet.getString("defaultSource"),
+                            : await resultSet.getBlob("defaultSource").asString(),
                         RDB$FIELD_LENGTH: resultSet.getNumber("fieldLength"),
                         RDB$FIELD_SCALE: resultSet.getNumber("fieldScale"),
                         RDB$VALIDATION_SOURCE: resultSet.isNull("validationSource") ? null
-                            : resultSet.getString("validationSource"),
+                            : await resultSet.getBlob("validationSource").asString(),
                         RDB$FIELD_SUB_TYPE: resultSet.isNull("fieldSubType") ? null
                             : resultSet.getNumber("fieldSubType"),
                         RDB$FIELD_PRECISION: resultSet.getNumber("fieldPrecision")
@@ -57,7 +57,7 @@ export class RDBReader {
                     TRIM(rf.RDB$FIELD_NAME)                           AS "fieldName",
                     TRIM(rf.RDB$FIELD_SOURCE)                         AS "fieldSource",
                     rf.RDB$NULL_FLAG                                  AS "nullFlag",
-                    CAST(rf.RDB$DEFAULT_SOURCE AS VARCHAR(4000))      AS "defaultSource"
+                    rf.RDB$DEFAULT_SOURCE                             AS "defaultSource"
                 FROM RDB$RELATION_FIELDS rf
                 ORDER BY RDB$RELATION_NAME, RDB$FIELD_POSITION
             `,
@@ -70,7 +70,7 @@ export class RDBReader {
                         RDB$FIELD_SOURCE: resultSet.getString("fieldSource"),
                         RDB$NULL_FLAG: resultSet.getNumber("nullFlag") as NullFlag,
                         RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource") ? null
-                            : resultSet.getString("defaultSource")
+                            : await resultSet.getBlob("defaultSource").asString()
                     });
                 }
                 return array;

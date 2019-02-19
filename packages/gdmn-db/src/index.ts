@@ -12,4 +12,4 @@ export * from "./ADriver";
 export * from "./Factory";
 export * from "./common/connectionPool/CommonConnectionPool";
 export * from "./common/CommonParamsAnalyzer";
-export * from "./DBStructure";
+export * from "./DBSchema";
