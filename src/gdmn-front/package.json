@@ -79,7 +79,7 @@
     "mini-css-extract-plugin": "^0",
     "optimize-css-assets-webpack-plugin": "^5",
     "prettier": "^1",
-    "react-hot-loader": "^4.7.0",
+    "react-hot-loader": "^4",
     "redux-logger": "^3",
     "shx": "^0",
     "style-loader": "^0",

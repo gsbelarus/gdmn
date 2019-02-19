@@ -42,61 +42,61 @@ describe("Delete", () => {
           connection,
           transaction,
           callback: async ({erBuilder, eBuilder}) => {
-              const MainEntity = await erBuilder.create(erModel, new Entity({
-                  name: "MAIN_ENTITY",
-                  lName: {}
-              }));
-              await eBuilder.createAttribute(MainEntity, new StringAttribute({
-                  name: "TEST_STRING",
-                  lName: {}
-              }));
+            const MainEntity = await erBuilder.create(erModel, new Entity({
+              name: "MAIN_ENTITY",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(MainEntity, new StringAttribute({
+              name: "TEST_STRING",
+              lName: {}
+            }));
 
 
-              const DetailEntity = await erBuilder.create(erModel, new Entity({
-                  name: "DETAIL_ENTITY",
-                  lName: {}
-              }));
-              await eBuilder.createAttribute(DetailEntity, new StringAttribute({
-                  name: "TEST_STRING",
-                  lName: {}
-              }));
+            const DetailEntity = await erBuilder.create(erModel, new Entity({
+              name: "DETAIL_ENTITY",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(DetailEntity, new StringAttribute({
+              name: "TEST_STRING",
+              lName: {}
+            }));
 
 
-              const ChildEntity = await erBuilder.create(erModel, new Entity({
-                  name: "CHILD_ENTITY",
-                  lName: {},
-                  parent: MainEntity
-              }));
-              await eBuilder.createAttribute(ChildEntity, new StringAttribute({
-                  name: "TEST_STRING1",
-                  lName: {}
-              }));
-              await eBuilder.createAttribute(ChildEntity, new StringAttribute({
-                  name: "TEST_STRING2",
-                  lName: {}
-              }));
-              await eBuilder.createAttribute(ChildEntity, new EntityAttribute({
-                  name: "LINK",
-                  lName: {},
-                  entities: [MainEntity]
-              }));
-              await eBuilder.createAttribute(ChildEntity, new ParentAttribute({
-                  name: "PARENT",
-                  lName: {},
-                  entities: [ChildEntity]
-              }));
+            const ChildEntity = await erBuilder.create(erModel, new Entity({
+              name: "CHILD_ENTITY",
+              lName: {},
+              parent: MainEntity
+            }));
+            await eBuilder.createAttribute(ChildEntity, new StringAttribute({
+              name: "TEST_STRING1",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(ChildEntity, new StringAttribute({
+              name: "TEST_STRING2",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(ChildEntity, new EntityAttribute({
+              name: "LINK",
+              lName: {},
+              entities: [MainEntity]
+            }));
+            await eBuilder.createAttribute(ChildEntity, new ParentAttribute({
+              name: "PARENT",
+              lName: {},
+              entities: [ChildEntity]
+            }));
 
-              await eBuilder.createAttribute(ChildEntity, new SetAttribute({
-                  name: "SET_LINK",
-                  lName: {},
-                  entities: [MainEntity]
-              }));
+            await eBuilder.createAttribute(ChildEntity, new SetAttribute({
+              name: "SET_LINK",
+              lName: {},
+              entities: [MainEntity]
+            }));
 
-              await eBuilder.createAttribute(ChildEntity, new DetailAttribute({
-                  name: "DETAIL_ENTITY",
-                  lName: {},
-                  entities: [DetailEntity]
-              }));
+            await eBuilder.createAttribute(ChildEntity, new DetailAttribute({
+              name: "DETAIL_ENTITY",
+              lName: {},
+              entities: [DetailEntity]
+            }));
           }
         });
       }
@@ -120,7 +120,7 @@ describe("Delete", () => {
 
     await AConnection.executeTransaction({
       connection,
-      callback: (transaction) => connection.execute(transaction,sql, params)
+      callback: (transaction) => connection.execute(transaction, sql, params)
     });
   });
 
@@ -137,7 +137,7 @@ describe("Delete", () => {
 
     await AConnection.executeTransaction({
       connection,
-      callback: (transaction) => connection.execute(transaction,sql, params)
+      callback: (transaction) => connection.execute(transaction, sql, params)
     });
   });
 });

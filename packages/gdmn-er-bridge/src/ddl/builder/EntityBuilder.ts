@@ -160,7 +160,7 @@ export class EntityBuilder extends Builder {
             fieldName
           }, {
             tableName: Builder._getOwnRelationName(eAttr.entities[0]),
-            fieldName:Builder._getPKFieldName(eAttr.entities[0], Builder._getOwnRelationName(eAttr.entities[0]))
+            fieldName: Builder._getPKFieldName(eAttr.entities[0], Builder._getOwnRelationName(eAttr.entities[0]))
           });
 
           if (!attribute.adapter) {

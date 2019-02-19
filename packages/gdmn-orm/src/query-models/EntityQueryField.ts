@@ -1,9 +1,9 @@
 import {Attribute} from "../model/Attribute";
-import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
-import {SetAttribute} from "../model/link/SetAttribute";
-import {EntityAttribute} from "../model/link/EntityAttribute";
 import {Entity} from "../model/Entity";
 import {ERModel} from "../model/ERModel";
+import {EntityAttribute} from "../model/link/EntityAttribute";
+import {SetAttribute} from "../model/link/SetAttribute";
+import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 import {EntityLink, IEntityLinkInspector} from "./EntityLink";
 
 export interface IEntityQueryFieldInspector {
@@ -43,7 +43,7 @@ export class EntityQueryField {
     const attribute = entity.attribute(inspector.attribute);
     if (attribute instanceof EntityAttribute) {
       if (!inspector.link) {
-        throw new Error("EntityQueryField with EntityAttribute must has 'link' property")
+        throw new Error("EntityQueryField with EntityAttribute must has 'link' property");
       }
       if (attribute instanceof SetAttribute) {
         return new EntityQueryField(attribute, EntityLink.inspectorToObject(erModel, inspector.link),
@@ -64,7 +64,7 @@ export class EntityQueryField {
       }
       return new EntityQueryField(attribute);
     }
-    throw new Error("Should never happened")
+    throw new Error("Should never happened");
   }
 
   public inspect(): IEntityQueryFieldInspector {

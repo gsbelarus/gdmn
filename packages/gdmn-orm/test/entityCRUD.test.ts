@@ -1,6 +1,7 @@
 import {
   EntityDelete,
-  EntityInsert, EntityUpdate,
+  EntityInsert,
+  EntityUpdate,
   IEntityDeleteInspector,
   IEntityInsertInspector,
   IEntityUpdateInspector,
@@ -62,8 +63,8 @@ describe("EntityQuery", () => {
     }));
     childEntity.add(new StringAttribute({name: "TEST_STRING", lName: {}}));
     childEntity.add(new StringAttribute({name: "TEST_STRING1", lName: {}}));
-    childEntity.add(new ParentAttribute({name: "PARENT",lName: {}, entities: [childEntity]}));
-    childEntity.add( new EntityAttribute({name: "LINK", lName: {}, entities: [testEntity]}));
+    childEntity.add(new ParentAttribute({name: "PARENT", lName: {}, entities: [childEntity]}));
+    childEntity.add(new EntityAttribute({name: "LINK", lName: {}, entities: [testEntity]}));
     childEntity.add(setAttr);
 
   });

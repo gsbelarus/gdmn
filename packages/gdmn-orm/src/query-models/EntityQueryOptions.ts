@@ -86,7 +86,7 @@ export class EntityQueryOptions {
           alias: opt.alias,
           attribute: findLink.entity.attribute(opt.attribute),
           type: opt.type
-        }
+        };
       }) : undefined
     );
   }
