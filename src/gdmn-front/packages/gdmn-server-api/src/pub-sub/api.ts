@@ -124,7 +124,7 @@ interface IApplicationInfo {
   creationDate: Date;
 }
 
-const enum TTaskFinishStatus {
+export enum TTaskFinishStatus {
   INTERRUPTED = 3,
   ERROR = 4,
   DONE = 5

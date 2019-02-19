@@ -8,12 +8,10 @@ import { Observable } from 'rxjs';
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
-import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TPingTaskCmd, TTaskActionNames, TTaskFinishStatus, TTaskStatus } from '@gdmn/server-api';
 import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
-
-const EndTaskStatuses = [TTaskStatus.DONE, TTaskStatus.ERROR, TTaskStatus.INTERRUPTED];
 
 interface IStompDemoViewState {
   stressStarted: boolean;
@@ -135,7 +133,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
                   await getTaskResultObservable()
                     .pipe(
                       filter(
-                        value => Reflect.has(value.payload, 'result') && EndTaskStatuses.includes(value.payload.status)
+                        value => Reflect.has(value.payload, 'result') && value.payload.status in TTaskFinishStatus
                       ),
                       first()
                     )
@@ -147,8 +145,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
                     getTaskResultObservable()
                       .pipe(
                         filter(
-                          value =>
-                            Reflect.has(value.payload, 'result') && EndTaskStatuses.includes(value.payload.status)
+                          value => Reflect.has(value.payload, 'result') && value.payload.status in TTaskFinishStatus
                         ),
                         first()
                       )
@@ -207,32 +204,33 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       ])
     );
 
-    apiService.makeDataCursor({
-      payload: {
-        action: TTaskActionNames.QUERY,
+    apiService
+      .makeDataCursor({
         payload: {
-          query: query.inspect(),
-          sequentially: true
+          action: TTaskActionNames.QUERY,
+          payload: {
+            query: query.inspect(),
+            sequentially: true
+          }
         }
-      }
-    }).subscribe(value => {
-      console.log('QUERY result', value);
+      })
+      .subscribe(value => {
+        console.log('QUERY result', value);
 
-      if (value.payload.status === TTaskStatus.RUNNING) {
+        if (value.payload.status === TTaskStatus.RUNNING) {
+          if (value.meta) {
+            console.log('taskId', value.meta.taskId);
 
-        if (value.meta) {
-          console.log('taskId', value.meta.taskId);
-
+            this.setState({
+              cursorTaskId: value.meta.taskId
+            });
+          }
+        } else {
           this.setState({
-            cursorTaskId: value.meta.taskId
+            cursorTaskId: undefined
           });
         }
-      } else {
-        this.setState({
-          cursorTaskId: undefined
-        });
-      }
-    })
+      });
   };
 
   private handleCursorNext = () => {
@@ -367,11 +365,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               disabled={!this.props.erModel || !!this.state.cursorTaskId}
             />
             <br />
-            <DefaultButton
-              onClick={this.handleCursorNext}
-              text="CURSOR NEXT"
-              disabled={!!!this.state.cursorTaskId}
-            />
+            <DefaultButton onClick={this.handleCursorNext} text="CURSOR NEXT" disabled={!!!this.state.cursorTaskId} />
             <br />
             <DefaultButton
               onClick={this.handleDestroyCursor}

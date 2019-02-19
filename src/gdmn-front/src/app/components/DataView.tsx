@@ -1,12 +1,13 @@
 import React from 'react';
-import { IViewProps, View } from './View';
-import { RecordSet, SortFields } from 'gdmn-recordset';
-import { GDMNGrid, GridComponentState, IGridState } from 'gdmn-grid';
-import { Semaphore } from 'gdmn-internals';
-import { getMutex, disposeMutex } from './dataViewMutexes';
 import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
-import { LinkCommandBarButton } from './LinkCommandBarButton';
+import { RecordSet, SortFields } from 'gdmn-recordset';
+import { GDMNGrid, GridComponentState, IGridState, TLoadMoreRsData } from 'gdmn-grid';
+import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
+
+import { IViewProps, View } from './View';
+import { disposeMutex, getMutex } from './dataViewMutexes';
+import { LinkCommandBarButton } from './LinkCommandBarButton';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -17,7 +18,8 @@ export interface IRSAndGCS {
 export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
   erModel?: ERModel;
-  loadData: (mutex: Semaphore) => void;
+  createRs: (mutex: Semaphore) => void;
+  loadMoreRsData?: TLoadMoreRsData;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
   onColumnResize: (gridName: string, columnIndex: number, newWidth: number) => void;
@@ -45,16 +47,19 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public componentDidMount() {
     if (!this.isDataLoaded()) {
-      this.props.loadData(getMutex(this.getDataViewKey()));
+      this.props.createRs(getMutex(this.getDataViewKey()));
     }
 
     super.componentDidMount();
   }
 
   public componentDidUpdate() {
-    const { loadData } = this.props;
+    if (this.props.loadMoreRsData) return; // todo test
+
+    // TODO: ???
+    const { createRs } = this.props;
     if (!this.isDataLoaded()) {
-      loadData(getMutex(this.getDataViewKey()));
+      createRs(getMutex(this.getDataViewKey()));
     } else {
       const { data } = this.props;
       if (data && data.rs && data.detail && data.detail.length) {
@@ -62,7 +67,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         const detailValue = masterLink.values[0].value;
         const masterValue = data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName);
         if (detailValue !== masterValue) {
-          loadData(getMutex(this.getDataViewKey()));
+          createRs(getMutex(this.getDataViewKey()));
         }
       }
     }
@@ -71,20 +76,20 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   public componentWillUnmount() {
     disposeMutex(this.getDataViewKey());
 
+    // TODO
+
     const { updateViewTab, viewTab } = this.props;
 
     if (viewTab) {
-      const savedState = Object.entries(this._gridRef).reduce(
-        (p, [name, g]) => {
-          if (g) {
-            return {...p, [name]: g.state}
-          } else {
-            return p;
-          }
-        }, {}
-      );
+      const savedState = Object.entries(this._gridRef).reduce((p, [name, g]) => {
+        if (g) {
+          return { ...p, [name]: g.state };
+        } else {
+          return p;
+        }
+      }, {});
 
-      updateViewTab({...viewTab, savedState});
+      updateViewTab({ ...viewTab, savedState });
     }
   }
 
@@ -102,7 +107,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Add'
         },
-        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/add` : `${match!.url}`),
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/add` : `${match!.url}`)
       },
       {
         key: `edit`,
@@ -110,14 +115,14 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`),
+        commandBarButtonAs: btn(this.isDataLoaded() ? `${match!.url}/edit/${data!.rs.currentRow}` : `${match!.url}`)
       },
       {
         key: `delete`,
         text: 'Delete',
         iconProps: {
           iconName: 'Delete'
-        },
+        }
       }
     ];
   }
@@ -155,7 +160,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       onSelectAllRows,
       onSetCursorPos,
       onSort,
-      onToggleGroup
+      onToggleGroup,
+      loadMoreRsData
     } = this.props;
     const masterRS = data!.rs;
     const detailRS = data!.detail![0].rs;
@@ -167,6 +173,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         <GDMNGrid
           {...data!.gcs}
           rs={masterRS}
+          loadMoreRsData={loadMoreRsData}
           onCancelSortDialog={() => onCancelSortDialog(masterGridName)}
           onApplySortDialog={(sortFields: SortFields) =>
             onApplySortDialog(masterRS, masterGridName, sortFields, this._gridRef[masterGridName])
@@ -221,7 +228,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       onSelectAllRows,
       onSetCursorPos,
       onSort,
-      onToggleGroup
+      onToggleGroup,
+      loadMoreRsData
     } = this.props;
     const masterRS = data!.rs;
     const masterGridName = masterRS.name;
@@ -231,6 +239,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         <GDMNGrid
           {...data!.gcs}
           rs={masterRS}
+          loadMoreRsData={loadMoreRsData}
           onCancelSortDialog={() => onCancelSortDialog(masterGridName)}
           onApplySortDialog={(sortFields: SortFields) =>
             onApplySortDialog(masterRS, masterGridName, sortFields, this._gridRef[masterGridName])
@@ -275,5 +284,3 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     }
   }
 }
-
-

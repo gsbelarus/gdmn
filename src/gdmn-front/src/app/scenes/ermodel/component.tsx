@@ -1,12 +1,11 @@
-import { ERModel } from 'gdmn-orm';
+import React from 'react';
 import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
 
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
-import React from 'react';
 
 export interface IERModelViewProps extends IDataViewProps<any> {
-  apiGetSchema: () => void
+  apiGetSchema: () => void;
 }
 
 export class ERModelView extends DataView<IERModelViewProps, {}> {
@@ -38,14 +37,17 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
 
-    return [...super.getCommandBarItems(),
+    return [
+      ...super.getCommandBarItems(),
       {
         key: 'loadEntity',
         text: 'Load entity',
         iconProps: {
           iconName: 'Table'
         },
-        commandBarButtonAs: btn(this.isDataLoaded() ? `entity/${data!.rs.getString(data!.rs.currentRow, 'name')}` : `${match!.url}`)
+        commandBarButtonAs: btn(
+          this.isDataLoaded() ? `entity/${data!.rs.getString(data!.rs.currentRow, 'name')}` : `${match!.url}`
+        )
       },
       {
         key: 'reloadERModel',
@@ -58,5 +60,3 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
     ];
   }
 }
-
-

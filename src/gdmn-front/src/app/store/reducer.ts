@@ -1,5 +1,5 @@
 import { combineReducers, Reducer } from 'redux';
-import { getType } from 'typesafe-actions';
+import { ActionType, createAction, getType } from 'typesafe-actions';
 // @ts-ignore
 import persistLocalStorage from 'redux-persist/lib/storage';
 // @ts-ignore
@@ -17,11 +17,41 @@ import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 
 initializeIcons(/* optional base url */);
 
+// RS-META
+
+interface IRsMetaState {
+  [rsName: string]: {
+    taskId?: string;
+  };
+}
+
+const rsMetaActions = {
+  setRsMeta: createAction('SET_RS_META', resolve => {
+    return (rsName: string, rsMeta: { taskId?: string }) => resolve({ rsName, rsMeta });
+  })
+};
+
+type TRsMetaActions = ActionType<typeof rsMetaActions>;
+
+function rsMetaReducer(state: IRsMetaState = {}, action: TRsMetaActions) {
+  if (action.type === getType(rsMetaActions.setRsMeta)) {
+    return {
+      ...state,
+      [action.payload.rsName]: action.payload.rsMeta
+    };
+  }
+
+  return state;
+}
+
+//
+
 interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: TGdmnState;
   readonly recordSet: RecordSetReducerState;
+  readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
 }
 
@@ -32,12 +62,13 @@ const authPersistConfig = {
 };
 
 function withReset(reducer: any) {
-  return (state: any, action: any) => reducer(
-    action.type === getType(authActions.onSignOut) || action.type === getType(gdmnActions.onApiDeleteAccount)
-      ? undefined /* reset state to initial*/
-      : state,
-    action
-  );
+  return (state: any, action: any) =>
+    reducer(
+      action.type === getType(authActions.onSignOut) || action.type === getType(gdmnActions.onApiDeleteAccount)
+        ? undefined /* reset state to initial*/
+        : state,
+      action
+    );
 }
 
 const reducer = combineReducers<IState>({
@@ -45,6 +76,7 @@ const reducer = combineReducers<IState>({
   gdmnState: withReset(gdmnReducer),
   authState: persistReducer(authPersistConfig, withReset(authReducer)),
   recordSet: withReset(recordSetReducer),
+  rsMeta: withReset(rsMetaReducer),
   grid: withReset(gridReducer)
 });
 
@@ -52,4 +84,4 @@ type TReducer = Reducer<IState & PersistPartial, TActions>;
 
 // tslint:disable-next-line no-default-export
 export default reducer; // TODO test hmr require without default
-export { TReducer, IState };
+export { TReducer, IState, rsMetaActions, TRsMetaActions, IRsMetaState };
