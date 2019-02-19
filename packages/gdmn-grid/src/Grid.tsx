@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
-import { AutoSizer, Grid, GridCellProps } from 'react-virtualized';
+import {
+  AutoSizer,
+  Grid,
+  GridCellProps,
+  Index,
+  IndexRange,
+  InfiniteLoader,
+  InfiniteLoaderChildProps,
+  SectionRenderedParams
+} from 'react-virtualized';
 import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
-import { OnScroll, SyncScroll, OnScrollParams } from './SyncScroll';
+import { OnScroll, OnScrollParams } from './SyncScroll';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
@@ -19,6 +28,8 @@ export interface IColumn {
 }
 
 export type Columns = IColumn[];
+
+export type TLoadMoreRsData = (params: IndexRange) => Promise<any>;
 
 export interface IGridProps {
   rs: RecordSet;
@@ -40,6 +51,7 @@ export interface IGridProps {
   onSelectRow: (idx: number, selected: boolean) => void;
   onSelectAllRows: (value: boolean) => void;
   onToggleGroup: (rowIdx: number) => void;
+  loadMoreRsData?: TLoadMoreRsData;
 }
 
 export interface IGridState {
@@ -142,6 +154,10 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _columnSizingDeltaX: number = 0;
   private _scrollIntoView?: ScrollIntoView = undefined;
 
+  public static defaultProps: Partial<IGridProps> = {
+    loadMoreRsData: () => new Promise(resolve => resolve())
+  };
+
   constructor(props: IGridProps) {
     super(props);
     const maxCountFieldInCell = props.columns.reduce((max, c) => (c.fields.length > max ? c.fields.length : max), 0);
@@ -219,6 +235,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       onCancelSortDialog,
       onApplySortDialog,
       onSetCursorPos,
+      loadMoreRsData,
       currentCol
     } = this.props;
     const { rowHeight, overscanColumnCount, overscanRowCount, deltaWidth } = this.state;
@@ -233,7 +250,14 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       return undefined;
     }
 
-    const composeGrid = (width: number, height: number, scrollLeft: number, sTop: number, onScroll: OnScroll) => {
+    const composeGrid = (
+      width: number,
+      height: number,
+      scrollLeft: number,
+      sTop: number,
+      onScroll: OnScroll,
+      infiniteLoaderChildProps: InfiniteLoaderChildProps
+    ) => {
       const getLeftSideColumnWidth = this._getColumnMeasurer(this._adjustLeftSideColumnIndex, true);
       const getBodyColumnWidth = this._getColumnMeasurer(this._adjustBodyColumnIndex, false);
       const getRightSideColumnWidth = this._getColumnMeasurer(this._adjustRightSideColumnIndex, true);
@@ -595,6 +619,22 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           </div>
         );
 
+        // TODO: test
+        const onSectionRendered = ({
+          columnStartIndex,
+          columnStopIndex,
+          rowStartIndex,
+          rowStopIndex
+        }: SectionRenderedParams) => {
+          const startIndex = rowStartIndex * columnCount + columnStartIndex;
+          const stopIndex = rowStopIndex * columnCount + columnStopIndex;
+
+          infiniteLoaderChildProps.onRowsRendered({
+            startIndex,
+            stopIndex
+          });
+        };
+
         const bodyRows = () => (
           <div
             className={styles.BodyRows}
@@ -633,10 +673,10 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               scrollLeft={scrollLeft}
               scrollTop={scrollTop}
               ref={g => {
-                if (g) {
-                  this._bodyRowsGrid = g;
-                }
+                if (g) this._bodyRowsGrid = g;
+                infiniteLoaderChildProps.registerChild(g);
               }}
+              onSectionRendered={onSectionRendered}
             />
           </div>
         );
@@ -778,27 +818,44 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
     return (
       <div className="GridBody">
-        <AutoSizer>
-          {
-            ({ width, height }) => {
-              let deltaWidth = width -
-                columns.reduce( (w, c) => c.width ? (w + c.width) : (w + this.state.columnWidth), 0) -
-                scrollbarSize();
+        <InfiniteLoader
+          isRowLoaded={this.isRowLoaded}
+          loadMoreRows={(params: IndexRange) => loadMoreRsData!(params)}
+          rowCount={rs.size + 20 /* todo */}
+          //minimumBatchSize={20}
+        >
+          {infiniteLoaderChildProps => {
+            return (
+              <AutoSizer>
+                {({ width, height }) => {
+                  let deltaWidth =
+                    width -
+                    columns.reduce((w, c) => (c.width ? w + c.width : w + this.state.columnWidth), 0) -
+                    scrollbarSize();
 
-              if (deltaWidth < 0) {
-                deltaWidth = 0
-              };
+                  if (deltaWidth < 0) {
+                    deltaWidth = 0;
+                  }
 
-              if (deltaWidth >= 0 && deltaWidth !== this.state.deltaWidth) {
-                this.setState({ deltaWidth });
-              };
+                  if (deltaWidth >= 0 && deltaWidth !== this.state.deltaWidth) {
+                    this.setState({ deltaWidth });
+                  }
 
-              const { scrollLeft, scrollTop } = this.state;
+                  const { scrollLeft, scrollTop } = this.state;
 
-              return composeGrid(width, height, scrollLeft, scrollTop, (params: OnScrollParams) => this.setState({ ...params }) );
-            }
-          }
-        </AutoSizer>
+                  return composeGrid(
+                    width,
+                    height,
+                    scrollLeft,
+                    scrollTop,
+                    (params: OnScrollParams) => this.setState({ ...params }),
+                    infiniteLoaderChildProps
+                  );
+                }}
+              </AutoSizer>
+            );
+          }}
+        </InfiniteLoader>
         {sortDialog ? (
           <GDMNSortDialog
             fieldDefs={rs.fieldDefs}
@@ -990,13 +1047,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         </Draggable>
       );
     } else {
-      return (
-        <div
-          key={key}
-          className={cn(styles.CellColumn, styles.HeaderCell)}
-          style={style}
-        ></div>
-      );
+      return <div key={key} className={cn(styles.CellColumn, styles.HeaderCell)} style={style} />;
     }
   };
 
@@ -1114,7 +1165,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           );
         })
       ) : (
-        <span className={cn(styles.CellColumn, textClass)}></span>
+        <span className={cn(styles.CellColumn, textClass)} />
       );
 
     const checkMark =
@@ -1180,41 +1231,56 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     }
   };
 
-  private _getFooterCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) =>
-    ({columnIndex, key, style}: GridCellProps) => {
-      const { rs, columns, rightSideColumns, leftSideColumns } = this.props;
-      const column = columns[adjustFunc(columnIndex)];
-      const classNames = cn(styles.CellColumn, styles.FooterCell, fixed ? styles.FixedCell : '');
-      const cellText =
-        fixed || ((columns.length - rightSideColumns - leftSideColumns) !== columnIndex)
-        ?
-        column.fields.map( (f, idx) => {
-        let classNameSpan = f.alignment === 'RIGHT' ? styles.DataCellRight : f.alignment === 'CENTER' ? styles.DataCellCenter : styles.DataCellLeft;
-        let fieldName = f.fieldName;
-        let aggregates = rs.aggregates;
-        return <span key={idx} className={classNameSpan}>{aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined}</span>;
-        })
-        :
-        '';
+  private _getFooterCellRenderer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) => ({
+    columnIndex,
+    key,
+    style
+  }: GridCellProps) => {
+    const { rs, columns, rightSideColumns, leftSideColumns } = this.props;
+    const column = columns[adjustFunc(columnIndex)];
+    const classNames = cn(styles.CellColumn, styles.FooterCell, fixed ? styles.FixedCell : '');
+    const cellText =
+      fixed || columns.length - rightSideColumns - leftSideColumns !== columnIndex
+        ? column.fields.map((f, idx) => {
+            let classNameSpan =
+              f.alignment === 'RIGHT'
+                ? styles.DataCellRight
+                : f.alignment === 'CENTER'
+                ? styles.DataCellCenter
+                : styles.DataCellLeft;
+            let fieldName = f.fieldName;
+            let aggregates = rs.aggregates;
+            return (
+              <span key={idx} className={classNameSpan}>
+                {aggregates ? (aggregates[fieldName] ? aggregates[fieldName] : undefined) : undefined}
+              </span>
+            );
+          })
+        : '';
 
-      return (
-        <div
-          className={classNames}
-          key={key}
-          style={style}
-        >
-          {cellText}
-        </div>
-      );
-    };
+    return (
+      <div className={classNames} key={key} style={style}>
+        {cellText}
+      </div>
+    );
+  };
 
-  private _getColumnMeasurer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) => ({ index }: { index: number}): number => {
+  private _getColumnMeasurer = (adjustFunc: AdjustColumnIndexFunc, fixed: boolean) => ({
+    index
+  }: {
+    index: number;
+  }): number => {
     const { columns, rightSideColumns } = this.props;
     const { columnWidth, deltaWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
-    return (!fixed && ((columns.length - rightSideColumns) === adjustedIndex))
+    return !fixed && columns.length - rightSideColumns === adjustedIndex
       ? deltaWidth
-      : (columns[adjustedIndex] && columns[adjustedIndex].width ? columns[adjustedIndex].width!  : columnWidth);
-  }
-};
+      : columns[adjustedIndex] && columns[adjustedIndex].width
+      ? columns[adjustedIndex].width!
+      : columnWidth;
+  };
 
+  private isRowLoaded = ({ index }: Index) => {
+    return false; // index < this.props.rs.size; // TODO: check row !!rs.get(index)
+  };
+}
