@@ -15,7 +15,6 @@ export class RDBReader {
                     TRIM(f.RDB$FIELD_NAME)                            AS "fieldName",
                     f.RDB$FIELD_TYPE                                  AS "fieldType",
                     f.RDB$NULL_FLAG                                   AS "nullFlag",
-                    CAST(f.RDB$DEFAULT_VALUE AS VARCHAR(4000))        AS "defaultValue",
                     CAST(f.RDB$DEFAULT_SOURCE AS VARCHAR(4000))       AS "defaultSource",
                     f.RDB$FIELD_LENGTH                                AS "fieldLength",
                     f.RDB$FIELD_SCALE                                 AS "fieldScale",
@@ -31,8 +30,6 @@ export class RDBReader {
                         RDB$FIELD_NAME: resultSet.getString("fieldName"),
                         RDB$FIELD_TYPE: resultSet.getNumber("fieldType"),
                         RDB$NULL_FLAG: resultSet.getNumber("nullFlag") as NullFlag,
-                        RDB$DEFAULT_VALUE: resultSet.isNull("defaultValue") ? null
-                            : resultSet.getString("defaultValue"),
                         RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource") ? null
                             : resultSet.getString("defaultSource"),
                         RDB$FIELD_LENGTH: resultSet.getNumber("fieldLength"),
@@ -60,7 +57,6 @@ export class RDBReader {
                     TRIM(rf.RDB$FIELD_NAME)                           AS "fieldName",
                     TRIM(rf.RDB$FIELD_SOURCE)                         AS "fieldSource",
                     rf.RDB$NULL_FLAG                                  AS "nullFlag",
-                    CAST(rf.RDB$DEFAULT_VALUE AS VARCHAR(4000))       AS "defaultValue",
                     CAST(rf.RDB$DEFAULT_SOURCE AS VARCHAR(4000))      AS "defaultSource"
                 FROM RDB$RELATION_FIELDS rf
                 ORDER BY RDB$RELATION_NAME, RDB$FIELD_POSITION
@@ -73,8 +69,6 @@ export class RDBReader {
                         RDB$FIELD_NAME: resultSet.getString("fieldName"),
                         RDB$FIELD_SOURCE: resultSet.getString("fieldSource"),
                         RDB$NULL_FLAG: resultSet.getNumber("nullFlag") as NullFlag,
-                        RDB$DEFAULT_VALUE: resultSet.isNull("defaultValue") ? null
-                            : resultSet.getString("defaultValue"),
                         RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource") ? null
                             : resultSet.getString("defaultSource")
                     });

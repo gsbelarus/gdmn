@@ -24,7 +24,6 @@ export interface IRDB$FIELD {
     RDB$FIELD_NAME: string;
     RDB$FIELD_TYPE: FieldType;
     RDB$NULL_FLAG: NullFlag;
-    RDB$DEFAULT_VALUE: string | null;
     RDB$DEFAULT_SOURCE: string | null;
     RDB$FIELD_LENGTH: number;
     RDB$FIELD_SCALE: number;
@@ -38,7 +37,6 @@ export interface IRDB$RELATIONFIELD {
     RDB$FIELD_NAME: string;
     RDB$FIELD_SOURCE: string;
     RDB$NULL_FLAG: NullFlag;
-    RDB$DEFAULT_VALUE: string | null;
     RDB$DEFAULT_SOURCE: string | null;
 }
 
@@ -136,8 +134,8 @@ export class DBSchema {
     private loadFields(fields: IRDB$FIELD[]): void {
         this._fields = fields.reduce((loadedFields, item) => {
             loadedFields[item.RDB$FIELD_NAME] = new Field(item.RDB$FIELD_TYPE, !!item.RDB$NULL_FLAG,
-                item.RDB$DEFAULT_VALUE, item.RDB$DEFAULT_SOURCE, item.RDB$FIELD_LENGTH, item.RDB$FIELD_SCALE,
-                item.RDB$VALIDATION_SOURCE, item.RDB$FIELD_SUB_TYPE, item.RDB$FIELD_PRECISION);
+                item.RDB$DEFAULT_SOURCE, item.RDB$FIELD_LENGTH, item.RDB$FIELD_SCALE, item.RDB$VALIDATION_SOURCE,
+                item.RDB$FIELD_SUB_TYPE, item.RDB$FIELD_PRECISION);
             return loadedFields;
         }, {} as IFields);
     }
