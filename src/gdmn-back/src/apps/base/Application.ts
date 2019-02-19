@@ -1,5 +1,6 @@
+import {EventEmitter} from "events";
 import {AConnection} from "gdmn-db";
-import {ERBridge} from "gdmn-er-bridge";
+import {EQueryCursor, ERBridge} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   EntityDelete,
@@ -210,35 +211,57 @@ export class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitUnlock();
-        this.checkSession(context.session);
-
         const {query, sequentially} = context.command.payload;
         const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
 
-        const result = await context.session.executeConnection(async (connection) => {
-          if (sequentially) {
-            const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
-            context.session.cursors.set(task.id, cursor);
-            try {
+        if (sequentially) {
+          const cursorEmitter = new EventEmitter();
+          const cursorPromise = new Promise<EQueryCursor>((resolve, reject) => {
+            cursorEmitter.once("cursor", resolve);
+            cursorEmitter.once("error", reject);
+          });
+          context.session.cursorsPromises.set(task.id, cursorPromise);
+          try {
+            await this.waitUnlock();
+            this.checkSession(context.session);
+
+            await context.session.executeConnection(async (connection) => {
+              const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
+              cursorEmitter.emit("cursor", cursor);
+
               await new Promise((resolve, reject) => {
                 // wait for closing cursor
                 cursor.waitClose().then(() => resolve()).catch(reject);
                 // or wait for interrupt task
                 task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
               });
-            } finally {
-              context.session.cursors.delete(task.id);
+
+            });
+          } catch (error) {
+            cursorEmitter.emit("error", error);
+          } finally {
+            context.session.cursorsPromises.delete(task.id);
+            try {
+              const cursor = await cursorPromise;
               if (!cursor.closed) {
                 await cursor.close();
               }
+            } catch (error) {
+              // ignore
             }
-          } else {
-            return await ERBridge.query(connection, connection.readTransaction, entityQuery);
           }
-        });
-        await context.checkStatus();
-        return result;
+          await context.checkStatus();
+
+        } else {
+          await this.waitUnlock();
+          this.checkSession(context.session);
+
+          const result = await context.session.executeConnection((connection) => (
+            ERBridge.query(connection, connection.readTransaction, entityQuery))
+          );
+          await context.checkStatus();
+          return result;
+        }
       }
     });
     session.taskManager.add(task);
@@ -260,7 +283,7 @@ export class Application extends ADatabase {
 
         const {taskKey, rowsCount} = context.command.payload;
 
-        const cursor = context.session.cursors.get(taskKey);
+        const cursor = await context.session.cursorsPromises.get(taskKey);
         if (!cursor) {
           throw new Error("Unknown taskKey");
         }
