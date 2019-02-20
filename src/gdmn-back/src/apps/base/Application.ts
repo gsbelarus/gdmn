@@ -227,28 +227,25 @@ export class Application extends ADatabase {
 
             await context.session.executeConnection(async (connection) => {
               const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
-              cursorEmitter.emit("cursor", cursor);
-
-              await new Promise((resolve, reject) => {
-                // wait for closing cursor
-                cursor.waitClose().then(() => resolve()).catch(reject);
-                // or wait for interrupt task
-                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
-              });
+              try {
+                cursorEmitter.emit("cursor", cursor);
+                await new Promise((resolve, reject) => {
+                  // wait for closing cursor
+                  cursor.waitClose().then(() => resolve()).catch(reject);
+                  // or wait for interrupt task
+                  task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+                });
+              } finally {
+                if (!cursor.closed) {
+                  await cursor.close();
+                }
+              }
 
             });
           } catch (error) {
             cursorEmitter.emit("error", error);
           } finally {
             context.session.cursorsPromises.delete(task.id);
-            try {
-              const cursor = await cursorPromise;
-              if (!cursor.closed) {
-                await cursor.close();
-              }
-            } catch (error) {
-              // ignore
-            }
           }
           await context.checkStatus();
 
