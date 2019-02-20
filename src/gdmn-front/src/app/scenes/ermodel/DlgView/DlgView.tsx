@@ -17,7 +17,7 @@ export interface IDlgViewMatchParams {
 
 export interface IDlgViewProps extends IViewProps<IDlgViewMatchParams> {
   src?: RecordSet,
-  erModel?: ERModel,
+  erModel: ERModel,
   dlgState: DlgState,
 }
 
@@ -27,18 +27,11 @@ export interface IDlgViewState {
 
 export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchParams> {
 
-  /*
-  static getDerivedStateFromProps(props: IDlgViewProps, state: IDlgViewState) {
-    return state;
-  }
-  */
-
   public getViewCaption(): string {
     if (this.props.match) {
-      const entityName = this.props.match.params.entityName;
-      return this.props.dlgState === DlgState.dsInsert ? `add ${entityName}`  : `edit ${entityName}`;
+      return this.props.match.params.entityName;
     } else {
-      return ''
+      return '';
     }
   }
 
@@ -59,7 +52,19 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
         },
       }
     ];
+  }
 
+  public componentDidMount() {
+    super.componentDidMount();
+
+    const { entityName, id } = this.props.match.params;
+    const { erModel } = this.props;
+    const { rs } = this.state;
+
+    if (!rs) {
+      const entity = erModel.entities[entityName];
+
+    }
   }
 
   public render() {

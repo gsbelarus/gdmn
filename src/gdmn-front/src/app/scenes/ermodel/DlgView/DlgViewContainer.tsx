@@ -6,7 +6,6 @@ import { connectView } from '@src/app/components/connectView';
 import { RouteComponentProps } from 'react-router';
 
 export const DlgViewContainer = compose<any, RouteComponentProps<IDlgViewMatchParams>>(
-  connectView,
   connect(
     (state: IState, ownProps: RouteComponentProps<IDlgViewMatchParams>) => {
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
@@ -16,12 +15,7 @@ export const DlgViewContainer = compose<any, RouteComponentProps<IDlgViewMatchPa
         dlgState: DlgState.dsEdit
       };
     }
-    /*
-    () => ({
-      saveRecord: () => thunkDispatch(gdmnActionsAsync.saveRecord()),
-      cancelRecord: () => thunkDispatch(gdmnActionsAsync.cancelRecord()),
-    }),
-    */
-  )
+  ),
+  connectView
 )(DlgView);
 

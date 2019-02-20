@@ -17,6 +17,7 @@ import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewCon
 import styles from './styles.css';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
+import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 
 type TGdmnViewStateProps = {
   loading: boolean;
@@ -142,19 +143,15 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 )}
               />
               {
-                /*
               <Route
                 path={`${match.path}/entity/:entityName/edit/:currentRow`}
                 render={props => (
                   <div style={{ margin: -16 }}>
-                    <DlgViewContainer {...props}
-                      updateViewTab={updateViewTab}
-                      viewTab={viewTabs.find( vt => vt.url === props.match.url )}
-                      dlgState={IDlgState.dsEdit}
-                    />
+                    <DlgViewContainer {...props} />
                   </div>
                 )}
               />
+                /*
               <Route
                 path={`${match.path}/entity/:entityName/add`}
                 render={props => (

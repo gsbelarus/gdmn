@@ -6,7 +6,7 @@ import { IndexRange } from 'react-virtualized';
 import { compose } from 'recompose';
 import { filter, first } from 'rxjs/operators';
 import { Semaphore } from 'gdmn-internals';
-import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute } from 'gdmn-orm';
+import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute } from 'gdmn-orm';
 import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSetData, TFieldType } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 
@@ -53,7 +53,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
         ...dispatchProps,
 
         createRs: (mutex: Semaphore) =>
-          dispatch((dispatch, getState) => {
+          dispatch((dispatch, _getState) => {
             if (!mutex.permits) return;
             console.log('createRs');
 
@@ -62,7 +62,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                 entity,
                 'z',
                 Object.values(entity.attributes)
-                  .filter(attr => attr instanceof ScalarAttribute && !(attr instanceof BlobAttribute))
+                  .filter(attr => ((attr instanceof ScalarAttribute) || (attr instanceof SequenceAttribute)) && !(attr instanceof BlobAttribute) )
                   .map(attr => new EntityQueryField(attr))
               )
             );
