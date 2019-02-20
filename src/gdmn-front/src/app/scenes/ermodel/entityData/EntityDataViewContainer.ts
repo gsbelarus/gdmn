@@ -19,7 +19,6 @@ import { EntityDataView, IEntityDataViewProps, IEntityMatchParams } from './Enti
 import { attr2fd } from './utils';
 
 export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityMatchParams>>(
-  connectDataView,
   connect(
     (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
@@ -191,5 +190,6 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
 
       return mergeProps;
     }
-  )
+  ),
+  connectDataView
 )(EntityDataView);

@@ -13,7 +13,6 @@ import { compose } from 'recompose';
 import { connectDataView } from '@src/app/components/connectDataView';
 
 export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
-  connectDataView,
   connect(
     (state: IState) => ({
       data: {
@@ -185,5 +184,6 @@ export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
         }),
       apiGetSchema: () => thunkDispatch(gdmnActionsAsync.apiGetSchema())
     })
-  )
+  ),
+  connectDataView
 )(ERModelView);
