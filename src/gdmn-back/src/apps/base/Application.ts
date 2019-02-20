@@ -240,7 +240,6 @@ export class Application extends ADatabase {
                   await cursor.close();
                 }
               }
-
             });
           } catch (error) {
             cursorEmitter.emit("error", error);
