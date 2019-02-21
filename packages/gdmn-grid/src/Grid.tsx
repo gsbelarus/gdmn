@@ -52,6 +52,8 @@ export interface IGridProps {
   onSelectAllRows: (value: boolean) => void;
   onToggleGroup: (rowIdx: number) => void;
   loadMoreRsData?: TLoadMoreRsData;
+  loadMoreThresholdPages?: number;
+  loadMoreMinBatchPagesRatio?: number;
 }
 
 export interface IGridState {
@@ -155,7 +157,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _scrollIntoView?: ScrollIntoView = undefined;
 
   public static defaultProps: Partial<IGridProps> = {
-    loadMoreRsData: () => new Promise(resolve => resolve())
+    loadMoreRsData: () => new Promise(resolve => resolve()),
+    loadMoreThresholdPages: 2,
+    loadMoreMinBatchPagesRatio: 2
   };
 
   constructor(props: IGridProps) {
@@ -236,6 +240,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       onApplySortDialog,
       onSetCursorPos,
       loadMoreRsData,
+      loadMoreThresholdPages,
+      loadMoreMinBatchPagesRatio,
       currentCol
     } = this.props;
     const { rowHeight, overscanColumnCount, overscanRowCount, deltaWidth } = this.state;
@@ -250,14 +256,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       return undefined;
     }
 
-    const composeGrid = (
-      width: number,
-      height: number,
-      scrollLeft: number,
-      sTop: number,
-      onScroll: OnScroll,
-      infiniteLoaderChildProps: InfiniteLoaderChildProps
-    ) => {
+    const composeGrid = (width: number, height: number, scrollLeft: number, sTop: number, onScroll: OnScroll) => {
       const getLeftSideColumnWidth = this._getColumnMeasurer(this._adjustLeftSideColumnIndex, true);
       const getBodyColumnWidth = this._getColumnMeasurer(this._adjustBodyColumnIndex, false);
       const getRightSideColumnWidth = this._getColumnMeasurer(this._adjustRightSideColumnIndex, true);
@@ -291,8 +290,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const scrollTop =
         scrollHeight <= bodyHeight ? 0 : sTop >= scrollHeight - rowHeight ? scrollHeight - bodyHeight : sTop;
 
-      const bodyCountRows = Math.floor(bodyHeight / rowHeight);
+      const bodyCountRows = Math.floor(bodyHeight / rowHeight); /* page size */
       const bodyBottomRow = Math.floor((scrollTop + bodyHeight) / rowHeight);
+
+      /* ' || 1'  - 0 protection, Math.max - negative protection */
+      const infiniteLoadThreshold = Math.max(loadMoreThresholdPages || 1, 1) * (bodyCountRows || 1);
+      const infiniteLoadMinimumBatchSize = infiniteLoadThreshold * Math.max(loadMoreMinBatchPagesRatio || 1, 1);
 
       this._scrollIntoView = (recordIndex: number, columnIndex?: number) => {
         if (!bodyHeight) {
@@ -619,15 +622,14 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           </div>
         );
 
-        // TODO: test
-        const onSectionRendered = ({
+        const getOnSectionRendered = (infiniteLoaderChildProps: InfiniteLoaderChildProps) => ({
           columnStartIndex,
           columnStopIndex,
           rowStartIndex,
           rowStopIndex
         }: SectionRenderedParams) => {
-          const startIndex = rowStartIndex * columnCount + columnStartIndex;
-          const stopIndex = rowStopIndex * columnCount + columnStopIndex;
+          const startIndex = rowStartIndex; // * columnCount + columnStartIndex;
+          const stopIndex = rowStopIndex; //* columnCount + columnStopIndex;
 
           infiniteLoaderChildProps.onRowsRendered({
             startIndex,
@@ -646,38 +648,52 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                   }
             }
           >
-            <Grid
-              className={cn(
-                styles.BodyGrid,
-                rightSideColumns ? styles.BodyGridNoVScroll : styles.BodyGridVScroll,
-                !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
-              )}
-              columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
-              height={bodyHeight}
-              overscanColumnCount={overscanColumnCount}
-              overscanRowCount={overscanRowCount}
-              cellRenderer={this._getRowsCellRenderer(this._adjustBodyColumnIndex, false)}
-              rowHeight={rowHeight}
-              rowCount={rowCount}
-              width={bodyWidth}
-              onScroll={
-                !rightSideColumns || hideFooter
-                  ? ({ scrollLeft, scrollTop }) =>
-                      onScroll({
-                        scrollLeft,
-                        scrollTop
-                      })
-                  : undefined
-              }
-              scrollLeft={scrollLeft}
-              scrollTop={scrollTop}
-              ref={g => {
-                if (g) this._bodyRowsGrid = g;
-                infiniteLoaderChildProps.registerChild(g);
+            <InfiniteLoader
+              isRowLoaded={this.isRowLoaded}
+              loadMoreRows={(params: IndexRange) => loadMoreRsData!(params)}
+              rowCount={rs.size + 100}
+              minimumBatchSize={infiniteLoadMinimumBatchSize}
+              threshold={infiniteLoadThreshold}
+            >
+              {infiniteLoaderChildProps => {
+                return (
+                  <Grid
+                    className={cn(
+                      styles.BodyGrid,
+                      rightSideColumns ? styles.BodyGridNoVScroll : styles.BodyGridVScroll,
+                      !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
+                    )}
+                    columnWidth={getBodyColumnWidth}
+                    columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+                    height={bodyHeight}
+                    overscanColumnCount={overscanColumnCount}
+                    overscanRowCount={overscanRowCount}
+                    cellRenderer={this._getRowsCellRenderer(this._adjustBodyColumnIndex, false)}
+                    rowHeight={rowHeight}
+                    rowCount={rowCount}
+                    width={bodyWidth}
+                    onScroll={
+                      !rightSideColumns || hideFooter
+                        ? ({ scrollLeft, scrollTop }) =>
+                            onScroll({
+                              scrollLeft,
+                              scrollTop
+                            })
+                        : undefined
+                    }
+                    scrollLeft={scrollLeft}
+                    scrollTop={scrollTop}
+                    ref={g => {
+                      if (g) {
+                        this._bodyRowsGrid = g;
+                        infiniteLoaderChildProps.registerChild(g);
+                      }
+                    }}
+                    onSectionRendered={getOnSectionRendered(infiniteLoaderChildProps)}
+                  />
+                );
               }}
-              onSectionRendered={onSectionRendered}
-            />
+            </InfiniteLoader>
           </div>
         );
 
@@ -818,44 +834,28 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
     return (
       <div className="GridBody">
-        <InfiniteLoader
-          isRowLoaded={this.isRowLoaded}
-          loadMoreRows={(params: IndexRange) => loadMoreRsData!(params)}
-          rowCount={rs.size + 100}
-          minimumBatchSize={100}
-        >
-          {infiniteLoaderChildProps => {
-            return (
-              <AutoSizer>
-                {({ width, height }) => {
-                  let deltaWidth =
-                    width -
-                    columns.reduce((w, c) => (c.width ? w + c.width : w + this.state.columnWidth), 0) -
-                    scrollbarSize();
+        <AutoSizer>
+          {({ width, height }) => {
+            let deltaWidth =
+              width -
+              columns.reduce((w, c) => (c.width ? w + c.width : w + this.state.columnWidth), 0) -
+              scrollbarSize();
 
-                  if (deltaWidth < 0) {
-                    deltaWidth = 0;
-                  }
+            if (deltaWidth < 0) {
+              deltaWidth = 0;
+            }
 
-                  if (deltaWidth >= 0 && deltaWidth !== this.state.deltaWidth) {
-                    this.setState({ deltaWidth });
-                  }
+            if (deltaWidth >= 0 && deltaWidth !== this.state.deltaWidth) {
+              this.setState({ deltaWidth });
+            }
 
-                  const { scrollLeft, scrollTop } = this.state;
+            const { scrollLeft, scrollTop } = this.state;
 
-                  return composeGrid(
-                    width,
-                    height,
-                    scrollLeft,
-                    scrollTop,
-                    (params: OnScrollParams) => this.setState({ ...params }),
-                    infiniteLoaderChildProps
-                  );
-                }}
-              </AutoSizer>
+            return composeGrid(width, height, scrollLeft, scrollTop, (params: OnScrollParams) =>
+              this.setState({ ...params })
             );
           }}
-        </InfiniteLoader>
+        </AutoSizer>
         {sortDialog ? (
           <GDMNSortDialog
             fieldDefs={rs.fieldDefs}
