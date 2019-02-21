@@ -34,6 +34,7 @@ export type TaskWorker<Cmd extends ICmd<any>, Result> = (context: IContext<Cmd>)
 
 export interface ICmd<A, P = any> {
   readonly id?: string;
+  readonly isSimple?: boolean;
   readonly action: A;
   readonly payload: P;
 }
