@@ -67,38 +67,40 @@ export class StompSession implements StompClientCommandListener {
       }
     };
     this._onChangeTask = (task) => {
-      if (!task.options.command.isSimple) {
-        const subscription = this._subscriptions
-          .find((sub) => sub.destination === StompSession.DESTINATION_TASK_STATUS);
+      if (task.options.command.replyMode) {
+        return;
+      }
+      const subscription = this._subscriptions
+        .find((sub) => sub.destination === StompSession.DESTINATION_TASK_STATUS);
 
-        if (subscription) {
-          const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
+      if (subscription) {
+        const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
 
-          this._stomp.message(headers, JSON.stringify({
-            status: task.status,
-            payload: task.options.command.payload
-          })).catch(this.logger.warn);
-        }
+        this._stomp.message(headers, JSON.stringify({
+          status: task.status,
+          payload: task.options.command.payload
+        })).catch(this.logger.warn);
       }
     };
     this._onProgressTask = (task) => {
-      if (!task.options.command.isSimple) {
-        const subscription = this._subscriptions
-          .find((sub) => sub.destination === StompSession.DESTINATION_TASK_PROGRESS);
+      if (task.options.command.replyMode) {
+        return;
+      }
+      const subscription = this._subscriptions
+        .find((sub) => sub.destination === StompSession.DESTINATION_TASK_PROGRESS);
 
-        if (subscription) {
-          const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
+      if (subscription) {
+        const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
 
-          this._stomp.message(headers, JSON.stringify({
-            payload: task.options.command.payload,
-            progress: {
-              min: task.progress.min,
-              max: task.progress.max,
-              value: task.progress.value,
-              description: task.progress.description
-            }
-          })).catch(this.logger.warn);
-        }
+        this._stomp.message(headers, JSON.stringify({
+          payload: task.options.command.payload,
+          progress: {
+            min: task.progress.min,
+            max: task.progress.max,
+            value: task.progress.value,
+            description: task.progress.description
+          }
+        })).catch(this.logger.warn);
       }
     };
   }
@@ -392,7 +394,7 @@ export class StompSession implements StompClientCommandListener {
 
   public send(headers: StompHeaders, body: string = ""): void {
     this._try(() => {
-      const {destination, simple: isSimple} = headers;
+      const {destination, "reply-mode": replyMode} = headers;
 
       switch (destination) {
         case StompSession.DESTINATION_TASK:
@@ -410,7 +412,7 @@ export class StompSession implements StompClientCommandListener {
           }
           const command: ICmd<Actions, unknown> = {
             id,
-            isSimple: isSimple === "1",
+            replyMode: replyMode === "1",
             action: headers.action as Actions,
             payload: body ? JSON.parse(body).payload : undefined
           };
@@ -469,6 +471,7 @@ export class StompSession implements StompClientCommandListener {
       "content-type": "application/json;charset=utf-8",
       "destination": subscription.destination,
       "action": task.options.command.action,
+      "reply-mode": task.options.command.replyMode ? "1" : "0",
       "subscription": subscription.id,
       "message-id": messageKey,
       "task-id": task.id
