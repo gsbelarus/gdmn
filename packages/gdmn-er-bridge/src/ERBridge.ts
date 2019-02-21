@@ -113,16 +113,20 @@ export class ERBridge {
                             transaction: ATransaction,
                             query: EntityQuery): Promise<IEntityQueryResponse> {
     const cursor = await EQueryCursor.open(connection, transaction, query);
-    let data: any[] = [];
-    while (true) {
-      const rows = await cursor.fetch(100);
-      data = data.concat(rows.data);
-      if (rows.finished) {
-        break;
+    try {
+      let data: any[] = [];
+      while (true) {
+        const rows = await cursor.fetch(100);
+        data = data.concat(rows.data);
+        if (rows.finished) {
+          break;
+        }
       }
-    }
 
-    return cursor.makeEntityQueryResponse(data);
+      return cursor.makeEntityQueryResponse(data);
+    } finally {
+      await cursor.close();
+    }
   }
 
   public static async insert(connection: AConnection,
