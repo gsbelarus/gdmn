@@ -2094,7 +2094,7 @@
     "@uifabric/utilities" ">=6.28.0 <7.0.0"
     tslib "^1.7.1"
 
-"@uifabric/utilities@>=6.28.0 <7.0.0", "@uifabric/utilities@>=6.29.0 <7.0.0", "@uifabric/utilities@>=6.29.1 <7.0.0":
+"@uifabric/utilities@>=6.28.0 <7.0.0", "@uifabric/utilities@>=6.29.0 <7.0.0", "@uifabric/utilities@>=6.29.1 <7.0.0", "@uifabric/utilities@>=6.29.2 <7.0.0":
   version "6.29.2"
   resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-6.29.2.tgz#83536d3e96179376dfb0b5dee3dcaca5e859afbc"
   integrity sha512-bkW4eWlYj2ghobHOLn2KUO4B//v7wy365ZwtQVu+OWkuyAWJOUaY0J4qQvqbFsTKZybcXmmAPQtsrCJwWdE68w==
@@ -10174,7 +10174,7 @@ octokit-pagination-methods@^1.1.0:
   resolved "https://registry.yarnpkg.com/octokit-pagination-methods/-/octokit-pagination-methods-1.1.0.tgz#cf472edc9d551055f9ef73f6e42b4dbb4c80bea4"
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
-"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.141.1 <7.0.0", office-ui-fabric-react@^6:
+"office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.141.1 <7.0.0":
   version "6.141.1"
   resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.141.1.tgz#24d4a64dd3f936da277eca3242b997944ff6d43e"
   integrity sha512-Osq1MbDvNxIM1LBnqYQfik4zBtqm5OwhjmxXQ6YgpYxJFZaN9p7y0dkLu/YmaF3iNxixe+l4ilI6ePAMnJ6i1Q==
@@ -10186,6 +10186,21 @@ octokit-pagination-methods@^1.1.0:
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
     "@uifabric/styling" ">=6.41.0 <7.0.0"
     "@uifabric/utilities" ">=6.29.1 <7.0.0"
+    prop-types "^15.5.10"
+    tslib "^1.7.1"
+
+office-ui-fabric-react@^6:
+  version "6.142.1"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.142.1.tgz#f364455ceea5cd73199f226386430dc45a076aca"
+  integrity sha512-8uv/Norhlk3xV2yq4s/a/f1JKSvfob4sF+92Dq2AUb9/ZMAjRORgmzz0X9AfR8Yp9raXZCM4QysrJOohO/UShg==
+  dependencies:
+    "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/foundation" ">=0.7.1 <1.0.0"
+    "@uifabric/icons" ">=6.4.0 <7.0.0"
+    "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
+    "@uifabric/set-version" ">=1.1.3 <2.0.0"
+    "@uifabric/styling" ">=6.41.0 <7.0.0"
+    "@uifabric/utilities" ">=6.29.2 <7.0.0"
     prop-types "^15.5.10"
     tslib "^1.7.1"
 
