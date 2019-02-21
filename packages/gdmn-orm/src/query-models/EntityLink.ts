@@ -42,10 +42,7 @@ export class EntityLink {
   public deepFindLink(field: EntityQueryField): EntityLink | undefined;
   public deepFindLink(source: string | EntityQueryField): EntityLink | undefined {
     if (source instanceof EntityQueryField) {
-      const find = this.fields
-        .filter((qField) => !qField.link)
-        .some((qField) => qField === source);
-
+      const find = this.fields.some((qField) => qField === source);
       if (find) {
         return this;
       }

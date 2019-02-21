@@ -19,7 +19,8 @@ import {Select} from "../../src/crud/query/Select";
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_QUERY.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_QUERY.FDB"),
+  readTransaction: true
 };
 
 jest.setTimeout(60 * 1000);
@@ -242,12 +243,8 @@ describe("Query", () => {
       "  T$1.TEST_STRING AS F$1\n" +
       "FROM TEST_ENTITY T$1");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -276,12 +273,8 @@ describe("Query", () => {
       "FROM MASTER_ENTITY T$2\n" +
       "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$2.LINK");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -310,17 +303,13 @@ describe("Query", () => {
       "FROM MASTER_ENTITY T$2\n" +
       "  LEFT JOIN DETAIL_ENTITY T$1 ON T$1.MASTERKEY = T$2.ID");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
   it("entity set", async () => {
-    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+    const query = EntityQuery.inspectorToObject(erModel, {
       link: {
         entity: "MASTER_ENTITY",
         alias: "me",
@@ -338,7 +327,8 @@ describe("Query", () => {
           }
         ]
       }
-    }));
+    });
+    const {sql} = new Select(query);
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_INTEGER AS F$1,\n" +
@@ -347,13 +337,24 @@ describe("Query", () => {
       "  LEFT JOIN TABLE_21 T$1 ON T$1.KEY1 = T$3.ID\n" +
       "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    const result = await ERBridge.query(connection, connection.readTransaction, query);
+    const resultAttrs = Object.entries(result.aliases).map(([alias, info]) => {
+      const link = query.link.deepFindLink(info.linkAlias)!;
+
+      const findField = link.fields.find((field) => field.attribute.name === info.attribute)!;
+      if (info.setAttribute) {
+        const setAttribute = findField.setAttributes!.find((attr) => attr.name === info.setAttribute);
+        return {alias, attribute: findField.attribute, setAttribute};
+      }
+      return {alias, attribute: findField.attribute};
     });
+
+    expect(resultAttrs[0].alias).toEqual("F$1");
+    expect(resultAttrs[0].attribute).toEqual(erModel.entities["MASTER_ENTITY"].attribute("SET_LINK"));
+    expect(resultAttrs[0].setAttribute)
+      .toEqual((erModel.entities["MASTER_ENTITY"].attribute("SET_LINK") as SetAttribute).attributes["TEST_INTEGER"]);
+    expect(resultAttrs[1].alias).toEqual("F$2");
+    expect(resultAttrs[1].attribute).toEqual(erModel.entities["TEST_ENTITY"].attribute("TEST_STRING"));
   });
 
   it("inheritance without parent attributes", async () => {
@@ -373,12 +374,8 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$2.ID");
 
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -399,12 +396,8 @@ describe("Query", () => {
       "FROM TEST_ENTITY T$2\n" +
       "  JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$2.ID");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -472,12 +465,8 @@ describe("Query", () => {
       "  LEFT JOIN DETAIL_ENTITY T$4 ON T$4.MASTERKEY = T$6.ID\n" +
       "  LEFT JOIN TEST_ENTITY T$5 ON T$5.ID = T$4.LINK");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -516,12 +505,8 @@ describe("Query", () => {
       "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.LINK\n" +
       "ORDER BY T$1.TEST_STRING2 ASC, T$2.TEST_FLOAT DESC");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -577,12 +562,8 @@ describe("Query", () => {
       "  AND (T$1.TEST_STRING1 IS NULL OR T$2.TEST_FLOAT IS NULL)");
     expect(params).toEqual({"P$1": "asd", "P$2": 10});
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -612,12 +593,9 @@ describe("Query", () => {
       "FROM TEST_ENTITY T$2\n" +
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
       "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$3.PARENT");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -648,12 +626,9 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$4.PARENT");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -684,12 +659,9 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$4.PARENT");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -720,12 +692,9 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  LEFT JOIN CHILD_ENTITY2 T$1 ON T$1.INHERITEDKEY = T$4.PARENT");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -760,12 +729,9 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$5 ON T$5.LB <= T$4.LB AND T$5.RB >= T$4.RB\n" +
       "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$4.PARENT");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -800,12 +766,9 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$5 ON T$5.LB <= T$4.LB AND T$5.RB >= T$4.RB\n" +
       "  LEFT JOIN CHILD_ENTITY T$1 ON T$1.INHERITEDKEY = T$4.PARENT");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -838,12 +801,9 @@ describe("Query", () => {
       "  JOIN CHILD_ENTITY T$3 ON T$3.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$4 ON T$4.INHERITEDKEY = T$2.ID\n" +
       "  JOIN CHILD_ENTITY2 T$1 ON T$1.LB <= T$4.LB AND T$1.RB >= T$4.RB");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -893,12 +853,8 @@ describe("Query", () => {
       "  FROM TREE T$5\n" +
       ") T$1");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -917,12 +873,8 @@ describe("Query", () => {
       "  T$1.TEST_STRING1 AS F$1\n" +
       "FROM TEST_ENTITY5 T$1");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -972,12 +924,8 @@ describe("Query", () => {
       "  FROM TREE T$6\n" +
       ")  T$1 ON T$1.ID = T$2.LINK");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 
@@ -998,12 +946,8 @@ describe("Query", () => {
       "  T$1.TEST_FLOAT10 AS F$2\n" +
       "FROM TEST_ENTITY10 T$1");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
 });
