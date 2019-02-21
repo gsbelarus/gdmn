@@ -19,26 +19,34 @@ const force = process.argv.slice(2).includes("-force");
 const startDate = new Date(2014, 1, 1);
 const endDate = new Date(2018, 11, 1);
 
-const downloadRates = (d: Date, endDate: Date, rates: NBRBRates): Promise<NBRBRates> => {
+async function downloadRates(d: Date, endDate: Date, rates: NBRBRates): Promise<NBRBRates> {
   if (d < endDate) {
-    return fetch(`${urlNBRBRates}?Periodicity=0&onDate=${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`)
-      .then(res => res.text())
-      .then(res => JSON.parse(res) as NBRBRates)
-      .then(res => downloadRates(new Date(d.setDate(d.getDate() + 1)), endDate, rates.concat(res)));
-  } else {
-    return Promise.resolve(rates);
+    const result = await fetch(`${urlNBRBRates}?Periodicity=0&onDate=${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+    const text = await result.json();
+    return await downloadRates(new Date(d.setDate(d.getDate() + 1)), endDate, rates.concat(text));
   }
-};
+  return rates;
+}
+
+async function downloadCurrencies(): Promise<NBRBCurrencies> {
+  const result = await fetch(urlNBRBCurrencies);
+  return await result.json();
+}
 
 if (force || !fs.existsSync(PATH_NB_RB_RATES)) {
   downloadRates(startDate, endDate, [])
     .then(res => fs.writeFileSync(PATH_NB_RB_RATES, JSON.stringify(res, undefined, 2)))
-    .catch(console.error);
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
 }
 
 if (force || !fs.existsSync(PATH_NB_RB_CUR)) {
-  fetch(urlNBRBCurrencies)
-    .then(res => res.text())
-    .then(res => JSON.parse(res) as NBRBCurrencies)
-    .then(res => fs.writeFileSync(PATH_NB_RB_CUR, JSON.stringify(res, undefined, 2)));
+  downloadCurrencies()
+    .then(res => fs.writeFileSync(PATH_NB_RB_CUR, JSON.stringify(res, undefined, 2)))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
 }
