@@ -1,33 +1,62 @@
-import { IDataRow, FieldDefs, SortFields, INamedField, IMatchedSubString, FoundRows, FoundNodes, IDataGroup, TRowType, IRow, TRowCalcFunc, CloneGroup, Data, Measures, IFieldDef, TDataType, TFieldType, IMasterLink } from "./types";
+import {
+  IDataRow,
+  FieldDefs,
+  SortFields,
+  INamedField,
+  IMatchedSubString,
+  FoundRows,
+  FoundNodes,
+  IDataGroup,
+  TRowType,
+  IRow,
+  TRowCalcFunc,
+  CloneGroup,
+  Data,
+  Measures,
+  IFieldDef,
+  TDataType,
+  TFieldType,
+  IMasterLink
+} from "./types";
 import { IFilter } from "./filter";
 import { List } from "immutable";
 import equal from "fast-deep-equal";
-import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull, checkField } from "./utils";
+import {
+  getAsString,
+  getAsNumber,
+  getAsBoolean,
+  getAsDate,
+  isNull,
+  checkField
+} from "./utils";
 import { Subject } from "rxjs";
 import { EntityQuery } from "gdmn-orm";
 
-export type RecordSetEvent = 'AfterScroll' | 'BeforeScroll';
+export type RecordSetEvent = "AfterScroll" | "BeforeScroll";
 
-export type RecordSetEventData<R extends IDataRow = IDataRow> = { event: RecordSetEvent, rs: RecordSet<R> };
+export type RecordSetEventData<R extends IDataRow = IDataRow> = {
+  event: RecordSetEvent;
+  rs: RecordSet<R>;
+};
 
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
-  name: string,
-  eq?: EntityQuery,
-  fieldDefs: FieldDefs,
-  calcFields: TRowCalcFunc<R> | undefined,
-  data: Data<R>,
-  currentRow: number,
-  sortFields: SortFields,
-  allRowsSelected: boolean,
-  selectedRows: boolean[],
-  filter?: IFilter,
-  savedData?: Data<R>,
-  searchStr?: string,
-  foundRows?: FoundRows,
-  groups?: IDataGroup<R>[],
-  aggregates?: R,
-  masterLink?: IMasterLink,
-  subject: Subject<RecordSetEventData<R>>
+  name: string;
+  eq?: EntityQuery;
+  fieldDefs: FieldDefs;
+  calcFields: TRowCalcFunc<R> | undefined;
+  data: Data<R>;
+  currentRow: number;
+  sortFields: SortFields;
+  allRowsSelected: boolean;
+  selectedRows: boolean[];
+  filter?: IFilter;
+  savedData?: Data<R>;
+  searchStr?: string;
+  foundRows?: FoundRows;
+  groups?: IDataGroup<R>[];
+  aggregates?: R;
+  masterLink?: IMasterLink;
+  subject: Subject<RecordSetEventData<R>>;
 }
 
 export class RecordSet<R extends IDataRow = IDataRow> {
@@ -49,11 +78,28 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _masterLink?: IMasterLink;
   private _subject: Subject<RecordSetEventData<R>>;
 
-  private constructor (params: IRecordSetParams<R>)
-  {
-    const { name, eq, fieldDefs, calcFields, data, currentRow, sortFields, allRowsSelected,
-      selectedRows, filter, savedData, searchStr, foundRows, groups, aggregates, masterLink,
-      subject } = params;
+  public loadingStopRowIdx?: number;
+
+  private constructor(params: IRecordSetParams<R>) {
+    const {
+      name,
+      eq,
+      fieldDefs,
+      calcFields,
+      data,
+      currentRow,
+      sortFields,
+      allRowsSelected,
+      selectedRows,
+      filter,
+      savedData,
+      searchStr,
+      foundRows,
+      groups,
+      aggregates,
+      masterLink,
+      subject
+    } = params;
 
     if (!data.size && currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
@@ -78,7 +124,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._subject = subject;
 
     if (this.size && currentRow >= this.size) {
-      throw new Error('Invalid currentRow value');
+      throw new Error("Invalid currentRow value");
     }
   }
 
@@ -87,9 +133,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     fieldDefs: FieldDefs,
     data: Data<R>,
     masterLink?: IMasterLink,
-    eq?: EntityQuery): RecordSet<R>
-  {
-    const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
+    eq?: EntityQuery
+  ): RecordSet<R> {
+    const withCalcFunc = fieldDefs.filter(fd => fd.calcFunc);
 
     if (withCalcFunc.length) {
       return new RecordSet<R>({
@@ -99,9 +145,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         calcFields: (row: R): R => {
           const res = Object.assign({} as R, row);
 
-          withCalcFunc.forEach(
-            fd => res[fd.fieldName] = fd.calcFunc!(res)
-          );
+          withCalcFunc.forEach(fd => (res[fd.fieldName] = fd.calcFunc!(res)));
 
           return res;
         },
@@ -190,18 +234,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   get foundNodes(): FoundNodes | undefined {
-    return !this._foundRows ? undefined : this._foundRows.reduce(
-      (c, r) => {
-        if (r) {
-          r.forEach( n => c.push(n) );
-        }
-        return c;
-      }, []
-    );
+    return !this._foundRows
+      ? undefined
+      : this._foundRows.reduce((c, r) => {
+          if (r) {
+            r.forEach(n => c.push(n));
+          }
+          return c;
+        }, []);
   }
 
   get foundNodesCount() {
-    return this._foundRows ? this._foundRows.reduce( (c, r) => r ? c + r.length : c, 0 ) : 0;
+    return this._foundRows
+      ? this._foundRows.reduce((c, r) => (r ? c + r.length : c), 0)
+      : 0;
   }
 
   get searchStr() {
@@ -213,25 +259,33 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return this._aggregates;
     }
 
-    const aggFields = this._fieldDefs.filter( fd => fd.aggregator );
+    const aggFields = this._fieldDefs.filter(fd => fd.aggregator);
 
     if (aggFields.length) {
-      const accumulator = aggFields.map( fd => ({
+      const accumulator = aggFields.map(fd => ({
         fieldName: fd.fieldName,
         value: fd.aggregator!.init(),
         processRow: fd.aggregator!.processRow,
         getTotal: fd.aggregator!.getTotal
       }));
 
-      for (let i = 0; i < this._data.size; i++){
-        accumulator.forEach(acc => acc.value = acc.processRow(this._getData(this._data, i, this._calcFields), acc.fieldName, acc.value));
+      for (let i = 0; i < this._data.size; i++) {
+        accumulator.forEach(
+          acc =>
+            (acc.value = acc.processRow(
+              this._getData(this._data, i, this._calcFields),
+              acc.fieldName,
+              acc.value
+            ))
+        );
       }
 
       this._aggregates = accumulator.reduce(
         (prev, acc) => {
           prev[acc.fieldName] = acc.getTotal(acc.value);
           return prev;
-        }, {} as R
+        },
+        {} as R
       );
     }
 
@@ -247,21 +301,26 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _checkFields(fields: INamedField[]) {
-    fields.forEach( f => {
-      if (!this._fieldDefs.find( fd => fd.fieldName === f.fieldName )) {
+    fields.forEach(f => {
+      if (!this._fieldDefs.find(fd => fd.fieldName === f.fieldName)) {
         throw new Error(`Unknown field ${f.fieldName}`);
       }
     });
   }
 
   private _getGroupRowCount(group: IDataGroup<R>): number {
-    const t = group.collapsed ? 0
-    : group.subGroups.length ? group.subGroups.reduce( (p, s) => p + this._getGroupRowCount(s), 0 )
-    : group.bufferCount;
+    const t = group.collapsed
+      ? 0
+      : group.subGroups.length
+      ? group.subGroups.reduce((p, s) => p + this._getGroupRowCount(s), 0)
+      : group.bufferCount;
     return 1 + t + (group.footer && !group.collapsed ? 1 : 0);
   }
 
-  private _findGroup(groups: IDataGroup<R>[], rowIdx: number): { groupIdx: number, group: IDataGroup<R>} {
+  private _findGroup(
+    groups: IDataGroup<R>[],
+    rowIdx: number
+  ): { groupIdx: number; group: IDataGroup<R> } {
     const groupsCount = groups.length;
 
     if (!groupsCount) {
@@ -271,24 +330,40 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const fg = groups[0];
     const lg = groups[groupsCount - 1];
 
-    if (rowIdx < fg.rowIdx || rowIdx >= lg.rowIdx + this._getGroupRowCount(lg)) {
-      throw new Error(`findGroup: invalid row index ${rowIdx} (${fg.rowIdx}-${lg.rowIdx + this._getGroupRowCount(lg)})`);
+    if (
+      rowIdx < fg.rowIdx ||
+      rowIdx >= lg.rowIdx + this._getGroupRowCount(lg)
+    ) {
+      throw new Error(
+        `findGroup: invalid row index ${rowIdx} (${fg.rowIdx}-${lg.rowIdx +
+          this._getGroupRowCount(lg)})`
+      );
     }
 
-    let approxGroupIdx = Math.floor(groupsCount * (rowIdx - fg.rowIdx) / (lg.rowIdx + this._getGroupRowCount(lg) - fg.rowIdx));
+    let approxGroupIdx = Math.floor(
+      (groupsCount * (rowIdx - fg.rowIdx)) /
+        (lg.rowIdx + this._getGroupRowCount(lg) - fg.rowIdx)
+    );
 
     while (approxGroupIdx > 0 && rowIdx < groups[approxGroupIdx].rowIdx) {
       approxGroupIdx--;
     }
 
-    while (approxGroupIdx < groupsCount - 1 && rowIdx >= groups[approxGroupIdx + 1].rowIdx) {
+    while (
+      approxGroupIdx < groupsCount - 1 &&
+      rowIdx >= groups[approxGroupIdx + 1].rowIdx
+    ) {
       approxGroupIdx++;
     }
 
     const group = groups[approxGroupIdx];
 
     if (rowIdx > group.rowIdx && group.subGroups.length) {
-      if (group.footer && !group.collapsed && rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1) {
+      if (
+        group.footer &&
+        !group.collapsed &&
+        rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1
+      ) {
         return { groupIdx: approxGroupIdx, group };
       } else {
         return this._findGroup(group.subGroups, rowIdx);
@@ -298,7 +373,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  private _getData(data: Data<R>, rowIdx: number, calcFields: TRowCalcFunc<R> | undefined): R {
+  private _getData(
+    data: Data<R>,
+    rowIdx: number,
+    calcFields: TRowCalcFunc<R> | undefined
+  ): R {
     if (rowIdx < 0 || rowIdx >= data.size) {
       throw new Error(`Invalid row idx ${rowIdx}`);
     }
@@ -310,11 +389,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  private _get(rowIdx: number, calcFields: TRowCalcFunc<R> | undefined): IRow<R> {
+  private _get(
+    rowIdx: number,
+    calcFields: TRowCalcFunc<R> | undefined
+  ): IRow<R> {
     const groups = this._groups;
 
     if (!groups || !groups.length) {
-      return { data: this._getData(this._data, rowIdx, calcFields), type: TRowType.Data };
+      return {
+        data: this._getData(this._data, rowIdx, calcFields),
+        type: TRowType.Data
+      };
     }
 
     const group = this._findGroup(groups, rowIdx).group;
@@ -322,12 +407,18 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     if (rowIdx === group.rowIdx) {
       return {
         data: group.header,
-        type: group.collapsed ? TRowType.HeaderCollapsed : TRowType.HeaderExpanded,
+        type: group.collapsed
+          ? TRowType.HeaderCollapsed
+          : TRowType.HeaderExpanded,
         group
       };
     }
 
-    if (group.footer && !group.collapsed && rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1) {
+    if (
+      group.footer &&
+      !group.collapsed &&
+      rowIdx === group.rowIdx + this._getGroupRowCount(group) - 1
+    ) {
       return {
         data: group.footer,
         type: TRowType.Footer,
@@ -336,7 +427,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return {
-      data: this._getData(this._data, group.bufferIdx + rowIdx - group.rowIdx - 1, calcFields),
+      data: this._getData(
+        this._data,
+        group.bufferIdx + rowIdx - group.rowIdx - 1,
+        calcFields
+      ),
       type: TRowType.Data,
       group
     };
@@ -346,33 +441,80 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._get(rowIdx, this._calcFields);
   }
 
-  public getValue(rowIdx: number, fieldName: string, defaultValue?: TDataType): TDataType {
-    return checkField(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
+  public getValue(
+    rowIdx: number,
+    fieldName: string,
+    defaultValue?: TDataType
+  ): TDataType {
+    return checkField(
+      this._get(rowIdx, this._calcFields).data,
+      fieldName,
+      defaultValue
+    );
   }
 
-  public getString(rowIdx: number, fieldName: string, defaultValue?: string): string {
-    const fd = this.fieldDefs.find( fd => fd.fieldName === fieldName );
+  public getString(
+    rowIdx: number,
+    fieldName: string,
+    defaultValue?: string
+  ): string {
+    const fd = this.fieldDefs.find(fd => fd.fieldName === fieldName);
     if (fd) {
       switch (fd.dataType) {
-        case TFieldType.Float, TFieldType.Integer, TFieldType.Currency:
-          return getAsString(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue, fd.numberFormat);
+        case (TFieldType.Float, TFieldType.Integer, TFieldType.Currency):
+          return getAsString(
+            this._get(rowIdx, this._calcFields).data,
+            fieldName,
+            defaultValue,
+            fd.numberFormat
+          );
         case TFieldType.Date:
-          return getAsString(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue, undefined, fd.dateFormat);
+          return getAsString(
+            this._get(rowIdx, this._calcFields).data,
+            fieldName,
+            defaultValue,
+            undefined,
+            fd.dateFormat
+          );
       }
     }
-    return getAsString(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
+    return getAsString(
+      this._get(rowIdx, this._calcFields).data,
+      fieldName,
+      defaultValue
+    );
   }
 
-  public getNumber(rowIdx: number, fieldName: string, defaultValue?: number): number {
-    return getAsNumber(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
+  public getNumber(
+    rowIdx: number,
+    fieldName: string,
+    defaultValue?: number
+  ): number {
+    return getAsNumber(
+      this._get(rowIdx, this._calcFields).data,
+      fieldName,
+      defaultValue
+    );
   }
 
-  public getBoolean(rowIdx: number, fieldName: string, defaultValue?: boolean): boolean {
-    return getAsBoolean(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
+  public getBoolean(
+    rowIdx: number,
+    fieldName: string,
+    defaultValue?: boolean
+  ): boolean {
+    return getAsBoolean(
+      this._get(rowIdx, this._calcFields).data,
+      fieldName,
+      defaultValue
+    );
   }
 
   public getDate(rowIdx: number, fieldName: string, defaultValue?: Date): Date {
-    return getAsDate(this._get(rowIdx, this._calcFields).data, fieldName, defaultValue);
+    return getAsDate(
+      this._get(rowIdx, this._calcFields).data,
+      fieldName,
+      defaultValue
+    );
   }
 
   public isNull(rowIdx: number, fieldName: string): boolean {
@@ -403,11 +545,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _cloneGroups(
     parent: IDataGroup<R> | undefined,
     groups: IDataGroup<R>[],
-    cloneGroup: CloneGroup<R>): IDataGroup<R>[]
-  {
+    cloneGroup: CloneGroup<R>
+  ): IDataGroup<R>[] {
     const res: IDataGroup<R>[] = [];
     let prev: IDataGroup<R> | undefined = undefined;
-    groups.forEach( g => {
+    groups.forEach(g => {
       const cloned = cloneGroup(parent, prev, g);
       if (cloned.subGroups.length) {
         cloned.subGroups = this._cloneGroups(cloned, g.subGroups, cloneGroup);
@@ -427,23 +569,32 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const fg = this._findGroup(groups, rowIdx);
 
-    return new RecordSet<R>(
-      {
-        ...this.params,
-        currentRow: fg.group.rowIdx,
-        selectedRows: [],
-        groups: this._cloneGroups(undefined, groups,
-          (parent, prev, g) => {
-            return g.rowIdx < fg.group.rowIdx ? g
-            : g.rowIdx === fg.group.rowIdx ? {...g, collapsed: !g.collapsed}
-            : {...g, rowIdx: prev ? prev.rowIdx + this._getGroupRowCount(prev) : parent ? parent.rowIdx + 1 : 0}
-          }
-        )
-      }
-    );
+    return new RecordSet<R>({
+      ...this.params,
+      currentRow: fg.group.rowIdx,
+      selectedRows: [],
+      groups: this._cloneGroups(undefined, groups, (parent, prev, g) => {
+        return g.rowIdx < fg.group.rowIdx
+          ? g
+          : g.rowIdx === fg.group.rowIdx
+          ? { ...g, collapsed: !g.collapsed }
+          : {
+              ...g,
+              rowIdx: prev
+                ? prev.rowIdx + this._getGroupRowCount(prev)
+                : parent
+                ? parent.rowIdx + 1
+                : 0
+            };
+      })
+    });
   }
 
-  public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures<R>): RecordSet<R> {
+  public sort(
+    sortFields: SortFields,
+    dimension?: SortFields,
+    measures?: Measures<R>
+  ): RecordSet<R> {
     this._checkFields(sortFields);
 
     if (!this._data.size) {
@@ -467,36 +618,72 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           p.push(this.get(idx));
         }
         return p;
-      }, [] as IRow<R>[]
+      },
+      [] as IRow<R>[]
     );
 
     const combinedSort = dimension ? sortFields.concat(dimension) : sortFields;
 
-    const sortOnCalcFields = combinedSort.some( sf => !!this._fieldDefs.find( fd => fd.fieldName === sf.fieldName && !!fd.calcFunc ));
+    const sortOnCalcFields = combinedSort.some(
+      sf =>
+        !!this._fieldDefs.find(
+          fd => fd.fieldName === sf.fieldName && !!fd.calcFunc
+        )
+    );
 
     let fieldDefs = this._fieldDefs;
     let calcFields = this._calcFields;
-    let sorted = (sortOnCalcFields ? this._data.sort(
-      (a, b) => {
-        const calcA = this._calcFields!(a);
-        const calcB = this._calcFields!(b);
-        return combinedSort.reduce(
-          (p, f) => p ? p : (calcA[f.fieldName]! < calcB[f.fieldName]! ? (f.asc ? -1 : 1) : (calcA[f.fieldName]! > calcB[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
-        0);
-      }
-    )
-    :
-    this._data.sort(
-      (a, b) => combinedSort.reduce(
-        (p, f) => p ? p : (a[f.fieldName]! < b[f.fieldName]! ? (f.asc ? -1 : 1) : (a[f.fieldName]! > b[f.fieldName]! ? (f.asc ? 1 : -1) : 0)),
-      0)
-    )).toList();
+    let sorted = (sortOnCalcFields
+      ? this._data.sort((a, b) => {
+          const calcA = this._calcFields!(a);
+          const calcB = this._calcFields!(b);
+          return combinedSort.reduce(
+            (p, f) =>
+              p
+                ? p
+                : calcA[f.fieldName]! < calcB[f.fieldName]!
+                ? f.asc
+                  ? -1
+                  : 1
+                : calcA[f.fieldName]! > calcB[f.fieldName]!
+                ? f.asc
+                  ? 1
+                  : -1
+                : 0,
+            0
+          );
+        })
+      : this._data.sort((a, b) =>
+          combinedSort.reduce(
+            (p, f) =>
+              p
+                ? p
+                : a[f.fieldName]! < b[f.fieldName]!
+                ? f.asc
+                  ? -1
+                  : 1
+                : a[f.fieldName]! > b[f.fieldName]!
+                ? f.asc
+                  ? 1
+                  : -1
+                : 0,
+            0
+          )
+        )
+    ).toList();
 
     if (dimension && measures) {
       const newFieldDefs: IFieldDef[] = [];
       const newData: R[] = [];
 
-      const calcSlice = (level: number, initialRowIdx: number, size: number, newRow: R, olapValue: TDataType[], upSuffix: string): R => {
+      const calcSlice = (
+        level: number,
+        initialRowIdx: number,
+        size: number,
+        newRow: R,
+        olapValue: TDataType[],
+        upSuffix: string
+      ): R => {
         const fieldName = dimension[level].fieldName;
         let rowIdx = initialRowIdx;
         let left = size;
@@ -505,25 +692,43 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           let cnt = 0;
           const row = this._getData(sorted, rowIdx + cnt, calcFields);
           const value = row[fieldName];
-          const valueFieldDef = this._fieldDefs.find( fd => fd.fieldName === fieldName )!;
-          while (cnt < left && this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value) {
+          const valueFieldDef = this._fieldDefs.find(
+            fd => fd.fieldName === fieldName
+          )!;
+          while (
+            cnt < left &&
+            this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value
+          ) {
             cnt++;
           }
-          const fieldNameSuffix = `${upSuffix}[${value === null ? 'null' : value.toString()}]`;
-          measures.forEach( m => {
+          const fieldNameSuffix = `${upSuffix}[${
+            value === null ? "null" : value.toString()
+          }]`;
+          measures.forEach(m => {
             const measureFieldName = `[${m.fieldName}]${fieldNameSuffix}`;
-            if (!newFieldDefs.find( fd => fd.fieldName === measureFieldName )) {
+            if (!newFieldDefs.find(fd => fd.fieldName === measureFieldName)) {
               newFieldDefs.push({
                 fieldName: measureFieldName,
                 dataType: valueFieldDef.dataType,
-                caption: value === null ? 'null' : value.toString(),
+                caption: value === null ? "null" : value.toString(),
                 olapValue: [...olapValue, value]
               });
             }
-            newRow[measureFieldName] = m.measureCalcFunc( idx => this._getData(sorted, idx, calcFields), rowIdx, cnt);
+            newRow[measureFieldName] = m.measureCalcFunc(
+              idx => this._getData(sorted, idx, calcFields),
+              rowIdx,
+              cnt
+            );
           });
           if (level < dimension.length - 1) {
-            calcSlice(level + 1, rowIdx, cnt, newRow, [...olapValue, value], fieldNameSuffix);
+            calcSlice(
+              level + 1,
+              rowIdx,
+              cnt,
+              newRow,
+              [...olapValue, value],
+              fieldNameSuffix
+            );
           }
           left -= cnt;
           rowIdx += cnt;
@@ -540,7 +745,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           let cnt = 0;
           let row = this._getData(sorted, rowIdx + cnt, calcFields);
           let value = row[fieldName];
-          while (rowIdx + cnt < sorted.size && this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value) {
+          while (
+            rowIdx + cnt < sorted.size &&
+            this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value
+          ) {
             if (level < sortFields.length - 1) {
               cnt += groupSlice(level + 1, rowIdx + cnt);
             } else {
@@ -548,7 +756,22 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             }
           }
           if (level === sortFields.length - 1) {
-            newData.push(calcSlice(0, rowIdx, cnt, sortFields.reduce( (r, sf) => { r[sf.fieldName] = row[sf.fieldName]; return r; }, {} as R ), [], ''));
+            newData.push(
+              calcSlice(
+                0,
+                rowIdx,
+                cnt,
+                sortFields.reduce(
+                  (r, sf) => {
+                    r[sf.fieldName] = row[sf.fieldName];
+                    return r;
+                  },
+                  {} as R
+                ),
+                [],
+                ""
+              )
+            );
           }
           if (level) {
             return cnt;
@@ -557,45 +780,55 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         }
 
         return sorted.size;
-      }
+      };
 
       groupSlice(0, 0);
 
       sorted = List<R>(newData);
-      newFieldDefs.sort(
-        (a, b) => {
-          if (a.olapValue && b.olapValue) {
-            for (let i = 0; i < a.olapValue.length && i < b.olapValue.length; i++) {
-              const av = a.olapValue[i];
-              const bv = b.olapValue[i];
-              const res = av === bv ? 0
-                : av === null || av === undefined ? -1
-                : bv === null || bv === undefined ? 1
-                : av < bv ? -1
+      newFieldDefs.sort((a, b) => {
+        if (a.olapValue && b.olapValue) {
+          for (
+            let i = 0;
+            i < a.olapValue.length && i < b.olapValue.length;
+            i++
+          ) {
+            const av = a.olapValue[i];
+            const bv = b.olapValue[i];
+            const res =
+              av === bv
+                ? 0
+                : av === null || av === undefined
+                ? -1
+                : bv === null || bv === undefined
+                ? 1
+                : av < bv
+                ? -1
                 : 1;
-              if (res) return res;
-            }
-            return a.olapValue.length - b.olapValue.length;
-          } else {
-            return 0;
+            if (res) return res;
           }
+          return a.olapValue.length - b.olapValue.length;
+        } else {
+          return 0;
         }
-      );
-      fieldDefs = [...sortFields.map( sf => this._fieldDefs.find( fd => fd.fieldName === sf.fieldName )! ), ...newFieldDefs];
+      });
+      fieldDefs = [
+        ...sortFields.map(
+          sf => this._fieldDefs.find(fd => fd.fieldName === sf.fieldName)!
+        ),
+        ...newFieldDefs
+      ];
 
       if (calcFields) {
-        const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
+        const withCalcFunc = fieldDefs.filter(fd => fd.calcFunc);
 
         if (withCalcFunc.length) {
           calcFields = (row: R): R => {
             const res = Object.assign({} as R, row);
 
-            withCalcFunc.forEach(
-              fd => res[fd.fieldName] = fd.calcFunc!(res)
-            );
+            withCalcFunc.forEach(fd => (res[fd.fieldName] = fd.calcFunc!(res)));
 
             return res;
-          }
+          };
         } else {
           calcFields = undefined;
         }
@@ -603,7 +836,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (sortFields[0].groupBy) {
-      const groupData = (level: number, initialRowIdx: number, bufferIdx: number, bufferSize: number) => {
+      const groupData = (
+        level: number,
+        initialRowIdx: number,
+        bufferIdx: number,
+        bufferSize: number
+      ) => {
         const res: IDataGroup<R>[] = [];
         const fieldName = sortFields[level].fieldName;
         let rowIdx = initialRowIdx;
@@ -611,46 +849,77 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
         while (bufferBeginIdx < bufferIdx + bufferSize) {
           let bufferEndIdx = bufferBeginIdx;
-          let value = this._getData(sorted, bufferBeginIdx, calcFields)[fieldName];
+          let value = this._getData(sorted, bufferBeginIdx, calcFields)[
+            fieldName
+          ];
 
-          while (bufferEndIdx < bufferIdx + bufferSize && this._getData(sorted, bufferEndIdx, calcFields)[fieldName] === value) {
+          while (
+            bufferEndIdx < bufferIdx + bufferSize &&
+            this._getData(sorted, bufferEndIdx, calcFields)[fieldName] === value
+          ) {
             bufferEndIdx++;
           }
 
           const bufferCount = bufferEndIdx - bufferBeginIdx;
 
           if (bufferCount > 0) {
-            const headerData = this._getData(sorted, bufferBeginIdx, calcFields);
-            const header: R = {[fieldName]: headerData[fieldName]} as R;
+            const headerData = this._getData(
+              sorted,
+              bufferBeginIdx,
+              calcFields
+            );
+            const header: R = { [fieldName]: headerData[fieldName] } as R;
             let footer;
 
             if (sortFields[level].calcAggregates) {
-              const aggFields = this._fieldDefs.filter( fd => fd.aggregator );
+              const aggFields = this._fieldDefs.filter(fd => fd.aggregator);
 
               if (aggFields.length) {
-                const accumulator = aggFields.map( fd => ({
+                const accumulator = aggFields.map(fd => ({
                   fieldName: fd.fieldName,
                   value: fd.aggregator!.init(),
                   processRow: fd.aggregator!.processRow,
-                  getTotal: fd.aggregator!.getTotal,
+                  getTotal: fd.aggregator!.getTotal
                 }));
 
-                for (let i = bufferBeginIdx; i < bufferBeginIdx + bufferCount; i++) {
-                  accumulator.forEach( acc => acc.value = acc.processRow(this._getData(sorted, i, this._calcFields), acc.fieldName, acc.value) );
+                for (
+                  let i = bufferBeginIdx;
+                  i < bufferBeginIdx + bufferCount;
+                  i++
+                ) {
+                  accumulator.forEach(
+                    acc =>
+                      (acc.value = acc.processRow(
+                        this._getData(sorted, i, this._calcFields),
+                        acc.fieldName,
+                        acc.value
+                      ))
+                  );
                 }
 
-                footer = accumulator.reduce((prev, acc) => {
-                  prev[acc.fieldName] = acc.getTotal(acc.value);
-                  return prev;
-                }, {} as R);
-              };
+                footer = accumulator.reduce(
+                  (prev, acc) => {
+                    prev[acc.fieldName] = acc.getTotal(acc.value);
+                    return prev;
+                  },
+                  {} as R
+                );
+              }
             }
 
             const group = {
               header,
               level,
               collapsed: false,
-              subGroups: sortFields.length > level + 1 && sortFields[level + 1].groupBy ? groupData(level + 1, rowIdx + 1, bufferBeginIdx, bufferCount) : [],
+              subGroups:
+                sortFields.length > level + 1 && sortFields[level + 1].groupBy
+                  ? groupData(
+                      level + 1,
+                      rowIdx + 1,
+                      bufferBeginIdx,
+                      bufferCount
+                    )
+                  : [],
               footer,
               rowIdx: rowIdx,
               bufferIdx: bufferBeginIdx,
@@ -679,7 +948,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         selectedRows: [],
         searchStr: undefined,
         foundRows: undefined,
-        groups,
+        groups
       });
     }
 
@@ -710,7 +979,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
         }
         return p;
-      }, [] as boolean[]
+      },
+      [] as boolean[]
     );
 
     return res;
@@ -727,19 +997,19 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       selectedRows: [],
       searchStr: undefined,
       foundRows: undefined,
-      groups: this._cloneGroups(undefined, this._groups,
-        (parent, prev, g) => {
-          if (prev) {
-            return {...g, rowIdx: prev.rowIdx + this._getGroupRowCount(prev), collapsed: collapse};
-          }
-          else if (parent) {
-            return {...g, rowIdx: parent.rowIdx + 1, collapsed: collapse};
-          }
-          else {
-            return {...g, rowIdx: 0, collapsed: collapse};
-          }
+      groups: this._cloneGroups(undefined, this._groups, (parent, prev, g) => {
+        if (prev) {
+          return {
+            ...g,
+            rowIdx: prev.rowIdx + this._getGroupRowCount(prev),
+            collapsed: collapse
+          };
+        } else if (parent) {
+          return { ...g, rowIdx: parent.rowIdx + 1, collapsed: collapse };
+        } else {
+          return { ...g, rowIdx: 0, collapsed: collapse };
         }
-      ),
+      })
     });
   }
 
@@ -764,14 +1034,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Invalid row index`);
     }
 
-    this._subject.next({ event: 'BeforeScroll', rs: this });
+    this._subject.next({ event: "BeforeScroll", rs: this });
 
     const rs = new RecordSet<R>({
       ...this.params,
-      currentRow,
+      currentRow
     });
 
-    this._subject.next({ event: 'AfterScroll', rs });
+    this._subject.next({ event: "AfterScroll", rs });
 
     return rs;
   }
@@ -797,7 +1067,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return this;
     }
 
-    const selectedRows = this.allRowsSelected ? Array(this.size).fill(true) : [...this._selectedRows];
+    const selectedRows = this.allRowsSelected
+      ? Array(this.size).fill(true)
+      : [...this._selectedRows];
 
     const row = this.get(idx);
     selectedRows[idx] = selected || undefined;
@@ -810,7 +1082,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       }
     }
 
-    const allRowsSelected = this.size === selectedRows.reduce( (p, sr) => sr ? p + 1 : p, 0 );
+    const allRowsSelected =
+      this.size === selectedRows.reduce((p, sr) => (sr ? p + 1 : p), 0);
 
     return new RecordSet<R>({
       ...this.params,
@@ -826,26 +1099,34 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const isFilter = filter && filter.conditions.length;
     const currentRowData = this.get(this.currentRow);
-    const selectedRowsData = this._allRowsSelected ? this.toArray()
-    : this._selectedRows.reduce( (p, sr, idx) =>
-      {
-        if (sr) {
-          p.push(this.get(idx));
-        }
-        return p;
-      }, [] as IRow<R>[]
-    );
+    const selectedRowsData = this._allRowsSelected
+      ? this.toArray()
+      : this._selectedRows.reduce(
+          (p, sr, idx) => {
+            if (sr) {
+              p.push(this.get(idx));
+            }
+            return p;
+          },
+          [] as IRow<R>[]
+        );
 
     let newData: Data<R>;
 
     if (isFilter) {
-      const re = new RegExp(filter!.conditions[0].value, 'i');
-      newData = (this._savedData || this._data).filter(
-        row => row ? Object.entries(row).some( ([_, value]) => value !== null && re.test(value.toString())) : false
-      ).toList();
+      const re = new RegExp(filter!.conditions[0].value, "i");
+      newData = (this._savedData || this._data)
+        .filter(row =>
+          row
+            ? Object.entries(row).some(
+                ([_, value]) => value !== null && re.test(value.toString())
+              )
+            : false
+        )
+        .toList();
     } else {
       if (!this._savedData) {
-        throw new Error('No saved data for RecordSet');
+        throw new Error("No saved data for RecordSet");
       }
       newData = this._savedData;
     }
@@ -879,15 +1160,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
         }
         return p;
-      }, [] as boolean[]
+      },
+      [] as boolean[]
     );
 
     return res;
   }
 
-  public isFiltered = (): boolean => (
-    !!this._filter && !!this._filter.conditions.length && !!this._filter.conditions[0].value
-  )
+  public isFiltered = (): boolean =>
+    !!this._filter &&
+    !!this._filter.conditions.length &&
+    !!this._filter.conditions[0].value;
 
   public search(searchStr: string | undefined): RecordSet<R> {
     if (!searchStr) {
@@ -898,36 +1181,36 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       });
     }
 
-    const re = RegExp(searchStr, 'i');
+    const re = RegExp(searchStr, "i");
     const foundRows: FoundRows = [];
     let foundIdx = 1;
 
-    for(let rowIdx = 0; rowIdx < this.size; rowIdx++) {
+    for (let rowIdx = 0; rowIdx < this.size; rowIdx++) {
       const v = this.get(rowIdx).data;
-          const foundNodes: FoundNodes = [];
-          Object.entries(v).forEach( ([fieldName, fieldValue]) => {
-            if (!fieldValue) return;
+      const foundNodes: FoundNodes = [];
+      Object.entries(v).forEach(([fieldName, fieldValue]) => {
+        if (!fieldValue) return;
 
-            const s = fieldValue.toString();
-            let b = 0;
-            let m = re.exec(s);
+        const s = fieldValue.toString();
+        let b = 0;
+        let m = re.exec(s);
 
-            while(m !== null) {
-              foundNodes.push({
-                rowIdx,
-                fieldName,
-                matchStart: m.index + b,
-                matchLen: m[0].length,
-                foundIdx: foundIdx++
-              });
-              b += m.index + m[0].length;
-              m = re.exec(s.substr(b));
-            }
+        while (m !== null) {
+          foundNodes.push({
+            rowIdx,
+            fieldName,
+            matchStart: m.index + b,
+            matchLen: m[0].length,
+            foundIdx: foundIdx++
           });
-          if (foundNodes.length) {
-            foundRows[rowIdx] = foundNodes;
-          }
+          b += m.index + m[0].length;
+          m = re.exec(s.substr(b));
         }
+      });
+      if (foundNodes.length) {
+        foundRows[rowIdx] = foundNodes;
+      }
+    }
 
     return new RecordSet<R>({
       ...this.params,
@@ -937,37 +1220,36 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public splitMatched(row: number, fieldName: string): IMatchedSubString[] {
-
     if (row < 0 || row >= this.size) {
       throw new Error(`splitMatched: invalid row index ${row}`);
     }
 
     const rowData = this.get(row).data;
-    const s = rowData[fieldName] ? rowData[fieldName]!.toString() : '';
+    const s = rowData[fieldName] ? rowData[fieldName]!.toString() : "";
 
     if (this._foundRows && this._foundRows[row]) {
-      const foundNodes = this._foundRows[row].filter( fn => fn.fieldName === fieldName );
+      const foundNodes = this._foundRows[row].filter(
+        fn => fn.fieldName === fieldName
+      );
 
       if (foundNodes.length) {
         const res: IMatchedSubString[] = [];
         let b = 0;
-        foundNodes.forEach(
-          fn => {
-            if (b < fn.matchStart) {
-              res.push({
-                str: s.substr(b, fn.matchStart - b),
-              });
-            }
+        foundNodes.forEach(fn => {
+          if (b < fn.matchStart) {
             res.push({
-              str: s.substr(fn.matchStart, fn.matchLen),
-              foundIdx: fn.foundIdx
+              str: s.substr(b, fn.matchStart - b)
             });
-            b = fn.matchStart + fn.matchLen;
           }
-        );
+          res.push({
+            str: s.substr(fn.matchStart, fn.matchLen),
+            foundIdx: fn.foundIdx
+          });
+          b = fn.matchStart + fn.matchLen;
+        });
         if (b < s.length) {
           res.push({
-            str: s.substr(b),
+            str: s.substr(b)
           });
         }
         return res;
@@ -975,17 +1257,20 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (this.isFiltered()) {
-      const re = new RegExp(this._filter!.conditions[0].value, 'i');
+      const re = new RegExp(this._filter!.conditions[0].value, "i");
       const res: IMatchedSubString[] = [];
       let l = 0;
       let m = re.exec(s);
 
-      while(m !== null) {
+      while (m !== null) {
         if (m.index) {
           res.push({ str: m.input.substr(0, m.index) });
           l = l + m.index;
         }
-        res.push({ str: m.input.substr(m.index, m[0].length), matchFilter: true });
+        res.push({
+          str: m.input.substr(m.index, m[0].length),
+          matchFilter: true
+        });
         l = l + m[0].length;
         m = re.exec(m.input.substr(m.index + m[0].length));
       }
@@ -1018,9 +1303,48 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       masterLink: masterLink || this.params.masterLink
     });
 
-    this._subject.next({ event: 'AfterScroll', rs });
+    this._subject.next({ event: "AfterScroll", rs });
+
+    this.loadingStopRowIdx = undefined; // todo
 
     return rs;
   }
-};
 
+  // todo: test
+  public addData(records: R[]): RecordSet<R> {
+
+    const rs = new RecordSet<R>({
+      ...this.params,
+      data: this._data.push(...records),
+      // currentRow: 0,
+      sortFields: [],
+      // allRowsSelected: false,
+      // selectedRows: [],
+      filter: undefined,
+      savedData: undefined,
+      searchStr: undefined,
+      foundRows: undefined,
+      groups: undefined,
+      aggregates: undefined
+    });
+
+    this._subject.next({ event: "AfterScroll", rs });
+
+    if (this.loadingStopRowIdx !== undefined && this.loadingStopRowIdx < rs.size) {
+      this.loadingStopRowIdx = undefined;
+    }
+
+    return rs;
+  }
+
+  public isRowLoading(rowIdx: number): boolean {
+    if (this.loadingStopRowIdx === undefined) return false;
+
+    return !this.isRowLoaded(rowIdx) && rowIdx <= this.loadingStopRowIdx;
+  }
+
+  // todo: учесть группировку
+  public isRowLoaded(rowIdx: number): boolean {
+    return rowIdx < this._data.size;
+  }
+}

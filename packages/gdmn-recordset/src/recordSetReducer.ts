@@ -1,16 +1,22 @@
-import * as actions from './recordSetActions';
-import { ActionType, getType } from 'typesafe-actions';
-import { RecordSet } from './recordSet';
+import { ActionType, getType } from "typesafe-actions";
+
+import * as actions from "./recordSetActions";
+import { RecordSet } from "./recordSet";
 
 export type RecordSetAction = ActionType<typeof actions>;
 
 export interface RecordSetReducerState {
   [name: string]: RecordSet;
-};
+}
 
-export const recordSetReducer = (state: RecordSetReducerState = {}, action: RecordSetAction): RecordSetReducerState => {
-
-  if (typeof action.type !== 'string' || !action.type.startsWith('RECORDSET/')) {
+export const recordSetReducer = (
+  state: RecordSetReducerState = {},
+  action: RecordSetAction
+): RecordSetReducerState => {
+  if (
+    typeof action.type !== "string" ||
+    !action.type.startsWith("RECORDSET/")
+  ) {
     return state;
   }
 
@@ -23,7 +29,7 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
       throw new Error(`Duplicate recordset name ${name}`);
     }
 
-    return {...state, [name]: rs};
+    return { ...state, [name]: rs };
   }
 
   if (!state[name]) {
@@ -31,7 +37,7 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
   }
 
   if (action.type === getType(actions.deleteRecordSet)) {
-    const newState = {...state};
+    const newState = { ...state };
     delete newState[name];
     return newState;
   }
@@ -39,8 +45,8 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
   const rs = state[name];
 
   const newState = (newRS: RecordSet) => {
-    return {...state, [name]: newRS};
-  }
+    return { ...state, [name]: newRS };
+  };
 
   switch (action.type) {
     case getType(actions.setRecordSet): {
@@ -91,6 +97,11 @@ export const recordSetReducer = (state: RecordSetReducerState = {}, action: Reco
     case getType(actions.setRecordSetData): {
       const { data, masterLink } = action.payload;
       return newState(rs.setData(data, masterLink));
+    }
+
+    case getType(actions.addRecordSetData): {
+      const { records } = action.payload;
+      return newState(rs.addData(records));
     }
 
     default:

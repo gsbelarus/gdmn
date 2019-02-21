@@ -1,6 +1,7 @@
 import { createAction } from "typesafe-actions";
+
 import { RecordSet } from "./recordSet";
-import { SortFields, Data, IMasterLink } from "./types";
+import { SortFields, Data, IMasterLink, IDataRow } from './types';
 import { IFilter } from "./filter";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
@@ -28,6 +29,12 @@ export const setRecordSetData = createAction('RECORDSET/SET_DATA', resolve => {
 });
 
 export type SetRecordSetData = typeof setRecordSetData;
+
+export const addRecordSetData = createAction('RECORDSET/ADD_DATA', resolve => {
+  return (params: WithComponentName<{ records: IDataRow[] }>) => resolve(params);
+});
+
+export type AddRecordSetData = typeof addRecordSetData;
 
 export const sortRecordSet = createAction('RECORDSET/SORT', resolve => {
   return (params: WithComponentName<{ sortFields: SortFields }>) => resolve(params);
