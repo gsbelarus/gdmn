@@ -31,13 +31,13 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
         }
       };
     },
-    (
-      thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>,
-      ownProps: Partial<IEntityDataViewProps>
-    ) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>) => ({
       dispatch: thunkDispatch
     }),
-    ({ rsMeta, erModel, ...stateProps }, { dispatch, ...dispatchProps }, ownProps) => {
+    (stateProps, dispatchProps, ownProps) => {
+      const { erModel } = stateProps;
+      const { dispatch } = dispatchProps;
+
       if (!erModel || !Object.keys(erModel.entities).length) return;
 
       const entityName = ownProps.match ? ownProps.match.params.entityName : '';
@@ -45,8 +45,6 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
       if (!entity) {
         throw new Error(`Entity ${entityName} not found in ER Model`);
       }
-
-      let rsTaskId: string | undefined = rsMeta ? rsMeta.taskId : undefined;
 
       const mergeProps = {
         ...stateProps,
@@ -83,11 +81,14 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                   if (value.meta) {
                     console.log('taskId', value.meta.taskId);
 
-                    rsTaskId = value.meta.taskId;
+                    if (!value.meta.taskId) {
+                      throw new Error('Task id is not set');
+                    }
 
                     dispatch(
                       rsMetaActions.setRsMeta(entity.name, {
-                        taskId: value.meta.taskId
+                        taskId: value.meta.taskId,
+                        q
                       })
                     );
 
@@ -97,95 +98,117 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                 } else {
                   //rsTaskId = undefined;
 
-                  dispatch(
-                    rsMetaActions.setRsMeta(entity.name, {
-                      taskId: undefined
-                    })
-                  );
+                  dispatch(rsMetaActions.deleteRsMeta(entity.name));
                 }
               });
             // });
           }),
 
-        loadMoreRsData: async ({ startIndex, stopIndex }: IndexRange) => {
-          console.log('loadMoreRsData 1', startIndex, stopIndex, rsTaskId, rsMeta);
+        loadMoreRsData: async ({ startIndex, stopIndex }: IndexRange) =>
+          dispatch((dispatch, getState) => {
+            const rsMeta = getState().rsMeta[entityName];
 
-          if (!rsTaskId) return;
-          if (!stateProps.data) return;
-          if (!!stateProps.data.rs && stopIndex < stateProps.data.rs.size) return;
-
-          console.log('loadMoreRsData 2', rsTaskId);
-
-          const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
-
-          const res = await apiService
-            .getNextData({
-              payload: {
-                action: TTaskActionNames.FETCH_QUERY,
-                payload: {
-                  rowsCount: fetchRecordCount,
-                  taskKey: rsTaskId
-                }
-              }
-            })
-            .pipe(
-              filter(value => Reflect.has(value.payload, 'result') && value.payload.status! in TTaskFinishStatus),
-              first()
-            )
-            .toPromise();
-
-          console.log(res);
-
-          if (Reflect.has(res.payload, 'result')) {
-            console.log('loadMoreRsData 3');
-            if (res.error) {
-              // todo
-              console.log(res.error.message);
-            } else if (!!res.payload.result) {
-              const fieldDefs = Object.entries(res.payload.result.aliases).map(([fieldAlias, data]) => {
-                const attr = entity.attributes[data.attribute];
-                if (!attr) {
-                  throw new Error(`Unknown attribute ${data.attribute}`);
-                }
-                return attr2fd(fieldAlias, entity, attr);
-              });
-
-              let { rs, gcs } = stateProps.data;
-              if (!rs) {
-                console.log('createWithData');
-
-                rs = RecordSet.createWithData(entity.name, fieldDefs, List(res.payload.result.data as IDataRow[]));
-                dispatch(createRecordSet({ name: rs.name, rs }));
-
-                if (!gcs) {
-                  dispatch(
-                    createGrid({
-                      name: rs.name,
-                      columns: rs.fieldDefs.map(fd => ({
-                        name: fd.fieldName,
-                        caption: [fd.caption || fd.fieldName],
-                        fields: [{ ...fd }],
-                        width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                      })),
-                      leftSideColumns: 0,
-                      rightSideColumns: 0,
-                      hideFooter: true
-                    })
-                  );
-                }
-              } else {
-                console.log('setRecordSetData');
-
-                dispatch(
-                  setRecordSetData({
-                    name: rs.name,
-                    data: rs.params.data.push(...(res.payload.result.data as IDataRow[])) // todo insert [startIndex]
-                  })
-                );
-              }
+            if (!rsMeta) {
+              throw new Error('No rsMeta data');
             }
+
+            const { taskId, q } = rsMeta;
+
+            console.log('loadMoreRsData 1', startIndex, stopIndex, taskId, rsMeta);
+
+            //if (!rsTaskId) return;
+            if (!stateProps.data) return;
+            if (!!stateProps.data.rs && stopIndex < stateProps.data.rs.size) return;
+
+            console.log('loadMoreRsData 2', taskId);
+
+            const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
+
+            apiService
+              .getNextData({
+                payload: {
+                  action: TTaskActionNames.FETCH_QUERY,
+                  payload: {
+                    rowsCount: fetchRecordCount,
+                    taskKey: taskId
+                  }
+                }
+              })
+              .pipe(
+                filter(value => Reflect.has(value.payload, 'result') && value.payload.status! in TTaskFinishStatus),
+                first()
+              )
+              .toPromise()
+              .then(res => {
+                console.log(res);
+
+                if (Reflect.has(res.payload, 'result')) {
+                  console.log('loadMoreRsData 3');
+                  if (res.error) {
+                    // todo
+                    console.log(res.error.message);
+                  } else if (!!res.payload.result) {
+                    if (!q) {
+                      throw new Error(`EntityQuery not found in rsMeta`);
+                    }
+
+                    const fieldDefs = Object.entries(res.payload.result.aliases).map(([fieldAlias, data]) => {
+                      const attr = entity.attributes[data.attribute];
+                      if (!attr) {
+                        throw new Error(`Unknown attribute ${data.attribute}`);
+                      }
+                      return attr2fd(q!, fieldAlias, data);
+                    });
+
+                    let { rs, gcs } = stateProps.data;
+                    if (!rs) {
+                      console.log('createWithData');
+
+                      rs = RecordSet.createWithData(
+                        entity.name,
+                        fieldDefs,
+                        List(res.payload.result.data as IDataRow[]),
+                        undefined,
+                        q
+                      );
+
+                      dispatch(createRecordSet({
+                        name: rs.name,
+                        rs
+                      }));
+
+                      if (!gcs) {
+                        dispatch(
+                          createGrid({
+                            name: rs.name,
+                            columns: rs.fieldDefs.map(fd => ({
+                              name: fd.fieldName,
+                              caption: [fd.caption || fd.fieldName],
+                              fields: [{ ...fd }],
+                              width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                            })),
+                            leftSideColumns: 0,
+                            rightSideColumns: 0,
+                            hideFooter: true
+                          })
+                        );
+                      }
+                    } else {
+                      console.log('setRecordSetData');
+
+                      dispatch(
+                        setRecordSetData({
+                          name: rs.name,
+                          data: rs.params.data.push(...(res.payload.result.data as IDataRow[])) // todo insert [startIndex]
+                        })
+                      );
+                    }
+                  }
+                }
+              }
+            );
           }
-        }
+        )
       };
 
       return mergeProps;

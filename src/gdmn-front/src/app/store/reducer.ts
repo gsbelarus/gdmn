@@ -14,6 +14,7 @@ import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
+import { EntityQuery } from 'gdmn-orm';
 
 initializeIcons(/* optional base url */);
 
@@ -21,13 +22,17 @@ initializeIcons(/* optional base url */);
 
 interface IRsMetaState {
   [rsName: string]: {
-    taskId?: string;
+    taskId: string;
+    q: EntityQuery;
   };
 }
 
 const rsMetaActions = {
   setRsMeta: createAction('SET_RS_META', resolve => {
-    return (rsName: string, rsMeta: { taskId?: string }) => resolve({ rsName, rsMeta });
+    return (rsName: string, rsMeta: { taskId: string, q: EntityQuery }) => resolve({ rsName, rsMeta });
+  }),
+  deleteRsMeta: createAction('DELETE_RS_META', resolve => {
+    return (rsName: string) => resolve(rsName);
   })
 };
 
@@ -39,6 +44,12 @@ function rsMetaReducer(state: IRsMetaState = {}, action: TRsMetaActions) {
       ...state,
       [action.payload.rsName]: action.payload.rsMeta
     };
+  }
+
+  if (action.type === getType(rsMetaActions.deleteRsMeta)) {
+    const newState = {...state};
+    delete newState[action.payload];
+    return newState;
   }
 
   return state;

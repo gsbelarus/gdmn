@@ -8,11 +8,28 @@ import {
   SequenceAttribute,
   StringAttribute,
   BooleanAttribute,
-  EnumAttribute
+  EnumAttribute,
+  IEntityQueryResponseFieldAlias,
+  EntityQuery
 } from 'gdmn-orm';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
-export function attr2fd(fieldAlias: string, _entity: Entity, attr: Attribute): IFieldDef {
+export function attr2fd(q: EntityQuery, fieldAlias: string, data: IEntityQueryResponseFieldAlias): IFieldDef {
+  const link = q.link.deepFindLink(data.linkAlias)!;
+  const findField = link.fields.find( field => field.attribute.name === data.attribute);
+
+  if (!findField) {
+    throw new Error('Invalid query data!');
+  }
+
+  /*
+  if (data.setAttribute) {
+    const setAttribute = findField.setAttributes!.find((attr) => attr.name === data.setAttribute);
+    return {alias, attribute: findField.attribute, setAttribute};
+  }
+  */
+
+  const attr = findField.attribute;
   let dataType;
   let size: number | undefined = undefined;
 
