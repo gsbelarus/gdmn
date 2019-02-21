@@ -42,8 +42,11 @@ async function exit(): Promise<void> {
     }
   } finally {
     defaultLogger.info("Shutdown...");
-    await logShutdown();
-    process.exit();
+    try {
+      await logShutdown();
+    } finally {
+      process.exit();
+    }
   }
 }
 
@@ -55,15 +58,17 @@ async function serverErrorHandler(error: NodeJS.ErrnoException): Promise<void> {
     case "EACCES":
       defaultLogger.error("Port requires elevated privileges");
       await logShutdown();
-      process.exit();
+      process.exit(1);
       break;
     case "EADDRINUSE":
       defaultLogger.error("Port is already in use");
       await logShutdown();
-      process.exit();
+      process.exit(1);
       break;
     default:
-      throw error;
+      defaultLogger.error(error);
+      process.exit(1);
+      break;
   }
 }
 
