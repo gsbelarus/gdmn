@@ -649,9 +649,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             }
           >
             <InfiniteLoader
-              isRowLoaded={this.isRowLoaded}
-              loadMoreRows={(params: IndexRange) => loadMoreRsData!(params)}
-              rowCount={rs.size + 100}
+              isRowLoaded={this._isRowLoadingOrLoaded}
+              loadMoreRows={loadMoreRsData!}
+              rowCount={rs.size + infiniteLoadMinimumBatchSize}
               minimumBatchSize={infiniteLoadMinimumBatchSize}
               threshold={infiniteLoadThreshold}
             >
@@ -1280,7 +1280,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       : columnWidth;
   };
 
-  private isRowLoaded = ({ index }: Index) => {
-    return index < this.props.rs.size; // TODO: check row !!rs.get(index)
+  private _isRowLoadingOrLoaded = ({ index }: Index) => {
+    return this.props.rs.isRowLoaded(index) || this.props.rs.isRowLoading(index);
   };
 }
