@@ -1,5 +1,6 @@
 import { List } from "immutable";
 import { INumberFormat, IDateFormat } from "./format";
+import { IEntityQueryResponseFieldAlias } from "gdmn-orm";
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
@@ -45,6 +46,7 @@ export interface IFieldDef extends INamedField {
   alignment?: TAlignment;
   numberFormat?: INumberFormat;
   dateFormat?: IDateFormat;
+  eqfa?: IEntityQueryResponseFieldAlias;
 };
 
 export type FieldDefs = IFieldDef[];

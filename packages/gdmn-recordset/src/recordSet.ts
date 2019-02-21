@@ -4,6 +4,7 @@ import { List } from "immutable";
 import equal from "fast-deep-equal";
 import { getAsString, getAsNumber, getAsBoolean, getAsDate, isNull, checkField } from "./utils";
 import { Subject } from "rxjs";
+import { EntityQuery } from "gdmn-orm";
 
 export type RecordSetEvent = 'AfterScroll' | 'BeforeScroll';
 
@@ -11,6 +12,7 @@ export type RecordSetEventData<R extends IDataRow = IDataRow> = { event: RecordS
 
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   name: string,
+  eq?: EntityQuery,
   fieldDefs: FieldDefs,
   calcFields: TRowCalcFunc<R> | undefined,
   data: Data<R>,
@@ -30,6 +32,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
 
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
+  private _eq?: EntityQuery;
   private _fieldDefs: FieldDefs;
   private _calcFields: TRowCalcFunc<R> | undefined;
   private _data: Data<R>;
@@ -48,7 +51,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   private constructor (params: IRecordSetParams<R>)
   {
-    const { name, fieldDefs, calcFields, data, currentRow, sortFields, allRowsSelected,
+    const { name, eq, fieldDefs, calcFields, data, currentRow, sortFields, allRowsSelected,
       selectedRows, filter, savedData, searchStr, foundRows, groups, aggregates, masterLink,
       subject } = params;
 
@@ -57,6 +60,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     this.name = name;
+    this._eq = eq;
     this._fieldDefs = fieldDefs;
     this._calcFields = calcFields;
     this._data = data;
@@ -82,13 +86,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     name: string,
     fieldDefs: FieldDefs,
     data: Data<R>,
-    masterLink?: IMasterLink): RecordSet<R>
+    masterLink?: IMasterLink,
+    eq?: EntityQuery): RecordSet<R>
   {
     const withCalcFunc = fieldDefs.filter( fd => fd.calcFunc );
 
     if (withCalcFunc.length) {
       return new RecordSet<R>({
         name,
+        eq,
         fieldDefs,
         calcFields: (row: R): R => {
           const res = Object.assign({} as R, row);
@@ -110,6 +116,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     } else {
       return new RecordSet<R>({
         name,
+        eq,
         fieldDefs,
         calcFields: undefined,
         data,
@@ -126,6 +133,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   get params(): IRecordSetParams<R> {
     return {
       name: this.name,
+      eq: this._eq,
       fieldDefs: this._fieldDefs,
       calcFields: this._calcFields,
       data: this._data,
