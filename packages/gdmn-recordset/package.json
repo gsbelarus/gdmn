@@ -26,9 +26,9 @@
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
     "fast-deep-equal": "^2",
-    "gdmn-orm": "1.0.0",
+    "gdmn-orm": "^1",
     "immutable": "^3",
-    "rxjs": "^6.3.3",
+    "rxjs": "^6",
     "typesafe-actions": "^3"
   },
   "devDependencies": {
