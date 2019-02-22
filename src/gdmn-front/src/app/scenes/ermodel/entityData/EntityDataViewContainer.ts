@@ -7,15 +7,7 @@ import { compose } from 'recompose';
 import { filter, first } from 'rxjs/operators';
 import { Semaphore } from 'gdmn-internals';
 import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute } from 'gdmn-orm';
-import {
-  createRecordSet,
-  IDataRow,
-  RecordSet,
-  RecordSetAction,
-  setRecordSetData,
-  addRecordSetData,
-  TFieldType
-} from 'gdmn-recordset';
+import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSetData, TFieldType } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 
 import { TGdmnActions } from '@src/app/scenes/gdmn/actions';
@@ -42,8 +34,17 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>) => ({
       dispatch: thunkDispatch
     }),
-    ({ rsMeta, erModel, ...stateProps }, { dispatch, ...dispatchProps }, ownProps) => {
-      let rsTaskId: string | undefined = rsMeta ? rsMeta.taskId : undefined;
+    (stateProps, dispatchProps, ownProps) => {
+      const { erModel } = stateProps;
+      const { dispatch } = dispatchProps;
+
+      if (!erModel || !Object.keys(erModel.entities).length) return;
+
+      const entityName = ownProps.match ? ownProps.match.params.entityName : '';
+      const entity = erModel.entities[entityName];
+      if (!entity) {
+        throw new Error(`Entity ${entityName} not found in ER Model`);
+      }
 
       const mergeProps = {
         ...stateProps,
@@ -54,23 +55,12 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
             if (!mutex.permits) return;
             console.log('createRs');
 
-            if (!erModel || !Object.keys(erModel.entities).length) return;
-            const entityName = ownProps.match ? ownProps.match.params.entityName : '';
-            const entity = erModel.entities[entityName];
-            if (!entity) {
-              throw new Error(`Entity ${entityName} not found in ER Model`);
-            }
-
             const q = new EntityQuery(
               new EntityLink(
                 entity,
                 'z',
                 Object.values(entity.attributes)
-                  .filter(
-                    attr =>
-                      (attr instanceof ScalarAttribute || attr instanceof SequenceAttribute) &&
-                      !(attr instanceof BlobAttribute)
-                  )
+                  .filter(attr => ((attr instanceof ScalarAttribute) || (attr instanceof SequenceAttribute)) && !(attr instanceof BlobAttribute) )
                   .map(attr => new EntityQueryField(attr))
               )
             );
@@ -95,8 +85,6 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                       throw new Error('Task id is not set');
                     }
 
-                    rsTaskId = value.meta.taskId; /* для корректного вызова mergeProps.loadMoreRsData */
-
                     dispatch(
                       rsMetaActions.setRsMeta(entity.name, {
                         taskId: value.meta.taskId,
@@ -104,16 +92,12 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                       })
                     );
 
-                    mergeProps.loadMoreRsData({ startIndex: 0, stopIndex: 100 }); // todo calc stopIndex
+                    // setTimeout - workaround
+                    window.setTimeout(() => mergeProps.loadMoreRsData({ startIndex: 0, stopIndex: 1 }), 2000); // todo calc stopIndex
                   }
                 } else {
                   //rsTaskId = undefined;
 
-                  // dispatch(
-                  //   rsMetaActions.setRsMeta(entity.name, {
-                  //     taskId: undefined
-                  //   })
-                  // );
                   dispatch(rsMetaActions.deleteRsMeta(entity.name));
                 }
               });
@@ -121,44 +105,32 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
           }),
 
         loadMoreRsData: async ({ startIndex, stopIndex }: IndexRange) =>
-          // dispatch((dispatch, getState)
-          {
-            console.log('loadMoreRsData 1', startIndex, stopIndex, rsTaskId, rsMeta);
+          dispatch((dispatch, getState) => {
+            const rsMeta = getState().rsMeta[entityName];
 
-            if (!erModel || !Object.keys(erModel.entities).length) return;
-            const entityName = ownProps.match ? ownProps.match.params.entityName : '';
-            const entity = erModel.entities[entityName];
-            if (!entity) {
-              throw new Error(`Entity ${entityName} not found in ER Model`);
+            if (!rsMeta) {
+              throw new Error('No rsMeta data');
             }
 
-            // const rsMeta = getState().rsMeta[entityName];
-            // if (!rsMeta) {
-            //   throw new Error('No rsMeta data');
-            // }
-            // const { taskId, q } = rsMeta;
-            ////if (!rsTaskId) return;
+            const { taskId, q } = rsMeta;
 
-            if (!rsTaskId) return;
+            console.log('loadMoreRsData 1', startIndex, stopIndex, taskId, rsMeta);
+
+            //if (!rsTaskId) return;
             if (!stateProps.data) return;
             if (!!stateProps.data.rs && stopIndex < stateProps.data.rs.size) return;
 
-            console.log('loadMoreRsData 2', rsTaskId);
-
-            let { rs, gcs } = stateProps.data;
-            if (rs) {
-              rs.loadingStopRowIdx = stopIndex;
-            }
+            console.log('loadMoreRsData 2', taskId);
 
             const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
 
-            const res = await apiService
+            apiService
               .getNextData({
                 payload: {
                   action: TTaskActionNames.FETCH_QUERY,
                   payload: {
                     rowsCount: fetchRecordCount,
-                    taskKey: rsTaskId // rsMeta.taskId
+                    taskKey: taskId
                   }
                 }
               })
@@ -166,72 +138,77 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                 filter(value => Reflect.has(value.payload, 'result') && value.payload.status! in TTaskFinishStatus),
                 first()
               )
-              .toPromise();
-            // .then(res => {
+              .toPromise()
+              .then(res => {
+                console.log(res);
 
-            console.log(res);
+                if (Reflect.has(res.payload, 'result')) {
+                  console.log('loadMoreRsData 3');
+                  if (res.error) {
+                    // todo
+                    console.log(res.error.message);
+                  } else if (!!res.payload.result) {
+                    if (!q) {
+                      throw new Error(`EntityQuery not found in rsMeta`);
+                    }
 
-            if (Reflect.has(res.payload, 'result')) {
-              console.log('loadMoreRsData 3');
-              if (res.error) {
-                // todo
-                console.log(res.error.message);
-              } else if (!!res.payload.result) {
-                const { q } = rsMeta;
+                    const fieldDefs = Object.entries(res.payload.result.aliases).map(([fieldAlias, data]) => {
+                      const attr = entity.attributes[data.attribute];
+                      if (!attr) {
+                        throw new Error(`Unknown attribute ${data.attribute}`);
+                      }
+                      return attr2fd(q!, fieldAlias, data);
+                    });
 
-                if (!q) {
-                  throw new Error(`EntityQuery not found in rsMeta`);
-                }
+                    let { rs, gcs } = stateProps.data;
+                    if (!rs) {
+                      console.log('createWithData');
 
-                const fieldDefs = Object.entries(res.payload.result.aliases).map(([fieldAlias, data]) => {
-                  const attr = entity.attributes[data.attribute];
-                  if (!attr) {
-                    throw new Error(`Unknown attribute ${data.attribute}`);
-                  }
-                  return attr2fd(q!, fieldAlias, data);
-                });
+                      rs = RecordSet.createWithData(
+                        entity.name,
+                        fieldDefs,
+                        List(res.payload.result.data as IDataRow[]),
+                        undefined,
+                        q
+                      );
 
-                if (!rs) {
-                  console.log('createWithData');
-
-                  rs = RecordSet.createWithData(
-                    entity.name,
-                    fieldDefs,
-                    List(res.payload.result.data as IDataRow[]),
-                    undefined,
-                    q
-                  );
-                  dispatch(createRecordSet({ name: rs.name, rs }));
-
-                  if (!gcs) {
-                    dispatch(
-                      createGrid({
+                      dispatch(createRecordSet({
                         name: rs.name,
-                        columns: rs.fieldDefs.map(fd => ({
-                          name: fd.fieldName,
-                          caption: [fd.caption || fd.fieldName],
-                          fields: [{ ...fd }],
-                          width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                        })),
-                        leftSideColumns: 0,
-                        rightSideColumns: 0,
-                        hideFooter: true
-                      })
-                    );
-                  }
-                } else {
-                  console.log('setRecordSetData');
+                        rs
+                      }));
 
-                  dispatch(
-                    addRecordSetData({
-                      name: rs.name,
-                      records: res.payload.result.data as IDataRow[]
-                    })
-                  );
+                      if (!gcs) {
+                        dispatch(
+                          createGrid({
+                            name: rs.name,
+                            columns: rs.fieldDefs.map(fd => ({
+                              name: fd.fieldName,
+                              caption: [fd.caption || fd.fieldName],
+                              fields: [{ ...fd }],
+                              width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                            })),
+                            leftSideColumns: 0,
+                            rightSideColumns: 0,
+                            hideFooter: true
+                          })
+                        );
+                      }
+                    } else {
+                      console.log('setRecordSetData');
+
+                      dispatch(
+                        setRecordSetData({
+                          name: rs.name,
+                          data: rs.params.data.push(...(res.payload.result.data as IDataRow[])) // todo insert [startIndex]
+                        })
+                      );
+                    }
+                  }
                 }
               }
-            }
+            );
           }
+        )
       };
 
       return mergeProps;

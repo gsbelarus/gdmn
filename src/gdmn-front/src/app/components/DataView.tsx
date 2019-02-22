@@ -100,7 +100,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     const { data, match } = this.props;
 
-    // console.log(data!.rs.fieldDefs);
+    console.log(data!.rs.fieldDefs);
 
     if (!data!.rs.fieldDefs.find( fd => fd.fieldName === 'ID' )) {
       return [];
