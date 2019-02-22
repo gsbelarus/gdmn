@@ -24,7 +24,7 @@ interface IRsMetaState {
   [rsName: string]: {
     taskId: string;
     q: EntityQuery;
-  };
+  } | undefined;
 }
 
 const rsMetaActions = {

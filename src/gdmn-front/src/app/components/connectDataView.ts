@@ -1,4 +1,4 @@
-import { connect } from "react-redux";
+import { connect } from 'react-redux';
 import { ThunkDispatch } from 'redux-thunk';
 import { IState } from '@src/app/store/reducer';
 import {
@@ -20,14 +20,17 @@ import {
   sortRecordSet,
   toggleGroup
 } from 'gdmn-recordset';
-import { compose } from "recompose";
-import { connectView } from "./connectView";
+import { compose } from 'recompose';
+import { connectView } from './connectView';
 
 export const connectDataView = compose(
   connectView,
   connect(
     (state: IState) => ({
-      erModel: state.gdmnState.erModel
+      erModel:
+        state.gdmnState.erModel && Object.keys(state.gdmnState.erModel.entities).length
+          ? state.gdmnState.erModel
+          : undefined // todo перенести
     }),
     (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
       onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),

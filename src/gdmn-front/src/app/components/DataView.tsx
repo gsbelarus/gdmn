@@ -53,10 +53,17 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     super.componentDidMount();
   }
 
-  public componentDidUpdate() {
-    if (this.props.loadMoreRsData) return; // todo test
+  public componentDidUpdate(prevProps: IDataViewProps<R>) {
+    // todo
+    if (this.props.loadMoreRsData) {
+      if (!prevProps.erModel && this.props.erModel) {
+        if (!this.isDataLoaded()) {
+          this.props.createRs(getMutex(this.getDataViewKey()));
+        }
+      }
+      return;
+    }
 
-    // TODO: ???
     const { createRs } = this.props;
     if (!this.isDataLoaded()) {
       createRs(getMutex(this.getDataViewKey()));
@@ -100,7 +107,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     const { data, match } = this.props;
 
-    console.log(data!.rs.fieldDefs);
+    // console.log(data!.rs.fieldDefs);
 
     if (!data!.rs.fieldDefs.find( fd => fd.fieldName === 'ID' )) {
       return [];
