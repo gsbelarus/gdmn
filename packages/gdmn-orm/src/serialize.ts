@@ -18,12 +18,13 @@ import {TimeStampAttribute} from "./model/scalar/number/TimeStampAttribute";
 import {SequenceAttribute} from "./model/scalar/SequenceAttribute";
 import {StringAttribute} from "./model/scalar/StringAttribute";
 import {Sequence} from "./model/Sequence";
-import {AttributeTypes, ContextVariables, IEnumValue, ILName} from "./types";
+import {AttributeTypes, ContextVariables, IEnumValue} from "./types";
+import {LName} from "gdmn-internals";
 
 export interface IAttribute {
   name: string;
   type: AttributeTypes;
-  lName: ILName;
+  lName: LName;
   required: boolean;
   semCategories: string;
   adapter?: any;
@@ -76,7 +77,7 @@ export interface ISetAttribute extends IEntityAttribute {
 export interface IEntity {
   parent?: string;
   name: string;
-  lName: ILName;
+  lName: LName;
   isAbstract: boolean;
   semCategories: string;
   unique: string[][];

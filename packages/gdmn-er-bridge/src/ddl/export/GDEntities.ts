@@ -8,7 +8,6 @@ import {
   ERModel,
   ICrossRelations,
   IEntityAdapter,
-  ILName,
   ParentAttribute,
   relationName2Adapter,
   relationNames2Adapter,
@@ -17,6 +16,7 @@ import {
   SetAttribute,
   StringAttribute
 } from "gdmn-orm";
+import {LName} from "gdmn-internals";
 import {Constants} from "../Constants";
 import {IATLoadResult} from "./atData";
 import {loadDocument} from "./document";
@@ -25,7 +25,7 @@ import {gedeminTables} from "./gdTables";
 interface IEntityInput {
   parent?: Entity;
   name?: string;
-  lName?: ILName;
+  lName?: LName;
   isAbstract?: boolean;
   semCategories?: SemCategory[];
   adapter: IEntityAdapter;

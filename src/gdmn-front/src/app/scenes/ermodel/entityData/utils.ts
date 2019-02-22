@@ -14,9 +14,9 @@ import {
 } from 'gdmn-orm';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
-export function attr2fd(q: EntityQuery, fieldAlias: string, data: IEntityQueryResponseFieldAlias): IFieldDef {
-  const link = q.link.deepFindLink(data.linkAlias)!;
-  const findField = link.fields.find( field => field.attribute.name === data.attribute);
+export function attr2fd(q: EntityQuery, fieldAlias: string, eqfa: IEntityQueryResponseFieldAlias): IFieldDef {
+  const link = q.link.deepFindLink(eqfa.linkAlias)!;
+  const findField = link.fields.find( field => field.attribute.name === eqfa.attribute );
 
   if (!findField) {
     throw new Error('Invalid query data!');
@@ -55,6 +55,7 @@ export function attr2fd(q: EntityQuery, fieldAlias: string, data: IEntityQueryRe
     fieldName: fieldAlias,
     dataType,
     size,
-    caption: attr.name
+    caption: attr.name,
+    eqfa
   };
 }

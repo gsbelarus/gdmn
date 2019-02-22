@@ -1,8 +1,9 @@
 import {semCategories2Str, SemCategory} from "gdmn-nlp";
 import {IEntityAdapter} from "../rdbadapter";
 import {IEntity} from "../serialize";
-import {IBaseSemOptions, ILName} from "../types";
+import {IBaseSemOptions} from "../types";
 import {Attribute} from "./Attribute";
+import {LName} from "gdmn-internals";
 
 export interface IAttributes {
   [name: string]: Attribute;
@@ -17,7 +18,7 @@ export class Entity {
 
   public readonly parent?: Entity;
   public readonly name: string;
-  public readonly lName: ILName;
+  public readonly lName: LName;
   public readonly isAbstract: boolean;
   public readonly semCategories: SemCategory[];
   public adapter?: IEntityAdapter;

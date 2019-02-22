@@ -1,6 +1,7 @@
 import {semCategories2Str, SemCategory} from "gdmn-nlp";
 import {IAttribute} from "../serialize";
-import {AttributeTypes, IBaseSemOptions, ILName} from "../types";
+import {AttributeTypes, IBaseSemOptions} from "../types";
+import {LName} from "gdmn-internals";
 
 export interface IAttributeOptions<Adapter> extends IBaseSemOptions<Adapter> {
   required?: boolean;
@@ -11,7 +12,7 @@ export abstract class Attribute<Adapter = any> {
   public abstract type: AttributeTypes;
 
   public readonly name: string;
-  public readonly lName: ILName;
+  public readonly lName: LName;
   public readonly required: boolean;
   public readonly semCategories: SemCategory[];
   public adapter?: Adapter;

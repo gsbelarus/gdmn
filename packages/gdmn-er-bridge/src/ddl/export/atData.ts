@@ -8,13 +8,13 @@
 
 import {AConnection, AResultSet, ATransaction} from "gdmn-db";
 import {SemCategory, str2SemCategories} from "gdmn-nlp";
-import {ILName, ITName} from "gdmn-orm";
+import {LName, ITName} from "gdmn-internals";
 
 /**
  * Дополнительная информация по доменам.
  */
 export interface IATField {
-  lName: ILName;
+  lName: LName;
   refTable?: string;
   refCondition?: string;
   setTable?: string;
@@ -33,7 +33,7 @@ export interface IATFields {
 export interface IATRelationField {
   attrName?: string;
   masterEntityName?: string;
-  lName: ILName;
+  lName: LName;
   fieldSource: string;
   fieldSourceKey: number;
   crossTable?: string;
@@ -50,7 +50,7 @@ export interface IATRelationFields {
  * Дополнительная информация по таблицам.
  */
 export interface IATRelation {
-  lName: ILName;
+  lName: LName;
   entityName?: string;
   semCategories: SemCategory[];
   relationFields: IATRelationFields;
