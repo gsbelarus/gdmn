@@ -1,10 +1,10 @@
 import { Semaphore } from 'gdmn-internals';
 
 interface IMutexes {
-  [name: string]: Semaphore
+  [name: string]: Semaphore;
 }
 
-const mutexes: IMutexes = { }
+const mutexes: IMutexes = {};
 
 export function getMutex(name: string) {
   let mutex = mutexes[name];

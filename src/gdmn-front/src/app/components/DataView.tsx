@@ -18,7 +18,8 @@ export interface IRSAndGCS {
 export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
   erModel?: ERModel;
-  createRs: (mutex: Semaphore) => void;
+  attachRs: (mutex?: Semaphore) => void;
+  detachRs?: () => void;
   loadMoreRsData?: TLoadMoreRsData;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
@@ -47,7 +48,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public componentDidMount() {
     if (!this.isDataLoaded()) {
-      this.props.createRs(getMutex(this.getDataViewKey()));
+      this.props.attachRs(getMutex(this.getDataViewKey()));
     }
 
     super.componentDidMount();
@@ -58,15 +59,15 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     if (this.props.loadMoreRsData) {
       if (!prevProps.erModel && this.props.erModel) {
         if (!this.isDataLoaded()) {
-          this.props.createRs(getMutex(this.getDataViewKey()));
+          this.props.attachRs(getMutex(this.getDataViewKey()));
         }
       }
       return;
     }
 
-    const { createRs } = this.props;
+    const { attachRs } = this.props;
     if (!this.isDataLoaded()) {
-      createRs(getMutex(this.getDataViewKey()));
+      attachRs(getMutex(this.getDataViewKey()));
     } else {
       const { data } = this.props;
       if (data && data.rs && data.detail && data.detail.length) {
@@ -74,7 +75,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         const detailValue = masterLink.values[0].value;
         const masterValue = data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName);
         if (detailValue !== masterValue) {
-          createRs(getMutex(this.getDataViewKey()));
+          attachRs(getMutex(this.getDataViewKey()));
         }
       }
     }
@@ -82,8 +83,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public componentWillUnmount() {
     disposeMutex(this.getDataViewKey());
-
-    // TODO
+    if (this.props.detachRs) this.props.detachRs();
 
     const { updateViewTab, viewTab } = this.props;
 

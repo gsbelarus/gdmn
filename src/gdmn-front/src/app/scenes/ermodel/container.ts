@@ -29,7 +29,7 @@ export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
 
     (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
       loadMoreRsData: undefined,
-      createRs: (_mutex: Semaphore) =>
+      attachRs: (_mutex: Semaphore) =>
         thunkDispatch((dispatch, getState) => {
           const erModel = getState().gdmnState.erModel;
 

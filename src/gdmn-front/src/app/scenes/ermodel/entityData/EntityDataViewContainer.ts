@@ -14,7 +14,8 @@ import {
   RecordSetAction,
   setRecordSetData,
   addRecordSetData,
-  TFieldType
+  TFieldType,
+  deleteRecordSet
 } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 
@@ -47,7 +48,8 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
         erModel,
         ...stateProps,
         ...dispatchProps,
-        createRs: (mutex?: Semaphore) =>
+
+        attachRs: (mutex?: Semaphore) =>
           dispatch((dispatch, getState) => {
             console.log('createRs');
             // if (!mutex.permits) return;
@@ -61,7 +63,6 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
             if (!entity) {
               throw new Error(`Entity ${entityName} not found in ER Model`);
             }
-
 
             const q = new EntityQuery(
               new EntityLink(
@@ -121,11 +122,33 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                   //     taskId: undefined
                   //   })
                   // );
+
+                  if (getState().recordSet[entity.name]) {
+                    getState().recordSet[entity.name].srcEoF = true;
+                  }
                   dispatch(rsMetaActions.deleteRsMeta(entity.name));
                 }
               });
             // });
           }),
+
+        detachRs: () => {
+          if (!stateProps.data || !stateProps.data.rs) return;
+
+          dispatch(deleteRecordSet({ name: stateProps.data.rs.name }));
+
+          if (rsMeta) {
+            apiService.interruptTask({
+              payload: {
+                action: TTaskActionNames.INTERRUPT,
+                payload: {
+                  taskKey: rsMeta.taskId
+                }
+              }
+            });
+            dispatch(rsMetaActions.deleteRsMeta(stateProps.data.rs.name));
+          }
+        },
 
         loadMoreRsData: async ({ startIndex, stopIndex }: IndexRange) =>
           // dispatch((dispatch, getState)
@@ -148,7 +171,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
 
             if (!rsMeta) return;
             if (!stateProps.data) return;
-            if (!!stateProps.data.rs && stopIndex < stateProps.data.rs.size) return;
+            if (!!stateProps.data.rs && ((stopIndex < stateProps.data.rs.size) || stateProps.data.rs.srcEoF)) return;
 
             // console.log('loadMoreRsData 2');
 

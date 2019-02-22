@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { ThunkDispatch } from 'redux-thunk';
-import { IState } from '@src/app/store/reducer';
+import { compose } from 'recompose';
 import {
   applySortDialog,
   cancelSortDialog,
@@ -20,7 +20,8 @@ import {
   sortRecordSet,
   toggleGroup
 } from 'gdmn-recordset';
-import { compose } from 'recompose';
+
+import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
 
 export const connectDataView = compose(
