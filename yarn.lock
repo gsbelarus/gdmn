@@ -2094,7 +2094,17 @@
     "@uifabric/utilities" ">=6.28.0 <7.0.0"
     tslib "^1.7.1"
 
-"@uifabric/utilities@>=6.28.0 <7.0.0", "@uifabric/utilities@>=6.29.0 <7.0.0", "@uifabric/utilities@>=6.29.1 <7.0.0", "@uifabric/utilities@>=6.29.2 <7.0.0":
+"@uifabric/utilities@>=6.28.0 <7.0.0", "@uifabric/utilities@>=6.29.0 <7.0.0", "@uifabric/utilities@>=6.29.3 <7.0.0":
+  version "6.29.3"
+  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-6.29.3.tgz#2d1a3a8a2dcf34942d5c9ad6d6d42b59dfddbc20"
+  integrity sha512-c+Kkk4416XY9BVdceCxq6vMktI21quJWYbPStn0Ltvn84XBkhsb4YelloUG4YSwLz7Yhdy5i4eYSArNgvEt4fQ==
+  dependencies:
+    "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
+    "@uifabric/set-version" ">=1.1.3 <2.0.0"
+    prop-types "^15.5.10"
+    tslib "^1.7.1"
+
+"@uifabric/utilities@>=6.29.1 <7.0.0":
   version "6.29.2"
   resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-6.29.2.tgz#83536d3e96179376dfb0b5dee3dcaca5e859afbc"
   integrity sha512-bkW4eWlYj2ghobHOLn2KUO4B//v7wy365ZwtQVu+OWkuyAWJOUaY0J4qQvqbFsTKZybcXmmAPQtsrCJwWdE68w==
@@ -10190,9 +10200,9 @@ octokit-pagination-methods@^1.1.0:
     tslib "^1.7.1"
 
 office-ui-fabric-react@^6:
-  version "6.142.1"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.142.1.tgz#f364455ceea5cd73199f226386430dc45a076aca"
-  integrity sha512-8uv/Norhlk3xV2yq4s/a/f1JKSvfob4sF+92Dq2AUb9/ZMAjRORgmzz0X9AfR8Yp9raXZCM4QysrJOohO/UShg==
+  version "6.143.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.143.0.tgz#8859a2e23780999c3372d73c80e1e32cb7dd2b5d"
+  integrity sha512-JXV1h8upR+WPYQ7SuJFgp9XuLrJUDT9QjI7bzbyY+dpwjKCX0D22BlTfi7O52IdDt4eFesJofN8DfW0A/opvMw==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/foundation" ">=0.7.1 <1.0.0"
@@ -10200,7 +10210,7 @@ office-ui-fabric-react@^6:
     "@uifabric/merge-styles" ">=6.15.2 <7.0.0"
     "@uifabric/set-version" ">=1.1.3 <2.0.0"
     "@uifabric/styling" ">=6.41.0 <7.0.0"
-    "@uifabric/utilities" ">=6.29.2 <7.0.0"
+    "@uifabric/utilities" ">=6.29.3 <7.0.0"
     prop-types "^15.5.10"
     tslib "^1.7.1"
 
@@ -11844,14 +11854,14 @@ react-dev-utils@^7.0.3:
     text-table "0.2.0"
 
 react-dom@^16:
-  version "16.8.2"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.8.2.tgz#7c8a69545dd554d45d66442230ba04a6a0a3c3d3"
-  integrity sha512-cPGfgFfwi+VCZjk73buu14pYkYBR1b/SRMSYqkLDdhSEHnSwcuYTPu6/Bh6ZphJFIk80XLvbSe2azfcRzNF+Xg==
+  version "16.8.3"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.8.3.tgz#ae236029e66210783ac81999d3015dfc475b9c32"
+  integrity sha512-ttMem9yJL4/lpItZAQ2NTFAbV7frotHk5DZEHXUOws2rMmrsvh1Na7ThGT0dTzUIl6pqTOi5tYREfL8AEna3lA==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
-    scheduler "^0.13.2"
+    scheduler "^0.13.3"
 
 react-draggable@^3:
   version "3.1.1"
@@ -11886,10 +11896,15 @@ react-is@^16.5.2, react-is@^16.6.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.7.0.tgz#c1bd21c64f1f1364c6f70695ec02d69392f41bfa"
   integrity sha512-Z0VRQdF4NPDoI0tsXVMLkJLiwEBa+RP66g0xDHxgxysxSoCUccSten4RTF/UFvZF1dZvZ9Zu1sx+MDXwcOR34g==
 
-react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.2:
+react-is@^16.7.0, react-is@^16.8.2:
   version "16.8.2"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.8.2.tgz#09891d324cad1cb0c1f2d91f70a71a4bee34df0f"
   integrity sha512-D+NxhSR2HUCjYky1q1DwpNUD44cDpUXzSmmFyC3ug1bClcU/iDNy0YNn1iwme28fn+NFhpA13IndOd42CrFb+Q==
+
+react-is@^16.8.1:
+  version "16.8.3"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.8.3.tgz#4ad8b029c2a718fc0cfc746c8d4e1b7221e5387d"
+  integrity sha512-Y4rC1ZJmsxxkkPuMLwvKvlL1Zfpbcu+Bf4ZigkHup3v9EfdYhAlWAaVyA19olXq2o2mGn0w+dFKvk3pVVlYcIA==
 
 react-lifecycles-compat@^3.0.0, react-lifecycles-compat@^3.0.2, react-lifecycles-compat@^3.0.4:
   version "3.0.4"
@@ -12043,14 +12058,14 @@ react-virtualized@^9:
     react-lifecycles-compat "^3.0.4"
 
 react@^16:
-  version "16.8.2"
-  resolved "https://registry.yarnpkg.com/react/-/react-16.8.2.tgz#83064596feaa98d9c2857c4deae1848b542c9c0c"
-  integrity sha512-aB2ctx9uQ9vo09HVknqv3DGRpI7OIGJhCx3Bt0QqoRluEjHSaObJl+nG12GDdYH6sTgE7YiPJ6ZUyMx9kICdXw==
+  version "16.8.3"
+  resolved "https://registry.yarnpkg.com/react/-/react-16.8.3.tgz#c6f988a2ce895375de216edcfaedd6b9a76451d9"
+  integrity sha512-3UoSIsEq8yTJuSu0luO1QQWYbgGEILm+eJl2QN/VLDi7hL+EN18M3q3oVZwmVzzBJ3DkM7RMdRwBmZZ+b4IzSA==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
-    scheduler "^0.13.2"
+    scheduler "^0.13.3"
 
 read-cmd-shim@^1.0.1:
   version "1.0.1"
@@ -12728,10 +12743,10 @@ sax@^1.2.4, sax@~1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
-scheduler@^0.13.2:
-  version "0.13.2"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.13.2.tgz#969eaee2764a51d2e97b20a60963b2546beff8fa"
-  integrity sha512-qK5P8tHS7vdEMCW5IPyt8v9MJOHqTrOUgPXib7tqm9vh834ibBX5BNhwkplX/0iOzHW5sXyluehYfS9yrkz9+w==
+scheduler@^0.13.3:
+  version "0.13.3"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.13.3.tgz#bed3c5850f62ea9c716a4d781f9daeb9b2a58896"
+  integrity sha512-UxN5QRYWtpR1egNWzJcVLk8jlegxAugswQc984lD3kU7NuobsO37/sRfbpTdBjtnD5TBNFA2Q2oLV5+UmPSmEQ==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
