@@ -28,15 +28,15 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "@types/koa-bodyparser": "^4.2.2",
     "gdmn-er-bridge": "^1",
     "koa": "^2",
-    "koa-bodyparser": "^4.2.1",
+    "koa-bodyparser": "^4",
     "koa-router": "^7.4.0"
   },
   "devDependencies": {
     "@types/koa": "^2",
-    "@types/koa-router": "^7.0.39",
+    "@types/koa-bodyparser": "^4",
+    "@types/koa-router": "^7",
     "@types/node": "^11",
     "nodemon": "^1",
     "ts-node": "^8",

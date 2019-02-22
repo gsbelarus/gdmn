@@ -1,25 +1,15 @@
-import Koa from "koa";
-import {Factory, IConnectionOptions} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {EntityQuery, ERModel, IEntityQueryResponse} from "gdmn-orm";
-import Router from 'koa-router';
+import Koa from "koa";
 import bodyParser from "koa-bodyparser";
+import Router from "koa-router";
+import {loadDBDetails} from "./testConfig";
 
-const driver = Factory.getDriver("firebird");
-const options: IConnectionOptions = {
-  server: {
-    host: "192.168.0.34",
-    port: 3054
-  },
-  username: "SYSDBA",
-  password: "masterkey",
-  readTransaction: true,
-  path: "k:\\bases\\broiler\\GDBASE_2019_01_14.FDB"
-};
+const dbDetail = loadDBDetails()[0];
 
 async function loadERModel(): Promise<ERModel> {
-  const connection = driver.newConnection();
-  await connection.connect(options);
+  const connection = dbDetail.driver.newConnection();
+  await connection.connect({...dbDetail.connectionOptions, readTransaction: true});
   try {
     await ERBridge.initDatabase(connection);
     return await ERBridge.reloadERModel(connection, connection.readTransaction, new ERModel());
@@ -29,8 +19,8 @@ async function loadERModel(): Promise<ERModel> {
 }
 
 async function getData(query: EntityQuery): Promise<IEntityQueryResponse> {
-  const connection = driver.newConnection();
-  await connection.connect(options);
+  const connection = dbDetail.driver.newConnection();
+  await connection.connect({...dbDetail.connectionOptions, readTransaction: true});
   try {
     return await ERBridge.query(connection, connection.readTransaction, query);
   } finally {
@@ -40,35 +30,34 @@ async function getData(query: EntityQuery): Promise<IEntityQueryResponse> {
 
 async function getErModelResp(ctx: Koa.Context): Promise<void> {
   try {
-    if (ctx.state.ERModel){
+    if (ctx.state.ERModel) {
       ctx.body = ctx.state.ERModel.serialize();
-   }
+    }
   } catch (err) {
     ctx.status = err.statusCode || err.status || 500;
     ctx.body = {
       message: ctx.status + ": " + err.message
-    }
-  }      
+    };
+  }
 }
 
 async function getDataResp(ctx: Koa.Context): Promise<void> {
   try {
     console.log(ctx.request.querystring);
     console.log(ctx.request.query.query);
-    let query = ctx.request.query.query;
-    try{
+    const query = ctx.request.query.query;
+    try {
       const entityQuery = EntityQuery.deserialize(ctx.state.ERModel, query);
-      let bodytext = await getData(entityQuery);
-      ctx.body = bodytext;
+      ctx.body = await getData(entityQuery);
       console.log(ctx.body);
-    } catch (err){
+    } catch (err) {
       console.log(err.message);
       ctx.status = 400;
-      ctx.body = '400: Некорректный запрос'
-    } 
-  } catch{
+      ctx.body = "400: Некорректный запрос";
+    }
+  } catch {
     ctx.status = 500;
-    ctx.body = '500: Ошибка выполнения sql и другие внутренние ошибки'
+    ctx.body = "500: Ошибка выполнения sql и другие внутренние ошибки";
   }
 }
 
@@ -85,29 +74,29 @@ async function init(): Promise<void> {
         message: ctx.status + ": " + err.message
       };
     }
-  })
+  });
 
-  app.use((ctx, next) => {
+  app.use(async (ctx, next) => {
     ctx.state.ERModel = ourERModel;
-    next();
+    await next();
   });
   const router = new Router();
   router
-    .get('/ermodel', getErModelResp)
-    .get('/data', getDataResp); 
+    .get("/ermodel", getErModelResp)
+    .get("/data", getDataResp);
 
   app
     .use(router.routes())
     .use(router.allowedMethods());
 
-  app.listen(3000); 
+  app.listen(3000);
 }
 
-
 init()
-  .then(()=>{
-    console.log('ok');
+  .then(() => {
+    console.log("ok");
   })
-  .catch((err)=>{
-    console.log(err.message);
-  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
