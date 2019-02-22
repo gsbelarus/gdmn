@@ -189,6 +189,18 @@ export class Task<Cmd extends ICmd<any>, Result> {
     }
   }
 
+  public async waitDoneStatus(): Promise<void> {
+    return new Promise((resolve) => {
+      const callback = (task: Task<Cmd, Result>) => {
+        if (Task.DONE_STATUSES.includes(task._status)) {
+          this.emitter.removeListener("change", callback);
+          resolve();
+        }
+      };
+      this.emitter.addListener("change", callback);
+    });
+  }
+
   private _updateStatus(status: TaskStatus): void {
     if (Task.DONE_STATUSES.includes(this._status)) {
       this._logger.error("id#%s was finished", this._id);

@@ -4,7 +4,7 @@ import process from "process";
 import {IDBDetail} from "../ADatabase";
 import {AppCommandProvider} from "../AppCommandProvider";
 import {Application} from "../Application";
-import {ICmd, Task} from "../task/Task";
+import {ICmd, TaskStatus} from "../task/Task";
 
 export interface IAppWorkerRequest {
   userKey: number;
@@ -13,7 +13,9 @@ export interface IAppWorkerRequest {
 
 export interface IAppWorkerResponse<R> {
   command: ICmd<any, any>;
-  result: R;
+  status: TaskStatus;
+  result?: R;
+  error?: Error;
 }
 
 const ENV_IS_APP_PROCESS = "IS_APP_PROCESS";
@@ -102,22 +104,16 @@ if (ApplicationProcess.isProcess) {
     await creating;
     const session = await application.sessionManager.open(data.userKey);
     try {
-      const response = await new Promise((resolve) => {
-        const task = new AppCommandProvider(application).receive(session, data.command);
+      const task = new AppCommandProvider(application).receive(session, data.command);
+      task.execute();
+      await task.waitDoneStatus();
+      const response: IAppWorkerResponse<any> = {
+        command: data.command,
+        status: task.status,
+        result: task.result,
+        error: task.error
+      };
 
-        const callback = () => {
-          if (Task.DONE_STATUSES.includes(task.status)) {
-            const res: IAppWorkerResponse<any> = {
-              command: data.command,
-              result: task.result
-            };
-            task.emitter.removeListener("change", callback);
-            resolve(res);
-          }
-        };
-        task.emitter.addListener("change", callback);
-        task.execute();
-      });
       process.send!(response);
     } finally {
       await session.forceClose();

@@ -287,10 +287,10 @@ export class Application extends ADatabase {
         const result = await cursor.fetch(rowsCount);
         if (result.finished && !cursor.closed) {
           await cursor.close();
-          // wait for closing query task
+          // wait for finish query task
           const findTask = context.session.taskManager.find(taskKey);
           if (findTask) {
-            await findTask.waitExecution();
+            await findTask.waitDoneStatus();
           }
         }
         return cursor.makeEntityQueryResponse(result.data);

@@ -73,7 +73,7 @@ export class StompSession implements StompClientCommandListener {
       const subscription = this._subscriptions
         .find((sub) => sub.destination === StompSession.DESTINATION_TASK_STATUS);
 
-      if (subscription) {
+      if (subscription && task.status !== TaskStatus.IDLE && !Task.DONE_STATUSES.includes(task.status)) {
         const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
 
         this._stomp.message(headers, JSON.stringify({
