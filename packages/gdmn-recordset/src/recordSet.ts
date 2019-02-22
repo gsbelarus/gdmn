@@ -200,6 +200,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._fieldDefs;
   }
 
+  get eq() {
+    return this._eq;
+  }
+
   get size() {
     if (this._groups && this._groups.length) {
       const lg = this._groups[this._groups.length - 1];
@@ -298,6 +302,42 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get asObservable() {
     return this._subject;
+  }
+
+  get pk(): IFieldDef[] {
+    let res: IFieldDef[] = [];
+
+    if (this._eq) {
+      this._eq.link.entity.pk.forEach( attr => {
+        const eqf = this._eq!.link.fields.find( f => f.attribute === attr );
+        if (eqf) {
+          const pkfd = this._fieldDefs.find( fd => !!fd.eqfa && fd.eqfa.linkAlias === this._eq!.link.alias && fd.eqfa.attribute === attr.name );
+          if (pkfd) {
+            res.push(pkfd);
+          }
+        }
+      });
+    }
+
+    return res;
+  }
+
+  get pkValue(): TDataType[] {
+    if (!this.size) {
+      throw new Error('RecordSet is empty');
+    }
+
+    const r = this._get(this._currentRow, undefined).data;
+
+    return this.pk.map( fd => r[fd.fieldName] );
+  }
+
+  get pk2s(): string[] {
+    if (!this.size) {
+      throw new Error('RecordSet is empty');
+    }
+
+    return this.pk.map( fd => this.getString(this._currentRow, fd.fieldName) );
   }
 
   private _checkFields(fields: INamedField[]) {
