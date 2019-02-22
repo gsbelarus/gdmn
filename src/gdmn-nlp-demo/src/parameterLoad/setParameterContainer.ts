@@ -1,7 +1,7 @@
 import { connect } from 'react-redux';
 import { State } from '../store';
 import { SetParameterLoad } from './setParameterLoad';
-import { ParamAction } from './reducer';
+import { ParameterLoadAction } from './reducer';
 import * as actions from './actions';
 import { load } from '../appAction';
 import { ThunkDispatch } from 'redux-thunk';
@@ -12,7 +12,7 @@ export const SetParameterContainer = connect(
     ...state.param,
     ermodel: state.ermodel
   }),
-  (dispatch: ThunkDispatch<State, never, ParamAction | ERModelAction>) => ({
+  (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>) => ({
     onSetTextHost: (text: string) => dispatch(actions.setHost(text)),
     onSetTextPort: (text: string) => dispatch(actions.setPort(text)),
     onSetReadFile: (check: boolean) => dispatch(actions.setIsReadFile(check)),

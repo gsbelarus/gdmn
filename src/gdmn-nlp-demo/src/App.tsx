@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
 import { IERModels, ERModelAction } from './ermodel/reducer';
 import { SetParameterContainer } from './parameterLoad/setParameterContainer';
-import { ParamAction } from './parameterLoad/reducer';
+import { ParameterLoadAction } from './parameterLoad/reducer';
 import { load } from './appAction';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
@@ -223,7 +223,7 @@ export default connect(
       erModel: state.ermodel
     }
   },
-  (dispatch: ThunkDispatch<State, never, ParamAction | ERModelAction>) => ({
+  (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>) => ({
     onLoadERModel: (url: string, name: string) => dispatch(load(url, name)),
     onLoadERModel2: (erModel: ERModel, name: string) => dispatch(loadERModel({ name, erModel }))
   })

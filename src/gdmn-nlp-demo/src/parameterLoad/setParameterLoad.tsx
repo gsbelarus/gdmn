@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Checkbox, TextField, PrimaryButton } from 'office-ui-fabric-react';
-import './setParam.css';
+import './setParameterLoad.css';
 
 export interface ISetParameterProps {
   host: string,

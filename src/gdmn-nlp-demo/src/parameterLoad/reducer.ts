@@ -1,7 +1,7 @@
 import { ActionType, getType } from 'typesafe-actions';
 import * as actions from './actions';
 
-export type ParamAction = ActionType<typeof actions>;
+export type ParameterLoadAction = ActionType<typeof actions>;
 
 export interface ISetParameterState {
   host: string,
@@ -15,7 +15,7 @@ const initialState: ISetParameterState = {
   isReadFile: false,
 };
 
-export function reducer(state: ISetParameterState = initialState, action: ParamAction): ISetParameterState {
+export function reducer(state: ISetParameterState = initialState, action: ParameterLoadAction): ISetParameterState {
   switch (action.type) {
     case getType(actions.setHost): {
       let host = action.payload;

@@ -2,10 +2,10 @@ import { ThunkDispatch } from 'redux-thunk';
 import { State } from './store';
 import { setERModelLoading, loadERModel } from './ermodel/actions';
 import { deserializeERModel } from 'gdmn-orm';
-import { ParamAction } from './parameterLoad/reducer';
+import { ParameterLoadAction } from './parameterLoad/reducer';
 import { ERModelAction } from './ermodel/reducer';
 
-export const load = (url: string, name: string) => (dispatch: ThunkDispatch<State, never, ParamAction | ERModelAction>, _getState: () => State) => {
+export const load = (url: string, name: string) => (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>, _getState: () => State) => {
   dispatch(loadERModel({ name, erModel: undefined }));
   dispatch(setERModelLoading({ name, loading: true }));
   fetch(url)

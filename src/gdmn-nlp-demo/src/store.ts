@@ -8,9 +8,9 @@ import { gridReducer, GridReducerState, GridAction } from 'gdmn-grid';
 import { reducer as nlpDialogReducer, NLPDialogAction } from './nlpdialog/reducer';
 import { RecordSetReducerState, recordSetReducer, RecordSetAction } from 'gdmn-recordset';
 import { NLPDialog } from "gdmn-nlp-agent";
-import { reducer as setParamReducer, ISetParamState, ParamAction } from './param/reducer';
+import { reducer as setParamReducer, ISetParameterState, ParameterLoadAction } from './parameterLoad/reducer';
 
-export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RecordSetAction | GridAction | NLPDialogAction | ParamAction;
+export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RecordSetAction | GridAction | NLPDialogAction | ParameterLoadAction;
 
 export interface State {
   morphology: IMorphologyState;
@@ -19,7 +19,7 @@ export interface State {
   grid: GridReducerState;
   recordSet: RecordSetReducerState;
   nlpDialog: NLPDialog;
-  param: ISetParamState;
+  param: ISetParameterState;
 };
 
 const rootReducer = combineReducers<State, Actions>(
