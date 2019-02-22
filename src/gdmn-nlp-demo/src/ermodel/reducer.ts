@@ -26,7 +26,7 @@ export function reducer(state: IERModels = {}, action: ERModelAction): IERModels
         [name]: {
           loading: false,
           erModel,
-          erTranslatorRU: new ERTranslatorRU(erModel)
+          erTranslatorRU: erModel && new ERTranslatorRU(erModel)
         }
       };
     }

@@ -9,7 +9,7 @@ export const setERModelLoading = createAction('ERMODEL/SET_LOADING', resolve => 
 export type SetERModelLoading = typeof setERModelLoading;
 
 export const loadERModel = createAction('ERMODEL/LOAD', resolve => {
-    return (param: { name: string, erModel: ERModel }) => resolve(param);
+    return (param: { name: string, erModel?: ERModel }) => resolve(param);
   });
 
 export type LoadERModel = typeof loadERModel;

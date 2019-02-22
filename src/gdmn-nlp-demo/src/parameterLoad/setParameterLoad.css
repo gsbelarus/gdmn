@@ -1,0 +1,14 @@
+.SetParamBox {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding-bottom: 8px;
+}
+
+.SetParamBox > * {
+  margin: 4px;
+}
+
+.disable > * {
+  pointer-events: none;
+}

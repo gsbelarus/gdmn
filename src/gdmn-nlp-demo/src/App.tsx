@@ -5,13 +5,16 @@ import { MorphBoxContainer } from './morphology/MorphBoxContainer';
 import { CommandBar, ICommandBarItemProps, IComponentAsProps, CommandBarButton, BaseComponent, IButtonProps } from 'office-ui-fabric-react';
 import { SyntaxBoxContainer } from './syntax/SyntaxBoxContainer';
 import { ERModelBoxContainer } from './ermodel/ERModelBoxContainer';
-import { Actions, State } from './store';
-import { setERModelLoading, loadERModel } from './ermodel/actions';
+import { State } from './store';
+import { loadERModel } from './ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
-import { deserializeERModel, ERModel, Entity, IntegerAttribute, StringAttribute, DateAttribute, FloatAttribute, EntityAttribute } from 'gdmn-orm';
+import { ERModel, Entity, IntegerAttribute, StringAttribute, DateAttribute, FloatAttribute, EntityAttribute } from 'gdmn-orm';
 import { connect } from 'react-redux';
 import { ChatBoxContainer } from './nlpdialog/NLPDialogBoxContainer';
-import { IERModels } from './ermodel/reducer';
+import { IERModels, ERModelAction } from './ermodel/reducer';
+import { SetParameterContainer } from './parameterLoad/setParameterContainer';
+import { ParamAction } from './parameterLoad/reducer';
+import { load } from './appAction';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
@@ -45,7 +48,7 @@ class InternalApp extends Component<IAppProps, {}> {
     const { erModel, onLoadERModel, onLoadERModel2 } = this.props;
 
     if (!erModel['db']) {
-      onLoadERModel('/data/ermodel.serialized.json', 'db');
+      onLoadERModel(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db');
     }
 
     const erm = new ERModel();
@@ -167,6 +170,7 @@ class InternalApp extends Component<IAppProps, {}> {
               <Route exact={false} path={`/syntax`} component={SyntaxBoxContainer} />
               <Route exact={false} path={`/ermodel/:name`} component={ERModelBoxContainer} />
               <Route exact={false} path={`/nlpdialog`} component={ChatBoxContainer} />
+              <Route exact={false} path={`/parameterLoad`} component={SetParameterContainer} />
             </Switch>
           </div>
         </>
@@ -191,7 +195,7 @@ class InternalApp extends Component<IAppProps, {}> {
         text: 'Syntax',
         commandBarButtonAs: btn('/syntax')
       },
-      ...Object.entries(erModel).map( ([name, m]) => (
+      ...Object.entries(erModel).map(([name, m]) => (
         {
           key: `ermodel-${name}`,
           disabled: !m.erModel,
@@ -203,6 +207,11 @@ class InternalApp extends Component<IAppProps, {}> {
         key: 'nlpdialog',
         text: 'NLP Dialog',
         commandBarButtonAs: btn('/nlpdialog')
+      },
+      {
+        key: 'setParameterLoad',
+        text: 'Parameter load',
+        commandBarButtonAs: btn('/parameterLoad')
       }
     ];
   };
@@ -214,22 +223,8 @@ export default connect(
       erModel: state.ermodel
     }
   },
-  (dispatch: ThunkDispatch<State, never, Actions>) => ({
-    onLoadERModel: (srcFile: string, name: string) => dispatch(
-      (dispatch: ThunkDispatch<State, never, Actions>, _getState: () => State) => {
-        dispatch(setERModelLoading({ name, loading: true }));
-        fetch(`${process.env.PUBLIC_URL}${srcFile}`)
-        .then( res => res.text() )
-        .then( res => JSON.parse(res) )
-        .then( res => dispatch(loadERModel({ name, erModel: deserializeERModel(res, true) })) )
-        .then( _res => dispatch(setERModelLoading({ name, loading: false })) )
-        .catch( err => {
-          dispatch(setERModelLoading({ name, loading: false }));
-          console.log(err);
-         });
-      }
-    ),
+  (dispatch: ThunkDispatch<State, never, ParamAction | ERModelAction>) => ({
+    onLoadERModel: (url: string, name: string) => dispatch(load(url, name)),
     onLoadERModel2: (erModel: ERModel, name: string) => dispatch(loadERModel({ name, erModel }))
   })
 )(InternalApp);
-
