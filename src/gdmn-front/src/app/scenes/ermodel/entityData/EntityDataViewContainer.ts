@@ -62,7 +62,6 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
               throw new Error(`Entity ${entityName} not found in ER Model`);
             }
 
-            // console.log('createRs -1');
 
             const q = new EntityQuery(
               new EntityLink(
@@ -116,7 +115,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                   }
                 } else {
                   console.log('rs close');
-                  rsMeta = undefined;
+                  // rsMeta = undefined;
                   // dispatch(
                   //   rsMetaActions.setRsMeta(entity.name, {
                   //     taskId: undefined
