@@ -79,6 +79,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _subject: Subject<RecordSetEventData<R>>;
 
   public loadingStopRowIdx?: number;
+  public srcEoF?: boolean;
 
   private constructor(params: IRecordSetParams<R>) {
     const {
