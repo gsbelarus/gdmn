@@ -107,12 +107,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     const { data, match } = this.props;
 
-    // console.log(data!.rs.fieldDefs);
-
-    if (!data!.rs.fieldDefs.find( fd => fd.fieldName === 'ID' )) {
-      return [];
-    }
-
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -132,7 +126,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: btn(`${match!.url}/edit/${data!.rs.getString(data!.rs.currentRow, 'ID')}`)
+        commandBarButtonAs: btn(`${match!.url}/edit/${data!.rs.pk2s.join('-')}`)
       },
       {
         key: `delete`,
