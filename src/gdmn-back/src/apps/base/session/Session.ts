@@ -119,10 +119,11 @@ export class Session {
     this._updateStatus(SessionStatus.FORCE_CLOSING);
 
     this.clearCloseTimer();
-    const waitPromises = this._taskManager.find(...Task.PROCESS_STATUSES)
-      .filter((task) => task.options.session === this)
+    const waitPromises = this._taskManager.find(this)
       .map((task) => {
-        task.interrupt();
+        if (!Task.DONE_STATUSES.includes(task.status)) {
+          task.interrupt();
+        }
         return task.waitExecution();
       });
     await Promise.all(waitPromises);
