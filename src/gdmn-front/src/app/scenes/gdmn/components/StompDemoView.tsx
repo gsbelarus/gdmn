@@ -90,7 +90,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         ])
       );
 
-      return apiService.makeDataCursor({
+      return apiService.query({
         payload: {
           action: TTaskActionNames.QUERY,
           payload: {
@@ -205,12 +205,11 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     );
 
     apiService
-      .makeDataCursor({
+      .prepareQuery({
         payload: {
-          action: TTaskActionNames.QUERY,
+          action: TTaskActionNames.PREPARE_QUERY,
           payload: {
-            query: query.inspect(),
-            sequentially: true
+            query: query.inspect()
           }
         }
       })
@@ -237,7 +236,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     if (!this.state.cursorTaskId) return;
 
     apiService
-      .getNextData({
+      .fetchQuery({
         payload: {
           action: TTaskActionNames.FETCH_QUERY,
           payload: {
@@ -269,7 +268,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     }
 
     cmds.forEach(value => {
-      apiService.makeDataCursor({
+      apiService.query({
         payload: {
           action: TTaskActionNames.QUERY,
           payload: {

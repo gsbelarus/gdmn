@@ -43,6 +43,7 @@ export interface IOptions<Cmd extends ICmd<any>, Result> {
   readonly command: Cmd;
   readonly session: Session;
   readonly level: Level;
+  readonly unlimited?: boolean;
   readonly logger?: Logger;
   readonly progress?: IProgressOptions;
   readonly worker: TaskWorker<Cmd, Result>;
@@ -215,7 +216,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
       clearTimeout(this._timer);
       this._timer = undefined;
     }
-    if (this._status === TaskStatus.RUNNING) {
+    if (this._status === TaskStatus.RUNNING && !this._options.unlimited) {
       this._timer = setTimeout(() => this.interrupt(), Constants.SERVER.TASK.TIMEOUT);
     }
     this._logger.info("id#%s is changed; Action: %s; Status: %s", this._id, this._options.command.action,

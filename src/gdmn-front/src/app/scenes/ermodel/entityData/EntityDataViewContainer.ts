@@ -80,11 +80,10 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
 
             // mutex.acquire().then(() => { // todo: ?
             apiService
-              .makeDataCursor({
+              .prepareQuery({
                 payload: {
-                  action: TTaskActionNames.QUERY,
+                  action: TTaskActionNames.PREPARE_QUERY,
                   payload: {
-                    sequentially: true,
                     query: q.inspect()
                   }
                 }
@@ -183,7 +182,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
             const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
 
             const res = await apiService
-              .getNextData({
+              .fetchQuery({
                 payload: {
                   action: TTaskActionNames.FETCH_QUERY,
                   payload: {

@@ -31,7 +31,7 @@
     "gdmn-er-bridge": "^1",
     "koa": "^2",
     "koa-bodyparser": "^4",
-    "koa-router": "^7.4.0"
+    "koa-router": "^7"
   },
   "devDependencies": {
     "@types/koa": "^2",

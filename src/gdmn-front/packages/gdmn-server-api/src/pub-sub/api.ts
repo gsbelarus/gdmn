@@ -1,6 +1,6 @@
-import { IEntityQueryInspector, IEntityQueryResponse, IERModel } from 'gdmn-orm';
+import {IEntityQueryInspector, IEntityQueryResponse, IERModel} from "gdmn-orm";
 
-import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
+import {IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta} from "./protocol";
 
 enum TGdmnTopic {
   TASK = '/task',
@@ -27,6 +27,7 @@ const enum TGdmnErrorCodes {
 // -- task
 const enum TTaskActionNames {
   QUERY = 'QUERY',
+  PREPARE_QUERY = 'PREPARE_QUERY',
   FETCH_QUERY = 'FETCH_QUERY',
   INTERRUPT = 'INTERRUPT',
   RELOAD_SCHEMA = 'RELOAD_SCHEMA',
@@ -63,7 +64,9 @@ type TTaskActionMessageData<TActionName extends keyof TTaskActionPayloadTypes> =
 interface TTaskActionPayloadTypes {
   [TTaskActionNames.QUERY]: {
     query: IEntityQueryInspector;
-    sequentially?: boolean;
+  };
+  [TTaskActionNames.PREPARE_QUERY]: {
+    query: IEntityQueryInspector;
   };
   [TTaskActionNames.FETCH_QUERY]: {
     taskKey: string;
@@ -107,7 +110,8 @@ type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = 
 };
 
 interface TTaskActionResultTypes {
-  [TTaskActionNames.QUERY]: IEntityQueryResponse | undefined;
+  [TTaskActionNames.QUERY]: IEntityQueryResponse;
+  [TTaskActionNames.PREPARE_QUERY]: undefined;
   [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse;
   [TTaskActionNames.INTERRUPT]: undefined;
   [TTaskActionNames.RELOAD_SCHEMA]: IERModel;

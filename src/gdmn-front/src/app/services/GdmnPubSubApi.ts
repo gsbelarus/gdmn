@@ -32,6 +32,8 @@ import {
   TInterruptTaskCmdResult,
   TPingTaskCmd,
   TPingTaskCmdResult,
+  TPrepareQueryTaskCmd,
+  TPrepareQueryTaskCmdResult,
   TQueryTaskCmd,
   TQueryTaskCmdResult,
   TRefreshAuthCmd,
@@ -49,7 +51,7 @@ import {
   TTaskCmd,
   TTaskCmdResult,
   TTaskResultMessageData
-} from '@gdmn/server-api';
+} from "@gdmn/server-api";
 import {
   IPubSubMessage,
   PubSubClient,
@@ -169,11 +171,15 @@ class GdmnPubSubApi {
     return this.runTaskCmd<TTaskActionNames.GET_SCHEMA>(cmd);
   }
 
-  public makeDataCursor(cmd: TQueryTaskCmd): Observable<TQueryTaskCmdResult> {
+  public query(cmd: TQueryTaskCmd): Observable<TQueryTaskCmdResult> {
     return this.runTaskCmd<TTaskActionNames.QUERY>(cmd);
   }
 
-  public getNextData(cmd: TFetchQueryTaskCmd): Observable<TFetchQueryTaskCmdResult> {
+  public prepareQuery(cmd: TPrepareQueryTaskCmd): Observable<TPrepareQueryTaskCmdResult> {
+    return this.runTaskCmd<TTaskActionNames.PREPARE_QUERY>(cmd);
+  }
+
+  public fetchQuery(cmd: TFetchQueryTaskCmd): Observable<TFetchQueryTaskCmdResult> {
     return this.runTaskCmd<TTaskActionNames.FETCH_QUERY>(cmd);
   }
 

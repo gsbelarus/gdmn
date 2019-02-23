@@ -172,11 +172,12 @@ export class Session {
 
   private _internalClose(): void {
     if (this._status === SessionStatus.OPENED) {
-      const runningTasks = this._taskManager.find(TaskStatus.RUNNING)
+      const limitedRunningTasks = this._taskManager.find(TaskStatus.RUNNING)
+        .filter((task) => !task.options.unlimited)
         .filter((task) => task.options.session === this);
-      if (runningTasks.length) {
+      if (limitedRunningTasks.length) {
         this._logger.info("id#%s is waiting for task completion", this.id);
-        const waitPromises = runningTasks.map((task) => task.waitExecution());
+        const waitPromises = limitedRunningTasks.map((task) => task.waitExecution());
         Promise.all(waitPromises).then(() => this._internalClose()).catch(this._logger.error);
       } else {
         this.forceClose().catch(this._logger.error);

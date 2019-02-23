@@ -30,6 +30,7 @@ export type AppAction =
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
   | "QUERY"
+  | "PREPARE_QUERY"
   | "FETCH_QUERY"
   | "CREATE"
   | "UPDATE"
@@ -42,6 +43,7 @@ export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
 export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector, sequentially?: boolean }>;
+export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 export type CreateCmd = AppCmd<"CREATE", { create: IEntityInsertInspector }>;
 export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
@@ -204,60 +206,77 @@ export class Application extends ADatabase {
 
   public pushQueryCmd(session: Session,
                       command: QueryCmd
-  ): Task<QueryCmd, IEntityQueryResponse | undefined> {
+  ): Task<QueryCmd, IEntityQueryResponse> {
     const task = new Task({
       session,
       command,
       level: Level.SESSION,
+      unlimited: true,
       logger: this.taskLogger,
       worker: async (context) => {
-        const {query, sequentially} = context.command.payload;
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {query} = context.command.payload;
         const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
 
-        if (sequentially) {
-          const cursorEmitter = new EventEmitter();
-          const cursorPromise = new Promise<EQueryCursor>((resolve, reject) => {
-            cursorEmitter.once("cursor", resolve);
-            cursorEmitter.once("error", reject);
-          });
-          context.session.cursorsPromises.set(task.id, cursorPromise);
-          try {
-            await this.waitUnlock();
-            this.checkSession(context.session);
+        const result = await context.session.executeConnection((connection) => (
+          ERBridge.query(connection, connection.readTransaction, entityQuery))
+        );
+        await context.checkStatus();
+        return result;
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
 
-            await context.session.executeConnection(async (connection) => {
-              const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
-              try {
-                cursorEmitter.emit("cursor", cursor);
-                await new Promise((resolve, reject) => {
-                  // wait for closing cursor
-                  cursor.waitClose().then(() => resolve()).catch(reject);
-                  // or wait for interrupt task
-                  task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
-                });
-              } finally {
-                if (!cursor.closed) {
-                  await cursor.close();
-                }
-              }
-            });
-          } catch (error) {
-            cursorEmitter.emit("error", error);
-          } finally {
-            context.session.cursorsPromises.delete(task.id);
-          }
-          await context.checkStatus();
+  public pushPrepareQueryCmd(session: Session,
+                             command: PrepareQueryCmd
+  ): Task<PrepareQueryCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      unlimited: true,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        const {query} = context.command.payload;
+        const entityQuery = EntityQuery.inspectorToObject(this.erModel, query);
 
-        } else {
+        const cursorEmitter = new EventEmitter();
+        const cursorPromise = new Promise<EQueryCursor>((resolve, reject) => {
+          cursorEmitter.once("cursor", resolve);
+          cursorEmitter.once("error", reject);
+        });
+        context.session.cursorsPromises.set(task.id, cursorPromise);
+        try {
           await this.waitUnlock();
           this.checkSession(context.session);
 
-          const result = await context.session.executeConnection((connection) => (
-            ERBridge.query(connection, connection.readTransaction, entityQuery))
-          );
-          await context.checkStatus();
-          return result;
+          await context.session.executeConnection(async (connection) => {
+            const cursor = await ERBridge.openQueryCursor(connection, connection.readTransaction, entityQuery);
+            try {
+              cursorEmitter.emit("cursor", cursor);
+              await new Promise((resolve, reject) => {
+                // wait for closing cursor
+                cursor.waitClose().then(() => resolve()).catch(reject);
+                // or wait for interrupt task
+                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+              });
+            } finally {
+              if (!cursor.closed) {
+                await cursor.close();
+              }
+            }
+          });
+        } catch (error) {
+          cursorEmitter.emit("error", error);
+        } finally {
+          context.session.cursorsPromises.delete(task.id);
         }
+        await context.checkStatus();
       }
     });
     session.taskManager.add(task);

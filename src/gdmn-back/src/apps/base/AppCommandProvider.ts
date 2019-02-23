@@ -7,6 +7,7 @@ import {
   GetSchemaCmd,
   InterruptCmd,
   PingCmd,
+  PrepareQueryCmd,
   QueryCmd,
   ReloadSchemaCmd,
   UpdateCmd
@@ -39,6 +40,14 @@ export class AppCommandProvider {
   }
 
   private static _verifyQueryCmd(command: ICmd<AppAction, any>): command is QueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "query" in command.payload
+      && typeof command.payload.query === "object";
+    // TODO
+  }
+
+  private static _verifyPrepareQueryCmd(command: ICmd<AppAction, any>): command is PrepareQueryCmd {
     return typeof command.payload === "object"
       && !!command.payload
       && "query" in command.payload
@@ -107,6 +116,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushQueryCmd(session, command);
+      }
+      case "PREPARE_QUERY": {
+        if (!AppCommandProvider._verifyPrepareQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushPrepareQueryCmd(session, command);
       }
       case "FETCH_QUERY": {
         if (!AppCommandProvider._verifyFetchQueryCmd(command)) {

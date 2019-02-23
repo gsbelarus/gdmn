@@ -111,6 +111,12 @@ type TQueryTaskCmd = TTaskCmd<TTaskActionNames.QUERY>;
 
 type TQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY>;
 
+// prepare query
+
+type TPrepareQueryTaskCmd = TTaskCmd<TTaskActionNames.PREPARE_QUERY>;
+
+type TPrepareQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.PREPARE_QUERY>;
+
 // fetch query
 
 type TFetchQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_QUERY>;
@@ -160,6 +166,8 @@ export {
   TGetSchemaTaskCmdResult,
   TQueryTaskCmd,
   TQueryTaskCmdResult,
+  TPrepareQueryTaskCmd,
+  TPrepareQueryTaskCmdResult,
   TFetchQueryTaskCmd,
   TFetchQueryTaskCmdResult,
   TCreateAppTaskCmd,

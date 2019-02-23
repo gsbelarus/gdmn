@@ -69,13 +69,13 @@ export class ApplicationProcess {
         }
 
         if (data && data.command.id === cmd.id) {
-          this._process.removeListener("error", reject);
+          this._process.removeListener("error", reject);  // TODO fix
           this._process.removeListener("message", callback);
           resolve(data.result);
         }
       };
 
-      this._process.addListener("error", reject);
+      this._process.addListener("error", reject);  // TODO fix
       this._process.addListener("message", callback);
 
       const request: IAppWorkerRequest = {
