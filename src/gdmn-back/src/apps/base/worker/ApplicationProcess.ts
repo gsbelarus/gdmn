@@ -4,7 +4,7 @@ import process from "process";
 import {IDBDetail} from "../ADatabase";
 import {AppCommandProvider} from "../AppCommandProvider";
 import {Application} from "../Application";
-import {ICmd, TaskStatus} from "../task/Task";
+import {ICmd, Task, TaskStatus} from "../task/Task";
 
 export interface IAppWorkerRequest {
   userKey: number;
@@ -69,13 +69,19 @@ export class ApplicationProcess {
         }
 
         if (data && data.command.id === cmd.id) {
-          this._process.removeListener("error", reject);  // TODO fix
-          this._process.removeListener("message", callback);
-          resolve(data.result);
+          if (Task.DONE_STATUSES.includes(data.status)) {
+            switch (data.status) {
+              case TaskStatus.SUCCESS:
+                return resolve(data.result);
+              case TaskStatus.FAILED:
+                return reject(data.error);
+              case TaskStatus.INTERRUPTED:
+                return reject(new Error("Unsupported app process task status"));
+            }
+          }
         }
       };
 
-      this._process.addListener("error", reject);  // TODO fix
       this._process.addListener("message", callback);
 
       const request: IAppWorkerRequest = {
