@@ -25,11 +25,11 @@
     },
     "publicDir": "./public",
     "session": {
-      "timeout": "1d",
+      "timeout": "3h",
       "maxConnections": 10
     },
     "task": {
-      "timeout": "1d"
+      "timeout": "3h"
     },
     "jwt": {
       "secret": "DefaultJWTSecret",
