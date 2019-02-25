@@ -48,7 +48,7 @@ const Root: FC<IRootProps> = ({
         <Fragment>
           <Fabric style={{ height: '100%' }}>
             <Customizer {...FluentCustomizations}>
-              <ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>
+              { /*<ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>*/ }
                 <BrowserRouter>{routes}</BrowserRouter>
                 <Sticky stickyPosition={StickyPositionType.Footer}>
                   <ErrorMsgBarContainer />
@@ -60,7 +60,7 @@ const Root: FC<IRootProps> = ({
                     </div>
                   </footer>
                 </Sticky>
-              </ScrollablePane>
+              { /*</ScrollablePane>*/ }
             </Customizer>
           </Fabric>
         </Fragment>

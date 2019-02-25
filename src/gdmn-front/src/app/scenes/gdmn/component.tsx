@@ -41,7 +41,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     if (!match) return null;
 
     return (
-      <div className="App" style={{ height: '100%', overflow: 'auto' }}>
+      <div className="App" style={{ height: 'calc(100% - 64px)', overflowY: 'hidden' }}>
         <Sticky stickyPosition={StickyPositionType.Header}>
           <div className="Header">
             <Link to={`${match.path}`}>
