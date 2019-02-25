@@ -27,7 +27,7 @@ export interface IContext<Cmd extends ICmd<any>> {
   command: Cmd;
   session: Session;
   checkStatus: StatusChecker;
-  progress: Progress;
+  progress?: Progress;
 }
 
 export type TaskWorker<Cmd extends ICmd<any>, Result> = (context: IContext<Cmd>) => Result | Promise<Result>;
@@ -39,13 +39,18 @@ export interface ICmd<A, P = any> {
   readonly payload: P;
 }
 
+export interface IProgress {
+  enabled: boolean;
+  options?: IProgressOptions;
+}
+
 export interface IOptions<Cmd extends ICmd<any>, Result> {
   readonly command: Cmd;
   readonly session: Session;
   readonly level: Level;
   readonly unlimited?: boolean;
   readonly logger?: Logger;
-  readonly progress?: IProgressOptions;
+  readonly progress?: IProgress;
   readonly worker: TaskWorker<Cmd, Result>;
 }
 
@@ -82,7 +87,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
 
   private readonly _id: string;
   private readonly _options: IOptions<Cmd, Result>;
-  private readonly _progress: Progress;
+  private readonly _progress?: Progress;
   private readonly _log: ITaskLog[] = [];
 
   private _processLock = new Semaphore();
@@ -95,14 +100,17 @@ export class Task<Cmd extends ICmd<any>, Result> {
     this._id = uuidV1().toUpperCase();
     this._options = options;
     this._logger = options.logger || console;
-    this._progress = new Progress(options.progress);
-    this._progress.emitter.on("change", () => {
-      this._logger.info("id#%s in progress; Value: %s; Description: %s", this._id, this._progress.value,
-        this._progress.description);
-      if (this.status === TaskStatus.RUNNING) {
-        this.emitter.emit("progress", this);
-      }
-    });
+
+    if (options.progress && options.progress.enabled) {
+      this._progress = new Progress(options.progress.options);
+      this._progress.emitter.on("change", () => {
+        this._logger.info("id#%s in progress; Value: %s; Description: %s", this._id, this._progress!.value,
+          this._progress!.description);
+        if (this.status === TaskStatus.RUNNING) {
+          this.emitter.emit("progress", this);
+        }
+      });
+    }
     this._updateStatus(this._status);
   }
 
@@ -114,7 +122,7 @@ export class Task<Cmd extends ICmd<any>, Result> {
     return this._options;
   }
 
-  get progress(): Progress {
+  get progress(): Progress | undefined {
     return this._progress;
   }
 

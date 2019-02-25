@@ -86,6 +86,9 @@ export class StompSession implements StompClientCommandListener {
       if (task.options.command.replyMode) {
         return;
       }
+      if (!task.progress) {
+        return;
+      }
       const subscription = this._subscriptions
         .find((sub) => sub.destination === StompSession.DESTINATION_TASK_PROGRESS);
 
