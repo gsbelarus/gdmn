@@ -10,6 +10,11 @@ const creating = Constants.SERVER.CLUSTER.ENABLED
   ? clusterStart(defaultLogger, serverErrorHandler)
   : start(defaultLogger, serverErrorHandler);
 
+creating.catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
+
 process.on("SIGINT", exit);
 process.on("SIGTERM", exit);
 
