@@ -32,7 +32,7 @@ async function getData(query: EntityQuery): Promise<IEntityQueryResponse> {
 async function getErModelResp(ctx: Koa.Context): Promise<void> {
   try {
     if (ctx.state.ERModel) {
-      ctx.body = ctx.state.ERModel.serialize();
+      ctx.body = ctx.state.ERModel.serialize(true);
     }
   } catch (err) {
     ctx.status = err.statusCode || err.status || 500;
