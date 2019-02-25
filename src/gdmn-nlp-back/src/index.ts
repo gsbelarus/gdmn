@@ -3,6 +3,7 @@ import {EntityQuery, ERModel, IEntityQueryResponse} from "gdmn-orm";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import Router from "koa-router";
+import cors from "koa2-cors";
 import {loadDBDetails} from "./testConfig";
 
 const dbDetail = loadDBDetails()[0];
@@ -64,17 +65,18 @@ async function getDataResp(ctx: Koa.Context): Promise<void> {
 async function init(): Promise<void> {
   const ourERModel = await loadERModel();
   const app = new Koa();
-  app.use(bodyParser());
-  app.use(async (ctx, next) => {
-    try {
-      await next();
-    } catch (err) {
-      ctx.status = err.statusCode || err.status || 500;
-      ctx.body = {
-        message: ctx.status + ": " + err.message
-      };
-    }
-  });
+  app.use(bodyParser())
+    .use(cors())
+    .use(async (ctx, next) => {
+      try {
+        await next();
+      } catch (err) {
+        ctx.status = err.statusCode || err.status || 500;
+        ctx.body = {
+         message: ctx.status + ": " + err.message
+        };
+      }
+    });
 
   app.use(async (ctx, next) => {
     ctx.state.ERModel = ourERModel;
@@ -89,7 +91,7 @@ async function init(): Promise<void> {
     .use(router.routes())
     .use(router.allowedMethods());
 
-  app.listen(3000);
+  app.listen(3001);
 }
 
 init()
