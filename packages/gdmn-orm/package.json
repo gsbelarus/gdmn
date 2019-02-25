@@ -27,8 +27,8 @@
   "dependencies": {
     "@types/clone": "^0",
     "clone": "^2",
-    "gdmn-nlp": "^1",
-    "gdmn-internals": "^1"
+    "gdmn-internals": "^1",
+    "gdmn-nlp": "^1"
   },
   "devDependencies": {
     "@types/jest": "^24",

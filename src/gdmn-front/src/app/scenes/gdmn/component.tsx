@@ -144,7 +144,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
               />
               {
               <Route
-                path={`${match.path}/entity/:entityName/edit/:currentRow`}
+                path={`${match.path}/entity/:entityName/edit/:id`}
                 render={props => (
                   <div style={{ margin: -16 }}>
                     <DlgViewContainer {...props} />

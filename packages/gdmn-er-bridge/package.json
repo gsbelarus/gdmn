@@ -27,8 +27,8 @@
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
     "gdmn-db": "^1",
-    "gdmn-orm": "^1",
     "gdmn-internals": "^1",
+    "gdmn-orm": "^1",
     "moment": "^2"
   },
   "devDependencies": {
