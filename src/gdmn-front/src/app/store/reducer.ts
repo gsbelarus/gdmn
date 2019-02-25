@@ -24,12 +24,12 @@ interface IRsMetaState {
   [rsName: string]: {
     taskId: string;
     q: EntityQuery;
-  } | undefined;
+  }; // | undefined;
 }
 
 const rsMetaActions = {
   setRsMeta: createAction('SET_RS_META', resolve => {
-    return (rsName: string, rsMeta: { taskId: string, q: EntityQuery }) => resolve({ rsName, rsMeta });
+    return (rsName: string, rsMeta: { taskId: string; q: EntityQuery }) => resolve({ rsName, rsMeta });
   }),
   deleteRsMeta: createAction('DELETE_RS_META', resolve => {
     return (rsName: string) => resolve(rsName);
@@ -47,7 +47,7 @@ function rsMetaReducer(state: IRsMetaState = {}, action: TRsMetaActions) {
   }
 
   if (action.type === getType(rsMetaActions.deleteRsMeta)) {
-    const newState = {...state};
+    const newState = { ...state };
     delete newState[action.payload];
     return newState;
   }

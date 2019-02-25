@@ -51,7 +51,7 @@ import {
   TTaskCmd,
   TTaskCmdResult,
   TTaskResultMessageData
-} from "@gdmn/server-api";
+} from '@gdmn/server-api';
 import {
   IPubSubMessage,
   PubSubClient,
@@ -155,32 +155,32 @@ class GdmnPubSubApi {
     return this.auth(cmd, true);
   }
 
-  public interruptTask(cmd: TInterruptTaskCmd): Observable<TInterruptTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.INTERRUPT>(cmd);
+  public interruptTask(cmd: TInterruptTaskCmd): Promise<TInterruptTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.INTERRUPT>(cmd);
   }
 
-  public reloadSchema(cmd: TReloadSchemaTaskCmd): Observable<TReloadSchemaTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.RELOAD_SCHEMA>(cmd);
+  public reloadSchema(cmd: TReloadSchemaTaskCmd): Promise<TReloadSchemaTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.RELOAD_SCHEMA>(cmd);
   }
 
   public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {
     return this.runTaskCmd<TTaskActionNames.PING>(cmd);
   }
 
-  public getSchema(cmd: TGetSchemaTaskCmd): Observable<TGetSchemaTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.GET_SCHEMA>(cmd);
+  public getSchema(cmd: TGetSchemaTaskCmd): Promise<TGetSchemaTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.GET_SCHEMA>(cmd);
   }
 
-  public query(cmd: TQueryTaskCmd): Observable<TQueryTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.QUERY>(cmd);
+  public query(cmd: TQueryTaskCmd): Promise<TQueryTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.QUERY>(cmd);
   }
 
   public prepareQuery(cmd: TPrepareQueryTaskCmd): Observable<TPrepareQueryTaskCmdResult> {
     return this.runTaskCmd<TTaskActionNames.PREPARE_QUERY>(cmd);
   }
 
-  public fetchQuery(cmd: TFetchQueryTaskCmd): Observable<TFetchQueryTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.FETCH_QUERY>(cmd);
+  public fetchQuery(cmd: TFetchQueryTaskCmd): Promise<TFetchQueryTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.FETCH_QUERY>(cmd);
   }
 
   public createApp(cmd: TCreateAppTaskCmd): Observable<TCreateAppTaskCmdResult> {
@@ -313,14 +313,16 @@ class GdmnPubSubApi {
     };
   }
 
-  private runTaskCmd<TActionName extends keyof TTaskActionResultTypes>(
-    taskCmd: TTaskCmd<TActionName>
-  ): Observable<TTaskCmdResult<TActionName>> {
-    return this.pubSubClient
+  private _runTaskCmd<TActionName extends keyof TTaskActionResultTypes>(
+    taskCmd: TTaskCmd<TActionName>,
+    replyMode: boolean = false
+  ) {
+    const observ = this.pubSubClient
       .publish<IPubSubMessage<TGdmnPublishMessageMeta>>(TGdmnTopic.TASK, {
         meta: {
           action: taskCmd.payload.action,
-          [TStandardHeaderKey.CONTENT_TYPE]: 'application/json;charset=utf-8' // todo
+          [TStandardHeaderKey.CONTENT_TYPE]: 'application/json;charset=utf-8', // todo
+          ...(replyMode ? { 'reply-mode': '1' } : {})
         },
         data: JSON.stringify({ payload: taskCmd.payload.payload })
       })
@@ -363,9 +365,7 @@ class GdmnPubSubApi {
             taskIdFilterOperator,
             first(),
             parseMsgDataMapOperator,
-            map(
-              resultMsgData => <TTaskResultMessageData<TActionName>>resultMsgData
-            ),
+            map(resultMsgData => <TTaskResultMessageData<TActionName>>resultMsgData),
             map(resultMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
@@ -376,6 +376,10 @@ class GdmnPubSubApi {
               meta
             }))
           );
+
+          if (replyMode) {
+            return taskActionResult;
+          }
 
           /*
 
@@ -395,9 +399,7 @@ class GdmnPubSubApi {
           const taskProgressResult = this.taskProgressResultObservable!.pipe(
             taskIdFilterOperator,
             parseMsgDataMapOperator,
-            map(
-              resultMsgData => <ITaskProgressMessageData<TActionName>>resultMsgData
-            ),
+            map(resultMsgData => <ITaskProgressMessageData<TActionName>>resultMsgData),
             map(progressMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
@@ -424,9 +426,7 @@ class GdmnPubSubApi {
           const taskStatusResult = this.taskStatusResultObservable!.pipe(
             taskIdFilterOperator,
             parseMsgDataMapOperator,
-            map(
-              resultMsgData => <ITaskStatusMessageData<TActionName>>resultMsgData
-            ),
+            map(resultMsgData => <ITaskStatusMessageData<TActionName>>resultMsgData),
             map(statusMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
@@ -439,6 +439,20 @@ class GdmnPubSubApi {
           return merge(taskActionResult, taskProgressResult, taskStatusResult);
         })
       );
+
+    return replyMode ? observ.pipe(first()).toPromise() : observ;
+  }
+
+  private runTaskCmd<TActionName extends keyof TTaskActionResultTypes>(
+    taskCmd: TTaskCmd<TActionName>
+  ): Observable<TTaskCmdResult<TActionName>> {
+    return <Observable<TTaskCmdResult<TActionName>>>this._runTaskCmd<TActionName>(taskCmd);
+  }
+
+  private runTaskRequestCmd<TActionName extends keyof TTaskActionResultTypes>(
+    taskCmd: TTaskCmd<TActionName>
+  ): Promise<TTaskCmdResult<TActionName>> {
+    return <Promise<TTaskCmdResult<TActionName>>>this._runTaskCmd<TActionName>(taskCmd, true);
   }
 }
 

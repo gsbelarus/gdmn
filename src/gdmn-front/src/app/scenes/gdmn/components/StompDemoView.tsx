@@ -1,14 +1,12 @@
 import React from 'react';
 import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
-import { filter, first } from 'rxjs/operators';
 import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
-import { Observable } from 'rxjs';
 
 import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
-import { TPingTaskCmd, TTaskActionNames, TTaskFinishStatus, TTaskStatus } from '@gdmn/server-api';
+import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { IViewProps, View } from '@src/app/components/View';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { apiService } from '@src/app/services/apiService';
@@ -58,17 +56,19 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   // stress test
 
   private handleStressApi = () => {
-    this.stressLoop(() => {
-      return apiService.ping({
-        payload: {
-          action: TTaskActionNames.PING,
+    this.stressLoop(async () => {
+      return await apiService
+        .ping({
           payload: {
-            delay: parseInt(this.pingDelayFieldRef.current!.state.value),
-            steps: parseInt(this.pingStepsFieldRef.current!.state.value),
-            testChildProcesses: this.testChildProcFieldRef.current!.checked || false
+            action: TTaskActionNames.PING,
+            payload: {
+              delay: parseInt(this.pingDelayFieldRef.current!.state.value),
+              steps: parseInt(this.pingStepsFieldRef.current!.state.value),
+              testChildProcesses: this.testChildProcFieldRef.current!.checked || false
+            }
           }
-        }
-      });
+        })
+        .toPromise();
     });
   };
 
@@ -78,7 +78,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       return;
     }
 
-    this.stressLoop(() => {
+    this.stressLoop(async () => {
       const entity = Object.values(this.props.erModel!.entities)[0];
       const query = new EntityQuery(
         new EntityLink(entity, 'alias', [
@@ -90,7 +90,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         ])
       );
 
-      return apiService.query({
+      return await apiService.query({
         payload: {
           action: TTaskActionNames.QUERY,
           payload: {
@@ -101,7 +101,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     });
   };
 
-  private stressLoop = (getTaskResultObservable: () => Observable<any>) => {
+  private stressLoop = (getTaskResultObservable: () => Promise<any>) => {
     this.setState(
       {
         stressStarted: true,
@@ -130,28 +130,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             try {
               if (sequentialMode) {
                 for (let i = 0; i < maxRequestsCount; i++) {
-                  await getTaskResultObservable()
-                    .pipe(
-                      filter(
-                        value => Reflect.has(value.payload, 'result') && value.payload.status in TTaskFinishStatus
-                      ),
-                      first()
-                    )
-                    .toPromise();
+                  await getTaskResultObservable();
                 }
               } else {
-                await Promise.all(
-                  new Array(maxRequestsCount).fill(0).map(() =>
-                    getTaskResultObservable()
-                      .pipe(
-                        filter(
-                          value => Reflect.has(value.payload, 'result') && value.payload.status in TTaskFinishStatus
-                        ),
-                        first()
-                      )
-                      .toPromise()
-                  )
-                );
+                await Promise.all(new Array(maxRequestsCount).fill(0).map(() => getTaskResultObservable()));
               }
             } catch (e) {
               console.log('d1-> error', e);
@@ -232,26 +214,22 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       });
   };
 
-  private handleCursorNext = () => {
+  private handleCursorNext = async () => {
     if (!this.state.cursorTaskId) return;
 
-    apiService
-      .fetchQuery({
+    const value = await apiService.fetchQuery({
+      payload: {
+        action: TTaskActionNames.FETCH_QUERY,
         payload: {
-          action: TTaskActionNames.FETCH_QUERY,
-          payload: {
-            taskKey: this.state.cursorTaskId,
-            rowsCount: 1
-          }
+          taskKey: this.state.cursorTaskId,
+          rowsCount: 1
         }
-      })
-      .subscribe(value => {
-        console.log('result', value);
-        if (value.payload.status === TTaskStatus.DONE && value.payload.result) {
-          //  todo: set state
-          console.log('data.length', value.payload.result.data.length);
-        }
-      });
+      }
+    });
+
+    if (value.payload.status === TTaskStatus.DONE) {
+      console.log('data.length', value.payload.result!.data.length);
+    }
   };
 
   private handleSendNlpQuery = () => {

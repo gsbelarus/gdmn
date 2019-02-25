@@ -1,6 +1,6 @@
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
-import { TGdmnErrorCodes, TPingTaskCmd, TTaskActionNames } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 
 import { TThunkAction } from '@src/app/store/TActions';
@@ -52,19 +52,16 @@ const gdmnActionsAsync = {
     apiService.ping(cmd);
   },
   apiGetSchema: (): TThunkAction => async (dispatch, getState, { apiService }) => {
-    apiService
-      .getSchema({
-        payload: {
-          action: TTaskActionNames.GET_SCHEMA,
-          payload: undefined
-        }
-      })
-      .subscribe(value => {
-        if (!!value.payload.result) {
-          const erModel = deserializeERModel(value.payload.result);
-          dispatch(gdmnActions.setSchema(erModel));
-        }
-      });
+    const value = await apiService.getSchema({
+      payload: {
+        action: TTaskActionNames.GET_SCHEMA,
+        payload: undefined
+      }
+    });
+    if (value.payload.status === TTaskStatus.DONE) {
+      const erModel = deserializeERModel(value.payload.result!);
+      dispatch(gdmnActions.setSchema(erModel));
+    }
   }
 };
 

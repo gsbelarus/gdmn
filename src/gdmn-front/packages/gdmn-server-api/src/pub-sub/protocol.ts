@@ -50,7 +50,9 @@ type TAccountDeleteRequestMeta = TAccessAuthRequestMeta & {
 type TAccountDeleteResponseMeta = IAccessAuthResponseMeta;
 
 // publish
-type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
+type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes> & {
+  'reply-mode'?: '1';
+};
 
 // receive
 type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
