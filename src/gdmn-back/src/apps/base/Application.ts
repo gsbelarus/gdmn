@@ -88,6 +88,7 @@ export class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
+      progress: {enabled: true},
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
@@ -101,13 +102,13 @@ export class Application extends ADatabase {
             callback: (worker) => worker.executeCmd(context.session.userKey, context.command)
           });
         } else {
-          context.progress.reset({max: steps}, false);
-          context.progress.increment(0, `Process ping...`);
+          context.progress!.reset({max: steps}, false);
+          context.progress!.increment(0, `Process ping...`);
           for (let i = 0; i < steps; i++) {
             if (delay > 0) {
               await new Promise((resolve) => setTimeout(resolve, delay));
             }
-            context.progress.increment(1, `Process ping... Complete step: ${i + 1}`);
+            context.progress!.increment(1, `Process ping... Complete step: ${i + 1}`);
             await context.checkStatus();
           }
         }
