@@ -160,6 +160,10 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return undefined;
   }
 
+  public renderModal(): JSX.Element | undefined {
+    return undefined;
+  }
+
   public renderMD() {
     const {
       data,
@@ -181,6 +185,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     return this.renderWide(
       <div className="ViewGridPlacement">
+        {this.renderModal()}
         <GDMNGrid
           {...data!.gcs}
           rs={masterRS}
@@ -247,6 +252,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     return this.renderWide(
       <div className="ViewGridPlacement">
+        {this.renderModal()}
         <GDMNGrid
           {...data!.gcs}
           rs={masterRS}

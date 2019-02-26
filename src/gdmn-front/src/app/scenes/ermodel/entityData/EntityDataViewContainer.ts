@@ -6,7 +6,7 @@ import { IndexRange } from 'react-virtualized';
 import { compose } from 'recompose';
 import { Semaphore } from 'gdmn-internals';
 import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute } from 'gdmn-orm';
-import { addRecordSetData, createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType } from 'gdmn-recordset';
+import { addRecordSetData, createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType, IRSSQLParams } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 
 import { TGdmnActions } from '@src/app/scenes/gdmn/actions';
@@ -184,7 +184,11 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                   fieldDefs,
                   List(res.payload.result.data as IDataRow[]),
                   undefined,
-                  rsMeta.q
+                  rsMeta.q,
+                  {
+                    select: res.payload.result.info.select as string,
+                    params: res.payload.result.info.params as IRSSQLParams
+                  }
                 );
                 dispatch(createRecordSet({ name: rs.name, rs }));
 

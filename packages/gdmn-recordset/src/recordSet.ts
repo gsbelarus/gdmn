@@ -39,10 +39,19 @@ export type RecordSetEventData<R extends IDataRow = IDataRow> = {
   rs: RecordSet<R>;
 };
 
+export interface IRSSQLParams {
+  [name: string]: any;
+};
+
+export interface IRSSQLSelect {
+  select: string;
+  params?: IRSSQLParams;
+};
+
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   name: string;
   eq?: EntityQuery;
-  sql?: string;
+  sql?: IRSSQLSelect;
   fieldDefs: FieldDefs;
   calcFields: TRowCalcFunc<R> | undefined;
   data: Data<R>;
@@ -63,7 +72,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
 export class RecordSet<R extends IDataRow = IDataRow> {
   readonly name: string;
   private _eq?: EntityQuery;
-  private _sql?: string;
+  private _sql?: IRSSQLSelect;
   private _fieldDefs: FieldDefs;
   private _calcFields: TRowCalcFunc<R> | undefined;
   private _data: Data<R>;
@@ -139,7 +148,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     data: Data<R>,
     masterLink?: IMasterLink,
     eq?: EntityQuery,
-    sql?: string
+    sql?: IRSSQLSelect
   ): RecordSet<R> {
     const withCalcFunc = fieldDefs.filter(fd => fd.calcFunc);
 
@@ -186,6 +195,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return {
       name: this.name,
       eq: this._eq,
+      sql: this._sql,
       fieldDefs: this._fieldDefs,
       calcFields: this._calcFields,
       data: this._data,
