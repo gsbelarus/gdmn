@@ -40,7 +40,7 @@ type TTaskCmdResult<
 > = ICmdResult<// TGdmnReceivedMessageMeta & // todo: tmp
 {
   result?: TTaskActionResultTypes[TActionName];
-  status?: TTaskStatus;
+  status: TTaskStatus;
   progress?: ITaskProgress;
   action: TTaskActionNames; // todo: tmp
 }, IGdmnMessageError, { taskId: string | undefined }>;

@@ -96,6 +96,7 @@ export class StompSession implements StompClientCommandListener {
         const headers = this._getMessageHeaders(subscription, task, uuidV1().toUpperCase());
 
         this._stomp.message(headers, JSON.stringify({
+          status: task.status,
           payload: task.options.command.payload,
           progress: {
             min: task.progress.min,

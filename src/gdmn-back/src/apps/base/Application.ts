@@ -168,9 +168,11 @@ export class Application extends ADatabase {
             callback: (worker) => worker.executeCmd(context.session.userKey, context.command)
           });
         } else {
-          context.progress!.reset({max: steps}, false);
-          context.progress!.increment(0, `Process ping...`);
           for (let i = 0; i < steps; i++) {
+            if (i === 0) {
+              context.progress!.reset({max: steps}, false);
+              context.progress!.increment(0, `Process ping...`);
+            }
             if (delay > 0) {
               await new Promise((resolve) => setTimeout(resolve, delay));
             }

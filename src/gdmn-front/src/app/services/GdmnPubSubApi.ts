@@ -403,6 +403,7 @@ class GdmnPubSubApi {
             map(progressMsgData => ({
               payload: {
                 action: taskCmd.payload.action,
+                status: progressMsgData.status,
                 progress: progressMsgData.progress
               },
               meta

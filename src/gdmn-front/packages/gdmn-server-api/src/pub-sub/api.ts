@@ -156,6 +156,7 @@ const enum TTaskStatus {
 interface ITaskProgressMessageData<TActionName extends keyof TTaskActionPayloadTypes>
   extends TTaskActionMessageData<TActionName> {
   progress: ITaskProgress;
+  status: TTaskStatus;
 }
 
 interface ITaskProgress {

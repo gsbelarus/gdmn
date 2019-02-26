@@ -1,15 +1,16 @@
-import React from 'react';
-import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
-import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
-import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
+import {TPingTaskCmd, TTaskActionNames, TTaskFinishStatus, TTaskStatus} from "@gdmn/server-api";
+import {NumberTextField} from "@src/app/components/NumberTextField";
+import {IViewProps, View} from "@src/app/components/View";
+import {apiService} from "@src/app/services/apiService";
+import {parsePhrase, RusWord} from "gdmn-nlp";
+import {ERTranslatorRU, ICommand} from "gdmn-nlp-agent";
 
-import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
-import { parsePhrase, RusWord } from 'gdmn-nlp';
-import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
-import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
-import { IViewProps, View } from '@src/app/components/View';
-import { NumberTextField } from '@src/app/components/NumberTextField';
-import { apiService } from '@src/app/services/apiService';
+import {EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute} from "gdmn-orm";
+import {Checkbox, ICheckbox, IToggle, Toggle} from "office-ui-fabric-react";
+import {DefaultButton, PrimaryButton} from "office-ui-fabric-react/lib/components/Button";
+import {ITextField, TextField} from "office-ui-fabric-react/lib/components/TextField";
+import React from "react";
+import {filter, first} from "rxjs/operators";
 
 interface IStompDemoViewState {
   stressStarted: boolean;
@@ -68,6 +69,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             }
           }
         })
+        .pipe(filter(value => value.payload.status in TTaskFinishStatus), first())
         .toPromise();
     });
   };
