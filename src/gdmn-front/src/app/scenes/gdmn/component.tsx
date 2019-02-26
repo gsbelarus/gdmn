@@ -18,6 +18,7 @@ import styles from './styles.css';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
+import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 
 type TGdmnViewStateProps = {
   loading: boolean;
@@ -126,7 +127,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => {
                   return (
                     <div style={{ margin: -16 }}>
-                      <ERModelViewContainer {...props} />
+                      <ERModelBoxContainer {...props} />
                     </div>
                   );
                 }}

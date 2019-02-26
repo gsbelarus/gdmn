@@ -5,7 +5,7 @@ import { RouteComponentProps } from 'react-router';
 import { IndexRange } from 'react-virtualized';
 import { compose } from 'recompose';
 import { Semaphore } from 'gdmn-internals';
-import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute } from 'gdmn-orm';
+import { BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute, EntityAttribute } from 'gdmn-orm';
 import { addRecordSetData, createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType, IRSSQLParams } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 
@@ -63,7 +63,17 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                       (attr instanceof ScalarAttribute || attr instanceof SequenceAttribute) &&
                       !(attr instanceof BlobAttribute)
                   )
-                  .map(attr => new EntityQueryField(attr))
+                  .map(attr => new EntityQueryField(attr)
+                  /*{
+                    if (attr instanceof EntityAttribute) {
+
+                      return new EntityQueryField(attr, new EntityLink(
+                        attr.e
+                      ))
+                    } else {
+                      return new EntityQueryField(attr)
+                    }*/
+                  )
               )
             );
 
