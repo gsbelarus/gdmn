@@ -1,7 +1,12 @@
-import { empty, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
-import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
-import { debugFnType, Versions } from '@stomp/stompjs'; // todo
-import ExtendableError from 'es6-error';
+import {
+  IPubSubMessage,
+  PubSubClient,
+  stringfyValues,
+  TPubSubConnectStatus,
+  TPubSubMsgPublishStatus,
+  TStandardHeaderKey,
+  WebStomp
+} from "@gdmn/client-core";
 
 import {
   _ISignResponseMeta,
@@ -51,16 +56,11 @@ import {
   TTaskCmd,
   TTaskCmdResult,
   TTaskResultMessageData
-} from '@gdmn/server-api';
-import {
-  IPubSubMessage,
-  PubSubClient,
-  stringfyValues,
-  TPubSubConnectStatus,
-  TPubSubMsgPublishStatus,
-  TStandardHeaderKey,
-  WebStomp
-} from '@gdmn/client-core';
+} from "@gdmn/server-api";
+import {debugFnType, Versions} from "@stomp/stompjs"; // todo
+import ExtendableError from "es6-error";
+import {empty, merge, Observable, Subject, Subscription, throwError} from "rxjs";
+import {catchError, filter, first, map, mergeMap, tap} from "rxjs/operators";
 
 class GdmnPubSubError extends ExtendableError {
   public errorData: IGdmnMessageError<TGdmnErrorCodes>;
@@ -103,7 +103,7 @@ class GdmnPubSubApi {
         brokerURL: endpointUrl,
         webSocketFactory: () => {
           return new WebSocket(
-            endpointUrl + (this.reconnectUrlQuery ? `/?${this.reconnectUrlQuery}` : ''),
+            endpointUrl + (this.reconnectUrlQuery ? `/?${this.reconnectUrlQuery}` : ""),
             Versions.default.protocolVersions()
           );
         },
@@ -123,6 +123,10 @@ class GdmnPubSubApi {
     fn: (maxAbnormallyReconnectCount: number, context: ThisType<PubSubClient>) => void
   ) {
     this.pubSubClient.onMaxCountAbnormallyReconnect = fn;
+  }
+
+  public get errorMessageObservable(): Subject<IPubSubMessage<TGdmnReceivedErrorMeta>> {
+    return <any>this.pubSubClient.errorMessageObservable;
   }
 
   public async signUp(cmd: TSignUpCmd): Promise<TSignUpCmdResult> {
@@ -167,6 +171,10 @@ class GdmnPubSubApi {
     return this.runTaskCmd<TTaskActionNames.PING>(cmd);
   }
 
+  public simplePing(cmd: TPingTaskCmd): Promise<TPingTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.PING>(cmd);
+  }
+
   public getSchema(cmd: TGetSchemaTaskCmd): Promise<TGetSchemaTaskCmdResult> {
     return this.runTaskRequestCmd<TTaskActionNames.GET_SCHEMA>(cmd);
   }
@@ -195,10 +203,6 @@ class GdmnPubSubApi {
     return this.runTaskCmd<TTaskActionNames.GET_APPS>(cmd);
   }
 
-  public get errorMessageObservable(): Subject<IPubSubMessage<TGdmnReceivedErrorMeta>> {
-    return <any>this.pubSubClient.errorMessageObservable;
-  }
-
   public async auth(cmd: TAuthCmd | TDeleteAccountCmd, reconnect: boolean = false): Promise<TAuthCmdResult> {
     // todo: tmp if !disconnected
     if (
@@ -214,13 +218,13 @@ class GdmnPubSubApi {
     }
 
     // //-//console.log('AUTH+connect');
-    this.reconnectUrlQuery = '';
+    this.reconnectUrlQuery = "";
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
         tap(connectedMessage => {
-          this.reconnectUrlQuery = cmd.payload.session ? `session=${cmd.payload.session}` : ''; // todo
+          this.reconnectUrlQuery = cmd.payload.session ? `session=${cmd.payload.session}` : ""; // todo
           this.pubSubClient.reconnectMeta.authorization = cmd.payload.authorization;
           this.updateReconnectMeta(connectedMessage);
           this.subTasks();
@@ -229,7 +233,7 @@ class GdmnPubSubApi {
           const meta = connectedMessage.meta || {};
           return {
             payload: {
-              session: meta.session || ''
+              session: meta.session || ""
             }
           };
         }),
@@ -240,23 +244,23 @@ class GdmnPubSubApi {
   }
 
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {
-    this.reconnectUrlQuery = '';
+    this.reconnectUrlQuery = "";
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
     return await this.pubSubClient.connectedMessageObservable
       .pipe(
         tap(connectedMessage => {
           this.reconnectUrlQuery =
-            connectedMessage.meta && connectedMessage.meta.session ? `session=${connectedMessage.meta.session}` : ''; // todo
+            connectedMessage.meta && connectedMessage.meta.session ? `session=${connectedMessage.meta.session}` : ""; // todo
           this.updateReconnectMeta(connectedMessage);
         }),
         map(connectedMessage => {
           const meta = connectedMessage.meta || {};
           return {
             payload: {
-              'access-token': meta['access-token'] || '',
-              'refresh-token': meta['refresh-token'] || '',
-              session: meta.session || ''
+              "access-token": meta["access-token"] || "",
+              "refresh-token": meta["refresh-token"] || "",
+              session: meta.session || ""
             }
           };
         }),
@@ -283,7 +287,7 @@ class GdmnPubSubApi {
     this.taskActionResultObservable = this.pubSubClient.subscribe<IPubSubMessage<TGdmnReceivedMessageMeta>>(
       TGdmnTopic.TASK,
       {
-        ack: 'client-individual'
+        ack: "client-individual"
       }
     );
 
@@ -291,15 +295,18 @@ class GdmnPubSubApi {
 
     // todo: test delete
     this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(
-      value => {}
+      value => {
+      }
       //-//console.log('[GDMN][PUB-SUB] taskProgressResult: ', value)
     );
     this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(
-      value => {}
+      value => {
+      }
       //-//console.log('[GDMN][PUB-SUB] taskStatusResult: ', value)
     );
     this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(
-      value => {}
+      value => {
+      }
       //-//console.log('[GDMN][PUB-SUB] taskActionResult: ', value)
     );
   }
@@ -308,8 +315,8 @@ class GdmnPubSubApi {
     const meta = connectedMessage.meta || {};
 
     this.pubSubClient.reconnectMeta = {
-      authorization: meta['access-token'] || this.pubSubClient.reconnectMeta.authorization || '',
-      session: meta.session || this.pubSubClient.reconnectMeta.session || ''
+      authorization: meta["access-token"] || this.pubSubClient.reconnectMeta.authorization || "",
+      session: meta.session || this.pubSubClient.reconnectMeta.session || ""
     };
   }
 
@@ -321,26 +328,26 @@ class GdmnPubSubApi {
       .publish<IPubSubMessage<TGdmnPublishMessageMeta>>(TGdmnTopic.TASK, {
         meta: {
           action: taskCmd.payload.action,
-          [TStandardHeaderKey.CONTENT_TYPE]: 'application/json;charset=utf-8', // todo
-          ...(replyMode ? { 'reply-mode': '1' } : {})
+          [TStandardHeaderKey.CONTENT_TYPE]: "application/json;charset=utf-8", // todo
+          ...(replyMode ? {"reply-mode": "1"} : {})
         },
-        data: JSON.stringify({ payload: taskCmd.payload.payload })
+        data: JSON.stringify({payload: taskCmd.payload.payload})
       })
       .pipe(
         filter(msgPublishState => msgPublishState.status === TPubSubMsgPublishStatus.PUBLISHED),
         mergeMap(msgPublishState => {
           const taskIdFilterOperator = filter<IPubSubMessage<TGdmnReceivedMessageMeta>>(
             message =>
-              !!msgPublishState.meta && !!message.meta && message.meta['task-id'] === msgPublishState.meta['task-id'] // todo
+              !!msgPublishState.meta && !!message.meta && message.meta["task-id"] === msgPublishState.meta["task-id"] // todo
           );
 
           const parseMsgDataMapOperator = map<IPubSubMessage<TGdmnReceivedMessageMeta>, IGdmnMessageData>(message => {
-            if (!message.data) throw Error('[GDMN][PUB-SUB] Invalid server response (TaskCmdResult)');
+            if (!message.data) throw Error("[GDMN][PUB-SUB] Invalid server response (TaskCmdResult)");
             return JSON.parse(message.data);
           });
 
           const meta = {
-            taskId: msgPublishState && msgPublishState.meta ? msgPublishState.meta['task-id'] : undefined
+            taskId: msgPublishState && msgPublishState.meta ? msgPublishState.meta["task-id"] : undefined
           };
 
           /*
@@ -457,4 +464,4 @@ class GdmnPubSubApi {
   }
 }
 
-export { GdmnPubSubApi, GdmnPubSubError };
+export {GdmnPubSubApi, GdmnPubSubError};

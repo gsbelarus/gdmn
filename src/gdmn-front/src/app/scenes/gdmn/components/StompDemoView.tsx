@@ -59,7 +59,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   private handleStressApi = () => {
     this.stressLoop(async () => {
       return await apiService
-        .ping({
+        .simplePing({
           payload: {
             action: TTaskActionNames.PING,
             payload: {
@@ -68,9 +68,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               testChildProcesses: this.testChildProcFieldRef.current!.checked || false
             }
           }
-        })
-        .pipe(filter(value => value.payload.status in TTaskFinishStatus), first())
-        .toPromise();
+        });
     });
   };
 
@@ -103,7 +101,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     });
   };
 
-  private stressLoop = (getTaskResultObservable: () => Promise<any>) => {
+  private stressLoop = (getTaskResult: () => Promise<any>) => {
     this.setState(
       {
         stressStarted: true,
@@ -132,10 +130,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             try {
               if (sequentialMode) {
                 for (let i = 0; i < maxRequestsCount; i++) {
-                  await getTaskResultObservable();
+                  await getTaskResult();
                 }
               } else {
-                await Promise.all(new Array(maxRequestsCount).fill(0).map(() => getTaskResultObservable()));
+                await Promise.all(new Array(maxRequestsCount).fill(0).map(() => getTaskResult()));
               }
             } catch (e) {
               console.log('d1-> error', e);
