@@ -28,7 +28,7 @@ export class AppCommandProvider {
     return typeof command.payload === "object"
       && !!command.payload
       && "withError" in command.payload
-      && typeof command.payload.steps === "boolean";
+      && typeof command.payload.withError === "boolean";
   }
 
   private static _verifyPingCmd(command: ICmd<AppAction, any>): command is PingCmd {
