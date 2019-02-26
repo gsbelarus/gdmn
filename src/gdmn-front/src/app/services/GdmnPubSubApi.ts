@@ -6,7 +6,7 @@ import {
   TPubSubMsgPublishStatus,
   TStandardHeaderKey,
   WebStomp
-} from "@gdmn/client-core";
+} from '@gdmn/client-core';
 
 import {
   _ISignResponseMeta,
@@ -22,6 +22,8 @@ import {
   TDeleteAccountCmd,
   TDeleteAppTaskCmd,
   TDeleteAppTaskCmdResult,
+  TDemoTaskCmd,
+  TDemoTaskCmdResult,
   TFetchQueryTaskCmd,
   TFetchQueryTaskCmdResult,
   TGdmnErrorCodes,
@@ -56,11 +58,11 @@ import {
   TTaskCmd,
   TTaskCmdResult,
   TTaskResultMessageData
-} from "@gdmn/server-api";
-import {debugFnType, Versions} from "@stomp/stompjs"; // todo
-import ExtendableError from "es6-error";
-import {empty, merge, Observable, Subject, Subscription, throwError} from "rxjs";
-import {catchError, filter, first, map, mergeMap, tap} from "rxjs/operators";
+} from '@gdmn/server-api';
+import { debugFnType, Versions } from '@stomp/stompjs'; // todo
+import ExtendableError from 'es6-error';
+import { empty, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
 
 class GdmnPubSubError extends ExtendableError {
   public errorData: IGdmnMessageError<TGdmnErrorCodes>;
@@ -165,6 +167,10 @@ class GdmnPubSubApi {
 
   public reloadSchema(cmd: TReloadSchemaTaskCmd): Promise<TReloadSchemaTaskCmdResult> {
     return this.runTaskRequestCmd<TTaskActionNames.RELOAD_SCHEMA>(cmd);
+  }
+
+  public demo(cmd: TDemoTaskCmd): Observable<TDemoTaskCmdResult> {
+    return this.runTaskCmd<TTaskActionNames.DEMO>(cmd);
   }
 
   public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {

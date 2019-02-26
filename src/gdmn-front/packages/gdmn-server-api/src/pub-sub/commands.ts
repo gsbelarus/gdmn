@@ -93,6 +93,12 @@ type TReloadSchemaTaskCmd  = TTaskCmd<TTaskActionNames.RELOAD_SCHEMA>;
 
 type TReloadSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.RELOAD_SCHEMA>;
 
+// demo task
+
+type TDemoTaskCmd = TTaskCmd<TTaskActionNames.DEMO>;
+
+type TDemoTaskCmdResult = TTaskCmdResult<TTaskActionNames.DEMO>;
+
 // ping task
 
 type TPingTaskCmd = TTaskCmd<TTaskActionNames.PING>;
@@ -156,6 +162,8 @@ export {
   TRefreshAuthCmdResult,
   TDeleteAccountCmd,
   TDeleteAccountCmdResult,
+  TDemoTaskCmd,
+  TDemoTaskCmdResult,
   TInterruptTaskCmd,
   TInterruptTaskCmdResult,
   TReloadSchemaTaskCmd,

@@ -1,22 +1,24 @@
-import {TPingTaskCmd, TTaskActionNames, TTaskFinishStatus, TTaskStatus} from "@gdmn/server-api";
-import {NumberTextField} from "@src/app/components/NumberTextField";
-import {IViewProps, View} from "@src/app/components/View";
-import {apiService} from "@src/app/services/apiService";
-import {parsePhrase, RusWord} from "gdmn-nlp";
-import {ERTranslatorRU, ICommand} from "gdmn-nlp-agent";
+import React from 'react';
+import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
+import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
+import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
+import { parsePhrase, RusWord } from 'gdmn-nlp';
+import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
 
-import {EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute} from "gdmn-orm";
-import {Checkbox, ICheckbox, IToggle, Toggle} from "office-ui-fabric-react";
-import {DefaultButton, PrimaryButton} from "office-ui-fabric-react/lib/components/Button";
-import {ITextField, TextField} from "office-ui-fabric-react/lib/components/TextField";
-import React from "react";
-import {filter, first} from "rxjs/operators";
+import { TPingTaskCmd, TTaskActionNames, TTaskFinishStatus, TTaskStatus } from '@gdmn/server-api';
+import { NumberTextField } from '@src/app/components/NumberTextField';
+import { IViewProps, View } from '@src/app/components/View';
+import { apiService } from '@src/app/services/apiService';
 
 interface IStompDemoViewState {
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
   cursorTaskId: string | undefined;
+  demoTaskId: string | undefined;
+  demoProgress: string | undefined;
+  demoError: string | undefined;
 }
 
 interface IStompDemoViewProps extends IViewProps {
@@ -43,32 +45,110 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   stressSequentialModeFieldRef = React.createRef<IToggle & { checked?: boolean }>(); // todo
   testChildProcFieldRef = React.createRef<ICheckbox>();
 
+  demoTaskFieldRef = React.createRef<ICheckbox>();
+
   public state: IStompDemoViewState = {
     stressStarted: false,
     stressResultTime: 0,
     stressResultRequestsCount: 0,
-    cursorTaskId: undefined
+    cursorTaskId: undefined,
+    demoTaskId: undefined,
+    demoProgress: undefined,
+    demoError: undefined
   };
 
   public getViewCaption(): string {
     return 'Stomp API';
   }
 
+  private handleDemoInterrupt = () => {
+    if (!this.state.demoTaskId) {
+      return;
+    }
+
+    apiService.interruptTask({
+      payload: {
+        action: TTaskActionNames.INTERRUPT,
+        payload: {
+          taskKey: this.state.demoTaskId
+        }
+      }
+    });
+  };
+
+  private handleSendDemo = () => {
+    this.setState(
+      {
+        demoError: undefined,
+        demoProgress: undefined
+      },
+      () => {
+
+        console.log('handleSendDemo');
+
+        apiService
+          .demo({
+            payload: {
+              action: TTaskActionNames.DEMO,
+              payload: {
+                withError: this.demoTaskFieldRef.current!.checked || false
+              }
+            }
+          })
+          .subscribe(res => {
+            console.log(res);
+
+            if (res.error) {
+              console.log('error', res.error);
+              this.setState({
+                demoError: JSON.stringify(res.error)
+              });
+            }
+
+            if (res.payload.status === TTaskStatus.RUNNING) {
+              if (res.meta) {
+                console.log('taskId', res.meta.taskId);
+
+                this.setState({
+                  demoTaskId: res.meta.taskId
+                });
+              }
+            }
+
+            if (res.payload.progress) {
+              this.setState({
+                demoProgress: JSON.stringify(res.payload.progress)
+              });
+            }
+
+            if (res.payload.status in TTaskFinishStatus) {
+              this.setState({
+                demoTaskId: undefined
+              });
+
+              if (res.payload.status === TTaskStatus.DONE) {
+                // result = res.payload.result
+              }
+            }
+          });
+      }
+    );
+  };
+
   // stress test
 
   private handleStressApi = () => {
     this.stressLoop(async () => {
-      return await apiService
-        .simplePing({
+      return await apiService.simplePing({
+        payload: {
+          action: TTaskActionNames.PING,
           payload: {
-            action: TTaskActionNames.PING,
-            payload: {
-              delay: parseInt(this.pingDelayFieldRef.current!.state.value),
-              steps: parseInt(this.pingStepsFieldRef.current!.state.value),
-              testChildProcesses: this.testChildProcFieldRef.current!.checked || false
-            }
+            delay: parseInt(this.pingDelayFieldRef.current!.state.value),
+            steps: parseInt(this.pingStepsFieldRef.current!.state.value),
+            testChildProcesses: this.testChildProcFieldRef.current!.checked || false
           }
-        });
+        }
+      });
     });
   };
 
@@ -158,7 +238,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   // api test
 
   private handleDestroyCursor = () => {
-    if (!!!this.state.cursorTaskId) return;
+    if (!this.state.cursorTaskId) {
+      return;
+    }
 
     apiService.interruptTask({
       payload: {
@@ -215,7 +297,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   };
 
   private handleCursorNext = async () => {
-    if (!this.state.cursorTaskId) return;
+    if (!this.state.cursorTaskId) {
+      return;
+    }
 
     const value = await apiService.fetchQuery({
       payload: {
@@ -236,7 +320,9 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     const phrase = 'покажи всех организации из минска и пинска';
     const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
 
-    if (!parsedPhrase || !this.props.erModel) return;
+    if (!parsedPhrase || !this.props.erModel) {
+      return;
+    }
 
     let cmds: ICommand[] = [];
     try {
@@ -334,23 +420,44 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             </span>
           </div>
         </div>
-        <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <PrimaryButton
-              onClick={this.handleCreateCursor}
-              text="CREATE CURSOR"
-              disabled={!this.props.erModel || !!this.state.cursorTaskId}
-            />
-            <br />
-            <DefaultButton onClick={this.handleCursorNext} text="CURSOR NEXT" disabled={!!!this.state.cursorTaskId} />
-            <br />
-            <DefaultButton
-              onClick={this.handleDestroyCursor}
-              text="DESTROY CURSOR (interrupt)"
-              disabled={!!!this.state.cursorTaskId}
-            />
-            <br />
-            <br />
+        <div>
+          <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <PrimaryButton onClick={this.handleSendDemo} text="CREATE DEMO-TASK" disabled={!!this.state.demoTaskId} />
+              <br />
+              <Checkbox componentRef={this.demoTaskFieldRef} label="with error" defaultChecked={false} />
+              <br />
+              <DefaultButton
+                onClick={this.handleDemoInterrupt}
+                text="INTERRUPT DEMO-TASK"
+                disabled={!this.state.demoTaskId}
+              />
+              <br />
+              <span style={{ fontSize: 16 }}>Progress: {this.state.demoProgress}</span>
+              <br />
+              <span style={{ fontSize: 16 }}>Error: {this.state.demoError}</span>
+            </div>
+          </div>
+
+          <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16, marginTop: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <PrimaryButton
+                onClick={this.handleCreateCursor}
+                text="CREATE CURSOR"
+                disabled={!this.props.erModel || !!this.state.cursorTaskId}
+              />
+              <br />
+              <DefaultButton onClick={this.handleCursorNext} text="CURSOR NEXT" disabled={!!!this.state.cursorTaskId} />
+              <br />
+              <DefaultButton
+                onClick={this.handleDestroyCursor}
+                text="DESTROY CURSOR (interrupt)"
+                disabled={!!!this.state.cursorTaskId}
+              />
+            </div>
+          </div>
+
+          <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16, marginTop: 16 }}>
             <PrimaryButton
               onClick={this.handleSendNlpQuery}
               text="покажи все организации из минска и пинска"
