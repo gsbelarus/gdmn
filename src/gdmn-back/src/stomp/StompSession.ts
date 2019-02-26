@@ -284,11 +284,6 @@ export class StompSession implements StompClientCommandListener {
         this._application = this.mainApplication;
       }
 
-      await this._application.waitUnlock();
-      if (this._application.status !== DBStatus.CONNECTED) {
-        await this._application.connect();
-      }
-
       // create session for application
       if (session) {
         const sessionId = StompSession.parseSessionMessageHeader(session).id;
@@ -297,6 +292,11 @@ export class StompSession implements StompClientCommandListener {
         this._session = await this.application.sessionManager.open(result.userKey);
       }
       this.session.clearCloseTimer();
+
+      await this.application.waitUnlock();
+      if (this.application.status !== DBStatus.CONNECTED) {
+        await this.application.connect();
+      }
 
       this._sendConnected(result.newTokens || {});
     }, headers);
