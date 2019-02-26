@@ -294,9 +294,15 @@ export class StompSession implements StompClientCommandListener {
       }
       this.session.clearCloseTimer();
 
-      await this.application.waitUnlock();
-      if (this.application.status !== DBStatus.CONNECTED) {
-        await this.application.connect();
+      // connect to application if needed
+      try {
+        await this.application.waitUnlock();
+        if (this.application.status !== DBStatus.CONNECTED) {
+          await this.application.connect();
+        }
+      } catch (error) {
+        await this.session.forceClose();
+        throw error;
       }
 
       this._sendConnected(result.newTokens || {});
