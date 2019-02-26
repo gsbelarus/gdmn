@@ -25,7 +25,8 @@ import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 
 export type AppAction =
-  "PING"
+  "DEMO"
+  | "PING"
   | "INTERRUPT"
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
@@ -38,6 +39,7 @@ export type AppAction =
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
+export type DemoCmd = AppCmd<"DEMO", { withError: boolean }>;
 export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
@@ -81,6 +83,70 @@ export class Application extends ADatabase {
     };
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
+  }
+
+  public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      progress: {enabled: true},
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {withError} = context.command.payload;
+
+        await context.session.executeConnection(async (connection) => {
+          const contactCountResult = await connection.executeReturning(connection.readTransaction, `
+            SELECT COUNT(*)
+            FROM GD_CONTACT
+          `);
+          const contactCount = contactCountResult.getNumber(0);
+
+          await context.checkStatus();
+
+          context.progress!.reset({max: contactCount}, false);
+          context.progress!.increment(0, `Process demo... Fetch contacts`);
+
+          await AConnection.executeQueryResultSet({
+            connection,
+            transaction: connection.readTransaction,
+            sql: `
+              SELECT
+                ID,
+                NAME
+              FROM GD_CONTACT
+            `,
+            callback: async (resultSet) => {
+              const indexError = Math.floor(Math.random() * 150) + 50;
+              let i = 0;
+              while (await resultSet.next()) {
+                if (withError && i === indexError) {
+                  throw new Error("Demo error");
+                }
+                const id = resultSet.getNumber("ID");
+                const name = resultSet.getString("NAME");
+                const entryCountResult = await connection.executeReturning(connection.readTransaction, `
+                  SELECT COUNT(*)
+                  FROM AC_ENTRY
+                  WHERE USR$GS_CUSTOMER = :contactKey
+                `, {contactKey: id});
+                const entryCount = entryCountResult.getNumber(0);
+
+                await context.checkStatus();
+                context.progress!.increment(1, `Process demo... ${name}:${entryCount}`);
+                i++;
+              }
+            }
+          });
+        });
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
   }
 
   public pushPingCmd(session: Session, command: PingCmd): Task<PingCmd, void> {

@@ -3,6 +3,7 @@ import {
   Application,
   CreateCmd,
   DeleteCmd,
+  DemoCmd,
   FetchQueryCmd,
   GetSchemaCmd,
   InterruptCmd,
@@ -23,7 +24,14 @@ export class AppCommandProvider {
     this._application = application;
   }
 
-  private static _verifyPingCmd(command: ICmd<AppAction, any>): command is PingCmd | never {
+  private static _verifyDemoCmd(command: ICmd<AppAction, any>): command is DemoCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "withError" in command.payload
+      && typeof command.payload.steps === "boolean";
+  }
+
+  private static _verifyPingCmd(command: ICmd<AppAction, any>): command is PingCmd {
     return typeof command.payload === "object"
       && !!command.payload
       && "steps" in command.payload
@@ -93,11 +101,17 @@ export class AppCommandProvider {
       (command.payload as any) = {};
     }
     switch (command.action) {
+      case "DEMO": {
+        if (!AppCommandProvider._verifyDemoCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushDemoCmd(session, command);
+      }
       case "PING": {
         if (!AppCommandProvider._verifyPingCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
-        return this._application.pushPingCmd(session, command);
+        return this._application.pushPingCmd(session, command as any);
       }
       case "INTERRUPT": {
         if (!AppCommandProvider._verifyInterruptCmd(command)) {
