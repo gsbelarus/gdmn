@@ -288,6 +288,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   public componentWillUnmount(): void {
     this.handleDestroyCursor().catch(console.error);
+    this.handleDemoInterrupt().catch(console.error);
   }
 
   public render() {
