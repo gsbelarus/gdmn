@@ -27,7 +27,7 @@
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
     "@types/classnames": "^2",
-    "@types/react-redux": "^6",
+    "@types/react-redux": "^7",
     "@types/react-virtualized": "^9",
     "classnames": "^2",
     "gdmn-recordset": "^1",
@@ -36,7 +36,7 @@
     "react": "^16",
     "react-dom": "^16",
     "react-draggable": "^3",
-    "react-redux": "^5",
+    "react-redux": "^6",
     "react-virtualized": "^9",
     "redux": "^4",
     "redux-thunk": "^2",
