@@ -8,11 +8,9 @@ import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator'
 import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
 import { Dispatch } from 'redux';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
-
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
-
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import styles from './styles.css';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
@@ -20,25 +18,27 @@ import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 
-type TGdmnViewStateProps = {
+export type TGdmnViewStateProps = {
   loading: boolean;
   loadingMessage?: string;
 };
 
-type TGdmnViewProps = TGdmnViewStateProps & { dispatch: Dispatch<any> }; // TODO
+export type TGdmnViewProps = TGdmnViewStateProps & { dispatch: Dispatch<any> }; // TODO
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 @CSSModules(styles, { allowMultiple: true })
-class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
+export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
     const {
       match,
       history,
       dispatch,
       loading,
-      location    } = this.props;
+      location
+    } = this.props;
+
     if (!match) return null;
 
     return (
@@ -55,6 +55,7 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
             </div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="RightSideHeaderPart">
               <span className="BigLogo">
                 <b>
@@ -127,6 +128,16 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
                 render={props => {
                   return (
                     <div style={{ margin: -16 }}>
+                      <ERModelViewContainer {...props} />
+                    </div>
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/er-model2`}
+                render={props => {
+                  return (
+                    <div style={{ margin: -16 }}>
                       <ERModelBoxContainer {...props} />
                     </div>
                   );
@@ -176,25 +187,3 @@ class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & Inj
     );
   }
 }
-
-export { GdmnView, TGdmnViewProps, TGdmnViewStateProps };
-
-/*
-          <Breadcrumb
-            onRenderItem={(props, defaultRenderer) => {
-              if (defaultRenderer && props && props.href) {
-                return (
-                  <NavLink to={props.href}>{defaultRenderer!(props)}</NavLink>
-                )
-              } else {
-                return null;
-              }
-            }}
-
-            items={breadcrumbs.map((breadcrumb: BreadcrumbsProps): IBreadcrumbItem => ({
-              key: breadcrumb.key,
-              text: breadcrumb.key,
-              href: breadcrumb.props.match.url
-            }))}
-          />
-*/

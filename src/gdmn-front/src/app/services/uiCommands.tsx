@@ -31,6 +31,13 @@ export const uiCommands: IUICommand[] = [
     link: `/er-model`
   },
   {
+    command: 'erModel2',
+    form: 'mainHeader',
+    group: 'ermodel',
+    caption: 'ER Model2',
+    link: `/er-model2`
+  },
+  {
     command: 'webStomp',
     form: 'mainHeader',
     group: 'stomp',
