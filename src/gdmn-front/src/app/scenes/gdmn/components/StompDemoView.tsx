@@ -99,7 +99,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             console.log(res);
 
             if (res.error) {
-              console.log('error', res.error);
               this.setState({
                 demoError: JSON.stringify(res.error)
               });
@@ -107,8 +106,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
             if (res.payload.status === TTaskStatus.RUNNING) {
               if (res.meta) {
-                console.log('taskId', res.meta.taskId);
-
                 this.setState({
                   demoTaskId: res.meta.taskId
                 });
@@ -204,7 +201,6 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
           let timeStart;
 
           do {
-            // console.log('do')
             timeStart = window.performance.now();
 
             try {
@@ -237,12 +233,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   // api test
 
-  private handleDestroyCursor = () => {
+  private handleDestroyCursor = async () => {
     if (!this.state.cursorTaskId) {
       return;
     }
 
-    apiService.interruptTask({
+    await apiService.interruptTask({
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
@@ -316,7 +312,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     }
   };
 
-  private handleSendNlpQuery = () => {
+  private handleSendNlpQuery = async () => {
     const phrase = 'покажи всех организации из минска и пинска';
     const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
 
@@ -331,20 +327,19 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       this.props.onError(e);
     }
 
-    cmds.forEach(value => {
-      apiService.query({
+    await Promise.all(cmds.map(value => apiService.query({
         payload: {
           action: TTaskActionNames.QUERY,
           payload: {
             query: value.payload.inspect()
           }
         }
-      });
-    });
+      })
+    ));
   };
 
   public componentWillUnmount(): void {
-    this.handleDestroyCursor();
+    this.handleDestroyCursor().catch(console.error);
   }
 
   public render() {
