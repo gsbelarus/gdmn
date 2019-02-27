@@ -136,7 +136,7 @@ export class Application extends ADatabase {
                 const entryCount = entryCountResult.getNumber(0);
 
                 await context.checkStatus();
-                context.progress!.increment(1, `Process demo... ${name}:${entryCount}`);
+                context.progress!.increment(1, `Process demo...`);
                 i++;
               }
             }

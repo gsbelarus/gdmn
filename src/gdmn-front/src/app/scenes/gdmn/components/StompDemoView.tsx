@@ -6,7 +6,7 @@ import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/Tex
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
 
-import { TPingTaskCmd, TTaskActionNames, TTaskFinishStatus, TTaskStatus } from '@gdmn/server-api';
+import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { IViewProps, View } from '@src/app/components/View';
 import { apiService } from '@src/app/services/apiService';
@@ -15,10 +15,13 @@ interface IStompDemoViewState {
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
-  cursorTaskId: string | undefined;
-  demoTaskId: string | undefined;
-  demoProgress: string | undefined;
-  demoError: string | undefined;
+  cursor?: {
+    taskId?: string;
+  };
+  demo?: {
+    taskId?: string;
+    progress?: string;
+  };
 }
 
 interface IStompDemoViewProps extends IViewProps {
@@ -51,37 +54,31 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     stressStarted: false,
     stressResultTime: 0,
     stressResultRequestsCount: 0,
-    cursorTaskId: undefined,
-    demoTaskId: undefined,
-    demoProgress: undefined,
-    demoError: undefined
+    cursor: undefined,
+    demo: undefined
   };
 
   public getViewCaption(): string {
     return 'Stomp API';
   }
 
-  private handleDemoInterrupt = () => {
-    if (!this.state.demoTaskId) {
+  private handleDemoInterrupt = async () => {
+    if (!this.state.demo || !this.state.demo.taskId) {
       return;
     }
 
-    apiService.interruptTask({
+    await apiService.interruptTask({
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
-          taskKey: this.state.demoTaskId
+          taskKey: this.state.demo.taskId
         }
       }
     });
   };
 
   private handleSendDemo = () => {
-    this.setState(
-      {
-        demoError: undefined,
-        demoProgress: undefined
-      },
+    this.setState({demo: {}},
       () => {
 
         console.log('handleSendDemo');
@@ -96,35 +93,23 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             }
           })
           .subscribe(res => {
-            console.log(res);
-
-            if (res.error) {
-              this.setState({
-                demoError: JSON.stringify(res.error)
-              });
-            }
-
-            if (res.payload.status === TTaskStatus.RUNNING) {
-              if (res.meta) {
+            switch (res.payload.status) {
+              case TTaskStatus.RUNNING: {
                 this.setState({
-                  demoTaskId: res.meta.taskId
+                  demo: {
+                    ...this.state.demo,
+                    taskId: res.meta && res.meta.taskId,
+                    progress: res.payload.progress && `${res.payload.progress.min}-${res.payload.progress.max}; ` +
+                      `current: ${res.payload.progress.value}; description: ${res.payload.progress.description}`
+                  }
                 });
+                break;
               }
-            }
-
-            if (res.payload.progress) {
-              this.setState({
-                demoProgress: JSON.stringify(res.payload.progress)
-              });
-            }
-
-            if (res.payload.status in TTaskFinishStatus) {
-              this.setState({
-                demoTaskId: undefined
-              });
-
-              if (res.payload.status === TTaskStatus.DONE) {
-                // result = res.payload.result
+              case TTaskStatus.INTERRUPTED: // work with interrupted status if needed
+              case TTaskStatus.ERROR: // work with error if needed
+              case TTaskStatus.DONE: {  // work with result
+                this.setState({demo: undefined});
+                break;
               }
             }
           });
@@ -234,7 +219,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   // api test
 
   private handleDestroyCursor = async () => {
-    if (!this.state.cursorTaskId) {
+    if (!this.state.cursor || !this.state.cursor.taskId) {
       return;
     }
 
@@ -242,16 +227,14 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       payload: {
         action: TTaskActionNames.INTERRUPT,
         payload: {
-          taskKey: this.state.cursorTaskId
+          taskKey: this.state.cursor.taskId
         }
       }
     });
   };
 
   private handleCreateCursor = () => {
-    this.setState({
-      cursorTaskId: undefined
-    });
+    this.setState({cursor: {}});
 
     const entity = Object.values(this.props.erModel!.entities)[0];
     const query = new EntityQuery(
@@ -276,24 +259,28 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       .subscribe(value => {
         console.log('QUERY result', value);
 
-        if (value.payload.status === TTaskStatus.RUNNING) {
-          if (value.meta) {
-            console.log('taskId', value.meta.taskId);
-
+        switch (value.payload.status) {
+          case TTaskStatus.RUNNING: {
             this.setState({
-              cursorTaskId: value.meta.taskId
+              cursor: {
+                ...this.state.cursor,
+                taskId: value.meta && value.meta.taskId
+              }
             });
+            break;
           }
-        } else {
-          this.setState({
-            cursorTaskId: undefined
-          });
+          case TTaskStatus.INTERRUPTED:
+          case TTaskStatus.ERROR:
+          case TTaskStatus.DONE: {
+            this.setState({cursor: undefined});
+            break;
+          }
         }
       });
   };
 
   private handleCursorNext = async () => {
-    if (!this.state.cursorTaskId) {
+    if (!this.state.cursor || !this.state.cursor.taskId) {
       return;
     }
 
@@ -301,7 +288,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       payload: {
         action: TTaskActionNames.FETCH_QUERY,
         payload: {
-          taskKey: this.state.cursorTaskId,
+          taskKey: this.state.cursor.taskId,
           rowsCount: 1
         }
       }
@@ -418,19 +405,22 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
         <div>
           <div className="ViewBody" style={{ width: 'max-content', marginLeft: 16 }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <PrimaryButton onClick={this.handleSendDemo} text="CREATE DEMO-TASK" disabled={!!this.state.demoTaskId} />
+              <PrimaryButton onClick={this.handleSendDemo} text="CREATE DEMO-TASK" disabled={!!this.state.demo} />
               <br />
-              <Checkbox componentRef={this.demoTaskFieldRef} label="with error" defaultChecked={false} />
+              <Checkbox
+                componentRef={this.demoTaskFieldRef}
+                label="with error"
+                defaultChecked={false}
+                disabled={!!this.state.demo}
+              />
               <br />
               <DefaultButton
                 onClick={this.handleDemoInterrupt}
                 text="INTERRUPT DEMO-TASK"
-                disabled={!this.state.demoTaskId}
+                disabled={!this.state.demo || !this.state.demo.taskId}
               />
               <br />
-              <span style={{ fontSize: 16 }}>Progress: {this.state.demoProgress}</span>
-              <br />
-              <span style={{ fontSize: 16 }}>Error: {this.state.demoError}</span>
+              <span style={{ fontSize: 16 }}>Progress: {this.state.demo && this.state.demo.progress}</span>
             </div>
           </div>
 
@@ -439,15 +429,19 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               <PrimaryButton
                 onClick={this.handleCreateCursor}
                 text="CREATE CURSOR"
-                disabled={!this.props.erModel || !!this.state.cursorTaskId}
+                disabled={!this.props.erModel || !!this.state.cursor}
               />
               <br />
-              <DefaultButton onClick={this.handleCursorNext} text="CURSOR NEXT" disabled={!!!this.state.cursorTaskId} />
+              <DefaultButton
+                onClick={this.handleCursorNext}
+                text="CURSOR NEXT"
+                disabled={!this.state.cursor || !this.state.cursor.taskId}
+              />
               <br />
               <DefaultButton
                 onClick={this.handleDestroyCursor}
                 text="DESTROY CURSOR (interrupt)"
-                disabled={!!!this.state.cursorTaskId}
+                disabled={!this.state.cursor || !this.state.cursor.taskId}
               />
             </div>
           </div>
