@@ -9,8 +9,7 @@ export const load = (url: string, name: string) => (dispatch: ThunkDispatch<Stat
   dispatch(loadERModel({ name, erModel: undefined }));
   dispatch(setERModelLoading({ name, loading: true }));
   fetch(url)
-    .then(res => res.text())
-    .then(res => JSON.parse(res))
+    .then(res => res.json())
     .then(res => dispatch(loadERModel({ name, erModel: deserializeERModel(res, true) })))
     .then(_res => dispatch(setERModelLoading({ name, loading: false })))
     .catch(err => {

@@ -7,12 +7,18 @@ import * as erModelActions from "../ermodel/actions";
 import { ThunkDispatch } from 'redux-thunk';
 import { ERModelAction } from '../ermodel/reducer';
 import { RusPhrase } from 'gdmn-nlp';
+import { RecordSetAction } from 'gdmn-recordset';
+import { EntityQuery } from 'gdmn-orm';
 
 export const SyntaxBoxContainer = connect(
   (state: State) => {
     if (state.ermodel['db']) {
       return {
         ...state.syntax,
+        isVisibleQuery: state.ermodel,
+        host: state.param.hostLoad,
+        port: state.param.portLoad,
+        isReadFile: state.param.isReadFileLoad,
         commandError: state.ermodel['db'].commandError,
         command: state.ermodel['db'].command
       }
@@ -20,7 +26,7 @@ export const SyntaxBoxContainer = connect(
 
     return {...state.syntax};
   },
-  (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>) => ({
+  (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction | RecordSetAction>) => ({
     onSetText: (text: string) => dispatch(
       (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
         dispatch(syntaxActions.setSyntaxText(text));
@@ -30,6 +36,11 @@ export const SyntaxBoxContainer = connect(
         } else {
           dispatch(erModelActions.clearCommand({ name: 'db', clear: true }));
         }
+      }
+    ),
+    onLoadRecordSet: (query: EntityQuery, host: string, port: string) => dispatch(
+      (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
+        dispatch(syntaxActions.loadRecordSet(query, host, port));
       }
     )
   })

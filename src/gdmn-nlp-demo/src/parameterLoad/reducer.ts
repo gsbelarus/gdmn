@@ -7,12 +7,18 @@ export interface ISetParameterState {
   host: string,
   port: string,
   isReadFile: boolean,
+  hostLoad: string,
+  portLoad: string,
+  isReadFileLoad: boolean,
 }
 
 const initialState: ISetParameterState = {
   host: '',
   port: '',
-  isReadFile: false,
+  isReadFile: true,
+  hostLoad: '',
+  portLoad: '',
+  isReadFileLoad: true,
 };
 
 export function reducer(state: ISetParameterState = initialState, action: ParameterLoadAction): ISetParameterState {
@@ -26,7 +32,6 @@ export function reducer(state: ISetParameterState = initialState, action: Parame
     }
     case getType(actions.setPort): {
       let port = action.payload;
-      let errorMessage = null;
       if (!/^(0|[1-9]\d*)$/.test(port)) {port='';}
       else if (Number.parseInt(port, 10) > 65535) {port=''}
       return {
@@ -44,17 +49,23 @@ export function reducer(state: ISetParameterState = initialState, action: Parame
     case getType(actions.loadingByParameter): {
       const { host, port, isReadFile} = action.payload;
       if(isReadFile) {
-        console.log("not error, isReadFile")
         return {
           ...state
         }
       }
 
       if(host !== '' || port !== '') {
-      console.log("not error, set host, port")
         return {
           ...state
         }
+      }
+    }
+    case getType(actions.parametersLoading) : {
+      return {
+        ...state,
+        hostLoad: state.host,
+        portLoad: state.port,
+        isReadFileLoad: state.isReadFile,
       }
     }
   }

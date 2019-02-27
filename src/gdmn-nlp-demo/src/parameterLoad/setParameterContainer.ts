@@ -19,6 +19,7 @@ export const SetParameterContainer = connect(
     onLoadByParameter: (host: string, port: string, isReadFile: boolean) =>
       isReadFile 
         ? dispatch(load(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db'))
-        : dispatch(load(`http://${host}:${port}/ermodel`, 'db'))
+        : dispatch(load(`http://${host}:${port}/ermodel`, 'db')),
+    onParametersLoading: () => dispatch(actions.parametersLoading()),
   })
 )(SetParameterLoad);

@@ -23,3 +23,9 @@ export const loadingByParameter = createAction('PARAM/LOADING_BY_PARAM', resolve
 });
 
 export type LoadingByParam = typeof loadingByParameter;
+
+export const parametersLoading = createAction('PARAM/PARAMETERS_LOADING', resolve => {
+  return () => resolve();
+});
+
+export type ParametersLoading = typeof parametersLoading;

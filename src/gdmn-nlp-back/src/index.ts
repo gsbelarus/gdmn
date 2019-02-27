@@ -44,13 +44,10 @@ async function getErModelResp(ctx: Koa.Context): Promise<void> {
 
 async function getDataResp(ctx: Koa.Context): Promise<void> {
   try {
-    console.log(ctx.request.querystring);
-    console.log(ctx.request.query.query);
     const query = ctx.request.query.query;
     try {
       const entityQuery = EntityQuery.deserialize(ctx.state.ERModel, query);
       ctx.body = await getData(entityQuery);
-      console.log(ctx.body);
     } catch (err) {
       console.log(err.message);
       ctx.status = 400;

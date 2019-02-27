@@ -10,7 +10,8 @@ export interface ISetParameterProps {
   onSetTextHost: (text: string) => void,
   onSetTextPort: (text: string) => void,
   onSetReadFile: (check: boolean) => void,
-  onLoadByParam: (host: string, port: string, isReadFile: boolean) => void,
+  onLoadByParameter: (host: string, port: string, isReadFile: boolean) => void,
+  onParametersLoading: () => void,
 }
 
 export class SetParameterLoad extends Component<ISetParameterProps, {}> {
@@ -50,7 +51,8 @@ export class SetParameterLoad extends Component<ISetParameterProps, {}> {
           text="Загрузить"
           style={{ maxWidth: '48px' }}
           onClick={ () => {
-            this.props.onLoadByParam(this.props.host, this.props.port, this.props.isReadFile);
+            this.props.onLoadByParameter(this.props.host, this.props.port, this.props.isReadFile);
+            this.props.onParametersLoading();
           } }
         />
       </div>
