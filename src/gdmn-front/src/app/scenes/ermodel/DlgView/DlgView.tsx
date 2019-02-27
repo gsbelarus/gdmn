@@ -12,7 +12,7 @@ import {
   ScalarAttribute,
   SequenceAttribute
 } from 'gdmn-orm';
-import { TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TTaskStatus } from '@gdmn/server-api';
 import { apiService } from '@src/app/services/apiService';
 import { attr2fd } from '../entityData/utils';
 import { List } from 'immutable';
@@ -107,15 +107,10 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
     );
 
     const value = await apiService.query({
-      payload: {
-        action: TTaskActionNames.QUERY,
-        payload: {
-          query: q.inspect()
-        }
-      }
+      query: q.inspect()
     });
 
-    if (value.payload.status === TTaskStatus.DONE) {
+    if (value.payload.status === TTaskStatus.SUCCESS) {
       if (!value.payload.result) throw new Error('No result in query response'); // todo conditional type
 
       console.log(value.payload.result);

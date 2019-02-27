@@ -85,6 +85,7 @@ interface TTaskActionPayloadTypes {
   [TTaskActionNames.PING]: {
     steps: number;
     delay: number;
+    testChildProcesses: boolean
   };
   [TTaskActionNames.GET_SCHEMA]: undefined;
   [TTaskActionNames.CREATE_APP]: {
@@ -133,11 +134,7 @@ interface IApplicationInfo {
   creationDate: Date;
 }
 
-export enum TTaskFinishStatus {
-  INTERRUPTED = 3,
-  ERROR = 4,
-  DONE = 5
-}
+export const TTaskFinishStatus = [TTaskStatus.INTERRUPTED, TTaskStatus.FAILED, TTaskStatus.SUCCESS];
 
 // -- TASK-STATUS
 // sub: /task/status
@@ -151,8 +148,8 @@ const enum TTaskStatus {
   RUNNING = 1,
   PAUSED = 2,
   INTERRUPTED = 3,
-  ERROR = 4,
-  DONE = 5
+  FAILED = 4,
+  SUCCESS = 5
 }
 
 // -- TASK-PROGRESS

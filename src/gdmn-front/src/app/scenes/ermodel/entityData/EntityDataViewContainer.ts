@@ -80,28 +80,23 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
             // mutex.acquire().then(() => { // todo: ?
             apiService
               .prepareQuery({
-                payload: {
-                  action: TTaskActionNames.PREPARE_QUERY,
-                  payload: {
-                    query: q.inspect()
-                  }
-                }
+                query: q.inspect()
               })
               .subscribe(value => {
                 if (value.payload.status === TTaskStatus.RUNNING) {
-                  if (!(value.meta && value.meta.taskId)) {
+                  if (!(value.meta && value.meta.taskKey)) {
                     throw new Error('Task id is not set');
                   }
 
                   /* для корректного вызова mergeProps.loadMoreRsData */
                   rsMeta = {
-                    taskId: value.meta.taskId,
+                    taskKey: value.meta.taskKey,
                     q
                   };
 
                   dispatch(
                     rsMetaActions.setRsMeta(entity.name, {
-                      taskId: value.meta.taskId,
+                      taskKey: value.meta.taskKey,
                       q
                     })
                   );
@@ -129,7 +124,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
           //     payload: {
           //       action: TTaskActionNames.INTERRUPT,
           //       payload: {
-          //         taskKey: rsMeta.taskId
+          //         taskKey: rsMeta.taskKey
           //       }
           //     }
           //   });
@@ -163,19 +158,14 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
             console.log('fetchQuery', stopIndex - fetchRecordCount, stopIndex, rsMeta);
 
             const res = await apiService.fetchQuery({
-              payload: {
-                action: TTaskActionNames.FETCH_QUERY,
-                payload: {
-                  rowsCount: fetchRecordCount,
-                  taskKey: rsMeta.taskId
-                }
-              }
+              rowsCount: fetchRecordCount,
+              taskKey: rsMeta.taskKey
             });
             // .then(res => {
 
             console.log(res);
 
-            if (res.payload.status === TTaskStatus.DONE) {
+            if (res.payload.status === TTaskStatus.SUCCESS) {
               if (!res.payload.result) throw new Error('No result in query response'); // todo conditional type
 
               const fieldDefs = Object.entries(res.payload.result.aliases).map(([fieldAlias, data]) => {

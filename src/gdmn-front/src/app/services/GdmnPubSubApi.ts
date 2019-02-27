@@ -17,35 +17,24 @@ import {
   ITaskStatusMessageData,
   TAuthCmd,
   TAuthCmdResult,
-  TCreateAppTaskCmd,
   TCreateAppTaskCmdResult,
   TDeleteAccountCmd,
-  TDeleteAppTaskCmd,
   TDeleteAppTaskCmdResult,
-  TDemoTaskCmd,
   TDemoTaskCmdResult,
-  TFetchQueryTaskCmd,
   TFetchQueryTaskCmdResult,
   TGdmnErrorCodes,
   TGdmnPublishMessageMeta,
   TGdmnReceivedErrorMeta,
   TGdmnReceivedMessageMeta,
   TGdmnTopic,
-  TGetAppsTaskCmd,
   TGetAppsTaskCmdResult,
-  TGetSchemaTaskCmd,
   TGetSchemaTaskCmdResult,
-  TInterruptTaskCmd,
   TInterruptTaskCmdResult,
-  TPingTaskCmd,
   TPingTaskCmdResult,
-  TPrepareQueryTaskCmd,
   TPrepareQueryTaskCmdResult,
-  TQueryTaskCmd,
   TQueryTaskCmdResult,
   TRefreshAuthCmd,
   TRefreshAuthCmdResult,
-  TReloadSchemaTaskCmd,
   TReloadSchemaTaskCmdResult,
   TSignInCmd,
   TSignInCmdResult,
@@ -54,14 +43,14 @@ import {
   TSignUpCmd,
   TSignUpCmdResult,
   TTaskActionNames,
-  TTaskActionResultTypes,
+  TTaskActionPayloadTypes,
   TTaskCmd,
   TTaskCmdResult,
   TTaskResultMessageData
 } from '@gdmn/server-api';
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
-import { empty, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { EMPTY, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
 
 class GdmnPubSubError extends ExtendableError {
@@ -161,52 +150,112 @@ class GdmnPubSubApi {
     return this.auth(cmd, true);
   }
 
-  public interruptTask(cmd: TInterruptTaskCmd): Promise<TInterruptTaskCmdResult> {
-    return this.runTaskRequestCmd<TTaskActionNames.INTERRUPT>(cmd);
+  public interruptTask(payload: TTaskActionPayloadTypes[TTaskActionNames.INTERRUPT]): Promise<TInterruptTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.INTERRUPT,
+        payload
+      }
+    });
   }
 
-  public reloadSchema(cmd: TReloadSchemaTaskCmd): Promise<TReloadSchemaTaskCmdResult> {
-    return this.runTaskRequestCmd<TTaskActionNames.RELOAD_SCHEMA>(cmd);
+  public reloadSchema(payload: TTaskActionPayloadTypes[TTaskActionNames.RELOAD_SCHEMA]): Promise<TReloadSchemaTaskCmdResult> {
+    return this.runTaskRequestCmd<TTaskActionNames.RELOAD_SCHEMA>({
+      payload: {
+        action: TTaskActionNames.RELOAD_SCHEMA,
+        payload
+      }
+    });
   }
 
-  public demo(cmd: TDemoTaskCmd): Observable<TDemoTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.DEMO>(cmd);
+  public demo(payload: TTaskActionPayloadTypes[TTaskActionNames.DEMO]): Observable<TDemoTaskCmdResult> {
+    return this.runTaskCmd({
+      payload: {
+        action: TTaskActionNames.DEMO,
+        payload
+      }
+    });
   }
 
-  public ping(cmd: TPingTaskCmd): Observable<TPingTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.PING>(cmd);
+  public ping(payload: TTaskActionPayloadTypes[TTaskActionNames.PING]): Observable<TPingTaskCmdResult> {
+    return this.runTaskCmd({
+      payload: {
+        action: TTaskActionNames.PING,
+        payload
+      }
+    });
   }
 
-  public simplePing(cmd: TPingTaskCmd): Promise<TPingTaskCmdResult> {
-    return this.runTaskRequestCmd<TTaskActionNames.PING>(cmd);
+  public simplePing(payload: TTaskActionPayloadTypes[TTaskActionNames.PING]): Promise<TPingTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.PING,
+        payload
+      }
+    });
   }
 
-  public getSchema(cmd: TGetSchemaTaskCmd): Promise<TGetSchemaTaskCmdResult> {
-    return this.runTaskRequestCmd<TTaskActionNames.GET_SCHEMA>(cmd);
+  public getSchema(): Promise<TGetSchemaTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.GET_SCHEMA,
+        payload: undefined
+      }
+    });
   }
 
-  public query(cmd: TQueryTaskCmd): Promise<TQueryTaskCmdResult> {
-    return this.runTaskRequestCmd<TTaskActionNames.QUERY>(cmd);
+  public query(payload: TTaskActionPayloadTypes[TTaskActionNames.QUERY]): Promise<TQueryTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.QUERY,
+        payload
+      }
+    });
   }
 
-  public prepareQuery(cmd: TPrepareQueryTaskCmd): Observable<TPrepareQueryTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.PREPARE_QUERY>(cmd);
+  public prepareQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.PREPARE_QUERY]): Observable<TPrepareQueryTaskCmdResult> {
+    return this.runTaskCmd({
+      payload: {
+        action: TTaskActionNames.PREPARE_QUERY,
+        payload
+      }
+    });
   }
 
-  public fetchQuery(cmd: TFetchQueryTaskCmd): Promise<TFetchQueryTaskCmdResult> {
-    return this.runTaskRequestCmd<TTaskActionNames.FETCH_QUERY>(cmd);
+  public fetchQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.FETCH_QUERY]): Promise<TFetchQueryTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.FETCH_QUERY,
+        payload
+      }
+    });
   }
 
-  public createApp(cmd: TCreateAppTaskCmd): Observable<TCreateAppTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.CREATE_APP>(cmd);
+  public createApp(payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]): Promise<TCreateAppTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.CREATE_APP,
+        payload
+      }
+    });
   }
 
-  public deleteApp(cmd: TDeleteAppTaskCmd): Observable<TDeleteAppTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.DELETE_APP>(cmd);
+  public deleteApp(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE_APP]): Promise<TDeleteAppTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.DELETE_APP,
+        payload
+      }
+    });
   }
 
-  public getApps(cmd: TGetAppsTaskCmd): Observable<TGetAppsTaskCmdResult> {
-    return this.runTaskCmd<TTaskActionNames.GET_APPS>(cmd);
+  public getApps(): Promise<TGetAppsTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.GET_APPS,
+        payload: undefined
+      }
+    });
   }
 
   public async auth(cmd: TAuthCmd | TDeleteAccountCmd, reconnect: boolean = false): Promise<TAuthCmdResult> {
@@ -220,7 +269,7 @@ class GdmnPubSubApi {
 
       this.subTasks();
 
-      return empty().toPromise(); // todo test
+      return EMPTY.toPromise(); // todo test
     }
 
     // //-//console.log('AUTH+connect');
@@ -247,6 +296,18 @@ class GdmnPubSubApi {
         first()
       )
       .toPromise();
+  }
+
+  public runTaskCmd<TActionName extends TTaskActionNames>(
+    taskCmd: TTaskCmd<TActionName>
+  ): Observable<TTaskCmdResult<TActionName>> {
+    return <Observable<TTaskCmdResult<TActionName>>>this._runTaskCmd<TActionName>(taskCmd);
+  }
+
+  public runTaskRequestCmd<TActionName extends TTaskActionNames>(
+    taskCmd: TTaskCmd<TActionName>
+  ): Promise<TTaskCmdResult<TActionName>> {
+    return <Promise<TTaskCmdResult<TActionName>>>this._runTaskCmd<TActionName>(taskCmd, true);
   }
 
   private async sign(cmd: TSignUpCmd | TSignInCmd | TRefreshAuthCmd): Promise<ICmdResult<_ISignResponseMeta, null>> {
@@ -326,7 +387,7 @@ class GdmnPubSubApi {
     };
   }
 
-  private _runTaskCmd<TActionName extends keyof TTaskActionResultTypes>(
+  private _runTaskCmd<TActionName extends TTaskActionNames>(
     taskCmd: TTaskCmd<TActionName>,
     replyMode: boolean = false
   ) {
@@ -342,7 +403,7 @@ class GdmnPubSubApi {
       .pipe(
         filter(msgPublishState => msgPublishState.status === TPubSubMsgPublishStatus.PUBLISHED),
         mergeMap(msgPublishState => {
-          const taskIdFilterOperator = filter<IPubSubMessage<TGdmnReceivedMessageMeta>>(
+          const taskKeyFilterOperator = filter<IPubSubMessage<TGdmnReceivedMessageMeta>>(
             message =>
               !!msgPublishState.meta && !!message.meta && message.meta["task-id"] === msgPublishState.meta["task-id"] // todo
           );
@@ -353,7 +414,7 @@ class GdmnPubSubApi {
           });
 
           const meta = {
-            taskId: msgPublishState && msgPublishState.meta ? msgPublishState.meta["task-id"] : undefined
+            taskKey: msgPublishState && msgPublishState.meta ? msgPublishState.meta["task-id"] : undefined
           };
 
           /*
@@ -375,7 +436,7 @@ class GdmnPubSubApi {
 
            */
           const taskActionResult = this.taskActionResultObservable!.pipe(
-            taskIdFilterOperator,
+            taskKeyFilterOperator,
             first(),
             parseMsgDataMapOperator,
             map(resultMsgData => <TTaskResultMessageData<TActionName>>resultMsgData),
@@ -410,7 +471,7 @@ class GdmnPubSubApi {
 
            */
           const taskProgressResult = this.taskProgressResultObservable!.pipe(
-            taskIdFilterOperator,
+            taskKeyFilterOperator,
             parseMsgDataMapOperator,
             map(resultMsgData => <ITaskProgressMessageData<TActionName>>resultMsgData),
             map(progressMsgData => ({
@@ -438,7 +499,7 @@ class GdmnPubSubApi {
 
             */
           const taskStatusResult = this.taskStatusResultObservable!.pipe(
-            taskIdFilterOperator,
+            taskKeyFilterOperator,
             parseMsgDataMapOperator,
             map(resultMsgData => <ITaskStatusMessageData<TActionName>>resultMsgData),
             map(statusMsgData => ({
@@ -455,18 +516,6 @@ class GdmnPubSubApi {
       );
 
     return replyMode ? observ.pipe(first()).toPromise() : observ;
-  }
-
-  private runTaskCmd<TActionName extends keyof TTaskActionResultTypes>(
-    taskCmd: TTaskCmd<TActionName>
-  ): Observable<TTaskCmdResult<TActionName>> {
-    return <Observable<TTaskCmdResult<TActionName>>>this._runTaskCmd<TActionName>(taskCmd);
-  }
-
-  private runTaskRequestCmd<TActionName extends keyof TTaskActionResultTypes>(
-    taskCmd: TTaskCmd<TActionName>
-  ): Promise<TTaskCmdResult<TActionName>> {
-    return <Promise<TTaskCmdResult<TActionName>>>this._runTaskCmd<TActionName>(taskCmd, true);
   }
 }
 

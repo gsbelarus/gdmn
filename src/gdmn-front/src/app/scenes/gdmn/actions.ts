@@ -1,6 +1,6 @@
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
-import { TGdmnErrorCodes, TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 
 import { TThunkAction } from '@src/app/store/TActions';
@@ -48,17 +48,9 @@ const gdmnActionsAsync = {
 
     dispatch(gdmnActions.onApiDeleteAccount); // todo test
   },
-  apiPing: (cmd: TPingTaskCmd): TThunkAction => async (dispatch, getState, { apiService }) => {
-    apiService.ping(cmd);
-  },
   apiGetSchema: (): TThunkAction => async (dispatch, getState, { apiService }) => {
-    const value = await apiService.getSchema({
-      payload: {
-        action: TTaskActionNames.GET_SCHEMA,
-        payload: undefined
-      }
-    });
-    if (value.payload.status === TTaskStatus.DONE) {
+    const value = await apiService.getSchema();
+    if (value.payload.status === TTaskStatus.SUCCESS) {
       const erModel = deserializeERModel(value.payload.result!);
       dispatch(gdmnActions.setSchema(erModel));
     }

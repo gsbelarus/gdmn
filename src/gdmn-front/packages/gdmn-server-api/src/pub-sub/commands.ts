@@ -3,7 +3,6 @@ import {
   ITaskProgress,
   TTaskActionMessageData,
   TTaskActionNames,
-  TTaskActionPayloadTypes,
   TTaskActionResultTypes,
   TTaskStatus
 } from './api';
@@ -30,20 +29,19 @@ interface ICmdResult<TPayload, IError = IGdmnMessageError, IMeta = { [key: strin
   meta?: IMeta;
 }
 
-type TTaskCmd<TActionName extends keyof TTaskActionPayloadTypes> = ICmd<
-  // TGdmnPublishMessageMeta & // todo: tmp
-  { action: TTaskActionNames } & TTaskActionMessageData<TActionName> // todo: tmp // todo type test
->;
+// TGdmnPublishMessageMeta & // todo: tmp
+type TTaskCmd<TActionName extends TTaskActionNames> =
+  ICmd<{ action: TActionName } & TTaskActionMessageData<TActionName>>;
 
-type TTaskCmdResult<
-  TActionName extends keyof TTaskActionResultTypes
-> = ICmdResult<// TGdmnReceivedMessageMeta & // todo: tmp
+// TGdmnReceivedMessageMeta & // todo: tmp
+type TTaskCmdResult<TActionName extends TTaskActionNames> =
+  ICmdResult<
 {
   result?: TTaskActionResultTypes[TActionName];
   status: TTaskStatus;
   progress?: ITaskProgress;
-  action: TTaskActionNames; // todo: tmp
-}, IGdmnMessageError, { taskId: string | undefined }>;
+  action: TActionName;
+}, IGdmnMessageError, { taskKey: string | undefined }>;
 
 // sign up
 
@@ -143,9 +141,9 @@ type TDeleteAppTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_APP>;
 
 // get apps task
 
-type TGetAppsTaskCmd = TTaskCmd<TTaskActionNames.GET_SCHEMA>;
+type TGetAppsTaskCmd = TTaskCmd<TTaskActionNames.GET_APPS>;
 
-type TGetAppsTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_SCHEMA>;
+type TGetAppsTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APPS>;
 
 export {
   TTaskCmd,

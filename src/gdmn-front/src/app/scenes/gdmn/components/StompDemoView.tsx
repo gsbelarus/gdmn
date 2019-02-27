@@ -6,7 +6,7 @@ import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/Tex
 import { parsePhrase, RusWord } from 'gdmn-nlp';
 import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
 
-import { TPingTaskCmd, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TPingTaskCmd, TTaskStatus } from '@gdmn/server-api';
 import { NumberTextField } from '@src/app/components/NumberTextField';
 import { IViewProps, View } from '@src/app/components/View';
 import { apiService } from '@src/app/services/apiService';
@@ -16,10 +16,10 @@ interface IStompDemoViewState {
   stressResultTime: number;
   stressResultRequestsCount: number;
   cursor?: {
-    taskId?: string;
+    taskKey?: string;
   };
   demo?: {
-    taskId?: string;
+    taskKey?: string;
     progress?: string;
   };
 }
@@ -63,17 +63,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   }
 
   private handleDemoInterrupt = async () => {
-    if (!this.state.demo || !this.state.demo.taskId) {
+    if (!this.state.demo || !this.state.demo.taskKey) {
       return;
     }
 
     await apiService.interruptTask({
-      payload: {
-        action: TTaskActionNames.INTERRUPT,
-        payload: {
-          taskKey: this.state.demo.taskId
-        }
-      }
+      taskKey: this.state.demo.taskKey
     });
   };
 
@@ -85,12 +80,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
         apiService
           .demo({
-            payload: {
-              action: TTaskActionNames.DEMO,
-              payload: {
-                withError: this.demoTaskFieldRef.current!.checked || false
-              }
-            }
+            withError: this.demoTaskFieldRef.current!.checked || false
           })
           .subscribe(res => {
             switch (res.payload.status) {
@@ -98,7 +88,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
                 this.setState({
                   demo: {
                     ...this.state.demo,
-                    taskId: res.meta && res.meta.taskId,
+                    taskKey: res.meta && res.meta.taskKey,
                     progress: res.payload.progress && `${res.payload.progress.min}-${res.payload.progress.max}; ` +
                       `current: ${res.payload.progress.value}; description: ${res.payload.progress.description}`
                   }
@@ -106,8 +96,8 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
                 break;
               }
               case TTaskStatus.INTERRUPTED: // work with interrupted status if needed
-              case TTaskStatus.ERROR: // work with error if needed
-              case TTaskStatus.DONE: {  // work with result
+              case TTaskStatus.FAILED: // work with error if needed
+              case TTaskStatus.SUCCESS: {  // work with result
                 this.setState({demo: undefined});
                 break;
               }
@@ -121,15 +111,10 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   private handleStressApi = () => {
     this.stressLoop(async () => {
-      return await apiService.simplePing({
-        payload: {
-          action: TTaskActionNames.PING,
-          payload: {
-            delay: parseInt(this.pingDelayFieldRef.current!.state.value),
-            steps: parseInt(this.pingStepsFieldRef.current!.state.value),
-            testChildProcesses: this.testChildProcFieldRef.current!.checked || false
-          }
-        }
+      await apiService.simplePing({
+        delay: parseInt(this.pingDelayFieldRef.current!.state.value),
+        steps: parseInt(this.pingStepsFieldRef.current!.state.value),
+        testChildProcesses: this.testChildProcFieldRef.current!.checked || false
       });
     });
   };
@@ -153,12 +138,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       );
 
       return await apiService.query({
-        payload: {
-          action: TTaskActionNames.QUERY,
-          payload: {
-            query: query.inspect()
-          }
-        }
+        query: query.inspect()
       });
     });
   };
@@ -219,17 +199,12 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   // api test
 
   private handleDestroyCursor = async () => {
-    if (!this.state.cursor || !this.state.cursor.taskId) {
+    if (!this.state.cursor || !this.state.cursor.taskKey) {
       return;
     }
 
     await apiService.interruptTask({
-      payload: {
-        action: TTaskActionNames.INTERRUPT,
-        payload: {
-          taskKey: this.state.cursor.taskId
-        }
-      }
+      taskKey: this.state.cursor.taskKey
     });
   };
 
@@ -249,12 +224,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
     apiService
       .prepareQuery({
-        payload: {
-          action: TTaskActionNames.PREPARE_QUERY,
-          payload: {
-            query: query.inspect()
-          }
-        }
+        query: query.inspect()
       })
       .subscribe(value => {
         console.log('QUERY result', value);
@@ -264,14 +234,14 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
             this.setState({
               cursor: {
                 ...this.state.cursor,
-                taskId: value.meta && value.meta.taskId
+                taskKey: value.meta && value.meta.taskKey
               }
             });
             break;
           }
           case TTaskStatus.INTERRUPTED:
-          case TTaskStatus.ERROR:
-          case TTaskStatus.DONE: {
+          case TTaskStatus.FAILED:
+          case TTaskStatus.SUCCESS: {
             this.setState({cursor: undefined});
             break;
           }
@@ -280,21 +250,16 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   };
 
   private handleCursorNext = async () => {
-    if (!this.state.cursor || !this.state.cursor.taskId) {
+    if (!this.state.cursor || !this.state.cursor.taskKey) {
       return;
     }
 
     const value = await apiService.fetchQuery({
-      payload: {
-        action: TTaskActionNames.FETCH_QUERY,
-        payload: {
-          taskKey: this.state.cursor.taskId,
-          rowsCount: 1
-        }
-      }
+      taskKey: this.state.cursor.taskKey,
+      rowsCount: 1
     });
 
-    if (value.payload.status === TTaskStatus.DONE) {
+    if (value.payload.status === TTaskStatus.SUCCESS) {
       console.log('data.length', value.payload.result!.data.length);
     }
   };
@@ -314,15 +279,11 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       this.props.onError(e);
     }
 
-    await Promise.all(cmds.map(value => apiService.query({
-        payload: {
-          action: TTaskActionNames.QUERY,
-          payload: {
-            query: value.payload.inspect()
-          }
-        }
-      })
-    ));
+    await Promise.all(
+      cmds.map(value => apiService.query({
+        query: value.payload.inspect()
+      }))
+    );
   };
 
   public componentWillUnmount(): void {
@@ -417,7 +378,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               <DefaultButton
                 onClick={this.handleDemoInterrupt}
                 text="INTERRUPT DEMO-TASK"
-                disabled={!this.state.demo || !this.state.demo.taskId}
+                disabled={!this.state.demo || !this.state.demo.taskKey}
               />
               <br />
               <span style={{ fontSize: 16 }}>Progress: {this.state.demo && this.state.demo.progress}</span>
@@ -435,13 +396,13 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
               <DefaultButton
                 onClick={this.handleCursorNext}
                 text="CURSOR NEXT"
-                disabled={!this.state.cursor || !this.state.cursor.taskId}
+                disabled={!this.state.cursor || !this.state.cursor.taskKey}
               />
               <br />
               <DefaultButton
                 onClick={this.handleDestroyCursor}
                 text="DESTROY CURSOR (interrupt)"
-                disabled={!this.state.cursor || !this.state.cursor.taskId}
+                disabled={!this.state.cursor || !this.state.cursor.taskKey}
               />
             </div>
           </div>
