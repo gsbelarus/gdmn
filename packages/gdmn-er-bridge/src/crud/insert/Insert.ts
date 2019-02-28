@@ -1,6 +1,6 @@
 import {Attribute, Entity, EntityInsert, EntityInsertField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
-import {Builder} from "../../ddl/builder/Builder";
 import {Constants} from "../../ddl/Constants";
+import {Utils} from "../../Utils";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsInsert {
@@ -36,7 +36,7 @@ export class Insert {
         return relation.pk[0];
       }
     }
-    const mainRelation = Builder._getMainRelation(entity);
+    const mainRelation = Utils.getMainRelation(entity);
     if (mainRelation.relationName === relationName) {
       const pkAttr = entity.pk[0];
       if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
@@ -82,9 +82,9 @@ export class Insert {
   private _makeReturning(query: EntityInsert, rel: IRelation): string {
     const {entity} = query;
 
-    const mainRelation = Builder._getMainRelation(entity);
-    const ownRelation = Builder._getOwnRelationName(entity);
-    const PKFieldName = Builder._getPKFieldName(entity, rel.relationName);
+    const mainRelation = Utils.getMainRelation(entity);
+    const ownRelation = Utils.getOwnRelationName(entity);
+    const PKFieldName = Utils.getPKFieldName(entity, rel.relationName);
 
     if (mainRelation.relationName !== rel.relationName) {
       return `\n  RETURNING ${PKFieldName} INTO :Key1Value;\n`; //INHERITEDKEY
@@ -97,7 +97,7 @@ export class Insert {
 
   private _makeFields(query: EntityInsert, rel: IRelation): string {
     const {entity, fields} = query;
-    const mainRelation = Builder._getMainRelation(entity);
+    const mainRelation = Utils.getMainRelation(entity);
 
     const from = fields
       .filter(field =>
@@ -115,7 +115,7 @@ export class Insert {
 
   private _makeValues(query: EntityInsert, rel: IRelation): string {
     const {entity, fields} = query;
-    const mainRelation = Builder._getMainRelation(entity);
+    const mainRelation = Utils.getMainRelation(entity);
 
     const values = fields
       .filter(field =>
@@ -137,7 +137,7 @@ export class Insert {
     const {fields} = query;
     const _getFirstSetAttr = Insert._getFirstSetAttr(fields);
     const attribute = _getFirstSetAttr!.attribute as SetAttribute;
-    const MainCrossRelationName = Builder._getMainCrossRelationName(attribute);
+    const MainCrossRelationName = Utils.getMainCrossRelationName(attribute);
 
     let MainCrossPk = Insert._getMainCrossPk(attribute);
 

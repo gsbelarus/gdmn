@@ -355,21 +355,21 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
               { command.payload.link.fields.map( (field, idx) =>
                 <div key={idx}>
                   <div className="field">{field.attribute.name}
-                  {field.link &&
+                  {field.links && field.links.length && // TODO
                     <div className="payload">
-                      <div className="alias">{field.link.alias}</div>
-                      <div className="entityName">{field.link.entity.name}</div>
-                      { field.link.fields && <div className="fields">
-                        <div id={`scrollUp${field.link.alias}/${idx}`} className="scrollUp">
+                      <div className="alias">{field.links[0].alias}</div>
+                      <div className="entityName">{field.links[0].entity.name}</div>
+                      { field.links[0].fields && <div className="fields">
+                        <div id={`scrollUp${field.links[0].alias}/${idx}`} className="scrollUp">
                           <div className="s">
-                            {field.link.fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
+                            {field.links[0].fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
                           </div>
                         </div>
-                        <button id={`buttonForScroll${field.link.alias}/${idx}`} className="buttonForScroll"
+                        <button id={`buttonForScroll${field.links[0].alias}/${idx}`} className="buttonForScroll"
                           onClick={ () =>
                             this.collUpsFields(
-                              `scrollUp${field.link.alias}/${idx}`,
-                              `buttonForScroll${field.link.alias}/${idx}`
+                              `scrollUp${field.links[0].alias}/${idx}`,
+                              `buttonForScroll${field.links[0].alias}/${idx}`
                             ) }>...</button>
                       </div> }
                     </div>

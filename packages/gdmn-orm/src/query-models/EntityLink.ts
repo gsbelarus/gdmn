@@ -48,10 +48,12 @@ export class EntityLink {
       }
 
       for (const qField of this.fields) {
-        if (qField.link) {
-          const findLink = qField.link.deepFindLink(source);
-          if (findLink) {
-            return findLink;
+        if (qField.links) {
+          for (const link of qField.links) {
+            const findLink = link.deepFindLink(source);
+            if (findLink) {
+              return findLink;
+            }
           }
         }
       }
@@ -60,10 +62,12 @@ export class EntityLink {
         return this;
       }
       for (const field of this.fields) {
-        if (field.link) {
-          const find = field.link.deepFindLink(source);
-          if (find) {
-            return find;
+        if (field.links) {
+          for (const link of field.links) {
+            const find = link.deepFindLink(source);
+            if (find) {
+              return find;
+            }
           }
         }
       }

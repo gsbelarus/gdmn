@@ -256,13 +256,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "LINK",
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "te",
               fields: [
                 {attribute: "TEST_STRING"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -286,13 +286,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "DETAIL_ENTITY",
-            link: {
+            links: [{
               entity: "DETAIL_ENTITY",
               alias: "de",
               fields: [
                 {attribute: "TEST_STRING2"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -317,13 +317,13 @@ describe("Query", () => {
           {
             attribute: "SET_LINK",
             setAttributes: ["TEST_INTEGER"],
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "s",
               fields: [
                 {attribute: "TEST_STRING"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -409,44 +409,44 @@ describe("Query", () => {
         fields: [
           {
             attribute: "LINK",
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "te",
               fields: [
                 {attribute: "TEST_STRING"}
               ]
-            }
+            }]
           },
           {
             attribute: "SET_LINK",
             setAttributes: ["TEST_INTEGER"],
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "s",
               fields: [
                 {attribute: "TEST_STRING"}
               ]
-            }
+            }]
           },
           {
             attribute: "DETAIL_ENTITY",
-            link: {
+            links: [{
               entity: "DETAIL_ENTITY",
               alias: "de",
               fields: [
                 {attribute: "TEST_STRING2"},
                 {
                   attribute: "LINK",
-                  link: {
+                  links: [{
                     entity: "TEST_ENTITY",
                     alias: "te",
                     fields: [
                       {attribute: "TEST_STRING"}
                     ]
-                  }
+                  }]
                 }
               ]
-            }
+            }]
           }
         ]
       }
@@ -479,11 +479,11 @@ describe("Query", () => {
           {attribute: "TEST_STRING1"},
           {
             attribute: "LINK",
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "te",
               fields: []
-            }
+            }]
           }
         ]
       },
@@ -519,11 +519,11 @@ describe("Query", () => {
           {attribute: "TEST_STRING1"},
           {
             attribute: "LINK",
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "te",
               fields: []
-            }
+            }]
           }
         ]
       },
@@ -575,13 +575,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY",
               alias: "parent",
               fields: [
                 {attribute: "ID"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -607,13 +607,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY2",
               alias: "parent",
               fields: [
                 {attribute: "ID"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -640,13 +640,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY2",
               alias: "parent",
               fields: [
                 {attribute: "TEST_STRING1"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -673,13 +673,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY2",
               alias: "parent",
               fields: [
                 {attribute: "TEST_STRING2"}
               ]
-            }
+            }]
           }
         ]
       }
@@ -706,7 +706,7 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY2",
               alias: "parent",
               fields: [
@@ -716,7 +716,7 @@ describe("Query", () => {
               options: {
                 hasRoot: true
               }
-            }
+            }]
           }
         ]
       }
@@ -743,7 +743,7 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY2",
               alias: "parent",
               fields: [
@@ -753,7 +753,7 @@ describe("Query", () => {
               options: {
                 hasRoot: true
               }
-            }
+            }]
           }
         ]
       }
@@ -780,7 +780,7 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "CHILD_ENTITY2",
               alias: "parent",
               fields: [
@@ -789,7 +789,7 @@ describe("Query", () => {
               options: {
                 hasRoot: true
               }
-            }
+            }]
           }
         ]
       }
@@ -815,14 +815,14 @@ describe("Query", () => {
         fields: [
           {
             attribute: "PARENT",
-            link: {
+            links: [{
               entity: "TEST_ENTITY5",
               alias: "parent",
               fields: [
                 {attribute: "TEST_STRING1"}
 
               ]
-            }
+            }]
           }
         ]
       }
@@ -886,13 +886,13 @@ describe("Query", () => {
         fields: [
           {
             attribute: "LINK",
-            link: {
+            links: [{
               entity: "TEST_ENTITY5",
               alias: "te",
               fields: [
                 {attribute: "TEST_STRING1"}
               ]
-            }
+            }]
           }
         ]
       }

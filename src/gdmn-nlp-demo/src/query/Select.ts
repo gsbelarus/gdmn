@@ -11,8 +11,10 @@ import {
   ScalarAttribute,
   SetAttribute
 } from "gdmn-orm";
-
+import {Constants} from "./Constants";
+import {Utils} from "./Utils";
 import {SQLTemplates} from "./SQLTemplates";
+import {VirtualQueries} from "./VirtualQueries";
 
 export interface IParams {
   [paramName: string]: any;
@@ -29,15 +31,7 @@ export class Select {
 
   constructor(query: EntityQuery) {
     this._query = query;
-
-    this.sql = this._getSelect();
-
-    // console.debug("===================\n" +
-    //   "QUERY:\n" + this._query.serialize() + "\n" +
-    //   "SQL:\n" + this.sql + "\n" +
-    //   "PARAMS:\n" + JSON.stringify(this.params) + "\n" +
-    //   "==================="
-    // );
+    this.sql = this._getSelect(this._query, true);
   }
 
   private static _arrayJoinWithBracket(array: string[], separator: string): string {
@@ -49,63 +43,35 @@ export class Select {
     return "";
   }
 
-  private static _getOwnRelationName(entity: Entity): string {
-    if (entity.adapter) {
-      const relations = entity.adapter.relation.filter((rel) => !rel.weak);
-      if (relations.length) {
-        return relations[relations.length - 1].relationName;
-      }
-    }
-    return entity.name;
-  }
+  private _getSelect(query: EntityQuery, first?: boolean, withoutAlias?: boolean): string {
+    const {options, link} = query;
 
-  private static _getPKFieldName(entity: Entity, relationName: string): string {
-    if (entity.adapter) {
-      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
-      if (relation && relation.pk && relation.pk.length) {
-        return relation.pk[0];
-      }
-    }
-    const mainRelationName = Select._getOwnRelationName(entity);
-    if (mainRelationName === relationName) {
-      const pkAttr = entity.pk[0];
-      if (pkAttr instanceof ScalarAttribute || pkAttr.type === "Entity") {
-        return pkAttr.adapter.field;
-      }
-    }
-    if (entity.parent) {
-      return this._getPKFieldName(entity.parent, relationName);
-    }
-    throw new Error(`Primary key is not found for ${relationName} relation`);
-  }
-
-  private _getSelect(): string {
     let sql = `SELECT`;
 
-    if (this._query.options && this._query.options.first !== undefined) {
-      sql += ` FIRST ${this._addToParams(this._query.options.first)}`;
+    if (options && options.first !== undefined) {
+      sql += ` FIRST ${this._addToParams(options.first)}`;
     }
 
-    if (this._query.options && this._query.options.skip !== undefined) {
-      sql += ` SKIP ${this._addToParams(this._query.options.skip)}`;
+    if (options && options.skip !== undefined) {
+      sql += ` SKIP ${this._addToParams(options.skip)}`;
     }
 
-    sql += `\n${this._makeFields(this._query.link).join(",\n")}`;
-    sql += `\n${this._makeFrom()}`;
+    sql += `\n${this._makeFields(link, withoutAlias).join(",\n")}`;
+    sql += `\n${this._makeFrom(query, first)}`;
 
-    const sqlJoin = this._makeJoin(this._query.link).join("\n");
+    const sqlJoin = this._makeJoin(link).join("\n");
     if (sqlJoin) {
       sql += `\n${sqlJoin}`;
     }
 
-    const sqlWhere = this._makeWhereLinkConditions(this._query.link)
-      .concat(this._makeWhereConditions(this._query.options && this._query.options.where))
+    const sqlWhere = this._makeWhereLinkConditions(link)
+      .concat(this._makeWhereConditions(link, options && options.where))
       .join("\n  AND ");
     if (sqlWhere) {
       sql += `\nWHERE ${sqlWhere}`;
     }
 
-    const sqlOrder = this._makeOrder().join(", ");
+    const sqlOrder = this._makeOrder(link).join(", ");
     if (sqlOrder) {
       sql += `\nORDER BY ${sqlOrder}`;
     }
@@ -113,18 +79,18 @@ export class Select {
     return sql;
   }
 
-  private _makeFields(link: EntityLink): string[] {
+  private _makeFields(link: EntityLink, withoutAlias?: boolean): string[] {
     const fields = link.fields
-      .filter((field) => !field.link)
+      .filter((field) => !field.links)
       .map((field) => {
         const attribute = field.attribute as ScalarAttribute;
         const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
         const fieldAlias = this._getFieldAlias(field);
-        return SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field);
+        return SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field, withoutAlias);
       });
 
     const joinedFields = link.fields.reduce((items, field) => {
-      if (field.link) {
+      if (field.links) {
         if (field.setAttributes) {
           const attribute = field.attribute as SetAttribute;
           const crossFields = field.setAttributes.map((setAttr) => {
@@ -136,7 +102,10 @@ export class Select {
           });
           items = items.concat(crossFields);
         }
-        return items.concat(this._makeFields(field.link));
+        for (const fLink of field.links) {
+          items = items.concat(this._makeFields(fLink));
+        }
+        return items;
       }
       return items;
     }, [] as string[]);
@@ -144,29 +113,53 @@ export class Select {
     return fields.concat(joinedFields);
   }
 
-  private _makeFrom(): string {
-    const link = this._query.link;
+  private _makeFrom(query: EntityQuery, first?: boolean): string {
+    const {link} = query;
 
-    const existsRelations = this._getExistsRelations(link);
-    const from = existsRelations.map((rel, index) => {
-      if (index) {
+    const mainRelation = Utils.getMainRelation(link.entity);
+    const from = link.entity.adapter!.relation.map((rel) => {
+      if (rel.relationName == mainRelation.relationName) {
+        if (!link.entity.isIntervalTree && link.entity.isTree && first) {
+
+          const virtualTree = this._query.link.fields
+            .filter((field) => field.attribute.type === "Parent")
+            .map((field) => {
+              const virtualQuery = VirtualQueries.makeVirtualQuery(query);
+              const virtualQuery2 = VirtualQueries.makeSecondVirtualQuery(query, true);
+              const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(query, false);
+
+              const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
+              const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
+
+                if (rel.relationName == mainRelation.relationName) {
+                  const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
+                  const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
+                  const tableWithRecursive = this._getSelect(virtualQuery, false, true);
+
+                  // TODO field.links![0]
+                  return SQLTemplates.fromWithTree(this._getTableAlias(field.links![0], this._query.link.entity.name),
+                    rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
+                }
+              });
+              return from.join("\n");
+            });
+
+          if (virtualTree.length > 0) {
+            return virtualTree;
+          }
+        }
+        return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
+      } else {
         return SQLTemplates.join(
           rel.relationName,
           this._getTableAlias(link, rel.relationName),
-          Select._getPKFieldName(link.entity, rel.relationName),
-          this._getTableAlias(link, existsRelations[0].relationName),
-          Select._getPKFieldName(link.entity, existsRelations[0].relationName),
+          Utils.getPKFieldName(link.entity, rel.relationName),
+          this._getTableAlias(link, mainRelation.relationName),
+          Utils.getPKFieldName(link.entity, mainRelation.relationName),
           rel.weak ? "LEFT" : ""
         );
-      } else {
-        return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
       }
     });
-
-    if (!from.length) {
-      const relationName = link.entity.adapter!.relation[0].relationName;
-      from.push(SQLTemplates.from(this._getTableAlias(link, relationName), relationName));
-    }
 
     return from.join("\n");
   }
@@ -177,93 +170,154 @@ export class Select {
       existsRelations.push(link.entity.adapter!.relation[0]);
     }
     const firstRelationName = existsRelations[0].relationName;
-    const firstPKFieldName = Select._getPKFieldName(link.entity, firstRelationName);
+    const firstPKFieldName = Utils.getPKFieldName(link.entity, firstRelationName);
 
     return link.fields.reduce((joins, field) => {
-      if (field.link) {
-        const linkExistsRelations = this._getExistsRelations(field.link);
-        if (!linkExistsRelations.length) {
-          linkExistsRelations.push(field.link.entity.adapter!.relation[0]);
-        }
-        const linkFirstRelationName = linkExistsRelations[0].relationName;
-        const linkFirstPKFieldName = Select._getPKFieldName(field.link.entity, linkFirstRelationName);
+      if (field.links) {
+        for (const fLink of field.links) {
+          const linkExistsRelations = this._getExistsRelations(fLink);
+          if (!linkExistsRelations.length) {
+            linkExistsRelations.push(fLink.entity.adapter!.relation[0]);
+          }
+          const linkFirstRelationName = linkExistsRelations[0].relationName;
+          const linkFirstPKFieldName = Utils.getPKFieldName(fLink.entity, linkFirstRelationName);
 
-        switch (field.attribute.type) {
-          case "Parent": {
-            throw new Error("Unsupported yet");
-          }
-          case "Set": {
-            const attr = field.attribute as SetAttribute;
-            joins.push(
-              SQLTemplates.join(
-                attr.adapter!.crossRelation,
-                this._getTableAlias(link, attr.adapter!.crossRelation),
-                attr.adapter!.crossPk[0],
-                this._getTableAlias(link, firstRelationName),
-                Select._getPKFieldName(link.entity, firstRelationName),
-                "LEFT"
-              )
-            );
-            joins.push(
-              SQLTemplates.join(
-                linkFirstRelationName,
-                this._getTableAlias(field.link, linkFirstRelationName),
-                linkFirstPKFieldName,
-                this._getTableAlias(link, attr.adapter!.crossRelation),
-                attr.adapter!.crossPk[1],
-                "LEFT"
-              )
-            );
-            break;
-          }
-          case "Detail": {  // TODO
-            const attr = field.attribute as DetailAttribute;
-            const mLink = attr.adapter!.masterLinks.find((l) => l.detailRelation === linkFirstRelationName);
-            if (!mLink) {
-              throw new Error("Internal");
+          switch (field.attribute.type) {
+            case "Parent": {
+              const attr = field.attribute as EntityAttribute;
+              if (fLink.options && fLink.options.hasRoot) {
+                joins.push(
+                  SQLTemplates.joinWithTree(
+                    attr.adapter!.relation,
+                    this._getTableAlias(fLink, attr.adapter!.relation),
+                    Constants.DEFAULT_LB_NAME,
+                    this._getTableAlias(link, attr.adapter!.relation),
+                    Constants.DEFAULT_RB_NAME
+                  )
+                );
+              }
+              if (linkFirstRelationName !== attr.adapter!.relation || !(fLink.options
+                && fLink.options.hasRoot) && link.entity.isIntervalTree) {
+                joins.push(
+                  SQLTemplates.join(
+                    linkFirstRelationName,
+                    this._getTableAlias(fLink, linkFirstRelationName),
+                    linkFirstPKFieldName,
+                    this._getTableAlias(link, attr.adapter!.relation),
+                    attr.adapter!.field,
+                    "LEFT"
+                  )
+                );
+              }
+              break;
             }
-            joins.push(
-              SQLTemplates.join(
-                mLink.detailRelation,
-                this._getTableAlias(field.link, mLink.detailRelation),
-                mLink.link2masterField,
-                this._getTableAlias(link, firstRelationName),
-                firstPKFieldName,
-                "LEFT"
-              )
-            );
-            break;
-          }
-          case "Entity":
-          default: {
-            const attr = field.attribute as EntityAttribute;
-            joins.push(
-              SQLTemplates.join(
-                linkFirstRelationName,
-                this._getTableAlias(field.link, linkFirstRelationName),
-                linkFirstPKFieldName,
-                this._getTableAlias(link, attr.adapter!.relation),
-                attr.adapter!.field,
-                "LEFT"
-              )
-            );
-          }
-        }
-        linkExistsRelations.reduce((relJoins, rel) => {
-          if (field.link && linkFirstRelationName !== rel.relationName) {
-            relJoins.push(SQLTemplates.join(
-              rel.relationName,
-              this._getTableAlias(link, rel.relationName),
-              Select._getPKFieldName(field.link.entity, rel.relationName),
-              this._getTableAlias(link, linkExistsRelations[0].relationName),
-              Select._getPKFieldName(field.link.entity, linkExistsRelations[0].relationName),
-              rel.weak ? "LEFT" : ""
-            ));
-          }
-          return relJoins;
-        }, joins);
+            case "Set": {
+              const attr = field.attribute as SetAttribute;
+              joins.push(
+                SQLTemplates.join(
+                  attr.adapter!.crossRelation,
+                  this._getTableAlias(link, attr.adapter!.crossRelation),
+                  attr.adapter!.crossPk[0],
+                  this._getTableAlias(link, firstRelationName),
+                  Utils.getPKFieldName(link.entity, firstRelationName),
+                  "LEFT"
+                )
+              );
+              joins.push(
+                SQLTemplates.join(
+                  linkFirstRelationName,
+                  this._getTableAlias(fLink, linkFirstRelationName),
+                  linkFirstPKFieldName,
+                  this._getTableAlias(link, attr.adapter!.crossRelation),
+                  attr.adapter!.crossPk[1],
+                  "LEFT"
+                )
+              );
+              break;
+            }
+            case "Detail": {  // TODO
+              const attr = field.attribute as DetailAttribute;
+              const mLink = attr.adapter!.masterLinks.find((l) => l.detailRelation === linkFirstRelationName);
+              if (!mLink) {
+                throw new Error("Internal");
+              }
+              joins.push(
+                SQLTemplates.join(
+                  mLink.detailRelation,
+                  this._getTableAlias(fLink, mLink.detailRelation),
+                  mLink.link2masterField,
+                  this._getTableAlias(link, firstRelationName),
+                  firstPKFieldName,
+                  "LEFT"
+                )
+              );
+              break;
+            }
+            case "Entity":
+            default: {
+              if (!fLink.entity.isIntervalTree && fLink.entity.isTree) {
+                const forTreeQuery = new EntityQuery(fLink);
 
-        return joins.concat(this._makeJoin(field.link));
+                const virtualQuery = VirtualQueries.makeVirtualQuery(forTreeQuery);
+                const virtualQuery2 = VirtualQueries.makeSecondVirtualQuery(forTreeQuery, true);
+                const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(forTreeQuery, false);
+
+                const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
+                const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
+
+                  if (rel.relationName == mainRelation.relationName) {
+                    const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
+                    const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
+                    const tableWithRecursive = this._getSelect(virtualQuery, false, true);
+
+
+                    const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(fLink, this._query.link.entity.name),
+                      rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
+
+                    const attr = field.attribute as EntityAttribute;
+                    joins.push(
+                      SQLTemplates.join(
+                        sqlText,
+                        this._getTableAlias(fLink, linkFirstRelationName),
+                        linkFirstPKFieldName,
+                        this._getTableAlias(link, attr.adapter!.relation),
+                        attr.adapter!.field
+                      )
+                    );
+                  }
+                });
+                break;
+              }
+
+              const attr = field.attribute as EntityAttribute;
+              joins.push(
+                SQLTemplates.join(
+                  linkFirstRelationName,
+                  this._getTableAlias(fLink, linkFirstRelationName),
+                  linkFirstPKFieldName,
+                  this._getTableAlias(link, attr.adapter!.relation),
+                  attr.adapter!.field,
+                  "LEFT"
+                )
+              );
+            }
+          }
+          linkExistsRelations.reduce((relJoins, rel) => {
+            if (fLink && linkFirstRelationName !== rel.relationName) {
+              relJoins.push(SQLTemplates.join(
+                rel.relationName,
+                this._getTableAlias(fLink, rel.relationName), // TODO test
+                Utils.getPKFieldName(fLink.entity, rel.relationName),
+                this._getTableAlias(link, linkFirstRelationName),
+                Utils.getPKFieldName(fLink.entity, linkFirstRelationName),
+                "LEFT"
+              ));
+            }
+            return relJoins;
+          }, joins);
+          joins = joins.concat(this._makeJoin(fLink));
+        }
+        return joins;
       }
       return joins;
     }, [] as string[]);
@@ -293,7 +347,7 @@ export class Select {
     }, whereEquals);
   }
 
-  private _makeWhereConditions(where?: IEntityQueryWhere[]): string[] {
+  private _makeWhereConditions(link: EntityLink, where?: IEntityQueryWhere[]): string[] {
     if (!where) {
       return [];
     }
@@ -302,7 +356,7 @@ export class Select {
 
       if (item.isNull) {
         const filterItems = item.isNull.map((isNull) => {
-          const findLink = this._getLink(isNull.alias);
+          const findLink = this._getLink(isNull.alias, link);
           const alias = this._getTableAlias(findLink, isNull.attribute.adapter!.relation);
           return SQLTemplates.isNull(alias, isNull.attribute.adapter!.field);
         });
@@ -313,7 +367,7 @@ export class Select {
       }
       if (item.equals) {
         const filterItems = item.equals.map((equals) => {
-          const findLink = this._getLink(equals.alias);
+          const findLink = this._getLink(equals.alias, link);
           const alias = this._getTableAlias(findLink, equals.attribute.adapter!.relation);
           return SQLTemplates.equals(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
         });
@@ -324,19 +378,19 @@ export class Select {
       }
 
       if (item.and) {
-        const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(item.and), " AND ");
+        const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.and), " AND ");
         if (filter) {
           filters.push(filter);
         }
       }
       if (item.or) {
-        const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(item.or), " OR ");
+        const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.or), " OR ");
         if (filter) {
           filters.push(filter);
         }
       }
       if (item.not) {
-        const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(item.not), " AND ");
+        const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.not), " AND ");
         if (filter) {
           filters.push(filter);
         }
@@ -346,11 +400,11 @@ export class Select {
     }, [] as string[]);
   }
 
-  private _makeOrder(): string[] {
+  private _makeOrder(link: EntityLink): string[] {
     if (this._query.options && this._query.options.order) {
       return this._query.options.order.reduce((orders, order) => {
-        const link = this._getLink(order.alias);
-        const alias = this._getTableAlias(link, order.attribute.adapter!.relation);
+        const getlink = this._getLink(order.alias, link);
+        const alias = this._getTableAlias(getlink, order.attribute.adapter!.relation);
         orders.push(
           SQLTemplates.order(alias, order.attribute.adapter!.field, order.type || "ASC")
         );
@@ -362,11 +416,14 @@ export class Select {
 
   private _isExistsInLink(link: EntityLink, relationName: string): boolean {
     const existInFields = link.fields.some((field) => {
-      if (field.link) {
+      if (field.links) {
         const attribute = field.attribute as EntityAttribute;
         switch (attribute.type) {
           case "Parent": {
-            throw new Error("Unsupported yet");
+            if (attribute.adapter && attribute.adapter.relation === relationName) {
+              return true;
+            }
+            break;
           }
           case "Detail": {
             const pkAttr = link.entity.pk[0];
@@ -393,7 +450,7 @@ export class Select {
             break;
           }
         }
-        return this._isExistsInLink(field.link, relationName);
+        return field.links.some((fLink) => this._isExistsInLink(fLink, relationName));
       } else {
         const attribute = field.attribute as ScalarAttribute;
         return attribute.adapter!.relation === relationName;
@@ -441,8 +498,8 @@ export class Select {
 
   }
 
-  private _getLink(alias: string): EntityLink {
-    const findLink = this._query.link.deepFindLink(alias);
+  private _getLink(alias: string, link: EntityLink): EntityLink {
+    const findLink = link.deepFindLink(alias);
     if (!findLink) {
       throw new Error(`Alias ${alias} is not found`);
     }

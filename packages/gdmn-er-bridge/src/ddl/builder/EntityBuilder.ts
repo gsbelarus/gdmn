@@ -11,6 +11,7 @@ import {
   SequenceAttribute,
   SetAttribute
 } from "gdmn-orm";
+import {Utils} from "../../Utils";
 import {Constants} from "../Constants";
 import {IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
@@ -20,10 +21,10 @@ import {DomainResolver} from "./DomainResolver";
 export class EntityBuilder extends Builder {
 
   public async addUnique(entity: Entity, attributes: Attribute[]): Promise<void> {
-    const tableName = Builder._getOwnRelationName(entity);
+    const tableName = Utils.getOwnRelationName(entity);
     const constraintName = Prefix.uniqueConstraint(await this.nextDDLUnique());
 
-    await this.ddlHelper.addUnique(constraintName, tableName, attributes.map((attr) => Builder._getFieldName(attr)));
+    await this.ddlHelper.addUnique(constraintName, tableName, attributes.map((attr) => Utils.getFieldName(attr)));
     entity.addUnique(attributes);
   }
 
@@ -33,7 +34,7 @@ export class EntityBuilder extends Builder {
   }
 
   public async createAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr): Promise<Attr> {
-    const tableName = Builder._getOwnRelationName(entity);
+    const tableName = Utils.getOwnRelationName(entity);
 
     if (attribute instanceof ScalarAttribute) {
       // if (attribute.name === "RB") {
@@ -43,7 +44,7 @@ export class EntityBuilder extends Builder {
       //    await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
       // }
 
-      const fieldName = Builder._getFieldName(attribute);
+      const fieldName = Utils.getFieldName(attribute);
       const domainName = Prefix.domain(await this.nextDDLUnique());
       await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attribute));
       await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -65,7 +66,7 @@ export class EntityBuilder extends Builder {
       switch (attribute.type) {
         case "Detail": {
           const dAttr = attribute as DetailAttribute;
-          const fieldName = Builder._getPKFieldName(entity, Builder._getOwnRelationName(entity));
+          const fieldName = Utils.getPKFieldName(entity, Utils.getOwnRelationName(entity));
           let detailTableName: string;
           let detailLinkFieldName: string;
           if (dAttr.adapter && dAttr.adapter.masterLinks.length) {
@@ -110,7 +111,7 @@ export class EntityBuilder extends Builder {
         case "Parent": {
           //throw new Error("Unsupported yet");
           const pAttr = attribute as ParentAttribute;
-          const fieldName = Builder._getFieldName(pAttr);
+          const fieldName = Utils.getFieldName(pAttr);
           const domainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -132,8 +133,8 @@ export class EntityBuilder extends Builder {
             tableName,
             fieldName
           }, {
-            tableName: Builder._getOwnRelationName(pAttr.entities[0]),
-            fieldName: Builder._getPKFieldName(pAttr.entities[0], Builder._getOwnRelationName(pAttr.entities[0]))
+            tableName: Utils.getOwnRelationName(pAttr.entities[0]),
+            fieldName: Utils.getPKFieldName(pAttr.entities[0], Utils.getOwnRelationName(pAttr.entities[0]))
           }, {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"
@@ -149,7 +150,7 @@ export class EntityBuilder extends Builder {
         }
         case "Entity": {
           const eAttr = attribute as EntityAttribute;
-          const fieldName = Builder._getFieldName(eAttr);
+          const fieldName = Utils.getFieldName(eAttr);
           const domainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(eAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -159,8 +160,8 @@ export class EntityBuilder extends Builder {
             tableName,
             fieldName
           }, {
-            tableName: Builder._getOwnRelationName(eAttr.entities[0]),
-            fieldName: Builder._getPKFieldName(eAttr.entities[0], Builder._getOwnRelationName(eAttr.entities[0]))
+            tableName: Utils.getOwnRelationName(eAttr.entities[0]),
+            fieldName: Utils.getPKFieldName(eAttr.entities[0], Utils.getOwnRelationName(eAttr.entities[0]))
           });
 
           if (!attribute.adapter) {
@@ -204,7 +205,7 @@ export class EntityBuilder extends Builder {
           pkFields.push(refPK);
 
           for (const crossAttr of Object.values(setAttr.attributes).filter((attr) => attr instanceof ScalarAttribute)) {
-            const fieldName = Builder._getFieldName(crossAttr);
+            const fieldName = Utils.getFieldName(crossAttr);
             const domainName = Prefix.domain(await this.nextDDLUnique());
             await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(crossAttr));
             fields.push({
@@ -235,7 +236,7 @@ export class EntityBuilder extends Builder {
           }
 
           // create own table column
-          const fieldName = Builder._getFieldName(setAttr);
+          const fieldName = Utils.getFieldName(setAttr);
           const domainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(setAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -252,8 +253,8 @@ export class EntityBuilder extends Builder {
             tableName: relationName,
             fieldName: ownPKName
           }, {
-            tableName: Builder._getOwnRelationName(entity),
-            fieldName: Builder._getPKFieldName(entity, Builder._getOwnRelationName(entity))
+            tableName: Utils.getOwnRelationName(entity),
+            fieldName: Utils.getPKFieldName(entity, Utils.getOwnRelationName(entity))
           }, {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"
@@ -263,8 +264,8 @@ export class EntityBuilder extends Builder {
             tableName: relationName,
             fieldName: refPKName
           }, {
-            tableName: Builder._getOwnRelationName(setAttr.entities[0]),
-            fieldName: Builder._getPKFieldName(setAttr.entities[0], Builder._getOwnRelationName(setAttr.entities[0]))
+            tableName: Utils.getOwnRelationName(setAttr.entities[0]),
+            fieldName: Utils.getPKFieldName(setAttr.entities[0], Utils.getOwnRelationName(setAttr.entities[0]))
           });
 
           if (!attribute.adapter) {

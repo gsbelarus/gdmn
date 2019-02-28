@@ -9,31 +9,31 @@ import {EntityLink, IEntityLinkInspector} from "./EntityLink";
 export interface IEntityQueryFieldInspector {
   attribute: string;
   setAttributes?: string[];
-  link?: IEntityLinkInspector;
+  links?: IEntityLinkInspector[];
 }
 
 export class EntityQueryField {
 
   public readonly attribute: Attribute;
-  public readonly link?: EntityLink;
+  public readonly links?: EntityLink[];
   public readonly setAttributes?: ScalarAttribute[];
 
-  constructor(attribute: Attribute, link?: EntityLink, setAttributes?: ScalarAttribute[]) {
+  constructor(attribute: Attribute, links?: EntityLink[], setAttributes?: ScalarAttribute[]) {
     this.attribute = attribute;
     if (attribute instanceof EntityAttribute) {
-      if (!link) {
+      if (!links || !links.length) {
         throw new Error("EntityQueryField with EntityAttribute must has 'link' property");
       }
     }
     if (attribute instanceof ScalarAttribute) {
-      if (link) {
-        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'link' property");
+      if (links && !links.length) {
+        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'links' property");
       }
       if (setAttributes) {
         throw new Error("EntityQueryField with ScalarAttribute must hasn't 'setAttributes' property");
       }
     }
-    this.link = link;
+    this.links = links;
     this.setAttributes = setAttributes;
   }
 
@@ -42,22 +42,24 @@ export class EntityQueryField {
                                   inspector: IEntityQueryFieldInspector): EntityQueryField {
     const attribute = entity.attribute(inspector.attribute);
     if (attribute instanceof EntityAttribute) {
-      if (!inspector.link) {
-        throw new Error("EntityQueryField with EntityAttribute must has 'link' property");
+      if (!inspector.links || !inspector.links.length) {
+        throw new Error("EntityQueryField with EntityAttribute must has 'links' property");
       }
       if (attribute instanceof SetAttribute) {
-        return new EntityQueryField(attribute, EntityLink.inspectorToObject(erModel, inspector.link),
+        return new EntityQueryField(attribute,
+          inspector.links.map((link) => EntityLink.inspectorToObject(erModel, link)),
           inspector.setAttributes && inspector.setAttributes.map((attrName) => {
             const setAttr = attribute as SetAttribute;
             return setAttr.attribute(attrName);
           })
         );
       }
-      return new EntityQueryField(attribute, EntityLink.inspectorToObject(erModel, inspector.link));
+      return new EntityQueryField(attribute,
+        inspector.links.map((link) => EntityLink.inspectorToObject(erModel, link)));
     }
     if (attribute instanceof ScalarAttribute) {
-      if (inspector.link) {
-        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'link' property");
+      if (inspector.links && inspector.links.length) {
+        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'links' property");
       }
       if (inspector.setAttributes) {
         throw new Error("EntityQueryField with ScalarAttribute must hasn't 'setAttributes' property");
@@ -69,8 +71,8 @@ export class EntityQueryField {
 
   public inspect(): IEntityQueryFieldInspector {
     const inspect: IEntityQueryFieldInspector = {attribute: this.attribute.name};
-    if (this.link) {
-      inspect.link = this.link.inspect();
+    if (this.links) {
+      inspect.links = this.links.map((link) => link.inspect());
     }
     if (this.setAttributes) {
       inspect.setAttributes = this.setAttributes.map((attr) => attr.name);

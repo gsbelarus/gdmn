@@ -1,5 +1,5 @@
 import {EntityDelete} from "gdmn-orm";
-import {Builder} from "../../ddl/builder/Builder";
+import {Utils} from "../../Utils";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsDelete {
@@ -25,9 +25,9 @@ export class Delete {
 
     sql += `\n${this._makeFrom(query)}`;
 
-    const mainRelationName = Builder._getMainRelation(entity);
+    const mainRelationName = Utils.getMainRelation(entity);
 
-    const PKFieldName = Builder._getPKFieldName(entity, mainRelationName.relationName);
+    const PKFieldName = Utils.getPKFieldName(entity, mainRelationName.relationName);
 
     sql += `\nWHERE ${PKFieldName} = ${this._addToParams(pkValue)}`;
 
@@ -36,7 +36,7 @@ export class Delete {
 
   private _makeFrom(query: EntityDelete): string {
     const {entity} = query;
-    return SQLTemplates.fromDelete(Builder._getMainRelation(entity).relationName);
+    return SQLTemplates.fromDelete(Utils.getMainRelation(entity).relationName);
   }
 
   private _addToParams(value: any): string {

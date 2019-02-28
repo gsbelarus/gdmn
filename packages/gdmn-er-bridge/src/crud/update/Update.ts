@@ -1,11 +1,10 @@
 import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
-import {Builder} from "../../ddl/builder/Builder";
+import {Utils} from "../../Utils";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsUpdate {
   [paramName: string]: any;
 }
-
 
 export class Update {
 
@@ -29,8 +28,8 @@ export class Update {
   private _makeWhere(query: EntityUpdate, rel: IRelation): string {
     const {entity} = query;
 
-    const mainRelationName = Builder._getOwnRelationName(entity);
-    const PKFieldName = Builder._getPKFieldName(entity, rel.relationName);
+    const mainRelationName = Utils.getOwnRelationName(entity);
+    const PKFieldName = Utils.getPKFieldName(entity, rel.relationName);
     const lineBreak = mainRelationName === rel.relationName ? "\n" : "\n";
     return `\n  WHERE ${PKFieldName} = :ParentID;${lineBreak}`;
   }
@@ -69,7 +68,7 @@ export class Update {
 
   private _makeFrom(update: EntityUpdate, rel?: IRelation): string {
     const {entity} = update;
-    const ownRelation = Builder._getOwnRelationName(entity);
+    const ownRelation = Utils.getOwnRelationName(entity);
 
     if (rel) {
       return SQLTemplates.fromUpdate(rel.relationName);
@@ -104,7 +103,7 @@ export class Update {
 
     const attribute = _getFirstSetAttr!.attribute as SetAttribute;
 
-    const MainCrossRelationName = Builder._getMainCrossRelationName(attribute);
+    const MainCrossRelationName = Utils.getMainCrossRelationName(attribute);
 
     const values = _getFirstSetAttr!.value;
 

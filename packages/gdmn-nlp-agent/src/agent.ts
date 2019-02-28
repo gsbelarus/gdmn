@@ -1,6 +1,37 @@
-import { morphAnalyzer, Noun, NounLexeme, SemContext, hasMeaning, RusVerb, SemCategory, RusCase, RusAdjectiveLexeme, RusAdjectiveCategory, RusPhrase, RusImperativeVP, RusANP, RusPP, RusPrepositionLexeme, PrepositionType, RusNoun, RusHmNouns, RusNNP } from "gdmn-nlp";
-import { Entity, ERModel, EntityLink, EntityQueryField, ScalarAttribute, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue, EntityAttribute, IEntityQueryWhere } from "gdmn-orm";
-import { ICommand, Action} from "./command";
+import {
+  hasMeaning,
+  morphAnalyzer,
+  Noun,
+  NounLexeme,
+  PrepositionType,
+  RusAdjectiveCategory,
+  RusAdjectiveLexeme,
+  RusANP,
+  RusCase,
+  RusHmNouns,
+  RusImperativeVP,
+  RusNNP,
+  RusNoun,
+  RusPhrase,
+  RusPP,
+  RusPrepositionLexeme,
+  RusVerb,
+  SemCategory,
+  SemContext
+} from "gdmn-nlp";
+import {
+  Entity,
+  EntityAttribute,
+  EntityLink,
+  EntityQuery,
+  EntityQueryField,
+  EntityQueryOptions,
+  ERModel,
+  IEntityQueryWhere,
+  IEntityQueryWhereValue,
+  ScalarAttribute
+} from "gdmn-orm";
+import {Action, ICommand} from "./command";
 
 export class ERTranslatorRU {
 
@@ -88,14 +119,17 @@ export class ERTranslatorRU {
             const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
             if (attr instanceof EntityAttribute) {
               const linkEntity = attr.entities[0];
-              const linkAlias = "alias2"
-              if (!fields
-                  .filter((field) => field.link)
-                  .some((field) => field.link!.alias === linkAlias && field.attribute === attr)) {
-                fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, linkAlias, [])));
+              const linkAlias = "alias2";
+              if (
+                !fields
+                  .filter((field) => field.links)
+                  .some((field) =>
+                    field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+              ) {
+                fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
               }
 
-              const orEquals: IEntityQueryWhereValue[] =[];
+              const orEquals: IEntityQueryWhereValue[] = [];
               orEquals.push({
                 alias: "alias2",
                 attribute: linkEntity.attribute("NAME"),
@@ -147,56 +181,62 @@ export class ERTranslatorRU {
             const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
             if (hsm instanceof RusHmNouns) {
               hsm.items.map(item => {
-                if(item instanceof RusNoun) {
-                  const words = item.lexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+                if (item instanceof RusNoun) {
+                  const words = item.lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
                   if (attr instanceof EntityAttribute) {
                     const linkEntity = attr.entities[0];
-                    const linkAlias = "alias2"
-                    if (!fields
-                        .filter((field) => field.link)
-                        .some((field) => field.link!.alias === linkAlias && field.attribute === attr)) {
-                      fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, linkAlias, [])));
+                    const linkAlias = "alias2";
+                    if (
+                      !fields
+                        .filter((field) => field.links)
+                        .some((field) =>
+                          field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+                    ) {
+                      fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
                     }
-              
-              const orEquals: IEntityQueryWhereValue[] =[];
-              orEquals.push({
-                alias: "alias2",
-                attribute: linkEntity.attribute("NAME"),
-                value: words
-              });
-              or.push({equals: orEquals});
+
+                    const orEquals: IEntityQueryWhereValue[] = [];
+                    orEquals.push({
+                      alias: "alias2",
+                      attribute: linkEntity.attribute("NAME"),
+                      value: words
+                    });
+                    or.push({equals: orEquals});
 
                   } else {
                     equals.push({
-                      alias:"alias1",
+                      alias: "alias1",
                       attribute: attr,
                       value: words
                     });
                   }
                 }
-              })
+              });
             } else {
-              const words = nounLexeme.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+              const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
               if (attr instanceof EntityAttribute) {
                 const linkEntity = attr.entities[0];
-                const linkAlias = "alias2"
-                if (!fields
-                    .filter((field) => field.link)
-                    .some((field) => field.link!.alias === linkAlias && field.attribute === attr)) {
-                  fields.push(new EntityQueryField(attr, new EntityLink(linkEntity, linkAlias, [])));
+                const linkAlias = "alias2";
+                if (
+                  !fields
+                    .filter((field) => field.links)
+                    .some((field) =>
+                      field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+                ) {
+                  fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
                 }
-              
-                const orEquals: IEntityQueryWhereValue[] =[];
+
+                const orEquals: IEntityQueryWhereValue[] = [];
                 orEquals.push({
                   alias: "alias2",
                   attribute: linkEntity.attribute("NAME"),
                   value: words
                 });
                 or.push({equals: orEquals});
-  
-                } else {
+
+              } else {
                 equals.push({
-                  alias:"alias1",
+                  alias: "alias1",
                   attribute: attr,
                   value: words
                 });

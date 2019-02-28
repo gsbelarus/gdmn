@@ -6,18 +6,16 @@ import {
   EntityLink,
   EntityQuery,
   EntityQueryField,
-  EntityQueryOptions,
   IEntityQueryWhere,
-  IEntityQueryWhereValue,
   IRelation,
   ScalarAttribute,
-  SetAttribute,
-  StringAttribute
+  SetAttribute
 } from "gdmn-orm";
 import {IParams} from "../..";
-import {Builder} from "../../ddl/builder/Builder";
 import {Constants} from "../../ddl/Constants";
+import {Utils} from "../../Utils";
 import {SQLTemplates} from "./SQLTemplates";
+import {VirtualQueries} from "./VirtualQueries";
 
 export interface IParams {
   [paramName: string]: any;
@@ -35,12 +33,6 @@ export class Select {
   constructor(query: EntityQuery) {
     this._query = query;
     this.sql = this._getSelect(this._query, true);
-    // console.debug("===================\n" +
-    //   "QUERY:\n" + this._query.serialize() + "\n" +
-    //   "SQL:\n" + this.sql + "\n" +
-    //   "PARAMS:\n" + JSON.stringify(this.params) + "\n" +
-    //   "==================="
-    // );
   }
 
   private static _arrayJoinWithBracket(array: string[], separator: string): string {
@@ -52,7 +44,7 @@ export class Select {
     return "";
   }
 
-  private _getSelect(query: EntityQuery, first?: boolean, withoutAlies?: boolean): string {
+  private _getSelect(query: EntityQuery, first?: boolean, withoutAlias?: boolean): string {
     const {options, link} = query;
 
     let sql = `SELECT`;
@@ -65,7 +57,7 @@ export class Select {
       sql += ` SKIP ${this._addToParams(options.skip)}`;
     }
 
-    sql += `\n${this._makeFields(link, withoutAlies).join(",\n")}`;
+    sql += `\n${this._makeFields(link, withoutAlias).join(",\n")}`;
     sql += `\n${this._makeFrom(query, first)}`;
 
     const sqlJoin = this._makeJoin(link).join("\n");
@@ -90,7 +82,7 @@ export class Select {
 
   private _makeFields(link: EntityLink, withoutAlias?: boolean): string[] {
     const fields = link.fields
-      .filter((field) => !field.link)
+      .filter((field) => !field.links)
       .map((field) => {
         const attribute = field.attribute as ScalarAttribute;
         const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
@@ -99,7 +91,7 @@ export class Select {
       });
 
     const joinedFields = link.fields.reduce((items, field) => {
-      if (field.link) {
+      if (field.links) {
         if (field.setAttributes) {
           const attribute = field.attribute as SetAttribute;
           const crossFields = field.setAttributes.map((setAttr) => {
@@ -111,7 +103,10 @@ export class Select {
           });
           items = items.concat(crossFields);
         }
-        return items.concat(this._makeFields(field.link));
+        for (const fLink of field.links) {
+          items = items.concat(this._makeFields(fLink));
+        }
+        return items;
       }
       return items;
     }, [] as string[]);
@@ -119,255 +114,22 @@ export class Select {
     return fields.concat(joinedFields);
   }
 
-  private _makeVirtualQuery(query: EntityQuery): EntityQuery {
-    const virtualTree = this._makeVirtualTree(query.link);
-
-    const linkTree = new EntityLink(virtualTree, "TREE", Object.values(virtualTree!.attributes)
-      .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
-
-    return new EntityQuery(linkTree);
-  }
-
-  private _makeQueryToTree(): Entity {
-    let queryToTree = new Entity({
-      name: "TREE",
-      lName: {},
-      adapter: {relation: [{relationName: "TREE", pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]}
-    });
-
-    queryToTree.add(new StringAttribute({
-      name: Constants.DEFAULT_ID_NAME,
-      lName: {ru: {name: "Идентификатор"}},
-      adapter: {
-        relation: Builder._getOwnRelationName(queryToTree),
-        field: Constants.DEFAULT_ID_NAME
-      }
-    }));
-
-    const fieldParent = new StringAttribute({
-      name: "PARENT",
-      lName: {},
-      entities: [queryToTree],
-      adapter: {relation: "TREE", field: "PARENT"}
-    });
-    queryToTree.add(fieldParent);
-
-    return queryToTree;
-  }
-
-  private _makeVirtualTree(link: EntityLink): Entity {
-    let queryToTree = this._makeQueryToTree();
-
-    link.fields
-      .filter((field) => !field.link)
-      .map((field) => {
-        const attribute = field.attribute as ScalarAttribute;
-        if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
-          queryToTree = this._makeVirtualFields(queryToTree, attribute.adapter!.field);
-        }
-      });
-
-    link.fields.reduce((items, field) => {
-      if (field.link) {
-
-        field.link.fields
-          .filter((field) => !field.link)
-          .map((field) => {
-            const attribute = field.attribute as ScalarAttribute;
-            if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
-              queryToTree = this._makeVirtualFields(queryToTree, attribute.adapter!.field);
-            }
-          });
-      }
-      return items;
-    }, [] as string[]);
-
-    return queryToTree;
-
-  }
-
-  private _makeSecondVirtualQuery(query: EntityQuery, withEquals?: boolean): EntityQuery {
-    const virtualEntity = this._makeSecondVirtualEntity(query.link);
-
-    const linkEntity = new EntityLink(virtualEntity, "parent", Object.values(virtualEntity!.attributes)
-      .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
-
-    if (withEquals) {
-      const equals: IEntityQueryWhereValue[] = [];
-      equals.push({
-        alias: "parent",
-        attribute: linkEntity.entity.attribute("PARENT"),
-        value: "11111"
-      });
-      const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
-
-      return new EntityQuery(linkEntity, options);
-    }
-    return new EntityQuery(linkEntity);
-  }
-
-  private _makeThirdVirtualQuery(query: EntityQuery, withEquals?: boolean): EntityQuery {
-    const virtualEntity = this._makeThirdVirtualEntity(query.link);
-
-    const linkEntity = new EntityLink(virtualEntity, "parent", Object.values(virtualEntity!.attributes)
-      .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
-
-    if (withEquals) {
-      const equals: IEntityQueryWhereValue[] = [];
-      equals.push({
-        alias: "parent",
-        attribute: linkEntity.entity.attribute("PARENT"),
-        value: "11111"
-      });
-      const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
-
-      return new EntityQuery(linkEntity, options);
-    }
-    return new EntityQuery(linkEntity);
-  }
-
-  private _makeSecondVirtualEntity(link: EntityLink): Entity {
-    let query = new Entity({
-      name: Builder._getOwnRelationName(link.entity),
-      lName: {},
-      adapter: {
-        relation: [{relationName: Builder._getOwnRelationName(link.entity), pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]
-      }
-    });
-
-    query.add(new StringAttribute({
-      name: Constants.DEFAULT_ID_NAME,
-      lName: {},
-      adapter: {
-        relation: Builder._getOwnRelationName(query),
-        field: Constants.DEFAULT_ID_NAME
-      }
-    }));
-    query.add(new StringAttribute({
-      name: Constants.DEFAULT_PARENT_KEY_NAME,
-      lName: {},
-      adapter: {
-        relation: Builder._getOwnRelationName(query),
-        field: Constants.DEFAULT_PARENT_KEY_NAME
-      }
-    }));
-
-    link.fields
-      .filter((field) => !field.link)
-      .map((field) => {
-        const attribute = field.attribute as ScalarAttribute;
-        if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-          query = this._makeVirtualFields(query, attribute.adapter!.field);
-        }
-      });
-
-    link.fields.reduce((items, field) => {
-      if (field.link) {
-        field.link.fields
-          .filter((field) => !field.link)
-          .map((field) => {
-            const attribute = field.attribute as ScalarAttribute;
-            if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-              query = this._makeVirtualFields(query, attribute.adapter!.field);
-            }
-          });
-      }
-      return items;
-    }, [] as string[]);
-
-    return query;
-  }
-
-  private _makeThirdVirtualEntity(link: EntityLink): Entity {
-    let query = new Entity({
-      name: Builder._getOwnRelationName(link.entity),
-      lName: {},
-      adapter: {
-        relation: [{
-          relationName: Builder._getOwnRelationName(link.entity),
-          pk: [Constants.DEFAULT_PARENT_KEY_NAME]
-        }, {
-          relationName: "TREE",
-          pk: [Constants.DEFAULT_ID_NAME]
-        }]
-      }
-    });
-
-    query.add(new StringAttribute({
-      name: Constants.DEFAULT_ID_NAME,
-      lName: {},
-      adapter: {
-        relation: query.adapter!.relation[0].relationName,
-        field: Constants.DEFAULT_ID_NAME
-      }
-    }));
-    query.add(new StringAttribute({
-      name: Constants.DEFAULT_PARENT_KEY_NAME,
-      lName: {},
-      adapter: {
-        relation: query.adapter!.relation[0].relationName,
-        field: Constants.DEFAULT_PARENT_KEY_NAME
-      }
-    }));
-
-    link.fields
-      .filter((field) => !field.link)
-      .map((field) => {
-        const attribute = field.attribute as ScalarAttribute;
-        if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-          query = this._makeVirtualFields(query, attribute.adapter!.field);
-        }
-      });
-
-    link.fields.reduce((items, field) => {
-      if (field.link) {
-
-        field.link.fields
-          .filter((field) => !field.link)
-          .map((field) => {
-            const attribute = field.attribute as ScalarAttribute;
-            if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-              query = this._makeVirtualFields(query, attribute.adapter!.field);
-            }
-          });
-      }
-      return items;
-    }, [] as string[]);
-    return query;
-  }
-
-  private _makeVirtualFields(queryToTree: Entity, nameFields: string): Entity {
-    const field = new StringAttribute({
-      name: nameFields,
-      required: true,
-      lName: {},
-      adapter: {"relation": queryToTree.name, "field": nameFields}
-    });
-    queryToTree.add(field);
-
-    return queryToTree;
-  }
-
   private _makeFrom(query: EntityQuery, first?: boolean): string {
     const {link} = query;
 
-    const mainRelation = Builder._getMainRelation(link.entity);
+    const mainRelation = Utils.getMainRelation(link.entity);
     const from = link.entity.adapter!.relation.map((rel) => {
       if (rel.relationName == mainRelation.relationName) {
-
         if (!link.entity.isIntervalTree && link.entity.isTree && first) {
 
           const virtualTree = this._query.link.fields
             .filter((field) => field.attribute.type === "Parent")
             .map((field) => {
-              const virtualQuery = this._makeVirtualQuery(query);
-              const virtualQuery2 = this._makeSecondVirtualQuery(query, true);
-              const virtualQuery3 = this._makeThirdVirtualQuery(query, false);
+              const virtualQuery = VirtualQueries.makeVirtualQuery(query);
+              const virtualQuery2 = VirtualQueries.makeSecondVirtualQuery(query, true);
+              const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(query, false);
 
-              const mainRelation = Builder._getMainRelation(virtualQuery.link.entity);
+              const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
               const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
                 if (rel.relationName == mainRelation.relationName) {
@@ -375,7 +137,8 @@ export class Select {
                   const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
                   const tableWithRecursive = this._getSelect(virtualQuery, false, true);
 
-                  return SQLTemplates.fromWithTree(this._getTableAlias(field.link!, this._query.link.entity.name),
+                  // TODO field.links![0]
+                  return SQLTemplates.fromWithTree(this._getTableAlias(field.links![0], this._query.link.entity.name),
                     rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
                 }
               });
@@ -391,9 +154,9 @@ export class Select {
         return SQLTemplates.join(
           rel.relationName,
           this._getTableAlias(link, rel.relationName),
-          Builder._getPKFieldName(link.entity, rel.relationName),
+          Utils.getPKFieldName(link.entity, rel.relationName),
           this._getTableAlias(link, mainRelation.relationName),
-          Builder._getPKFieldName(link.entity, mainRelation.relationName),
+          Utils.getPKFieldName(link.entity, mainRelation.relationName),
           rel.weak ? "LEFT" : ""
         );
       }
@@ -408,37 +171,130 @@ export class Select {
       existsRelations.push(link.entity.adapter!.relation[0]);
     }
     const firstRelationName = existsRelations[0].relationName;
-    const firstPKFieldName = Builder._getPKFieldName(link.entity, firstRelationName);
+    const firstPKFieldName = Utils.getPKFieldName(link.entity, firstRelationName);
 
     return link.fields.reduce((joins, field) => {
-      if (field.link) {
-        const linkExistsRelations = this._getExistsRelations(field.link);
-        if (!linkExistsRelations.length) {
-          linkExistsRelations.push(field.link.entity.adapter!.relation[0]);
-        }
-        const linkFirstRelationName = linkExistsRelations[0].relationName;
-        const linkFirstPKFieldName = Builder._getPKFieldName(field.link.entity, linkFirstRelationName);
+      if (field.links) {
+        for (const fLink of field.links) {
+          const linkExistsRelations = this._getExistsRelations(fLink);
+          if (!linkExistsRelations.length) {
+            linkExistsRelations.push(fLink.entity.adapter!.relation[0]);
+          }
+          const linkFirstRelationName = linkExistsRelations[0].relationName;
+          const linkFirstPKFieldName = Utils.getPKFieldName(fLink.entity, linkFirstRelationName);
 
-        switch (field.attribute.type) {
-          case "Parent": {
-            const attr = field.attribute as EntityAttribute;
-            if (field.link.options && field.link.options.hasRoot) {
+          switch (field.attribute.type) {
+            case "Parent": {
+              const attr = field.attribute as EntityAttribute;
+              if (fLink.options && fLink.options.hasRoot) {
+                joins.push(
+                  SQLTemplates.joinWithTree(
+                    attr.adapter!.relation,
+                    this._getTableAlias(fLink, attr.adapter!.relation),
+                    Constants.DEFAULT_LB_NAME,
+                    this._getTableAlias(link, attr.adapter!.relation),
+                    Constants.DEFAULT_RB_NAME
+                  )
+                );
+              }
+              if (linkFirstRelationName !== attr.adapter!.relation || !(fLink.options
+                && fLink.options.hasRoot) && link.entity.isIntervalTree) {
+                joins.push(
+                  SQLTemplates.join(
+                    linkFirstRelationName,
+                    this._getTableAlias(fLink, linkFirstRelationName),
+                    linkFirstPKFieldName,
+                    this._getTableAlias(link, attr.adapter!.relation),
+                    attr.adapter!.field,
+                    "LEFT"
+                  )
+                );
+              }
+              break;
+            }
+            case "Set": {
+              const attr = field.attribute as SetAttribute;
               joins.push(
-                SQLTemplates.joinWithTree(
-                  attr.adapter!.relation,
-                  this._getTableAlias(field.link, attr.adapter!.relation),
-                  Constants.DEFAULT_LB_NAME,
-                  this._getTableAlias(link, attr.adapter!.relation),
-                  Constants.DEFAULT_RB_NAME
+                SQLTemplates.join(
+                  attr.adapter!.crossRelation,
+                  this._getTableAlias(link, attr.adapter!.crossRelation),
+                  attr.adapter!.crossPk[0],
+                  this._getTableAlias(link, firstRelationName),
+                  Utils.getPKFieldName(link.entity, firstRelationName),
+                  "LEFT"
                 )
               );
-            }
-            if (linkFirstRelationName !== attr.adapter!.relation || !(field.link.options
-              && field.link.options.hasRoot) && link.entity.isIntervalTree) {
               joins.push(
                 SQLTemplates.join(
                   linkFirstRelationName,
-                  this._getTableAlias(field.link, linkFirstRelationName),
+                  this._getTableAlias(fLink, linkFirstRelationName),
+                  linkFirstPKFieldName,
+                  this._getTableAlias(link, attr.adapter!.crossRelation),
+                  attr.adapter!.crossPk[1],
+                  "LEFT"
+                )
+              );
+              break;
+            }
+            case "Detail": {  // TODO
+              const attr = field.attribute as DetailAttribute;
+              const mLink = attr.adapter!.masterLinks.find((l) => l.detailRelation === linkFirstRelationName);
+              if (!mLink) {
+                throw new Error("Internal");
+              }
+              joins.push(
+                SQLTemplates.join(
+                  mLink.detailRelation,
+                  this._getTableAlias(fLink, mLink.detailRelation),
+                  mLink.link2masterField,
+                  this._getTableAlias(link, firstRelationName),
+                  firstPKFieldName,
+                  "LEFT"
+                )
+              );
+              break;
+            }
+            case "Entity":
+            default: {
+              if (!fLink.entity.isIntervalTree && fLink.entity.isTree) {
+                const forTreeQuery = new EntityQuery(fLink);
+
+                const virtualQuery = VirtualQueries.makeVirtualQuery(forTreeQuery);
+                const virtualQuery2 = VirtualQueries.makeSecondVirtualQuery(forTreeQuery, true);
+                const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(forTreeQuery, false);
+
+                const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
+                const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
+
+                  if (rel.relationName == mainRelation.relationName) {
+                    const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
+                    const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
+                    const tableWithRecursive = this._getSelect(virtualQuery, false, true);
+
+
+                    const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(fLink, this._query.link.entity.name),
+                      rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
+
+                    const attr = field.attribute as EntityAttribute;
+                    joins.push(
+                      SQLTemplates.join(
+                        sqlText,
+                        this._getTableAlias(fLink, linkFirstRelationName),
+                        linkFirstPKFieldName,
+                        this._getTableAlias(link, attr.adapter!.relation),
+                        attr.adapter!.field
+                      )
+                    );
+                  }
+                });
+                break;
+              }
+
+              const attr = field.attribute as EntityAttribute;
+              joins.push(
+                SQLTemplates.join(
+                  linkFirstRelationName,
+                  this._getTableAlias(fLink, linkFirstRelationName),
                   linkFirstPKFieldName,
                   this._getTableAlias(link, attr.adapter!.relation),
                   attr.adapter!.field,
@@ -446,114 +302,23 @@ export class Select {
                 )
               );
             }
-            break;
           }
-          case "Set": {
-            const attr = field.attribute as SetAttribute;
-            joins.push(
-              SQLTemplates.join(
-                attr.adapter!.crossRelation,
-                this._getTableAlias(link, attr.adapter!.crossRelation),
-                attr.adapter!.crossPk[0],
-                this._getTableAlias(link, firstRelationName),
-                Builder._getPKFieldName(link.entity, firstRelationName),
+          linkExistsRelations.reduce((relJoins, rel) => {
+            if (fLink && linkFirstRelationName !== rel.relationName) {
+              relJoins.push(SQLTemplates.join(
+                rel.relationName,
+                this._getTableAlias(fLink, rel.relationName),
+                Utils.getPKFieldName(fLink.entity, rel.relationName),
+                this._getTableAlias(fLink, linkFirstRelationName),
+                Utils.getPKFieldName(fLink.entity, linkFirstRelationName),
                 "LEFT"
-              )
-            );
-            joins.push(
-              SQLTemplates.join(
-                linkFirstRelationName,
-                this._getTableAlias(field.link, linkFirstRelationName),
-                linkFirstPKFieldName,
-                this._getTableAlias(link, attr.adapter!.crossRelation),
-                attr.adapter!.crossPk[1],
-                "LEFT"
-              )
-            );
-            break;
-          }
-          case "Detail": {  // TODO
-            const attr = field.attribute as DetailAttribute;
-            const mLink = attr.adapter!.masterLinks.find((l) => l.detailRelation === linkFirstRelationName);
-            if (!mLink) {
-              throw new Error("Internal");
+              ));
             }
-            joins.push(
-              SQLTemplates.join(
-                mLink.detailRelation,
-                this._getTableAlias(field.link, mLink.detailRelation),
-                mLink.link2masterField,
-                this._getTableAlias(link, firstRelationName),
-                firstPKFieldName,
-                "LEFT"
-              )
-            );
-            break;
-          }
-          case "Entity":
-          default: {
-
-            if (!field.link.entity.isIntervalTree && field.link.entity.isTree) {
-              const forTreeQuery = new EntityQuery(field.link);
-
-              const virtualQuery = this._makeVirtualQuery(forTreeQuery);
-              const virtualQuery2 = this._makeSecondVirtualQuery(forTreeQuery, true);
-              const virtualQuery3 = this._makeThirdVirtualQuery(forTreeQuery, false);
-
-              const mainRelation = Builder._getMainRelation(virtualQuery.link.entity);
-              const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
-
-                if (rel.relationName == mainRelation.relationName) {
-                  const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
-                  const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
-                  const tableWithRecursive = this._getSelect(virtualQuery, false, true);
-
-
-                  const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(field.link!, this._query.link.entity.name),
-                    rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
-
-                  const attr = field.attribute as EntityAttribute;
-                  joins.push(
-                    SQLTemplates.join(
-                      sqlText,
-                      this._getTableAlias(field.link!, linkFirstRelationName),
-                      linkFirstPKFieldName,
-                      this._getTableAlias(link, attr.adapter!.relation),
-                      attr.adapter!.field
-                    )
-                  );
-                }
-              });
-              break;
-            }
-
-            const attr = field.attribute as EntityAttribute;
-            joins.push(
-              SQLTemplates.join(
-                linkFirstRelationName,
-                this._getTableAlias(field.link, linkFirstRelationName),
-                linkFirstPKFieldName,
-                this._getTableAlias(link, attr.adapter!.relation),
-                attr.adapter!.field,
-                "LEFT"
-              )
-            );
-          }
+            return relJoins;
+          }, joins);
+          joins = joins.concat(this._makeJoin(fLink));
         }
-        linkExistsRelations.reduce((relJoins, rel) => {
-          if (field.link && linkFirstRelationName !== rel.relationName) {
-            relJoins.push(SQLTemplates.join(
-              rel.relationName,
-              this._getTableAlias(link, rel.relationName),
-              Builder._getPKFieldName(field.link.entity, rel.relationName),
-              this._getTableAlias(link, linkFirstRelationName),
-              Builder._getPKFieldName(field.link.entity, linkFirstRelationName),
-              rel.weak ? "LEFT" : ""
-            ));
-          }
-          return relJoins;
-        }, joins);
-        return joins.concat(this._makeJoin(field.link));
+        return joins;
       }
       return joins;
     }, [] as string[]);
@@ -652,13 +417,14 @@ export class Select {
 
   private _isExistsInLink(link: EntityLink, relationName: string): boolean {
     const existInFields = link.fields.some((field) => {
-      if (field.link) {
+      if (field.links) {
         const attribute = field.attribute as EntityAttribute;
         switch (attribute.type) {
           case "Parent": {
             if (attribute.adapter && attribute.adapter.relation === relationName) {
               return true;
             }
+            break;
           }
           case "Detail": {
             const pkAttr = link.entity.pk[0];
@@ -685,7 +451,7 @@ export class Select {
             break;
           }
         }
-        return this._isExistsInLink(field.link, relationName);
+        return field.links.some((fLink) => this._isExistsInLink(fLink, relationName));
       } else {
         const attribute = field.attribute as ScalarAttribute;
         return attribute.adapter!.relation === relationName;

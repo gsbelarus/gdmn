@@ -35,7 +35,7 @@ import {
   TimeAttribute,
   TimeStampAttribute
 } from "gdmn-orm";
-import {Builder} from "../builder/Builder";
+import {Utils} from "../../Utils";
 import {Constants} from "../Constants";
 import {IATLoadResult, IATRelation, load} from "./atData";
 import {gdDomains} from "./gddomains";
@@ -137,7 +137,7 @@ export class ERExport {
         lName: {ru: {name: "Родитель"}},
         entities: [parent],
         adapter: {
-          relation: Builder._getOwnRelationName(entity),
+          relation: Utils.getOwnRelationName(entity),
           field: Constants.DEFAULT_INHERITED_KEY_NAME
         }
       }));
@@ -148,7 +148,7 @@ export class ERExport {
           lName: {ru: {name: "Идентификатор"}},
           sequence: this._erModel.sequencies[Constants.GLOBAL_GENERATOR],
           adapter: {
-            relation: Builder._getOwnRelationName(entity),
+            relation: Utils.getOwnRelationName(entity),
             field: Constants.DEFAULT_ID_NAME
           }
         })
@@ -158,7 +158,7 @@ export class ERExport {
   }
 
   private _createAttributes(entity: Entity): void {
-    const ownRelationName = Builder._getOwnRelationName(entity);
+    const ownRelationName = Utils.getOwnRelationName(entity);
     entity.adapter!.relation.forEach(rel => {
       const relation = this._dbSchema.relations[rel.relationName];
       const atRelation = this._getATResult().atRelations[relation.name];

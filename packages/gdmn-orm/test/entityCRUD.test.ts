@@ -77,44 +77,44 @@ describe("EntityQuery", () => {
         fields: [
           {
             attribute: "LINK",
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "te",
               fields: [
                 {attribute: "TEST_STRING"}
               ]
-            }
+            }]
           },
           {
             attribute: "SET_LINK",
             setAttributes: ["TEST_INTEGER"],
-            link: {
+            links: [{
               entity: "TEST_ENTITY",
               alias: "s",
               fields: [
                 {attribute: "TEST_STRING"}
               ]
-            }
+            }]
           },
           {
             attribute: "DETAIL_ENTITY",
-            link: {
+            links: [{
               entity: "DETAIL_ENTITY",
               alias: "de",
               fields: [
                 {attribute: "TEST_STRING2"},
                 {
                   attribute: "LINK",
-                  link: {
+                  links: [{
                     entity: "TEST_ENTITY",
                     alias: "te",
                     fields: [
                       {attribute: "TEST_STRING"}
                     ]
-                  }
+                  }]
                 }
               ]
-            }
+            }]
           }
         ]
       },
