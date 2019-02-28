@@ -1160,7 +1160,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     const isFilter = filter && filter.conditions.length;
-    const currentRowData = this.get(this.currentRow);
+    const currentRowData = this.size ? this.get(this.currentRow) : undefined;
     const selectedRowsData = this._allRowsSelected
       ? this.toArray()
       : this._selectedRows.reduce(
@@ -1208,7 +1208,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       aggregates: undefined
     });
 
-    const foundIdx = this.indexOf(currentRowData);
+    const foundIdx = currentRowData ? this.indexOf(currentRowData) : -1;
     if (foundIdx >= 0) {
       res._currentRow = foundIdx;
     }
