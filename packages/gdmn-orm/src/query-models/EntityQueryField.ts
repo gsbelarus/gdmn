@@ -22,7 +22,12 @@ export class EntityQueryField {
     this.attribute = attribute;
     if (attribute instanceof EntityAttribute) {
       if (!links || !links.length) {
-        throw new Error("EntityQueryField with EntityAttribute must has 'link' property");
+        throw new Error("EntityQueryField with EntityAttribute must has 'links' property");
+      }
+      for (const link of links) {
+        if (!attribute.entities.includes(link.entity)) {
+          throw new Error(`Attribute can't link to entity "${link.entity.name}"`);
+        }
       }
     }
     if (attribute instanceof ScalarAttribute) {
@@ -41,32 +46,14 @@ export class EntityQueryField {
                                   entity: Entity,
                                   inspector: IEntityQueryFieldInspector): EntityQueryField {
     const attribute = entity.attribute(inspector.attribute);
-    if (attribute instanceof EntityAttribute) {
-      if (!inspector.links || !inspector.links.length) {
-        throw new Error("EntityQueryField with EntityAttribute must has 'links' property");
-      }
-      if (attribute instanceof SetAttribute) {
-        return new EntityQueryField(attribute,
-          inspector.links.map((link) => EntityLink.inspectorToObject(erModel, link)),
-          inspector.setAttributes && inspector.setAttributes.map((attrName) => {
-            const setAttr = attribute as SetAttribute;
-            return setAttr.attribute(attrName);
-          })
-        );
-      }
-      return new EntityQueryField(attribute,
-        inspector.links.map((link) => EntityLink.inspectorToObject(erModel, link)));
-    }
-    if (attribute instanceof ScalarAttribute) {
-      if (inspector.links && inspector.links.length) {
-        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'links' property");
-      }
-      if (inspector.setAttributes) {
-        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'setAttributes' property");
-      }
-      return new EntityQueryField(attribute);
-    }
-    throw new Error("Should never happened");
+
+    return new EntityQueryField(attribute,
+      inspector.links && inspector.links.map((link) => EntityLink.inspectorToObject(erModel, link)),
+      inspector.setAttributes && inspector.setAttributes.map((attrName) => {
+        const setAttr = attribute as SetAttribute;
+        return setAttr.attribute(attrName);
+      })
+    );
   }
 
   public inspect(): IEntityQueryFieldInspector {
