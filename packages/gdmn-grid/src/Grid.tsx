@@ -276,14 +276,18 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       const bodyColumns = columnCount - leftSideColumns - rightSideColumns;
 
-      const rowCount = rs.size;
-      const scrollHeight = rowCount * rowHeight;
-      const currentRow = rs.currentRow;
-
       const headerHeight = hideHeader ? 0 : rowHeight;
       const footerHeight = hideFooter ? 0 : rowHeight + sbSize;
 
       const bodyHeight = height - headerHeight - footerHeight;
+
+      const dataRowCount = rs.size;
+      // rowCount can be greater than rs.size because we need in
+      // drawing fake rows down to full height of grid's body
+      const rowCount = Math.max(dataRowCount, Math.ceil(bodyHeight / rowHeight));
+      const scrollHeight = rowCount * rowHeight; 
+      const currentRow = rs.currentRow; 
+
       const bodyWidth = width - leftSideColumnsWidth - rightSideWidth;
       const bodyColumnsWidth = rightSideColumns ? bodyWidth : bodyWidth <= sbSize ? 0 : bodyWidth - sbSize;
 
@@ -352,7 +356,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
         switch (e.key) {
           case 'ArrowDown':
-            if (currentRow < rowCount - 1) {
+            if (currentRow < dataRowCount - 1) {
               newRow = currentRow + 1;
             }
             break;
@@ -376,10 +380,10 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             break;
 
           case 'PageDown':
-            if (currentRow < rowCount - 1) {
+            if (currentRow < dataRowCount - 1) {
               newRow =
-                currentRow > rowCount - 1 - bodyCountRows
-                  ? rowCount - 1
+                currentRow > dataRowCount - 1 - bodyCountRows
+                  ? dataRowCount - 1
                   : bodyBottomRow + (currentRow === bodyBottomRow ? bodyCountRows : 0);
             }
             break;
@@ -390,7 +394,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 currentRow === rowCount
                   ? rowCount - 1
                   : currentRow < bodyCountRows
-                  ? 1
+                  ? 0
                   : scrollTop === rowHeight * currentRow
                   ? currentRow - bodyCountRows
                   : Math.floor(scrollTop / rowHeight);
@@ -607,24 +611,24 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             {rightSideColumns ? (
               undefined
             ) : (
-              <div
+              <div className={cn(styles.CellColumn, styles.HeaderCell)}
                 style={{
                   position: 'absolute',
                   right: 0,
                   top: 0,
-                  width: sbSize,
-                  height: headerHeight
+                  width: sbSize + 1,
+                  height: headerHeight,
+                  borderRight: 'none',
+                  borderLeft: 'none'
                 }}
               >
-                <div className={cn(styles.CellColumn, styles.HeaderCell)} />
+                {/* <div className={cn(styles.CellColumn, styles.HeaderCell)} /> */}
               </div>
             )}
           </div>
         );
 
         const getOnSectionRendered = (infiniteLoaderChildProps: InfiniteLoaderChildProps) => ({
-          columnStartIndex,
-          columnStopIndex,
           rowStartIndex,
           rowStopIndex
         }: SectionRenderedParams) => {
@@ -1086,18 +1090,22 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       rightSideColumns
     } = this.props;
     const currentRow = rs.currentRow;
-    const adjustedColumnIndex = adjustFunc(columnIndex);
-    const rowData = rs.get(rowIndex);
-    const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
-    const footer = rowData.type === TRowType.Footer;
+    const adjustedColumnIndex = adjustFunc(columnIndex); 
 
+    const isFakeRow = rowIndex >= rs.size; 
+
+    const rsEmpty = {data: null, type: 0, group: null};
+    const rowData = isFakeRow ? rsEmpty : rs.get(rowIndex);
+    const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
+    const footer = rowData.type === TRowType.Footer; 
+    
     const backgroundClass = fixed
       ? styles.FixedBackground
       : currentRow === rowIndex
       ? adjustedColumnIndex === currentCol
         ? styles.CurrentCellBackground
         : styles.CurrentRowBackground
-      : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
+      : selectRows && (rs.allRowsSelected || (!isFakeRow && rs.selectedRows[rowIndex]))
       ? styles.SelectedBackground
       : groupHeader
       ? styles.GroupHeaderBackground
@@ -1110,7 +1118,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const textClass =
       !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText : styles.BlackText;
 
-    if (groupHeader && rowData.group && adjustedColumnIndex > rowData.group.level) {
+    if (!isFakeRow && groupHeader && rowData.group && adjustedColumnIndex > rowData.group.level) {
       return (
         <div
           className={cn(backgroundClass, borderClass)}
@@ -1129,15 +1137,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       );
 
     const cellText =
-      fixed || adjustedColumnIndex !== columns.length - rightSideColumns ? (
+      !isFakeRow && (fixed || adjustedColumnIndex !== columns.length - rightSideColumns) ? (
         columns[adjustedColumnIndex].fields.map((fld, fldid) => {
           let cellClass =
             fld.alignment === 'RIGHT'
               ? styles.DataCellRight
               : fld.alignment === 'CENTER'
               ? styles.DataCellCenter
-              : 'styles.DataCellLeft';
-          return rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]) ? (
+              : 'styles.DataCellLeft';      
+          return ((rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]))) ? (
             <span key={fldid} className={cellClass}>
               {rs.splitMatched(rowIndex, fld.fieldName).map((s, idx) =>
                 s.matchFilter || s.foundIdx ? (
@@ -1169,7 +1177,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       );
 
     const checkMark =
-      selectRows && !adjustedColumnIndex ? (
+      !isFakeRow && selectRows && !adjustedColumnIndex ? (
         <div
           className={styles.CellMarkArea}
           onClick={e => {
@@ -1184,7 +1192,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       );
 
     const groupTriangle =
-      groupHeader && rowData.group && adjustedColumnIndex === rowData.group.level ? (
+      !isFakeRow && groupHeader && rowData.group && adjustedColumnIndex === rowData.group.level ? (
         <div
           className={styles.CellMarkArea}
           onClick={e => {
@@ -1200,7 +1208,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
     const cellClassDiv = cn(fixed ? styles.FixedCell : '', styles.DataCellLeft);
 
-    if (checkMark || groupTriangle) {
+    if (!isFakeRow && (checkMark || groupTriangle)) {
       return (
         <div
           className={cn(backgroundClass, borderClass, styles.CellRow)}
@@ -1223,7 +1231,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           }
           key={key}
           style={style}
-          onClick={() => onSetCursorPos(adjustedColumnIndex, rowIndex)}
+          onClick={ isFakeRow ? undefined : () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
         >
           {cellText}
         </div>
