@@ -29,6 +29,19 @@ export class EntityQueryField {
           throw new Error(`Attribute can't link to entity "${link.entity.name}"`);
         }
       }
+      if (attribute instanceof SetAttribute) {
+        if (setAttributes) {
+          for (const setAttribute of setAttributes) {
+            if (!Object.values(attribute.attributes).includes(setAttribute)) {
+              throw new Error(`SetAttribute has no attribute "${attribute.attributes}"`);
+            }
+          }
+        }
+      } else {
+        if (setAttributes) {
+          throw new Error("EntityQueryField without SetAttribute must hasn't 'setAttributes' property");
+        }
+      }
     }
     if (attribute instanceof ScalarAttribute) {
       if (links && !links.length) {
