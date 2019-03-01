@@ -23,6 +23,8 @@ import {
 
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
+import { IViewTab } from '../scenes/gdmn/types';
+import { gdmnActions, TGdmnActions } from '../scenes/gdmn/actions';
 
 export const connectDataView = compose(
   connectView,
@@ -33,7 +35,9 @@ export const connectDataView = compose(
           ? state.gdmnState.erModel
           : undefined // todo перенести
     }),
-    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>) => ({
+    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
+      updateViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.updateViewTab(viewTab)),
+
       onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
 
       onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) =>

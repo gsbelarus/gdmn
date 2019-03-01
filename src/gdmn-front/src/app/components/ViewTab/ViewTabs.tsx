@@ -9,7 +9,7 @@ import { RecordSetReducerState } from 'gdmn-recordset';
 export interface IViewTabsProps {
   viewTabs: IViewTab[];
   recordSet: RecordSetReducerState;
-  onClose: (url: string) => void;
+  onClose: (vt: IViewTab) => void;
 }
 
 @CSSModules(styles, { allowMultiple: true })
@@ -20,7 +20,7 @@ export class ViewTabs extends React.Component<IViewTabsProps & RouteComponentPro
     return viewTabs.length ?
       <div styleName="ViewTabs">
         <div styleName="ViewTabSpace" />
-        {viewTabs.map( vt => <ViewTab key={vt.url} {...vt} loading={ !!vt.rs && !recordSet[vt.rs[0]] } onClose={onClose} /> )}
+        {viewTabs.map( vt => <ViewTab key={vt.url} {...vt} loading={ !!vt.rs && !recordSet[vt.rs[0]] } onClose={ () => onClose(vt) } /> )}
         <div styleName="ViewRestSpace" />
       </div>
     :

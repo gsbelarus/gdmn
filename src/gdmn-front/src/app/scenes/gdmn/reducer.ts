@@ -4,7 +4,7 @@ import { ERModel } from 'gdmn-orm';
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 
-type TGdmnState = {
+export type TGdmnState = {
   erModel: ERModel;
   loading: boolean;
   loadingCounter: number;
@@ -19,7 +19,7 @@ const initialState: TGdmnState = {
   viewTabs: []
 };
 
-function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
+export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
   switch (action.type) {
     case getType(gdmnActions.setSchema): {
       return {
@@ -51,7 +51,7 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
       };
     }
 
-    case getType(gdmnActions.updateViewTab): {
+    case getType(gdmnActions.addViewTab): {
       const idx = state.viewTabs.findIndex(vt => vt.url === action.payload.url);
 
       if (idx === -1) {
@@ -59,6 +59,16 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
           ...state,
           viewTabs: [...state.viewTabs, action.payload]
         };
+      } else {
+        throw new Error(`ViewTab with url ${action.payload.url} already exists`);
+      }
+    }
+
+    case getType(gdmnActions.updateViewTab): {
+      const idx = state.viewTabs.findIndex(vt => vt.url === action.payload.url);
+
+      if (idx === -1) {
+        throw new Error(`Can't find a tab with url ${action.payload.url}`);
       } else {
         return {
           ...state,
@@ -71,7 +81,7 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
       const idx = state.viewTabs.findIndex(vt => vt.url === action.payload.url);
 
       if (idx === -1) {
-        return state;
+        throw new Error(`Can't find a tab with url ${action.payload.url}`);
       } else {
         return {
           ...state,
@@ -85,4 +95,3 @@ function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
   }
 }
 
-export { reducer, TGdmnState };

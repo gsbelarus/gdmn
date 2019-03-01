@@ -18,30 +18,33 @@ export const ViewTabsContainer = connect(
   (stateProps, dispatchProps, ownProps: RouteComponentProps<any>): IViewTabsProps => ({
     ...stateProps,
     ...dispatchProps,
-    onClose: (url: string) => {
-      const { match, history } = ownProps;
+    onClose: (vt: IViewTab) => {
+      const { history, location } = ownProps;
       const { viewTabs } = stateProps;
       const { dispatch } = dispatchProps;
-      let tabToDelete: IViewTab | undefined = undefined;
 
-      if (match && viewTabs.length) {
+      const foundIdx = viewTabs.findIndex( t => t === vt );
+
+      if (foundIdx === -1) return;
+
+      let nextPath = '';
+
+      if (location.pathname === vt.url) {
         if (viewTabs.length === 1) {
-          history.push(match.path);
-          tabToDelete = viewTabs[0];
+          nextPath = '/spa/gdmn';
         } else {
-          const foundIdx = viewTabs.findIndex( vt => vt.url === url );
-          if (foundIdx >= 0) {
-            history.push(foundIdx > 0 ? viewTabs[foundIdx - 1].url : viewTabs[foundIdx + 1].url);
-            tabToDelete = viewTabs[foundIdx];
-          }
+          nextPath = foundIdx > 0 ? viewTabs[foundIdx - 1].url : viewTabs[foundIdx + 1].url;
         }
       }
 
-      if (tabToDelete) {
-        dispatch(gdmnActions.deleteViewTab(tabToDelete));
-        if (tabToDelete.rs) {
-          tabToDelete.rs.forEach( name => dispatch(deleteRecordSet({ name })) );
-        }
+      if (nextPath) {
+        history.push(nextPath);
+      }
+
+      dispatch(gdmnActions.deleteViewTab(vt));
+
+      if (vt.rs) {
+        vt.rs.forEach( name => dispatch(deleteRecordSet({ name })) );
       }
     }
   })

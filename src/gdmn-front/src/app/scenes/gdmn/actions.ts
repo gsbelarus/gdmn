@@ -80,6 +80,10 @@ const gdmnActions = {
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST'),
 
+  addViewTab: createAction('gdmn/ADD_VIEW_TAB', resolve => {
+    return (viewTab: IViewTab) => resolve(viewTab);
+  }),
+
   updateViewTab: createAction('gdmn/UPDATE_VIEW_TAB', resolve => {
     return (viewTab: IViewTab) => resolve(viewTab);
   }),

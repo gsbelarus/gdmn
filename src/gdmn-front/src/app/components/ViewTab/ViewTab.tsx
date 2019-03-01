@@ -8,7 +8,7 @@ export interface IViewTabProps {
   caption: string;
   url: string;
   loading: boolean;
-  onClose: (url: string) => void;
+  onClose: () => void;
 }
 
 @CSSModules(styles, { allowMultiple: true })
@@ -25,7 +25,7 @@ export class ViewTab extends React.Component<IViewTabProps, {}> {
               <Link to={url}>
                 {caption}
               </Link>
-              <span styleName="ViewTabCross" onClick={ () => onClose(url) }>x</span>
+              <span styleName="ViewTabCross" onClick={onClose}>x</span>
             </div>
         </div>
         <div styleName="ViewTabSpace" />
@@ -38,7 +38,7 @@ export class ViewTab extends React.Component<IViewTabProps, {}> {
             <Link to={url}>
               {caption}
             </Link>
-            <span styleName="ViewTabCross" onClick={ () => onClose(url) }>x</span>
+            <span styleName="ViewTabCross" onClick={onClose}>x</span>
           </div>
           <div styleName="ViewInactiveShadow" />
         </div>

@@ -18,13 +18,13 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
   }
 
   public componentDidMount() {
-    const { updateViewTab, match } = this.props;
+    const { addViewTab, match } = this.props;
 
     if (!match || !match.url) {
       throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
-    updateViewTab({
+    addViewTab({
       caption: this.getViewCaption(),
       url: match.url,
       rs: ['entities', 'attributes']

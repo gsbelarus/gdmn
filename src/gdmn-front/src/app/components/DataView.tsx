@@ -8,6 +8,7 @@ import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
 import { LinkCommandBarButton } from './LinkCommandBarButton';
+import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -20,6 +21,7 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   erModel?: ERModel;
   attachRs: (mutex?: Semaphore) => void;
   detachRs?: () => void;
+  updateViewTab: (viewTab: IViewTab) => void;
   loadMoreRsData?: TLoadMoreRsData;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
@@ -96,6 +98,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         }
       }, {});
 
+      console.log('update view tab');
       updateViewTab({ ...viewTab, savedState });
     }
   }
@@ -280,6 +283,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   }
 
   public render() {
+    console.log('data view render');
+
     if (!this.isDataLoaded()) {
       return this.renderLoading();
     }
