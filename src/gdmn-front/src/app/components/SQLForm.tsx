@@ -11,7 +11,9 @@ const classNames = mergeStyleSets({
     margin: '15px 0px',
     overflow: 'auto',
     height: '50vh',
-    border: '1px solid ' + theme.palette.neutralLight
+    border: '1px solid ' + theme.palette.neutralSecondary,
+    padding: '0.5em',
+    fontSize: '12px'
   }
 });
 
@@ -20,10 +22,11 @@ export interface ISQLFormStateProps {
   onCloseSQL: () => void
 }
 
-class SQLForm extends PureComponent<ISQLFormStateProps> {
+export class SQLForm extends PureComponent<ISQLFormStateProps> {
 
   public render() {
-    const {rs, onCloseSQL} = this.props;
+    const { rs, onCloseSQL } = this.props;
+
     return (
       <Dialog
         className={classNames.wrapper}
@@ -42,19 +45,19 @@ class SQLForm extends PureComponent<ISQLFormStateProps> {
       >
         <div>
           <Pivot>
-            <PivotItem headerText="SQL" className={classNames.textContent}>
+            <PivotItem headerText="SQL Select" className={classNames.textContent}>
               <pre>
-                {rs!.sql && rs!.sql.select}
+                {rs.sql && rs.sql.select}
+              </pre>
+            </PivotItem>
+            <PivotItem headerText="SQL Params" className={classNames.textContent}>
+              <pre>
+                {rs.sql && rs.sql.params && JSON.stringify(rs.sql.params, undefined, 2)}
               </pre>
             </PivotItem>
             <PivotItem headerText="EntityQuery" className={classNames.textContent}>
               <pre>
-                {rs!.eq && JSON.stringify(rs!.eq.inspect(), undefined, 2)}
-              </pre>
-            </PivotItem>
-            <PivotItem headerText="Parameters" className={classNames.textContent}>
-              <pre>
-                {rs!.sql && rs!.sql.params && JSON.stringify(rs!.sql.params, undefined, 2)}
+                {rs.eq && JSON.stringify(rs.eq.inspect(), undefined, 2)}
               </pre>
             </PivotItem>
           </Pivot>
@@ -66,5 +69,3 @@ class SQLForm extends PureComponent<ISQLFormStateProps> {
     );
   }
 }
-
-export { SQLForm };

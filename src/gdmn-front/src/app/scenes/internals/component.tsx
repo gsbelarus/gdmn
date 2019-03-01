@@ -45,9 +45,12 @@ export class Internals extends View<IInternalsProps, {}> {
             <ol>
             {
               Object.entries(rsMeta).map( ([name, rsm]) => (
-                <li>
-                  {name} -- taskKey: {rsm.taskKey ? rsm.taskKey : undefined}, query: {rsm.q ? JSON.stringify(rsm.q.inspect(), undefined, 2) : 'undefined'}
-                </li>
+                rsm ?
+                  <li>
+                    {name} -- taskKey: {rsm.taskKey ? rsm.taskKey : undefined}, query: {rsm.q ? JSON.stringify(rsm.q.inspect(), undefined, 2) : 'undefined'}
+                  </li>
+                :
+                  <li>{name}</li>
               ))
             }
             </ol>
