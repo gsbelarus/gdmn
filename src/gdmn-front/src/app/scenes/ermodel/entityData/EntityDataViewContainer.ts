@@ -159,13 +159,12 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
           // const entityName = ownProps.match ? ownProps.match.params.entityName : "";
           //
           // const rsMeta = getState().rsMeta[entityName];
-          // dispatch(deleteRecordSet({name: stateProps.data.rs.name}));
-          //
           // if (rsMeta) {
           //   await apiService.interruptTask({
           //     taskKey: rsMeta.taskKey
           //   });
           // }
+          // dispatch(deleteRecordSet({name: stateProps.data.rs.name}));
         }),
 
         loadMoreRsData: async ({startIndex, stopIndex}: IndexRange) => {
