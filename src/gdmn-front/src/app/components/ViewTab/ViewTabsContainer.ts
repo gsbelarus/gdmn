@@ -10,7 +10,7 @@ import { deleteRecordSet } from 'gdmn-recordset';
 export const ViewTabsContainer = connect(
   (state: IState) => ({
     recordSet: state.recordSet,
-    viewTabs: selectGdmnState(state).viewTabs,
+    viewTabs: state.gdmnState.viewTabs,
   }),
   dispatch => ({
     dispatch
@@ -42,6 +42,8 @@ export const ViewTabsContainer = connect(
       }
 
       dispatch(gdmnActions.deleteViewTab(vt));
+
+      console.log(vt.rs);
 
       if (vt.rs) {
         vt.rs.forEach( name => dispatch(deleteRecordSet({ name })) );

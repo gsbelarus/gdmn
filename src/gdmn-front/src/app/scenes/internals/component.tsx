@@ -3,11 +3,13 @@ import { ERModel } from "gdmn-orm";
 import { IViewProps, View } from "@src/app/components/View";
 import { RecordSetReducerState } from "gdmn-recordset";
 import { IRsMetaState } from "@src/app/store/reducer";
+import { IViewTab } from "../gdmn/types";
 
 export interface IInternalsProps extends IViewProps<any> {
   erModel?: ERModel;
   recordSet: RecordSetReducerState;
   rsMeta: IRsMetaState;
+  viewTabs: IViewTab[];
 };
 
 export class Internals extends View<IInternalsProps, {}> {
@@ -18,7 +20,7 @@ export class Internals extends View<IInternalsProps, {}> {
 
   render () {
 
-    const { erModel, recordSet, rsMeta } = this.props;
+    const { erModel, recordSet, rsMeta, viewTabs } = this.props;
 
     return this.renderWide(
       undefined,
@@ -34,6 +36,18 @@ export class Internals extends View<IInternalsProps, {}> {
             Object.entries(recordSet).map( ([name, rs]) => (
               <li>
                 {name} -- {rs.size} records, {rs.fieldDefs.length} fields, srcEoF: {rs.srcEoF ? 'true' : 'false'}
+              </li>
+            ))
+          }
+          </ol>
+        </div>
+        <div>
+          <h2>ViewTabs</h2>
+          <ol>
+          {
+            viewTabs.map( vt => (
+              <li>
+                {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join : 'no recordsets'}, {vt.savedState ? JSON.stringify(vt.savedState, undefined, 2) : 'no saved state'}
               </li>
             ))
           }

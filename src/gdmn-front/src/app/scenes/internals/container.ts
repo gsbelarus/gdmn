@@ -10,7 +10,8 @@ export const InternalsContainer = compose<any, any>(
       return {
         erModel: state.gdmnState.erModel,
         recordSet: state.recordSet,
-        rsMeta: state.rsMeta
+        rsMeta: state.rsMeta,
+        viewTabs: state.gdmnState.viewTabs
       }
     }
   ),

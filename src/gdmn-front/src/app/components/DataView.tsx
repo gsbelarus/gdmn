@@ -283,8 +283,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   }
 
   public render() {
-    console.log('data view render');
-
     if (!this.isDataLoaded()) {
       return this.renderLoading();
     }

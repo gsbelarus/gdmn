@@ -11,13 +11,9 @@ import { IViewProps } from './View';
 export const connectView = compose<any, IViewProps>(
   withRouter,
   connect(
-    (state: IState, ownProps: RouteComponentProps<any>) => {
-      console.log('connect view tab');
-
-      return {
-        viewTab: state.gdmnState.viewTabs.find(vt => vt.url === ownProps.match.url)
-      }
-    },
+    (state: IState, ownProps: RouteComponentProps<any>) => ({
+      viewTab: state.gdmnState.viewTabs.find(vt => vt.url === ownProps.match.url)
+    }),
     (dispatch: ThunkDispatch<IState, never, TGdmnActions>) => ({
       addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab))
     })

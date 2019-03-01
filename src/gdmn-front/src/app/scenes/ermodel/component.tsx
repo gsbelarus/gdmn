@@ -18,17 +18,19 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
   }
 
   public componentDidMount() {
-    const { addViewTab, match } = this.props;
+    const { viewTab, addViewTab, match } = this.props;
 
     if (!match || !match.url) {
       throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
-    addViewTab({
-      caption: this.getViewCaption(),
-      url: match.url,
-      rs: ['entities', 'attributes']
-    });
+    if (!viewTab) {
+      addViewTab({
+        caption: this.getViewCaption(),
+        url: match.url,
+        rs: ['entities', 'attributes']
+      });
+    }
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
