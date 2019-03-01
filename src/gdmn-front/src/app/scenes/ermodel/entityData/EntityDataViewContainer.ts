@@ -11,7 +11,6 @@ import {
   createRecordSet,
   finishLoadingData,
   IDataRow,
-  IRSSQLParams,
   RecordSet,
   RecordSetAction,
   startLoadingData,
@@ -105,13 +104,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                       switch (res.payload.status) {
                         case TTaskStatus.SUCCESS: {
                           const fieldDefs = Object.entries(res.payload.result!.aliases)
-                            .map(([fieldAlias, data]) => {
-                              const attr = entity.attributes[data.attribute];
-                              if (!attr) {
-                                throw new Error(`Unknown attribute ${data.attribute}`);
-                              }
-                              return attr2fd(rsMeta.q, fieldAlias, data);
-                            });
+                            .map(([fieldAlias, data]) => attr2fd(rsMeta.q, fieldAlias, data));
 
                           const rs = RecordSet.createWithData(
                             entity.name,
@@ -120,10 +113,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                             false,
                             undefined,
                             rsMeta.q,
-                            {
-                              select: res.payload.result!.info.select as string,
-                              params: res.payload.result!.info.params as IRSSQLParams
-                            }
+                            res.payload.result!.info
                           );
                           dispatch(createRecordSet({name: rs.name, rs}));
 
@@ -146,10 +136,15 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                     });
                   break;
                 }
-                default: {
+                case TTaskStatus.INTERRUPTED:
+                case TTaskStatus.FAILED:
+                case TTaskStatus.SUCCESS:
                   console.log("rs close");
-
                   dispatch(rsMetaActions.deleteRsMeta(entity.name));
+                  break;
+                case TTaskStatus.PAUSED:
+                default: {
+                  throw new Error("Unsupported");
                 }
               }
             });
