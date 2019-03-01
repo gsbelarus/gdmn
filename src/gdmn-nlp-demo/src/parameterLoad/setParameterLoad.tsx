@@ -1,58 +1,73 @@
 import React, { Component } from 'react';
 import { Checkbox, TextField, PrimaryButton } from 'office-ui-fabric-react';
 import './setParameterLoad.css';
+import { load } from '../appAction';
+import { IERModels } from '../ermodel/reducer';
+
+export interface IParameterState {
+  host: string;
+  port: string;
+  isReadFile: boolean;
+};
 
 export interface ISetParameterProps {
   host: string,
   port: string,
   isReadFile: boolean,
-  errorMessage: string,
-  onSetTextHost: (text: string) => void,
-  onSetTextPort: (text: string) => void,
-  onSetReadFile: (check: boolean) => void,
+  ermodel: IERModels,
+  loading: boolean,
   onLoadByParameter: (host: string, port: string, isReadFile: boolean) => void,
-  onParametersLoading: () => void,
+  onParametersLoading: (host: string, port: string, isReadFile: boolean) => void,
+  onSetLoading: (loading: boolean) => void,
 }
 
-export class SetParameterLoad extends Component<ISetParameterProps, {}> {
+export class SetParameterLoad extends Component<ISetParameterProps, IParameterState> {
+  state: IParameterState = {
+    host: this.props.host,
+    port: this.props.port,
+    isReadFile: this.props.isReadFile
+  };
 
   render() {
+
     return (
       <div className='SetParamBox'>
         <TextField
             label="Host"
             style={{maxWidth: '200px'}}
-            value={this.props.host}
-            disabled={this.props.isReadFile}
+            value={this.state.host}
+            disabled={this.state.isReadFile}
             onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              this.props.onSetTextHost(e.target.value);
+              this.setState( {host: e.target.value });
             }}
           />
         <TextField
             label="port"
             style={{maxWidth: '200px'}}
-            value={this.props.port}
-            disabled={this.props.isReadFile}
+            value={this.state.port}
+            disabled={this.state.isReadFile}
             onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              this.props.onSetTextPort(e.target.value);
+              this.setState( {port: e.target.value });
             }}
           />
 
         <Checkbox
           label="Reading from file"
           style={{ maxWidth: '48px' }}
-          checked={this.props.isReadFile}
+          checked={this.state.isReadFile}
+          disabled={this.props.loading}
           onChange={ (_ev: React.FormEvent<HTMLElement>, isChecked: boolean) => {
-            this.props.onSetReadFile(isChecked);
+            this.setState( {isReadFile: isChecked });
           }}
         />
         
         <PrimaryButton
           text="Загрузить"
           style={{ maxWidth: '48px' }}
+          disabled={this.props.loading}
           onClick={ () => {
-            this.props.onLoadByParameter(this.props.host, this.props.port, this.props.isReadFile);
-            this.props.onParametersLoading();
+            this.props.onLoadByParameter(this.state.host, this.state.port, this.state.isReadFile);
+            this.props.onParametersLoading(this.state.host, this.state.port, this.state.isReadFile);
           } }
         />
       </div>

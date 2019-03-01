@@ -12,7 +12,6 @@ export const setSyntaxText = createAction('SYNTAX/SET_SYNTAX_TEXT', resolve => {
 export type SetSyntaxText = typeof setSyntaxText;
 
 let fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] => {
-  console.log(res);
   const keysAliases = Object.keys(res.aliases);
   var result: IFieldDef[] = keysAliases.map((alias) => {
     const eqfa = res.aliases[alias];
@@ -26,8 +25,6 @@ let fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] =>
     const attr = findField.attribute;
     let dataType;
     let size: number | undefined = undefined;
-
-    console.log(alias)
 
     switch(attr.type) {
       case "Blob":

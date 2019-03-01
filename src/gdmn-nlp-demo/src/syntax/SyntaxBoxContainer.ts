@@ -16,9 +16,9 @@ export const SyntaxBoxContainer = connect(
       return {
         ...state.syntax,
         isVisibleQuery: state.ermodel,
-        host: state.param.hostLoad,
-        port: state.param.portLoad,
-        isReadFile: state.param.isReadFileLoad,
+        host: state.param.host,
+        port: state.param.port,
+        isReadFile: state.param.isReadFile,
         commandError: state.ermodel['db'].commandError,
         command: state.ermodel['db'].command
       }

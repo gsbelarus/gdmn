@@ -417,7 +417,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   render() {
     const { editedText, showPhrases, verboseErrors, tokens } = this.state;
-    const { text, onSetText, errorMsg, parserDebug, commandError, command, isVisibleQuery, host, port, onLoadRecordSet } = this.props;
+    const { text, onSetText, errorMsg, parserDebug, commandError, command, isVisibleQuery, host, port, isReadFile, onLoadRecordSet } = this.props;
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -458,7 +458,6 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           onClick={ () => {
             const query = command[0].payload;
             onLoadRecordSet(query, host, port);
-            //isReadFile ? loadRecordSet(query, 'localhost', '3000' ) : loadRecordSet(query, host, port )
           } }
         />
       </div>

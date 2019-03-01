@@ -10,16 +10,15 @@ import { ERModelAction } from '../ermodel/reducer';
 export const SetParameterContainer = connect(
   (state: State) => ({
     ...state.param,
-    ermodel: state.ermodel
+    ermodel: state.ermodel,
+    loading: state.ermodel['db'] ? state.ermodel['db'].loading : true
   }),
   (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>) => ({
-    onSetTextHost: (text: string) => dispatch(actions.setHost(text)),
-    onSetTextPort: (text: string) => dispatch(actions.setPort(text)),
-    onSetReadFile: (check: boolean) => dispatch(actions.setIsReadFile(check)),
     onLoadByParameter: (host: string, port: string, isReadFile: boolean) =>
       isReadFile 
         ? dispatch(load(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db'))
         : dispatch(load(`http://${host}:${port}/ermodel`, 'db')),
-    onParametersLoading: () => dispatch(actions.parametersLoading()),
+    onParametersLoading: (host: string, port: string, isReadFile: boolean) =>
+      dispatch(actions.parametersLoading( {host, port, isReadFile} )),
   })
 )(SetParameterLoad);
