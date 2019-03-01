@@ -1,6 +1,10 @@
 import React from 'react';
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
-import { ICommandBarItemProps, Dialog, DefaultButton, DialogFooter, PrimaryButton, DialogType } from 'office-ui-fabric-react';
+import { ICommandBarItemProps, IModalProps } from 'office-ui-fabric-react';
+import { SQLForm } from '@src/app/components/SQLForm';
+declare module 'office-ui-fabric-react/lib/Modal' {
+  const Modal: React.StatelessComponent<IModalProps>;
+ }
 
 export interface IEntityMatchParams {
   entityName: string
@@ -15,6 +19,10 @@ export interface IEntityDataViewState {
 export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataViewState, IEntityMatchParams> {
   public state: IEntityDataViewState = {
     showSQL: false
+  }
+
+  private onCloseSQL = () => {
+    this.setState({ showSQL: false });
   }
 
   public getDataViewKey() {
@@ -58,47 +66,16 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
     return this.props.match ? this.props.match.params.entityName : '';
   }
 
-  private _closeSQL = () => {
-    this.setState({ showSQL: false });
-  }
-
   public renderModal() {
     const { showSQL } = this.state;
     const { data } = this.props;
 
     if (showSQL && data && data!.rs && data!.rs!.sql) {
       return (
-        <Dialog
-          hidden={!showSQL}
-          onDismiss={this._closeSQL}
-          dialogContentProps={{
-            type: DialogType.close,
-            title: 'SQL'
-          }}
-          modalProps={{
-            titleAriaId: 'showSQLTitleID',
-            subtitleAriaId: 'showSQLSubTitleID',
-            isBlocking: false
-          }}
-        >
-          <pre>
-            {data!.rs!.sql.select}
-          </pre>
-          {
-            data!.rs!.sql.params?
-            <pre>
-              <br />
-              Parameters:
-              <br />
-              {JSON.stringify(data!.rs!.sql.params, undefined, 2)}
-            </pre>
-            :
-            undefined
-          }
-          <DialogFooter>
-            <PrimaryButton onClick={this._closeSQL} text="Close" />
-          </DialogFooter>
-        </Dialog>
+       <SQLForm
+         rs={data!.rs!}
+         onCloseSQL={this.onCloseSQL}
+         />
       );
     }
 
