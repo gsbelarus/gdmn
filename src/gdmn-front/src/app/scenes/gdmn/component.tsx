@@ -15,6 +15,7 @@ import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
+import { InternalsContainer } from '../internals/container';
 
 export type TGdmnViewStateProps = {
   loading: boolean;
@@ -33,7 +34,7 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
 
     if (!match) return null;
 
-    const topAreaHeight = 56 + 32;
+    const topAreaHeight = 56 + 36;
 
     return (
       <>
@@ -50,6 +51,7 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
             <div className="RightSideHeaderPart">
               <span className="BigLogo">
                 <b>
@@ -117,6 +119,14 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
                     <StompDemoViewContainer
                       {...props}
                     />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/internals`}
+                render={props => {
+                  return (
+                    <InternalsContainer {...props} />
                   );
                 }}
               />

@@ -24,6 +24,13 @@ export interface IUICommand {
 
 export const uiCommands: IUICommand[] = [
   {
+    command: 'internals',
+    form: 'mainHeader',
+    group: 'internals',
+    caption: 'Internals',
+    link: `/internals`
+  },
+  {
     command: 'erModel',
     form: 'mainHeader',
     group: 'ermodel',
