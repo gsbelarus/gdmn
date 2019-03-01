@@ -95,13 +95,13 @@ export const recordSetReducer = (
     }
 
     case getType(actions.setRecordSetData): {
-      const { data, masterLink } = action.payload;
-      return newState(rs.setData(data, masterLink));
+      const { data, masterLink, srcEoF } = action.payload;
+      return newState(rs.setData(data, masterLink, srcEoF));
     }
 
     case getType(actions.addRecordSetData): {
-      const { records } = action.payload;
-      return newState(rs.addData(records));
+      const { records, srcEoF } = action.payload;
+      return newState(rs.addData(records, srcEoF));
     }
 
     default:

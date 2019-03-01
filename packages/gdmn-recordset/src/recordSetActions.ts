@@ -25,13 +25,13 @@ export const deleteRecordSet = createAction('RECORDSET/DELETE', resolve => {
 export type DeleteRecordSet = typeof deleteRecordSet;
 
 export const setRecordSetData = createAction('RECORDSET/SET_DATA', resolve => {
-  return (params: WithComponentName<{ data: Data, masterLink?: IMasterLink }>) => resolve(params);
+  return (params: WithComponentName<{ data: Data, masterLink?: IMasterLink, srcEoF?: boolean }>) => resolve(params);
 });
 
 export type SetRecordSetData = typeof setRecordSetData;
 
 export const addRecordSetData = createAction('RECORDSET/ADD_DATA', resolve => {
-  return (params: WithComponentName<{ records: IDataRow[] }>) => resolve(params);
+  return (params: WithComponentName<{ records: IDataRow[], srcEoF?: boolean }>) => resolve(params);
 });
 
 export type AddRecordSetData = typeof addRecordSetData;

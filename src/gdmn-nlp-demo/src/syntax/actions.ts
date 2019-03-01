@@ -67,6 +67,6 @@ let fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] =>
 export const loadRecordSet = (query: EntityQuery, host: string, port: string)  => (dispatch: ThunkDispatch<State, never, RecordSetAction>, _getState: () => State) => {
   fetch(`http://${host}:${port}/data?query=${encodeURIComponent(query.serialize())}`)
   .then(res => res.json())
-  .then(res => RecordSet.createWithData('db', fieldDefs(query, res), List(res.data as IDataRow[]), undefined, query))
+  .then(res => RecordSet.createWithData('db', fieldDefs(query, res), List(res.data as IDataRow[]), true, undefined, query))
   .then(res => dispatch(createRecordSet({ name: res.name, rs: res })))
 }

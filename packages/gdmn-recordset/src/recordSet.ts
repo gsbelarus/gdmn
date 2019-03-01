@@ -55,6 +55,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   fieldDefs: FieldDefs;
   calcFields: TRowCalcFunc<R> | undefined;
   data: Data<R>;
+  srcEoF?: boolean;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
@@ -76,6 +77,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _fieldDefs: FieldDefs;
   private _calcFields: TRowCalcFunc<R> | undefined;
   private _data: Data<R>;
+  private _srcEoF?: boolean;
   private _currentRow: number;
   private _sortFields: SortFields;
   private _allRowsSelected: boolean;
@@ -90,13 +92,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _subject: Subject<RecordSetEventData<R>>;
 
   public loadingStopRowIdx?: number;
-  public srcEoF?: boolean;
 
   private constructor(params: IRecordSetParams<R>) {
     const {
       name,
       eq,
       sql,
+      srcEoF,
       fieldDefs,
       calcFields,
       data,
@@ -124,6 +126,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._fieldDefs = fieldDefs;
     this._calcFields = calcFields;
     this._data = data;
+    this._srcEoF = srcEoF;
     this._currentRow = currentRow < 0 ? 0 : currentRow;
     this._sortFields = sortFields;
     this._allRowsSelected = allRowsSelected;
@@ -146,6 +149,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     name: string,
     fieldDefs: FieldDefs,
     data: Data<R>,
+    srcEoF: boolean = true,
     masterLink?: IMasterLink,
     eq?: EntityQuery,
     sql?: IRSSQLSelect
@@ -166,6 +170,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           return res;
         },
         data,
+        srcEoF,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
@@ -181,6 +186,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         fieldDefs,
         calcFields: undefined,
         data,
+        srcEoF,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
@@ -199,6 +205,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       fieldDefs: this._fieldDefs,
       calcFields: this._calcFields,
       data: this._data,
+      srcEoF: this._srcEoF,
       currentRow: this._currentRow,
       sortFields: this._sortFields,
       allRowsSelected: this._allRowsSelected,
@@ -224,6 +231,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get sql() {
     return this._sql;
+  }
+
+  get srcEoF() {
+    return this._srcEoF;
   }
 
   get size() {
@@ -1348,10 +1359,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return [{ str: s }];
   }
 
-  public setData(data: Data<R>, masterLink?: IMasterLink): RecordSet<R> {
+  public setData(data: Data<R>, masterLink?: IMasterLink, srcEoF: boolean = true): RecordSet<R> {
     const rs = new RecordSet<R>({
       ...this.params,
       data,
+      srcEoF,
       currentRow: 0,
       sortFields: [],
       allRowsSelected: false,
@@ -1372,12 +1384,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return rs;
   }
 
-  // todo: test
-  public addData(records: R[]): RecordSet<R> {
+  public addData(records: R[], srcEoF?: boolean): RecordSet<R> {
+    if (this._srcEoF) {
+      throw new Error("End of file");
+    }
 
     const rs = new RecordSet<R>({
       ...this.params,
       data: this._data.push(...records),
+      srcEoF,
       // currentRow: 0,
       sortFields: [],
       // allRowsSelected: false,

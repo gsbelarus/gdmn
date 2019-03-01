@@ -101,12 +101,20 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                     })
                   );
 
-                  mergeProps.loadMoreRsData({ startIndex: 0, stopIndex: 100 }); // todo calc stopIndex
+                  mergeProps.loadMoreRsData({ startIndex: 0, stopIndex: 100 });
                 } else {
                   console.log('rs close');
 
-                  if (getState().recordSet[entity.name]) {
-                    getState().recordSet[entity.name].srcEoF = true;
+                  const recordSet = getState().recordSet[entity.name];
+                  if (recordSet) {
+                    dispatch(
+                      addRecordSetData({
+                        name: recordSet.name,
+                        records: [],
+                        srcEoF: true
+                      })
+                    );
+                    // getState().recordSet[entity.name].srcEoF = true;
                   }
                   dispatch(rsMetaActions.deleteRsMeta(entity.name));
                 }
@@ -183,6 +191,7 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
                   entity.name,
                   fieldDefs,
                   List(res.payload.result.data as IDataRow[]),
+                  false,
                   undefined,
                   rsMeta.q,
                   {

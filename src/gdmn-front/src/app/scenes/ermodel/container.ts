@@ -131,6 +131,7 @@ export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
                     } as IDataRow)
                 )
               ),
+              true,
               {
                 masterName: entitiesRS.name,
                 values: [
