@@ -30,11 +30,17 @@ export const setRecordSetData = createAction('RECORDSET/SET_DATA', resolve => {
 
 export type SetRecordSetData = typeof setRecordSetData;
 
-export const addRecordSetData = createAction('RECORDSET/ADD_DATA', resolve => {
+export const startLoadingData = createAction('RECORDSET/START_LOADING_DATA', resolve => {
+  return (params: WithComponentName) => resolve(params);
+});
+
+export type StartLoadingData = typeof startLoadingData;
+
+export const finishLoadingData = createAction('RECORDSET/FINISH_LOADING_DATA', resolve => {
   return (params: WithComponentName<{ records: IDataRow[], srcEoF?: boolean }>) => resolve(params);
 });
 
-export type AddRecordSetData = typeof addRecordSetData;
+export type FinishLoadingData = typeof finishLoadingData;
 
 export const sortRecordSet = createAction('RECORDSET/SORT', resolve => {
   return (params: WithComponentName<{ sortFields: SortFields }>) => resolve(params);

@@ -99,9 +99,13 @@ export const recordSetReducer = (
       return newState(rs.setData(data, masterLink, srcEoF));
     }
 
-    case getType(actions.addRecordSetData): {
+    case getType(actions.startLoadingData): {
+      return newState(rs.startLoadingData());
+    }
+
+    case getType(actions.finishLoadingData): {
       const { records, srcEoF } = action.payload;
-      return newState(rs.addData(records, srcEoF));
+      return newState(rs.finishLoadingData(records, srcEoF));
     }
 
     default:

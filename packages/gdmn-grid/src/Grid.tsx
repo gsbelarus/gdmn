@@ -285,8 +285,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       // rowCount can be greater than rs.size because we need in
       // drawing fake rows down to full height of grid's body
       const rowCount = Math.max(dataRowCount, Math.ceil(bodyHeight / rowHeight));
-      const scrollHeight = rowCount * rowHeight; 
-      const currentRow = rs.currentRow; 
+      const scrollHeight = rowCount * rowHeight;
+      const currentRow = rs.currentRow;
 
       const bodyWidth = width - leftSideColumnsWidth - rightSideWidth;
       const bodyColumnsWidth = rightSideColumns ? bodyWidth : bodyWidth <= sbSize ? 0 : bodyWidth - sbSize;
@@ -633,7 +633,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           rowStopIndex
         }: SectionRenderedParams) => {
           const startIndex = rowStartIndex; // * columnCount + columnStartIndex;
-          const stopIndex = rowStopIndex; //* columnCount + columnStopIndex;
+          const stopIndex = rowStopIndex; // * columnCount + columnStopIndex;
 
           infiniteLoaderChildProps.onRowsRendered({
             startIndex,
@@ -647,14 +647,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             onWheel={
               !rightSideColumns
                 ? undefined
-                : e => {
-                    onScrollWheel(e);
-                  }
+                : e => onScrollWheel(e)
             }
           >
             <InfiniteLoader
-              isRowLoaded={this._isRowLoadingOrLoaded}
-              loadMoreRows={loadMoreRsData!}
+              isRowLoaded={this._isRowLoaded}
+              loadMoreRows={rs.loadingData || rs.srcEoF ? Promise.resolve : loadMoreRsData!}
               rowCount={rs.size + infiniteLoadMinimumBatchSize}
               minimumBatchSize={infiniteLoadMinimumBatchSize}
               threshold={infiniteLoadThreshold}
@@ -1090,15 +1088,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       rightSideColumns
     } = this.props;
     const currentRow = rs.currentRow;
-    const adjustedColumnIndex = adjustFunc(columnIndex); 
+    const adjustedColumnIndex = adjustFunc(columnIndex);
 
-    const isFakeRow = rowIndex >= rs.size; 
+    const isFakeRow = rowIndex >= rs.size;
 
     const rsEmpty = {data: null, type: 0, group: null};
     const rowData = isFakeRow ? rsEmpty : rs.get(rowIndex);
     const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
-    const footer = rowData.type === TRowType.Footer; 
-    
+    const footer = rowData.type === TRowType.Footer;
+
     const backgroundClass = fixed
       ? styles.FixedBackground
       : currentRow === rowIndex
@@ -1144,7 +1142,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               ? styles.DataCellRight
               : fld.alignment === 'CENTER'
               ? styles.DataCellCenter
-              : 'styles.DataCellLeft';      
+              : 'styles.DataCellLeft';
           return ((rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex]))) ? (
             <span key={fldid} className={cellClass}>
               {rs.splitMatched(rowIndex, fld.fieldName).map((s, idx) =>
@@ -1288,7 +1286,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       : columnWidth;
   };
 
-  private _isRowLoadingOrLoaded = ({ index }: Index) => {
-    return this.props.rs.isRowLoaded(index) || this.props.rs.isRowLoading(index);
+  private _isRowLoaded = ({ index }: Index) => {
+    return this.props.rs.srcEoF || index < this.props.rs.size;
   };
 }

@@ -56,6 +56,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   calcFields: TRowCalcFunc<R> | undefined;
   data: Data<R>;
   srcEoF?: boolean;
+  loadingData?: boolean;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
@@ -78,6 +79,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _calcFields: TRowCalcFunc<R> | undefined;
   private _data: Data<R>;
   private _srcEoF?: boolean;
+  private _loadingData?: boolean;
   private _currentRow: number;
   private _sortFields: SortFields;
   private _allRowsSelected: boolean;
@@ -91,17 +93,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _masterLink?: IMasterLink;
   private _subject: Subject<RecordSetEventData<R>>;
 
-  public loadingStopRowIdx?: number;
-
   private constructor(params: IRecordSetParams<R>) {
     const {
       name,
       eq,
       sql,
-      srcEoF,
       fieldDefs,
       calcFields,
       data,
+      srcEoF,
+      loadingData,
       currentRow,
       sortFields,
       allRowsSelected,
@@ -127,6 +128,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._calcFields = calcFields;
     this._data = data;
     this._srcEoF = srcEoF;
+    this._loadingData = loadingData;
     this._currentRow = currentRow < 0 ? 0 : currentRow;
     this._sortFields = sortFields;
     this._allRowsSelected = allRowsSelected;
@@ -235,6 +237,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get srcEoF() {
     return this._srcEoF;
+  }
+
+  get loadingData() {
+    return this._loadingData;
   }
 
   get size() {
@@ -1379,24 +1385,37 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     this._subject.next({ event: "AfterScroll", rs });
 
-    this.loadingStopRowIdx = undefined; // todo
-
     return rs;
   }
 
-  public addData(records: R[], srcEoF?: boolean): RecordSet<R> {
+  public startLoadingData(): RecordSet<R> {
     if (this._srcEoF) {
       throw new Error("End of file");
     }
+    if (this._loadingData) {
+      throw new Error("RecordSet already in loading");
+    }
 
-    const rs = new RecordSet<R>({
+    return new RecordSet<R>({
+      ...this.params,
+      loadingData: true
+    });
+  }
+
+  public finishLoadingData(records: R[], srcEoF?: boolean): RecordSet<R> {
+    if (this._srcEoF) {
+      throw new Error("End of file");
+    }
+    if (!this._loadingData) {
+      throw new Error("RecordSet should be in loading");
+    }
+
+    return new RecordSet<R>({
       ...this.params,
       data: this._data.push(...records),
       srcEoF,
-      // currentRow: 0,
+      loadingData: false,
       sortFields: [],
-      // allRowsSelected: false,
-      // selectedRows: [],
       filter: undefined,
       savedData: undefined,
       searchStr: undefined,
@@ -1404,24 +1423,5 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       groups: undefined,
       aggregates: undefined
     });
-
-    this._subject.next({ event: "AfterScroll", rs });
-
-    if (this.loadingStopRowIdx !== undefined && this.loadingStopRowIdx < rs.size) {
-      this.loadingStopRowIdx = undefined;
-    }
-
-    return rs;
-  }
-
-  public isRowLoading(rowIdx: number): boolean {
-    if (this.loadingStopRowIdx === undefined) return false;
-
-    return !this.isRowLoaded(rowIdx) && rowIdx <= this.loadingStopRowIdx;
-  }
-
-  // todo: учесть группировку
-  public isRowLoaded(rowIdx: number): boolean {
-    return rowIdx < this._data.size;
   }
 }
