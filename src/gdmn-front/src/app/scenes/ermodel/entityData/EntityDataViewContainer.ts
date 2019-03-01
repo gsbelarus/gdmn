@@ -155,16 +155,16 @@ export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityM
             });
         }),
 
-        detachRs: () => dispatch((dispatch, getState) => {
-          if (!stateProps.data || !stateProps.data.rs) return;
-
-          // dispatch(deleteRecordSet({ name: stateProps.data.rs.name }));
+        detachRs: () => dispatch(async (dispatch, getState) => {
+          // const entityName = ownProps.match ? ownProps.match.params.entityName : "";
+          //
+          // const rsMeta = getState().rsMeta[entityName];
+          // dispatch(deleteRecordSet({name: stateProps.data.rs.name}));
           //
           // if (rsMeta) {
-          //   apiService.interruptTask({
+          //   await apiService.interruptTask({
           //     taskKey: rsMeta.taskKey
           //   });
-          //   dispatch(rsMetaActions.deleteRsMeta(stateProps.data.rs.name));
           // }
         }),
 
