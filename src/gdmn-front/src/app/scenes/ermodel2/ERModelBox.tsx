@@ -83,6 +83,10 @@ export class ERModelBox extends View<IERModelBoxProps, IERModelBoxState> {
     });
   }
 
+  public getViewHeaderHeight() {
+    return 120;
+  }
+
   render () {
     const { erModel } = this.props;
 
@@ -116,72 +120,70 @@ export class ERModelBox extends View<IERModelBoxProps, IERModelBoxState> {
     );
 
     return this.renderWide(
-      <div>
-        <div className="ERModelSearch">
+      <div className="ERModelSearch">
+        <TextField
+          label="Search for:"
+          style={{maxWidth: '200px'}}
+          value={text}
+          onChange={ (_event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+            if (newValue !== undefined) {
+              this.setState({ text: newValue });
+            }
+          }}
+        />
+        <Checkbox label="Entity" checked={searchInEntity} onChange={ (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
+            this.setState({ searchInEntity: !!isChecked })
+          }}
+        />
+        <Checkbox label="Attribute" checked={searchInAttribute} onChange={ (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
+            this.setState({ searchInAttribute: !!isChecked })
+          }}
+        />
+        <ChoiceGroup
+          selectedKey={viewMode}
+          options={[
+            {
+              key: 'S',
+              text: 'Small '
+            } as IChoiceGroupOption,
+            {
+              key: 'L',
+              text: 'Large '
+            }
+          ]}
+          onChange={(ev?: React.FormEvent<HTMLElement>, option?: IChoiceGroupOption): void => {
+            if (option && option.key === 'S') {
+              this.setState({ viewMode: 'S' });
+            } else {
+              this.setState({ viewMode: 'L' });
+            }
+          }}
+        />
+        {
+          erModel &&
           <TextField
-            label="Search for:"
-            style={{maxWidth: '200px'}}
-            value={text}
-            onChange={ (_event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+            label="Show max:"
+            style={{maxWidth: '60px'}}
+            value={maxCount.toString()}
+            onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
               if (newValue !== undefined) {
-                this.setState({ text: newValue });
-              }
-            }}
-          />
-          <Checkbox label="Entity" checked={searchInEntity} onChange={ (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
-              this.setState({ searchInEntity: !!isChecked })
-            }}
-          />
-          <Checkbox label="Attribute" checked={searchInAttribute} onChange={ (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
-              this.setState({ searchInAttribute: !!isChecked })
-            }}
-          />
-          <ChoiceGroup
-            selectedKey={viewMode}
-            options={[
-              {
-                key: 'S',
-                text: 'Small '
-              } as IChoiceGroupOption,
-              {
-                key: 'L',
-                text: 'Large '
-              }
-            ]}
-            onChange={(ev?: React.FormEvent<HTMLElement>, option?: IChoiceGroupOption): void => {
-              if (option && option.key === 'S') {
-                this.setState({ viewMode: 'S' });
-              } else {
-                this.setState({ viewMode: 'L' });
-              }
-            }}
-          />
-          {
-            erModel &&
-            <TextField
-              label="Show max:"
-              style={{maxWidth: '60px'}}
-              value={maxCount.toString()}
-              onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-                if (newValue !== undefined) {
-                  if (parseInt(newValue) > 0) {
-                    this.setState({ maxCount: parseInt(newValue) });
-                  }
+                if (parseInt(newValue) > 0) {
+                  this.setState({ maxCount: parseInt(newValue) });
                 }
-              }}
-            />
-          }
-          <PrimaryButton
-            text="Filter"
-            disabled={filtering}
-            onClick={ () => this.setState({ foundEntities: [], filtering: true })}
+              }
+            }}
           />
-          {entities && entities.length ? <span>Shown: {entities.length}</span> : undefined}
-          {erModel ? <span>ER Model: {Object.entries(erModel.entities).length}</span> : undefined}
-        </div>
-        <div className="ERModel">
-          {entities}
-        </div>
+        }
+        <PrimaryButton
+          text="Filter"
+          disabled={filtering}
+          onClick={ () => this.setState({ foundEntities: [], filtering: true })}
+        />
+        {entities && entities.length ? <span>Shown: {entities.length}</span> : undefined}
+        {erModel ? <span>ER Model: {Object.entries(erModel.entities).length}</span> : undefined}
+      </div>,
+      <div className="ERModel">
+        {entities}
       </div>
     );
   }

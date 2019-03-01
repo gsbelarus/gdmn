@@ -45,25 +45,27 @@ const Root: FC<IRootProps> = ({
   <ErrBoundary>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <Fragment>
-          <Fabric style={{ height: '100%' }}>
-            <Customizer {...FluentCustomizations}>
-              { /*<ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>*/ }
-                <BrowserRouter>{routes}</BrowserRouter>
-                <Sticky stickyPosition={StickyPositionType.Footer}>
-                  <ErrorMsgBarContainer />
-                  <LostConnectWarnMsgContainer />
-                  <footer style={{ backgroundColor: 'lightgray', padding: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'stretch' }}>
-                      <StompLogPanelContainer />
-                      <ConnectBtnContainer />
-                    </div>
-                  </footer>
-                </Sticky>
-              { /*</ScrollablePane>*/ }
-            </Customizer>
-          </Fabric>
-        </Fragment>
+        <Fabric>
+          <Customizer {...FluentCustomizations}>
+            { /*<ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>*/ }
+              <BrowserRouter>{routes}</BrowserRouter>
+              <Sticky stickyPosition={StickyPositionType.Footer}>
+                <ErrorMsgBarContainer />
+                <LostConnectWarnMsgContainer />
+                {
+                /*
+                <footer style={{ backgroundColor: 'lightgray', padding: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'stretch' }}>
+                    <StompLogPanelContainer />
+                    <ConnectBtnContainer />
+                  </div>
+                </footer>
+                */
+                }
+              </Sticky>
+            { /*</ScrollablePane>*/ }
+          </Customizer>
+        </Fabric>
       </PersistGate>
     </Provider>
   </ErrBoundary>

@@ -13,6 +13,10 @@ export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Com
     return 'The View...';
   }
 
+  public getViewHeaderHeight() {
+    return 42;
+  }
+
   public renderOneColumn(content: JSX.Element): JSX.Element {
     return (
       <div className="ViewOneColumn">
@@ -22,11 +26,17 @@ export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Com
     );
   }
 
-  public renderWide(content: JSX.Element): JSX.Element {
+  public renderWide(header: JSX.Element | undefined, content: JSX.Element): JSX.Element {
+    const viewDataHeight = `calc(100% - ${this.getViewHeaderHeight().toString()}px)`;
     return (
       <div className="ViewWide">
-        {this.renderCommandBar()}
-        {content}
+        <div className="ViewHeader" style={{ height: this.getViewHeaderHeight() }}>
+          {this.renderCommandBar()}
+          {header}
+        </div>
+        <div className="ViewData" style={{ height: viewDataHeight }}>
+          {content}
+        </div>
       </div>
     );
   }

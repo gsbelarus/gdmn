@@ -5,14 +5,12 @@ import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
-import { Sticky, StickyPositionType } from 'office-ui-fabric-react';
 import { Dispatch } from 'redux';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
-import styles from './styles.css';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
@@ -28,22 +26,18 @@ export type TGdmnViewProps = TGdmnViewStateProps & { dispatch: Dispatch<any> }; 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
-@CSSModules(styles, { allowMultiple: true })
+//@CSSModules(styles, { allowMultiple: true })
 export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
   public render() {
-    const {
-      match,
-      history,
-      dispatch,
-      loading,
-      location
-    } = this.props;
+    const { match, history, dispatch, loading, location } = this.props;
 
     if (!match) return null;
 
+    const topAreaHeight = 56 + 32;
+
     return (
-      <div className="App" style={{ height: 'calc(100% - 64px)', overflowY: 'hidden' }}>
-        <Sticky stickyPosition={StickyPositionType.Header}>
+      <>
+        <div className="TopArea" style={{ height: topAreaHeight }}>
           <div className="Header">
             <Link to={`${match.path}`}>
               <Icon iconName="Home" className="RoundIcon" />
@@ -94,15 +88,18 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
               />
             </div>
           </div>
-          <ProgressIndicator
-            styles={{ itemProgress: { padding: 0, visibility: loading ? 'visible' : 'hidden' } }}
-            barHeight={4}
-            description={this.props.loadingMessage}
-          />
-        </Sticky>
-        <ViewTabsContainer history={history} match={match} location={location} />
-        {/*<ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>*/}
-        <main styleName="WorkArea" style={{ padding: 16 }}>
+          {
+            loading ?
+              <ProgressIndicator
+                styles={{ itemProgress: { padding: 0 } }}
+                barHeight={4}
+                description={this.props.loadingMessage}
+              />
+            : undefined
+          }
+          <ViewTabsContainer history={history} match={match} location={location} />
+        </div>
+        <main className="WorkArea" style={{ paddingTop: topAreaHeight, marginTop: -topAreaHeight }}>
           <ErrBoundary>
             <Switch>
               <Route
@@ -127,9 +124,7 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
                 path={`${match.path}/er-model`}
                 render={props => {
                   return (
-                    <div style={{ margin: -16 }}>
-                      <ERModelViewContainer {...props} />
-                    </div>
+                    <ERModelViewContainer {...props} />
                   );
                 }}
               />
@@ -137,9 +132,7 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
                 path={`${match.path}/er-model2`}
                 render={props => {
                   return (
-                    <div style={{ margin: -16 }}>
-                      <ERModelBoxContainer {...props} />
-                    </div>
+                    <ERModelBoxContainer {...props} />
                   );
                 }}
               />
@@ -147,20 +140,16 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
                 exact={true}
                 path={`${match.path}/entity/:entityName`}
                 render={props => (
-                  <div style={{ margin: -16 }}>
-                    <EntityDataViewContainer
-                      {...props}
-                    />
-                  </div>
+                  <EntityDataViewContainer
+                    {...props}
+                  />
                 )}
               />
               {
               <Route
                 path={`${match.path}/entity/:entityName/edit/:id`}
                 render={props => (
-                  <div style={{ margin: -16 }}>
-                    <DlgViewContainer {...props} />
-                  </div>
+                  <DlgViewContainer {...props} />
                 )}
               />
                 /*
@@ -182,8 +171,7 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
             </Switch>
           </ErrBoundary>
         </main>
-        {/*</ScrollablePane>*/}
-      </div>
+      </>
     );
   }
 }

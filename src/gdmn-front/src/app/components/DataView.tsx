@@ -183,7 +183,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     const masterGridName = masterRS.name;
     const detailGridName = detailRS.name;
 
-    return this.renderWide(
+    return this.renderWide(undefined,
       <div className="ViewGridPlacement">
         {this.renderModal()}
         <GDMNGrid
@@ -250,7 +250,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     const masterRS = data!.rs;
     const masterGridName = masterRS.name;
 
-    return this.renderWide(
+    return this.renderWide(undefined,
       <div className="ViewGridPlacement">
         {this.renderModal()}
         <GDMNGrid

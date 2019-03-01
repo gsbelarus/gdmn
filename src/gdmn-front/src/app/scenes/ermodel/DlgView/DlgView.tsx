@@ -163,7 +163,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
       return this.renderLoading();
     }
 
-    return this.renderWide(
+    return this.renderWide(undefined,
       <div className="dlgView">
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>

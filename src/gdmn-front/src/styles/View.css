@@ -27,11 +27,25 @@
 
 .ViewWide {
   width: 100%;
+  height: 100%;
+}
+
+.ViewHeader {
+  width: 100%;
+}
+
+.ViewData {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
 }
 
 .ViewGridPlacement {
   width: 100%;
-  height: calc(100vh - 200px);
+  height: 100%;
   display: flex;
   flex-direction: row;
 }

@@ -31,44 +31,35 @@ a:link {
   text-decoration: none;
 }
 
-b,
-strong {
-  font-weight: 500;
-}
-
-html,
-body,
-.react-root {
-  height: 100%; /*100vh*/
-}
-
 body {
   font-size: 14px;
-  display: flex;
-  flex-direction: column;
   font-family: 'Segoe UI',SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-i {
-  font-style: initial;
+.clearfix::before,
+.clearfix::after {
+  content: " ";
+  display: table;
 }
 
-.dropzone {
-  width: 100%;
-  background-color: rgb(241, 243, 244);
-  cursor: pointer;
+.clearfix::after {
+  clear: both;
 }
 
-.dropzone:hover {
-  background-color: var(--palette-action-hover);
+.flex {
+  display: flex;
+  flex-flow: column wrap;
 }
 
-.dropzone-active {
-  background-color: inherit;
+:global .row-flex {
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-flow: row wrap;
+  flex-flow: row wrap;
 }
+

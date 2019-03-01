@@ -1,5 +1,7 @@
-.App {
-  font-size: 14px;
+.TopArea {
+  position: relative;
+  width: 100%;
+  z-index: 1000;
 }
 
 .Header {
@@ -214,4 +216,13 @@
   flex-direction: column;
   padding: 20px 4px 4px 4px;
   border: 1px solid maroon;
+}
+
+.WorkArea {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  backface-visibility: hidden;
+  will-change: overflow;
 }
