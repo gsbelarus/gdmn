@@ -26,15 +26,10 @@ interface IRootProps {
   readonly persistor: Persistor;
   readonly routes: ReactNode;
   readonly renderStompLogPanelContainer: ReactType;
-  readonly renderLostConnectWarnMsgContainer: ReactType;
   readonly renderConnectBtnContainer: ReactType;
 }
 
-const Root: FC<IRootProps> = ({
-  store,
-  persistor,
-  routes,
-  renderLostConnectWarnMsgContainer: LostConnectWarnMsgContainer}) => (
+const Root: FC<IRootProps> = ({ store, persistor, routes, }) => (
   <ErrBoundary>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -42,7 +37,6 @@ const Root: FC<IRootProps> = ({
           <Customizer {...FluentCustomizations}>
             <BrowserRouter>{routes}</BrowserRouter>
             <Sticky stickyPosition={StickyPositionType.Footer}>
-              <LostConnectWarnMsgContainer />
               {
               /*
               <footer style={{ backgroundColor: 'lightgray', padding: 16 }}>

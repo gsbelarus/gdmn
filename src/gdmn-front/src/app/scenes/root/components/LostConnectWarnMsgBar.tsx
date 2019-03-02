@@ -1,15 +1,14 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import { MessageBar, MessageBarButton, MessageBarType } from 'office-ui-fabric-react';
 
-interface ILostConnectWarnMsgBarProps {
-  opened: boolean;
+export interface ILostConnectWarnMsgBarProps {
   onDismiss: () => void;
   onYesAction: () => void;
 }
 
-class LostConnectWarnMsgBar extends Component<ILostConnectWarnMsgBarProps> {
+export class LostConnectWarnMsgBar extends PureComponent<ILostConnectWarnMsgBarProps> {
   public render() {
-    return this.props.opened ? (
+    return (
       <MessageBar
         styles={{
           root: {
@@ -39,8 +38,7 @@ class LostConnectWarnMsgBar extends Component<ILostConnectWarnMsgBarProps> {
       >
         <span>Unable to connect to server. Abort connection attempts? </span>
       </MessageBar>
-    ) : null;
+    );
   }
 }
 
-export { LostConnectWarnMsgBar, ILostConnectWarnMsgBarProps };

@@ -21,7 +21,7 @@ export const ViewTabsContainer = connect(
     ...dispatchProps,
     onClose: async (vt: IViewTab) => {
       const { history, location } = ownProps;
-      const { viewTabs, rsMeta } = stateProps;
+      const { viewTabs, rsMeta, recordSet } = stateProps;
       const { dispatch } = dispatchProps;
 
       const foundIdx = viewTabs.findIndex( t => t === vt );
@@ -54,7 +54,7 @@ export const ViewTabsContainer = connect(
           )
         ))
         .then(
-          () => vt.rs!.forEach( name => dispatch(deleteRecordSet({ name })) )
+          () => vt.rs!.filter( name => !!recordSet[name] ).forEach( name => dispatch(deleteRecordSet({ name })) )
         );
       }
     }

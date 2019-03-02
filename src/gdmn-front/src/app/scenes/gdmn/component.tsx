@@ -17,11 +17,13 @@ import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
+import { LostConnectWarnMsgBar } from '../root/components/LostConnectWarnMsgBar';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
   loadingMessage?: string;
   errorMessage?: string;
+  lostConnectWarnOpened: boolean;
   dispatch: Dispatch<any>;
 };
 
@@ -31,11 +33,11 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 //@CSSModules(styles, { allowMultiple: true })
 export class GdmnView extends Component<IGdmnViewProps, {}> {
   public render() {
-    const { match, history, dispatch, loading, location, errorMessage } = this.props;
+    const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened } = this.props;
 
     if (!match) return null;
 
-    const topAreaHeight = 56 + 36 + (errorMessage ? 48 : 0);
+    const topAreaHeight = 56 + 36 + (errorMessage ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
 
     return (
       <>
@@ -110,6 +112,14 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               >
                 {errorMessage}
               </MessageBar>
+            : undefined
+          }
+          {
+            lostConnectWarnOpened ?
+              <LostConnectWarnMsgBar
+                onDismiss={ () => dispatch(rootActions.setLostConnectWarnOpened(false)) }
+                onYesAction={ () => dispatch(rootActions.abortNetReconnect()) }
+              />
             : undefined
           }
           <ViewTabsContainer history={history} match={match} location={location} />
