@@ -1,9 +1,7 @@
 import { getType } from 'typesafe-actions';
-
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
-import { IStompPanelStateProps } from '@src/app/scenes/root/components/StompLogPanel';
 
-interface IRootState extends IStompPanelStateProps {
+export interface IRootState {
   // refererPath?: string;
   errorMsgBarText?: string;
   logItems: { message: string }[];
@@ -18,7 +16,7 @@ const initialState: IRootState = {
   // disconnectedMode: false
 };
 
-function reducer(state: IRootState = initialState, action: TRootActions) {
+export function reducer(state: IRootState = initialState, action: TRootActions) {
   switch (action.type) {
     // case getType(rootActions.onAccessDenied):
     // case getType(rootActions.onNotAuthorizedAccess): {
@@ -59,4 +57,3 @@ function reducer(state: IRootState = initialState, action: TRootActions) {
   }
 }
 
-export { reducer, IRootState };

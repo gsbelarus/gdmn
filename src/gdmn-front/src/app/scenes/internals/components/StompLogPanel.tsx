@@ -8,14 +8,15 @@ import {
   SelectionMode
 } from 'office-ui-fabric-react';
 
-interface IStompPanelStateProps {
+export interface IStompPanelStateProps {
   logItems: { message: string }[];
 }
+
 interface IStompLogPanelState {
   stompLogOpened: boolean;
 }
 
-class StompLogPanel extends PureComponent<IStompPanelStateProps, IStompLogPanelState> {
+export class StompLogPanel extends PureComponent<IStompPanelStateProps, IStompLogPanelState> {
   public static columns = [
     {
       key: 'message',
@@ -72,5 +73,3 @@ class StompLogPanel extends PureComponent<IStompPanelStateProps, IStompLogPanelS
     );
   }
 }
-
-export { StompLogPanel, IStompPanelStateProps };
