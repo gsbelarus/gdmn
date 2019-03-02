@@ -47,7 +47,6 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         ...dispatchProps,
 
         attachRs: (mutex?: Semaphore) => dispatch((dispatch, getState) => {
-          console.log("createRs");
           // if (!mutex.permits) return;
 
           const erModel = getState().gdmnState.erModel;
@@ -139,7 +138,6 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                 case TTaskStatus.INTERRUPTED:
                 case TTaskStatus.FAILED:
                 case TTaskStatus.SUCCESS:
-                  console.log("rs close");
                   dispatch(rsMetaActions.deleteRsMeta(entity.name));
                   break;
                 case TTaskStatus.PAUSED:
@@ -148,18 +146,6 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                 }
               }
             });
-        }),
-
-        detachRs: () => dispatch(async (dispatch, getState) => {
-          // const entityName = ownProps.match ? ownProps.match.params.entityName : "";
-          //
-          // const rsMeta = getState().rsMeta[entityName];
-          // if (rsMeta) {
-          //   await apiService.interruptTask({
-          //     taskKey: rsMeta.taskKey
-          //   });
-          // }
-          // dispatch(deleteRecordSet({name: stateProps.data.rs.name}));
         }),
 
         loadMoreRsData: async ({startIndex, stopIndex}: IndexRange) => {
@@ -179,14 +165,11 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
 
           const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
 
-          console.log("startLoadingData", stopIndex - fetchRecordCount, stopIndex, rsMeta);
-
           dispatch(startLoadingData({name: stateProps.data.rs.name}));
           const res = await apiService.fetchQuery({
             rowsCount: fetchRecordCount,
             taskKey: rsMeta.taskKey
           });
-          console.log("finishLoadingData", res);
           switch (res.payload.status) {
             case TTaskStatus.SUCCESS: {
               dispatch(

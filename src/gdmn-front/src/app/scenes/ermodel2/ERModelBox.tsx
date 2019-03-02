@@ -84,7 +84,7 @@ export class ERModelBox extends View<IERModelBoxProps, IERModelBoxState> {
   }
 
   public getViewHeaderHeight() {
-    return 120;
+    return 84;
   }
 
   render () {

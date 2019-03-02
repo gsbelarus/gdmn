@@ -34,7 +34,7 @@ export class Internals extends View<IInternalsProps, {}> {
           <ol>
           {
             Object.entries(recordSet).map( ([name, rs]) => (
-              <li>
+              <li key={name}>
                 {name} -- {rs.size} records, {rs.fieldDefs.length} fields, srcEoF: {rs.srcEoF ? 'true' : 'false'}
               </li>
             ))
@@ -46,7 +46,7 @@ export class Internals extends View<IInternalsProps, {}> {
           <ol>
           {
             viewTabs.map( vt => (
-              <li>
+              <li key={vt.url}>
                 {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join() : 'no recordsets'}, {vt.savedState ? JSON.stringify(vt.savedState, undefined, 2) : 'no saved state'}
               </li>
             ))
@@ -60,7 +60,7 @@ export class Internals extends View<IInternalsProps, {}> {
             {
               Object.entries(rsMeta).map( ([name, rsm]) => (
                 rsm ?
-                  <li>
+                  <li key={name}>
                     {name} -- taskKey: {rsm.taskKey ? rsm.taskKey : undefined}, query: {rsm.q ? JSON.stringify(rsm.q.inspect(), undefined, 2) : 'undefined'}
                   </li>
                 :
