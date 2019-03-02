@@ -5,10 +5,12 @@ import { IViewTab } from '@src/app/scenes/gdmn/types';
 import { ViewTab } from './ViewTab';
 import { RouteComponentProps } from 'react-router-dom';
 import { RecordSetReducerState } from 'gdmn-recordset';
+import { IRsMetaState } from '@src/app/store/reducer';
 
 export interface IViewTabsProps {
   viewTabs: IViewTab[];
   recordSet: RecordSetReducerState;
+  rsMeta: IRsMetaState;
   onClose: (vt: IViewTab) => void;
 }
 
