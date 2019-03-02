@@ -11,8 +11,6 @@ import { Persistor } from 'redux-persist/lib/types';
 import {
   Customizer,
   Fabric,
-  ScrollablePane,
-  ScrollbarVisibility,
   Sticky,
   StickyPositionType
 } from 'office-ui-fabric-react';
@@ -27,7 +25,6 @@ interface IRootProps {
   readonly store: Store;
   readonly persistor: Persistor;
   readonly routes: ReactNode;
-  readonly renderErrorMsgBarContainer: ReactType;
   readonly renderStompLogPanelContainer: ReactType;
   readonly renderLostConnectWarnMsgContainer: ReactType;
   readonly renderConnectBtnContainer: ReactType;
@@ -37,11 +34,7 @@ const Root: FC<IRootProps> = ({
   store,
   persistor,
   routes,
-  renderLostConnectWarnMsgContainer: LostConnectWarnMsgContainer,
-  renderErrorMsgBarContainer: ErrorMsgBarContainer,
-  renderStompLogPanelContainer: StompLogPanelContainer,
-  renderConnectBtnContainer: ConnectBtnContainer
-}) => (
+  renderLostConnectWarnMsgContainer: LostConnectWarnMsgContainer}) => (
   <ErrBoundary>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -49,7 +42,6 @@ const Root: FC<IRootProps> = ({
           <Customizer {...FluentCustomizations}>
             <BrowserRouter>{routes}</BrowserRouter>
             <Sticky stickyPosition={StickyPositionType.Footer}>
-              <ErrorMsgBarContainer />
               <LostConnectWarnMsgContainer />
               {
               /*

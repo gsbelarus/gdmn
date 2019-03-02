@@ -21,25 +21,6 @@ const LostConnectWarnMsgContainer = connect(
   })
 )(LostConnectWarnMsgBar);
 
-const staticMessageBarProps: IMessageBarProps = {
-  isMultiline: true,
-  dismissButtonAriaLabel: 'Close',
-  messageBarType: MessageBarType.error
-};
-
-const ErrorMsgBarContainer = compose(
-  connect(
-    (state: IState) => ({
-      ...staticMessageBarProps,
-      children: selectRootState(state).errorMsgBarText
-    }),
-    dispatch => ({
-      onDismiss: bindActionCreators(rootActions.hideMessage, dispatch)
-    })
-  ),
-  branch((props: IMessageBarProps) => !props.children, renderNothing)
-)(MessageBar);
-
 const StompLogPanelContainer = connect((state: IState) => ({
   logItems: selectRootState(state).logItems
 }))(StompLogPanel);
@@ -58,7 +39,6 @@ const ConnectBtnContainer = connect(
 const RootContainer = compose<IRootProps, IRootProps>(
   withProps({
     renderLostConnectWarnMsgContainer: LostConnectWarnMsgContainer,
-    renderErrorMsgBarContainer: ErrorMsgBarContainer,
     renderStompLogPanelContainer: StompLogPanelContainer,
     renderConnectBtnContainer: ConnectBtnContainer
   })

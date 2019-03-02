@@ -1,6 +1,5 @@
 import React, { Component, Fragment } from 'react';
 import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
-import CSSModules, { InjectedCSSModuleProps } from 'react-css-modules';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
@@ -16,25 +15,27 @@ import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
+import { rootActions } from '../root/actions';
+import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
 
-export type TGdmnViewStateProps = {
+export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
   loadingMessage?: string;
+  errorMessage?: string;
+  dispatch: Dispatch<any>;
 };
-
-export type TGdmnViewProps = TGdmnViewStateProps & { dispatch: Dispatch<any> }; // TODO
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 //@CSSModules(styles, { allowMultiple: true })
-export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any> & InjectedCSSModuleProps> {
+export class GdmnView extends Component<IGdmnViewProps, {}> {
   public render() {
-    const { match, history, dispatch, loading, location } = this.props;
+    const { match, history, dispatch, loading, location, errorMessage } = this.props;
 
     if (!match) return null;
 
-    const topAreaHeight = 56 + 36;
+    const topAreaHeight = 56 + 36 + (errorMessage ? 48 : 0);
 
     return (
       <>
@@ -97,6 +98,18 @@ export class GdmnView extends Component<TGdmnViewProps & RouteComponentProps<any
                 barHeight={4}
                 description={this.props.loadingMessage}
               />
+            : undefined
+          }
+          {
+            errorMessage ?
+              <MessageBar
+                messageBarType={MessageBarType.error}
+                isMultiline={false}
+                onDismiss={() => dispatch(rootActions.hideMessage())}
+                dismissButtonAriaLabel="Close"
+              >
+                {errorMessage}
+              </MessageBar>
             : undefined
           }
           <ViewTabsContainer history={history} match={match} location={location} />
