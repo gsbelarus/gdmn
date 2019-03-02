@@ -279,7 +279,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const headerHeight = hideHeader ? 0 : rowHeight;
       const footerHeight = hideFooter ? 0 : rowHeight + sbSize;
 
-      const bodyHeight = height - headerHeight - footerHeight;
+      const bodyHeight = height - headerHeight - footerHeight - 1;
 
       const dataRowCount = rs.size;
       // rowCount can be greater than rs.size because we need in
