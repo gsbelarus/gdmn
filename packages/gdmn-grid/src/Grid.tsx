@@ -288,7 +288,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const scrollHeight = rowCount * rowHeight;
       const currentRow = rs.currentRow;
 
-      const bodyWidth = width - leftSideColumnsWidth - rightSideWidth;
+      const bodyWidth = width - leftSideColumnsWidth - rightSideWidth - 1;
       const bodyColumnsWidth = rightSideColumns ? bodyWidth : bodyWidth <= sbSize ? 0 : bodyWidth - sbSize;
 
       const scrollTop =
