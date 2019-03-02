@@ -1,6 +1,6 @@
 import { ActionType, createAction } from 'typesafe-actions';
 
-const rootActions = {
+export const rootActions = {
   onError: createAction('root/ON_ERROR', resolve => {
     return (error: Error, meta?: any) => resolve(error, meta);
   }),
@@ -33,6 +33,5 @@ const rootActions = {
   // })
 };
 
-type TRootActions = ActionType<typeof rootActions>;
+export type TRootActions = ActionType<typeof rootActions>;
 
-export { rootActions, TRootActions };

@@ -4,15 +4,14 @@ import ReactDOM from 'react-dom';
 import { Redirect, Route, Switch } from 'react-router-dom';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import { RouteAccessLevelType } from '@gdmn/client-core';
-
 import config from 'config.json';
 import { getStore } from '@src/app/store/store';
 import { ProtectedRouteContainer } from '@src/app/components/ProtectedRouteContainer';
 import { SignInBoxContainer } from '@src/app/scenes/auth/container';
-import { RootContainer } from '@src/app/scenes/root/container';
 import { GdmnContainer } from '@src/app/scenes/gdmn/container';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { apiService } from './services/apiService';
+import { Root } from './scenes/root/component';
 
 const clientRootPath = config.server.paths.clientRoot;
 const domContainerNode = config.webpack.appMountNodeId;
@@ -68,8 +67,7 @@ setConfig({
   //   cold(type)
 });
 
-
 (async () => {
   await start();
-  render(RootContainer);
+  render(Root);
 })();

@@ -17,7 +17,7 @@ import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
-import { LostConnectWarnMsgBar } from '../root/components/LostConnectWarnMsgBar';
+import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;

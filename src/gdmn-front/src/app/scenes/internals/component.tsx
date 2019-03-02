@@ -4,6 +4,7 @@ import { IViewProps, View } from "@src/app/components/View";
 import { RecordSetReducerState } from "gdmn-recordset";
 import { IRsMetaState } from "@src/app/store/reducer";
 import { IViewTab } from "../gdmn/types";
+import { StompLogPanelContainer, ConnectBtnContainer } from "./container";
 
 export interface IInternalsProps extends IViewProps<any> {
   erModel?: ERModel;
@@ -70,6 +71,8 @@ export class Internals extends View<IInternalsProps, {}> {
             </ol>
           </div>
         }
+        <StompLogPanelContainer />
+        <ConnectBtnContainer />
       </>
     );
   }
