@@ -18,12 +18,14 @@ export const connectView = compose<any, IViewProps>(
     (dispatch: ThunkDispatch<IState, never, TGdmnActions>) => ({
       addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab)),
 
-      updateViewTab: (viewTab: IViewTab) => (dispatch: Dispatch<TGdmnActions>, getState: () => IState) => {
-        const viewTabs = getState().gdmnState.viewTabs;
-        if (viewTabs.find(vt => vt.url === viewTab.url)) {
-          dispatch(gdmnActions.updateViewTab(viewTab));
+      updateViewTab: (viewTab: IViewTab) => dispatch(
+        (dispatch: Dispatch<TGdmnActions>, getState: () => IState) => {
+          const viewTabs = getState().gdmnState.viewTabs;
+          if (viewTabs.find(vt => vt.url === viewTab.url)) {
+            dispatch(gdmnActions.updateViewTab(viewTab));
+          }
         }
-      },
+      ),
     })
   )
 );

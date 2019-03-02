@@ -1,11 +1,9 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
-
 import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {createGrid, GridAction} from "gdmn-grid";
-import {Semaphore} from "gdmn-internals";
 import {BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute} from "gdmn-orm";
 import {
   createRecordSet,
@@ -22,7 +20,7 @@ import {RouteComponentProps} from "react-router";
 import {IndexRange} from "react-virtualized";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
-import {EntityDataView, IEntityDataViewProps, IEntityMatchParams} from "./EntityDataView";
+import {EntityDataView, IEntityDataViewProps} from "./EntityDataView";
 import {attr2fd} from "./utils";
 
 export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
@@ -46,7 +44,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         ...stateProps,
         ...dispatchProps,
 
-        attachRs: (mutex?: Semaphore) => dispatch((dispatch, getState) => {
+        attachRs: () => dispatch((dispatch, getState) => {
           // if (!mutex.permits) return;
 
           const erModel = getState().gdmnState.erModel;
@@ -148,7 +146,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             });
         }),
 
-        loadMoreRsData: async ({startIndex, stopIndex}: IndexRange) => {
+        loadMoreRsData: async ({stopIndex}: IndexRange) => {
           if (!rsMeta) {
             dispatch(
               startLoadingData({name: stateProps.data.rs.name})
