@@ -6,6 +6,7 @@ import { IViewTab } from '../scenes/gdmn/types';
 export interface IViewProps<R = any> extends RouteComponentProps<R> {
   viewTab?: IViewTab;
   addViewTab: (viewTab: IViewTab) => void;
+  updateViewTab: (viewTab: IViewTab) => void;
 }
 
 export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
@@ -46,23 +47,35 @@ export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Com
   }
 
   public renderCommandBar(): JSX.Element | undefined {
-    return <CommandBar items={this.getCommandBarItems()} />;
+    if (this.getCommandBarItems().length) {
+      return <CommandBar items={this.getCommandBarItems()} />;
+    } else {
+      return undefined;
+    }
   }
 
-  public getCommandBarItems(): ICommandBarItemProps[] { return []; }
+  public getCommandBarItems(): ICommandBarItemProps[] {
+    return [];
+  }
+
+  public addViewTab() {
+    const { addViewTab, match } = this.props;
+
+    addViewTab({
+      caption: this.getViewCaption(),
+      url: match.url
+    });
+  }
 
   public componentDidMount() {
-    const { viewTab, addViewTab, match } = this.props;
+    const { viewTab, match } = this.props;
 
     if (!match || !match.url) {
       throw new Error(`Invalid view ${this.getViewCaption()}`);
     }
 
     if (!viewTab) {
-      addViewTab({
-        caption: this.getViewCaption(),
-        url: match.url
-      });
+      this.addViewTab();
     }
   }
 

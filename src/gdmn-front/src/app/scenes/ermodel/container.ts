@@ -3,16 +3,15 @@ import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSet, TF
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
-import { RouteComponentProps } from 'react-router';
-
 import { IState } from '@src/app/store/reducer';
 import { gdmnActionsAsync, TGdmnActions } from '../gdmn/actions';
-import { ERModelView } from './component';
+import { ERModelView, IERModelViewProps } from './component';
 import { Semaphore } from 'gdmn-internals';
 import { compose } from 'recompose';
 import { connectDataView } from '@src/app/components/connectDataView';
+import { RouteComponentProps } from 'react-router';
 
-export const ERModelViewContainer = compose<any, RouteComponentProps<any>>(
+export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentProps<any>>(
   connect(
     (state: IState) => ({
       data: {

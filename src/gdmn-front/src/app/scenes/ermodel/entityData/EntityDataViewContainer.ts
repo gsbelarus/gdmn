@@ -25,7 +25,7 @@ import {ThunkDispatch} from "redux-thunk";
 import {EntityDataView, IEntityDataViewProps, IEntityMatchParams} from "./EntityDataView";
 import {attr2fd} from "./utils";
 
-export const EntityDataViewContainer = compose<any, RouteComponentProps<IEntityMatchParams>>(
+export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
   connect(
     (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
       const entityName = ownProps.match ? ownProps.match.params.entityName : "";

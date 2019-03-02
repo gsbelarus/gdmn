@@ -43,8 +43,6 @@ export const ViewTabsContainer = connect(
 
       dispatch(gdmnActions.deleteViewTab(vt));
 
-      console.log(vt.rs);
-
       if (vt.rs) {
         vt.rs.forEach( name => dispatch(deleteRecordSet({ name })) );
       }

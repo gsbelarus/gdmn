@@ -26,13 +26,17 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
   }
 
   public getDataViewKey() {
-    const key = this.props.match ? this.props.match.params.entityName : '';
+    return this.getRecordsetList()[0];
+  }
 
-    if (!key) {
-      throw new Error(`Invalid data view key`);
+  public getRecordsetList() {
+    const entityName = this.props.match ? this.props.match.params.entityName : '';
+
+    if (!entityName) {
+      throw new Error('Invalid entity name');
     }
 
-    return key;
+    return [entityName];
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -63,7 +67,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
   }
 
   public getViewCaption(): string {
-    return this.props.match ? this.props.match.params.entityName : '';
+    return this.getDataViewKey();
   }
 
   public renderModal() {

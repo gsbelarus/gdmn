@@ -20,15 +20,12 @@ import {
   sortRecordSet,
   toggleGroup
 } from 'gdmn-recordset';
-
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
-import { IViewTab } from '../scenes/gdmn/types';
-import { gdmnActions, TGdmnActions } from '../scenes/gdmn/actions';
-import { Dispatch } from 'redux';
-import { RouteComponentProps } from 'react-router';
+import { TGdmnActions } from '../scenes/gdmn/actions';
+import { IDataViewProps } from './DataView';
 
-export const connectDataView = compose(
+export const connectDataView = compose<any, IDataViewProps<any>>(
   connect(
     (state: IState) => ({
       erModel:
@@ -36,16 +33,7 @@ export const connectDataView = compose(
           ? state.gdmnState.erModel
           : undefined // todo перенести
     }),
-    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>, ownProps: RouteComponentProps<any>) => ({
-
-      //updateViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.updateViewTab(viewTab)),
-
-      updateViewTab: (viewTab: IViewTab) => (dispatch: Dispatch<TGdmnActions>, getState: () => IState) => {
-        const viewTabs = getState().gdmnState.viewTabs;
-        if (viewTabs.find(vt => vt.url === viewTab.url)) {
-          dispatch(gdmnActions.updateViewTab(viewTab));
-        }
-      },
+    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
 
       onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
 

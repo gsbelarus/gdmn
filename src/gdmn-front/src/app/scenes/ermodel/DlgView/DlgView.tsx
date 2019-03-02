@@ -132,28 +132,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
         q
       );
 
-      console.log(rs);
-
       this.setState({ rs });
-
-      /*
-      if (!gcs) {
-        dispatch(
-          createGrid({
-            name: rs.name,
-            columns: rs.fieldDefs.map(fd => ({
-              name: fd.fieldName,
-              caption: [fd.caption || fd.fieldName],
-              fields: [{ ...fd }],
-              width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-            })),
-            leftSideColumns: 0,
-            rightSideColumns: 0,
-            hideFooter: true
-          })
-        );
-      }
-      */
     }
   }
 

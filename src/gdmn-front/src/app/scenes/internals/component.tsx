@@ -47,7 +47,7 @@ export class Internals extends View<IInternalsProps, {}> {
           {
             viewTabs.map( vt => (
               <li>
-                {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join : 'no recordsets'}, {vt.savedState ? JSON.stringify(vt.savedState, undefined, 2) : 'no saved state'}
+                {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join() : 'no recordsets'}, {vt.savedState ? JSON.stringify(vt.savedState, undefined, 2) : 'no saved state'}
               </li>
             ))
           }

@@ -8,7 +8,6 @@ import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
 import { LinkCommandBarButton } from './LinkCommandBarButton';
-import { IViewTab } from '../scenes/gdmn/types';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -20,8 +19,6 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
   erModel?: ERModel;
   attachRs: (mutex?: Semaphore) => void;
-  detachRs?: () => void;
-  updateViewTab: (viewTab: IViewTab) => void;
   loadMoreRsData?: TLoadMoreRsData;
   onCancelSortDialog: (gridName: string) => void;
   onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
@@ -43,9 +40,21 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public abstract getDataViewKey(): string;
 
+  public abstract getRecordsetList(): string[];
+
   public isDataLoaded(): boolean {
     const { data } = this.props;
     return !!(data && data.rs);
+  }
+
+  public addViewTab() {
+    const { addViewTab, match } = this.props;
+
+    addViewTab({
+      caption: this.getViewCaption(),
+      url: match.url,
+      rs: this.getRecordsetList()
+    });
   }
 
   public componentDidMount() {
@@ -85,7 +94,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public componentWillUnmount() {
     disposeMutex(this.getDataViewKey());
-    if (this.props.detachRs) this.props.detachRs();
 
     const { updateViewTab, viewTab } = this.props;
 
@@ -98,7 +106,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         }
       }, {});
 
-      console.log('update view tab');
       updateViewTab({ ...viewTab, savedState });
     }
   }
@@ -121,7 +128,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Add'
         },
-        commandBarButtonAs: btn(`${match!.url}/add`)
+        commandBarButtonAs: btn(`${match.url}/add`)
       },
       {
         key: `edit`,
@@ -129,7 +136,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: btn(`${match!.url}/edit/${data!.rs.pk2s.join('-')}`)
+        commandBarButtonAs: data!.rs.size ? btn(`${match.url}/edit/${data!.rs.pk2s.join('-')}`) : undefined
       },
       {
         key: `delete`,

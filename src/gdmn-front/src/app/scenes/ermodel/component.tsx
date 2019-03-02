@@ -3,34 +3,23 @@ import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react'
 
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
+import { RouteComponentProps } from 'react-router';
 
 export interface IERModelViewProps extends IDataViewProps<any> {
   apiGetSchema: () => void;
 }
 
-export class ERModelView extends DataView<IERModelViewProps, {}> {
+export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentProps<any>> {
   public getDataViewKey() {
     return 'ermodel';
   }
 
-  public getViewCaption(): string {
-    return 'ER Model';
+  public getRecordsetList() {
+    return ['entities', 'attributes'];
   }
 
-  public componentDidMount() {
-    const { viewTab, addViewTab, match } = this.props;
-
-    if (!match || !match.url) {
-      throw new Error(`Invalid view ${this.getViewCaption()}`);
-    }
-
-    if (!viewTab) {
-      addViewTab({
-        caption: this.getViewCaption(),
-        url: match.url,
-        rs: ['entities', 'attributes']
-      });
-    }
+  public getViewCaption(): string {
+    return 'ER Model';
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -48,7 +37,7 @@ export class ERModelView extends DataView<IERModelViewProps, {}> {
           iconName: 'Table'
         },
         commandBarButtonAs: btn(
-          this.isDataLoaded() ? `entity/${data!.rs.getString(data!.rs.currentRow, 'name')}` : `${match!.url}`
+          this.isDataLoaded() && data!.rs.size ? `entity/${data!.rs.getString(data!.rs.currentRow, 'name')}` : `${match!.url}`
         )
       },
       {
