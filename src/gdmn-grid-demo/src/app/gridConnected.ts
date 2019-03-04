@@ -87,9 +87,7 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
         ),
       onToggleGroup:
         (rowIdx: number) => thunkDispatch(toggleGroup({ name: rs.name, rowIdx }))
-    }),
-    null,
-    { withRef: true }
+    })
   )(GDMNGrid);
 };
 
@@ -127,11 +125,11 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
           }
         }),
       onParamsDialog:
-        () => thunkDispatch(showParamsDialog({name})),        
+        () => thunkDispatch(showParamsDialog({name})),
       onCancelParamsDialog:
-        () => thunkDispatch(cancelParamsDialog({name})),         
+        () => thunkDispatch(cancelParamsDialog({name})),
       onToggle:
-        (columnName: string) => thunkDispatch(toggleColumn({name, columnName})), 
+        (columnName: string) => thunkDispatch(toggleColumn({name, columnName})),
       onSetSelectRows:
         (value: boolean) => thunkDispatch(setSelectRows({name, value})),
       onToggleHideFooter:

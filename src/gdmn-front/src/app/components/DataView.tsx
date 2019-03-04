@@ -179,32 +179,34 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       loadMoreRsData
     } = this.props;
     return (
-      <div>
-        <div>
+      <div style={{ width: '50%' }}>
+        <div style={{ height: '24px' }}>
           Filter:
         </div>
-        <GDMNGrid
-          {...gcs}
-          rs={rs}
-          loadMoreRsData={loadMoreRsData}
-          onCancelSortDialog={() => onCancelSortDialog(gridName)}
-          onApplySortDialog={(sortFields: SortFields) =>
-            onApplySortDialog(rs, gridName, sortFields, this._gridRef[gridName])
-          }
-          onColumnResize={(columnIndex: number, newWidth: number) =>
-            onColumnResize(gridName, columnIndex, newWidth)
-          }
-          onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(gridName, oldIndex, newIndex)}
-          onSelectRow={(idx: number, selected: boolean) => onSelectRow(rs, idx, selected)}
-          onSelectAllRows={(value: boolean) => onSelectAllRows(rs, value)}
-          onSetCursorPos={(cursorCol: number, cursorRow: number) =>
-            onSetCursorPos(rs, gridName, cursorCol, cursorRow)
-          }
-          onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[gridName])}
-          onToggleGroup={(rowIdx: number) => onToggleGroup(rs, rowIdx)}
-          ref={(grid: GDMNGrid) => grid && (this._gridRef[gridName] = grid)}
-          savedState={this.getSavedState(rs)}
-        />
+        <div style={{ height: 'calc(100% - 24px)' }}>
+          <GDMNGrid
+            {...gcs}
+            rs={rs}
+            loadMoreRsData={loadMoreRsData}
+            onCancelSortDialog={() => onCancelSortDialog(gridName)}
+            onApplySortDialog={(sortFields: SortFields) =>
+              onApplySortDialog(rs, gridName, sortFields, this._gridRef[gridName])
+            }
+            onColumnResize={(columnIndex: number, newWidth: number) =>
+              onColumnResize(gridName, columnIndex, newWidth)
+            }
+            onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(gridName, oldIndex, newIndex)}
+            onSelectRow={(idx: number, selected: boolean) => onSelectRow(rs, idx, selected)}
+            onSelectAllRows={(value: boolean) => onSelectAllRows(rs, value)}
+            onSetCursorPos={(cursorCol: number, cursorRow: number) =>
+              onSetCursorPos(rs, gridName, cursorCol, cursorRow)
+            }
+            onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[gridName])}
+            onToggleGroup={(rowIdx: number) => onToggleGroup(rs, rowIdx)}
+            ref={(grid: GDMNGrid) => grid && (this._gridRef[gridName] = grid)}
+            savedState={this.getSavedState(rs)}
+          />
+        </div>
       </div>
     );
   }

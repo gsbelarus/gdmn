@@ -173,7 +173,7 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
                     </div> : undefined
                   }
                   <div className={showPanel ? "GridForm" : "GridFormNoPanel"}>
-                    <Grid ref={ grid => grid && (grids[name].refGrid = (grid as any).getWrappedInstance()) } rs={getRecordSet(name)} />
+                    <Grid ref={ grid => grid && (grids[name].refGrid = (grid as GDMNGrid)) } rs={getRecordSet(name)} />
                   </div>
                 </div>
               );
