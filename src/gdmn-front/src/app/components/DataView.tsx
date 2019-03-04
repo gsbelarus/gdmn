@@ -4,7 +4,6 @@ import { RecordSet, SortFields } from 'gdmn-recordset';
 import { GDMNGrid, GridComponentState, IGridState, TLoadMoreRsData } from 'gdmn-grid';
 import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
-
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
 import { LinkCommandBarButton } from './LinkCommandBarButton';
@@ -148,23 +147,11 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     ];
   }
 
-  public getMasterSavedState() {
-    const { viewTab, data } = this.props;
-    const masterRS = data!.rs;
+  public getSavedState(rs: RecordSet) {
+    const { viewTab } = this.props;
 
-    if (viewTab && viewTab.savedState && viewTab.savedState[masterRS.name]) {
-      return viewTab.savedState[masterRS.name] as IGridState;
-    }
-
-    return undefined;
-  }
-
-  public getDetailSavedState() {
-    const { viewTab, data } = this.props;
-    const detailRS = data!.detail![0].rs;
-
-    if (viewTab && viewTab.savedState && viewTab.savedState[detailRS.name]) {
-      return viewTab.savedState[detailRS.name] as IGridState;
+    if (viewTab && viewTab.savedState && viewTab.savedState[rs.name]) {
+      return viewTab.savedState[rs.name] as IGridState;
     }
 
     return undefined;
@@ -174,9 +161,12 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return undefined;
   }
 
-  public renderMD() {
+  public renderGrid(
+    gridName: string,
+    gcs: GridComponentState,
+    rs: RecordSet
+  ) {
     const {
-      data,
       onCancelSortDialog,
       onApplySortDialog,
       onColumnResize,
@@ -188,6 +178,34 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       onToggleGroup,
       loadMoreRsData
     } = this.props;
+    return (
+      <GDMNGrid
+        {...gcs}
+        rs={rs}
+        loadMoreRsData={loadMoreRsData}
+        onCancelSortDialog={() => onCancelSortDialog(gridName)}
+        onApplySortDialog={(sortFields: SortFields) =>
+          onApplySortDialog(rs, gridName, sortFields, this._gridRef[gridName])
+        }
+        onColumnResize={(columnIndex: number, newWidth: number) =>
+          onColumnResize(gridName, columnIndex, newWidth)
+        }
+        onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(gridName, oldIndex, newIndex)}
+        onSelectRow={(idx: number, selected: boolean) => onSelectRow(rs, idx, selected)}
+        onSelectAllRows={(value: boolean) => onSelectAllRows(rs, value)}
+        onSetCursorPos={(cursorCol: number, cursorRow: number) =>
+          onSetCursorPos(rs, gridName, cursorCol, cursorRow)
+        }
+        onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[gridName])}
+        onToggleGroup={(rowIdx: number) => onToggleGroup(rs, rowIdx)}
+        ref={(grid: GDMNGrid) => grid && (this._gridRef[gridName] = grid)}
+        savedState={this.getSavedState(rs)}
+      />
+    );
+  }
+
+  public renderMD() {
+    const { data } = this.props;
     const masterRS = data!.rs;
     const detailRS = data!.detail![0].rs;
     const masterGridName = masterRS.name;
@@ -196,95 +214,21 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return this.renderWide(undefined,
       <div className="ViewGridPlacement">
         {this.renderModal()}
-        <GDMNGrid
-          {...data!.gcs}
-          rs={masterRS}
-          loadMoreRsData={loadMoreRsData}
-          onCancelSortDialog={() => onCancelSortDialog(masterGridName)}
-          onApplySortDialog={(sortFields: SortFields) =>
-            onApplySortDialog(masterRS, masterGridName, sortFields, this._gridRef[masterGridName])
-          }
-          onColumnResize={(columnIndex: number, newWidth: number) =>
-            onColumnResize(masterGridName, columnIndex, newWidth)
-          }
-          onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(masterGridName, oldIndex, newIndex)}
-          onSelectRow={(idx: number, selected: boolean) => onSelectRow(masterRS, idx, selected)}
-          onSelectAllRows={(value: boolean) => onSelectAllRows(masterRS, value)}
-          onSetCursorPos={(cursorCol: number, cursorRow: number) =>
-            onSetCursorPos(masterRS, masterGridName, cursorCol, cursorRow)
-          }
-          onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[masterGridName])}
-          onToggleGroup={(rowIdx: number) => onToggleGroup(masterRS, rowIdx)}
-          ref={(grid: GDMNGrid) => grid && (this._gridRef[masterGridName] = grid)}
-          savedState={this.getMasterSavedState()}
-        />
-        <GDMNGrid
-          {...data!.detail![0].gcs}
-          rs={detailRS}
-          onCancelSortDialog={() => onCancelSortDialog(detailGridName)}
-          onApplySortDialog={(sortFields: SortFields) =>
-            onApplySortDialog(detailRS, detailGridName, sortFields, this._gridRef[detailGridName])
-          }
-          onColumnResize={(columnIndex: number, newWidth: number) =>
-            onColumnResize(detailGridName, columnIndex, newWidth)
-          }
-          onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(detailGridName, oldIndex, newIndex)}
-          onSelectRow={(idx: number, selected: boolean) => onSelectRow(detailRS, idx, selected)}
-          onSelectAllRows={(value: boolean) => onSelectAllRows(detailRS, value)}
-          onSetCursorPos={(cursorCol: number, cursorRow: number) =>
-            onSetCursorPos(detailRS, detailGridName, cursorCol, cursorRow)
-          }
-          onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[detailGridName])}
-          onToggleGroup={(rowIdx: number) => onToggleGroup(detailRS, rowIdx)}
-          ref={(grid: GDMNGrid) => grid && (this._gridRef[detailGridName] = grid)}
-          savedState={this.getDetailSavedState()}
-        />
+        {this.renderGrid(masterGridName, data!.gcs, masterRS)}
+        {this.renderGrid(detailGridName, data!.detail![0].gcs, detailRS)}
       </div>
     );
   }
 
   public renderS() {
-    const {
-      data,
-      onCancelSortDialog,
-      onApplySortDialog,
-      onColumnResize,
-      onColumnMove,
-      onSelectRow,
-      onSelectAllRows,
-      onSetCursorPos,
-      onSort,
-      onToggleGroup,
-      loadMoreRsData
-    } = this.props;
+    const { data } = this.props;
     const masterRS = data!.rs;
     const masterGridName = masterRS.name;
 
     return this.renderWide(undefined,
       <div className="ViewGridPlacement">
         {this.renderModal()}
-        <GDMNGrid
-          {...data!.gcs}
-          rs={masterRS}
-          loadMoreRsData={loadMoreRsData}
-          onCancelSortDialog={() => onCancelSortDialog(masterGridName)}
-          onApplySortDialog={(sortFields: SortFields) =>
-            onApplySortDialog(masterRS, masterGridName, sortFields, this._gridRef[masterGridName])
-          }
-          onColumnResize={(columnIndex: number, newWidth: number) =>
-            onColumnResize(masterGridName, columnIndex, newWidth)
-          }
-          onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(masterGridName, oldIndex, newIndex)}
-          onSelectRow={(idx: number, selected: boolean) => onSelectRow(masterRS, idx, selected)}
-          onSelectAllRows={(value: boolean) => onSelectAllRows(masterRS, value)}
-          onSetCursorPos={(cursorCol: number, cursorRow: number) =>
-            onSetCursorPos(masterRS, masterGridName, cursorCol, cursorRow)
-          }
-          onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[masterGridName])}
-          onToggleGroup={(rowIdx: number) => onToggleGroup(masterRS, rowIdx)}
-          ref={(grid: GDMNGrid) => grid && (this._gridRef[masterGridName] = grid)}
-          savedState={this.getMasterSavedState()}
-        />
+        {this.renderGrid(masterGridName, data!.gcs, masterRS)}
       </div>
     );
   }

@@ -30,6 +30,15 @@ export interface IColumn {
 export type Columns = IColumn[];
 
 export type TLoadMoreRsData = (params: IndexRange) => Promise<any>;
+export type TOnCancelSortDialog = () => void;
+export type TOnApplySortDialog = (sortFields: SortFields) => void;
+export type TOnColumnResize = (columnIndex: number, newWidth: number) => void;
+export type TOnColumnMove = (oldIndex: number, newIndex: number) => void;
+export type TOnSetCursorPos = (cursorCol: number, cursorRow: number) => void;
+export type TOnSort = (rs: RecordSet, sortFields: SortFields) => void;
+export type TOnSelectRow = (idx: number, selected: boolean) => void;
+export type TOnSelectAllRows = (value: boolean) => void;
+export type TOnToggleGroup = (rowIdx: number) => void;
 
 export interface IGridProps {
   rs: RecordSet;
@@ -41,16 +50,16 @@ export interface IGridProps {
   hideHeader?: boolean;
   hideFooter?: boolean;
   sortDialog: boolean;
-  onCancelSortDialog: () => void;
-  onApplySortDialog: (sortFields: SortFields) => void;
   savedState?: IGridState;
-  onColumnResize: (columnIndex: number, newWidth: number) => void;
-  onColumnMove: (oldIndex: number, newIndex: number) => void;
-  onSetCursorPos: (cursorCol: number, cursorRow: number) => void;
-  onSort: (rs: RecordSet, sortFields: SortFields) => void;
-  onSelectRow: (idx: number, selected: boolean) => void;
-  onSelectAllRows: (value: boolean) => void;
-  onToggleGroup: (rowIdx: number) => void;
+  onCancelSortDialog: TOnCancelSortDialog;
+  onApplySortDialog: TOnApplySortDialog;
+  onColumnResize: TOnColumnResize;
+  onColumnMove: TOnColumnMove;
+  onSetCursorPos: TOnSetCursorPos;
+  onSort: TOnSort;
+  onSelectRow: TOnSelectRow;
+  onSelectAllRows: TOnSelectAllRows;
+  onToggleGroup: TOnToggleGroup;
   loadMoreRsData?: TLoadMoreRsData;
   loadMoreThresholdPages?: number;
   loadMoreMinBatchPagesRatio?: number;
