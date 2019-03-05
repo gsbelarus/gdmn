@@ -23,13 +23,13 @@ initializeIcons(/* optional base url */);
 interface IRsMetaState {
   [rsName: string]: {
     taskKey: string;
-    q: EntityQuery;
-  }; // | undefined;
+    query: EntityQuery;
+  };
 }
 
 const rsMetaActions = {
   setRsMeta: createAction('SET_RS_META', resolve => {
-    return (rsName: string, rsMeta: { taskKey: string; q: EntityQuery }) => resolve({ rsName, rsMeta });
+    return (rsName: string, rsMeta: { taskKey: string; query: EntityQuery }) => resolve({ rsName, rsMeta });
   }),
   deleteRsMeta: createAction('DELETE_RS_META', resolve => {
     return (rsName: string) => resolve(rsName);

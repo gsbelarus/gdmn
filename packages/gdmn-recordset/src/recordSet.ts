@@ -29,15 +29,7 @@ import {
   isNull,
   checkField
 } from "./utils";
-import { Subject } from "rxjs";
 import { EntityQuery } from "gdmn-orm";
-
-export type RecordSetEvent = "AfterScroll" | "BeforeScroll";
-
-export type RecordSetEventData<R extends IDataRow = IDataRow> = {
-  event: RecordSetEvent;
-  rs: RecordSet<R>;
-};
 
 export interface IRSSQLParams {
   [name: string]: any;
@@ -46,6 +38,16 @@ export interface IRSSQLParams {
 export interface IRSSQLSelect {
   select: string;
   params?: IRSSQLParams;
+};
+
+export interface IRecordSetOptions<R extends IDataRow = IDataRow> {
+  name: string;
+  fieldDefs: FieldDefs;
+  data: Data<R>;
+  srcEoF?: boolean;
+  masterLink?: IMasterLink;
+  eq?: EntityQuery;
+  sql?: IRSSQLSelect;
 };
 
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
@@ -68,102 +70,31 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   groups?: IDataGroup<R>[];
   aggregates?: R;
   masterLink?: IMasterLink;
-  subject: Subject<RecordSetEventData<R>>;
 }
 
 export class RecordSet<R extends IDataRow = IDataRow> {
-  readonly name: string;
-  private _eq?: EntityQuery;
-  private _sql?: IRSSQLSelect;
-  private _fieldDefs: FieldDefs;
-  private _calcFields: TRowCalcFunc<R> | undefined;
-  private _data: Data<R>;
-  private _srcEoF?: boolean;
-  private _loadingData?: boolean;
-  private _currentRow: number;
-  private _sortFields: SortFields;
-  private _allRowsSelected: boolean;
-  private _selectedRows: boolean[];
-  private _filter?: IFilter;
-  private _savedData?: Data<R>;
-  private _searchStr?: string;
-  private _foundRows?: FoundRows;
-  private _groups?: IDataGroup<R>[];
-  private _aggregates?: R;
-  private _masterLink?: IMasterLink;
-  private _subject: Subject<RecordSetEventData<R>>;
+
+  private readonly _params: IRecordSetParams<R>;
 
   private constructor(params: IRecordSetParams<R>) {
-    const {
-      name,
-      eq,
-      sql,
-      fieldDefs,
-      calcFields,
-      data,
-      srcEoF,
-      loadingData,
-      currentRow,
-      sortFields,
-      allRowsSelected,
-      selectedRows,
-      filter,
-      savedData,
-      searchStr,
-      foundRows,
-      groups,
-      aggregates,
-      masterLink,
-      subject
-    } = params;
-
-    if (!data.size && currentRow > 0) {
+    if (!params.data.size && params.currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
+    params.currentRow = params.currentRow < 0 ? 0 : params.currentRow;
 
-    this.name = name;
-    this._eq = eq;
-    this._sql = sql;
-    this._fieldDefs = fieldDefs;
-    this._calcFields = calcFields;
-    this._data = data;
-    this._srcEoF = srcEoF;
-    this._loadingData = loadingData;
-    this._currentRow = currentRow < 0 ? 0 : currentRow;
-    this._sortFields = sortFields;
-    this._allRowsSelected = allRowsSelected;
-    this._selectedRows = selectedRows;
-    this._filter = filter;
-    this._savedData = savedData;
-    this._searchStr = searchStr;
-    this._foundRows = foundRows;
-    this._groups = groups;
-    this._aggregates = aggregates;
-    this._masterLink = masterLink;
-    this._subject = subject;
+    this._params = params;
 
-    if (this.size && currentRow >= this.size) {
+    if (this.size && params.currentRow >= this.size) {
       throw new Error("Invalid currentRow value");
     }
   }
 
-  public static createWithData<R extends IDataRow = IDataRow>(
-    name: string,
-    fieldDefs: FieldDefs,
-    data: Data<R>,
-    srcEoF: boolean = true,
-    masterLink?: IMasterLink,
-    eq?: EntityQuery,
-    sql?: IRSSQLSelect
-  ): RecordSet<R> {
-    const withCalcFunc = fieldDefs.filter(fd => fd.calcFunc);
+  public static create<R extends IDataRow = IDataRow>(options: IRecordSetOptions<R>): RecordSet<R> {
+    const withCalcFunc = options.fieldDefs.filter(fd => fd.calcFunc);
 
     if (withCalcFunc.length) {
       return new RecordSet<R>({
-        name,
-        eq,
-        sql,
-        fieldDefs,
+        ...options,
         calcFields: (row: R): R => {
           const res = Object.assign({} as R, row);
 
@@ -171,138 +102,109 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
           return res;
         },
-        data,
-        srcEoF,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
         selectedRows: [],
-        masterLink,
-        subject: new Subject<RecordSetEventData<R>>()
       });
     } else {
       return new RecordSet<R>({
-        name,
-        eq,
-        sql,
-        fieldDefs,
+        ...options,
         calcFields: undefined,
-        data,
-        srcEoF,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
         selectedRows: [],
-        masterLink,
-        subject: new Subject<RecordSetEventData<R>>()
       });
     }
   }
 
-  get params(): IRecordSetParams<R> {
-    return {
-      name: this.name,
-      eq: this._eq,
-      sql: this._sql,
-      fieldDefs: this._fieldDefs,
-      calcFields: this._calcFields,
-      data: this._data,
-      srcEoF: this._srcEoF,
-      currentRow: this._currentRow,
-      sortFields: this._sortFields,
-      allRowsSelected: this._allRowsSelected,
-      selectedRows: this._selectedRows,
-      filter: this._filter,
-      savedData: this._savedData,
-      searchStr: this._searchStr,
-      foundRows: this._foundRows,
-      groups: this._groups,
-      aggregates: this._aggregates,
-      masterLink: this._masterLink,
-      subject: this._subject
-    };
+  get params(): Readonly<IRecordSetParams<R>> {
+    return this._params;
+  }
+
+  get name() {
+    return this._params.name;
   }
 
   get fieldDefs() {
-    return this._fieldDefs;
+    return this._params.fieldDefs;
   }
 
   get eq() {
-    return this._eq;
+    return this._params.eq;
   }
 
   get sql() {
-    return this._sql;
+    return this._params.sql;
   }
 
   get srcEoF() {
-    return this._srcEoF;
+    return this._params.srcEoF;
   }
 
   get loadingData() {
-    return this._loadingData;
+    return this._params.loadingData;
   }
 
   get size() {
-    if (this._groups && this._groups.length) {
-      const lg = this._groups[this._groups.length - 1];
+    if (this._params.groups && this._params.groups.length) {
+      const lg = this._params.groups[this._params.groups.length - 1];
       return lg.rowIdx + this._getGroupRowCount(lg);
     } else {
-      return this._data.size;
+      return this._params.data.size;
     }
   }
 
   get sortFields() {
-    return this._sortFields;
+    return this._params.sortFields;
   }
 
   get currentRow() {
-    return this._currentRow;
+    return this._params.currentRow;
   }
 
   get allRowsSelected() {
-    return this._allRowsSelected;
+    return this._params.allRowsSelected;
   }
 
   get selectedRows() {
-    return this._selectedRows;
+    return this._params.selectedRows;
   }
 
   get filter() {
-    return this._filter;
+    return this._params.filter;
   }
 
   get foundRows() {
-    return this._foundRows;
+    return this._params.foundRows;
   }
 
   get foundNodes(): FoundNodes | undefined {
-    return !this._foundRows
-      ? undefined
-      : this._foundRows.reduce((c, r) => {
-          if (r) {
-            r.forEach(n => c.push(n));
-          }
-          return c;
-        }, []);
+    return this._params.foundRows && this._params.foundRows.reduce((c, r) => {
+      if (r) {
+        r.forEach(n => c.push(n));
+      }
+      return c;
+    }, []);
   }
 
   get foundNodesCount() {
-    return this._foundRows
-      ? this._foundRows.reduce((c, r) => (r ? c + r.length : c), 0)
+    return this._params.foundRows
+      ? this._params.foundRows.reduce((c, r) => (r ? c + r.length : c), 0)
       : 0;
   }
 
   get searchStr() {
-    return this._searchStr;
+    return this._params.searchStr;
   }
 
   get aggregates() {
-    if (this._aggregates) {
-      return this._aggregates;
+    if (this._params.aggregates) {
+      return this._params.aggregates;
     }
 
-    const aggFields = this._fieldDefs.filter(fd => fd.aggregator);
+    const aggFields = this._params.fieldDefs.filter(fd => fd.aggregator);
 
     if (aggFields.length) {
       const accumulator = aggFields.map(fd => ({
@@ -312,18 +214,18 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         getTotal: fd.aggregator!.getTotal
       }));
 
-      for (let i = 0; i < this._data.size; i++) {
+      for (let i = 0; i < this._params.data.size; i++) {
         accumulator.forEach(
           acc =>
             (acc.value = acc.processRow(
-              this._getData(this._data, i, this._calcFields),
+              this._getData(this._params.data, i, this._params.calcFields),
               acc.fieldName,
               acc.value
             ))
         );
       }
 
-      this._aggregates = accumulator.reduce(
+      this._params.aggregates = accumulator.reduce(
         (prev, acc) => {
           prev[acc.fieldName] = acc.getTotal(acc.value);
           return prev;
@@ -332,25 +234,21 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       );
     }
 
-    return this._aggregates;
+    return this._params.aggregates;
   }
 
   get masterLink() {
-    return this._masterLink;
-  }
-
-  get asObservable() {
-    return this._subject;
+    return this._params.masterLink;
   }
 
   get pk(): IFieldDef[] {
     let res: IFieldDef[] = [];
 
-    if (this._eq) {
-      this._eq.link.entity.pk.forEach( attr => {
-        const eqf = this._eq!.link.fields.find( f => f.attribute === attr );
+    if (this._params.eq) {
+      this._params.eq.link.entity.pk.forEach( attr => {
+        const eqf = this._params.eq!.link.fields.find( f => f.attribute === attr );
         if (eqf) {
-          const pkfd = this._fieldDefs.find( fd => !!fd.eqfa && fd.eqfa.linkAlias === this._eq!.link.alias && fd.eqfa.attribute === attr.name );
+          const pkfd = this._params.fieldDefs.find( fd => !!fd.eqfa && fd.eqfa.linkAlias === this._params.eq!.link.alias && fd.eqfa.attribute === attr.name );
           if (pkfd) {
             res.push(pkfd);
           }
@@ -362,26 +260,29 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   get pkValue(): TDataType[] {
+    const {currentRow} = this._params;
     if (!this.size) {
       throw new Error('RecordSet is empty');
     }
 
-    const r = this._get(this._currentRow, undefined).data;
+    const r = this._get(currentRow, undefined).data;
 
     return this.pk.map( fd => r[fd.fieldName] );
   }
 
   get pk2s(): string[] {
+    const {currentRow} = this._params;
     if (!this.size) {
       throw new Error('RecordSet is empty');
     }
 
-    return this.pk.map( fd => this.getString(this._currentRow, fd.fieldName) );
+    return this.pk.map( fd => this.getString(currentRow, fd.fieldName) );
   }
 
   private _checkFields(fields: INamedField[]) {
+    const {fieldDefs} = this._params;
     fields.forEach(f => {
-      if (!this._fieldDefs.find(fd => fd.fieldName === f.fieldName)) {
+      if (!fieldDefs.find(fd => fd.fieldName === f.fieldName)) {
         throw new Error(`Unknown field ${f.fieldName}`);
       }
     });
@@ -472,11 +373,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     rowIdx: number,
     calcFields: TRowCalcFunc<R> | undefined
   ): IRow<R> {
-    const groups = this._groups;
+    const {groups, data} = this._params;
 
     if (!groups || !groups.length) {
       return {
-        data: this._getData(this._data, rowIdx, calcFields),
+        data: this._getData(data, rowIdx, calcFields),
         type: TRowType.Data
       };
     }
@@ -506,50 +407,37 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return {
-      data: this._getData(
-        this._data,
-        group.bufferIdx + rowIdx - group.rowIdx - 1,
-        calcFields
-      ),
+      data: this._getData(data, group.bufferIdx + rowIdx - group.rowIdx - 1, calcFields),
       type: TRowType.Data,
       group
     };
   }
 
   public get(rowIdx: number): IRow<R> {
-    return this._get(rowIdx, this._calcFields);
+    const {calcFields} = this._params;
+    return this._get(rowIdx, calcFields);
   }
 
-  public getValue(
-    rowIdx: number,
-    fieldName: string,
-    defaultValue?: TDataType
-  ): TDataType {
-    return checkField(
-      this._get(rowIdx, this._calcFields).data,
-      fieldName,
-      defaultValue
-    );
+  public getValue(rowIdx: number, fieldName: string, defaultValue?: TDataType): TDataType {
+    const {calcFields} = this._params;
+    return checkField(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getString(
-    rowIdx: number,
-    fieldName: string,
-    defaultValue?: string
-  ): string {
+  public getString(rowIdx: number, fieldName: string, defaultValue?: string): string {
+    const {calcFields} = this._params;
     const fd = this.fieldDefs.find(fd => fd.fieldName === fieldName);
     if (fd) {
       switch (fd.dataType) {
         case (TFieldType.Float, TFieldType.Integer, TFieldType.Currency):
           return getAsString(
-            this._get(rowIdx, this._calcFields).data,
+            this._get(rowIdx, calcFields).data,
             fieldName,
             defaultValue,
             fd.numberFormat
           );
         case TFieldType.Date:
           return getAsString(
-            this._get(rowIdx, this._calcFields).data,
+            this._get(rowIdx, calcFields).data,
             fieldName,
             defaultValue,
             undefined,
@@ -557,47 +445,31 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           );
       }
     }
-    return getAsString(
-      this._get(rowIdx, this._calcFields).data,
-      fieldName,
-      defaultValue
-    );
+    return getAsString(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getNumber(
-    rowIdx: number,
-    fieldName: string,
-    defaultValue?: number
-  ): number {
-    return getAsNumber(
-      this._get(rowIdx, this._calcFields).data,
-      fieldName,
-      defaultValue
-    );
+  public getNumber(rowIdx: number, fieldName: string, defaultValue?: number): number {
+    const {calcFields} = this._params;
+    return getAsNumber(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getBoolean(
-    rowIdx: number,
-    fieldName: string,
-    defaultValue?: boolean
-  ): boolean {
-    return getAsBoolean(
-      this._get(rowIdx, this._calcFields).data,
-      fieldName,
-      defaultValue
-    );
+  public getBoolean(rowIdx: number, fieldName: string, defaultValue?: boolean): boolean {
+    const {calcFields} = this._params;
+    return getAsBoolean(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
   public getDate(rowIdx: number, fieldName: string, defaultValue?: Date): Date {
+    const {calcFields} = this._params;
     return getAsDate(
-      this._get(rowIdx, this._calcFields).data,
+      this._get(rowIdx, calcFields).data,
       fieldName,
       defaultValue
     );
   }
 
   public isNull(rowIdx: number, fieldName: string): boolean {
-    return isNull(this._get(rowIdx, this._calcFields).data, fieldName);
+    const {calcFields} = this._params;
+    return isNull(this._get(rowIdx, calcFields).data, fieldName);
   }
 
   public toArray(): IRow<R>[] {
@@ -640,7 +512,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public toggleGroup(rowIdx: number): RecordSet<R> {
-    const groups = this._groups;
+    const {groups} = this._params;
 
     if (!groups || !groups.length) {
       throw new Error(`Data is not grouped`);
@@ -649,7 +521,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const fg = this._findGroup(groups, rowIdx);
 
     return new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       currentRow: fg.group.rowIdx,
       selectedRows: [],
       groups: this._cloneGroups(undefined, groups, (parent, prev, g) => {
@@ -669,20 +541,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  public sort(
-    sortFields: SortFields,
-    dimension?: SortFields,
-    measures?: Measures<R>
-  ): RecordSet<R> {
+  public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures<R>): RecordSet<R> {
     this._checkFields(sortFields);
 
-    if (!this._data.size) {
+    if (!this._params.data.size) {
       return this;
     }
 
     if (!sortFields.length) {
       return new RecordSet<R>({
-        ...this.params,
+        ...this._params,
         sortFields: [],
         searchStr: undefined,
         foundRows: undefined,
@@ -690,8 +558,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       });
     }
 
-    const currentRowData = this.get(this._currentRow);
-    const selectedRowsData = this._selectedRows.reduce(
+    const currentRowData = this.get(this._params.currentRow);
+    const selectedRowsData = this._params.selectedRows.reduce(
       (p, sr, idx) => {
         if (sr) {
           p.push(this.get(idx));
@@ -705,17 +573,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const sortOnCalcFields = combinedSort.some(
       sf =>
-        !!this._fieldDefs.find(
-          fd => fd.fieldName === sf.fieldName && !!fd.calcFunc
-        )
+        !!this._params.fieldDefs.find(fd => fd.fieldName === sf.fieldName && !!fd.calcFunc)
     );
 
-    let fieldDefs = this._fieldDefs;
-    let calcFields = this._calcFields;
+    let fieldDefs = this._params.fieldDefs;
+    let calcFields = this._params.calcFields;
     let sorted = (sortOnCalcFields
-      ? this._data.sort((a, b) => {
-          const calcA = this._calcFields!(a);
-          const calcB = this._calcFields!(b);
+      ? this._params.data.sort((a, b) => {
+          const calcA = this._params.calcFields!(a);
+          const calcB = this._params.calcFields!(b);
           return combinedSort.reduce(
             (p, f) =>
               p
@@ -732,7 +598,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             0
           );
         })
-      : this._data.sort((a, b) =>
+      : this._params.data.sort((a, b) =>
           combinedSort.reduce(
             (p, f) =>
               p
@@ -771,9 +637,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           let cnt = 0;
           const row = this._getData(sorted, rowIdx + cnt, calcFields);
           const value = row[fieldName];
-          const valueFieldDef = this._fieldDefs.find(
-            fd => fd.fieldName === fieldName
-          )!;
+          const valueFieldDef = this._params.fieldDefs.find(fd => fd.fieldName === fieldName)!;
           while (
             cnt < left &&
             this._getData(sorted, rowIdx + cnt, calcFields)[fieldName] === value
@@ -892,7 +756,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       });
       fieldDefs = [
         ...sortFields.map(
-          sf => this._fieldDefs.find(fd => fd.fieldName === sf.fieldName)!
+          sf => this._params.fieldDefs.find(fd => fd.fieldName === sf.fieldName)!
         ),
         ...newFieldDefs
       ];
@@ -951,7 +815,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             let footer;
 
             if (sortFields[level].calcAggregates) {
-              const aggFields = this._fieldDefs.filter(fd => fd.aggregator);
+              const aggFields = this._params.fieldDefs.filter(fd => fd.aggregator);
 
               if (aggFields.length) {
                 const accumulator = aggFields.map(fd => ({
@@ -969,7 +833,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                   accumulator.forEach(
                     acc =>
                       (acc.value = acc.processRow(
-                        this._getData(sorted, i, this._calcFields),
+                        this._getData(sorted, i, this._params.calcFields),
                         acc.fieldName,
                         acc.value
                       ))
@@ -1017,7 +881,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       const groups = groupData(0, 0, 0, sorted.size);
 
       return new RecordSet<R>({
-        ...this.params,
+        ...this._params,
         fieldDefs,
         calcFields,
         data: sorted,
@@ -1032,7 +896,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     const res = new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       fieldDefs,
       calcFields,
       data: sorted,
@@ -1046,10 +910,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const foundIdx = res.indexOf(currentRowData);
     if (foundIdx >= 0) {
-      res._currentRow = foundIdx;
+      res._params.currentRow = foundIdx;
     }
 
-    res._selectedRows = selectedRowsData.reduce(
+    res._params.selectedRows = selectedRowsData.reduce(
       (p, srd) => {
         if (srd) {
           const fi = res.indexOf(srd);
@@ -1066,17 +930,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public collapseExpandGroups(collapse: boolean): RecordSet<R> {
-    if (!this._groups) {
+    if (!this._params.groups) {
       throw new Error(`Not in grouping mode`);
     }
 
     return new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       currentRow: 0,
       selectedRows: [],
       searchStr: undefined,
       foundRows: undefined,
-      groups: this._cloneGroups(undefined, this._groups, (parent, prev, g) => {
+      groups: this._cloneGroups(undefined, this._params.groups, (parent, prev, g) => {
         if (prev) {
           return {
             ...g,
@@ -1097,7 +961,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return this;
     }
 
-    let newCurrentRow = this._currentRow + delta;
+    let newCurrentRow = this._params.currentRow + delta;
     if (newCurrentRow >= this.size) newCurrentRow = this.size - 1;
     if (newCurrentRow < 0) newCurrentRow = 0;
 
@@ -1105,7 +969,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setCurrentRow(currentRow: number): RecordSet<R> {
-    if (!this.size || this._currentRow === currentRow) {
+    if (!this.size || this._params.currentRow === currentRow) {
       return this;
     }
 
@@ -1113,16 +977,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Invalid row index`);
     }
 
-    this._subject.next({ event: "BeforeScroll", rs: this });
-
-    const rs = new RecordSet<R>({
-      ...this.params,
+    return new RecordSet<R>({
+      ...this._params,
       currentRow
     });
-
-    this._subject.next({ event: "AfterScroll", rs });
-
-    return rs;
   }
 
   public setAllRowsSelected(value: boolean): RecordSet<R> {
@@ -1131,9 +989,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       allRowsSelected: value,
-      selectedRows: value ? [] : this._selectedRows
+      selectedRows: value ? [] : this._params.selectedRows
     });
   }
 
@@ -1148,7 +1006,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const selectedRows = this.allRowsSelected
       ? Array(this.size).fill(true)
-      : [...this._selectedRows];
+      : [...this._params.selectedRows];
 
     const row = this.get(idx);
     selectedRows[idx] = selected || undefined;
@@ -1165,22 +1023,22 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       this.size === selectedRows.reduce((p, sr) => (sr ? p + 1 : p), 0);
 
     return new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       allRowsSelected,
       selectedRows: allRowsSelected ? [] : selectedRows
     });
   }
 
   public setFilter(filter: IFilter | undefined): RecordSet<R> {
-    if (equal(this._filter, filter)) {
+    if (equal(this._params.filter, filter)) {
       return this;
     }
 
     const isFilter = filter && filter.conditions.length;
     const currentRowData = this.size ? this.get(this.currentRow) : undefined;
-    const selectedRowsData = this._allRowsSelected
+    const selectedRowsData = this._params.allRowsSelected
       ? this.toArray()
-      : this._selectedRows.reduce(
+      : this._params.selectedRows.reduce(
           (p, sr, idx) => {
             if (sr) {
               p.push(this.get(idx));
@@ -1194,7 +1052,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     if (isFilter) {
       const re = new RegExp(filter!.conditions[0].value, "i");
-      newData = (this._savedData || this._data)
+      newData = (this._params.savedData || this._params.data)
         .filter(row =>
           row
             ? Object.entries(row).some(
@@ -1204,21 +1062,21 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         )
         .toList();
     } else {
-      if (!this._savedData) {
+      if (!this._params.savedData) {
         throw new Error("No saved data for RecordSet");
       }
-      newData = this._savedData;
+      newData = this._params.savedData;
     }
 
     const res = new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       data: newData,
       currentRow: 0,
       sortFields: [],
       allRowsSelected: false,
       selectedRows: [],
       filter: isFilter ? filter : undefined,
-      savedData: isFilter ? this._savedData || this._data : undefined,
+      savedData: isFilter ? this._params.savedData || this._params.data : undefined,
       searchStr: undefined,
       foundRows: undefined,
       groups: undefined,
@@ -1227,10 +1085,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const foundIdx = currentRowData ? this.indexOf(currentRowData) : -1;
     if (foundIdx >= 0) {
-      res._currentRow = foundIdx;
+      res._params.currentRow = foundIdx;
     }
 
-    res._selectedRows = selectedRowsData.reduce(
+    res._params.selectedRows = selectedRowsData.reduce(
       (p, srd) => {
         if (srd) {
           const fi = this.indexOf(srd);
@@ -1247,14 +1105,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public isFiltered = (): boolean =>
-    !!this._filter &&
-    !!this._filter.conditions.length &&
-    !!this._filter.conditions[0].value;
+    !!this._params.filter &&
+    !!this._params.filter.conditions.length &&
+    !!this._params.filter.conditions[0].value;
 
   public search(searchStr: string | undefined): RecordSet<R> {
     if (!searchStr) {
       return new RecordSet<R>({
-        ...this.params,
+        ...this._params,
         searchStr: undefined,
         foundRows: undefined
       });
@@ -1292,7 +1150,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     return new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       searchStr,
       foundRows: foundRows.length ? foundRows : undefined
     });
@@ -1306,8 +1164,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const rowData = this.get(row).data;
     const s = rowData[fieldName] ? rowData[fieldName]!.toString() : "";
 
-    if (this._foundRows && this._foundRows[row]) {
-      const foundNodes = this._foundRows[row].filter(
+    if (this._params.foundRows && this._params.foundRows[row]) {
+      const foundNodes = this._params.foundRows[row].filter(
         fn => fn.fieldName === fieldName
       );
 
@@ -1336,7 +1194,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (this.isFiltered()) {
-      const re = new RegExp(this._filter!.conditions[0].value, "i");
+      const re = new RegExp(this._params.filter!.conditions[0].value, "i");
       const res: IMatchedSubString[] = [];
       let l = 0;
       let m = re.exec(s);
@@ -1366,8 +1224,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setData(data: Data<R>, masterLink?: IMasterLink, srcEoF: boolean = true): RecordSet<R> {
-    const rs = new RecordSet<R>({
-      ...this.params,
+    return new RecordSet<R>({
+      ...this._params,
       data,
       srcEoF,
       currentRow: 0,
@@ -1380,39 +1238,35 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       foundRows: undefined,
       groups: undefined,
       aggregates: undefined,
-      masterLink: masterLink || this.params.masterLink
+      masterLink: masterLink || this._params.masterLink
     });
-
-    this._subject.next({ event: "AfterScroll", rs });
-
-    return rs;
   }
 
   public startLoadingData(): RecordSet<R> {
-    if (this._srcEoF) {
+    if (this._params.srcEoF) {
       throw new Error("End of file");
     }
-    if (this._loadingData) {
+    if (this._params.loadingData) {
       throw new Error("RecordSet already in loading");
     }
 
     return new RecordSet<R>({
-      ...this.params,
+      ...this._params,
       loadingData: true
     });
   }
 
   public finishLoadingData(records: R[], srcEoF?: boolean): RecordSet<R> {
-    if (this._srcEoF) {
+    if (this._params.srcEoF) {
       throw new Error("End of file");
     }
-    if (!this._loadingData) {
+    if (!this._params.loadingData) {
       throw new Error("RecordSet should be in loading");
     }
 
     return new RecordSet<R>({
-      ...this.params,
-      data: this._data.push(...records),
+      ...this._params,
+      data: this._params.data.push(...records),
       srcEoF,
       loadingData: false,
       sortFields: [],

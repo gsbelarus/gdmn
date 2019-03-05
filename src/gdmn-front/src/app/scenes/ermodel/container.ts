@@ -39,9 +39,9 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
           let entitiesRS = getState().recordSet.entities;
 
           if (!entitiesRS) {
-            entitiesRS = RecordSet.createWithData(
-              'entities',
-              [
+            entitiesRS = RecordSet.create({
+              name: 'entities',
+              fieldDefs: [
                 {
                   fieldName: 'name',
                   dataType: TFieldType.String,
@@ -55,7 +55,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                   caption: 'Description'
                 }
               ],
-              List(
+              data: List(
                 Object.entries(erModel.entities).map(
                   ([name, ent]) =>
                     ({
@@ -63,8 +63,9 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                       description: ent.lName.ru ? ent.lName.ru.name : name
                     } as IDataRow)
                 )
-              )
-            );
+              ),
+              srcEoF: true
+            });
 
             dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
           }
@@ -105,9 +106,9 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
               );
             }
           } else {
-            attributesRS = RecordSet.createWithData(
-              'attributes',
-              [
+            attributesRS = RecordSet.create({
+              name: 'attributes',
+              fieldDefs: [
                 {
                   fieldName: 'name',
                   size: 31,
@@ -121,7 +122,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                   caption: 'Description'
                 }
               ],
-              List(
+              data: List(
                 Object.entries(erModel.entities[currEntity].attributes).map(
                   ([name, ent]) =>
                     ({
@@ -130,8 +131,8 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                     } as IDataRow)
                 )
               ),
-              true,
-              {
+              srcEoF: true,
+              masterLink: {
                 masterName: entitiesRS.name,
                 values: [
                   {
@@ -140,7 +141,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                   }
                 ]
               }
-            );
+            });
             dispatch(createRecordSet({ name: attributesRS.name, rs: attributesRS }));
           }
 

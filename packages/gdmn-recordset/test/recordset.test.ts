@@ -116,36 +116,17 @@ describe('recordset', () => {
       },
     ];
 
-    let rs = RecordSet.createWithData(
-      'test',
+    let rs = RecordSet.create({
+      name: 'test',
       fieldDefs,
-      List<INBRBCurrency>(nbrbCurrencies as any)
-    );
+      data: List<INBRBCurrency>(nbrbCurrencies as any),
+      srcEoF: true
+    });
 
     expect(rs.size).toEqual(224);
 
-    let c = 0;
-
-    rs.asObservable.subscribe(
-      e => { if (e.event === 'BeforeScroll') {
-        expect(rs.currentRow).toEqual(0);
-        expect(e.rs.currentRow).toEqual(0);
-        c++;
-      } }
-    );
-
-    rs.asObservable.subscribe(
-      e => { if (e.event === 'AfterScroll') {
-        expect(rs.currentRow).toEqual(0);
-        expect(e.rs.currentRow).toEqual(10);
-        c++
-      } }
-    );
-
     rs = rs.setCurrentRow(10);
     expect(rs.currentRow).toEqual(10);
-    expect(c).toEqual(2);
-
   });
 
 });

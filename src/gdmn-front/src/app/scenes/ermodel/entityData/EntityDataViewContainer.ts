@@ -45,15 +45,13 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         ...dispatchProps,
 
         attachRs: () => dispatch((dispatch, getState) => {
-          // if (!mutex.permits) return;
-
           const erModel = getState().gdmnState.erModel;
 
           if (!erModel || !Object.keys(erModel.entities).length) return;
           const entityName = ownProps.match ? ownProps.match.params.entityName : "";
           const entity = erModel.entity(entityName);
 
-          const q = new EntityQuery(
+          const query = new EntityQuery(
             new EntityLink(
               entity,
               "z",
@@ -77,9 +75,10 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             )
           );
 
+          // FIXME
           apiService
             .prepareQuery({
-              query: q.inspect()
+              query: query.inspect()
             })
             .subscribe(value => {
               switch (value.payload.status) {
@@ -87,31 +86,30 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                   dispatch(
                     rsMetaActions.setRsMeta(entity.name, {
                       taskKey: value.meta!.taskKey!,
-                      q
+                      query
                     })
                   );
 
-                  const rsMeta = getState().rsMeta[entityName];
-
                   apiService.fetchQuery({
                     rowsCount: 100,
-                    taskKey: rsMeta.taskKey
+                    taskKey: value.meta!.taskKey!
                   })
                     .then((res) => {
+                      const rsMeta = getState().rsMeta[entityName];
+                      if (!rsMeta) return;
+
                       switch (res.payload.status) {
                         case TTaskStatus.SUCCESS: {
                           const fieldDefs = Object.entries(res.payload.result!.aliases)
-                            .map(([fieldAlias, data]) => attr2fd(rsMeta.q, fieldAlias, data));
+                            .map(([fieldAlias, data]) => attr2fd(rsMeta.query, fieldAlias, data));
 
-                          const rs = RecordSet.createWithData(
-                            entity.name,
+                          const rs = RecordSet.create({
+                            name: entity.name,
                             fieldDefs,
-                            List(res.payload.result!.data as IDataRow[]),
-                            false,
-                            undefined,
-                            rsMeta.q,
-                            res.payload.result!.info
-                          );
+                            data: List(res.payload.result!.data as IDataRow[]),
+                            eq: rsMeta.query,
+                            sql: res.payload.result!.info
+                          });
                           dispatch(createRecordSet({name: rs.name, rs}));
 
                           dispatch(

@@ -123,14 +123,13 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
         return attr2fd(q!, fieldAlias, data);
       });
 
-      const rs = RecordSet.createWithData(
-        `${entity.name}\\${id}`,
+      const rs = RecordSet.create({
+        name: `${entity.name}\\${id}`,
         fieldDefs,
-        List(value.payload.result.data as IDataRow[]),
-        true,
-        undefined,
-        q
-      );
+        data: List(value.payload.result.data as IDataRow[]),
+        srcEoF: true,
+        eq: q
+      });
 
       this.setState({ rs });
     }

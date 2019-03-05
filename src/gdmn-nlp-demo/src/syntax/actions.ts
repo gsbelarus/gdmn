@@ -1,5 +1,5 @@
 import { createAction } from 'typesafe-actions';
-import { EntityQuery, IEntityQueryResponse, NumberAttribute, StringAttribute, IntegerAttribute, SequenceAttribute, FloatAttribute, DateAttribute, BooleanAttribute, EnumAttribute } from 'gdmn-orm';
+import { EntityQuery, IEntityQueryResponse } from 'gdmn-orm';
 import { ThunkDispatch } from 'redux-thunk';
 import { State } from '../store';
 import { RecordSetAction, RecordSet, TFieldType, IFieldDef, IDataRow, createRecordSet } from 'gdmn-recordset';
@@ -13,7 +13,7 @@ export type SetSyntaxText = typeof setSyntaxText;
 
 let fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] => {
   const keysAliases = Object.keys(res.aliases);
-  var result: IFieldDef[] = keysAliases.map((alias) => {
+  return keysAliases.map((alias) => {
     const eqfa = res.aliases[alias];
     const link = query.link.deepFindLink(eqfa.linkAlias)!;
     const findField = link.fields.find( field => field.attribute.name === eqfa.attribute );
@@ -57,13 +57,17 @@ let fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] =>
     const caption = attr.name;
     return {fieldName: alias, dataType, size, caption, eqfa};
   });
-
-  return result;
-}
+};
 
 export const loadRecordSet = (query: EntityQuery, host: string, port: string)  => (dispatch: ThunkDispatch<State, never, RecordSetAction>, _getState: () => State) => {
   fetch(`http://${host}:${port}/data?query=${encodeURIComponent(query.serialize())}`)
   .then(res => res.json())
-  .then(res => RecordSet.createWithData('db', fieldDefs(query, res), List(res.data as IDataRow[]), true, undefined, query))
+  .then(res => RecordSet.create({
+    name: 'db',
+    fieldDefs: fieldDefs(query, res),
+    data: List(res.data as IDataRow[]),
+    srcEoF: true,
+    eq: query
+  }))
   .then(res => dispatch(createRecordSet({ name: res.name, rs: res })))
-}
+};
