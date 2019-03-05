@@ -14,7 +14,6 @@ import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
-import { EntityQuery } from 'gdmn-orm';
 
 initializeIcons(/* optional base url */);
 
@@ -23,13 +22,12 @@ initializeIcons(/* optional base url */);
 interface IRsMetaState {
   [rsName: string]: {
     taskKey: string;
-    query: EntityQuery;
   };
 }
 
 const rsMetaActions = {
   setRsMeta: createAction('SET_RS_META', resolve => {
-    return (rsName: string, rsMeta: { taskKey: string; query: EntityQuery }) => resolve({ rsName, rsMeta });
+    return (rsName: string, rsMeta: { taskKey: string; }) => resolve({ rsName, rsMeta });
   }),
   deleteRsMeta: createAction('DELETE_RS_META', resolve => {
     return (rsName: string) => resolve(rsName);
@@ -39,20 +37,21 @@ const rsMetaActions = {
 type TRsMetaActions = ActionType<typeof rsMetaActions>;
 
 function rsMetaReducer(state: IRsMetaState = {}, action: TRsMetaActions) {
-  if (action.type === getType(rsMetaActions.setRsMeta)) {
-    return {
-      ...state,
-      [action.payload.rsName]: action.payload.rsMeta
-    };
+  switch (action.type) {
+    case getType(rsMetaActions.setRsMeta): {
+      return {
+        ...state,
+        [action.payload.rsName]: action.payload.rsMeta || {}
+      };
+    }
+    case getType(rsMetaActions.deleteRsMeta): {
+      const newState = { ...state };
+      delete newState[action.payload];
+      return newState;
+    }
+    default:
+      return state;
   }
-
-  if (action.type === getType(rsMetaActions.deleteRsMeta)) {
-    const newState = { ...state };
-    delete newState[action.payload];
-    return newState;
-  }
-
-  return state;
 }
 
 //

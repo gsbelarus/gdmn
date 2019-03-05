@@ -11,7 +11,7 @@ export const ViewTabsContainer = connect(
   (state: IState) => ({
     recordSet: state.recordSet,
     rsMeta: state.rsMeta,
-    viewTabs: state.gdmnState.viewTabs,
+    viewTabs: state.gdmnState.viewTabs
   }),
   dispatch => ({
     dispatch
@@ -45,17 +45,22 @@ export const ViewTabsContainer = connect(
       dispatch(gdmnActions.deleteViewTab(vt));
 
       if (vt.rs) {
-        await Promise.all(vt.rs.filter( name => !!rsMeta[name] ).map(
-          name => apiService.interruptTask({
-            taskKey: rsMeta[name].taskKey
-          })
+        await Promise.all(
+          vt.rs
+            .filter(name => rsMeta[name])
+            .map(name => {
+              const {taskKey} = rsMeta[name];
+                if (taskKey) {
+                  apiService.interruptTask({taskKey}).catch(console.error);
+                }
+
+                dispatch(rsMetaActions.deleteRsMeta(name));
+              }
+            )
+        )
           .then(
-            () => dispatch(rsMetaActions.deleteRsMeta(name))
-          )
-        ))
-        .then(
-          () => vt.rs!.filter( name => !!recordSet[name] ).forEach( name => dispatch(deleteRecordSet({ name })) )
-        );
+            () => vt.rs!.filter(name => !!recordSet[name]).forEach(name => dispatch(deleteRecordSet({name})))
+          );
       }
     }
   })

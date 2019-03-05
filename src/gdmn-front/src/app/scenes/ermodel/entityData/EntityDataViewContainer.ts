@@ -75,7 +75,6 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             )
           );
 
-          // FIXME
           apiService
             .prepareQuery({
               query: query.inspect()
@@ -85,8 +84,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                 case TTaskStatus.RUNNING: {
                   dispatch(
                     rsMetaActions.setRsMeta(entity.name, {
-                      taskKey: value.meta!.taskKey!,
-                      query
+                      taskKey: value.meta!.taskKey!
                     })
                   );
 
@@ -95,19 +93,16 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                     taskKey: value.meta!.taskKey!
                   })
                     .then((res) => {
-                      const rsMeta = getState().rsMeta[entityName];
-                      if (!rsMeta) return;
-
                       switch (res.payload.status) {
                         case TTaskStatus.SUCCESS: {
                           const fieldDefs = Object.entries(res.payload.result!.aliases)
-                            .map(([fieldAlias, data]) => attr2fd(rsMeta.query, fieldAlias, data));
+                            .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
 
                           const rs = RecordSet.create({
                             name: entity.name,
                             fieldDefs,
                             data: List(res.payload.result!.data as IDataRow[]),
-                            eq: rsMeta.query,
+                            eq: query,
                             sql: res.payload.result!.info
                           });
                           dispatch(createRecordSet({name: rs.name, rs}));

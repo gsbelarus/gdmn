@@ -661,7 +661,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           >
             <InfiniteLoader
               isRowLoaded={this._isRowLoaded}
-              loadMoreRows={rs.loadingData || rs.srcEoF ? Promise.resolve : loadMoreRsData!}
+              loadMoreRows={rs.loadingData || rs.srcEoF ? () => Promise.resolve() : loadMoreRsData!}
               rowCount={rs.size + infiniteLoadMinimumBatchSize}
               minimumBatchSize={infiniteLoadMinimumBatchSize}
               threshold={infiniteLoadThreshold}
