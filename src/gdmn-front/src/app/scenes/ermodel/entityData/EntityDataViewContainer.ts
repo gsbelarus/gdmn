@@ -75,6 +75,8 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             )
           );
 
+          dispatch(rsMetaActions.setRsMeta(entity.name, {}));
+
           apiService
             .prepareQuery({
               query: query.inspect()
@@ -82,54 +84,57 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             .subscribe(value => {
               switch (value.payload.status) {
                 case TTaskStatus.RUNNING: {
-                  dispatch(
-                    rsMetaActions.setRsMeta(entity.name, {
-                      taskKey: value.meta!.taskKey!
+                  const taskKey = value.meta!.taskKey!;
+
+                  if (getState().rsMeta[entity.name]) {
+                    dispatch(rsMetaActions.setRsMeta(entity.name, {taskKey}));
+
+                    apiService.fetchQuery({
+                      rowsCount: 100,
+                      taskKey
                     })
-                  );
-
-                  apiService.fetchQuery({
-                    rowsCount: 100,
-                    taskKey: value.meta!.taskKey!
-                  })
-                    .then((res) => {
-                      switch (res.payload.status) {
-                        case TTaskStatus.SUCCESS: {
-                          const fieldDefs = Object.entries(res.payload.result!.aliases)
-                            .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
-
-                          const rs = RecordSet.create({
-                            name: entity.name,
-                            fieldDefs,
-                            data: List(res.payload.result!.data as IDataRow[]),
-                            eq: query,
-                            sql: res.payload.result!.info
-                          });
-                          dispatch(createRecordSet({name: rs.name, rs}));
-
-                          dispatch(
-                            createGrid({
-                              name: rs.name,
-                              columns: rs.fieldDefs.map(fd => ({
-                                name: fd.fieldName,
-                                caption: [fd.caption || fd.fieldName],
-                                fields: [{...fd}],
-                                width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                              })),
-                              leftSideColumns: 0,
-                              rightSideColumns: 0,
-                              hideFooter: true
-                            })
-                          );
+                      .then((res) => {
+                        if (!getState().rsMeta[entity.name]) {
+                          return;
                         }
-                      }
-                    });
+                        switch (res.payload.status) {
+                          case TTaskStatus.SUCCESS: {
+                            const fieldDefs = Object.entries(res.payload.result!.aliases)
+                              .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
+
+                            const rs = RecordSet.create({
+                              name: entity.name,
+                              fieldDefs,
+                              data: List(res.payload.result!.data as IDataRow[]),
+                              eq: query,
+                              sql: res.payload.result!.info
+                            });
+                            dispatch(createRecordSet({name: rs.name, rs}));
+
+                            dispatch(
+                              createGrid({
+                                name: rs.name,
+                                columns: rs.fieldDefs.map(fd => ({
+                                  name: fd.fieldName,
+                                  caption: [fd.caption || fd.fieldName],
+                                  fields: [{...fd}],
+                                  width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                                })),
+                                leftSideColumns: 0,
+                                rightSideColumns: 0,
+                                hideFooter: true
+                              })
+                            );
+                          }
+                        }
+                      });
+                  }
                   break;
                 }
                 case TTaskStatus.INTERRUPTED:
                 case TTaskStatus.FAILED:
                 case TTaskStatus.SUCCESS:
-                  dispatch(rsMetaActions.deleteRsMeta(entity.name));
+                  dispatch(rsMetaActions.setRsMeta(entity.name, {...getState().rsMeta[entity.name], srcEoF: true}));
                   break;
                 case TTaskStatus.PAUSED:
                 default: {
@@ -140,7 +145,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }),
 
         loadMoreRsData: async ({stopIndex}: IndexRange) => {
-          if (!rsMeta) {
+          if (rsMeta.srcEoF) {
             dispatch(
               startLoadingData({name: stateProps.data.rs.name})
             );
@@ -159,7 +164,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           dispatch(startLoadingData({name: stateProps.data.rs.name}));
           const res = await apiService.fetchQuery({
             rowsCount: fetchRecordCount,
-            taskKey: rsMeta.taskKey
+            taskKey: rsMeta.taskKey!
           });
           switch (res.payload.status) {
             case TTaskStatus.SUCCESS: {

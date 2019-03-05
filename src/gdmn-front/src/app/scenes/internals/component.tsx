@@ -62,7 +62,7 @@ export class Internals extends View<IInternalsProps, {}> {
               Object.entries(rsMeta).map( ([name, rsm]) => (
                 rsm ?
                   <li key={name}>
-                    {name} -- taskKey: {rsm.taskKey ? rsm.taskKey : undefined}
+                    {name} -- taskKey: {rsm.taskKey ? rsm.taskKey : undefined}, srcEoF: {rsm.srcEoF ? 'true' : 'false'}
                   </li>
                 :
                   <li>{name}</li>

@@ -48,15 +48,13 @@ export const ViewTabsContainer = connect(
         await Promise.all(
           vt.rs
             .filter(name => rsMeta[name])
-            .map(name => {
-              const {taskKey} = rsMeta[name];
-                if (taskKey) {
-                  apiService.interruptTask({taskKey}).catch(console.error);
-                }
-
-                dispatch(rsMetaActions.deleteRsMeta(name));
+            .map(async name => {
+              const {taskKey, srcEoF} = rsMeta[name];
+              if (taskKey && !srcEoF) {
+                await apiService.interruptTask({taskKey}).catch(console.error);
               }
-            )
+              dispatch(rsMetaActions.deleteRsMeta(name));
+            })
         )
           .then(
             () => vt.rs!.filter(name => !!recordSet[name]).forEach(name => dispatch(deleteRecordSet({name})))
