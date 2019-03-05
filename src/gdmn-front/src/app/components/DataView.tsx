@@ -164,7 +164,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   public renderGrid(
     gridName: string,
     gcs: GridComponentState,
-    rs: RecordSet
+    rs: RecordSet,
+    width: string
   ) {
     const {
       onCancelSortDialog,
@@ -179,7 +180,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       loadMoreRsData
     } = this.props;
     return (
-      <div style={{ width: '50%' }}>
+      <div style={{ width }}>
         <div style={{ height: '24px' }}>
           Filter:
         </div>
@@ -221,8 +222,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return this.renderWide(undefined,
       <div className="ViewGridPlacement">
         {this.renderModal()}
-        {this.renderGrid(masterGridName, data!.gcs, masterRS)}
-        {this.renderGrid(detailGridName, data!.detail![0].gcs, detailRS)}
+        {this.renderGrid(masterGridName, data!.gcs, masterRS, '50%')}
+        {this.renderGrid(detailGridName, data!.detail![0].gcs, detailRS, '50%')}
       </div>
     );
   }
@@ -235,7 +236,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return this.renderWide(undefined,
       <div className="ViewGridPlacement">
         {this.renderModal()}
-        {this.renderGrid(masterGridName, data!.gcs, masterRS)}
+        {this.renderGrid(masterGridName, data!.gcs, masterRS, '100%')}
       </div>
     );
   }

@@ -298,7 +298,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       const currentRow = rs.currentRow;
 
       const bodyWidth = width - leftSideColumnsWidth - rightSideWidth - 1;
-      const bodyColumnsWidth = rightSideColumns ? bodyWidth : bodyWidth <= sbSize ? 0 : bodyWidth - sbSize;
+      const bodyColumnsWidth = rightSideColumns ? bodyWidth : (bodyWidth <= sbSize ? 0 : bodyWidth - sbSize);
 
       const scrollTop =
         scrollHeight <= bodyHeight ? 0 : sTop >= scrollHeight - rowHeight ? scrollHeight - bodyHeight : sTop;
@@ -850,7 +850,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             let deltaWidth =
               width -
               columns.reduce((w, c) => (c.width ? w + c.width : w + this.state.columnWidth), 0) -
-              scrollbarSize();
+              scrollbarSize() - 1;
 
             if (deltaWidth < 0) {
               deltaWidth = 0;
@@ -1288,10 +1288,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const { columns, rightSideColumns } = this.props;
     const { columnWidth, deltaWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
-    return !fixed && columns.length - rightSideColumns === adjustedIndex
-      ? deltaWidth
-      : columns[adjustedIndex] && columns[adjustedIndex].width
-      ? columns[adjustedIndex].width!
+    return !fixed && (columns.length - rightSideColumns === adjustedIndex) ? deltaWidth
+      : columns[adjustedIndex] && columns[adjustedIndex].width ? columns[adjustedIndex].width!
       : columnWidth;
   };
 
