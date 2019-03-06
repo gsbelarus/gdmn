@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { IState, rsMetaActions } from '@src/app/store/reducer';
+import { IState } from '@src/app/store/reducer';
 import { IViewTab } from '@src/app/scenes/gdmn/types';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { IViewTabsProps, ViewTabs } from './ViewTabs';
@@ -47,18 +47,16 @@ export const ViewTabsContainer = connect(
       if (vt.rs) {
         await Promise.all(
           vt.rs
-            .filter(name => rsMeta[name])
+            .filter(name => recordSet[name])
             .map(async name => {
-              const {taskKey, srcEoF} = rsMeta[name];
-              if (taskKey && !srcEoF) {
-                await apiService.interruptTask({taskKey}).catch(console.error);
+              const rs = recordSet[name];
+              const rsm = rsMeta[name];
+              if (rsm) {
+                await apiService.interruptTask({taskKey: rsm.taskKey});
               }
-              dispatch(rsMetaActions.deleteRsMeta(name));
+              dispatch(deleteRecordSet({name: rs.name}));
             })
-        )
-          .then(
-            () => vt.rs!.filter(name => !!recordSet[name]).forEach(name => dispatch(deleteRecordSet({name})))
-          );
+        );
       }
     }
   })

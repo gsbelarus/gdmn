@@ -1,7 +1,7 @@
 import React from "react";
 import { ERModel } from "gdmn-orm";
 import { IViewProps, View } from "@src/app/components/View";
-import { RecordSetReducerState } from "gdmn-recordset";
+import { RecordSetReducerState, TStatus } from "gdmn-recordset";
 import { IRsMetaState } from "@src/app/store/reducer";
 import { IViewTab } from "../gdmn/types";
 import { StompLogPanelContainer, ConnectBtnContainer } from "./container";
@@ -36,7 +36,7 @@ export class Internals extends View<IInternalsProps, {}> {
           {
             Object.entries(recordSet).map( ([name, rs]) => (
               <li key={name}>
-                {name} -- {rs.size} records, {rs.fieldDefs.length} fields, srcEoF: {rs.srcEoF ? 'true' : 'false'}
+                {name} -- {rs.size} records, {rs.fieldDefs.length} fields, status: {TStatus[rs.status]}
               </li>
             ))
           }
@@ -62,7 +62,7 @@ export class Internals extends View<IInternalsProps, {}> {
               Object.entries(rsMeta).map( ([name, rsm]) => (
                 rsm ?
                   <li key={name}>
-                    {name} -- taskKey: {rsm.taskKey ? rsm.taskKey : undefined}, srcEoF: {rsm.srcEoF ? 'true' : 'false'}
+                    {name} -- taskKey: {rsm.taskKey}
                   </li>
                 :
                   <li>{name}</li>

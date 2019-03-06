@@ -6,13 +6,16 @@ import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {createGrid, GridAction} from "gdmn-grid";
 import {BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute} from "gdmn-orm";
 import {
+  addData,
   createRecordSet,
-  finishLoadingData,
   IDataRow,
+  loadingData,
   RecordSet,
   RecordSetAction,
-  startLoadingData,
-  TFieldType
+  setData,
+  setError,
+  TFieldType,
+  TStatus
 } from "gdmn-recordset";
 import {List} from "immutable";
 import {connect} from "react-redux";
@@ -75,7 +78,15 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             )
           );
 
-          dispatch(rsMetaActions.setRsMeta(entity.name, {}));
+          const rs = RecordSet.create({
+            name: entity.name,
+            fieldDefs: [],
+            data: List([] as IDataRow[]),
+            eq: query,
+            sequentially: true
+          });
+          dispatch(createRecordSet({name: rs.name, rs}));
+          dispatch(loadingData({name: rs.name}));
 
           apiService
             .prepareQuery({
@@ -86,7 +97,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                 case TTaskStatus.RUNNING: {
                   const taskKey = value.meta!.taskKey!;
 
-                  if (getState().rsMeta[entity.name]) {
+                  if (getState().recordSet[entity.name]) {
                     dispatch(rsMetaActions.setRsMeta(entity.name, {taskKey}));
 
                     apiService.fetchQuery({
@@ -94,48 +105,86 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                       taskKey
                     })
                       .then((res) => {
-                        if (!getState().rsMeta[entity.name]) {
-                          return;
-                        }
-                        switch (res.payload.status) {
-                          case TTaskStatus.SUCCESS: {
-                            const fieldDefs = Object.entries(res.payload.result!.aliases)
-                              .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
+                        const emptyRs = getState().recordSet[entity.name];
+                        if (emptyRs) {
+                          switch (res.payload.status) {
+                            case TTaskStatus.SUCCESS: {
+                              const fieldDefs = Object.entries(res.payload.result!.aliases)
+                                .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
 
-                            const rs = RecordSet.create({
-                              name: entity.name,
-                              fieldDefs,
-                              data: List(res.payload.result!.data as IDataRow[]),
-                              eq: query,
-                              sql: res.payload.result!.info
-                            });
-                            dispatch(createRecordSet({name: rs.name, rs}));
+                              dispatch(setData({
+                                name: emptyRs.name,
+                                data: List([] as IDataRow[]),
+                                fieldDefs,
+                                sql: res.payload.result!.info
+                              }));
+                              const rs = getState().recordSet[emptyRs.name];
 
-                            dispatch(
-                              createGrid({
-                                name: rs.name,
-                                columns: rs.fieldDefs.map(fd => ({
-                                  name: fd.fieldName,
-                                  caption: [fd.caption || fd.fieldName],
-                                  fields: [{...fd}],
-                                  width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                                })),
-                                leftSideColumns: 0,
-                                rightSideColumns: 0,
-                                hideFooter: true
-                              })
-                            );
+                              dispatch(
+                                addData({
+                                  name: rs.name,
+                                  records: res.payload.result!.data as IDataRow[],
+                                  full: res.payload.result!.finished
+                                })
+                              );
+
+                              dispatch(
+                                createGrid({
+                                  name: rs.name,
+                                  columns: rs.fieldDefs.map(fd => ({
+                                    name: fd.fieldName,
+                                    caption: [fd.caption || fd.fieldName],
+                                    fields: [{...fd}],
+                                    width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                                  })),
+                                  leftSideColumns: 0,
+                                  rightSideColumns: 0,
+                                  hideFooter: true
+                                })
+                              );
+                              break;
+                            }
+                            case TTaskStatus.FAILED: {
+                              dispatch(setError({name: emptyRs.name, error: {message: res.error!.message}}));
+                              break;
+                            }
+                            case TTaskStatus.INTERRUPTED:
+                            case TTaskStatus.PAUSED:
+                            default:
+                              throw new Error("Never thrown");
                           }
+                        } else {
+                          // viewTabs is closed; interrupt task
+                          apiService.interruptTask({taskKey}).catch(console.error);
                         }
                       });
+                  } else {
+                    // viewTabs is closed; interrupt task
+                    apiService.interruptTask({taskKey}).catch(console.error);
                   }
                   break;
                 }
                 case TTaskStatus.INTERRUPTED:
-                case TTaskStatus.FAILED:
-                case TTaskStatus.SUCCESS:
-                  dispatch(rsMetaActions.setRsMeta(entity.name, {...getState().rsMeta[entity.name], srcEoF: true}));
+                case TTaskStatus.FAILED: {
+                  dispatch(rsMetaActions.deleteRsMeta(entity.name));
+                  const rs = getState().recordSet[entity.name];
+                  if (rs) {
+                    if (rs.status !== TStatus.LOADING) {
+                      dispatch(loadingData({name: rs.name}));
+                    }
+                    dispatch(
+                      setError({
+                        name: entity.name,
+                        error: {message: value.error ? value.error.message : "Interrupted"}
+                      })
+                    );
+                  }
                   break;
+                }
+                case TTaskStatus.SUCCESS: {
+                  dispatch(rsMetaActions.deleteRsMeta(entity.name));
+                  break;
+                }
                 case TTaskStatus.PAUSED:
                 default: {
                   throw new Error("Unsupported");
@@ -145,44 +194,43 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }),
 
         loadMoreRsData: async ({stopIndex}: IndexRange) => {
-          if (rsMeta.srcEoF) {
-            dispatch(
-              startLoadingData({name: stateProps.data.rs.name})
-            );
-            dispatch(
-              finishLoadingData({
-                name: stateProps.data.rs.name,
-                records: [],
-                srcEoF: true
-              })
-            );
+          if (!rsMeta) {
             return;
           }
-
           const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
 
-          dispatch(startLoadingData({name: stateProps.data.rs.name}));
+          dispatch(loadingData({name: stateProps.data.rs.name}));
           const res = await apiService.fetchQuery({
             rowsCount: fetchRecordCount,
-            taskKey: rsMeta.taskKey!
+            taskKey: rsMeta.taskKey
           });
           switch (res.payload.status) {
             case TTaskStatus.SUCCESS: {
               dispatch(
-                finishLoadingData({
+                addData({
                   name: stateProps.data.rs.name,
-                  records: res.payload.result!.data as IDataRow[]
+                  records: res.payload.result!.data as IDataRow[],
+                  full: res.payload.result!.finished
                 })
               );
               break;
             }
-            default: {
-              finishLoadingData({
-                name: stateProps.data.rs.name,
-                records: []
-              });
+            case TTaskStatus.FAILED: {
+              // error can come from PREPARE_QUERY cmd
+              if (stateProps.data.rs.status !== TStatus.ERROR) {
+                dispatch(
+                  setError({
+                    name: stateProps.data.rs.name,
+                    error: {message: res.error!.message}
+                  })
+                );
+              }
               break;
             }
+            case TTaskStatus.INTERRUPTED:
+            case TTaskStatus.PAUSED:
+            default:
+              throw new Error("Never thrown");
           }
         }
       };

@@ -2,6 +2,17 @@ import { List } from "immutable";
 import { INumberFormat, IDateFormat } from "./format";
 import { IEntityQueryResponseFieldAlias } from "gdmn-orm";
 
+export enum TStatus {
+  PARTIAL,
+  LOADING,
+  FULL,
+  ERROR
+};
+
+export interface IError {
+  message: string;
+}
+
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
 export enum TFieldType {

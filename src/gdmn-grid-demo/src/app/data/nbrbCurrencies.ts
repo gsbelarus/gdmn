@@ -129,5 +129,5 @@ export function loadNBRBCurrencies(name: string, rscf: RSCreateFunc<INBRBCurrenc
 
     const data = List<INBRBCurrency>(nbrbCurrencies as any);
 
-    rscf(RecordSet.create<INBRBCurrency>({name, fieldDefs, data, srcEoF: true}));
+    rscf(RecordSet.create<INBRBCurrency>({name, fieldDefs, data}));
   };

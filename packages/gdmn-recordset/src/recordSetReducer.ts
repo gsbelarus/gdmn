@@ -94,18 +94,22 @@ export const recordSetReducer = (
       return newState(rs.collapseExpandGroups(collapse));
     }
 
-    case getType(actions.setRecordSetData): {
-      const { data, masterLink, srcEoF } = action.payload;
-      return newState(rs.setData(data, masterLink, srcEoF));
+    case getType(actions.setData): {
+      return newState(rs.setData(action.payload));
     }
 
-    case getType(actions.startLoadingData): {
-      return newState(rs.startLoadingData());
+    case getType(actions.loadingData): {
+      return newState(rs.loadingData());
     }
 
-    case getType(actions.finishLoadingData): {
-      const { records, srcEoF } = action.payload;
-      return newState(rs.finishLoadingData(records, srcEoF));
+    case getType(actions.addData): {
+      const { records, full } = action.payload;
+      return newState(rs.addData(records, full));
+    }
+
+    case getType(actions.setError): {
+      const { error } = action.payload;
+      return newState(rs.setError(error));
     }
 
     default:

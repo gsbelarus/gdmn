@@ -100,5 +100,5 @@ export function loadDemoData(name: string, rscf: RSCreateFunc) {
   ];
 
   const data = List<any>(demoData);
-  rscf(RecordSet.create({name, fieldDefs, data, srcEoF: true}));
+  rscf(RecordSet.create({name, fieldDefs, data}));
 };

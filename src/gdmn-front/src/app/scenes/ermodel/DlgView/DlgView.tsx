@@ -127,7 +127,6 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
         name: `${entity.name}\\${id}`,
         fieldDefs,
         data: List(value.payload.result.data as IDataRow[]),
-        srcEoF: true,
         eq: q
       });
 

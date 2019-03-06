@@ -1,7 +1,7 @@
 import { createAction } from "typesafe-actions";
 
-import { RecordSet } from "./recordSet";
-import { SortFields, Data, IMasterLink, IDataRow } from './types';
+import { IRecordSetDataOptions, RecordSet } from "./recordSet";
+import { SortFields, IDataRow, IError } from "./types";
 import { IFilter } from "./filter";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
@@ -24,23 +24,29 @@ export const deleteRecordSet = createAction('RECORDSET/DELETE', resolve => {
 
 export type DeleteRecordSet = typeof deleteRecordSet;
 
-export const setRecordSetData = createAction('RECORDSET/SET_DATA', resolve => {
-  return (params: WithComponentName<{ data: Data, masterLink?: IMasterLink, srcEoF?: boolean }>) => resolve(params);
+export const setData = createAction('RECORDSET/SET_DATA', resolve => {
+  return (params: WithComponentName<IRecordSetDataOptions>) => resolve(params);
 });
 
-export type SetRecordSetData = typeof setRecordSetData;
+export type SetData = typeof setData;
 
-export const startLoadingData = createAction('RECORDSET/START_LOADING_DATA', resolve => {
+export const loadingData = createAction('RECORDSET/LOADING_DATA', resolve => {
   return (params: WithComponentName) => resolve(params);
 });
 
-export type StartLoadingData = typeof startLoadingData;
+export type LoadingData = typeof loadingData;
 
-export const finishLoadingData = createAction('RECORDSET/FINISH_LOADING_DATA', resolve => {
-  return (params: WithComponentName<{ records: IDataRow[], srcEoF?: boolean }>) => resolve(params);
+export const addData = createAction('RECORDSET/ADD_DATA', resolve => {
+  return (params: WithComponentName<{ records: IDataRow[], full?: boolean}>) => resolve(params);
 });
 
-export type FinishLoadingData = typeof finishLoadingData;
+export type AddData = typeof addData;
+
+export const setError = createAction('RECORDSET/SET_ERROR', resolve => {
+  return (params: WithComponentName<{ error: IError}>) => resolve(params);
+});
+
+export type SetError = typeof setError;
 
 export const sortRecordSet = createAction('RECORDSET/SORT', resolve => {
   return (params: WithComponentName<{ sortFields: SortFields }>) => resolve(params);

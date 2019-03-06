@@ -118,7 +118,7 @@ interface TTaskActionResultTypes {
   [TTaskActionNames.DEMO]: undefined;
   [TTaskActionNames.QUERY]: IEntityQueryResponse;
   [TTaskActionNames.PREPARE_QUERY]: undefined;
-  [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse;
+  [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse & {finished: boolean};
   [TTaskActionNames.INTERRUPT]: undefined;
   [TTaskActionNames.RELOAD_SCHEMA]: IERModel;
   [TTaskActionNames.PING]: undefined;

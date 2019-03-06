@@ -79,5 +79,5 @@ export function loadNBRBRates(name: string, rscf: RSCreateFunc<INBRBRate>) {
     const typedRates: INBRBRate[] = (nbrbRates as any).map( (r: any): INBRBRate => ({...r, ['Date']: new Date(r['Date'])}) );
 
     const data = List<INBRBRate>(typedRates);
-    rscf(RecordSet.create({name, fieldDefs, data, srcEoF: true}));
+    rscf(RecordSet.create({name, fieldDefs, data}));
   };

@@ -63,8 +63,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                       description: ent.lName.ru ? ent.lName.ru.name : name
                     } as IDataRow)
                 )
-              ),
-              srcEoF: true
+              )
             });
 
             dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
@@ -93,14 +92,17 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
               dispatch(
                 setRecordSet({
                   name: attributesRS.name,
-                  rs: attributesRS.setData(data, {
-                    masterName: entitiesRS.name,
-                    values: [
-                      {
-                        fieldName: 'name',
-                        value: currEntity
-                      }
-                    ]
+                  rs: attributesRS.setData({
+                    data,
+                    masterLink: {
+                      masterName: entitiesRS.name,
+                      values: [
+                        {
+                          fieldName: "name",
+                          value: currEntity
+                        }
+                      ]
+                    }
                   })
                 })
               );
@@ -131,7 +133,6 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                     } as IDataRow)
                 )
               ),
-              srcEoF: true,
               masterLink: {
                 masterName: entitiesRS.name,
                 values: [

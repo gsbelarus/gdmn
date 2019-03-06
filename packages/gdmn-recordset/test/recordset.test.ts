@@ -119,8 +119,7 @@ describe('recordset', () => {
     let rs = RecordSet.create({
       name: 'test',
       fieldDefs,
-      data: List<INBRBCurrency>(nbrbCurrencies as any),
-      srcEoF: true
+      data: List<INBRBCurrency>(nbrbCurrencies as any)
     });
 
     expect(rs.size).toEqual(224);

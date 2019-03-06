@@ -102,7 +102,7 @@ describe('olap', () => {
   it('olap - 1 cell', () => {
 
     const data = List<any>(demoData.slice(0, 1));
-    let rs = RecordSet.create({name: 'olap', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'olap', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -141,7 +141,7 @@ describe('olap', () => {
   it('olap - 1 row, 2 columns', () => {
 
     const data = List<any>(demoData.slice(0, 2));
-    let rs = RecordSet.create({name: 'olap', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'olap', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -181,7 +181,7 @@ describe('olap', () => {
   it('olap - 2 rows, 4 columns', () => {
 
     const data = List<any>(demoData.slice(0, 3));
-    let rs = RecordSet.create({name: 'olap', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'olap', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -226,7 +226,7 @@ describe('olap', () => {
   it('olap - 3 rows, 5 columns', () => {
 
     const data = List<any>(demoData.slice(0, 4));
-    let rs = RecordSet.create({name:'olap', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name:'olap', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -278,7 +278,7 @@ describe('olap', () => {
   it('olap - 3 rows, 10 columns', () => {
 
     const data = List<any>(demoData.slice(0, 5));
-    let rs = RecordSet.create({name: 'olap', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'olap', fieldDefs, data});
 
     rs = rs.sort([
         {

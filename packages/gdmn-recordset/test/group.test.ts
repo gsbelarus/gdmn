@@ -102,7 +102,7 @@ describe('group', () => {
   it('group 1 level without aggregates', () => {
 
     const data = List<any>(demoData.slice(0, 5));
-    let rs = RecordSet.create({name: 'group', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'group', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -127,7 +127,7 @@ describe('group', () => {
   it('group 1 level with aggregates', () => {
 
     const data = List<any>(demoData.slice(0, 5));
-    let rs = RecordSet.create({name: 'group', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'group', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -157,7 +157,7 @@ describe('group', () => {
   it('group 2 levels without aggregates', () => {
 
     const data = List<any>(demoData.slice(0, 5));
-    let rs = RecordSet.create({name: 'group', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'group', fieldDefs, data});
 
     rs = rs.sort([
         {
@@ -190,7 +190,7 @@ describe('group', () => {
   it('group 2 levels with aggregates', () => {
 
     const data = List<any>(demoData.slice(0, 5));
-    let rs = RecordSet.create({name: 'group', fieldDefs, data, srcEoF: true});
+    let rs = RecordSet.create({name: 'group', fieldDefs, data});
 
     rs = rs.sort([
         {

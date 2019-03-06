@@ -66,7 +66,6 @@ export const loadRecordSet = (query: EntityQuery, host: string, port: string)  =
     name: 'db',
     fieldDefs: fieldDefs(query, res),
     data: List(res.data as IDataRow[]),
-    srcEoF: true,
     eq: query
   }))
   .then(res => dispatch(createRecordSet({ name: res.name, rs: res })))

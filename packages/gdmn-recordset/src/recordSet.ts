@@ -1,35 +1,30 @@
+import equal from "fast-deep-equal";
+import {EntityQuery} from "gdmn-orm";
+import {List} from "immutable";
+import {IFilter} from "./filter";
 import {
-  IDataRow,
-  FieldDefs,
-  SortFields,
-  INamedField,
-  IMatchedSubString,
-  FoundRows,
-  FoundNodes,
-  IDataGroup,
-  TRowType,
-  IRow,
-  TRowCalcFunc,
   CloneGroup,
   Data,
-  Measures,
+  FieldDefs,
+  FoundNodes,
+  FoundRows,
+  IDataGroup,
+  IDataRow,
+  IError,
   IFieldDef,
+  IMasterLink,
+  IMatchedSubString,
+  INamedField,
+  IRow,
+  Measures,
+  SortFields,
   TDataType,
   TFieldType,
-  IMasterLink
+  TRowCalcFunc,
+  TRowType,
+  TStatus
 } from "./types";
-import { IFilter } from "./filter";
-import { List } from "immutable";
-import equal from "fast-deep-equal";
-import {
-  getAsString,
-  getAsNumber,
-  getAsBoolean,
-  getAsDate,
-  isNull,
-  checkField
-} from "./utils";
-import { EntityQuery } from "gdmn-orm";
+import {checkField, getAsBoolean, getAsDate, getAsNumber, getAsString, isNull} from "./utils";
 
 export interface IRSSQLParams {
   [name: string]: any;
@@ -44,9 +39,16 @@ export interface IRecordSetOptions<R extends IDataRow = IDataRow> {
   name: string;
   fieldDefs: FieldDefs;
   data: Data<R>;
-  srcEoF?: boolean;
+  sequentially?: boolean;
   masterLink?: IMasterLink;
   eq?: EntityQuery;
+  sql?: IRSSQLSelect;
+};
+
+export interface IRecordSetDataOptions<R extends IDataRow = IDataRow> {
+  data: Data<R>;
+  fieldDefs?: FieldDefs;
+  masterLink?: IMasterLink;
   sql?: IRSSQLSelect;
 };
 
@@ -57,8 +59,8 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   fieldDefs: FieldDefs;
   calcFields: TRowCalcFunc<R> | undefined;
   data: Data<R>;
-  srcEoF?: boolean;
-  loadingData?: boolean;
+  status: TStatus;
+  error?: IError;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
@@ -102,6 +104,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
           return res;
         },
+        status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
@@ -110,6 +113,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     } else {
       return new RecordSet<R>({
         ...options,
+        status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
         calcFields: undefined,
         currentRow: 0,
         sortFields: [],
@@ -139,12 +143,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._params.sql;
   }
 
-  get srcEoF() {
-    return this._params.srcEoF;
-  }
-
-  get loadingData() {
-    return this._params.loadingData;
+  get status() {
+    return this._params.status;
   }
 
   get size() {
@@ -1223,11 +1223,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return [{ str: s }];
   }
 
-  public setData(data: Data<R>, masterLink?: IMasterLink, srcEoF: boolean = true): RecordSet<R> {
+  public setData(options: IRecordSetDataOptions<R>): RecordSet<R> {
     return new RecordSet<R>({
       ...this._params,
-      data,
-      srcEoF,
+      data: options.data,
+      fieldDefs: options.fieldDefs || this._params.fieldDefs,
+      sql: options.sql || this._params.sql,
       currentRow: 0,
       sortFields: [],
       allRowsSelected: false,
@@ -1238,44 +1239,60 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       foundRows: undefined,
       groups: undefined,
       aggregates: undefined,
-      masterLink: masterLink || this._params.masterLink
+      masterLink: options.masterLink || this._params.masterLink
     });
   }
 
-  public startLoadingData(): RecordSet<R> {
-    if (this._params.srcEoF) {
-      throw new Error("End of file");
+  public loadingData(): RecordSet<R> {
+    switch (this._params.status) {
+      case TStatus.FULL:
+        throw new Error("RecordSet already is full");
+      case TStatus.ERROR:
+        throw new Error("RecordSet already has error");
+      case TStatus.LOADING:
+        throw new Error("RecordSet already is loading");
+      case TStatus.PARTIAL:
+      default:
+        return new RecordSet<R>({
+          ...this._params,
+          status: TStatus.LOADING
+        });
     }
-    if (this._params.loadingData) {
-      throw new Error("RecordSet already in loading");
-    }
-
-    return new RecordSet<R>({
-      ...this._params,
-      loadingData: true
-    });
   }
 
-  public finishLoadingData(records: R[], srcEoF?: boolean): RecordSet<R> {
-    if (this._params.srcEoF) {
-      throw new Error("End of file");
+  public addData(records: R[], full?: boolean): RecordSet<R> {
+    switch (this._params.status) {
+      case TStatus.FULL:
+        throw new Error("RecordSet already is full");
+      case TStatus.ERROR:
+        throw new Error("RecordSet already has error");
+      case TStatus.PARTIAL:
+        throw new Error("RecordSet already is loading");
+      case TStatus.LOADING:
+      default:
+        return new RecordSet<R>({
+          ...this._params,
+          data: this._params.data.push(...records),
+          status: full ? TStatus.FULL : TStatus.PARTIAL
+        });
     }
-    if (!this._params.loadingData) {
-      throw new Error("RecordSet should be in loading");
-    }
+  }
 
-    return new RecordSet<R>({
-      ...this._params,
-      data: this._params.data.push(...records),
-      srcEoF,
-      loadingData: false,
-      sortFields: [],
-      filter: undefined,
-      savedData: undefined,
-      searchStr: undefined,
-      foundRows: undefined,
-      groups: undefined,
-      aggregates: undefined
-    });
+  public setError(error: IError): RecordSet<R> {
+    switch (this._params.status) {
+      case TStatus.FULL:
+        throw new Error("RecordSet already is full");
+      case TStatus.ERROR:
+        throw new Error("RecordSet already has error");
+      case TStatus.PARTIAL:
+        throw new Error("RecordSet already is loading");
+      case TStatus.LOADING:
+      default:
+        return new RecordSet<R>({
+          ...this._params,
+          status: TStatus.ERROR,
+          error: error
+        });
+    }
   }
 }

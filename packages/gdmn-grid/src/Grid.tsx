@@ -13,7 +13,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder } from 'gdmn-recordset';
+import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
 
@@ -661,7 +661,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           >
             <InfiniteLoader
               isRowLoaded={this._isRowLoaded}
-              loadMoreRows={rs.loadingData || rs.srcEoF ? () => Promise.resolve() : loadMoreRsData!}
+              loadMoreRows={rs.status === TStatus.PARTIAL ? loadMoreRsData! : () => Promise.resolve()}
               rowCount={rs.size + infiniteLoadMinimumBatchSize}
               minimumBatchSize={infiniteLoadMinimumBatchSize}
               threshold={infiniteLoadThreshold}
@@ -1294,6 +1294,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   };
 
   private _isRowLoaded = ({ index }: Index) => {
-    return this.props.rs.srcEoF || index < this.props.rs.size;
+    return this.props.rs.status === TStatus.FULL
+      || this.props.rs.status === TStatus.ERROR
+      || index < this.props.rs.size;
   };
 }
