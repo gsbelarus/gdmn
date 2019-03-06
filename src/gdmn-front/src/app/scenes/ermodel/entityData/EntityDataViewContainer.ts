@@ -3,7 +3,7 @@ import {connectDataView} from "@src/app/components/connectDataView";
 import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
-import {createGrid, GridAction} from "gdmn-grid";
+import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
 import {BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute} from "gdmn-orm";
 import {
   addData,
@@ -193,13 +193,13 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             });
         }),
 
-        loadMoreRsData: async ({stopIndex}: IndexRange) => {
+        loadMoreRsData: async (event: TLoadMoreRsDataEvent) => {
           if (!rsMeta) {
             return;
           }
-          const fetchRecordCount = stopIndex - (stateProps.data.rs ? stateProps.data.rs.size : 0);
+          const fetchRecordCount = event.stopIndex - (event.rs ? event.rs.size : 0);
 
-          dispatch(loadingData({name: stateProps.data.rs.name}));
+          dispatch(loadingData({name: event.rs.name}));
           const res = await apiService.fetchQuery({
             rowsCount: fetchRecordCount,
             taskKey: rsMeta.taskKey
@@ -208,7 +208,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             case TTaskStatus.SUCCESS: {
               dispatch(
                 addData({
-                  name: stateProps.data.rs.name,
+                  name: event.rs.name,
                   records: res.payload.result!.data as IDataRow[],
                   full: res.payload.result!.finished
                 })
@@ -220,7 +220,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
               if (stateProps.data.rs.status !== TStatus.ERROR) {
                 dispatch(
                   setError({
-                    name: stateProps.data.rs.name,
+                    name: event.rs.name,
                     error: {message: res.error!.message}
                   })
                 );

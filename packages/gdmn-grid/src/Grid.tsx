@@ -29,16 +29,32 @@ export interface IColumn {
 
 export type Columns = IColumn[];
 
-export type TLoadMoreRsData = (params: IndexRange) => Promise<any>;
-export type TOnCancelSortDialog = () => void;
-export type TOnApplySortDialog = (sortFields: SortFields) => void;
-export type TOnColumnResize = (columnIndex: number, newWidth: number) => void;
-export type TOnColumnMove = (oldIndex: number, newIndex: number) => void;
-export type TOnSetCursorPos = (cursorCol: number, cursorRow: number) => void;
-export type TOnSort = (rs: RecordSet, sortFields: SortFields) => void;
-export type TOnSelectRow = (idx: number, selected: boolean) => void;
-export type TOnSelectAllRows = (value: boolean) => void;
-export type TOnToggleGroup = (rowIdx: number) => void;
+export interface IGridEvent {
+  ref: GDMNGrid;
+  rs: RecordSet;
+}
+
+export type TOnCancelSortDialogEvent = IGridEvent;
+export type TOnApplySortDialogEvent = IGridEvent & {sortFields: SortFields};
+export type TOnColumnResizeEvent = IGridEvent & {columnIndex: number, newWidth: number};
+export type TOnColumnMoveEvent = IGridEvent & {oldIndex: number, newIndex: number};
+export type TOnSetCursorPosEvent = IGridEvent & {cursorCol: number, cursorRow: number};
+export type TOnSortEvent = IGridEvent & {sortFields: SortFields};
+export type TOnSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
+export type TOnSelectAllRowsEvent = IGridEvent & {value: boolean};
+export type TOnToggleGroupEvent = IGridEvent & {rowIdx: number};
+export type TLoadMoreRsDataEvent = IGridEvent & IndexRange;
+
+export type TOnCancelSortDialog = (event: TOnCancelSortDialogEvent) => void;
+export type TOnApplySortDialog = (event: TOnApplySortDialogEvent) => void;
+export type TOnColumnResize = (event: TOnColumnResizeEvent) => void;
+export type TOnColumnMove = (event: TOnColumnMoveEvent) => void;
+export type TOnSetCursorPos = (event: TOnSetCursorPosEvent) => void;
+export type TOnSort = (event: TOnSortEvent) => void;
+export type TOnSelectRow = (event: TOnSelectRowEvent) => void;
+export type TOnSelectAllRows = (event: TOnSelectAllRowsEvent) => void;
+export type TOnToggleGroup = (event: TOnToggleGroupEvent) => void;
+export type TLoadMoreRsData = (event: TLoadMoreRsDataEvent) => Promise<any>;
 
 export interface IGridProps {
   rs: RecordSet;
@@ -166,7 +182,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _scrollIntoView?: ScrollIntoView = undefined;
 
   public static defaultProps: Partial<IGridProps> = {
-    loadMoreRsData: () => new Promise(resolve => resolve()),
+    loadMoreRsData: () => Promise.resolve(),
     loadMoreThresholdPages: 2,
     loadMoreMinBatchPagesRatio: 2
   };
@@ -453,7 +469,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           offsetLeft = newCellRight - scrollLeft - bodyWidth;
         }
 
-        onSetCursorPos(newCol, newRow);
+        onSetCursorPos({ref: this, rs, cursorCol: newCol, cursorRow: newRow});
 
         if (offsetTop || offsetLeft) {
           onScroll({
@@ -493,7 +509,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           } else if (newCellBottom > scrollTop + bodyHeight) {
             offsetTop = newCellBottom - scrollTop - bodyHeight;
           }
-          onSetCursorPos(newCol, newRow);
+          onSetCursorPos({ref: this, rs, cursorCol: newCol, cursorRow: newRow});
           newscrollTop = scrollTop + offsetTop;
         }
 
@@ -661,7 +677,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           >
             <InfiniteLoader
               isRowLoaded={this._isRowLoaded}
-              loadMoreRows={rs.status === TStatus.PARTIAL ? loadMoreRsData! : () => Promise.resolve()}
+              loadMoreRows={
+                rs.status === TStatus.PARTIAL
+                  ? (params) => loadMoreRsData!({ref: this, rs, ...params})
+                  : () => Promise.resolve()
+              }
               rowCount={rs.size + infiniteLoadMinimumBatchSize}
               minimumBatchSize={infiniteLoadMinimumBatchSize}
               threshold={infiniteLoadThreshold}
@@ -871,8 +891,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           <GDMNSortDialog
             fieldDefs={rs.fieldDefs}
             sortFields={rs.sortFields}
-            onCancel={onCancelSortDialog}
-            onApply={onApplySortDialog}
+            onCancel={() => onCancelSortDialog({ref: this, rs})}
+            onApply={(sortFields) => onApplySortDialog({ref: this, rs, sortFields})}
           />
         ) : (
           undefined
@@ -939,7 +959,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             this._columnSizingDeltaX += deltaX;
             const newWidth = getColumnWidth({ index: columnIndex }) + this._columnSizingDeltaX;
             if (newWidth > MIN_GRID_COLUMN_WIDTH) {
-              onColumnResize(adjustedColumnIndex, newWidth);
+              onColumnResize({ref: this, rs, columnIndex: adjustedColumnIndex, newWidth});
               this._columnSizingDeltaX = 0;
             }
           }}
@@ -966,7 +986,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               className={styles.CellMarkArea}
               onClick={(e: React.MouseEvent<HTMLDivElement>) => {
                 e.stopPropagation();
-                onSelectAllRows(!rs.allRowsSelected);
+                onSelectAllRows({ref: this, rs, value: !rs.allRowsSelected});
               }}
             >
               {rs.allRowsSelected || selectedRowsCount === rs.size ? '☑' : selectedRowsCount ? '☒' : '☐'}
@@ -976,7 +996,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 className={styles.CellCaption}
                 onClick={() => {
                   if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
-                    onSort(rs, [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]);
+                    onSort({
+                      ref: this,
+                      rs,
+                      sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
+                    });
                   }
                 }}
               >
@@ -1002,7 +1026,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               className="CellCaption"
               onClick={() => {
                 if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
-                  onSort(rs, [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]);
+                  onSort({
+                    ref: this,
+                    rs,
+                    sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
+                  });
                 }
               }}
             >
@@ -1037,7 +1065,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 d -= getColumnWidth({ index: --ec });
               }
               if (columnIndex !== ec) {
-                onColumnMove(adjustedColumnIndex, adjustFunc(ec));
+                onColumnMove({ref: this, rs, oldIndex: adjustedColumnIndex, newIndex: adjustFunc(ec)});
               }
             } else if (this._columnMovingDeltaX > 0 && columnIndex < columnsCount - 1) {
               let d = this._columnMovingDeltaX;
@@ -1049,7 +1077,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 columnIndex !== ec &&
                 !(ec === columns.length - rightSideColumns - leftSideColumns && this.state.deltaWidth > 0)
               ) {
-                onColumnMove(adjustedColumnIndex, adjustFunc(ec));
+                onColumnMove({ref: this, rs, oldIndex: adjustedColumnIndex, newIndex: adjustFunc(ec)});
               }
             }
           }}
@@ -1131,7 +1159,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           className={cn(backgroundClass, borderClass)}
           key={key}
           style={style}
-          onClick={() => onSetCursorPos(adjustedColumnIndex, rowIndex)}
+          onClick={() => {
+            onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
+          }}
         />
       );
     }
@@ -1189,7 +1219,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           className={styles.CellMarkArea}
           onClick={e => {
             e.stopPropagation();
-            onSelectRow(rowIndex, rs.allRowsSelected ? false : !rs.selectedRows[rowIndex]);
+            onSelectRow({
+              ref: this,
+              rs,
+              idx: rowIndex,
+              selected: rs.allRowsSelected ? false : !rs.selectedRows[rowIndex]
+            });
           }}
         >
           {rs.allRowsSelected || rs.selectedRows[rowIndex] ? '☑' : '☐'}
@@ -1204,7 +1239,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           className={styles.CellMarkArea}
           onClick={e => {
             e.stopPropagation();
-            onToggleGroup(rowIndex);
+            onToggleGroup({ref: this, rs, rowIdx: rowIndex});
           }}
         >
           {rowData.type === TRowType.HeaderCollapsed ? '▷' : '▽'}
@@ -1221,7 +1256,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           className={cn(backgroundClass, borderClass, styles.CellRow)}
           key={key}
           style={style}
-          onClick={() => onSetCursorPos(adjustedColumnIndex, rowIndex)}
+          onClick={() => {
+            onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
+          }}
         >
           {checkMark}
           {groupTriangle}
@@ -1238,7 +1275,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           }
           key={key}
           style={style}
-          onClick={ isFakeRow ? undefined : () => onSetCursorPos(adjustedColumnIndex, rowIndex) }
+          onClick={
+            isFakeRow
+              ? undefined
+              : () => {
+                onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
+              }
+          }
         >
           {cellText}
         </div>

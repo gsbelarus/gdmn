@@ -118,7 +118,7 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
         grids: {
           ...grids,
           [name]: {
-            Grid: connectGrid(name, rs, columns, getGridRef),
+            Grid: connectGrid(name, rs, columns),
             Panel: connectGridPanel(name, rs, getGridRef)
           }
         }

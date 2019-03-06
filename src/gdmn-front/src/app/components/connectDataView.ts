@@ -5,18 +5,24 @@ import {
   applySortDialog,
   cancelSortDialog,
   columnMove,
-  GDMNGrid,
   GridAction,
   resizeColumn,
-  setCursorCol
-} from 'gdmn-grid';
+  setCursorCol,
+  TOnApplySortDialogEvent,
+  TOnCancelSortDialogEvent,
+  TOnColumnMoveEvent,
+  TOnColumnResizeEvent,
+  TOnSelectAllRowsEvent,
+  TOnSelectRowEvent,
+  TOnSetCursorPosEvent,
+  TOnSortEvent,
+  TOnToggleGroupEvent
+} from "gdmn-grid";
 import {
-  RecordSet,
   RecordSetAction,
   selectRow,
   setAllRowsSelected,
   setRecordSet,
-  SortFields,
   sortRecordSet,
   toggleGroup
 } from 'gdmn-recordset';
@@ -35,87 +41,87 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
     }),
     (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
 
-      onCancelSortDialog: (gridName: string) => dispatch(cancelSortDialog({ name: gridName })),
+      onCancelSortDialog: (event: TOnCancelSortDialogEvent) =>
+        dispatch(
+          cancelSortDialog({ name: event.rs.name })
+        ),
 
-      onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) =>
+      onApplySortDialog: (event: TOnApplySortDialogEvent) =>
         dispatch((dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>, getState: () => IState) => {
-          dispatch(applySortDialog({ name: gridName, sortFields }));
-          dispatch(sortRecordSet({ name: rs.name, sortFields }));
-          if (gridRef) {
-            gridRef.scrollIntoView(getState().recordSet[rs.name].currentRow);
-          }
+          dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
+          dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
+
+          event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
         }),
 
-      onColumnResize: (gridName: string, columnIndex: number, newWidth: number) =>
+      onColumnResize: (event: TOnColumnResizeEvent) =>
         dispatch(
           resizeColumn({
-            name: gridName,
-            columnIndex,
-            newWidth
+            name: event.rs.name,
+            columnIndex: event.columnIndex,
+            newWidth: event.newWidth
           })
         ),
 
-      onColumnMove: (gridName: string, oldIndex: number, newIndex: number) =>
+      onColumnMove: (event: TOnColumnMoveEvent) =>
         dispatch(
           columnMove({
-            name: gridName,
-            oldIndex,
-            newIndex
+            name: event.rs.name,
+            oldIndex: event.oldIndex,
+            newIndex: event.newIndex
           })
         ),
 
-      onSelectRow: (rs: RecordSet, idx: number, selected: boolean) =>
+      onSelectRow: (event: TOnSelectRowEvent) =>
         dispatch(
           selectRow({
-            name: rs.name,
-            idx,
-            selected
+            name: event.rs.name,
+            idx: event.idx,
+            selected: event.selected
           })
         ),
 
-      onSelectAllRows: (rs: RecordSet, value: boolean) =>
+      onSelectAllRows: (event: TOnSelectAllRowsEvent) =>
         dispatch(
           setAllRowsSelected({
-            name: rs.name,
-            value
+            name: event.rs.name,
+            value: event.value
           })
         ),
 
-      onSetCursorPos: (rs: RecordSet, gridName: string, cursorCol: number, cursorRow: number) => {
+      onSetCursorPos: (event: TOnSetCursorPosEvent) => {
         dispatch(
           setRecordSet({
-            name: rs.name,
-            rs: rs.setCurrentRow(cursorRow)
+            name: event.rs.name,
+            rs: event.rs.setCurrentRow(event.cursorRow)
           })
         );
 
         dispatch(
           setCursorCol({
-            name: gridName,
-            cursorCol
+            name: event.rs.name,
+            cursorCol: event.cursorCol
           })
         );
       },
 
-      onSort: (rs: RecordSet, sortFields: SortFields, gridRef?: GDMNGrid) =>
+      onSort: (event: TOnSortEvent) =>
         dispatch((dispatch: ThunkDispatch<IState, never, RecordSetAction>, getState: () => IState) => {
           dispatch(
             sortRecordSet({
-              name: rs.name,
-              sortFields
+              name: event.rs.name,
+              sortFields: event.sortFields
             })
           );
 
-          if (gridRef) {
-            gridRef.scrollIntoView(getState().recordSet[rs.name].currentRow);
-          }
+          event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
         }),
 
-      onToggleGroup: (rs: RecordSet, rowIdx: number) =>
+      onToggleGroup: (event: TOnToggleGroupEvent) =>
         dispatch(
           toggleGroup({
-            name: rs.name,
-            rowIdx
+            name: event.rs.name,
+            rowIdx: event.rowIdx
           })
         )
     })

@@ -1,7 +1,21 @@
 import React from 'react';
 import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
-import { RecordSet, SortFields } from 'gdmn-recordset';
-import { GDMNGrid, GridComponentState, IGridState, TLoadMoreRsData } from 'gdmn-grid';
+import { RecordSet } from 'gdmn-recordset';
+import {
+  GDMNGrid,
+  GridComponentState,
+  IGridState,
+  TLoadMoreRsData,
+  TOnApplySortDialog,
+  TOnCancelSortDialog,
+  TOnColumnMove,
+  TOnColumnResize,
+  TOnSelectAllRows,
+  TOnSelectRow,
+  TOnSetCursorPos,
+  TOnSort,
+  TOnToggleGroup
+} from "gdmn-grid";
 import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
@@ -19,15 +33,15 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   erModel?: ERModel;
   attachRs: (mutex?: Semaphore) => void;
   loadMoreRsData?: TLoadMoreRsData;
-  onCancelSortDialog: (gridName: string) => void;
-  onApplySortDialog: (rs: RecordSet, gridName: string, sortFields: SortFields, gridRef?: GDMNGrid) => void;
-  onColumnResize: (gridName: string, columnIndex: number, newWidth: number) => void;
-  onColumnMove: (gridName: string, oldIndex: number, newIndex: number) => void;
-  onSelectRow: (rs: RecordSet, idx: number, selected: boolean) => void;
-  onSelectAllRows: (rs: RecordSet, value: boolean) => void;
-  onSetCursorPos: (rs: RecordSet, gridName: string, cursorCol: number, cursorRow: number) => void;
-  onSort: (rs: RecordSet, sortFields: SortFields, gridRef?: GDMNGrid) => void;
-  onToggleGroup: (rs: RecordSet, rowIdx: number) => void;
+  onCancelSortDialog: TOnCancelSortDialog;
+  onApplySortDialog: TOnApplySortDialog;
+  onColumnResize: TOnColumnResize;
+  onColumnMove: TOnColumnMove;
+  onSelectRow: TOnSelectRow;
+  onSelectAllRows: TOnSelectAllRows;
+  onSetCursorPos: TOnSetCursorPos;
+  onSort: TOnSort;
+  onToggleGroup: TOnToggleGroup;
 }
 
 export interface IGridRef {
@@ -189,21 +203,15 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
             {...gcs}
             rs={rs}
             loadMoreRsData={loadMoreRsData}
-            onCancelSortDialog={() => onCancelSortDialog(gridName)}
-            onApplySortDialog={(sortFields: SortFields) =>
-              onApplySortDialog(rs, gridName, sortFields, this._gridRef[gridName])
-            }
-            onColumnResize={(columnIndex: number, newWidth: number) =>
-              onColumnResize(gridName, columnIndex, newWidth)
-            }
-            onColumnMove={(oldIndex: number, newIndex: number) => onColumnMove(gridName, oldIndex, newIndex)}
-            onSelectRow={(idx: number, selected: boolean) => onSelectRow(rs, idx, selected)}
-            onSelectAllRows={(value: boolean) => onSelectAllRows(rs, value)}
-            onSetCursorPos={(cursorCol: number, cursorRow: number) =>
-              onSetCursorPos(rs, gridName, cursorCol, cursorRow)
-            }
-            onSort={(rs: RecordSet, sortFields: SortFields) => onSort(rs, sortFields, this._gridRef[gridName])}
-            onToggleGroup={(rowIdx: number) => onToggleGroup(rs, rowIdx)}
+            onCancelSortDialog={onCancelSortDialog}
+            onApplySortDialog={onApplySortDialog}
+            onColumnResize={onColumnResize}
+            onColumnMove={onColumnMove}
+            onSelectRow={onSelectRow}
+            onSelectAllRows={onSelectAllRows}
+            onSetCursorPos={onSetCursorPos}
+            onSort={onSort}
+            onToggleGroup={onToggleGroup}
             ref={(grid: GDMNGrid) => grid && (this._gridRef[gridName] = grid)}
             savedState={this.getSavedState(rs)}
           />
