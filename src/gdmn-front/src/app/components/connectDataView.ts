@@ -16,7 +16,8 @@ import {
   TSelectRowEvent,
   TSetCursorPosEvent,
   TSortEvent,
-  TToggleGroupEvent
+  TToggleGroupEvent,
+  TOnFilterEvent
 } from "gdmn-grid";
 import {
   RecordSetAction,
@@ -24,7 +25,8 @@ import {
   setAllRowsSelected,
   setRecordSet,
   sortRecordSet,
-  toggleGroup
+  toggleGroup,
+  setFilter
 } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
@@ -123,7 +125,16 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
             name: event.rs.name,
             rowIdx: event.rowIdx
           })
-        )
+        ),
+
+        onSetFilter:
+        (event: TOnFilterEvent) => {
+          if (event.filter) {
+            dispatch(setFilter({name: event.rs.name, filter: { conditions: [ { value: event.filter } ] } }))
+          } else {
+            dispatch(setFilter({name: event.rs.name, filter: undefined }))
+          }
+        }
     })
   ),
   connectView

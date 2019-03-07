@@ -6,6 +6,14 @@ import './GridPanel.css';
 import { RecordSet } from 'gdmn-recordset';
 import { ParamsDialog } from './ParamsDialog';
 
+export interface IGridPanelEvent {
+  rs: RecordSet;
+}
+
+export type TOnFilterEvent = IGridPanelEvent & {filter: string};
+
+export type TOnFilter = (event: TOnFilterEvent) => void;
+
 export interface IGDMNGridPanelProps {
   rs: RecordSet;
   visibleColumns: Columns;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
+import { ICommandBarItemProps, IComponentAsProps, TextField } from 'office-ui-fabric-react';
 import { RecordSet } from 'gdmn-recordset';
 import {
   GDMNGrid,
@@ -15,7 +15,8 @@ import {
   TSelectRowEvent,
   TSetCursorPosEvent,
   TSortEvent,
-  TToggleGroupEvent
+  TToggleGroupEvent,
+  TOnFilter
 } from "gdmn-grid";
 import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
@@ -43,6 +44,7 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
   onSort: TEventCallback<TSortEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
+  onSetFilter: TOnFilter;
 }
 
 export interface IGridRef {
@@ -98,7 +100,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       if (data && data.rs && data.detail && data.detail.length) {
         const masterLink = data.detail[0].rs.masterLink!;
         const detailValue = masterLink.values[0].value;
-        const masterValue = data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName);
+        const masterValue = data.rs.size > 0 ? data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName) : '';
         if (detailValue !== masterValue) {
           attachRs(getMutex(this.getDataViewKey()));
         }
@@ -191,13 +193,24 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       onSelectAllRows,
       onSetCursorPos,
       onSort,
+      onSetFilter,
       onToggleGroup,
       loadMoreRsData
     } = this.props;
+    const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     return (
       <div style={{ width }}>
-        <div style={{ height: '24px' }}>
-          Filter:
+        <div className="GridFilter">
+          <TextField
+            label="Filter:"
+            value={filter}
+            onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              onSetFilter({
+                rs,
+                filter: newValue ? newValue : ''
+              })
+            }}
+          />
         </div>
         <div style={{ height: 'calc(100% - 24px)' }}>
           <GDMNGrid

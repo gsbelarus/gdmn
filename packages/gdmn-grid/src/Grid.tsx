@@ -16,6 +16,7 @@ import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable
 import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
+import { ParamsDialog } from './ParamsDialog';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
@@ -81,6 +82,7 @@ export interface IGridState {
   deltaWidth: number;
   scrollLeft: number;
   scrollTop: number;
+  showDialogParams: boolean;
 }
 
 export const styles = {
@@ -172,6 +174,10 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _columnSizingDeltaX: number = 0;
   private _scrollIntoView?: ScrollIntoView = undefined;
 
+  private onCloseDialogParams = () => {
+    this.setState({ showDialogParams: false });
+  }  
+
   public static defaultProps: Partial<IGridProps> = {
     loadMoreRsData: () => Promise.resolve(),
     loadMoreThresholdPages: 2,
@@ -194,7 +200,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       columnBeingResized: false,
       deltaWidth: 0,
       scrollLeft: 0,
-      scrollTop: 0
+      scrollTop: 0,
+      showDialogParams: false
     };
   }
 
@@ -260,7 +267,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       loadMoreMinBatchPagesRatio,
       currentCol
     } = this.props;
-    const { rowHeight, overscanColumnCount, overscanRowCount, deltaWidth } = this.state;
+    const { rowHeight, overscanColumnCount, overscanRowCount, deltaWidth, showDialogParams } = this.state;
 
     if (!rs) {
       return <div>No data!</div>;
@@ -427,6 +434,10 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             if (currentCol < columns.length - rightSideColumns - 1) {
               newCol = columns.length - rightSideColumns - 1;
             }
+            break;
+
+          case 'F10':
+            this.setState({ showDialogParams: true });
             break;
 
           default:
@@ -885,6 +896,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             onCancel={() => onCancelSortDialog({ref: this, rs})}
             onApply={(sortFields) => onApplySortDialog({ref: this, rs, sortFields})}
           />
+        ) : (
+          undefined
+        )}
+        {showDialogParams ? (
+          <ParamsDialog onCancel={this.onCloseDialogParams} columns={columns} onToggle={() => {}} />
         ) : (
           undefined
         )}

@@ -5,6 +5,7 @@ import { ParamsPanel } from './ParamsPanel';
 
 export interface IParamsField {
   fieldname: string;
+  columnname: string
 }
 
 interface IParamsDialogProps {
@@ -18,7 +19,7 @@ class ParamsDialog extends PureComponent<IParamsDialogProps> {
     const { onCancel, columns, onToggle } = this.props;
     return (
       <div>
-        <Panel isOpen={true} onDismiss={onCancel} headerText="Column options" type={PanelType.smallFixedFar}>
+        <Panel isOpen={true} onDismiss={onCancel} headerText="Column options" type={PanelType.medium}>
           <ParamsPanel columns={columns} onToggle={onToggle} />
         </Panel>
       </div>

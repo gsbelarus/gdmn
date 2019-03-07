@@ -18,7 +18,7 @@ interface IParamsPanelProps {
 
 export interface IPanelState {
   selectionFieldName: string;
-  fieldList: IParamsField[];
+  fieldList: IParamsField[]; 
 }
 
 class ParamsPanel extends PureComponent<IParamsPanelProps, IPanelState> {
@@ -27,21 +27,31 @@ class ParamsPanel extends PureComponent<IParamsPanelProps, IPanelState> {
 
   public static columns = [
     {
-      key: 'fieldname',
-      name: 'NAME',
-      fieldName: 'fieldname',
+      key: 'columnname',
+      name: 'COLUMN NAME',
+      fieldName: 'columnname',
       minWidth: 100,
-      maxWidth: 100,
+      maxWidth: 150,
       isResizable: true,
       isMultiline: true,
       data: 'string'
-    }
+    },
+    {
+      key: 'fieldname',
+      name: 'FIELD NAME',
+      fieldName: 'fieldname',
+      minWidth: 100,
+      maxWidth: 150,
+      isResizable: true,
+      isMultiline: true,
+      data: 'string'
+    }    
   ];
 
   constructor(props: IParamsPanelProps) {
     super(props);
-
-    this._allItems = this.props.columns.map(c => ({ fieldname: c.name }));
+    this._allItems = this.props.columns.map(c => ({ columnname: c.caption ? c.caption.join('; ') : (c.fields.map(f => f.caption).join('; ') && c.name),  
+      fieldname: c.name}));
     this._selection = new Selection({
       onSelectionChanged: () => {
         if (this._selection.getSelectedCount() > 0) {

@@ -60,3 +60,8 @@
 .DangerZone > div {
   margin-bottom: 16px;
 }
+
+.GridFilter{
+  padding: 8px;
+  width: 250px;
+}

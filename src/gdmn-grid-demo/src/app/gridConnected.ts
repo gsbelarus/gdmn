@@ -198,6 +198,6 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
       }
     })
   )(GDMNGridPanel);
-};
+}; 
 
 export type ConnectedGridPanel = ReturnType<typeof connectGridPanel>;
