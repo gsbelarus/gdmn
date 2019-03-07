@@ -4,13 +4,15 @@ import {
   Columns,
   setSearchIdx,
   GetGridRef,
-  TOnCancelSortDialogEvent,
-  TOnApplySortDialogEvent,
-  TOnColumnResizeEvent,
-  TOnColumnMoveEvent,
-  TOnSelectRowEvent,
-  TOnSelectAllRowsEvent,
-  TOnSetCursorPosEvent, TOnSortEvent, TOnToggleGroupEvent
+  TCancelSortDialogEvent,
+  TApplySortDialogEvent,
+  TColumnResizeEvent,
+  TColumnMoveEvent,
+  TSelectRowEvent,
+  TSelectAllRowsEvent,
+  TSetCursorPosEvent,
+  TSortEvent,
+  TToggleGroupEvent
 } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
@@ -62,29 +64,29 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       }
     },
     (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
-      onCancelSortDialog: (event: TOnCancelSortDialogEvent) => thunkDispatch(
+      onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
           cancelSortDialog({name})
         ),
-      onApplySortDialog: (event: TOnApplySortDialogEvent) => thunkDispatch(
+      onApplySortDialog: (event: TApplySortDialogEvent) => thunkDispatch(
           (dispatch, getState) => {
             dispatch(applySortDialog({ name, sortFields: event.sortFields }));
             dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
             event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
           }
         ),
-      onColumnResize: (event: TOnColumnResizeEvent) => thunkDispatch(
+      onColumnResize: (event: TColumnResizeEvent) => thunkDispatch(
           resizeColumn({name, columnIndex: event.columnIndex, newWidth: event.newWidth})
         ),
-      onColumnMove: (event: TOnColumnMoveEvent) => thunkDispatch(
+      onColumnMove: (event: TColumnMoveEvent) => thunkDispatch(
           columnMove({name, oldIndex: event.oldIndex, newIndex: event.newIndex})
         ),
-      onSelectRow: (event: TOnSelectRowEvent) => thunkDispatch(
+      onSelectRow: (event: TSelectRowEvent) => thunkDispatch(
           selectRow({name, idx: event.idx, selected: event.selected})
         ),
-      onSelectAllRows: (event: TOnSelectAllRowsEvent) => thunkDispatch(
+      onSelectAllRows: (event: TSelectAllRowsEvent) => thunkDispatch(
           setAllRowsSelected({name, value: event.value})
         ),
-      onSetCursorPos: (event: TOnSetCursorPosEvent) => thunkDispatch(
+      onSetCursorPos: (event: TSetCursorPosEvent) => thunkDispatch(
           (dispatch, getState) => {
             const recordSet = getState().recordSet[event.rs.name];
             if (recordSet) {
@@ -93,13 +95,13 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
             }
           }
         ),
-      onSort: (event: TOnSortEvent) => thunkDispatch(
+      onSort: (event: TSortEvent) => thunkDispatch(
           (dispatch: ThunkDispatch<State, never, RecordSetAction>, getState: () => State) => {
             dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
             event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
           }
         ),
-      onToggleGroup: (event: TOnToggleGroupEvent) => thunkDispatch(
+      onToggleGroup: (event: TToggleGroupEvent) => thunkDispatch(
           toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
         )
     })

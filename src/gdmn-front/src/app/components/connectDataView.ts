@@ -8,15 +8,15 @@ import {
   GridAction,
   resizeColumn,
   setCursorCol,
-  TOnApplySortDialogEvent,
-  TOnCancelSortDialogEvent,
-  TOnColumnMoveEvent,
-  TOnColumnResizeEvent,
-  TOnSelectAllRowsEvent,
-  TOnSelectRowEvent,
-  TOnSetCursorPosEvent,
-  TOnSortEvent,
-  TOnToggleGroupEvent
+  TApplySortDialogEvent,
+  TCancelSortDialogEvent,
+  TColumnMoveEvent,
+  TColumnResizeEvent,
+  TSelectAllRowsEvent,
+  TSelectRowEvent,
+  TSetCursorPosEvent,
+  TSortEvent,
+  TToggleGroupEvent
 } from "gdmn-grid";
 import {
   RecordSetAction,
@@ -41,12 +41,12 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
     }),
     (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
 
-      onCancelSortDialog: (event: TOnCancelSortDialogEvent) =>
+      onCancelSortDialog: (event: TCancelSortDialogEvent) =>
         dispatch(
           cancelSortDialog({ name: event.rs.name })
         ),
 
-      onApplySortDialog: (event: TOnApplySortDialogEvent) =>
+      onApplySortDialog: (event: TApplySortDialogEvent) =>
         dispatch((dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>, getState: () => IState) => {
           dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
           dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
@@ -54,7 +54,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
         }),
 
-      onColumnResize: (event: TOnColumnResizeEvent) =>
+      onColumnResize: (event: TColumnResizeEvent) =>
         dispatch(
           resizeColumn({
             name: event.rs.name,
@@ -63,7 +63,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           })
         ),
 
-      onColumnMove: (event: TOnColumnMoveEvent) =>
+      onColumnMove: (event: TColumnMoveEvent) =>
         dispatch(
           columnMove({
             name: event.rs.name,
@@ -72,7 +72,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           })
         ),
 
-      onSelectRow: (event: TOnSelectRowEvent) =>
+      onSelectRow: (event: TSelectRowEvent) =>
         dispatch(
           selectRow({
             name: event.rs.name,
@@ -81,7 +81,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           })
         ),
 
-      onSelectAllRows: (event: TOnSelectAllRowsEvent) =>
+      onSelectAllRows: (event: TSelectAllRowsEvent) =>
         dispatch(
           setAllRowsSelected({
             name: event.rs.name,
@@ -89,7 +89,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           })
         ),
 
-      onSetCursorPos: (event: TOnSetCursorPosEvent) => {
+      onSetCursorPos: (event: TSetCursorPosEvent) => {
         dispatch(
           setRecordSet({
             name: event.rs.name,
@@ -105,7 +105,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
         );
       },
 
-      onSort: (event: TOnSortEvent) =>
+      onSort: (event: TSortEvent) =>
         dispatch((dispatch: ThunkDispatch<IState, never, RecordSetAction>, getState: () => IState) => {
           dispatch(
             sortRecordSet({
@@ -117,7 +117,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
         }),
 
-      onToggleGroup: (event: TOnToggleGroupEvent) =>
+      onToggleGroup: (event: TToggleGroupEvent) =>
         dispatch(
           toggleGroup({
             name: event.rs.name,

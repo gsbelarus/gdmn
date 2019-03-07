@@ -34,27 +34,18 @@ export interface IGridEvent {
   rs: RecordSet;
 }
 
-export type TOnCancelSortDialogEvent = IGridEvent;
-export type TOnApplySortDialogEvent = IGridEvent & {sortFields: SortFields};
-export type TOnColumnResizeEvent = IGridEvent & {columnIndex: number, newWidth: number};
-export type TOnColumnMoveEvent = IGridEvent & {oldIndex: number, newIndex: number};
-export type TOnSetCursorPosEvent = IGridEvent & {cursorCol: number, cursorRow: number};
-export type TOnSortEvent = IGridEvent & {sortFields: SortFields};
-export type TOnSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
-export type TOnSelectAllRowsEvent = IGridEvent & {value: boolean};
-export type TOnToggleGroupEvent = IGridEvent & {rowIdx: number};
+export type TCancelSortDialogEvent = IGridEvent;
+export type TApplySortDialogEvent = IGridEvent & {sortFields: SortFields};
+export type TColumnResizeEvent = IGridEvent & {columnIndex: number, newWidth: number};
+export type TColumnMoveEvent = IGridEvent & {oldIndex: number, newIndex: number};
+export type TSetCursorPosEvent = IGridEvent & {cursorCol: number, cursorRow: number};
+export type TSortEvent = IGridEvent & {sortFields: SortFields};
+export type TSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
+export type TSelectAllRowsEvent = IGridEvent & {value: boolean};
+export type TToggleGroupEvent = IGridEvent & {rowIdx: number};
 export type TLoadMoreRsDataEvent = IGridEvent & IndexRange;
 
-export type TOnCancelSortDialog = (event: TOnCancelSortDialogEvent) => void;
-export type TOnApplySortDialog = (event: TOnApplySortDialogEvent) => void;
-export type TOnColumnResize = (event: TOnColumnResizeEvent) => void;
-export type TOnColumnMove = (event: TOnColumnMoveEvent) => void;
-export type TOnSetCursorPos = (event: TOnSetCursorPosEvent) => void;
-export type TOnSort = (event: TOnSortEvent) => void;
-export type TOnSelectRow = (event: TOnSelectRowEvent) => void;
-export type TOnSelectAllRows = (event: TOnSelectAllRowsEvent) => void;
-export type TOnToggleGroup = (event: TOnToggleGroupEvent) => void;
-export type TLoadMoreRsData = (event: TLoadMoreRsDataEvent) => Promise<any>;
+export type TEventCallback<T, R = void> = (event: T) => R;
 
 export interface IGridProps {
   rs: RecordSet;
@@ -67,16 +58,16 @@ export interface IGridProps {
   hideFooter?: boolean;
   sortDialog: boolean;
   savedState?: IGridState;
-  onCancelSortDialog: TOnCancelSortDialog;
-  onApplySortDialog: TOnApplySortDialog;
-  onColumnResize: TOnColumnResize;
-  onColumnMove: TOnColumnMove;
-  onSetCursorPos: TOnSetCursorPos;
-  onSort: TOnSort;
-  onSelectRow: TOnSelectRow;
-  onSelectAllRows: TOnSelectAllRows;
-  onToggleGroup: TOnToggleGroup;
-  loadMoreRsData?: TLoadMoreRsData;
+  onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
+  onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
+  onColumnResize: TEventCallback<TColumnResizeEvent>;
+  onColumnMove: TEventCallback<TColumnMoveEvent>;
+  onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
+  onSort: TEventCallback<TSortEvent>;
+  onSelectRow: TEventCallback<TSelectRowEvent>;
+  onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
+  onToggleGroup: TEventCallback<TToggleGroupEvent>;
+  loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
   loadMoreThresholdPages?: number;
   loadMoreMinBatchPagesRatio?: number;
 }
