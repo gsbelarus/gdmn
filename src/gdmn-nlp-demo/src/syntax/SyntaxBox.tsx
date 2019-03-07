@@ -21,8 +21,8 @@ export interface ISyntaxBoxProps {
   commandError?: string,
   command?: ICommand[],
   isVisibleQuery: boolean,
-  onSetText: (text: string) => void,
-  onLoadRecordSet: (query: EntityQuery) => void
+  onAnalyze: (text: string) => void,
+  onQuery: () => void
 };
 
 export interface ISyntaxBoxState {
@@ -414,7 +414,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   render() {
     const { editedText, showPhrases, verboseErrors, tokens } = this.state;
-    const { text, onSetText, errorMsg, parserDebug, commandError, command, isVisibleQuery, onLoadRecordSet } = this.props;
+    const { text, onAnalyze, errorMsg, parserDebug, commandError, command, isVisibleQuery, onQuery } = this.props;
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -447,15 +447,12 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         />
         <DefaultButton
           text="Analyze"
-          onClick={ () => { this.setState({ showPhrases: false }); onSetText(editedText); }}
+          onClick={ () => { this.setState({ showPhrases: false }); onAnalyze(editedText); }}
         />
         <DefaultButton
           text="Query"
           disabled={!isVisibleQuery}
-          onClick={ () => {
-            const query = command[0].payload;
-            onLoadRecordSet(query);
-          } }
+          onClick={ () => onQuery()}
         />
       </div>
       <div className="SyntaxTokens">
