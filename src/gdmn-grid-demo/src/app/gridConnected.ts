@@ -104,7 +104,9 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       onToggleGroup: (event: TToggleGroupEvent) => thunkDispatch(
           toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
         )
-    })
+    }),
+    undefined,
+    {forwardRef: true}
   )(GDMNGrid);
 };
 
