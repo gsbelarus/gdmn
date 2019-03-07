@@ -94,11 +94,13 @@ export class ERModelBox extends View<IERModelBoxProps, IERModelBoxState> {
       return this.renderLoading();
     }
 
+    const getInheritanceSeq = (e: Entity, prev = ''): string => e.parent ? getInheritanceSeq(e.parent, `${prev} -> ${e.parent.name}`) : prev;
+
     const { text, searchInEntity, searchInAttribute, viewMode, maxCount, foundEntities, filtering } = this.state;
 
     const entities = foundEntities.map( entity =>
       <div key={entity.name} className="Entity">
-        <div>{entity.name}</div>
+        <div>{entity.name}{getInheritanceSeq(entity)}</div>
         <div>{entity.lName.ru ? entity.lName.ru.name: entity.name}</div>
         {
           viewMode === 'S'
