@@ -10,6 +10,7 @@
     "outDir": "./dist/src",
     "sourceMap": true,
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "forceConsistentCasingInFileNames": false
   }
 }

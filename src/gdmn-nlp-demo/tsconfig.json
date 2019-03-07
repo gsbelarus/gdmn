@@ -16,8 +16,7 @@
     "lib": [
       "es2017",
       "dom"
-    ],
-    "forceConsistentCasingInFileNames": true
+    ]
   },
   "include": [
     "./src/**/*"
