@@ -37,32 +37,9 @@ import { ThunkDispatch } from 'redux-thunk';
 export const RecordSetViewContainer = connect(
   (state: State) => ({
       grid: state.grid['db'],
-      recordSet: state.recordSet['db']
+      rs: state.recordSet['db']
   }),
   (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
-    mountGrid: () => thunkDispatch(
-      (dispatch, getState) => {
-        const rs = getState().recordSet['db'];
-        dispatch(createGrid({
-          name: rs.name,
-          columns: rs.fieldDefs.map(fd => ({
-            name: fd.fieldName,
-            caption: [fd.caption || fd.fieldName],
-            fields: [{...fd}],
-            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-          })),
-          leftSideColumns: 0,
-          rightSideColumns: 0,
-          hideFooter: true
-        }))
-      }
-    ),
-    unmountGrid: () => thunkDispatch(
-      (dispatch, getState) => {
-        const rs = getState().recordSet['db'];
-        dispatch(deleteGrid({name: rs.name}));
-      }
-    ),
     onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
       cancelSortDialog({name: event.rs.name})
     ),

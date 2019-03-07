@@ -19,8 +19,6 @@ import './recordSetView.css';
 export interface IRecordSetViewProps {
   recordSet: RecordSet,
   grid: GridComponentState,
-  mountGrid: () => void;
-  unmountGrid: () => void;
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
   onColumnResize: TEventCallback<TColumnResizeEvent>;
@@ -34,23 +32,15 @@ export interface IRecordSetViewProps {
 
 export class RecordSetView extends Component<IRecordSetViewProps, {}> {
 
-  componentDidMount() {
-    this.props.mountGrid();
-  }
-
-  componentWillUnmount() {
-    this.props.unmountGrid();
-  }
-
   render() {
-    const { recordSet, grid, ...callbacks } = this.props;
+    const { grid, ...other } = this.props;
 
     if (!grid) {
       return null;
     }
     return (
       <div className="GridArea" key='db'>
-        <GDMNGrid {...grid} {...callbacks} rs={recordSet}/>
+        <GDMNGrid {...grid} {...other}/>
       </div>
     );
   }

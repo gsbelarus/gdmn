@@ -12,15 +12,13 @@ import { EntityQuery } from 'gdmn-orm';
 
 export const SyntaxBoxContainer = connect(
   (state: State) => {
-    if (state.ermodel['db']) {
+    const erModel = state.ermodel['db'];
+    if (erModel) {
       return {
         ...state.syntax,
-        isVisibleQuery: state.ermodel,
-        host: state.param.host,
-        port: state.param.port,
-        isReadFile: state.param.isReadFile,
-        commandError: state.ermodel['db'].commandError,
-        command: state.ermodel['db'].command
+        isVisibleQuery: erModel.command && state.param.host && state.param.port,
+        commandError: erModel.commandError,
+        command: erModel.command
       }
     }
 
@@ -38,12 +36,11 @@ export const SyntaxBoxContainer = connect(
         }
       }
     ),
-    onLoadRecordSet: (query: EntityQuery, host: string, port: string) => {
-      dispatch(
-        (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
-          dispatch(syntaxActions.loadRecordSet(query, host, port));
-        }
-      )
-    }
+    onLoadRecordSet: (query: EntityQuery) => dispatch(
+      (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
+        const {host, port} = getState().param;
+        dispatch(syntaxActions.loadRecordSet(query, host, port));
+      }
+    )
   })
 )(SyntaxBox);
