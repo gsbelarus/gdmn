@@ -5,16 +5,17 @@ import {
   GDMNGrid,
   GridComponentState,
   IGridState,
-  TLoadMoreRsData,
-  TOnApplySortDialog,
-  TOnCancelSortDialog,
-  TOnColumnMove,
-  TOnColumnResize,
-  TOnSelectAllRows,
-  TOnSelectRow,
-  TOnSetCursorPos,
-  TOnSort,
-  TOnToggleGroup
+  TLoadMoreRsDataEvent,
+  TEventCallback,
+  TApplySortDialogEvent,
+  TCancelSortDialogEvent,
+  TColumnMoveEvent,
+  TColumnResizeEvent,
+  TSelectAllRowsEvent,
+  TSelectRowEvent,
+  TSetCursorPosEvent,
+  TSortEvent,
+  TToggleGroupEvent
 } from "gdmn-grid";
 import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
@@ -32,16 +33,16 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   data?: IRSAndGCS;
   erModel?: ERModel;
   attachRs: (mutex?: Semaphore) => void;
-  loadMoreRsData?: TLoadMoreRsData;
-  onCancelSortDialog: TOnCancelSortDialog;
-  onApplySortDialog: TOnApplySortDialog;
-  onColumnResize: TOnColumnResize;
-  onColumnMove: TOnColumnMove;
-  onSelectRow: TOnSelectRow;
-  onSelectAllRows: TOnSelectAllRows;
-  onSetCursorPos: TOnSetCursorPos;
-  onSort: TOnSort;
-  onToggleGroup: TOnToggleGroup;
+  loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
+  onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
+  onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
+  onColumnResize: TEventCallback<TColumnResizeEvent>;
+  onColumnMove: TEventCallback<TColumnMoveEvent>;
+  onSelectRow: TEventCallback<TSelectRowEvent>;
+  onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
+  onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
+  onSort: TEventCallback<TSortEvent>;
+  onToggleGroup: TEventCallback<TToggleGroupEvent>;
 }
 
 export interface IGridRef {

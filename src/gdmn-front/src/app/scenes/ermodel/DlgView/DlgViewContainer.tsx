@@ -1,7 +1,7 @@
 import { IState } from '@src/app/store/reducer';
 import { connect } from 'react-redux';
 import { DlgView, DlgState, IDlgViewMatchParams, IDlgViewProps } from './DlgView';
-import { compose, _ReactLifeCycleFunctionsThisArguments } from 'recompose';
+import { compose } from 'recompose';
 import { connectView } from '@src/app/components/connectView';
 import { RouteComponentProps } from 'react-router';
 
