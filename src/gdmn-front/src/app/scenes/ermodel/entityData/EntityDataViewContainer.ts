@@ -80,7 +80,6 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           .subscribe(async value => {
             switch (value.payload.status) {
               case TTaskStatus.RUNNING: {
-                await new Promise(resolve => setTimeout(resolve, 3000));
                 const taskKey = value.meta!.taskKey!;
 
                 if (!getState().rsMeta[entity.name]) {
