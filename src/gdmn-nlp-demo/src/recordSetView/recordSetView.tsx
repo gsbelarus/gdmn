@@ -1,6 +1,19 @@
 import React, { Component } from "react";
 import { RecordSet, SortFields } from 'gdmn-recordset';
-import { GridComponentState, GDMNGrid } from 'gdmn-grid';
+import {
+  GridComponentState,
+  GDMNGrid,
+  TEventCallback,
+  TCancelSortDialogEvent,
+  TApplySortDialogEvent,
+  TColumnResizeEvent,
+  TColumnMoveEvent,
+  TSelectRowEvent,
+  TSelectAllRowsEvent,
+  TSetCursorPosEvent,
+  TSortEvent,
+  TToggleGroupEvent
+} from 'gdmn-grid';
 import './recordSetView.css';
 
 export interface IRecordSetViewProps {
@@ -8,15 +21,15 @@ export interface IRecordSetViewProps {
   grid: GridComponentState,
   mountGrid: () => void;
   unmountGrid: () => void;
-  onCancelSortDialog: () => void;
-  onApplySortDialog: (sortFields: SortFields) => void;
-  onColumnResize: (columnIndex: number, newWidth: number) => void;
-  onColumnMove: (oldIndex: number, newIndex: number) => void;
-  onSetCursorPos: (cursorCol: number, cursorRow: number) => void;
-  onSort: (rs: RecordSet, sortFields: SortFields) => void;
-  onSelectRow: (idx: number, selected: boolean) => void;
-  onSelectAllRows: (value: boolean) => void;
-  onToggleGroup: (rowIdx: number) => void;
+  onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
+  onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
+  onColumnResize: TEventCallback<TColumnResizeEvent>;
+  onColumnMove: TEventCallback<TColumnMoveEvent>;
+  onSelectRow: TEventCallback<TSelectRowEvent>;
+  onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
+  onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
+  onSort: TEventCallback<TSortEvent>;
+  onToggleGroup: TEventCallback<TToggleGroupEvent>;
 };
 
 export class RecordSetView extends Component<IRecordSetViewProps, {}> {
@@ -28,15 +41,16 @@ export class RecordSetView extends Component<IRecordSetViewProps, {}> {
   componentWillUnmount() {
     this.props.unmountGrid();
   }
+
   render() {
-    const { recordSet, grid } = this.props;
+    const { recordSet, grid, ...callbacks } = this.props;
 
     if (!grid) {
-      return <div/>;
+      return null;
     }
     return (
       <div className="GridArea" key='db'>
-        <GDMNGrid {...grid} rs={recordSet}/>
+        <GDMNGrid {...grid} {...callbacks} rs={recordSet}/>
       </div>
     );
   }

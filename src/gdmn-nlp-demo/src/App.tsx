@@ -15,7 +15,7 @@ import { IERModels, ERModelAction } from './ermodel/reducer';
 import { SetParameterContainer } from './parameterLoad/setParameterContainer';
 import { ParameterLoadAction } from './parameterLoad/reducer';
 import { load } from './appAction';
-import { RecordSetViewConteiner } from './recordSetView/recordSetViewConteiner';
+import { RecordSetViewContainer } from './recordSetView/recordSetViewContainer';
 import { RecordSetReducerState } from 'gdmn-recordset';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
@@ -174,7 +174,7 @@ class InternalApp extends Component<IAppProps, {}> {
               <Route exact={false} path={`/ermodel/:name`} component={ERModelBoxContainer} />
               <Route exact={false} path={`/nlpdialog`} component={ChatBoxContainer} />
               <Route exact={false} path={`/parameterLoad`} component={SetParameterContainer} />
-              <Route exact={false} path={`/recordSet`} component={RecordSetViewConteiner} />
+              <Route exact={false} path={`/recordSet`} component={RecordSetViewContainer} />
             </Switch>
           </div>
         </>

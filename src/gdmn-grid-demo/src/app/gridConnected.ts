@@ -65,33 +65,33 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
     },
     (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
       onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
-          cancelSortDialog({name})
+          cancelSortDialog({name: event.rs.name})
         ),
       onApplySortDialog: (event: TApplySortDialogEvent) => thunkDispatch(
           (dispatch, getState) => {
-            dispatch(applySortDialog({ name, sortFields: event.sortFields }));
+            dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
             dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
             event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
           }
         ),
       onColumnResize: (event: TColumnResizeEvent) => thunkDispatch(
-          resizeColumn({name, columnIndex: event.columnIndex, newWidth: event.newWidth})
+          resizeColumn({name: event.rs.name, columnIndex: event.columnIndex, newWidth: event.newWidth})
         ),
       onColumnMove: (event: TColumnMoveEvent) => thunkDispatch(
-          columnMove({name, oldIndex: event.oldIndex, newIndex: event.newIndex})
+          columnMove({name: event.rs.name, oldIndex: event.oldIndex, newIndex: event.newIndex})
         ),
       onSelectRow: (event: TSelectRowEvent) => thunkDispatch(
-          selectRow({name, idx: event.idx, selected: event.selected})
+          selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})
         ),
       onSelectAllRows: (event: TSelectAllRowsEvent) => thunkDispatch(
-          setAllRowsSelected({name, value: event.value})
+          setAllRowsSelected({name: event.rs.name, value: event.value})
         ),
       onSetCursorPos: (event: TSetCursorPosEvent) => thunkDispatch(
           (dispatch, getState) => {
             const recordSet = getState().recordSet[event.rs.name];
             if (recordSet) {
               dispatch(setRecordSet({ name: event.rs.name, rs: recordSet.setCurrentRow(event.cursorRow) }));
-              dispatch(setCursorCol({ name, cursorCol: event.cursorCol }));
+              dispatch(setCursorCol({ name: event.rs.name, cursorCol: event.cursorCol }));
             }
           }
         ),
