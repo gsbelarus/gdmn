@@ -47,9 +47,7 @@ export interface IRecordSetOptions<R extends IDataRow = IDataRow> {
 
 export interface IRecordSetDataOptions<R extends IDataRow = IDataRow> {
   data: Data<R>;
-  fieldDefs?: FieldDefs;
   masterLink?: IMasterLink;
-  sql?: IRSSQLSelect;
 };
 
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
@@ -1224,23 +1222,31 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setData(options: IRecordSetDataOptions<R>): RecordSet<R> {
-    return new RecordSet<R>({
-      ...this._params,
-      data: options.data,
-      fieldDefs: options.fieldDefs || this._params.fieldDefs,
-      sql: options.sql || this._params.sql,
-      currentRow: 0,
-      sortFields: [],
-      allRowsSelected: false,
-      selectedRows: [],
-      filter: undefined,
-      savedData: undefined,
-      searchStr: undefined,
-      foundRows: undefined,
-      groups: undefined,
-      aggregates: undefined,
-      masterLink: options.masterLink || this._params.masterLink
-    });
+    switch (this._params.status) {
+      case TStatus.ERROR:
+        throw new Error("RecordSet already has error");
+      case TStatus.LOADING:
+        throw new Error("RecordSet already is loading");
+      case TStatus.PARTIAL:
+      case TStatus.FULL:
+      default:
+        return new RecordSet<R>({
+          ...this._params,
+          data: options.data,
+          status: TStatus.FULL,
+          currentRow: 0,
+          sortFields: [],
+          allRowsSelected: false,
+          selectedRows: [],
+          filter: undefined,
+          savedData: undefined,
+          searchStr: undefined,
+          foundRows: undefined,
+          groups: undefined,
+          aggregates: undefined,
+          masterLink: options.masterLink || this._params.masterLink
+        });
+    }
   }
 
   public loadingData(): RecordSet<R> {
