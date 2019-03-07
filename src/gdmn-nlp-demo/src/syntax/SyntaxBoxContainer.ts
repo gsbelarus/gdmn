@@ -38,10 +38,12 @@ export const SyntaxBoxContainer = connect(
         }
       }
     ),
-    onLoadRecordSet: (query: EntityQuery, host: string, port: string) => dispatch(
-      (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
-        dispatch(syntaxActions.loadRecordSet(query, host, port));
-      }
-    )
+    onLoadRecordSet: (query: EntityQuery, host: string, port: string) => {
+      dispatch(
+        (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
+          dispatch(syntaxActions.loadRecordSet(query, host, port));
+        }
+      )
+    }
   })
 )(SyntaxBox);

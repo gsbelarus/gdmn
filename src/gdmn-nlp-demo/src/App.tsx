@@ -15,6 +15,8 @@ import { IERModels, ERModelAction } from './ermodel/reducer';
 import { SetParameterContainer } from './parameterLoad/setParameterContainer';
 import { ParameterLoadAction } from './parameterLoad/reducer';
 import { load } from './appAction';
+import { RecordSetViewConteiner } from './recordSetView/recordSetViewConteiner';
+import { RecordSetReducerState } from 'gdmn-recordset';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
@@ -38,6 +40,7 @@ class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
 
 interface IAppProps {
   erModel: IERModels;
+  recordSet?: RecordSetReducerState;
   onLoadERModel: (srcFile: string, name: string) => void;
   onLoadERModel2: (erModel: ERModel, name: string) => void;
 };
@@ -171,6 +174,7 @@ class InternalApp extends Component<IAppProps, {}> {
               <Route exact={false} path={`/ermodel/:name`} component={ERModelBoxContainer} />
               <Route exact={false} path={`/nlpdialog`} component={ChatBoxContainer} />
               <Route exact={false} path={`/parameterLoad`} component={SetParameterContainer} />
+              <Route exact={false} path={`/recordSet`} component={RecordSetViewConteiner} />
             </Switch>
           </div>
         </>
@@ -179,7 +183,7 @@ class InternalApp extends Component<IAppProps, {}> {
   }
 
   private getItems = (): ICommandBarItemProps[] => {
-    const { erModel } = this.props;
+    const { erModel, recordSet } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -212,6 +216,12 @@ class InternalApp extends Component<IAppProps, {}> {
         key: 'setParameterLoad',
         text: 'Parameter load',
         commandBarButtonAs: btn('/parameterLoad')
+      },
+      {
+        key: 'recordSetView',
+        className: recordSet['db'] ? undefined : 'RecordSetViewHidden',
+        text: 'View RecordSet',
+        commandBarButtonAs: btn('/recordSet')
       }
     ];
   };
@@ -220,7 +230,8 @@ class InternalApp extends Component<IAppProps, {}> {
 export default connect(
   (state: State) => {
     return {
-      erModel: state.ermodel
+      erModel: state.ermodel,
+      recordSet: state.recordSet
     }
   },
   (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>) => ({

@@ -4,6 +4,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import { State } from '../store';
 import { RecordSetAction, RecordSet, TFieldType, IFieldDef, IDataRow, createRecordSet } from 'gdmn-recordset';
 import { List } from 'immutable';
+import { GridAction } from 'gdmn-grid';
 
 export const setSyntaxText = createAction('SYNTAX/SET_SYNTAX_TEXT', resolve => {
     return (text: string) => resolve(text);
@@ -59,7 +60,7 @@ let fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] =>
   });
 };
 
-export const loadRecordSet = (query: EntityQuery, host: string, port: string)  => (dispatch: ThunkDispatch<State, never, RecordSetAction>, _getState: () => State) => {
+export const loadRecordSet = (query: EntityQuery, host: string, port: string)  => (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, _getState: () => State) => {
   fetch(`http://${host}:${port}/data?query=${encodeURIComponent(query.serialize())}`)
   .then(res => res.json())
   .then(res => RecordSet.create({
@@ -68,5 +69,5 @@ export const loadRecordSet = (query: EntityQuery, host: string, port: string)  =
     data: List(res.data as IDataRow[]),
     eq: query
   }))
-  .then(res => dispatch(createRecordSet({ name: res.name, rs: res })))
+.then(res => dispatch(createRecordSet({ name: res.name, rs: res })))
 };
