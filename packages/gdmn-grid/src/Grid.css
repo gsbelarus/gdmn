@@ -128,10 +128,6 @@
   white-space: nowrap;
 }
 
-.CellColumn span {
-  padding: 0;
-}
-
 .DataCellLeft {
   text-align: left;
 }
@@ -304,13 +300,12 @@
 }
 
 .FilterMatchedHighlight {
-  border: 1px solid orangered;
+  background-color: limegreen;
   padding: 1px;
 }
 
 .SearchMatchedHighlight {
   background-color: limegreen;
-  color: white;
   padding: 1px;
 }
 
