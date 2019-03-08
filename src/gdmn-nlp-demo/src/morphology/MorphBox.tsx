@@ -44,7 +44,7 @@ import './MorphBox.css';
 
 export interface IMorphBoxProps {
   readonly text: string;
-  readonly token: IToken;
+  readonly token?: IToken;
   readonly words: AnyWord[];
   readonly onSetText: (text: string) => any;
 };
@@ -60,7 +60,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
   private _allWordsByPOS: [string, () => AnyWord[]][];
   private _allWords: AnyWord[];
 
-  constructor(props) {
+  constructor(props: IMorphBoxProps) {
     super(props);
 
     this._allWordsByPOS = [
@@ -120,10 +120,15 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
             label="Word"
             style={{maxWidth: '200px'}}
             value={text}
-            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              const foundWords: AnyWord[] = this._allWords.filter( f => f.word.indexOf(e.target.value) >= 0 );
-              onSetText(e.target.value);
-              this.setState({ vocabulary: foundWords });
+            onChange={ (_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              if (newValue) {
+                const foundWords: AnyWord[] = this._allWords.filter( f => f.word.indexOf(newValue) >= 0 );
+                onSetText(newValue);
+                this.setState({ vocabulary: foundWords });
+              } else {
+                onSetText('');
+                this.setState({ vocabulary: [] });
+              }
             }
           }
           />
@@ -177,11 +182,11 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
     );
   }
 
-  private getSynonymWords(w: AnyWord): JSX.Element {
+  private getSynonymWords(w: AnyWord): JSX.Element | undefined {
     const { onSetText } = this.props;
     return (w instanceof RusVerb && getSynonyms(w, SemContext.QueryDB) !== undefined)
       ? <div className="SynonymWords">
-          {getSynonyms(w, SemContext.QueryDB).map(
+          {getSynonyms(w, SemContext.QueryDB)!.map(
             w => w.getWordForm({ infn: true })).filter(
               word => word.word !== w.word ).map(
             s => <span onClick = { () => onSetText(s.word) }>{s.word}</span>
@@ -190,7 +195,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       : undefined;
   }
 
-  private getCategoryWords(w: AnyWord) : JSX.Element {
+  private getCategoryWords(w: AnyWord) : JSX.Element | undefined {
     return w.lexeme.semCategories.length
       ?
         <div className="SemCategories">

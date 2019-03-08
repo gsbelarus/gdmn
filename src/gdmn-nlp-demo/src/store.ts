@@ -22,7 +22,7 @@ export interface State {
   param: ISetParameterState;
 };
 
-const rootReducer = combineReducers<State, Actions>(
+const rootReducer = combineReducers<State>(
   {
     morphology: morphologyReducer,
     syntax: syntaxReducer,

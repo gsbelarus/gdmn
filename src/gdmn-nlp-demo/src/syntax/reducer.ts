@@ -23,6 +23,13 @@ const initialState: ISyntaxState = {
 
 export function reducer(state: ISyntaxState = initialState, action: SyntaxAction): ISyntaxState {
   switch (action.type) {
+    case getType(actions.clearSyntaxText): {
+      return {
+        text: '',
+        coombinations: []
+      }
+    }
+
     case getType(actions.setSyntaxText): {
       const text = action.payload;
       let coombinations = combinatorialMorph(text);

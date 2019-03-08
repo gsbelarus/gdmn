@@ -37,8 +37,8 @@ export class SetParameterLoad extends Component<ISetParameterProps, IParameterSt
             style={{maxWidth: '200px'}}
             value={this.state.host}
             disabled={this.state.isReadFile}
-            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              this.setState( {host: e.target.value });
+            onChange={ (_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              this.setState({ host: newValue ? newValue : '' });
             }}
           />
         <TextField
@@ -46,8 +46,8 @@ export class SetParameterLoad extends Component<ISetParameterProps, IParameterSt
             style={{maxWidth: '200px'}}
             value={this.state.port}
             disabled={this.state.isReadFile}
-            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              this.setState( {port: e.target.value });
+            onChange={ (_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              this.setState( {port: newValue ? newValue : '' });
             }}
           />
 
@@ -56,11 +56,11 @@ export class SetParameterLoad extends Component<ISetParameterProps, IParameterSt
           style={{ maxWidth: '48px' }}
           checked={this.state.isReadFile}
           disabled={this.props.loading}
-          onChange={ (_ev: React.FormEvent<HTMLElement>, isChecked: boolean) => {
-            this.setState( {isReadFile: isChecked });
+          onChange={ (_ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined, isChecked?: boolean) => {
+            this.setState({ isReadFile: !!isChecked });
           }}
         />
-        
+
         <PrimaryButton
           text="Загрузить"
           style={{ maxWidth: '48px' }}

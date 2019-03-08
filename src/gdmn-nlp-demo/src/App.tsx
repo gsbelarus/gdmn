@@ -167,7 +167,7 @@ class InternalApp extends Component<IAppProps, {}> {
           <CommandBar
             items={this.getItems()}
           />
-          <div className="WorkArea">
+          <div className="NLPWorkArea">
             <Switch>
               <Route exact={false} path={`/morphology`} component={MorphBoxContainer} />
               <Route exact={false} path={`/syntax`} component={SyntaxBoxContainer} />
@@ -219,7 +219,7 @@ class InternalApp extends Component<IAppProps, {}> {
       },
       {
         key: 'recordSetView',
-        className: recordSet['db'] ? undefined : 'RecordSetViewHidden',
+        className: recordSet && recordSet['db'] ? '' : 'RecordSetViewHidden',
         text: 'View RecordSet',
         commandBarButtonAs: btn('/recordSet')
       }

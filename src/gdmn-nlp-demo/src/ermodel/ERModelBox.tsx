@@ -31,7 +31,7 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
     filtering: false
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props: IERModelBoxProps, state: IERModelBoxState) {
     if (state.erModel !== props.erModel) {
       return {
         ...state,
@@ -140,16 +140,16 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
             label="Search for:"
             style={{maxWidth: '200px'}}
             value={text}
-            onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-              this.setState({ text: e.target.value });
+            onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              this.setState({ text: newValue ? newValue : '' });
             }}
           />
-          <Checkbox label="Entity" checked={searchInEntity} onChange={ (_ev: React.FormEvent<HTMLElement>, isChecked: boolean) => {
-              this.setState({ searchInEntity: isChecked })
+          <Checkbox label="Entity" checked={searchInEntity} onChange={ (_ev: React.FormEvent<HTMLElement> | undefined, isChecked?: boolean) => {
+              this.setState({ searchInEntity: !!isChecked })
             }}
           />
-          <Checkbox label="Attribute" checked={searchInAttribute} onChange={ (_ev: React.FormEvent<HTMLElement>, isChecked: boolean) => {
-              this.setState({ searchInAttribute: isChecked })
+          <Checkbox label="Attribute" checked={searchInAttribute} onChange={ (_ev: React.FormEvent<HTMLElement> | undefined, isChecked?: boolean) => {
+              this.setState({ searchInAttribute: !!isChecked })
             }}
           />
           <ChoiceGroup
@@ -164,8 +164,10 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
                 text: 'Large '
               }
             ]}
-            onChange={(ev: React.FormEvent<HTMLInputElement>, option: IChoiceGroupOption): void => {
-              this.setState({ viewMode: option.key })
+            onChange={(_ev: React.FormEvent<HTMLElement> | undefined, option?: IChoiceGroupOption): void => {
+              if (option) {
+                this.setState({ viewMode: option.key })
+              }
             }}
           />
           {
@@ -174,9 +176,9 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
               label="Show max:"
               style={{maxWidth: '60px'}}
               value={maxCount.toString()}
-              onChange={ (e: React.ChangeEvent<HTMLInputElement>) => {
-                if (parseInt(e.target.value) > 0) {
-                  this.setState({ maxCount: parseInt(e.target.value) });
+              onChange={ (_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+                if (newValue && parseInt(newValue) > 0) {
+                  this.setState({ maxCount: parseInt(newValue) });
                 }
               }}
             />

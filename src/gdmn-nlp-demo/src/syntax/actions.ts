@@ -1,7 +1,9 @@
-import {createAction} from "typesafe-actions";
+import { createAction } from "typesafe-actions";
 
-export const setSyntaxText = createAction('SYNTAX/SET_SYNTAX_TEXT', resolve => {
-    return (text: string) => resolve(text);
-  });
+export const setSyntaxText = createAction('SYNTAX/SET_SYNTAX_TEXT', resolve => (text: string) => resolve(text) );
 
 export type SetSyntaxText = typeof setSyntaxText;
+
+export const clearSyntaxText = createAction('SYNTAX/CLEAR_SYNTAX_TEXT', resolve => () => resolve() );
+
+export type ClearSyntaxText = typeof clearSyntaxText;

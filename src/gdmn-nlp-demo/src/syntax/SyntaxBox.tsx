@@ -20,10 +20,11 @@ export interface ISyntaxBoxProps {
   parserDebug?: ParsedText[],
   commandError?: string,
   command?: ICommand[],
-  isVisibleQuery: boolean,
+  isVisibleQuery?: boolean,
   onAnalyze: (text: string) => void,
-  onQuery: () => void
-};
+  onQuery: () => void,
+  onClear: (name: string) => void
+}
 
 export interface ISyntaxBoxState {
   editedText: string,
@@ -40,7 +41,10 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private _getColor(t: IToken): string {
-    return t.tokenType.name.substr(0, 4) + 'Color';
+    if (t.tokenType) {
+      return t.tokenType.name.substr(0, 4) + 'Color';
+    }
+    return '';
   }
 
   private _getCoombinations(): JSX.Element {
@@ -80,14 +84,14 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                   {
                     isMorphToken(s[0]) && (s[0] as IMorphToken).hsm ?
                       <sup>
-                        {(s[0] as IMorphToken).hsm.map( (h, idx) => h[0] && <span key={idx}>{h[0].word}</span> )}
+                        {(s[0] as IMorphToken).hsm!.map( (h, idx) => h[0] && <span key={idx}>{h[0].word}</span> )}
                       </sup>
                     : undefined
                   }
                 </div>
                 {
                   s.map( (w, wi) => (
-                    <div key={wi} className={getClassName(idx, w.tokenType.name)}>
+                    w.tokenType && <div key={wi} className={getClassName(idx, w.tokenType.name)}>
                       {w.tokenType.name}
                     </div>
                   ))
@@ -172,7 +176,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     return (
       <div className="CommandAndGraph">
         <div>
-          Parsed with {parsedText.parser.getName().label}:
+          Parsed with {parsedText.parser && parsedText.parser.getName().label}:
         </div>
         <div>
           {g.graph() ? (
@@ -209,12 +213,16 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private collUpsFields(id: string, idButton: string) {
-    var div = document.getElementById(id);
-    div.style.display = div.style.display !== "none"
-      && div.style.display !== "block" ? "block" : div.style.display === "none" ? "block" : "none";
-    var button = document.getElementById(idButton);
-    button.innerHTML = div.style.display === "none" ? "..." : "^";
-}
+    let div = document.getElementById(id);
+    if (div) {
+      div.style.display = div.style.display !== "none"
+        && div.style.display !== "block" ? "block" : div.style.display === "none" ? "block" : "none";
+      let button = document.getElementById(idButton);
+      if (button) {
+        button.innerHTML = div.style.display === "none" ? "..." : "^";
+      }
+    }
+  }
 
   private displaySKIP(skip: number) {
     return <div className="skip">
@@ -242,18 +250,18 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   private displayWHERE(wheres: IEntityQueryWhere[]) {
     return wheres.map( (where, idx1) =>
-      <div className="where" key={idx1}>
-        {this.displayOR(where.or, idx1)}
-        {this.displayAND(where.and, idx1)}
-        {this.displayNOT(where.not, idx1)}
-        {this.displayISNULL(where.isNull, null)}
-        {this.displayEQUALS(where.equals, null)}
+      where && <div className="where" key={idx1}>
+        {where.or && this.displayOR(where.or, idx1)}
+        {where.and && this.displayAND(where.and, idx1)}
+        {where.not && this.displayNOT(where.not, idx1)}
+        {where.isNull && this.displayISNULL(where.isNull, null)}
+        {where.equals && this.displayEQUALS(where.equals, null)}
       </div>
     )
   }
 
   private displayAND(ands: IEntityQueryWhere[], idx: number | null) {
-    return ands && <div className="allAnds" key={idx}>
+    return ands && <div className="allAnds">
             { ands.map( (and, idx1) =>
               <div  key={`and${idx1}`}>
                 { idx1 !== 0 ? <div>AND</div> : undefined }
@@ -262,14 +270,14 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                 { and.not ? this.displayNOT(and.not, null) : undefined }
                 { and.isNull ? this.displayISNULL(and.isNull, null) : undefined }
                 <div className="and" key={idx1}>
-                  {this.displayEQUALS(and.equals, null)}
+                  {and.equals && this.displayEQUALS(and.equals, null)}
               </div>
             </div>
           ) }</div>
   }
 
   private displayOR(ors: IEntityQueryWhere[], idx: number | null) {
-    return ors && <div className="allOrs" key={idx}>
+    return ors && <div className="allOrs">
             { ors.map( (or, idx1) =>
               <div  key={`or${idx1}`}>
                 { idx1 !== 0 ? <div>OR</div> : undefined }
@@ -278,7 +286,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                 { or.not ? this.displayNOT(or.not, null) : undefined }
                 { or.isNull ? this.displayISNULL(or.isNull, null) : undefined }
                 <div className="or" key={idx1}>
-                {this.displayEQUALS(or.equals, null)}
+                {or.equals && this.displayEQUALS(or.equals, null)}
               </div>
             </div>
           ) }</div>
@@ -298,7 +306,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayISNULL(isNulls: IEntityQueryAlias<ScalarAttribute>[], idx: number | null) {
-    return isNulls && <div className="allisNulls" key={idx}>
+    return isNulls && <div className="allisNulls">
             { isNulls.map( (isNull, idx1) =>
               <div  key={`isNull${idx1}`}>
                 { <div>IsNULL</div> }
@@ -312,7 +320,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayNOT(nots: IEntityQueryWhere[], idx: number | null) {
-    return nots && <div className="allNots" key={idx}>
+    return nots && <div className="allNots">
             { nots.map( (not, idx1) =>
               <div  key={`not${idx1}`}>
                 { <div>NOT</div> }
@@ -321,7 +329,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                 { not.not ? this.displayNOT(not.not, null) : undefined }
                 { not.isNull ? this.displayISNULL(not.isNull, null) : undefined }
                 <div className="not" key={idx1}>
-                {this.displayEQUALS(not.equals, null)}
+                {not.equals && this.displayEQUALS(not.equals, null)}
               </div>
             </div>
           ) }</div>
@@ -332,7 +340,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
       <div className="command">
         <div className="commandAction">
          <div className={`action${command.action}`} />
-         <div>
+         {command.payload.options && <div>
             {
               command.payload.options.skip &&
               this.displaySKIP(command.payload.options.skip)
@@ -341,7 +349,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
               command.payload.options.first &&
               this.displayFIRST(command.payload.options.first)
             }
-          </div>
+          </div>}
         </div>
         <div className="payload" >
         <div className="alias">{command.payload.link.alias}</div>
@@ -363,11 +371,11 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                           </div>
                         </div>
                         <button id={`buttonForScroll${field.links[0].alias}/${idx}`} className="buttonForScroll"
-                          onClick={ () =>
+                          onClick={ field && field.links && field.links[0] ? () =>
                             this.collUpsFields(
-                              `scrollUp${field.links[0].alias}/${idx}`,
-                              `buttonForScroll${field.links[0].alias}/${idx}`
-                            ) }>...</button>
+                              `scrollUp${field!.links![0]!.alias}/${idx}`,
+                              `buttonForScroll${field!.links![0]!.alias}/${idx}`
+                            ) : undefined }>...</button>
                       </div> }
                     </div>
                   } </div>
@@ -414,7 +422,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   render() {
     const { editedText, showPhrases, verboseErrors, tokens } = this.state;
-    const { text, onAnalyze, errorMsg, parserDebug, commandError, command, isVisibleQuery, onQuery } = this.props;
+    const { text, onAnalyze, errorMsg, parserDebug, commandError, command, isVisibleQuery, onQuery, onClear, parsedText } = this.props;
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -422,18 +430,26 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           label="Text"
           value={editedText}
           onChange={
-            (e: React.ChangeEvent<HTMLInputElement>) => {
-              try {
-                const tokens = tokenize(e.target.value);
+            (_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              if (newValue) {
+                try {
+                  const tokens = tokenize(newValue);
+                  this.setState({
+                    editedText: newValue,
+                    showPhrases: false,
+                    tokens
+                  });
+                }
+                catch(err) {
+                  this.setState({
+                    editedText: err.message,
+                    tokens: []
+                  });
+                }
+              } else {
                 this.setState({
-                  editedText: e.target.value,
+                  editedText: '',
                   showPhrases: false,
-                  tokens
-                });
-              }
-              catch(err) {
-                this.setState({
-                  editedText: err.message,
                   tokens: []
                 });
               }
@@ -447,18 +463,24 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         />
         <DefaultButton
           text="Analyze"
+          disabled={!tokens.length}
           onClick={ () => { this.setState({ showPhrases: false }); onAnalyze(editedText); }}
         />
         <DefaultButton
           text="Query"
           disabled={!isVisibleQuery}
-          onClick={ () => onQuery()}
+          onClick={onQuery}
+        />
+        <DefaultButton
+          text="Clear"
+          disabled={!parsedText && !parserDebug}
+          onClick={ () => onClear('db') }
         />
       </div>
       <div className="SyntaxTokens">
         {
           tokens.map( (t, idx) =>
-            <div key={idx}>
+            t.tokenType && <div key={idx}>
               <div className={`Token${t.tokenType.name}`}>
                 {t.image.split('').map( (ch, idx) => ch === ' ' ? <span key={idx}>&nbsp;</span> : ch)}
               </div>
@@ -495,7 +517,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {parserDebug ?
           <div className="ParserDebug">
             {parserDebug.map( (pd, idx) =>
-                <div key={idx}>
+                pd.parser && <div key={idx}>
                   <div>
                     Parser: {pd.parser.getName().label}
                   </div>

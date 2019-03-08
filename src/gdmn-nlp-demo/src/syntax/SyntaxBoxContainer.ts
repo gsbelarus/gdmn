@@ -49,6 +49,9 @@ export const SyntaxBoxContainer = connect(
     onQuery: () => dispatch(
       async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, getState: () => State) => {
         const {param: {host, port}, ermodel, grid, recordSet} = getState();
+
+        if (!ermodel || !ermodel['db'] || !ermodel['db'].command || !ermodel['db'].command[0]) return;
+
         const query = ermodel['db'].command[0].payload;
 
         if (grid['db']) {
@@ -82,7 +85,11 @@ export const SyntaxBoxContainer = connect(
           hideFooter: true
         }));
       }
-    )
+    ),
+   onClear: (name: string) => {
+     dispatch(syntaxActions.clearSyntaxText());
+     dispatch(erModelActions.clearCommand({ name, clear: true }));
+    }
   })
 )(SyntaxBox);
 
