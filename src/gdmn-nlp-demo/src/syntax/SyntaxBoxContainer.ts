@@ -22,13 +22,13 @@ import { List } from 'immutable';
 
 export const SyntaxBoxContainer = connect(
   (state: State) => {
-    const erModel = state.ermodel['db'];
-    if (erModel) {
+    const erModelState = state.ermodel['db'];
+    if (erModelState) {
       return {
         ...state.syntax,
-        isVisibleQuery: erModel.command && state.param.host && state.param.port,
-        commandError: erModel.commandError,
-        command: erModel.command
+        isVisibleQuery: erModelState.command && state.param.host && state.param.port,
+        commandError: erModelState.commandError,
+        command: erModelState.command
       }
     }
 

@@ -59,13 +59,15 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
   private onInputPressEnter(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (!(e.key === 'Enter' && this.state.text.trim())) return;
 
-    const { nlpDialog, addNLPMessage: addNlpMessage } = this.props;
+    const { addNLPMessage, nlpDialog } = this.props;
+    addNLPMessage(this.state.text.trim());
 
-    addNlpMessage(this.state.text.trim());
+    const len = nlpDialog.length;
+
     this.setState({
       text: '',
-      showFrom: nlpDialog.length ? nlpDialog.length - 1 : 0,
-      showTo: nlpDialog.length ? nlpDialog.length - 1 : 0,
+      showFrom: len,
+      showTo: len,
       partialOK: true,
       recalc: true
     });

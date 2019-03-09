@@ -32,6 +32,11 @@ export const Numeric: TokenType = createToken({
   pattern: /[0-9]+/
 });
 
+export const DateToken: TokenType = createToken({
+  name: 'Date',
+  pattern: /(31|30|2[0-9]|1[0-9]|0[1-9]|[1-9]){1}\.(12|11|10|0[1-9]|[1-9]){1}\.([1-2]{1}[0-9]{3}|[0-9]{2})/
+});
+
 export const Other: TokenType = createToken({
   name: 'Other',
   pattern: /[A-Za-z]+/
@@ -40,10 +45,11 @@ export const Other: TokenType = createToken({
 const allTokens: TokenType[] = [
   LineBreak,
   WhiteSpace,
+  DateToken,
+  Numeric,
+  CyrillicWord,
   PunctuationMark,
   Comma,
-  CyrillicWord,
-  Numeric,
   Other
 ];
 
