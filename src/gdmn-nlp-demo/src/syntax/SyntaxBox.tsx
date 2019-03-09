@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { TextField, DefaultButton } from "office-ui-fabric-react";
 import "./SyntaxBox.css";
 import { IToken } from "chevrotain";
-import { ParsedText, Phrase, AnyWord, tokenize, CyrillicWord, morphAnalyzer } from "gdmn-nlp";
+import { ParsedText, Phrase, AnyWord, tokenize, CyrillicWord, morphAnalyzer, PhraseItem } from "gdmn-nlp";
 import { Edge as DagreEdge, graphlib, layout } from 'dagre';
 import { Rect } from "./Rect";
 import { Edge } from "./Edge";
@@ -126,7 +126,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
       });
 
       const recurs = (
-        phr: AnyWord | Phrase<AnyWord>
+        phr: PhraseItem<AnyWord>
       ) => {
         if (phr instanceof Phrase) {
           const label = phr.getName().label;

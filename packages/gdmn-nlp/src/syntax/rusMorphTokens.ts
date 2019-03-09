@@ -75,7 +75,7 @@ export const morphTokens = (() => {
   [RusGender.Masc, RusGender.Femn, RusGender.Neut].forEach( gender => {
     [true, false].forEach( animate => {
       signatures.push(RusNumeral.getSignature(RusCase.Accs, undefined, animate, gender));
-    }) 
+    })
   });
 
   [RusCase.Nomn, RusCase.Gent, RusCase.Accs, RusCase.Datv, RusCase.Ablt, RusCase.Loct].forEach(  grammCase =>

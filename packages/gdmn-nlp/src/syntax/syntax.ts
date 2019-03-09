@@ -1,9 +1,10 @@
 import { AnyWord } from '../morphology/morphology';
 import { getNextID } from '../utils/idGenerator';
+import { Value } from './value';
 
 export class Sentence {}
 
-export type PhraseItem<W extends AnyWord> = W | Phrase<W>;
+export type PhraseItem<W extends AnyWord> = W | Phrase<W> | Value;
 
 export interface PhraseName {
   label: string,

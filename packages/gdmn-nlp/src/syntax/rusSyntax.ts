@@ -6,6 +6,7 @@ import { RusWord } from '../morphology/rusMorphology';
 import { Phrase, PhraseName } from './syntax';
 import { AnyWord } from '../morphology/morphology';
 import { RusNumeral } from '../morphology/rusNumeral';
+import { DateValue } from './value';
 
 export class RusPhrase extends Phrase<RusWord> {};
 
@@ -191,6 +192,23 @@ export class RusPP extends RusPhrase {
     return {
       label: 'RusPP',
       description: 'Существительное с предлогом'
+    }
+  }
+}
+
+export class RusPTimeP extends RusPhrase {
+  constructor (prep: RusPreposition, date: DateValue) {
+    super([prep, date]);
+  }
+
+  get prep(): RusPreposition {
+    return this.items[0] as RusPreposition;
+  }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusPTimeP',
+      description: 'Предлог и дата'
     }
   }
 }

@@ -1,6 +1,7 @@
 import { VPParser1 } from "./VPParser1";
-import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusNNP, RusCN } from "../../rusSyntax";
+import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusNNP, RusCN, RusPTimeP } from "../../rusSyntax";
 import { tokenToWordOrHomogeneous, tokenToWordOrCompositeNumerals } from "../../parser";
+import { DateValue, parseDate } from "../../value";
 
 export const vpParser1 = new VPParser1();
 
@@ -60,7 +61,7 @@ export class VPVisitor1 extends BaseVPVisitor1 {
       return this.visit(ctx.imperativeNoun);
     };
   }
-  
+
   public qualImperativeNNPNoun = (ctx: any) => {
       const impCN = this.visit(ctx.imperativeNNPNumr);
       const impN = this.visit(ctx.imperativeNNPNoun);
@@ -103,7 +104,7 @@ export class VPVisitor1 extends BaseVPVisitor1 {
     : ctx.NUMRAnimNeutAccs ? ctx.NUMRAnimNeutAccs[0]
     : undefined);
   }
-  
+
   public imperativeNNPNoun = (ctx: any) => {
     return tokenToWordOrHomogeneous(ctx.NOUNAnimMascSingAccs ? ctx.NOUNAnimMascSingAccs[0]
       : ctx.NOUNAnimFemnSingAccs ? ctx.NOUNAnimFemnSingAccs[0]
@@ -141,16 +142,24 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public pp = (ctx: any) => {
+    if (ctx.ppPlace) {
+      return this.visit(ctx.ppPlace);
+    } else {
+      return this.visit(ctx.ppTime);
+    };
+  }
+
+  public ppPlace = (ctx: any) => {
     const ppn = this.visit(ctx.ppNoun);
 
     if (Array.isArray(ppn)) {
-      return new RusPP(this.visit(ctx.prep), new RusHmNouns(ppn));
+      return new RusPP(this.visit(ctx.prepPlace), new RusHmNouns(ppn));
     } else {
-      return new RusPP(this.visit(ctx.prep), ppn);
+      return new RusPP(this.visit(ctx.prepPlace), ppn);
     }
   }
 
-  public prep = (ctx: any) => {
+  public prepPlace = (ctx: any) => {
     return ctx.PREPPlce[0].word;
   }
 
@@ -166,6 +175,14 @@ export class VPVisitor1 extends BaseVPVisitor1 {
     : ctx.NOUNInanFemnPlurGent ? ctx.NOUNInanFemnPlurGent[0]
     : ctx.NOUNInanNeutPlurGent ? ctx.NOUNInanNeutPlurGent[0]
     : undefined);
+  }
+
+  public ppTime = (ctx: any) => {
+    return new RusPTimeP(this.visit(ctx.prepTime), new DateValue(ctx.DateToken[0].image, parseDate(ctx.DateToken[0].image)));
+  }
+
+  public prepTime = (ctx: any) => {
+    return ctx.PREPTime[0].word;
   }
 
 };

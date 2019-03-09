@@ -1,10 +1,11 @@
 import { parsePhrase } from "../parser";
 import { RusVerb } from "../../morphology/rusVerb";
-import { RusNP, RusPP, RusANP, RusPhrase, RusNNP, RusCN } from "../rusSyntax";
+import { RusNP, RusPP, RusANP, RusPhrase, RusNNP, RusCN, RusPTimeP } from "../rusSyntax";
 import { RusWord } from "../../morphology/rusMorphology";
 import { RusNoun } from "../../morphology/rusNoun";
 import { RusConjunction } from "../../morphology/rusConjunction";
 import { RusNumeral } from '../../morphology/rusNumeral';
+import { Value } from "../value";
 
 describe("vpparser1", () => {
 
@@ -102,6 +103,21 @@ describe("vpparser1", () => {
     expect(pp).toBeUndefined();
     expect((anp!.items[0] as RusWord).word).toEqual('лучшие');
     expect((anp!.items[1] as RusWord).word).toEqual('организации');
+  });
+
+  test("покажи курсы на 10.10.2018", () => {
+    const result = parsePhrase('покажи курсы на 10.10.2018');
+    const vp = result.phrase;
+    expect(vp).toBeDefined();
+    const verb = vp!.items[0] as RusWord;
+    expect(verb).toBeDefined();
+    expect(verb.word).toEqual('покажи');
+    const np = vp!.items[1] as RusNP;
+    const n = np!.items[0] as RusWord;
+    expect(n.word).toEqual('курсы');
+    const pp = np!.items[1] as RusPTimeP;
+    expect((pp!.items[0] as RusWord).word).toEqual('на');
+    expect((pp!.items[1] as Value).image).toEqual('10.10.2018');
   });
 
   /*

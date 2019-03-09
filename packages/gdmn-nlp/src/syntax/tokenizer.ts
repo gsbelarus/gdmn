@@ -33,7 +33,7 @@ export const Numeric: TokenType = createToken({
 });
 
 export const DateToken: TokenType = createToken({
-  name: 'Date',
+  name: 'DateToken',
   pattern: /(31|30|2[0-9]|1[0-9]|0[1-9]|[1-9]){1}\.(12|11|10|0[1-9]|[1-9]){1}\.([1-2]{1}[0-9]{3}|[0-9]{2})/
 });
 

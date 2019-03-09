@@ -1,13 +1,14 @@
 import { Parser } from "chevrotain";
 import { morphTokens } from "../../rusMorphTokens";
 import { IDescribedParser, ParserName } from "../../types";
+import { DateToken } from "../../..";
 
 /**
  * Грамматика для фразы типа "Покажи все организации из Минска"
  */
 export class VPParser1 extends Parser implements IDescribedParser {
   constructor() {
-    super(morphTokens);
+    super({...morphTokens, DateToken});
     Parser.performSelfAnalysis(this);
   };
 
@@ -118,11 +119,18 @@ export class VPParser1 extends Parser implements IDescribedParser {
   });
 
   public pp = this.RULE('pp', () => {
-    this.SUBRULE(this.prep);
+    this.OR([
+      { ALT: () => this.SUBRULE(this.ppPlace) },
+      { ALT: () => this.SUBRULE(this.ppTime) },
+    ]);
+  });
+
+  public ppPlace = this.RULE('ppPlace', () => {
+    this.SUBRULE(this.prepPlace);
     this.SUBRULE(this.ppNoun);
   });
 
-  public prep = this.RULE('prep', () => this.CONSUME(morphTokens.PREPPlce) );
+  public prepPlace = this.RULE('prepPlace', () => this.CONSUME(morphTokens.PREPPlce) );
 
   public ppNoun = this.RULE('ppNoun', () => {
     this.SUBRULE(this.nounGent);
@@ -138,4 +146,11 @@ export class VPParser1 extends Parser implements IDescribedParser {
       { ALT: () => this.CONSUME(morphTokens.NOUNInanNeutPlurGent) },
     ]);
   });
+
+  public ppTime = this.RULE('ppTime', () => {
+    this.SUBRULE(this.prepTime);
+    this.CONSUME(DateToken);
+  });
+
+  public prepTime = this.RULE('prepTime', () => this.CONSUME(morphTokens.PREPTime) );
 };
