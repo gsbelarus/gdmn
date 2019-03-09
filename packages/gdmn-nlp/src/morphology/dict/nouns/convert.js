@@ -1,9 +1,15 @@
+// @ts-nocheck
+
+/*
+  data file must have unix line endings (LF)
+*/
+
 var fs = require('fs');
 var rawFile = fs.readFileSync('./data-all.txt', 'utf-8').replace(/ё/g, 'е');
 
-const nouns = rawFile.replace(/́/g, '').split('{{').reduce( (p, s, idx) => {
+const nouns = rawFile.replace(/́/g, '').split('{{ШаблонДемо').reduce( (p, s, idx) => {
     if (s) {
-      const rg = /\s+\|имя=сущ ru ([mfn]{1}) (\w+) (.+)\s+.+основа=(.+)(?:\s+.+основа1=(.+))?(?:\s+.+основа2=(.+))?\s.+(?:\s.*)?слова=(?:(?:\[\[)?([^\]]+)(?:\]\])?,?\s?){1}(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\([^\]]+\))?\s+\}\}/g;
+      const rg = /\s*\|имя=сущ ru ([mfn]{1}) (\w+) (.+)\s+.+основа=(.+)(?:\s+.+основа1=(.+))?(?:\s+.+основа2=(.+))?\s.+(?:\s.*)?слова=(?:(?:\[\[)?([^\]]+)(?:\]\])?,?\s?){1}(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\([^\]]+\))?\s+\}\}/g;
       const groups = rg.exec(s);
       if (groups) {
         const t = [];
@@ -17,8 +23,7 @@ const nouns = rawFile.replace(/́/g, '').split('{{').reduce( (p, s, idx) => {
         if (groups[6] && t[t.length - 1] !== groups[6]) t.push(groups[6]);
         while (t.length < 8) t.push('');
         p.push(t);
-      }
-      else {
+      } else {
         const rg_m=/\|имя=сущ ru ([mfn]{1}) (\w+) (.+)\s+\|основа=(.+)\s+(?:\|основа1=(.+)\s+)?(?:\|основа2=(.+)\s+)?\}\}\s+([^*:]+)(?: типа:)?\s+\* \[\[([^\]]+)\]\]\s*(?:\* \[\[([^\]]+)\]\]\s*)?(?:\* \[\[([^\]]+)\]\]\s*)?/g;
         const groups_m = rg_m.exec(s);
         if (groups_m) {
@@ -33,6 +38,9 @@ const nouns = rawFile.replace(/́/g, '').split('{{').reduce( (p, s, idx) => {
           if (groups_m[6] && t_m[t_m.length - 1] !== groups_m[6]) t_m.push(groups_m[6]);
           while (t_m.length < 8) t_m.push('');
             p.push(t_m);
+        } else {
+          console.log('Нераспознанный шаблон:');
+          console.log(s);
         }
       }
     }

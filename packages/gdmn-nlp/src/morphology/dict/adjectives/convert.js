@@ -1,6 +1,9 @@
+// @ts-nocheck
+
 /*
   data file must have unix line endings (LF)
 */
+
 var fs = require('fs');
 var rawFile = fs.readFileSync('./data-all.txt', 'utf-8').replace(/ё/g, 'е');
 

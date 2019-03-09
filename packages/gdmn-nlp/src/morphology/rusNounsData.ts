@@ -168,6 +168,15 @@ export const rusNouns: IRusNoun[] = [
     declensionZ: '1a',
   },
   {
+    stem: 'курс',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '1a',
+  },
+  {
     stem: 'телефон',
     stem1: '',
     stem2: '',
@@ -870,6 +879,15 @@ export const rusNouns: IRusNoun[] = [
     declensionZ: '1a',
   },
   {
+    stem: 'валют',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Femn,
+    declension: 1,
+    declensionZ: '1a',
+  },
+  {
     stem: 'дат',
     stem1: '',
     stem2: '',
@@ -940,7 +958,8 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Femn,
     declension: 1,
     declensionZ: '4a',
-  },  {
+  },
+  {
     stem: 'проводниц',
     stem1: '',
     stem2: '',
@@ -1434,6 +1453,15 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Femn,
     declension: 1,
     declensionZ: '2*a',
+  },
+  {
+    stem: 'песн',
+    stem1: 'песен',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Femn,
+    declension: 1,
+    declensionZ: '2*a-ня',
   },
   {
     stem: 'шестерн',
@@ -1992,5 +2020,5 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '3*b(1)(2)',
-  }
+  },
 ];

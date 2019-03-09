@@ -963,6 +963,13 @@ export const RusDeclensionZEndings: RusDeclensionZEnding[] = [
   {
     animate: false,
     gender: RusGender.Femn,
+    declensionZ: '2*a-ня',
+    singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
+    plural: ['и', '', 'ям', 'и', 'ями', 'ях']
+  },
+  {
+    animate: false,
+    gender: RusGender.Femn,
     declensionZ: '2*b',
     singular: ['я', 'и', 'е', 'ю', 'ей', 'е'],
     plural: ['и', '', 'ям', 'и', 'ями', 'ях']
