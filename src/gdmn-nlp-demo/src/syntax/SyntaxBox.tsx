@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { TextField, DefaultButton } from "office-ui-fabric-react";
+import { TextField, DefaultButton, ComboBox, IComboBoxOption, SelectableOptionMenuItemType } from "office-ui-fabric-react";
 import "./SyntaxBox.css";
 import { IToken } from "chevrotain";
 import { ParsedText, Phrase, AnyWord, tokenize, CyrillicWord, morphAnalyzer, PhraseItem } from "gdmn-nlp";
@@ -424,6 +424,22 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     const { editedText, showPhrases, verboseErrors, tokens } = this.state;
     const { text, onAnalyze, errorMsg, parserDebug, commandError, command, isVisibleQuery, onQuery, onClear, parsedText } = this.props;
 
+    const INITIAL_OPTIONS: IComboBoxOption[] = [
+      { key: 'Header1', text: 'First heading', itemType: SelectableOptionMenuItemType.Header },
+      { key: 'A', text: 'Option A' },
+      { key: 'B', text: 'Option B' },
+      { key: 'C', text: 'Option C' },
+      { key: 'D', text: 'Option D' },
+      { key: 'divider', text: '-', itemType: SelectableOptionMenuItemType.Divider },
+      { key: 'Header2', text: 'Second heading', itemType: SelectableOptionMenuItemType.Header },
+      { key: 'E', text: 'Option E' },
+      { key: 'F', text: 'Option F', disabled: true },
+      { key: 'G', text: 'Option G' },
+      { key: 'H', text: 'Option H' },
+      { key: 'I', text: 'Option I' },
+      { key: 'J', text: 'Option J' }
+    ];
+
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
         <TextField
@@ -460,6 +476,19 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           text="..."
           style={{ maxWidth: '48px' }}
           onClick={ () => this.setState({ showPhrases: true }) }
+        />
+        <ComboBox
+          defaultSelectedKey="C"
+          label="ER-Model"
+          allowFreeform
+          autoComplete="on"
+          options={INITIAL_OPTIONS}
+          onFocus={() => console.log('onFocus called for basic uncontrolled example')}
+          onBlur={() => console.log('onBlur called for basic uncontrolled example')}
+          onMenuOpen={() => console.log('ComboBox menu opened')}
+          onPendingValueChanged={(option, pendingIndex, pendingValue) =>
+            console.log(`Preview value was changed. Pending index: ${pendingIndex}. Pending value: ${pendingValue}.`)
+          }
         />
         <DefaultButton
           text="Analyze"
