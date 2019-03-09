@@ -54,7 +54,10 @@
 }
 
 .AttrName {
-  display: inline-block;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
   min-width: 140px;
   max-width: 140px;
   padding-right: 4px;
@@ -82,4 +85,14 @@
 
 .OddRow {
   background-color: lightgoldenrodyellow;
+}
+
+.AttrSemCategories {
+  display: inline-block;
+}
+
+.AttrSemCategory {
+  color: green;
+  margin-left: 4px;
+  font-size: 10px;
 }

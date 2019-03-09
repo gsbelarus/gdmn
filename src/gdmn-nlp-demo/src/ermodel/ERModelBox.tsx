@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import "./ERModelBox.css";
 import { Spinner, SpinnerSize, TextField, Checkbox, ChoiceGroup, IChoiceGroupOption, PrimaryButton } from "office-ui-fabric-react";
 import { ERModel, Entity } from "gdmn-orm";
+import { semCategoryNames } from "gdmn-nlp";
 
 export interface IERModelBoxProps {
   loading: boolean;
@@ -112,7 +113,16 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
 
     const entities = foundEntities.map( entity =>
       <div key={entity.name} className="Entity">
-        <div>{entity.name}{getInheritanceSeq(entity)}</div>
+        <div>
+          {entity.name}
+          {
+            entity.semCategories && entity.semCategories.length ?
+            <>{entity.semCategories.map( sc => <span className="AttrSemCategory">{semCategoryNames[sc]}</span>)}</>
+            :
+            undefined
+          }
+          {getInheritanceSeq(entity)}
+        </div>
         <div>{entity.lName.ru ? entity.lName.ru.name: entity.name}</div>
         {
           viewMode === 'S'
@@ -123,6 +133,12 @@ export class ERModelBox extends Component<IERModelBoxProps, {}> {
                 <div key={attr.name} className={'Attr' + (idx % 2 === 0 ? ' OddRow' : '')}>
                   <span className={'AttrName' + (attr.name.length > 20 ? ' SmallText' : '')}>
                     {entity.pk.find( pk => pk.name === attr.name ) ? <strong>{attr.name}*</strong> : attr.name}
+                    {
+                      attr.semCategories && attr.semCategories.length ?
+                      <>{attr.semCategories.map( sc => <span className="AttrSemCategory">{semCategoryNames[sc]}</span>)}</>
+                      :
+                      undefined
+                    }
                   </span>
                   <span className={'AttrDesc' + (desc.length > 20 ? ' SmallText' : '')}>{desc}</span>
                   <span className="AttrType">{attr.inspectDataType()}</span>

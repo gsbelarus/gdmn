@@ -62,8 +62,8 @@
   color: white;
 }
 
-.TokenDate {
-  background-color: green;
+.TokenDateToken {
+  background-color: gray;
   color: white;
 }
 
@@ -131,6 +131,10 @@
 
 .ADVBColor {
   background-color: red;
+}
+
+.DateColor {
+  background-color: grey;
 }
 
 .ACTIVEColor {
