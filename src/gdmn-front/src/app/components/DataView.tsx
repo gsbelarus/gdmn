@@ -98,6 +98,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     } else {
       const { data } = this.props;
       if (data && data.rs && data.detail && data.detail.length) {
+
+
         const masterLink = data.detail[0].rs.masterLink!;
         const detailValue = masterLink.values[0].value;
         const masterValue = data.rs.size > 0 ? data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName) : '';
@@ -212,7 +214,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
             }}
           />
         </div>
-        <div style={{ height: 'calc(100% - 24px)' }}>
+        <div style={{ height: 'calc(100% - 77px)' }}>
           <GDMNGrid
             {...gcs}
             rs={rs}

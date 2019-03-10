@@ -146,7 +146,7 @@ export interface IMasterLink {
   masterName: string;
   values: {
     fieldName: string,
-    value: TDataType
+    value: TDataType | undefined
   }[]
 };
 

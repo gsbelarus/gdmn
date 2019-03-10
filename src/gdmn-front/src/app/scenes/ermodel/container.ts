@@ -69,7 +69,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
             dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
           }
 
-          const currEntity = entitiesRS.getString(entitiesRS.currentRow, 'name');
+          const currEntity = entitiesRS.size ? entitiesRS.getString(entitiesRS.currentRow, 'name') : undefined;
 
           let attributesRS = getState().recordSet.attributes;
 
@@ -79,15 +79,19 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
             }
 
             if (attributesRS.masterLink.values[0].value !== currEntity) {
-              const data = List(
-                Object.entries(erModel.entities[currEntity].attributes).map(
-                  ([name, ent]) =>
-                    ({
-                      name,
-                      description: ent.lName.ru ? ent.lName.ru.name : name
-                    } as IDataRow)
+              const data = currEntity
+                ?
+                List(
+                  Object.entries(erModel.entities[currEntity].attributes).map(
+                    ([name, ent]) =>
+                      ({
+                        name,
+                        description: ent.lName.ru ? ent.lName.ru.name : name
+                      } as IDataRow)
+                  )
                 )
-              );
+                :
+                List<IDataRow>();
 
               dispatch(
                 setRecordSet({
@@ -124,15 +128,19 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                   caption: 'Description'
                 }
               ],
-              data: List(
-                Object.entries(erModel.entities[currEntity].attributes).map(
-                  ([name, ent]) =>
-                    ({
-                      name,
-                      description: ent.lName.ru ? ent.lName.ru.name : name
-                    } as IDataRow)
+              data: currEntity
+                ?
+                List(
+                  Object.entries(erModel.entities[currEntity].attributes).map(
+                    ([name, ent]) =>
+                      ({
+                        name,
+                        description: ent.lName.ru ? ent.lName.ru.name : name
+                      } as IDataRow)
+                  )
                 )
-              ),
+                :
+                List<IDataRow>(),
               masterLink: {
                 masterName: entitiesRS.name,
                 values: [
