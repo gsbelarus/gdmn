@@ -11,6 +11,7 @@ import { ICommand } from 'gdmn-nlp-agent';
 import { isMorphToken, IMorphToken } from "gdmn-nlp";
 import { Select } from "../query/Select";
 import { EntityQuery, IEntityQueryWhere, IEntityQueryWhereValue, IEntityQueryAlias, ScalarAttribute, IEntityQueryOrder } from "gdmn-orm";
+import { IERModels } from "../ermodel/reducer";
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -18,26 +19,28 @@ export interface ISyntaxBoxProps {
   errorMsg?: string,
   parsedText?: ParsedText,
   parserDebug?: ParsedText[],
-  commandError?: string,
-  command?: ICommand[],
-  isVisibleQuery?: boolean,
-  onAnalyze: (text: string) => void,
-  onQuery: () => void,
-  onClear: (name: string) => void
+  erModels: IERModels,
+  host: string,
+  port: string,
+  onAnalyze: (erModelName: string, text: string) => void,
+  onQuery: (erModelName: string) => void,
+  onClear: (erModelName: string) => void
 }
 
 export interface ISyntaxBoxState {
   editedText: string,
   showPhrases: boolean,
   tokens: IToken[],
-  verboseErrors?: any
+  verboseErrors?: any,
+  selectedERModel?: string;
 }
 
 export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   state: ISyntaxBoxState = {
     editedText: this.props.text,
     showPhrases: false,
-    tokens: tokenize(this.props.text)
+    tokens: tokenize(this.props.text),
+    selectedERModel: 'db'
   }
 
   private _getColor(t: IToken): string {
@@ -411,34 +414,25 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private createStringSelect(query: EntityQuery) {
-    const selectQuery = new Select(query);
-    return (
-      <div className="SelectQuery">
-        <pre className="sql">{selectQuery.sql}</pre>
-        <div className="params">{JSON.stringify(selectQuery.params)}</div>
-      </div>
-    );
+    if (query.link.entity.adapter) {
+      const selectQuery = new Select(query);
+      return (
+        <div className="SelectQuery">
+          <pre className="sql">{selectQuery.sql}</pre>
+          <div className="params">{JSON.stringify(selectQuery.params)}</div>
+        </div>
+      );
+    }
   }
 
   render() {
-    const { editedText, showPhrases, verboseErrors, tokens } = this.state;
-    const { text, onAnalyze, errorMsg, parserDebug, commandError, command, isVisibleQuery, onQuery, onClear, parsedText } = this.props;
+    const { editedText, showPhrases, verboseErrors, tokens, selectedERModel } = this.state;
+    const { text, onAnalyze, errorMsg, parserDebug, onQuery, onClear, parsedText, erModels, host, port } = this.props;
 
-    const INITIAL_OPTIONS: IComboBoxOption[] = [
-      { key: 'Header1', text: 'First heading', itemType: SelectableOptionMenuItemType.Header },
-      { key: 'A', text: 'Option A' },
-      { key: 'B', text: 'Option B' },
-      { key: 'C', text: 'Option C' },
-      { key: 'D', text: 'Option D' },
-      { key: 'divider', text: '-', itemType: SelectableOptionMenuItemType.Divider },
-      { key: 'Header2', text: 'Second heading', itemType: SelectableOptionMenuItemType.Header },
-      { key: 'E', text: 'Option E' },
-      { key: 'F', text: 'Option F', disabled: true },
-      { key: 'G', text: 'Option G' },
-      { key: 'H', text: 'Option H' },
-      { key: 'I', text: 'Option I' },
-      { key: 'J', text: 'Option J' }
-    ];
+    const erModelState = selectedERModel ? erModels[selectedERModel] : undefined;
+    const canQuery = erModelState && erModelState.command && host && port;
+    const commandError = erModelState ? erModelState.commandError : undefined;
+    const command = erModelState ? erModelState.command : undefined;
 
     return (<div className="ContentBox">
       <div className="SyntaxBoxInput">
@@ -475,35 +469,31 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         <DefaultButton
           text="..."
           style={{ maxWidth: '48px' }}
-          onClick={ () => this.setState({ showPhrases: true }) }
+          onClick={ () => this.setState({ showPhrases: true, selectedERModel }) }
         />
         <ComboBox
-          defaultSelectedKey="C"
+          selectedKey={selectedERModel ? (erModels[selectedERModel] ? selectedERModel : undefined) : undefined}
           label="ER-Model"
-          allowFreeform
           autoComplete="on"
-          options={INITIAL_OPTIONS}
-          onFocus={() => console.log('onFocus called for basic uncontrolled example')}
-          onBlur={() => console.log('onBlur called for basic uncontrolled example')}
-          onMenuOpen={() => console.log('ComboBox menu opened')}
-          onPendingValueChanged={(option, pendingIndex, pendingValue) =>
-            console.log(`Preview value was changed. Pending index: ${pendingIndex}. Pending value: ${pendingValue}.`)
-          }
+          options={Object.keys(erModels).map( key => ({ key, text: key }) )}
+          onPendingValueChanged={(option, _pendingIndex, _newSelectedERModel) => {
+            if (option && erModels[option.text]) this.setState({ selectedERModel: option.text });
+          }}
         />
         <DefaultButton
           text="Analyze"
-          disabled={!tokens.length}
-          onClick={ () => { this.setState({ showPhrases: false }); onAnalyze(editedText); }}
+          disabled={!tokens.length || !selectedERModel || !erModels[selectedERModel] || erModels[selectedERModel].loading}
+          onClick={ selectedERModel ? () => { this.setState({ showPhrases: false }); onAnalyze(selectedERModel, editedText); } : undefined }
         />
         <DefaultButton
           text="Query"
-          disabled={!isVisibleQuery}
-          onClick={onQuery}
+          disabled={!canQuery}
+          onClick={ selectedERModel ? () => onQuery(selectedERModel) : undefined }
         />
         <DefaultButton
           text="Clear"
-          disabled={!parsedText && !parserDebug}
-          onClick={ () => onClear('db') }
+          disabled={!selectedERModel || (!parsedText && !parserDebug)}
+          onClick={ selectedERModel ? () => onClear(selectedERModel) : undefined }
         />
       </div>
       <div className="SyntaxTokens">
@@ -542,7 +532,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {this._renderPhrase()}
         {commandError && <div className="SyntaxError">{commandError}</div>}
         {command && <div>Command:{this._renderCommand(command[0])}</div>}
-        {command  && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
+        {command && command[0].payload.link.entity.adapter && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
         {parserDebug ?
           <div className="ParserDebug">
             {parserDebug.map( (pd, idx) =>

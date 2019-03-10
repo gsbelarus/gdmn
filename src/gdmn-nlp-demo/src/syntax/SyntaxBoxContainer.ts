@@ -21,51 +21,46 @@ import { EntityQuery, IEntityQueryResponse } from 'gdmn-orm';
 import { List } from 'immutable';
 
 export const SyntaxBoxContainer = connect(
-  (state: State) => {
-    const erModelState = state.ermodel['db'];
-    if (erModelState) {
-      return {
-        ...state.syntax,
-        isVisibleQuery: erModelState.command && state.param.host && state.param.port,
-        commandError: erModelState.commandError,
-        command: erModelState.command
-      }
+  (state: State) => (
+    {
+      ...state.syntax,
+      erModels: state.ermodel,
+      host: state.param.host,
+      port: state.param.port
     }
-
-    return {...state.syntax};
-  },
+  ),
   (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction | RecordSetAction>) => ({
-    onAnalyze: (text: string) => dispatch(
+    onAnalyze: (erModelName: string, text: string) => dispatch(
       (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
         dispatch(syntaxActions.setSyntaxText(text));
         const parsedText = getState().syntax.parsedText;
         if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
-          dispatch(erModelActions.processPhrase({name: 'db', phrase: parsedText.phrase as RusPhrase}));
+          dispatch(erModelActions.processPhrase({name: erModelName, phrase: parsedText.phrase as RusPhrase}));
         } else {
-          dispatch(erModelActions.clearCommand({name: 'db', clear: true}));
+          dispatch(erModelActions.clearCommand({name: erModelName, clear: true}));
         }
       }
     ),
-    onQuery: () => dispatch(
+    onQuery: (erModelName: string) => dispatch(
       async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, getState: () => State) => {
         const {param: {host, port}, ermodel, grid, recordSet} = getState();
 
-        if (!ermodel || !ermodel['db'] || !ermodel['db'].command || !ermodel['db'].command[0]) return;
+        if (!ermodel || !ermodel[erModelName] || !ermodel[erModelName].command || !ermodel[erModelName].command![0]) return;
 
-        const query = ermodel['db'].command[0].payload;
+        const query = ermodel[erModelName].command![0].payload;
 
-        if (grid['db']) {
-          dispatch(deleteGrid({name: 'db'}));
+        if (grid[erModelName]) {
+          dispatch(deleteGrid({name: erModelName}));
         }
-        if (recordSet['db']) {
-          dispatch(deleteRecordSet({name: 'db'}));
+        if (recordSet[erModelName]) {
+          dispatch(deleteRecordSet({name: erModelName}));
         }
 
         const response = await fetch(`http://${host}:${port}/data?query=${encodeURIComponent(query.serialize())}`);
         const responseJson = await response.json();
 
         const rs = RecordSet.create({
-          name: 'db',
+          name: erModelName,
           fieldDefs: fieldDefs(query, responseJson),
           data: List(responseJson.data as IDataRow[]),
           eq: query
