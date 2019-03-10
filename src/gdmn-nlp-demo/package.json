@@ -9,6 +9,7 @@
     "@types/react-dom": "^16",
     "@uifabric/fluent-theme": "^0",
     "dagre": "^0",
+    "gdmn-internals": "^1",
     "gdmn-grid": "^1",
     "gdmn-nlp-agent": "^1",
     "gdmn-recordset": "^1",

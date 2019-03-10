@@ -2,20 +2,14 @@ import { State } from '../store';
 import { connect } from 'react-redux';
 import { RecordSetView } from './recordSetView';
 import {
-  TFieldType,
   RecordSetAction,
-  SortFields,
   sortRecordSet,
   selectRow,
   setAllRowsSelected,
   setRecordSet,
-  RecordSet,
   toggleGroup
 } from 'gdmn-recordset';
 import {
-  createGrid,
-  deleteGrid,
-  GDMNGrid,
   GridAction,
   cancelSortDialog,
   applySortDialog,
@@ -33,12 +27,17 @@ import {
   TToggleGroupEvent
 } from 'gdmn-grid';
 import { ThunkDispatch } from 'redux-thunk';
+import { RouteComponentProps } from 'react-router';
 
 export const RecordSetViewContainer = connect(
-  (state: State) => ({
-      grid: state.grid['db'],
-      rs: state.recordSet['db']
-  }),
+  (state: State, ownProps: RouteComponentProps<{ name: string }>) => {
+    const name = ownProps.match.params.name;
+
+    return {
+      grid: state.grid[name],
+      rs: state.recordSet[name]
+    };
+  },
   (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
     onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
       cancelSortDialog({name: event.rs.name})

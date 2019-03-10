@@ -17,8 +17,9 @@ import {
   TFieldType
 } from 'gdmn-recordset';
 import {createGrid, deleteGrid, GridAction} from 'gdmn-grid';
-import { EntityQuery, IEntityQueryResponse } from 'gdmn-orm';
+import { EntityQuery, IEntityQueryResponse, Attribute, StringAttribute, IntegerAttribute, SequenceAttribute, FloatAttribute, DateAttribute, NumberAttribute, BooleanAttribute, EnumAttribute } from 'gdmn-orm';
 import { List } from 'immutable';
+import { getLName } from 'gdmn-internals';
 
 export const SyntaxBoxContainer = connect(
   (state: State) => (
@@ -56,29 +57,55 @@ export const SyntaxBoxContainer = connect(
           dispatch(deleteRecordSet({name: erModelName}));
         }
 
-        const response = await fetch(`http://${host}:${port}/data?query=${encodeURIComponent(query.serialize())}`);
-        const responseJson = await response.json();
+        if (erModelName === 'db') {
+          const response = await fetch(`http://${host}:${port}/data?query=${encodeURIComponent(query.serialize())}`);
+          const responseJson = await response.json();
 
-        const rs = RecordSet.create({
-          name: erModelName,
-          fieldDefs: fieldDefs(query, responseJson),
-          data: List(responseJson.data as IDataRow[]),
-          eq: query
-        });
-        dispatch(createRecordSet({name: rs.name, rs}));
+          const rs = RecordSet.create({
+            name: erModelName,
+            fieldDefs: sqlResult2fieldDefs(query, responseJson),
+            data: List(responseJson.data as IDataRow[]),
+            eq: query
+          });
+          dispatch(createRecordSet({name: rs.name, rs}));
 
-        dispatch(createGrid({
-          name: rs.name,
-          columns: rs.fieldDefs.map(fd => ({
-            name: fd.fieldName,
-            caption: [fd.caption || fd.fieldName],
-            fields: [{...fd}],
-            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-          })),
-          leftSideColumns: 0,
-          rightSideColumns: 0,
-          hideFooter: true
-        }));
+          dispatch(createGrid({
+            name: rs.name,
+            columns: rs.fieldDefs.map(fd => ({
+              name: fd.fieldName,
+              caption: [fd.caption || fd.fieldName],
+              fields: [{...fd}],
+              width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+            })),
+            leftSideColumns: 0,
+            rightSideColumns: 0,
+            hideFooter: true
+          }));
+        } else {
+          const response = await fetch(`http://www.nbrb.by/API/ExRates/Rates?onDate=2016-7-6&Periodicity=0`);
+          const responseJson = await response.json() as IJSONResult;
+
+          const rs = RecordSet.create({
+            name: erModelName,
+            fieldDefs: jsonResult2fieldDefs(query, responseJson),
+            data: List(responseJson as IDataRow[]),
+            eq: query
+          });
+          dispatch(createRecordSet({name: rs.name, rs}));
+
+          dispatch(createGrid({
+            name: rs.name,
+            columns: rs.fieldDefs.map(fd => ({
+              name: fd.fieldName,
+              caption: [fd.caption || fd.fieldName],
+              fields: [{...fd}],
+              width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+            })),
+            leftSideColumns: 0,
+            rightSideColumns: 0,
+            hideFooter: true
+          }));
+        }
       }
     ),
    onClear: (name: string) => {
@@ -88,7 +115,56 @@ export const SyntaxBoxContainer = connect(
   })
 )(SyntaxBox);
 
-const fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] => {
+function attr2fd(attr: Attribute): IFieldDef {
+  let dataType;
+  let size: number | undefined = undefined;
+
+  if (attr instanceof StringAttribute) {
+    dataType = TFieldType.String;
+  } else if (attr instanceof IntegerAttribute || attr instanceof SequenceAttribute) {
+    dataType = TFieldType.Integer;
+  } else if (attr instanceof FloatAttribute) {
+    dataType = TFieldType.Float;
+  } else if (attr instanceof DateAttribute) {
+    dataType = TFieldType.Date;
+  } else if (attr instanceof NumberAttribute) {
+    dataType = TFieldType.Currency;
+  } else if (attr instanceof BooleanAttribute) {
+    dataType = TFieldType.Boolean;
+  } else if (attr instanceof EnumAttribute) {
+    dataType = TFieldType.String;
+  } else {
+    throw new Error(`Unsupported attribute type ${attr.type} of ${attr.name}`);
+  }
+
+  return {
+    fieldName: attr.name,
+    dataType,
+    size,
+    caption: getLName(attr.lName)
+  };
+};
+
+interface IJSONResult {
+  [name: string]: any
+}[];
+
+const jsonResult2fieldDefs = (query: EntityQuery, res: IJSONResult): IFieldDef[] => {
+  if (!res.length) return [];
+
+  return Object.keys(res[0]).map( key => {
+    return {
+      fieldName: key,
+      dataType: TFieldType.String,
+      size: 40,
+      caption: key
+    };
+  });
+
+  // return Object.values(query.link.entity.attributes).map( attr => attr2fd(attr) );
+};
+
+const sqlResult2fieldDefs = (query: EntityQuery, res: IEntityQueryResponse ): IFieldDef[] => {
   const keysAliases = Object.keys(res.aliases);
   return keysAliases.map((alias) => {
     const eqfa = res.aliases[alias];

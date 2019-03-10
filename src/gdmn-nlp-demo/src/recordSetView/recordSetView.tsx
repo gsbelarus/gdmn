@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { RecordSet, SortFields } from 'gdmn-recordset';
+import { RecordSet } from 'gdmn-recordset';
 import {
   GridComponentState,
   GDMNGrid,
@@ -31,7 +31,6 @@ export interface IRecordSetViewProps {
 };
 
 export class RecordSetView extends Component<IRecordSetViewProps, {}> {
-
   render() {
     const { grid, ...other } = this.props;
 
@@ -39,7 +38,7 @@ export class RecordSetView extends Component<IRecordSetViewProps, {}> {
       return null;
     }
     return (
-      <div className="GridArea" key='db'>
+      <div className="GridArea">
         <GDMNGrid {...grid} {...other}/>
       </div>
     );

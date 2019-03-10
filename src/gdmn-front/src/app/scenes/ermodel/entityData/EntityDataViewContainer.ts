@@ -96,7 +96,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                   .then((res) => {
                     const rsm = getState().rsMeta[entity.name];
                     if (!rsm) {
-                      console.warn("ViewTab was closing, interrupt task");
+                      console.warn("ViewTab was closed, interrupt task");
                       apiService.interruptTask({taskKey}).catch(console.error);
                       return;
                     }

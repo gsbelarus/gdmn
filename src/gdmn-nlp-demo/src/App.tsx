@@ -40,7 +40,7 @@ class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
 
 interface IAppProps {
   erModel: IERModels;
-  recordSet?: RecordSetReducerState;
+  recordSet: RecordSetReducerState;
   onLoadERModel: (srcFile: string, name: string) => void;
   onLoadERModel2: (erModel: ERModel, name: string) => void;
 };
@@ -174,7 +174,7 @@ class InternalApp extends Component<IAppProps, {}> {
               <Route exact={false} path={`/ermodel/:name`} component={ERModelBoxContainer} />
               <Route exact={false} path={`/nlpdialog`} component={ChatBoxContainer} />
               <Route exact={false} path={`/parameterLoad`} component={SetParameterContainer} />
-              <Route exact={false} path={`/recordSet`} component={RecordSetViewContainer} />
+              <Route exact={false} path={`/recordSet/:name`} component={RecordSetViewContainer} />
             </Switch>
           </div>
         </>
@@ -217,12 +217,11 @@ class InternalApp extends Component<IAppProps, {}> {
         text: 'Parameter load',
         commandBarButtonAs: btn('/parameterLoad')
       },
-      {
-        key: 'recordSetView',
-        className: recordSet && recordSet['db'] ? '' : 'RecordSetViewHidden',
-        text: 'View RecordSet',
-        commandBarButtonAs: btn('/recordSet')
-      }
+      ...Object.entries(recordSet).map( ([name, rs]) => ({
+        key: `recordSetView${name}`,
+        text: `${name} data`,
+        commandBarButtonAs: btn(`/recordSet/${name}`, rs.size.toString())
+      }))
     ];
   };
 };

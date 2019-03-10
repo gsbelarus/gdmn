@@ -1,7 +1,5 @@
 import {
-  Attribute,
   DateAttribute,
-  Entity,
   FloatAttribute,
   IntegerAttribute,
   NumberAttribute,

@@ -430,7 +430,13 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     const { text, onAnalyze, errorMsg, parserDebug, onQuery, onClear, parsedText, erModels, host, port } = this.props;
 
     const erModelState = selectedERModel ? erModels[selectedERModel] : undefined;
-    const canQuery = erModelState && erModelState.command && host && port;
+    const canQuery = erModelState && erModelState.command && (
+      !erModelState.command[0].payload.link.entity.adapter
+      ||
+      (
+        host && port
+      )
+    );
     const commandError = erModelState ? erModelState.commandError : undefined;
     const command = erModelState ? erModelState.command : undefined;
 
