@@ -17,9 +17,8 @@ import {
   TFieldType
 } from 'gdmn-recordset';
 import {createGrid, deleteGrid, GridAction} from 'gdmn-grid';
-import { EntityQuery, IEntityQueryResponse, Attribute, StringAttribute, IntegerAttribute, SequenceAttribute, FloatAttribute, DateAttribute, NumberAttribute, BooleanAttribute, EnumAttribute } from 'gdmn-orm';
+import { EntityQuery, IEntityQueryResponse } from 'gdmn-orm';
 import { List } from 'immutable';
-import { getLName } from 'gdmn-internals';
 
 export const SyntaxBoxContainer = connect(
   (state: State) => (
@@ -114,36 +113,6 @@ export const SyntaxBoxContainer = connect(
     }
   })
 )(SyntaxBox);
-
-function attr2fd(attr: Attribute): IFieldDef {
-  let dataType;
-  let size: number | undefined = undefined;
-
-  if (attr instanceof StringAttribute) {
-    dataType = TFieldType.String;
-  } else if (attr instanceof IntegerAttribute || attr instanceof SequenceAttribute) {
-    dataType = TFieldType.Integer;
-  } else if (attr instanceof FloatAttribute) {
-    dataType = TFieldType.Float;
-  } else if (attr instanceof DateAttribute) {
-    dataType = TFieldType.Date;
-  } else if (attr instanceof NumberAttribute) {
-    dataType = TFieldType.Currency;
-  } else if (attr instanceof BooleanAttribute) {
-    dataType = TFieldType.Boolean;
-  } else if (attr instanceof EnumAttribute) {
-    dataType = TFieldType.String;
-  } else {
-    throw new Error(`Unsupported attribute type ${attr.type} of ${attr.name}`);
-  }
-
-  return {
-    fieldName: attr.name,
-    dataType,
-    size,
-    caption: getLName(attr.lName)
-  };
-};
 
 interface IJSONResult {
   [name: string]: any
