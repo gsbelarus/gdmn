@@ -36,7 +36,7 @@ export class Delete {
 
   private _makeFrom(query: EntityDelete): string {
     const {entity} = query;
-    return SQLTemplates.fromDelete(Utils.getMainRelation(entity).relationName);
+    return SQLTemplates.from("", Utils.getMainRelation(entity).relationName);
   }
 
   private _addToParams(value: any): string {

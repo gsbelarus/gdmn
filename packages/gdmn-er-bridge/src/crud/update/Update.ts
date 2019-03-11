@@ -71,9 +71,9 @@ export class Update {
     const ownRelation = Utils.getOwnRelationName(entity);
 
     if (rel) {
-      return SQLTemplates.fromUpdate(rel.relationName);
+      return rel.relationName;
     }
-    return SQLTemplates.fromUpdate(ownRelation);
+    return ownRelation;
   }
 
   private _makeFields(fields: EntityUpdateField[], rel?: IRelation): string[] {
@@ -86,7 +86,7 @@ export class Update {
       .map((field) => {
         const attribute = field.attribute as ScalarAttribute;
         const value = field.value;
-        return SQLTemplates.fieldUpdate(attribute.adapter!.field, this._addToParams(value));
+        return SQLTemplates.assign("", attribute.adapter!.field, this._addToParams(value));
       });
   }
 
@@ -98,7 +98,7 @@ export class Update {
   }
 
   private _getMappingTable(query: EntityUpdate): string {
-    const {entity, fields, pkValue} = query;
+    const {fields} = query;
     const _getFirstSetAttr = Update._getFirstSetAttr(fields);
 
     const attribute = _getFirstSetAttr!.attribute as SetAttribute;
@@ -114,10 +114,10 @@ export class Update {
             .filter((p) => typeof p === "object")
             .map((p) => {
                 if (typeof p === "number") {
-                  return `${SQLTemplates.valueInsert(this._addToParams(p.toString()))}`;
+                  return this._addToParams(p.toString());
                 } else {
                   return Object.values(p).map(x => {
-                    return x.attribute + " = " + `${SQLTemplates.valueInsert(this._addToParams(x.value))}`;
+                    return x.attribute + " = " + `${this._addToParams(x.value)}`;
                   });
                 }
               }
@@ -146,7 +146,7 @@ export class Update {
         if (typeof value == "string") {
           typeSQL = `VARCHAR(${value.length}) =`;
         }
-        return SQLTemplates.valueInsert(this._addToParamsBlock(value, typeSQL));
+        return this._addToParamsBlock(value, typeSQL);
       });
 
     fields
@@ -157,7 +157,7 @@ export class Update {
         if (typeof value == "object") {
           value.map((v: any) => {
             if (typeof v == "number") {
-              listParam.push(SQLTemplates.valueInsert(this._addToParamsBlock(v, typeSQL)));
+              listParam.push(this._addToParamsBlock(v, typeSQL));
             }
             const param = Object.values(v);
             param
@@ -165,11 +165,11 @@ export class Update {
               .map((p) => {
                   if (typeof p === "number") {
                     typeSQL = "INTEGER =";
-                    listParam.push(SQLTemplates.valueInsert(this._addToParamsBlock(p, typeSQL)));
+                    listParam.push(this._addToParamsBlock(p, typeSQL));
                   } else {
                     return Object.entries(p).map((x) => {
 
-                      listParam.push(SQLTemplates.valueInsert(this._addToParamsBlock(x, typeSQL)));
+                      listParam.push(this._addToParamsBlock(x, typeSQL));
                     });
                   }
                 }

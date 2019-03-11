@@ -370,7 +370,11 @@ export class Select {
         const filterItems = item.equals.map((equals) => {
           const findLink = this._getLink(equals.alias, link);
           const alias = this._getTableAlias(findLink, equals.attribute.adapter!.relation);
-          return SQLTemplates.equals(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
+          if (equals.attribute.type === "String") {
+            return SQLTemplates.equalsWithUpper(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
+          } else {
+            return SQLTemplates.equals(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
+          }
         });
         const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
         if (filter) {

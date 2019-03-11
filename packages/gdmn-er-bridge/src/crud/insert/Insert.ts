@@ -76,7 +76,7 @@ export class Insert {
   }
 
   private _makeFrom(query: EntityInsert, rel: IRelation): string {
-    return SQLTemplates.fromInsert(rel.relationName);
+    return rel.relationName;
   }
 
   private _makeReturning(query: EntityInsert, rel: IRelation): string {
@@ -123,7 +123,7 @@ export class Insert {
         && !(field.attribute.type === "Set")
       )
       .map(field => {
-        return SQLTemplates.valueInsert(this._addToParams(field.value));
+        return this._addToParams(field.value);
       });
 
     if (mainRelation.relationName !== rel.relationName) {
@@ -151,10 +151,10 @@ export class Insert {
 
           param.map(p => {
               if (typeof p === "number") {
-                val = `${SQLTemplates.valueInsert(this._addToParams(p.toString()))}`;
+                val = `${this._addToParams(p.toString())}`;
               } else {
                 Object.values(p).map(x => {
-                  val += ", " + `${SQLTemplates.valueInsert(this._addToParams(x.value))}`;
+                  val += ", " + `${this._addToParams(x.value)}`;
                   MainCross += ", " + x.attribute;
                 });
               }
@@ -169,7 +169,7 @@ export class Insert {
           return `\n  INSERT INTO` +
             ` ${MainCrossRelationName}` +
             `(${MainCrossPk})\n` +
-            `  VALUES(:Key1Value, ${SQLTemplates.valueInsert(this._addToParams(v))});\n`;
+            `  VALUES(:Key1Value, ${this._addToParams(v)});\n`;
         }
       }
     );
@@ -204,7 +204,7 @@ export class Insert {
         if (typeof value == "string") {
           typeSQL = `VARCHAR(${value.length}) =`;
         }
-        return SQLTemplates.valueInsert(this._addToParamsBlock(value, typeSQL));
+        return this._addToParamsBlock(value, typeSQL);
       });
 
     fields
@@ -216,17 +216,17 @@ export class Insert {
         if (typeof value == "object") {
           value.map((v: any) => {
             if (typeof v == "number") {
-              listParam.push(SQLTemplates.valueInsert(this._addToParamsBlock(v, typeSQL)));
+              listParam.push(this._addToParamsBlock(v, typeSQL));
             }
             const param = Object.values(v);
             param.map(p => {
                 if (typeof p === "number") {
                   typeSQL = "INTEGER =";
-                  listParam.push(SQLTemplates.valueInsert(this._addToParamsBlock(p, typeSQL)));
+                  listParam.push(this._addToParamsBlock(p, typeSQL));
                 } else {
                   return Object.entries(p).map((x) => {
 
-                    listParam.push(SQLTemplates.valueInsert(this._addToParamsBlock(x, typeSQL)));
+                    listParam.push(this._addToParamsBlock(x, typeSQL));
                   });
                 }
               }

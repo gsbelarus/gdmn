@@ -1,36 +1,9 @@
 export type JoinType = "LEFT" | "RIGHT" | "";
 
 export abstract class SQLTemplates {
-  /* SQLTemplates for Insert  */
-  public static fieldInsert(fieldName: string): string {
-    return `${fieldName}`;
-  }
 
-  public static valueInsert(fieldName: string): string {
-    return `${fieldName}`;
-  }
-
-  public static fromInsert(tableName: string): string {
-    return `${tableName}`;
-  }
-
-  /* SQLTemplates for Update  */
-  public static fieldUpdate(fieldName: string, value?: string): string {
-    return `${fieldName} = ${value}`;
-  }
-
-  public static fromUpdate(tableName: string): string {
-    return `${tableName}`;
-  }
-
-  /* SQLTemplates for Delete  */
-  public static fromDelete(tableName: string): string {
-    return `FROM ${tableName}`;
-  }
-
-  /* SQLTemplates for Common  */
   public static from(alias: string, tableName: string): string {
-    return `FROM ${tableName} ${alias}`;
+    return `FROM ${tableName}${alias && ` ${alias}`}`;
   }
 
   public static field(alias: string, fieldAlias: string, fieldName: string, withoutFieldAlias?: boolean): string {
@@ -90,24 +63,20 @@ export abstract class SQLTemplates {
     return `${alias && `${alias}.`}${fieldName} IS NULL`;
   }
 
-  public static condition(alias: string, fieldName: string, operator: string, value: string): string {
-    return `${alias && `${alias}.`}${fieldName} ${operator} ${value}`;
+  public static condition(alias: string, fieldName: string, operator: string, value: string, wrapper?: (text: string) => string): string {
+    const field = `${alias && `${alias}.`}${fieldName}`;
+    return `${wrapper ? wrapper(field) : field} ${operator} ${wrapper ? wrapper(value) : value}`;
   }
 
-  public static conditionUpdate(fieldName: string, operator: string, value: string): string {
-    return `${fieldName} ${operator} ${value}`;
+  public static assign(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "=", value);
   }
-
   public static equals(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "=", value);
   }
 
-  public static equalsUpdate(fieldName: string, value: string): string {
-    return SQLTemplates.conditionUpdate(fieldName, "=", value);
-  }
-
-  public static isNullUpdate(fieldName: string): string {
-    return `${fieldName} IS NULL`;
+  public static equalsWithUpper(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "=", value, (text) => `UPPER${text}`);
   }
 
   public static greater(alias: string, fieldName: string, value: string): string {
