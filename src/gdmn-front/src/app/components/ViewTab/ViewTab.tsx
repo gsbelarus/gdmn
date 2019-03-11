@@ -18,7 +18,7 @@ export class ViewTab extends React.Component<IViewTabProps, {}> {
 
     return url === location.pathname ? (
       <Fragment key={url}>
-        <div styleName="ViewTab">
+        <div styleName="ViewTab" onMouseDown={event => event.button === 1 ? onClose() : undefined}>
           <div styleName="ViewActiveColor" />
             <div styleName="ViewTabText ViewActiveTab">
               {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
@@ -32,7 +32,7 @@ export class ViewTab extends React.Component<IViewTabProps, {}> {
       </Fragment>
     ) : (
       <Fragment key={url}>
-        <div styleName="ViewTab">
+        <div styleName="ViewTab" onMouseDown={event => event.button === 1 ? onClose() : undefined}>
           <div styleName="ViewTabText ViewInactiveTab">
             {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
             <Link to={url}>
