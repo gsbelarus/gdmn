@@ -52,11 +52,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             entity,
             "z",
             Object.values(entity.attributes)
-              .filter(
-                attr =>
-                  (attr instanceof ScalarAttribute || attr instanceof SequenceAttribute) &&
-                  !(attr instanceof BlobAttribute)
-              )
+              .filter(attr => attr instanceof ScalarAttribute && attr.type !== "Blob")
               .map(attr => new EntityQueryField(attr)
                 /*{
                   if (attr instanceof EntityAttribute) {
@@ -110,7 +106,8 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                           fieldDefs,
                           data: List(res.payload.result!.data as IDataRow[]),
                           eq: query,
-                          sequentially: !!rsm.taskKey
+                          sequentially: !!rsm.taskKey,
+                          sql: res.payload.result!.info
                         });
                         dispatch(createRecordSet({name: rs.name, rs}));
 
