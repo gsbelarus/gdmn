@@ -1,7 +1,7 @@
 import {Entity, ERModel, StringAttribute} from "../src";
 import {deserializeERModel} from "../src/serialize";
 
-describe("ERModel", async () => {
+describe("ERModel",  () => {
 
   const erModel = new ERModel();
 
