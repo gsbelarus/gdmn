@@ -76,7 +76,7 @@ export abstract class SQLTemplates {
   }
 
   public static equalsWithUpper(alias: string, fieldName: string, value: string): string {
-    return SQLTemplates.condition(alias, fieldName, "=", value, (text) => `UPPER${text}`);
+    return SQLTemplates.condition(alias, fieldName, "=", value, (text) => `UPPER(${text})`);
   }
 
   public static greater(alias: string, fieldName: string, value: string): string {
