@@ -1,10 +1,7 @@
 import React from 'react';
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
-import { ICommandBarItemProps, IModalProps } from 'office-ui-fabric-react';
+import { ICommandBarItemProps } from 'office-ui-fabric-react';
 import { SQLForm } from '@src/app/components/SQLForm';
-declare module 'office-ui-fabric-react/lib/Modal' {
-  const Modal: React.StatelessComponent<IModalProps>;
- }
 
 export interface IEntityMatchParams {
   entityName: string

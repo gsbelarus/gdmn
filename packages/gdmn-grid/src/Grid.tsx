@@ -250,6 +250,19 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     }
   };
 
+  public async loadFully(batchSize: number): Promise<void> {
+    if (this.props.loadMoreRsData) {
+      while (this.props.rs.status === TStatus.PARTIAL) {
+        await this.props.loadMoreRsData({
+          ref: this,
+          rs: this.props.rs,
+          startIndex: this.props.rs.size,
+          stopIndex: this.props.rs.size + batchSize
+        });
+      }
+    }
+  }
+
   public render() {
     const {
       columns,

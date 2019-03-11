@@ -1,6 +1,6 @@
 import React from 'react';
 import { ICommandBarItemProps, IComponentAsProps, TextField } from 'office-ui-fabric-react';
-import { RecordSet } from 'gdmn-recordset';
+import {RecordSet, TStatus} from "gdmn-recordset";
 import {
   GDMNGrid,
   GridComponentState,
@@ -139,7 +139,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
 
-    return [
+    const items: ICommandBarItemProps[] = [
       {
         key: `add`,
         text: 'Add',
@@ -164,6 +164,19 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         }
       }
     ];
+
+    if (data!.rs.status === TStatus.PARTIAL || data!.rs.status === TStatus.LOADING) {
+      items.push({
+        key: 'load',
+        disabled: data!.rs.status === TStatus.LOADING,
+        text: 'Load fully',
+        iconProps: {
+          iconName: 'Download'
+        },
+        onClick: () => this._gridRef[data!.rs.name]!.loadFully(10) as any
+      });
+    }
+    return items;
   }
 
   public getSavedState(rs: RecordSet) {

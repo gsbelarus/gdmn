@@ -4,7 +4,7 @@ import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {BlobAttribute, EntityLink, EntityQuery, EntityQueryField, ScalarAttribute, SequenceAttribute} from "gdmn-orm";
+import {EntityLink, EntityQuery, EntityQueryField, ScalarAttribute} from "gdmn-orm";
 import {
   addData,
   createRecordSet,
@@ -13,7 +13,6 @@ import {
   loadingData,
   RecordSet,
   RecordSetAction,
-  setData,
   setError,
   TFieldType,
   TStatus
@@ -206,8 +205,34 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           default:
             throw new Error("Never thrown");
         }
-      }
-    })
+      },
+
+      // loadFully: (rs: RecordSet) => thunkDispatch(
+      //   async (dispatch, getState) => {
+      //     while (getState().recordSet[rs.name].status === TStatus.PARTIAL) {
+      //       dispatchProps.loadingData(rs.name);
+      //       const res = await apiService.fetchQuery({
+      //         rowsCount: 500,
+      //         taskKey: getState().rsMeta[rs.name].taskKey!
+      //       });
+      //       switch (res.payload.status) {
+      //         case TTaskStatus.SUCCESS: {
+      //           dispatchProps.addData(rs.name, res.payload.result!.data);
+      //           break;
+      //         }
+      //         case TTaskStatus.FAILED: {
+      //           dispatchProps.setError(rs.name, {message: res.error!.message});
+      //           break;
+      //         }
+      //         case TTaskStatus.INTERRUPTED:
+      //         case TTaskStatus.PAUSED:
+      //         default:
+      //           throw new Error("Never thrown");
+      //       }
+      //     }
+      //   }
+      // )
+    }),
   ),
   connectDataView
 )(EntityDataView);
