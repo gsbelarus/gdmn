@@ -25,7 +25,7 @@ const serviceOptions: IServiceOptions = {
 
 jest.setTimeout(100 * 1000);
 
-describe("Firebird driver tests", async () => {
+describe("Firebird driver tests", () => {
     const globalConnectionPool = driver.newCommonConnectionPool();
 
     beforeAll(async () => {
@@ -160,7 +160,7 @@ describe("Firebird driver tests", async () => {
         });
     });
 
-    describe.skip("stress", async () => {
+    describe.skip("stress", () => {
 
         const TIMEOUT = 8.64E7;
         const count = 1E3;
@@ -366,7 +366,7 @@ describe("Firebird driver tests", async () => {
 });
 
 // TODO CI
-// describe("Firebird service tests", async () => {
+// describe("Firebird service tests", () => {
 //     const connection = driver.newConnection();
 //
 //     beforeAll(async () => {

@@ -1,7 +1,7 @@
 import {AConnection, AConnectionPool, ICommonConnectionPoolOptions} from "../../src";
 
 export function transactionTest(connectionPool: AConnectionPool<ICommonConnectionPoolOptions>): void {
-    describe("ATransaction", async () => {
+    describe("ATransaction", () => {
 
         let globalConnection: AConnection;
 

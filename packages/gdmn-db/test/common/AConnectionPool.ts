@@ -1,7 +1,7 @@
 import {AConnectionPool, ADriver, IConnectionOptions} from "../../src";
 
 export function connectionPoolTest(driver: ADriver, dbOptions: IConnectionOptions): void {
-    describe("AConnectionPool", async () => {
+    describe("AConnectionPool", () => {
 
         it("lifecycle", async () => {
             const connectionPool = driver.newCommonConnectionPool();

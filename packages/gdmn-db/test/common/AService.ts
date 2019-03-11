@@ -5,7 +5,7 @@ import {AService, IRestoreOptions, IServiceOptions} from "../../src/AService";
 import {getData} from "../fixtures/getData";
 
 export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, dbOptions: IConnectionOptions): void {
-    describe("AService", async () => {
+    describe("AService", () => {
 
         const backupTestDbPath = resolve("./GDMN_DB_BACKUP.BKP");
 

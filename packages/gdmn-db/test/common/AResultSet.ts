@@ -1,7 +1,7 @@
 import {AConnection, AConnectionPool, ATransaction, CursorType, ICommonConnectionPoolOptions} from "../../src";
 
 export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionPoolOptions>): void {
-    describe("AResultSet", async () => {
+    describe("AResultSet", () => {
 
         let globalConnection: AConnection;
         let globalTransaction: ATransaction;

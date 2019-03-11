@@ -1,7 +1,7 @@
 import {AConnection, ADriver, IConnectionOptions} from "../../src";
 
 export function connectionTest(driver: ADriver, dbOptions: IConnectionOptions): void {
-    describe("AConnection", async () => {
+    describe("AConnection", () => {
 
         beforeAll(async () => {
             await AConnection.executeConnection({
