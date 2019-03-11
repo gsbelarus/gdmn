@@ -17,6 +17,7 @@ import { ParameterLoadAction } from './parameterLoad/reducer';
 import { load } from './appAction';
 import { RecordSetViewContainer } from './recordSetView/recordSetViewContainer';
 import { RecordSetReducerState } from 'gdmn-recordset';
+import { SemCategory } from 'gdmn-nlp';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
@@ -133,7 +134,8 @@ class InternalApp extends Component<IAppProps, {}> {
             name: 'Дата'
           }
         },
-        required: true
+        required: true,
+        semCategories: [SemCategory.Date]
       })
     ]);
 

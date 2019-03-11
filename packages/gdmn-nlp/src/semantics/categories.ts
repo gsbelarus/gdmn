@@ -18,14 +18,20 @@ export enum SemCategory {
   /**
    * Компания. Коммерческая организация.
    */
-  Company
+  Company,
+
+  /**
+   * Дата 
+   */
+  Date
 };
 
 export const semCategoryNames = [
   'objectlocation',
   'place',
   'organization',
-  'company'
+  'company',
+  'date'
 ];
 
 export function semCategory2Str(cat: SemCategory): string {
