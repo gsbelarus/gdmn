@@ -173,7 +173,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Download'
         },
-        onClick: () => this._gridRef[data!.rs.name]!.loadFully(10) as any
+        onClick: () => this._gridRef[data!.rs.name]!.loadFully(500) as any
       });
     }
     return items;
