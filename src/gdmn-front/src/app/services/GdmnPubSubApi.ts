@@ -195,11 +195,11 @@ class GdmnPubSubApi {
     });
   }
 
-  public getSchema(): Promise<TGetSchemaTaskCmdResult> {
+  public getSchema(payload: TTaskActionPayloadTypes[TTaskActionNames.GET_SCHEMA]): Promise<TGetSchemaTaskCmdResult> {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.GET_SCHEMA,
-        payload: undefined
+        payload
       }
     });
   }

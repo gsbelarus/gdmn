@@ -49,7 +49,7 @@ const gdmnActionsAsync = {
     dispatch(gdmnActions.onApiDeleteAccount); // todo test
   },
   apiGetSchema: (): TThunkAction => async (dispatch, getState, { apiService }) => {
-    const value = await apiService.getSchema();
+    const value = await apiService.getSchema({withAdapter: true});
     if (value.payload.status === TTaskStatus.SUCCESS) {
       const erModel = deserializeERModel(value.payload.result!);
       dispatch(gdmnActions.setSchema(erModel));

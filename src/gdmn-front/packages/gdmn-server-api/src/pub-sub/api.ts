@@ -87,7 +87,9 @@ interface TTaskActionPayloadTypes {
     delay: number;
     testChildProcesses: boolean
   };
-  [TTaskActionNames.GET_SCHEMA]: undefined;
+  [TTaskActionNames.GET_SCHEMA]: {
+    withAdapter: boolean;
+  };
   [TTaskActionNames.CREATE_APP]: {
     alias: string;
     connectionOptions?: {
