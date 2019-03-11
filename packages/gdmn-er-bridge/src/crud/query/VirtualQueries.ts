@@ -5,6 +5,7 @@ import {
   EntityQueryField,
   EntityQueryOptions,
   IEntityQueryWhereValue,
+  IntegerAttribute,
   ScalarAttribute,
   StringAttribute
 } from "gdmn-orm";
@@ -81,7 +82,7 @@ export class VirtualQueries {
       }
     }));
 
-    const fieldParent = new StringAttribute({
+    const fieldParent = new IntegerAttribute({
       name: "PARENT",
       lName: {},
       entities: [queryToTree],
@@ -141,7 +142,7 @@ export class VirtualQueries {
         field: Constants.DEFAULT_ID_NAME
       }
     }));
-    query.add(new StringAttribute({
+    query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
       adapter: {
@@ -201,7 +202,7 @@ export class VirtualQueries {
         field: Constants.DEFAULT_ID_NAME
       }
     }));
-    query.add(new StringAttribute({
+    query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
       adapter: {
