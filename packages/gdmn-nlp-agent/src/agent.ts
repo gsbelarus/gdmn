@@ -17,7 +17,8 @@ import {
   RusPrepositionLexeme,
   RusVerb,
   SemCategory,
-  SemContext
+  SemContext,
+  RusPTimeP
 } from "gdmn-nlp";
 import {
   Entity,
@@ -32,6 +33,7 @@ import {
   ScalarAttribute
 } from "gdmn-orm";
 import {Action, ICommand} from "./command";
+import { DateValue } from 'gdmn-nlp/dist/definitions/syntax/value';
 
 export class ERTranslatorRU {
 
@@ -171,6 +173,38 @@ export class ERTranslatorRU {
       //  }
       //}
 
+      if (np.items[1] instanceof RusPTimeP) {
+        const pTimeP: RusPTimeP = np.items[1] as RusPTimeP;
+        const attr = entity.attributesBySemCategory(SemCategory.Date)[0];
+        if (attr instanceof EntityAttribute) {
+          const linkEntity = attr.entities[0];
+          const linkAlias = "alias2";
+          if (
+            !fields
+              .filter((field) => field.links)
+              .some((field) =>
+                field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+          ) {
+            fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+          }
+
+          const orEquals: IEntityQueryWhereValue[] = [];
+          orEquals.push({
+            alias: "alias2",
+            attribute: linkEntity.attribute("Date"),
+            value: (pTimeP.items[1] as DateValue).image
+          });
+          or.push({equals: orEquals});
+
+        } else {
+          equals.push({
+            alias: "alias1",
+            attribute: attr,
+            value: (pTimeP.items[1] as DateValue).image
+          });
+        }
+      }
+
       const hsm = (np.pp instanceof RusPP) && ((np.pp as RusPP).items[1] instanceof RusHmNouns) ? (np.pp as RusPP).items[1] as RusHmNouns : undefined;
 
       if (np.pp instanceof RusPP) {
@@ -245,9 +279,9 @@ export class ERTranslatorRU {
           }
         }
       }
-      if (or) {
+      if (or.length !== 0) {
         options = new EntityQueryOptions(first, undefined, [{or: or}]);
-      } else {
+      } else if (equals.length !== 0) {
         options = new EntityQueryOptions(first, undefined, [{equals}]);
       }
 
