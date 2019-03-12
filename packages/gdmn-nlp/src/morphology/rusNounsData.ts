@@ -240,6 +240,15 @@ export const rusNouns: IRusNoun[] = [
     declensionZ: '3a',
   },
   {
+    stem: 'банк',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '3a',
+  },
+  {
     stem: 'товарищ',
     stem1: '',
     stem2: '',

@@ -1,7 +1,7 @@
 import { getType, ActionType } from 'typesafe-actions';
 import * as actions from './actions';
-import { NLPDialog, INLPDialogItem } from 'gdmn-nlp-agent';
-import { ParsedText, parsePhrase } from 'gdmn-nlp';
+import { NLPDialog } from 'gdmn-nlp-agent';
+import { ParsedText } from 'gdmn-nlp';
 
 export type NLPDialogAction = ActionType<typeof actions>;
 
@@ -22,30 +22,12 @@ export function reducer(state: INLPDialogState = initialState, action: NLPDialog
 
     case getType(actions.addNLPItem): {
 
-      const { who, text } = action.payload;
-      const newItems: INLPDialogItem[] = [action.payload];
-      let parsedText;
-
-      if (who === 'me') {
-        try {
-          parsedText = parsePhrase(text);
-          newItems.push({
-            who: 'it',
-            text: 'готово!'
-          });
-        }
-        catch(e) {
-          newItems.push({
-            who: 'it',
-            text: e.message
-          });
-        }
-      }
+      const { item, parsedText } = action.payload;
 
       return {
         ...state,
         parsedText,
-        items: [...state.items, ...newItems]
+        items: [...state.items, item]
       }
     }
   }
