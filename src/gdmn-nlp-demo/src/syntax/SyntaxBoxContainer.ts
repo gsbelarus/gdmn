@@ -81,8 +81,26 @@ export const SyntaxBoxContainer = connect(
             hideFooter: true
           }));
         } else {
-          const response = await fetch(`http://www.nbrb.by/API/ExRates/Rates?onDate=2016-7-6&Periodicity=0`);
+          console.log(query.inspect());
+
+          let year = new Date().getFullYear();
+          let month = new Date().getMonth() + 1;
+          let day = new Date().getDate();
+
+          if (query.options && query.options.where && query.options.where[0] && query.options!.where![0]!.equals && query.options!.where![0]!.equals[0]) {
+            if (query.link.alias === query.options!.where![0]!.equals![0].alias) {
+              if (query.options!.where![0]!.equals![0].attribute.name === 'Date') {
+                const dateSplit = (query.options!.where![0]!.equals![0].value as string).split('.');
+                day = isNaN(parseInt(dateSplit[0])) ? day : parseInt(dateSplit[0]);
+                month = isNaN(parseInt(dateSplit[1])) ? month : parseInt(dateSplit[1]);
+                year = isNaN(parseInt(dateSplit[2])) ? year : parseInt(dateSplit[2]);
+              }
+            }
+          }
+
+          const response = await fetch(`http://www.nbrb.by/API/ExRates/Rates?onDate=${year.toString()}-${month.toString()}-${day.toString()}&Periodicity=0`);
           const responseJson = await response.json() as IJSONResult;
+
 
           const rs = RecordSet.create({
             name: erModelName,
@@ -92,13 +110,23 @@ export const SyntaxBoxContainer = connect(
           });
           dispatch(createRecordSet({name: rs.name, rs}));
 
+          const getMaxLength = (fn: string) => {
+            let len = 0;
+            for (let i = 0; i < rs.size; i++) {
+              if (rs.getString(i, fn).length > len) {
+                len = rs.getString(i, fn).length;
+              }
+            }
+            return len;
+          }
+
           dispatch(createGrid({
             name: rs.name,
             columns: rs.fieldDefs.map(fd => ({
               name: fd.fieldName,
               caption: [fd.caption || fd.fieldName],
               fields: [{...fd}],
-              width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+              width: getMaxLength(fd.fieldName) * 8 + 16
             })),
             leftSideColumns: 0,
             rightSideColumns: 0,
