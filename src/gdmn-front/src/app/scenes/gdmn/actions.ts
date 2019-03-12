@@ -50,7 +50,7 @@ const gdmnActionsAsync = {
   apiGetSchema: (): TThunkAction => async (dispatch, getState, { apiService }) => {
     const value = await apiService.getSchema({withAdapter: true});
     if (value.payload.status === TTaskStatus.SUCCESS) {
-      const erModel = deserializeERModel(value.payload.result!);
+      const erModel = deserializeERModel(value.payload.result!, true);
       dispatch(gdmnActions.setSchema(erModel));
     }
   }
