@@ -25,11 +25,44 @@ export abstract class AResultMetadata {
 
     abstract get columnCount(): number;
 
-    public abstract getColumnLabel(i: number): string;
+    public getColumnLabel(i: number): string | undefined {
+        this._checkIndexRange(i);
+        return this._getColumnLabel(i);
+    }
 
-    public abstract getColumnName(i: number): string;
+    public getColumnName(i: number): string | undefined {
+        this._checkIndexRange(i);
+        return this._getColumnName(i);
+    }
 
-    public abstract getColumnType(i: number): Types;
+    public getColumnType(i: number): Types {
+        this._checkIndexRange(i);
+        return this._getColumnType(i);
+    }
 
-    public abstract isNullable(i: number): boolean;
+    public getColumnRelation(i: number): string | undefined {
+        this._checkIndexRange(i);
+        return this._getColumnRelation(i);
+    }
+
+    public isNullable(i: number): boolean {
+        this._checkIndexRange(i);
+        return this._isNullable(i);
+    }
+
+    protected _checkIndexRange(i: number): void {
+        if (i < 0 || i >= this.columnCount) {
+            throw new Error("Index out of range");
+        }
+    }
+
+    protected abstract _getColumnLabel(i: number): string | undefined;
+
+    protected abstract _getColumnName(i: number): string | undefined;
+
+    protected abstract _getColumnType(i: number): Types;
+
+    protected abstract _getColumnRelation(i: number): string | undefined;
+
+    protected abstract _isNullable(i: number): boolean;
 }

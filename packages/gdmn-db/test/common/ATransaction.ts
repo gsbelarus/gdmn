@@ -1,12 +1,13 @@
-import {AConnection, AConnectionPool, ICommonConnectionPoolOptions} from "../../src";
+import {AConnection, ADriver, IConnectionOptions} from "../../src";
 
-export function transactionTest(connectionPool: AConnectionPool<ICommonConnectionPoolOptions>): void {
+export function transactionTest(driver: ADriver, dbOptions: IConnectionOptions): void {
     describe("ATransaction", () => {
 
         let globalConnection: AConnection;
 
         beforeAll(async () => {
-            globalConnection = await connectionPool.get();
+            globalConnection = driver.newConnection();
+            await globalConnection.connect(dbOptions);
         });
 
         afterAll(async () => {

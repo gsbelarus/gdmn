@@ -127,10 +127,13 @@ export function getPortableInteger(buffer: Uint8Array, length: number): number {
 export interface IDescriptor {
     alias?: string;
     field?: string;
+    relation?: string;
+    owner?: string;
     type: number;
     subType: number;
     length: number;
     scale: number;
+    charset: number;
     offset: number;
     nullOffset: number;
     isNullable: boolean;
@@ -148,10 +151,13 @@ export function createDescriptors(status: Status, metadata?: MessageMetadata): I
         ret.push({
             alias: metadata.getAliasSync(status, i),
             field: metadata.getFieldSync(status, i),
+            relation: metadata.getRelationSync(status, i),
+            owner: metadata.getOwnerSync(status, i),
             type: metadata.getTypeSync(status, i),
             subType: metadata.getSubTypeSync(status, i),
             length: metadata.getLengthSync(status, i),
             scale: metadata.getScaleSync(status, i),
+            charset: metadata.getCharSetSync(status, i),
             offset: metadata.getOffsetSync(status, i),
             nullOffset: metadata.getNullOffsetSync(status, i),
             isNullable: metadata.isNullableSync(status, i)

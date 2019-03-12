@@ -43,15 +43,15 @@ export class ResultMetadata extends AResultMetadata {
         return new ResultMetadata(result);
     }
 
-    public getColumnLabel(i: number): string {
-        return this._source!.descriptors[i].alias || "";
+    protected _getColumnLabel(i: number): string | undefined {
+        return this._source!.descriptors[i].alias;
     }
 
-    public getColumnName(i: number): string {
-        return this._source!.descriptors[i].field || "";
+    protected _getColumnName(i: number): string | undefined {
+        return this._source!.descriptors[i].field;
     }
 
-    public getColumnType(i: number): Types {
+    protected _getColumnType(i: number): Types {
         switch (this._source!.descriptors[i].type) {
             case SQLTypes.SQL_BLOB:
                 return Types.BLOB;
@@ -84,7 +84,11 @@ export class ResultMetadata extends AResultMetadata {
         }
     }
 
-    public isNullable(i: number): boolean {
+    protected _getColumnRelation(i: number): string | undefined {
+        return this._source!.descriptors[i].relation;
+    }
+
+    protected _isNullable(i: number): boolean {
         return this._source!.descriptors[i].isNullable;
     }
 }

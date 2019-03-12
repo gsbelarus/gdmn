@@ -1,14 +1,13 @@
-import {AConnection, AConnectionPool, ATransaction, CursorType, ICommonConnectionPoolOptions} from "../../src";
+import {AConnection, ADriver, CursorType, IConnectionOptions} from "../../src";
 
-export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionPoolOptions>): void {
+export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): void {
     describe("AResultSet", () => {
 
         let globalConnection: AConnection;
-        let globalTransaction: ATransaction;
 
         beforeAll(async () => {
-            globalConnection = await connectionPool.get();
-            globalTransaction = await globalConnection.startTransaction();
+            globalConnection = driver.newConnection();
+            await globalConnection.connect(dbOptions);
 
             await AConnection.executeTransaction({
                 connection: globalConnection,
@@ -24,12 +23,9 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
                             textBlob        BLOB SUB_TYPE TEXT NOT NULL
                         )
                     `);
-                }
-            });
 
-            await AConnection.executeTransaction({
-                connection: globalConnection,
-                callback: async (transaction) => {
+                    await transaction.commitRetaining();
+
                     await AConnection.executePrepareStatement({
                         connection: globalConnection,
                         transaction,
@@ -55,14 +51,16 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         });
 
         afterAll(async () => {
-            await globalConnection.execute(globalTransaction, "DROP TABLE RESULT_SET_TABLE");
-            await globalTransaction.commit();
+            await AConnection.executeTransaction({
+                connection: globalConnection,
+                callback: (transaction) => globalConnection.execute(transaction, "DROP TABLE RESULT_SET_TABLE")
+            });
             await globalConnection.disconnect();
         });
 
         it("lifecycle", async () => {
             const resultSet = await globalConnection
-                .executeQuery(globalTransaction, "SELECT FIRST 1 * FROM RESULT_SET_TABLE");
+                .executeQuery(globalConnection.readTransaction, "SELECT FIRST 1 * FROM RESULT_SET_TABLE");
 
             expect(await resultSet.next()).toBeTruthy();
             expect(resultSet.closed).toBeFalsy();
@@ -74,7 +72,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (isNull) with params", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT FIRST :count * FROM RESULT_SET_TABLE",
                 params: {count: 1000},
                 type: CursorType.FORWARD_ONLY,
@@ -95,7 +93,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (isNull)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     while (await resultSet.next()) {
@@ -114,7 +112,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getAll)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -135,7 +133,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getAny)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -155,7 +153,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getBlob)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -175,7 +173,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getString)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -194,7 +192,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getNumber)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -213,7 +211,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getBoolean)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -231,7 +229,7 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
         it("read data (getDate)", async () => {
             await AConnection.executeQueryResultSet({
                 connection: globalConnection,
-                transaction: globalTransaction,
+                transaction: globalConnection.readTransaction,
                 sql: "SELECT * FROM RESULT_SET_TABLE",
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
@@ -242,6 +240,25 @@ export function resultSetTest(connectionPool: AConnectionPool<ICommonConnectionP
                         expect(resultSet.getDate("ONLYDATE")).toEqual(dataItem.onlyDate);
                         expect(resultSet.getDate("ONLYTIME")).toEqual(dataItem.onlyTime);
                         expect(resultSet.getDate("NULLVALUE")).toBeNull();
+                    }
+                }
+            });
+        });
+
+        it("metadata", async () => {
+            await AConnection.executeQueryResultSet({
+                connection: globalConnection,
+                transaction: globalConnection.readTransaction,
+                sql: "SELECT * FROM RESULT_SET_TABLE",
+                callback: async (resultSet) => {
+                    for (let i = 0; await resultSet.next(); i++) {
+                        const dataItem = arrayData[i];
+                        const names = Object.keys(dataItem).map((name) => name.toUpperCase());
+                        for (let j = 0; j < resultSet.metadata.columnCount; j++) {
+                            expect(resultSet.metadata.getColumnLabel(j)).toEqual(names[j]);
+                            expect(resultSet.metadata.getColumnName(j)).toEqual(names[j]);
+                            expect(resultSet.metadata.getColumnRelation(j)).toEqual("RESULT_SET_TABLE");
+                        }
                     }
                 }
             });
