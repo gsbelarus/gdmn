@@ -5,7 +5,7 @@ import thunk, { ThunkMiddleware, ThunkDispatch } from 'redux-thunk';
 import { reducer as syntaxReducer, ISyntaxState, SyntaxAction } from "./syntax/reducer";
 import { reducer as ermodelReducer, ERModelAction, IERModels } from "./ermodel/reducer";
 import { gridReducer, GridReducerState, GridAction } from 'gdmn-grid';
-import { reducer as nlpDialogReducer, NLPDialogAction } from './nlpdialog/reducer';
+import { reducer as nlpDialogReducer, NLPDialogAction, INLPDialogState } from './nlpdialog/reducer';
 import { RecordSetReducerState, recordSetReducer, RecordSetAction } from 'gdmn-recordset';
 import { NLPDialog } from "gdmn-nlp-agent";
 import { reducer as setParamReducer, ISetParameterState, ParameterLoadAction } from './parameterLoad/reducer';
@@ -18,7 +18,7 @@ export interface State {
   ermodel: IERModels;
   grid: GridReducerState;
   recordSet: RecordSetReducerState;
-  nlpDialog: NLPDialog;
+  nlpDialog: INLPDialogState;
   param: ISetParameterState;
 };
 

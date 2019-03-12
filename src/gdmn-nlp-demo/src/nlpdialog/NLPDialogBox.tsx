@@ -1,18 +1,20 @@
 import React, { Component } from "react";
 import { NLPDialogScroll } from "./NLPDialogScroll";
 import "./NLPDialogBox.css";
-import { NLPDialog } from "gdmn-nlp-agent";
+import { INLPDialogState } from "./reducer";
 
 export interface IChatBoxProps {
-  nlpDialog: NLPDialog;
+  nlpDialog: INLPDialogState;
   addNLPMessage: (text: string) => void;
 }
 
 export class ChatBox extends Component<IChatBoxProps, {}> {
   render() {
+    const { nlpDialog, addNLPMessage } = this.props;
+
     return (
       <div className="NLPDialogArea">
-        <NLPDialogScroll {...this.props} />
+        <NLPDialogScroll nlpDialog={nlpDialog.items} addNLPMessage={addNLPMessage} />
       </div>
     );
   }
