@@ -1,18 +1,23 @@
 import React from 'react';
 import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react';
-
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { RouteComponentProps } from 'react-router';
-import { SQLForm } from '@src/app/components/SQLForm';
+import { InspectorForm } from '@src/app/components/InspectorForm';
 
 export interface IERModelViewProps extends IDataViewProps<any> {
   apiGetSchema: () => void;
-  onShowInspector: (showInspector: boolean) => void;
+}
+
+export interface IERModelViewState {
   showInspector: boolean;
 }
 
-export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentProps<any>> {
+export class ERModelView extends DataView<IERModelViewProps, IERModelViewState, RouteComponentProps<any>> {
+  public state: IERModelViewState = {
+    showInspector: false
+  }
+
   public getDataViewKey() {
     return 'ermodel';
   }
@@ -26,7 +31,7 @@ export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentP
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const { apiGetSchema, data, match, onShowInspector } = this.props;
+    const { apiGetSchema, data, match } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -57,12 +62,29 @@ export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentP
         iconProps: {
           iconName: 'FileCode'
         },
-        onClick: () => {
-          onShowInspector(true)
-        }
+        onClick: () => this.setState({ showInspector: true })
       }
     ];
   }
 
+  public renderModal(): JSX.Element | undefined {
+    const { erModel, data } = this.props;
+    const { showInspector } = this.state;
+
+    if (showInspector && erModel && data && data!.rs && data!.rs!.size) {
+      const entityName = data!.rs.getString(data!.rs.currentRow, 'name');
+      const entity = erModel!.entities[entityName];
+      if (entity) {
+        return (
+          <InspectorForm
+            serializedEntity={entity.serialize(true)}
+            onDismiss={ () => this.setState({ showInspector: false }) }
+          />
+        );
+      }
+    }
+
+    return super.renderModal();
+  }
 
 }

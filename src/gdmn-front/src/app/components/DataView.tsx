@@ -23,7 +23,6 @@ import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
 import { LinkCommandBarButton } from './LinkCommandBarButton';
-import { InspectorForm } from './InspectorForm';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -46,8 +45,6 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   onSort: TEventCallback<TSortEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
   onSetFilter: TOnFilter;
-  showInspector: boolean;
-  onShowInspector: (showInspector: boolean) => void;
 }
 
 export interface IGridRef {
@@ -191,22 +188,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     return undefined;
   }
-
-  public renderModal(): JSX.Element | undefined {
-    const { showInspector, onShowInspector, erModel, data } = this.props;
-    const serializedEntity = erModel!.serialize().entities[data!.rs.currentRow];
-    if (showInspector && erModel && serializedEntity) {
-      return (
-       <InspectorForm
-         serializedEntity={serializedEntity}
-         onCloseInspectorForm={ () => onShowInspector(false) }
-         />
-      );
-    }
-
-    return super.renderModal();
-  }
-
 
   public renderGrid(
     gridName: string,

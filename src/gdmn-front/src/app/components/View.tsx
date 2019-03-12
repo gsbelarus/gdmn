@@ -42,7 +42,7 @@ export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Com
     );
   }
 
-   public renderModal(): JSX.Element | undefined {
+  public renderModal(): JSX.Element | undefined {
     return undefined;
   }
 

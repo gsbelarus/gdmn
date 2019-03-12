@@ -3,9 +3,10 @@ import { Dialog, mergeStyleSets, DialogType, DialogFooter, PrimaryButton, getThe
 import { IEntity } from 'gdmn-orm';
 
 const theme = getTheme();
+
 const classNames = mergeStyleSets({
   wrapper: {
-    overflow: 'hidden'
+    overflow: 'hidden',
   },
   textContent: {
     margin: '15px 0px',
@@ -19,26 +20,24 @@ const classNames = mergeStyleSets({
 
 export interface IInspectorFormProps {
   serializedEntity: IEntity,
-  onCloseInspectorForm: () => void
+  onDismiss: () => void
 }
 
 export class InspectorForm extends PureComponent<IInspectorFormProps> {
-
   public render() {
-    const { onCloseInspectorForm, serializedEntity } = this.props;
+    const { onDismiss, serializedEntity } = this.props;
     return (
       <Dialog
-        className={classNames.wrapper}
-        minWidth='70vh'
+        minWidth="70vw"
         hidden={false}
-        onDismiss={onCloseInspectorForm}
+        onDismiss={onDismiss}
         dialogContentProps={{
           type: DialogType.close,
-          title: 'Inspector'
+          title: 'Entity Inspector'
         }}
         modalProps={{
+          className: classNames.wrapper,
           titleAriaId: 'showInspectorTitleID',
-          subtitleAriaId: 'showInspectorSubTitleID',
           isBlocking: false
         }}
       >
@@ -46,7 +45,7 @@ export class InspectorForm extends PureComponent<IInspectorFormProps> {
           {JSON.stringify(serializedEntity, undefined, 2)}
         </pre>
         <DialogFooter>
-          <PrimaryButton onClick={onCloseInspectorForm} text="Close" />
+          <PrimaryButton onClick={onDismiss} text="Close" />
         </DialogFooter>
       </Dialog>
     );

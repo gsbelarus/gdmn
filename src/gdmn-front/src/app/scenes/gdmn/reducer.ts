@@ -1,6 +1,5 @@
 import { getType } from 'typesafe-actions';
 import { ERModel } from 'gdmn-orm';
-
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 
@@ -10,7 +9,6 @@ export type TGdmnState = {
   loadingCounter: number;
   loadingMessage?: string;
   viewTabs: IViewTab[];
-  showInspector: boolean
 };
 
 const initialState: TGdmnState = {
@@ -18,7 +16,6 @@ const initialState: TGdmnState = {
   loading: false,
   loadingCounter: 0,
   viewTabs: [],
-  showInspector: false
 };
 
 export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
@@ -90,13 +87,6 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
           viewTabs: [...state.viewTabs.slice(0, idx), ...state.viewTabs.slice(idx + 1)]
         };
       }
-    }
-
-    case getType(gdmnActions.showInspector): {
-      return {
-        ...state,
-        showInspector: action.payload
-      };
     }
 
     default:

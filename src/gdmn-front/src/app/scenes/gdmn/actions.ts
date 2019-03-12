@@ -2,7 +2,6 @@ import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
-
 import { TThunkAction } from '@src/app/store/TActions';
 import { selectAuthState } from '@src/app/store/selectors';
 import { authActionsAsync } from '@src/app/scenes/auth/actions';
@@ -90,11 +89,7 @@ const gdmnActions = {
 
   deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => {
     return (viewTab: IViewTab) => resolve(viewTab);
-  }),
-
-  showInspector: createAction('gdmm/SHOW_INSPECTOR_FORM', resolve => {
-    return (showInspector: boolean) => resolve(showInspector);
-  }),
+  })
 };
 
 type TGdmnActions = ActionType<typeof gdmnActions>;

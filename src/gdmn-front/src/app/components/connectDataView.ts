@@ -30,7 +30,7 @@ import {
 } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
-import { TGdmnActions, gdmnActions } from '../scenes/gdmn/actions';
+import { TGdmnActions } from '../scenes/gdmn/actions';
 import { IDataViewProps } from './DataView';
 
 export const connectDataView = compose<any, IDataViewProps<any>>(
@@ -40,7 +40,6 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
         state.gdmnState.erModel && Object.keys(state.gdmnState.erModel.entities).length
           ? state.gdmnState.erModel
           : undefined, // todo перенести
-      showInspector: state.gdmnState.showInspector
     }),
     (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
 
@@ -135,10 +134,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           } else {
             dispatch(setFilter({name: event.rs.name, filter: undefined }))
           }
-        },
-
-      onShowInspector: (showInspector: boolean) => dispatch(gdmnActions.showInspector(showInspector))
-
+        }
     })
   ),
   connectView
