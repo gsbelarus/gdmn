@@ -1,5 +1,5 @@
 import {existsSync, unlinkSync} from "fs";
-import {resolve} from "path";
+import path from "path";
 import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions, IServiceOptions} from "../src";
 import {Statement} from "../src/fb/Statement";
 import {connectionTest} from "./common/AConnection";
@@ -13,7 +13,8 @@ const driver = Factory.getDriver("firebird");
 export const dbOptions: IConnectionOptions = {
     username: "SYSDBA",
     password: "masterkey",
-    path: resolve("./GDMN_DB_FB.FDB")
+    path: path.resolve("./GDMN_DB_FB.FDB"),
+    readTransaction: true
 };
 
 const serviceOptions: IServiceOptions = {
@@ -26,7 +27,6 @@ const serviceOptions: IServiceOptions = {
 jest.setTimeout(100 * 1000);
 
 describe("Firebird driver tests", () => {
-    const globalConnectionPool = driver.newCommonConnectionPool();
 
     beforeAll(async () => {
         if (existsSync(dbOptions.path)) {
@@ -39,15 +39,9 @@ describe("Firebird driver tests", () => {
 
         await connection.disconnect();
         expect(connection.connected).toBeFalsy();
-
-        await globalConnectionPool.create(dbOptions, {min: 1, max: 1});
-        expect(globalConnectionPool.created).toBeTruthy();
     });
 
     afterAll(async () => {
-        await globalConnectionPool.destroy();
-        expect(globalConnectionPool.created).toBeFalsy();
-
         const connection = driver.newConnection();
 
         await connection.connect(dbOptions);
@@ -65,11 +59,11 @@ describe("Firebird driver tests", () => {
 
     connectionPoolTest(driver, dbOptions);
 
-    transactionTest(globalConnectionPool);
+    transactionTest(driver, dbOptions);
 
-    statementTest(globalConnectionPool);
+    statementTest(driver, dbOptions);
 
-    resultSetTest(globalConnectionPool);
+    resultSetTest(driver, dbOptions);
 
     describe("CommonParamsAnalyzer", () => {
 
@@ -168,7 +162,8 @@ describe("Firebird driver tests", () => {
         let globalConnection: AConnection;
 
         beforeAll(async () => {
-            globalConnection = await globalConnectionPool.get();
+            globalConnection = driver.newConnection();
+            await globalConnection.connect(dbOptions);
         });
 
         afterAll(async () => {

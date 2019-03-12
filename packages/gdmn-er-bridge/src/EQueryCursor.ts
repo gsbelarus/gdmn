@@ -40,7 +40,7 @@ export class EQueryCursor {
       const row: { [key: string]: any } = {};
       for (let j = 0; j < this._resultSet.metadata.columnCount; j++) {
         // TODO binary blob support
-        row[this._resultSet.metadata.getColumnLabel(j)] = await this._resultSet.getAny(j);
+        row[this._resultSet.metadata.getColumnLabel(j)!] = await this._resultSet.getAny(j);
       }
       data.push(row);
     }

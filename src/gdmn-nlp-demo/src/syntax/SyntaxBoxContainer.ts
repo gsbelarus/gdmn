@@ -26,7 +26,7 @@ export const SyntaxBoxContainer = connect(
       ...state.syntax,
       erModels: state.ermodel,
       host: state.param.host,
-      port: state.param.port
+      port: state.param.port,
     }
   ),
   (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction | RecordSetAction>) => ({
@@ -42,10 +42,11 @@ export const SyntaxBoxContainer = connect(
       }
     ),
     onQuery: (erModelName: string) => dispatch(
-      async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, getState: () => State) => {
+      async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | SyntaxAction>, getState: () => State) => {
         const {param: {host, port}, ermodel, grid, recordSet} = getState();
-
+        
         if (!ermodel || !ermodel[erModelName] || !ermodel[erModelName].command || !ermodel[erModelName].command![0]) return;
+        dispatch(syntaxActions.loadingQuery(true));
 
         const query = ermodel[erModelName].command![0].payload;
 
@@ -80,6 +81,7 @@ export const SyntaxBoxContainer = connect(
             rightSideColumns: 0,
             hideFooter: true
           }));
+          dispatch(syntaxActions.loadingQuery(false));
         } else {
           let year = new Date().getFullYear();
           let month = new Date().getMonth() + 1;
@@ -130,12 +132,16 @@ export const SyntaxBoxContainer = connect(
             rightSideColumns: 0,
             hideFooter: true
           }));
+          dispatch(syntaxActions.loadingQuery(false));
         }
       }
     ),
    onClear: (name: string) => {
      dispatch(syntaxActions.clearSyntaxText());
      dispatch(erModelActions.clearCommand({ name, clear: true }));
+    },
+    onLoading: (value: boolean) => {
+      dispatch(syntaxActions.loadingQuery(value));
     }
   })
 )(SyntaxBox);

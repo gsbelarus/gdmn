@@ -9,6 +9,7 @@ export type SyntaxAction = ActionType<typeof actions>;
 export interface ISyntaxState {
   readonly text: string;
   readonly coombinations: IToken[][];
+  readonly loading: boolean;
   readonly errorMsg?: string;
   readonly parsedText?: ParsedText;
   readonly parserDebug?: ParsedText[];
@@ -18,15 +19,17 @@ const initialText = predefinedPhrases[0];
 
 const initialState: ISyntaxState = {
   text: initialText,
-  coombinations: []
+  coombinations: [],
+  loading: false
 };
 
 export function reducer(state: ISyntaxState = initialState, action: SyntaxAction): ISyntaxState {
   switch (action.type) {
     case getType(actions.clearSyntaxText): {
       return {
+        ...state,
         text: '',
-        coombinations: []
+        coombinations: [],
       }
     }
 
@@ -67,6 +70,15 @@ export function reducer(state: ISyntaxState = initialState, action: SyntaxAction
         parserDebug: undefined
       };
     }
+
+    case getType(actions.loadingQuery): {
+      const value = action.payload;
+      return {
+        ...state,
+        loading: value
+      }
+    }
+
   }
 
   return state;
