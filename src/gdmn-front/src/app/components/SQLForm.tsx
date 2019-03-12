@@ -17,12 +17,12 @@ const classNames = mergeStyleSets({
   }
 });
 
-export interface ISQLFormStateProps {
+export interface ISQLFormProps {
   rs: RecordSet,
   onCloseSQL: () => void
 }
 
-export class SQLForm extends PureComponent<ISQLFormStateProps> {
+export class SQLForm extends PureComponent<ISQLFormProps> {
 
   public render() {
     const { rs, onCloseSQL } = this.props;

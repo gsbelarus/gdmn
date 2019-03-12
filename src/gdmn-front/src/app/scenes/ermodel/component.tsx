@@ -4,9 +4,12 @@ import { ICommandBarItemProps, IComponentAsProps } from 'office-ui-fabric-react'
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { RouteComponentProps } from 'react-router';
+import { SQLForm } from '@src/app/components/SQLForm';
 
 export interface IERModelViewProps extends IDataViewProps<any> {
   apiGetSchema: () => void;
+  onShowInspector: (showInspector: boolean) => void;
+  showInspector: boolean;
 }
 
 export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentProps<any>> {
@@ -23,7 +26,7 @@ export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentP
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const { apiGetSchema, data, match } = this.props;
+    const { apiGetSchema, data, match, onShowInspector } = this.props;
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
@@ -47,7 +50,19 @@ export class ERModelView extends DataView<IERModelViewProps, {}, RouteComponentP
           iconName: 'DatabaseSync'
         },
         onClick: apiGetSchema
+      },
+      {
+        key: 'Inspector',
+        text: 'Show Inspector',
+        iconProps: {
+          iconName: 'FileCode'
+        },
+        onClick: () => {
+          onShowInspector(true)
+        }
       }
     ];
   }
+
+
 }

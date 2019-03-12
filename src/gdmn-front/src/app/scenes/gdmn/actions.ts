@@ -90,7 +90,11 @@ const gdmnActions = {
 
   deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => {
     return (viewTab: IViewTab) => resolve(viewTab);
-  })
+  }),
+
+  showInspector: createAction('gdmm/SHOW_INSPECTOR_FORM', resolve => {
+    return (showInspector: boolean) => resolve(showInspector);
+  }),
 };
 
 type TGdmnActions = ActionType<typeof gdmnActions>;
