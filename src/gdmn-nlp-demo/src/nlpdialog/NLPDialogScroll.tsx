@@ -34,11 +34,10 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
   constructor(props: TNLPDialogScrollProps) {
     super(props);
 
-    const { nlpDialog } = this.props;
     this.state = {
       text: '',
-      showFrom: nlpDialog.length ? nlpDialog.length - 1 : 0,
-      showTo: nlpDialog.length ? nlpDialog.length - 1 : 0,
+      showFrom: -1,
+      showTo: -1,
       partialOK: true,
       recalc: true,
       scrollVisible: false,
@@ -59,15 +58,13 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
   private onInputPressEnter(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (!(e.key === 'Enter' && this.state.text.trim())) return;
 
-    const { addNLPMessage, nlpDialog } = this.props;
+    const { addNLPMessage } = this.props;
     addNLPMessage(this.state.text.trim());
-
-    const len = nlpDialog.length;
 
     this.setState({
       text: '',
-      showFrom: len,
-      showTo: len,
+      showFrom: -1,
+      showTo: -1,
       partialOK: true,
       recalc: true
     });
@@ -160,10 +157,19 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
         newTo = nlpDialog.length - 1;
       }
 
-      this.setState({ showFrom: newFrom, showTo: newTo, partialOK: !above, recalc: true });
+      this.setState({
+        showFrom: newFrom,
+        showTo: newTo,
+        partialOK: !above,
+        recalc: true
+      });
     } else {
       e.currentTarget.setPointerCapture(e.pointerId);
-      this.setState({ scrollVisible: true, prevClientY: e.clientY, prevFrac: 0 });
+      this.setState({
+        scrollVisible: true,
+        prevClientY: e.clientY,
+        prevFrac: 0
+      });
     }
   }
 
@@ -221,29 +227,45 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
   private calcVisibleCount() {
     const { nlpDialog } = this.props;
-    const { showFrom, showTo, recalc, partialOK } = this.state;
+    const { recalc, partialOK } = this.state;
 
     if (!recalc) return;
+
+    const showFrom = this.state.showFrom === -1 ? nlpDialog.length - 1 : this.state.showFrom;
+    const showTo = this.state.showTo === -1 ? nlpDialog.length - 1 : this.state.showTo;
 
     if (this.shownItems.length) {
       if (this.shownItems[0].offsetTop > topGap) {
         if (this.shownItems.length < nlpDialog.length && showFrom > 0) {
-          this.setState({ showFrom: showFrom - 1 });
+          this.setState({
+            showFrom: showFrom - 1,
+            showTo
+          });
         } else {
-          this.setState({ recalc: false });
+          this.setState({
+            showFrom,
+            showTo,
+            recalc: false
+          });
         }
       } else if (this.shownItems[0].offsetTop + this.shownItems[0].offsetHeight < 0 && showFrom < showTo) {
         this.setState({
           showFrom: showFrom + 1,
+          showTo,
           recalc: true
         });
       } else if (this.shownItems[0].offsetTop < 0 && !partialOK && !showFrom && showFrom < showTo) {
         this.setState({
+          showFrom,
           showTo: showTo - 1,
           recalc: false
         });
       } else {
-        this.setState({ recalc: false });
+        this.setState({
+          showFrom,
+          showTo,
+          recalc: false
+        });
       }
     } else {
       this.setState({
@@ -264,7 +286,10 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
   public render(): ReactNode {
     const { nlpDialog } = this.props;
-    const { showFrom, showTo, scrollVisible } = this.state;
+    const { scrollVisible } = this.state;
+
+    const showFrom = this.state.showFrom === -1 ? nlpDialog.length - 1 : this.state.showFrom;
+    const showTo = this.state.showTo === -1 ? nlpDialog.length - 1 : this.state.showTo;
 
     const thumbHeight = `${Math.trunc(((showTo - showFrom + 1) / nlpDialog.length) * 100).toString()}%`;
     const thumbTop = `${Math.trunc((showFrom / nlpDialog.length) * 100).toString()}%`;
@@ -279,11 +304,21 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
                 (i, idx) =>
                   i &&
                   typeof idx === 'number' &&
-                  idx >= this.state.showFrom &&
-                  idx <= this.state.showTo && (
-                    <div key={idx} className="NLPItem" ref={elem => elem && this.shownItems.push(elem)}>
-                      <span className="Circle">{i.who}</span>
-                      <span className="Message">{i.text}</span>
+                  idx >= showFrom &&
+                  idx <= showTo && (
+                    <div key={idx} className={`NLPItem ${i.who === 'me' ? 'NLPItemRight' : 'NLPItemLeft'}`} ref={elem => elem && this.shownItems.push(elem)}>
+                    {
+                      i.who === 'me' ?
+                        <>
+                          <span className="Message MessageRight">{i.text}</span>
+                          <span className="Circle">{i.who}</span>
+                        </>
+                      :
+                        <>
+                          <span className="Circle">{i.who}</span>
+                          <span className="Message MessageLeft">{i.text}</span>
+                        </>
+                    }
                     </div>
                   )
               )}

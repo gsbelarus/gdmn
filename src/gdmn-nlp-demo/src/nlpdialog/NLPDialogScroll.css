@@ -23,9 +23,19 @@
 }
 
 .NLPItem {
+  width: 100%;
   margin-left: 4px;
   margin-bottom: 12px;
   vertical-align: bottom;
+}
+
+.NLPItemLeft {
+  text-align: left;
+}
+
+.NLPItemRight {
+  text-align: right;
+  padding-right: 12px;
 }
 
 .NLPItem .Circle {
@@ -43,7 +53,7 @@
   box-sizing: initial;
 }
 
-.NLPItem .Message {
+.NLPItem .MessageLeft {
   position: relative;
   display: inline-block;
   background-color: antiquewhite;
@@ -53,7 +63,18 @@
   max-width: calc(100% - 4em);
 }
 
-.NLPItem .Message::before {
+.NLPItem .MessageRight {
+  position: relative;
+  display: inline-block;
+  background-color: antiquewhite;
+  border-radius: 6px 6px 6px 0;
+  padding: 4px 8px;
+  box-shadow: 2px 2px 1px 0 rgba(93,196,82,.5);
+  max-width: calc(100% - 4em);
+  margin-right: 8px;
+}
+
+.NLPItem .MessageLeft::before {
   position: absolute;
   content: '';
   bottom: -2px;
@@ -64,7 +85,18 @@
   z-index: 1;
 }
 
-.NLPItem .Message::after {
+.NLPItem .MessageRight::before {
+  position: absolute;
+  content: '';
+  bottom: -2px;
+  right: -8px;
+  width: 10px;
+  height: 2px;
+  background-color: rgba(93,196,82,.4);
+  z-index: 1;
+}
+
+.NLPItem .MessageLeft::after {
   position: absolute;
   content: '';
   bottom: 0;
@@ -72,6 +104,18 @@
   width: 16px;
   height: 10px;
   clip-path: url(#left-droplet);
+  background-color: inherit;
+  z-index: 1;
+}
+
+.NLPItem .MessageRight::after {
+  position: absolute;
+  content: '';
+  bottom: 0;
+  right: -10px;
+  width: 16px;
+  height: 10px;
+  clip-path: url(#right-droplet);
   background-color: inherit;
   z-index: 1;
 }
