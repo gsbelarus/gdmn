@@ -1,7 +1,7 @@
 import {Semaphore} from "gdmn-internals";
+import {AResult} from "./AResult";
 import {AResultSet, CursorType} from "./AResultSet";
 import {ATransaction} from "./ATransaction";
-import {Result} from "./fb/Result";
 import {IBaseExecuteOptions, TExecutor} from "./types";
 
 export type IParams = any[] | INamedParams;
@@ -97,7 +97,7 @@ export abstract class AStatement {
      * a result object;
      * never null
      */
-    public async executeReturning(params?: IParams): Promise<Result> {
+    public async executeReturning(params?: IParams): Promise<AResult> {
         if (this.isLock) {
             await this.waitUnlock();
         }
@@ -140,7 +140,7 @@ export abstract class AStatement {
 
     protected abstract async _executeQuery(params?: IParams, type?: CursorType): Promise<AResultSet>;
 
-    protected abstract async _executeReturning(params?: IParams): Promise<Result>;
+    protected abstract async _executeReturning(params?: IParams): Promise<AResult>;
 
     protected abstract async _execute(params?: IParams): Promise<void>;
 }

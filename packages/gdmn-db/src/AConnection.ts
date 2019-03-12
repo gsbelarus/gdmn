@@ -1,9 +1,9 @@
 import {Semaphore} from "gdmn-internals";
 import {ADriver} from "./ADriver";
+import {AResult} from "./AResult";
 import {AResultSet, CursorType} from "./AResultSet";
 import {AStatement, IParams} from "./AStatement";
 import {ATransaction, ITransactionOptions} from "./ATransaction";
-import {Result} from "./fb/Result";
 import {IBaseExecuteOptions, TExecutor} from "./types";
 
 export interface IConnectionServer {
@@ -230,7 +230,7 @@ export abstract class AConnection {
      * a result array;
      * never null
      */
-    public async executeReturning(transaction: ATransaction, sql: string, params?: IParams): Promise<Result> {
+    public async executeReturning(transaction: ATransaction, sql: string, params?: IParams): Promise<AResult> {
         if (this.isLock) {
             await this.waitUnlock();
         }
@@ -277,5 +277,5 @@ export abstract class AConnection {
 
     protected abstract async _executeReturning(transaction: ATransaction,
                                                sql: string,
-                                               params?: IParams): Promise<Result>;
+                                               params?: IParams): Promise<AResult>;
 }

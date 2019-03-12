@@ -154,7 +154,7 @@ export class Connection extends AConnection {
     protected async _executeReturning(transaction: Transaction, sql: string, params?: IParams): Promise<Result> {
         const statement = await Statement.prepare(transaction, sql);
         try {
-            return await statement.executeReturning(params);
+            return await statement.executeReturning(params) as Result;
         } finally {
             await statement.dispose();
         }
