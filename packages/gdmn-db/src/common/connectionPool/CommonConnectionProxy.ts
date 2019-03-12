@@ -1,10 +1,10 @@
 import {Pool} from "generic-pool";
 import {AConnection, IConnectionOptions} from "../../AConnection";
 import {ADriver} from "../../ADriver";
+import {AResult} from "../../AResult";
 import {AResultSet} from "../../AResultSet";
 import {AStatement, IParams} from "../../AStatement";
 import {ATransaction, ITransactionOptions} from "../../ATransaction";
-import {Result} from "../../fb/Result";
 
 export class CommonConnectionProxy extends AConnection {
 
@@ -120,7 +120,7 @@ export class CommonConnectionProxy extends AConnection {
 
     protected async _executeReturning(transaction: ATransaction,
                                       sql: string,
-                                      params?: IParams): Promise<Result> {
+                                      params?: IParams): Promise<AResult> {
         if (!this._connection || !this._pool.isBorrowedResource(this)) {
             throw new Error("Need database connection");
         }
