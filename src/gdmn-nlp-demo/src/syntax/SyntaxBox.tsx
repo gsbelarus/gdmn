@@ -20,16 +20,17 @@ export interface ISyntaxBoxProps {
   erModels: IERModels,
   host: string,
   port: string,
+  loading: boolean,
   onAnalyze: (erModelName: string, text: string) => void,
   onQuery: (erModelName: string) => void,
   onClear: (erModelName: string) => void
 }
 
 export interface ISyntaxBoxState {
-  editedText: string,
-  showPhrases: boolean,
-  tokens: IToken[],
-  verboseErrors?: any,
+  editedText: string;
+  showPhrases: boolean;
+  tokens: IToken[];
+  verboseErrors?: any;
   selectedERModel?: string;
 }
 
@@ -317,7 +318,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   render() {
     const { editedText, showPhrases, verboseErrors, tokens, selectedERModel } = this.state;
-    const { text, onAnalyze, errorMsg, parserDebug, onQuery, onClear, parsedText, erModels, host, port } = this.props;
+    const { text, onAnalyze, errorMsg, parserDebug, onQuery, onClear, parsedText, erModels, host, port, loading } = this.props;
 
     const erModelState = selectedERModel ? erModels[selectedERModel] : undefined;
     const canQuery = erModelState && erModelState.command && (
@@ -383,7 +384,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         />
         <DefaultButton
           text="Query"
-          disabled={!canQuery}
+          disabled={!canQuery || loading}
           onClick={ selectedERModel ? () => onQuery(selectedERModel) : undefined }
         />
         <DefaultButton
