@@ -1,17 +1,15 @@
 import React, { Component } from "react";
-import { TextField, DefaultButton, ComboBox, IComboBoxOption, SelectableOptionMenuItemType } from "office-ui-fabric-react";
+import { TextField, DefaultButton, ComboBox } from "office-ui-fabric-react";
 import "./SyntaxBox.css";
 import { IToken } from "chevrotain";
-import { ParsedText, Phrase, AnyWord, tokenize, CyrillicWord, morphAnalyzer, PhraseItem } from "gdmn-nlp";
-import { Edge as DagreEdge, graphlib, layout } from 'dagre';
-import { Rect } from "./Rect";
-import { Edge } from "./Edge";
+import { ParsedText, tokenize, CyrillicWord, morphAnalyzer } from "gdmn-nlp";
 import { predefinedPhrases } from "./phrases";
 import { ICommand } from 'gdmn-nlp-agent';
 import { isMorphToken, IMorphToken } from "gdmn-nlp";
 import { Select } from "../query/Select";
 import { EntityQuery, IEntityQueryWhere, IEntityQueryWhereValue, IEntityQueryAlias, ScalarAttribute, IEntityQueryOrder } from "gdmn-orm";
 import { IERModels } from "../ermodel/reducer";
+import { PhraseSyntaxTree } from "../components/PhraseSyntaxTree";
 
 export interface ISyntaxBoxProps {
   text: string,
@@ -107,114 +105,6 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     );
   }
 
-  private _renderPhrase() {
-    const { parsedText } = this.props;
-
-    if (!parsedText || !parsedText.phrase) {
-      return undefined;
-    }
-
-    const phrase = parsedText.phrase;
-
-    // Create a new directed graph
-    const g = new graphlib.Graph();
-
-    if (phrase instanceof Phrase) {
-      // Set an object for the graph label
-      g.setGraph({});
-
-      // Default to assigning a new object as a label for each new edge.
-      g.setDefaultEdgeLabel(() => {
-        return {};
-      });
-
-      const recurs = (
-        phr: PhraseItem<AnyWord>
-      ) => {
-        if (phr instanceof Phrase) {
-          const label = phr.getName().label;
-          g.setNode(phr.id.toString(), {
-            label,
-            width: label.length * 9 + 8,
-            height: 26,
-            className: 'phrase'
-          });
-          phr.items.forEach(p => {
-            g.setEdge(phr.id.toString(), p.id.toString());
-            recurs(p);
-          });
-        } else {
-          const label = phr.getText();
-          g.setNode(phr.id.toString(), {
-            label,
-            width: label.length * 9 + 8,
-            height: 26,
-            className: 'word',
-            rank: 'min'
-          });
-        }
-      };
-
-      recurs(phrase);
-
-      g.graph().ranksep = 36;
-      g.graph().marginx = 2;
-      g.graph().marginy = 2;
-      layout(g);
-    }
-
-    const makeRect = (n: string, idx: number) => {
-      const nd = g.node(n);
-      if (!nd) return null;
-
-      const x = nd.x - nd.width / 2;
-      const y = nd.y - nd.height / 2;
-      return (
-        <Rect key={idx} x={x} y={y} width={nd.width} height={nd.height} text={nd.label} className={nd.className} />
-      );
-    };
-
-    const makeEdge = (e: DagreEdge, idx: number) => <Edge key={idx} points={g.edge(e).points} />;
-
-    return (
-      <div className="CommandAndGraph">
-        <div>
-          Parsed with {parsedText.parser && parsedText.parser.getName().label}:
-        </div>
-        <div>
-          {g.graph() ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={g.graph().width}
-              height={g.graph().height}
-              viewBox={'0 0 ' + g.graph().width + ' ' + g.graph().height}
-              preserveAspectRatio="xMidYMid meet"
-            >
-              <defs>
-                <marker
-                  id="arrow"
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerUnits="strokeWidth"
-                  markerWidth="8"
-                  markerHeight="6"
-                  orient="auto"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 Z" style={{ strokeWidth: '1' }} />
-                </marker>
-              </defs>
-              <g>
-                {g.nodes().map((n, idx) => makeRect(n, idx))}
-                {g.edges().map((e, idx) => makeEdge(e, idx))}
-              </g>
-            </svg>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
   private collUpsFields(id: string, idButton: string) {
     let div = document.getElementById(id);
     if (div) {
@@ -254,48 +144,48 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   private displayWHERE(wheres: IEntityQueryWhere[]) {
     return wheres.map( (where, idx1) =>
       where && <div className="where" key={idx1}>
-        {where.or && this.displayOR(where.or, idx1)}
-        {where.and && this.displayAND(where.and, idx1)}
-        {where.not && this.displayNOT(where.not, idx1)}
-        {where.isNull && this.displayISNULL(where.isNull, null)}
-        {where.equals && this.displayEQUALS(where.equals, null)}
+        {where.or && this.displayOR(where.or)}
+        {where.and && this.displayAND(where.and)}
+        {where.not && this.displayNOT(where.not)}
+        {where.isNull && this.displayISNULL(where.isNull)}
+        {where.equals && this.displayEQUALS(where.equals)}
       </div>
     )
   }
 
-  private displayAND(ands: IEntityQueryWhere[], idx: number | null) {
+  private displayAND(ands: IEntityQueryWhere[]) {
     return ands && <div className="allAnds">
             { ands.map( (and, idx1) =>
               <div  key={`and${idx1}`}>
                 { idx1 !== 0 ? <div>AND</div> : undefined }
-                { and.or ? this.displayOR(and.or, null) : undefined }
-                { and.and ? this.displayAND(and.and, null) : undefined }
-                { and.not ? this.displayNOT(and.not, null) : undefined }
-                { and.isNull ? this.displayISNULL(and.isNull, null) : undefined }
+                { and.or ? this.displayOR(and.or) : undefined }
+                { and.and ? this.displayAND(and.and) : undefined }
+                { and.not ? this.displayNOT(and.not) : undefined }
+                { and.isNull ? this.displayISNULL(and.isNull) : undefined }
                 <div className="and" key={idx1}>
-                  {and.equals && this.displayEQUALS(and.equals, null)}
+                  {and.equals && this.displayEQUALS(and.equals)}
               </div>
             </div>
           ) }</div>
   }
 
-  private displayOR(ors: IEntityQueryWhere[], idx: number | null) {
+  private displayOR(ors: IEntityQueryWhere[]) {
     return ors && <div className="allOrs">
             { ors.map( (or, idx1) =>
               <div  key={`or${idx1}`}>
                 { idx1 !== 0 ? <div>OR</div> : undefined }
-                { or.and ? this.displayAND(or.and, null) : undefined }
-                { or.or ? this.displayOR(or.or, null) : undefined }
-                { or.not ? this.displayNOT(or.not, null) : undefined }
-                { or.isNull ? this.displayISNULL(or.isNull, null) : undefined }
+                { or.and ? this.displayAND(or.and) : undefined }
+                { or.or ? this.displayOR(or.or) : undefined }
+                { or.not ? this.displayNOT(or.not) : undefined }
+                { or.isNull ? this.displayISNULL(or.isNull) : undefined }
                 <div className="or" key={idx1}>
-                {or.equals && this.displayEQUALS(or.equals, null)}
+                {or.equals && this.displayEQUALS(or.equals)}
               </div>
             </div>
           ) }</div>
   }
 
-  private displayEQUALS(equals: IEntityQueryWhereValue[], idx: number | null) {
+  private displayEQUALS(equals: IEntityQueryWhereValue[]) {
     return equals && <div className="equals">
             {equals.map((equal, idx1) =>
               <div className="equal" key={idx1}>
@@ -308,7 +198,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           </div>
   }
 
-  private displayISNULL(isNulls: IEntityQueryAlias<ScalarAttribute>[], idx: number | null) {
+  private displayISNULL(isNulls: IEntityQueryAlias<ScalarAttribute>[]) {
     return isNulls && <div className="allisNulls">
             { isNulls.map( (isNull, idx1) =>
               <div  key={`isNull${idx1}`}>
@@ -322,17 +212,17 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   }
 
-  private displayNOT(nots: IEntityQueryWhere[], idx: number | null) {
+  private displayNOT(nots: IEntityQueryWhere[]) {
     return nots && <div className="allNots">
             { nots.map( (not, idx1) =>
               <div  key={`not${idx1}`}>
                 { <div>NOT</div> }
-                { not.and ? this.displayAND(not.and, null) : undefined }
-                { not.or ? this.displayOR(not.or, null) : undefined }
-                { not.not ? this.displayNOT(not.not, null) : undefined }
-                { not.isNull ? this.displayISNULL(not.isNull, null) : undefined }
+                { not.and ? this.displayAND(not.and) : undefined }
+                { not.or ? this.displayOR(not.or) : undefined }
+                { not.not ? this.displayNOT(not.not) : undefined }
+                { not.isNull ? this.displayISNULL(not.isNull) : undefined }
                 <div className="not" key={idx1}>
-                {not.equals && this.displayEQUALS(not.equals, null)}
+                {not.equals && this.displayEQUALS(not.equals)}
               </div>
             </div>
           ) }</div>
@@ -535,7 +425,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
       : undefined}
       <div className={ text === editedText || parserDebug ? '' : 'SemiTransparent' }>
         {this._getCoombinations()}
-        {this._renderPhrase()}
+        <PhraseSyntaxTree parsedText={parsedText} />
         {commandError && <div className="SyntaxError">{commandError}</div>}
         {command && <div>Command:{this._renderCommand(command[0])}</div>}
         {command && command[0].payload.link.entity.adapter && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}

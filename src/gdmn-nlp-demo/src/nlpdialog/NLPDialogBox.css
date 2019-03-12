@@ -1,4 +1,9 @@
 .NLPDialogArea {
+  display: flex;
+  flex-direction: row;
+}
+
+.NLPDialogColumn {
   width: 340px;
   height: 93vh;
 }
