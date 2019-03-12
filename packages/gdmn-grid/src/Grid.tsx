@@ -79,7 +79,6 @@ export interface IGridState {
   overscanColumnCount: number;
   overscanRowCount: number;
   columnBeingResized: boolean;
-  deltaWidth: number;
   scrollLeft: number;
   scrollTop: number;
   showDialogParams: boolean;
@@ -173,6 +172,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _columnMovingDeltaX: number = 0;
   private _columnSizingDeltaX: number = 0;
   private _scrollIntoView?: ScrollIntoView = undefined;
+  private _deltaWidth: number = 0;
 
   private onCloseDialogParams = () => {
     this.setState({ showDialogParams: false });
@@ -198,7 +198,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           ? inCellRowHeight + totalCellVertPadding
           : maxCountFieldInCell * inCellRowHeight + totalCellVertPadding,
       columnBeingResized: false,
-      deltaWidth: 0,
       scrollLeft: 0,
       scrollTop: 0,
       showDialogParams: false
@@ -218,8 +217,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             c.width !== nextProps.columns[idx].width ||
             c.name !== nextProps.columns[idx].name)
       ) ||
-      this.state.columnBeingResized !== nextState.columnBeingResized ||
-      this.state.deltaWidth !== nextState.deltaWidth;
+      this.state.columnBeingResized !== nextState.columnBeingResized;
 
     if (changed) {
       const recompute = (g: Grid | undefined) => {
@@ -280,7 +278,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       loadMoreMinBatchPagesRatio,
       currentCol
     } = this.props;
-    const { rowHeight, overscanColumnCount, overscanRowCount, deltaWidth, showDialogParams } = this.state;
+    const { rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
 
     if (!rs) {
       return <div>No data!</div>;
@@ -633,13 +631,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.HeaderGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns + (this._deltaWidth ? 1 : 0)}
               height={headerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getHeaderCellRenderer(
                 this._adjustBodyColumnIndex,
                 true,
-                bodyColumns + (deltaWidth ? 1 : 0),
+                bodyColumns + (this._deltaWidth ? 1 : 0),
                 false
               )}
               rowHeight={rowHeight}
@@ -710,7 +708,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                       !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
                     )}
                     columnWidth={getBodyColumnWidth}
-                    columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+                    columnCount={bodyColumns + (this._deltaWidth ? 1 : 0)}
                     height={bodyHeight}
                     overscanColumnCount={overscanColumnCount}
                     overscanRowCount={overscanRowCount}
@@ -748,7 +746,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.BodyFooterGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns + (this._deltaWidth ? 1 : 0)}
               height={footerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getFooterCellRenderer(this._adjustBodyColumnIndex, false)}
@@ -882,17 +880,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       <div className="GridBody">
         <AutoSizer>
           {({ width, height }) => {
-            let deltaWidth =
+            this._deltaWidth =
               width -
               columns.reduce((w, c) => (c.width ? w + c.width : w + this.state.columnWidth), 0) -
               scrollbarSize() - 1;
 
-            if (deltaWidth < 0) {
-              deltaWidth = 0;
-            }
-
-            if (deltaWidth >= 0 && deltaWidth !== this.state.deltaWidth) {
-              this.setState({ deltaWidth });
+            if (this._deltaWidth < 0) {
+              this._deltaWidth = 0;
             }
 
             const { scrollLeft, scrollTop } = this.state;
@@ -1095,7 +1089,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               }
               if (
                 columnIndex !== ec &&
-                !(ec === columns.length - rightSideColumns - leftSideColumns && this.state.deltaWidth > 0)
+                !(ec === columns.length - rightSideColumns - leftSideColumns && this._deltaWidth > 0)
               ) {
                 onColumnMove({ref: this, rs, oldIndex: adjustedColumnIndex, newIndex: adjustFunc(ec)});
               }
@@ -1356,9 +1350,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     index: number;
   }): number => {
     const { columns, rightSideColumns } = this.props;
-    const { columnWidth, deltaWidth } = this.state;
+    const { columnWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
-    return !fixed && (columns.length - rightSideColumns === adjustedIndex) ? deltaWidth
+    return !fixed && (columns.length - rightSideColumns === adjustedIndex) ? this._deltaWidth
       : columns[adjustedIndex] && columns[adjustedIndex].width ? columns[adjustedIndex].width!
       : columnWidth;
   };
