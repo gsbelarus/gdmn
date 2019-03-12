@@ -321,7 +321,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     const { text, onAnalyze, errorMsg, parserDebug, onQuery, onClear, parsedText, erModels, host, port, loading } = this.props;
 
     const erModelState = selectedERModel ? erModels[selectedERModel] : undefined;
-    const canQuery = erModelState && erModelState.command && (
+    const canQuery = erModelState && erModelState.command && !loading && (
       !erModelState.command[0].payload.link.entity.adapter
       ||
       (
@@ -384,7 +384,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         />
         <DefaultButton
           text="Query"
-          disabled={!canQuery || loading}
+          disabled={!canQuery}
           onClick={ selectedERModel ? () => onQuery(selectedERModel) : undefined }
         />
         <DefaultButton
