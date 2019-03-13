@@ -5,10 +5,12 @@ import { GridAction, deleteGrid, createGrid } from "gdmn-grid";
 import { EntityQuery, IEntityQueryResponse } from "gdmn-orm";
 import { List } from "immutable";
 import { ExecuteCommand } from "./types";
+import { loadingQuery, LoadingQuery } from "../syntax/actions";
+import { ActionType } from "typesafe-actions";
 
-export const executeCommand: ExecuteCommand = (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, name: string, eq: EntityQuery) =>
+export const executeCommand: ExecuteCommand = (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | ActionType<LoadingQuery>>, name: string, eq: EntityQuery) =>
   dispatch(
-    async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, getState: () => State) => {
+    async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | ActionType<LoadingQuery>>, getState: () => State) => {
       if (getState().grid[name]) {
         dispatch(deleteGrid({ name }));
       }
@@ -18,29 +20,35 @@ export const executeCommand: ExecuteCommand = (dispatch: ThunkDispatch<State, ne
 
       const { host, port } = getState().param;
 
-      const response = await fetch(`http://${host}:${port}/data?query=${encodeURIComponent(eq.serialize())}`);
-      const responseJson = await response.json();
+      dispatch(loadingQuery(true));
+      try {
+        const response = await fetch(`http://${host}:${port}/data?query=${encodeURIComponent(eq.serialize())}`);
+        const responseJson = await response.json();
 
-      const rs = RecordSet.create({
-        name,
-        fieldDefs: sqlResult2fieldDefs(eq, responseJson),
-        data: List(responseJson.data as IDataRow[]),
-        eq
-      });
-      dispatch(createRecordSet({ name, rs }));
+        const rs = RecordSet.create({
+          name,
+          fieldDefs: sqlResult2fieldDefs(eq, responseJson),
+          data: List(responseJson.data as IDataRow[]),
+          eq
+        });
+        dispatch(createRecordSet({ name, rs }));
 
-      dispatch(createGrid({
-        name,
-        columns: rs.fieldDefs.map(fd => ({
-          name: fd.fieldName,
-          caption: [fd.caption || fd.fieldName],
-          fields: [{...fd}],
-          width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-        })),
-        leftSideColumns: 0,
-        rightSideColumns: 0,
-        hideFooter: true
-      }));
+        dispatch(createGrid({
+          name,
+          columns: rs.fieldDefs.map(fd => ({
+            name: fd.fieldName,
+            caption: [fd.caption || fd.fieldName],
+            fields: [{...fd}],
+            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+          })),
+          leftSideColumns: 0,
+          rightSideColumns: 0,
+          hideFooter: true
+        }));
+      }
+      finally {
+        dispatch(loadingQuery(false));
+      }
     }
   );
 
