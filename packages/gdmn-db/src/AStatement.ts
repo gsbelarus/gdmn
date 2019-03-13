@@ -23,6 +23,8 @@ export interface IExecuteQueryOptions<R> extends IBaseExecuteOptions<AResultSet,
  */
 export abstract class AStatement {
 
+    protected _disposed = false;
+
     private readonly _transaction: ATransaction;
     private readonly _sql: string;
     private readonly _lock = new Semaphore();
@@ -44,7 +46,9 @@ export abstract class AStatement {
         return !!this._lock.permits;
     }
 
-    abstract get disposed(): boolean;
+    get disposed(): boolean {
+        return this._disposed;
+    }
 
     public static async executeSelf<R>(selfReceiver: TExecutor<null, AStatement>,
                                        callback: TExecutor<AStatement, R>): Promise<R> {
@@ -67,7 +71,13 @@ export abstract class AStatement {
 
     /**  Releases this Statement object's database and resources */
     public async dispose(): Promise<void> {
-        await this._executeWithLock(() => this._dispose());
+        await this._executeWithLock(async () => {
+            if (this._disposed) {
+                throw new Error("Statement already disposed");
+            }
+            await this._dispose();
+            this._disposed = true;
+        });
     }
 
     /**
@@ -85,6 +95,9 @@ export abstract class AStatement {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (this._disposed) {
+            throw new Error("Statement already disposed");
+        }
         return await this._executeQuery(params, type);
     }
 
@@ -101,6 +114,9 @@ export abstract class AStatement {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (this._disposed) {
+            throw new Error("Statement already disposed");
+        }
         return await this._executeReturning(params);
     }
 
@@ -113,6 +129,9 @@ export abstract class AStatement {
     public async execute(params?: IParams): Promise<void> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (this._disposed) {
+            throw new Error("Statement already disposed");
         }
         await this._execute(params);
     }

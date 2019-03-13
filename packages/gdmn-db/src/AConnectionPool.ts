@@ -14,6 +14,8 @@ export interface IExecuteGetConnectionOptions<Opt, R> extends IBaseExecuteOption
 
 export abstract class AConnectionPool<Options, ConOptions extends IConnectionOptions = IConnectionOptions> {
 
+    protected _created = false;
+
     private readonly _lock = new Semaphore();
 
     /**
@@ -23,7 +25,9 @@ export abstract class AConnectionPool<Options, ConOptions extends IConnectionOpt
      * true if the connection pool created;
      * false if the connection pool destroyed or not created
      */
-    abstract get created(): boolean;
+    get created(): boolean {
+        return this._created;
+    }
 
     get isLock(): boolean {
         return !!this._lock.permits;
@@ -67,12 +71,24 @@ export abstract class AConnectionPool<Options, ConOptions extends IConnectionOpt
      * the type for creating connection pool
      */
     public async create(connectionOptions: ConOptions, options: Options): Promise<void> {
-        await this._executeWithLock(() => this._create(connectionOptions, options));
+        await this._executeWithLock(async () => {
+            if (this._created) {
+                throw new Error("Connection pool already created");
+            }
+            await this._create(connectionOptions, options);
+            this._created = true;
+        });
     }
 
     /** Release resources occupied by the connection pool. */
     public async destroy(): Promise<void> {
-        await this._executeWithLock(() => this._destroy());
+        await this._executeWithLock(async () => {
+            if (!this._created) {
+                throw new Error("Need to create connection pool");
+            }
+            await this._destroy();
+            this._created = false;
+        });
     }
 
     /**
@@ -84,6 +100,9 @@ export abstract class AConnectionPool<Options, ConOptions extends IConnectionOpt
     public async get(): Promise<AConnection> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (!this._created) {
+            throw new Error("Need to create connection pool");
         }
         return await this._get();
     }

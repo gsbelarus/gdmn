@@ -3,7 +3,7 @@ import {ADriver} from "./ADriver";
 import {AResult} from "./AResult";
 import {AResultSet, CursorType} from "./AResultSet";
 import {AStatement, IParams} from "./AStatement";
-import {ATransaction, ITransactionOptions} from "./ATransaction";
+import {AccessMode, ATransaction, ITransactionOptions} from "./ATransaction";
 import {IBaseExecuteOptions, TExecutor} from "./types";
 
 export interface IConnectionServer {
@@ -47,6 +47,7 @@ export abstract class AConnection {
 
     public readonly driver: ADriver;
 
+    protected _connected = false;
     protected _readTransaction?: ATransaction;
 
     private readonly _lock = new Semaphore();
@@ -56,6 +57,9 @@ export abstract class AConnection {
     }
 
     get readTransaction(): ATransaction {
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
         if (!this._readTransaction) {
             throw new Error("Read Transaction is not found");
         }
@@ -73,7 +77,9 @@ export abstract class AConnection {
      * true if the database connected;
      * false if the database was disconnected or not connected yet
      */
-    abstract get connected(): boolean;
+    get connected(): boolean {
+        return this._connected;
+    }
 
     public static async executeSelf<Opt, R>(selfReceiver: TExecutor<null, AConnection>,
                                             callback: TExecutor<AConnection, R>): Promise<R> {
@@ -116,18 +122,32 @@ export abstract class AConnection {
     }
 
     /**
-     * Create database and connect to them.
+     * Create database and connect to it.
      *
      * @param {Options} options
-     * the type for creating database and connection to them
+     * the type for creating database and connection to it
      */
     public async createDatabase(options: IConnectionOptions): Promise<void> {
-        await this._executeWithLock(() => this._createDatabase(options));
+        await this._executeWithLock(async () => {
+            if (this._connected) {
+                throw new Error("Database already connected");
+            }
+            await this._createDatabase(options);
+            await this._openReadTransaction();
+            this._connected = true;
+        });
     }
 
-    /** Drop database and disconnect from them. */
+    /** Drop database and disconnect from it. */
     public async dropDatabase(): Promise<void> {
-        await this._executeWithLock(() => this._dropDatabase());
+        await this._executeWithLock(async () => {
+            if (!this._connected) {
+                throw new Error("Need to database connection");
+            }
+            await this._closeReadTransaction();
+            await this._dropDatabase();
+            this._connected = false;
+        });
     }
 
     /**
@@ -137,12 +157,26 @@ export abstract class AConnection {
      * the type for opening database connection
      */
     public async connect(options: IConnectionOptions): Promise<void> {
-        await this._executeWithLock(() => this._connect(options));
+        await this._executeWithLock(async () => {
+            if (this._connected) {
+                throw new Error("Database already connected");
+            }
+            await this._connect(options);
+            await this._openReadTransaction();
+            this._connected = true;
+        });
     }
 
     /** Disconnect from the database. */
     public async disconnect(): Promise<void> {
-        await this._executeWithLock(() => this._disconnect());
+        await this._executeWithLock(async () => {
+            if (!this._connected) {
+                throw new Error("Need to database connection");
+            }
+            await this._closeReadTransaction();
+            await this._disconnect();
+            this._connected = false;
+        });
     }
 
     /**
@@ -158,6 +192,9 @@ export abstract class AConnection {
     public async startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
         }
         return await this._startTransaction(options);
     }
@@ -176,6 +213,10 @@ export abstract class AConnection {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
+        this._checkTransaction(transaction);
         return await this._prepare(transaction, sql);
     }
 
@@ -199,6 +240,10 @@ export abstract class AConnection {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
+        this._checkTransaction(transaction);
         return await this._executeQuery(transaction, sql, params, type);
     }
 
@@ -215,6 +260,10 @@ export abstract class AConnection {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
+        this._checkTransaction(transaction);
         return await this._execute(transaction, sql, params);
     }
 
@@ -234,6 +283,10 @@ export abstract class AConnection {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
+        this._checkTransaction(transaction);
         return await this._executeReturning(transaction, sql, params);
     }
 
@@ -253,6 +306,20 @@ export abstract class AConnection {
             return await callback();
         } finally {
             this._lock.release();
+        }
+    }
+
+    protected async _openReadTransaction(): Promise<void> {
+        if (this._readTransaction) {
+            throw new Error("Read transaction already opened");
+        }
+        this._readTransaction = await this._startTransaction({accessMode: AccessMode.READ_ONLY});
+    }
+
+    protected async _closeReadTransaction(): Promise<void> {
+        if (this._readTransaction) {
+            await this._readTransaction.commit();
+            this._readTransaction = undefined;
         }
     }
 
@@ -278,4 +345,13 @@ export abstract class AConnection {
     protected abstract async _executeReturning(transaction: ATransaction,
                                                sql: string,
                                                params?: IParams): Promise<AResult>;
+
+    private _checkTransaction(transaction: ATransaction): void {
+        if (transaction.connection !== this) {
+            throw new Error("Invalid transaction");
+        }
+        if (transaction.finished) {
+            throw new Error("Need to open transaction");
+        }
+    }
 }

@@ -2,7 +2,7 @@ import {Attachment as NativeConnection} from "node-firebird-native-api";
 import {AConnection, IConnectionOptions} from "../AConnection";
 import {CursorType} from "../AResultSet";
 import {IParams} from "../AStatement";
-import {AccessMode, ATransaction, ITransactionOptions} from "../ATransaction";
+import {ITransactionOptions} from "../ATransaction";
 import {Client} from "./Client";
 import {Driver} from "./Driver";
 import {Result} from "./Result";
@@ -24,27 +24,24 @@ export class Connection extends AConnection {
     }
 
     get connected(): boolean {
-        if (this.handler) {
-            // this.client.statusActionSync((status) => this.handler!.pingSync(status));
-            try {
-                this.client.statusActionSync((status) => {  // hack for checking the lost connections
-                    const infoReq = new Uint8Array([blobInfo.totalLength]);
-                    const infoRet = new Uint8Array(20);
-                    this.handler!.getInfoSync(status, infoReq.byteLength, infoReq, infoRet.byteLength, infoRet);
-                });
-            } catch (error) {
-                return false;
+        if (super.connected) {
+            if (this.handler) {
+                // this.client.statusActionSync((status) => this.handler!.pingSync(status));
+                try {
+                    this.client.statusActionSync((status) => {  // hack for checking the lost connections
+                        const infoReq = new Uint8Array([blobInfo.totalLength]);
+                        const infoRet = new Uint8Array(20);
+                        this.handler!.getInfoSync(status, infoReq.byteLength, infoReq, infoRet.byteLength, infoRet);
+                    });
+                } catch (error) {
+                    this._connected = false;
+                    return false;
+                }
+                return true;
             }
-            return true;
+            return false;
         }
         return false;
-    }
-
-    get readTransaction(): ATransaction {
-        if (!this.handler) {
-            throw new Error("Need database connection");
-        }
-        return super.readTransaction;
     }
 
     private static _optionsToUri(options: IConnectionOptions): string {
@@ -61,10 +58,6 @@ export class Connection extends AConnection {
     }
 
     protected async _createDatabase(options: IConnectionOptions): Promise<void> {
-        if (this.handler) {
-            throw new Error("Database already connected");
-        }
-
         await this.client.create();
         this.handler = await this.client.statusAction((status) => (
             createDpb(options, this.client.client!.util, status, async (buffer, length) => {
@@ -72,22 +65,9 @@ export class Connection extends AConnection {
                 return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
             })
         ));
-
-        if (options.readTransaction) {
-            this._readTransaction = await this.startTransaction({accessMode: AccessMode.READ_ONLY});
-        }
     }
 
     protected async _dropDatabase(): Promise<void> {
-        if (!this.handler) {
-            throw new Error("Need database connection");
-        }
-
-        if (this._readTransaction) {
-            await this._readTransaction.commit();
-            this._readTransaction = undefined;
-        }
-
         if (this.transactionsCount > 0) {
             throw new Error("Not all transactions finished");
         }
@@ -98,10 +78,6 @@ export class Connection extends AConnection {
     }
 
     protected async _connect(options: IConnectionOptions): Promise<void> {
-        if (this.handler) {
-            throw new Error("Database already connected");
-        }
-
         await this.client.create();
         this.handler = await this.client.statusAction((status) => (
             createDpb(options, this.client.client!.util, status, async (buffer, length) => {
@@ -109,22 +85,9 @@ export class Connection extends AConnection {
                 return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
             })
         ));
-
-        if (options.readTransaction) {
-            this._readTransaction = await this.startTransaction({accessMode: AccessMode.READ_ONLY});
-        }
     }
 
     protected async _disconnect(): Promise<void> {
-        if (!this.handler) {
-            throw new Error("Need database connection");
-        }
-
-        if (this._readTransaction) {
-            await this._readTransaction.commit();
-            this._readTransaction = undefined;
-        }
-
         if (this.transactionsCount > 0) {
             throw new Error("Not all transactions finished");
         }
@@ -135,10 +98,6 @@ export class Connection extends AConnection {
     }
 
     protected async _startTransaction(options?: ITransactionOptions): Promise<Transaction> {
-        if (!this.handler) {
-            throw new Error("Need database connection");
-        }
-
         return await Transaction.create(this, options);
     }
 

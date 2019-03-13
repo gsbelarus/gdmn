@@ -94,10 +94,6 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
     }
 
     protected async _create(dbOptions: IConnectionOptions, options: ICommonConnectionPoolOptions): Promise<void> {
-        if (this._connectionPool) {
-            throw new Error("Connection pool already created");
-        }
-
         this._connectionPool = createPool({
             create: async () => {
                 if (!this._connectionPool) {
@@ -121,10 +117,6 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
     }
 
     protected async _destroy(): Promise<void> {
-        if (!this._connectionPool) {
-            throw new Error("Connection pool need created");
-        }
-
         // disconnect all borrowed connections
         const connections = Array.from((this._connectionPool as any)._allObjects).map((item: any) => item.obj);
         const connectedConnections = connections.filter((connection: CommonConnectionProxy) => connection.connected);
@@ -134,23 +126,19 @@ export class CommonConnectionPool extends AConnectionPool<ICommonConnectionPoolO
             await Promise.all(promises);
         }
 
-        await this._connectionPool.drain();
+        await this._connectionPool!.drain();
 
         // workaround; Wait until quantity minimum connections is established
         await Promise.all(Array.from((this._connectionPool as any)._factoryCreateOperations)
             .map((promise: any) => promise.then(null, null)));
 
-        await this._connectionPool.clear();
-        this._connectionPool.removeListener("factoryCreateError", console.error);
-        this._connectionPool.removeListener("factoryDestroyError", console.error);
+        await this._connectionPool!.clear();
+        this._connectionPool!.removeListener("factoryCreateError", console.error);
+        this._connectionPool!.removeListener("factoryDestroyError", console.error);
         this._connectionPool = undefined;
     }
 
     protected async _get(): Promise<AConnection> {
-        if (!this._connectionPool) {
-            throw new Error("Connection pool need created");
-        }
-
-        return await this._connectionPool.acquire();
+        return await this._connectionPool!.acquire();
     }
 }

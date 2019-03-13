@@ -43,10 +43,6 @@ export class Statement extends AStatement {
         return super.transaction as Transaction;
     }
 
-    get disposed(): boolean {
-        return !this.source;
-    }
-
     public static async prepare(transaction: Transaction,
                                 sql: string): Promise<Statement> {
         const paramsAnalyzer = new CommonParamsAnalyzer(sql, Statement.EXCLUDE_PATTERNS,
@@ -73,16 +69,12 @@ export class Statement extends AStatement {
     }
 
     protected async _dispose(): Promise<void> {
-        if (!this.source) {
-            throw new Error("Statement already disposed");
-        }
-
         if (this.resultSetsCount > 0) {
             throw new Error("Not all resultSets closed");
         }
 
-        this.source.outMetadata.releaseSync();
-        this.source.inMetadata.releaseSync();
+        this.source!.outMetadata.releaseSync();
+        this.source!.inMetadata.releaseSync();
 
         await this.transaction.connection.client.statusAction((status) => this.source!.handler.freeAsync(status));
         this.source = undefined;
@@ -90,26 +82,14 @@ export class Statement extends AStatement {
     }
 
     protected async _executeQuery(params?: IParams, type?: CursorType): Promise<ResultSet> {
-        if (!this.source) {
-            throw new Error("Statement already disposed");
-        }
-
         return ResultSet.open(this, this._paramsAnalyzer.prepareParams(params), type);
     }
 
     protected async _executeReturning(params?: IParams): Promise<Result> {
-        if (!this.source) {
-            throw new Error("Statement already disposed");
-        }
-
         return Result.get(this, this._paramsAnalyzer.prepareParams(params));
     }
 
     protected async _execute(params?: IParams): Promise<void> {
-        if (!this.source) {
-            throw new Error("Statement already disposed");
-        }
-
         await this.transaction.connection.client.statusAction(async (status) => {
             const {inMetadata, outMetadata, inDescriptors}: IStatementSource = this.source!;
             const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));

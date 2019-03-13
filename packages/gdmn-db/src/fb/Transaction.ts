@@ -18,10 +18,6 @@ export class Transaction extends ATransaction {
         return super.connection as Connection;
     }
 
-    get finished(): boolean {
-        return !this.handler;
-    }
-
     public static async create(
         connection: Connection,
         options: ITransactionOptions = ATransaction.DEFAULT_OPTIONS
@@ -36,10 +32,6 @@ export class Transaction extends ATransaction {
     }
 
     protected async _commit(): Promise<void> {
-        if (!this.handler) {
-            throw new Error("Need to open transaction");
-        }
-
         if (this.statementsCount > 0) {
             throw new Error("Not all statements disposed");
         }
@@ -50,17 +42,10 @@ export class Transaction extends ATransaction {
     }
 
     protected async _commitRetaining(): Promise<void> {
-        if (!this.handler) {
-            throw new Error("Need to open transaction");
-        }
         await this.connection.client.statusAction((status) => this.handler!.commitRetainingAsync(status));
     }
 
     protected async _rollback(): Promise<void> {
-        if (!this.handler) {
-            throw new Error("Need to open transaction");
-        }
-
         if (this.statementsCount > 0) {
             throw new Error("Not all statements disposed");
         }

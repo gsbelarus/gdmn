@@ -32,6 +32,8 @@ export abstract class ATransaction {
     protected readonly _connection: AConnection;
     protected readonly _options: ITransactionOptions;
 
+    protected _finished = false;
+
     private readonly _lock = new Semaphore();
 
     protected constructor(connection: AConnection, options?: ITransactionOptions) {
@@ -58,7 +60,9 @@ export abstract class ATransaction {
      * @returns {boolean}
      * true if the transaction was commited or rollbacked
      */
-    abstract get finished(): boolean;
+    get finished(): boolean {
+        return this._finished;
+    }
 
     public static async executeSelf<R>(selfReceiver: TExecutor<null, ATransaction>,
                                        callback: TExecutor<ATransaction, R>): Promise<R> {
@@ -78,17 +82,34 @@ export abstract class ATransaction {
 
     /** Commit the transaction. */
     public async commit(): Promise<void> {
-        await this._executeWithLock(() => this._commit());
+        await this._executeWithLock(async () => {
+            if (this._finished) {
+                throw new Error("Transaction already finished");
+            }
+            await this._commit();
+            this._finished = true;
+        });
     }
 
     /** Commit retaining the transaction. */
     public async commitRetaining(): Promise<void> {
-        await this._executeWithLock(() => this._commitRetaining());
+        await this._executeWithLock(async () => {
+            if (this._finished) {
+                throw new Error("Transaction already finished");
+            }
+            await this._commitRetaining();
+        });
     }
 
     /** Rollback the transaction. */
     public async rollback(): Promise<void> {
-        await this._executeWithLock(() => this._rollback());
+        await this._executeWithLock(async () => {
+            if (this._finished) {
+                throw new Error("Transaction already finished");
+            }
+            await this._rollback();
+            this._finished = true;
+        });
     }
 
     protected async _executeWithLock<R>(callback: TExecutor<void, R>): Promise<R> {

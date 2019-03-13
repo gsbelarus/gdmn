@@ -66,19 +66,19 @@ export class CommonConnectionProxy extends AConnection {
         this._connection = undefined;
     }
 
-    protected async _createDatabase(options: IConnectionOptions): Promise<void> {
+    public async createDatabase(options: IConnectionOptions): Promise<void> {
         throw new Error("Invalid operation for connection from the pool");
     }
 
-    protected async _dropDatabase(): Promise<void> {
+    public async dropDatabase(): Promise<void> {
         throw new Error("Invalid operation for connection from the pool");
     }
 
-    protected async _connect(options: IConnectionOptions): Promise<void> {
+    public async connect(options: IConnectionOptions): Promise<void> {
         throw new Error("Invalid operation for connection from the pool");
     }
 
-    protected async _disconnect(): Promise<void> {
+    public async disconnect(): Promise<void> {
         if (!this._connection) {
             throw new Error("Need database connection");
         }
@@ -86,6 +86,22 @@ export class CommonConnectionProxy extends AConnection {
         if (this._pool.isBorrowedResource(this)) {
             await this._pool.release(this);
         }
+    }
+
+    protected async _createDatabase(options: IConnectionOptions): Promise<void> {
+        // never call
+    }
+
+    protected async _dropDatabase(): Promise<void> {
+        // never call
+    }
+
+    protected async _connect(options: IConnectionOptions): Promise<void> {
+        // never call
+    }
+
+    protected async _disconnect(): Promise<void> {
+        // never call
     }
 
     protected async _startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
