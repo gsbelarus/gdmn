@@ -8,8 +8,6 @@ import { ThunkDispatch } from 'redux-thunk';
 import { ERModelAction } from '../ermodel/reducer';
 import { RusPhrase } from 'gdmn-nlp';
 import { RecordSetAction } from 'gdmn-recordset';
-import { executeCommand as executeGDMNCommand } from '../engine/gdmnEngine';
-import { executeCommand as executeNBRBCommand } from '../engine/nbrbEngine';
 import {GridAction} from 'gdmn-grid';
 
 export const SyntaxBoxContainer = connect(
@@ -36,16 +34,8 @@ export const SyntaxBoxContainer = connect(
     onQuery: (erModelName: string) => dispatch(
       async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | SyntaxAction>, getState: () => State) => {
         const ermodel = getState().ermodel[erModelName];
-
-        if (!ermodel || !ermodel.command || !ermodel.command![0] || !ermodel.executeCommand) return;
-
-        dispatch(syntaxActions.loadingQuery(true));
-
-        try {
+        if (ermodel && ermodel.command && ermodel.command![0] && ermodel.executeCommand) {
           ermodel.executeCommand(dispatch, erModelName, ermodel.command![0].payload);
-        }
-        finally {
-          dispatch(syntaxActions.loadingQuery(false));
         }
       }
     ),
@@ -53,9 +43,6 @@ export const SyntaxBoxContainer = connect(
      dispatch(syntaxActions.clearSyntaxText());
      dispatch(erModelActions.clearCommand({ name, clear: true }));
     },
-    onLoading: (value: boolean) => {
-      dispatch(syntaxActions.loadingQuery(value));
-    }
   })
 )(SyntaxBox);
 

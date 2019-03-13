@@ -8,6 +8,10 @@ import { Dispatch } from 'redux';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, TColumnResizeEvent, resizeColumn, GridAction, applySortDialog, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent, TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent } from 'gdmn-grid';
 import { sortRecordSet, RecordSetAction, selectRow, setAllRowsSelected, setRecordSet, toggleGroup } from 'gdmn-recordset';
+import { ICommand } from 'gdmn-nlp-agent';
+import { ERModel } from 'gdmn-orm';
+import { ExecuteCommand } from '../engine/types';
+import { loadingQuery, LoadingQuery } from '../syntax/actions';
 
 export const ChatBoxContainer = connect(
   (state: State) => ({
@@ -57,12 +61,10 @@ export const ChatBoxContainer = connect(
       toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
     ),
     addNLPMessage: (text: string) => dispatch(
-      (dispatch: Dispatch<NLPDialogAction>, getState: () => State) => {
+      (dispatch: Dispatch<any>, getState: () => State) => {
         dispatch(addNLPItem({ item: { who: 'me', text } }));
 
         let parsedText: ParsedText | undefined = undefined;
-        let command;
-        let errors: string[] = [];
 
         try {
           parsedText = parsePhrase(text.trim());
@@ -71,11 +73,18 @@ export const ChatBoxContainer = connect(
           dispatch(addNLPItem({ item: { who: 'it', text: e.message } }));
         }
 
+        let command: ICommand[] | undefined = undefined;
+        let erModelName;
+        let executeCommand: ExecuteCommand | undefined = undefined;
+        let errors: string[] = [];
+
         if (parsedText && parsedText.phrase instanceof RusPhrase) {
           Object.entries(getState().ermodel).some( ([n, m]) => {
             if (m && !m.loading && m.erModel && m.erTranslatorRU) {
               try {
                 command = m.erTranslatorRU.process(parsedText!.phrase as RusPhrase);
+                erModelName = n;
+                executeCommand = m.executeCommand;
                 return true;
               }
               catch (e) {
@@ -85,6 +94,10 @@ export const ChatBoxContainer = connect(
 
             return false;
           });
+        }
+
+        if (erModelName && command && command[0] && executeCommand) {
+          executeCommand!(dispatch, erModelName, command![0].payload);
         }
 
         if (command) {
