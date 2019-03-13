@@ -8,6 +8,7 @@ export type NLPDialogAction = ActionType<typeof actions>;
 export interface INLPDialogState {
   items: NLPDialog;
   parsedText?: ParsedText;
+  recordSetName?: string;
 };
 
 const initialState = {

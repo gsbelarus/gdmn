@@ -7,3 +7,9 @@
   width: 340px;
   height: 93vh;
 }
+
+.NLPDialogResultColumn {
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+}

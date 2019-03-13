@@ -17,6 +17,7 @@ type TNLPDialogScrollProps = INLPDialogScrollStateProps & INLPDialogScrollAction
 
 interface INLPDialogScrollState {
   text: string;
+  prevText: string;
   showFrom: number;
   showTo: number;
   partialOK: boolean;
@@ -36,6 +37,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
     this.state = {
       text: '',
+      prevText: '',
       showFrom: -1,
       showTo: -1,
       partialOK: true,
@@ -52,23 +54,37 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onInputPressEnter = this.onInputPressEnter.bind(this);
+    this.onInputArrowUp = this.onInputArrowUp.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
   }
 
   private onInputPressEnter(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (!(e.key === 'Enter' && this.state.text.trim())) return;
+    const { text } = this.state;
+    const trimText = text.trim();
 
-    const { addNLPMessage } = this.props;
-    addNLPMessage(this.state.text.trim());
+    if (e.key === 'Enter' && trimText) {
+      const { addNLPMessage } = this.props;
+      addNLPMessage(trimText);
 
-    this.setState({
-      text: '',
-      showFrom: -1,
-      showTo: -1,
-      partialOK: true,
-      recalc: true
-    });
-    e.preventDefault();
+      this.setState({
+        text: '',
+        prevText: trimText,
+        showFrom: -1,
+        showTo: -1,
+        partialOK: true,
+        recalc: true
+      });
+      e.preventDefault();
+    }
+  }
+
+  private onInputArrowUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    const { text, prevText } = this.state;
+    const trimText = text.trim();
+
+    if (e.key === 'ArrowUp' && !trimText) {
+      this.setState({ text: prevText });
+    }
   }
 
   private onInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -340,6 +356,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
               spellCheck={false}
               value={this.state.text}
               onKeyPress={this.onInputPressEnter}
+              onKeyDown={this.onInputArrowUp}
               onChange={this.onInputChange}
             />
           </div>

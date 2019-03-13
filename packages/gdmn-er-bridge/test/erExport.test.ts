@@ -28,8 +28,9 @@ describe("ERExport", () => {
   });
 
   it("erExport", async () => {
-    const serialized = erModel.serialize();
-    const deserialized = deserializeERModel(serialized);
+    const withAdapters = true;
+    const serialized = erModel.serialize(withAdapters);
+    const deserialized = deserializeERModel(serialized, withAdapters);
 
     if (fs.existsSync("c:/temp/test")) {
       fs.writeFileSync("c:/temp/test/ermodel.json",
@@ -43,12 +44,12 @@ describe("ERExport", () => {
       console.log("Serialized ERModel has been written to c:/temp/test/ermodel.serialized.json");
 
       fs.writeFileSync("c:/temp/test/ermodel.test.json",
-        JSON.stringify(deserialized.serialize(), undefined, 2)
+        JSON.stringify(deserialized.serialize(withAdapters), undefined, 2)
       );
       console.log("Deserialized ERModel has been written to c:/temp/test/ermodel.test.json");
     }
 
-    expect(serialized).toEqual(deserialized.serialize());
+    expect(JSON.stringify(serialized)).toEqual(JSON.stringify(deserialized.serialize(withAdapters)));
 
     /**
      * Проверка на то, что GD_PLACE древовидная таблица
