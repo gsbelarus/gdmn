@@ -22,7 +22,7 @@ import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
   loadingMessage?: string;
-  errorMessage?: string;
+  errorMessage?: string[];
   lostConnectWarnOpened: boolean;
   dispatch: Dispatch<any>;
 };
@@ -34,10 +34,9 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 export class GdmnView extends Component<IGdmnViewProps, {}> {
   public render() {
     const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened } = this.props;
-
     if (!match) return null;
 
-    const topAreaHeight = 56 + 36 + (errorMessage ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
+    const topAreaHeight = 56 + 36 + ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
 
     return (
       <>
@@ -103,14 +102,14 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
             : undefined
           }
           {
-            errorMessage ?
+            (errorMessage && errorMessage.length > 0) ?
               <MessageBar
                 messageBarType={MessageBarType.error}
                 isMultiline={false}
                 onDismiss={() => dispatch(rootActions.hideMessage())}
                 dismissButtonAriaLabel="Close"
               >
-                {errorMessage}
+                {errorMessage.join(', ')}
               </MessageBar>
             : undefined
           }

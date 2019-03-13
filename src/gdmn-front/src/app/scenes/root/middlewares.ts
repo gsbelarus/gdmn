@@ -9,7 +9,7 @@ const errorMiddleware: Middleware = ({ dispatch, getState }) => next => action =
     /* support not fsa-compliant redux actions (without action.error) see: piotrwitek/typesafe-actions#52 */
     (action.error || action.payload instanceof Error)
   ) {
-    let errorMsg = (<Error>action.payload).message;
+    //let errorMsg = (<Error>action.payload).message;
 
     // if (action.payload instanceof SyntaxError) {
     //   // todo: custom response parse error
@@ -18,15 +18,22 @@ const errorMiddleware: Middleware = ({ dispatch, getState }) => next => action =
     // }
     // todo: on server UnauthorizedError -> signOut
 
-    if (selectRootState(getState()).errorMsgBarText !== '') {
-      /* snackbar opened */
-      if (errorMsg !== selectRootState(getState()).errorMsgBarText) {
-        errorMsg += '  \n  ' + selectRootState(getState()).errorMsgBarText;
-      }
-      selectRootState(getState()).errorMsgBarText = errorMsg; // todo action
-    } else {
-      dispatch(rootActions.showMessage(errorMsg || action.type));
-    }
+    // if (selectRootState(getState()).errorMsgBarText !== '') {
+    //   /* snackbar opened */
+    //   if (errorMsg !== selectRootState(getState()).errorMsgBarText) {
+    //     errorMsg += '  \n  ' + selectRootState(getState()).errorMsgBarText;
+    //   }
+    //   selectRootState(getState()).errorMsgBarText = errorMsg; // todo action
+    // } else {
+    //   dispatch(rootActions.showMessage(errorMsg || action.type));
+    // }
+
+    const errorMsg = action.payload instanceof Error
+      ? (action.payload as Error).message
+      : typeof action.error === 'string' && action.error
+      ? action.error
+      : action.type;
+    dispatch(rootActions.showMessage(errorMsg));
   }
 
   return next(action);

@@ -3,14 +3,14 @@ import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 
 export interface IRootState {
   // refererPath?: string;
-  errorMsgBarText?: string;
+  errorMsgBarText: string[];
   logItems: { message: string }[];
   lostConnectWarnOpened: boolean;
   // disconnectedMode: boolean;
 }
 
 const initialState: IRootState = {
-  errorMsgBarText: '',
+  errorMsgBarText: [],
   logItems: [],
   lostConnectWarnOpened: false
   // disconnectedMode: false
@@ -28,13 +28,13 @@ export function reducer(state: IRootState = initialState, action: TRootActions) 
     case getType(rootActions.showMessage): {
       return {
         ...state,
-        errorMsgBarText: action.payload
+        errorMsgBarText: [...state.errorMsgBarText, action.payload]
       };
     }
     case getType(rootActions.hideMessage): {
       return {
         ...state,
-        errorMsgBarText: ''
+        errorMsgBarText: []
       };
     }
     case getType(rootActions.addStompLogMessage): {
