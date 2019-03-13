@@ -10,6 +10,7 @@
 
 .NLPDialogResultColumn {
   height: 93vh;
+  width: calc(100vw - 360px);
   display: flex;
   flex-direction: column;
 }

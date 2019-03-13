@@ -5,7 +5,7 @@ import { INLPDialogState } from "./reducer";
 import { PhraseSyntaxTree } from "../components/PhraseSyntaxTree";
 import { RecordSet } from "gdmn-recordset";
 import { GridComponentState, TEventCallback, TCancelSortDialogEvent, TApplySortDialogEvent, TColumnResizeEvent, TColumnMoveEvent, TSelectRowEvent,
-  TSelectAllRowsEvent, TSetCursorPosEvent, TSortEvent, TToggleGroupEvent } from "gdmn-grid";
+  TSelectAllRowsEvent, TSetCursorPosEvent, TSortEvent, TToggleGroupEvent, GDMNGrid } from "gdmn-grid";
 
 export interface IChatBoxProps {
   nlpDialog: INLPDialogState;
@@ -25,7 +25,7 @@ export interface IChatBoxProps {
 
 export class ChatBox extends Component<IChatBoxProps, {}> {
   render() {
-    const { nlpDialog, addNLPMessage } = this.props;
+    const { nlpDialog, addNLPMessage, rs, grid } = this.props;
     const { parsedText } = nlpDialog;
 
     return (
@@ -36,6 +36,10 @@ export class ChatBox extends Component<IChatBoxProps, {}> {
         <div className="NLPDialogResultColumn">
           {
             parsedText && <PhraseSyntaxTree parsedText={parsedText} />
+          }
+          {
+            rs && grid &&
+            <GDMNGrid {...grid} {...this.props}/>
           }
         </div>
       </div>
