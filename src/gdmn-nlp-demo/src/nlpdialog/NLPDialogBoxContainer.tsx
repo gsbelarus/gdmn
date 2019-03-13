@@ -9,9 +9,7 @@ import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, TColumnResizeEvent, resizeColumn, GridAction, applySortDialog, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent, TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent } from 'gdmn-grid';
 import { sortRecordSet, RecordSetAction, selectRow, setAllRowsSelected, setRecordSet, toggleGroup } from 'gdmn-recordset';
 import { ICommand } from 'gdmn-nlp-agent';
-import { ERModel } from 'gdmn-orm';
 import { ExecuteCommand } from '../engine/types';
-import { loadingQuery, LoadingQuery } from '../syntax/actions';
 
 export const ChatBoxContainer = connect(
   (state: State) => ({
@@ -74,7 +72,7 @@ export const ChatBoxContainer = connect(
         }
 
         let command: ICommand[] | undefined = undefined;
-        let erModelName;
+        let erModelName: string | undefined = undefined;
         let executeCommand: ExecuteCommand | undefined = undefined;
         let errors: string[] = [];
 
@@ -88,7 +86,7 @@ export const ChatBoxContainer = connect(
                 return true;
               }
               catch (e) {
-                errors.push(e.message);
+                errors.push(`ermodel ${n}: ${e.message}`);
               }
             }
 
@@ -97,11 +95,19 @@ export const ChatBoxContainer = connect(
         }
 
         if (erModelName && command && command[0] && executeCommand) {
-          executeCommand!(dispatch, erModelName, command![0].payload);
-        }
+          executeCommand!(dispatch, getState, erModelName, command![0].payload)
+          .then(
+            () => {
+              const recordSetName = erModelName!;
+              const rs = getState().recordSet[recordSetName];
 
-        if (command) {
-          dispatch(addNLPItem({ item: { who: 'it', text: 'готово!' }, parsedText }));
+              if (rs) {
+                dispatch(addNLPItem({ item: { who: 'it', text: `загружено записей: ${rs.size}` }, parsedText, recordSetName }));
+              } else {
+                dispatch(addNLPItem({ item: { who: 'it', text: 'готово' }, parsedText }));
+              }
+            }
+          )
         } else {
           errors.forEach( text => dispatch(addNLPItem({ item: { who: 'it', text } })) )
         }

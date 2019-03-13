@@ -18,16 +18,17 @@ const initialState = {
 export function reducer(state: INLPDialogState = initialState, action: NLPDialogAction): INLPDialogState {
   switch (action.type) {
     case getType(actions.clearNLPDialog): {
-      return initialState;
+      return {...initialState};
     }
 
     case getType(actions.addNLPItem): {
 
-      const { item, parsedText } = action.payload;
+      const { item, parsedText, recordSetName } = action.payload;
 
       return {
         ...state,
         parsedText,
+        recordSetName,
         items: [...state.items, item]
       }
     }

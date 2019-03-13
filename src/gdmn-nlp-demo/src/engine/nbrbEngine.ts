@@ -1,46 +1,46 @@
-import { ThunkDispatch } from "redux-thunk";
 import { State } from "../store";
 import { RecordSetAction, deleteRecordSet, RecordSet, IDataRow, createRecordSet, TFieldType, IFieldDef } from "gdmn-recordset";
 import { GridAction, deleteGrid, createGrid } from "gdmn-grid";
 import { EntityQuery } from "gdmn-orm";
 import { List } from "immutable";
 import { ExecuteCommand } from "./types";
+import { Dispatch } from "redux";
 
-export const executeCommand: ExecuteCommand = (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, name: string, eq: EntityQuery) =>
-  dispatch(
-    async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, getState: () => State) => {
-      if (getState().grid[name]) {
-        dispatch(deleteGrid({ name }));
+export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RecordSetAction | GridAction>, getState: () => State, name: string, eq: EntityQuery) => {
+  if (getState().grid[name]) {
+    dispatch(deleteGrid({ name }));
+  }
+
+  if (getState().recordSet[name]) {
+    dispatch(deleteRecordSet({ name }));
+  }
+
+  let year = new Date().getFullYear();
+  let month = new Date().getMonth() + 1;
+  let day = new Date().getDate();
+
+  if (eq.options && eq.options.where && eq.options.where[0] && eq.options!.where![0]!.equals && eq.options!.where![0]!.equals[0]) {
+    if (eq.link.alias === eq.options!.where![0]!.equals![0].alias) {
+      if (eq.options!.where![0]!.equals![0].attribute.name === 'Date') {
+        const dateSplit = (eq.options!.where![0]!.equals![0].value as string).split('.');
+        day = isNaN(parseInt(dateSplit[0])) ? day : parseInt(dateSplit[0]);
+        month = isNaN(parseInt(dateSplit[1])) ? month : parseInt(dateSplit[1]);
+        year = isNaN(parseInt(dateSplit[2])) ? year : parseInt(dateSplit[2]);
       }
-      if (getState().recordSet[name]) {
-        dispatch(deleteRecordSet({ name }));
-      }
+    }
+  }
 
-      let year = new Date().getFullYear();
-      let month = new Date().getMonth() + 1;
-      let day = new Date().getDate();
-
-      if (eq.options && eq.options.where && eq.options.where[0] && eq.options!.where![0]!.equals && eq.options!.where![0]!.equals[0]) {
-        if (eq.link.alias === eq.options!.where![0]!.equals![0].alias) {
-          if (eq.options!.where![0]!.equals![0].attribute.name === 'Date') {
-            const dateSplit = (eq.options!.where![0]!.equals![0].value as string).split('.');
-            day = isNaN(parseInt(dateSplit[0])) ? day : parseInt(dateSplit[0]);
-            month = isNaN(parseInt(dateSplit[1])) ? month : parseInt(dateSplit[1]);
-            year = isNaN(parseInt(dateSplit[2])) ? year : parseInt(dateSplit[2]);
-          }
-        }
-      }
-
-      const response = await fetch(`http://www.nbrb.by/API/ExRates/Rates?onDate=${year.toString()}-${month.toString()}-${day.toString()}&Periodicity=0`);
-      const responseJson = await response.json() as IJSONResult;
-
+  return (
+    fetch(`http://www.nbrb.by/API/ExRates/Rates?onDate=${year.toString()}-${month.toString()}-${day.toString()}&Periodicity=0`)
+    .then( response => response.json() as IJSONResult )
+    .then( responseJson => {
       const rs = RecordSet.create({
         name,
         fieldDefs: jsonResult2fieldDefs(eq, responseJson),
         data: List(responseJson as IDataRow[]),
         eq: eq
       });
-      dispatch(createRecordSet({name: rs.name, rs}));
+      dispatch(createRecordSet({name, rs}));
 
       const getMaxLength = (fn: string) => {
         let len = 0;
@@ -64,8 +64,10 @@ export const executeCommand: ExecuteCommand = (dispatch: ThunkDispatch<State, ne
         rightSideColumns: 0,
         hideFooter: true
       }));
-    }
+    })
+    .catch(console.log)
   );
+};
 
 interface IJSONResult {
   [name: string]: any

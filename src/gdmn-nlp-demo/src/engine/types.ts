@@ -1,9 +1,9 @@
-import { ThunkDispatch } from "redux-thunk";
 import { State } from "../store";
 import { RecordSetAction } from "gdmn-recordset";
 import { GridAction } from "gdmn-grid";
 import { EntityQuery } from "gdmn-orm";
 import { LoadingQuery } from "../syntax/actions";
 import { ActionType } from "typesafe-actions";
+import { Dispatch } from "redux";
 
-export type ExecuteCommand = (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | ActionType<LoadingQuery>>, name: string, eq: EntityQuery) => void;
+export type ExecuteCommand = (dispatch: Dispatch<RecordSetAction | GridAction | ActionType<LoadingQuery>>, getState: () => State, name: string, eq: EntityQuery) => Promise<any>;

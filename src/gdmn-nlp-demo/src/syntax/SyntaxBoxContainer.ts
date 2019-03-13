@@ -35,7 +35,7 @@ export const SyntaxBoxContainer = connect(
       async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | SyntaxAction>, getState: () => State) => {
         const ermodel = getState().ermodel[erModelName];
         if (ermodel && ermodel.command && ermodel.command![0] && ermodel.executeCommand) {
-          ermodel.executeCommand(dispatch, erModelName, ermodel.command![0].payload);
+          ermodel.executeCommand(dispatch, getState, erModelName, ermodel.command![0].payload);
         }
       }
     ),
