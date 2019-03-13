@@ -4,8 +4,9 @@ import { RecordSetAction, deleteRecordSet, RecordSet, IDataRow, createRecordSet,
 import { GridAction, deleteGrid, createGrid } from "gdmn-grid";
 import { EntityQuery } from "gdmn-orm";
 import { List } from "immutable";
+import { ExecuteCommand } from "./types";
 
-export const executeCommand = (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, name: string, eq: EntityQuery) =>
+export const executeCommand: ExecuteCommand = (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, name: string, eq: EntityQuery) =>
   dispatch(
     async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction>, getState: () => State) => {
       if (getState().grid[name]) {

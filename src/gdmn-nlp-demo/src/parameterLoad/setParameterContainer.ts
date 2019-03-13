@@ -6,6 +6,7 @@ import * as actions from './actions';
 import { load } from '../appAction';
 import { ThunkDispatch } from 'redux-thunk';
 import { ERModelAction } from '../ermodel/reducer';
+import { executeCommand } from '../engine/gdmnEngine';
 
 export const SetParameterContainer = connect(
   (state: State) => ({
@@ -15,9 +16,9 @@ export const SetParameterContainer = connect(
   }),
   (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>) => ({
     onLoadByParameter: (host: string, port: string, isReadFile: boolean) =>
-      isReadFile 
-        ? dispatch(load(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db'))
-        : dispatch(load(`http://${host}:${port}/ermodel`, 'db')),
+      isReadFile
+        ? dispatch(load(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db', executeCommand))
+        : dispatch(load(`http://${host}:${port}/ermodel`, 'db', executeCommand)),
     onParametersLoading: (host: string, port: string, isReadFile: boolean) =>
       dispatch(actions.parametersLoading( {host, port, isReadFile} )),
   })

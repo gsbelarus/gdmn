@@ -1,6 +1,7 @@
 import { createAction } from 'typesafe-actions';
 import { ERModel } from 'gdmn-orm';
 import { RusPhrase } from 'gdmn-nlp';
+import { ExecuteCommand } from '../engine/types';
 
 export const setERModelLoading = createAction('ERMODEL/SET_LOADING', resolve => {
     return (param: { name: string, loading: boolean }) => resolve(param);
@@ -9,7 +10,7 @@ export const setERModelLoading = createAction('ERMODEL/SET_LOADING', resolve => 
 export type SetERModelLoading = typeof setERModelLoading;
 
 export const loadERModel = createAction('ERMODEL/LOAD', resolve => {
-    return (param: { name: string, erModel?: ERModel }) => resolve(param);
+    return (param: { name: string, erModel: ERModel, executeCommand: ExecuteCommand }) => resolve(param);
   });
 
 export type LoadERModel = typeof loadERModel;

@@ -2,6 +2,7 @@ import { getType, ActionType } from 'typesafe-actions';
 import * as actions from './actions';
 import { ERModel, IERModel } from 'gdmn-orm';
 import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
+import { ExecuteCommand } from '../engine/types';
 
 export type ERModelAction = ActionType<typeof actions>;
 
@@ -11,6 +12,7 @@ export interface IERModelState {
   erTranslatorRU?: ERTranslatorRU;
   command?: ICommand[];
   commandError?: string;
+  executeCommand?: ExecuteCommand;
 };
 
 export interface IERModels {
@@ -20,13 +22,14 @@ export interface IERModels {
 export function reducer(state: IERModels = {}, action: ERModelAction): IERModels {
   switch (action.type) {
     case getType(actions.loadERModel): {
-      const { name, erModel } = action.payload;
+      const { name, erModel, executeCommand } = action.payload;
       return {
         ...state,
         [name]: {
           loading: false,
           erModel,
-          erTranslatorRU: erModel && new ERTranslatorRU(erModel)
+          erTranslatorRU: erModel && new ERTranslatorRU(erModel),
+          executeCommand
         }
       };
     }

@@ -18,6 +18,9 @@ import { load } from './appAction';
 import { RecordSetViewContainer } from './recordSetView/recordSetViewContainer';
 import { RecordSetReducerState } from 'gdmn-recordset';
 import { SemCategory } from 'gdmn-nlp';
+import { ExecuteCommand } from './engine/types';
+import { executeCommand as executeGDMNCommand } from './engine/gdmnEngine';
+import { executeCommand as executeNBRBCommand } from './engine/nbrbEngine';
 
 interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
@@ -42,8 +45,8 @@ class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
 interface IAppProps {
   erModel: IERModels;
   recordSet: RecordSetReducerState;
-  onLoadERModel: (srcFile: string, name: string) => void;
-  onLoadERModel2: (erModel: ERModel, name: string) => void;
+  onLoadERModel: (srcFile: string, name: string, executeCommand: ExecuteCommand) => void;
+  onLoadERModel2: (erModel: ERModel, name: string, executeCommand: ExecuteCommand) => void;
 };
 
 class InternalApp extends Component<IAppProps, {}> {
@@ -52,7 +55,7 @@ class InternalApp extends Component<IAppProps, {}> {
     const { erModel, onLoadERModel, onLoadERModel2 } = this.props;
 
     if (!erModel['db']) {
-      onLoadERModel(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db');
+      onLoadERModel(`${process.env.PUBLIC_URL}/data/ermodel.serialized.json`, 'db', executeGDMNCommand);
     }
 
     const erm = new ERModel();
@@ -153,7 +156,7 @@ class InternalApp extends Component<IAppProps, {}> {
 
     erm.add(rate);
 
-    onLoadERModel2(erm, 'nbrb');
+    onLoadERModel2(erm, 'nbrb', executeNBRBCommand);
 
     /*
     if (!erModel['nbrb']) {
@@ -236,7 +239,7 @@ export default connect(
     }
   },
   (dispatch: ThunkDispatch<State, never, ParameterLoadAction | ERModelAction>) => ({
-    onLoadERModel: (url: string, name: string) => dispatch(load(url, name)),
-    onLoadERModel2: (erModel: ERModel, name: string) => dispatch(loadERModel({ name, erModel }))
+    onLoadERModel: (url: string, name: string, executeCommand: ExecuteCommand) => dispatch(load(url, name, executeCommand)),
+    onLoadERModel2: (erModel: ERModel, name: string, executeCommand: ExecuteCommand) => dispatch(loadERModel({ name, erModel, executeCommand }))
   })
 )(InternalApp);
