@@ -51,6 +51,10 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
         });
 
         afterAll(async () => {
+            // read transaction (in connection) locks table dropping
+            await globalConnection.disconnect();
+
+            await globalConnection.connect(dbOptions);
             await AConnection.executeTransaction({
                 connection: globalConnection,
                 callback: (transaction) => globalConnection.execute(transaction, "DROP TABLE RESULT_SET_TABLE")
