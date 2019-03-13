@@ -66,9 +66,7 @@ const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT
     ]
   },
   plugins: [
-    new CleanWebpackPlugin(['dist'], {
-      root: getRootRelativePath('')
-    }),
+    new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({ filename: EXTRACT_CSS_FILENAME }),
     // new BundleAnalyzerPlugin(),
     new EnvironmentPlugin({
