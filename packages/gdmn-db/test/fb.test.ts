@@ -344,7 +344,7 @@ describe("Firebird driver tests", () => {
                                 expect(time).toEqual(fTime);
                                 expect(
                                     await globalConnection
-                                        .openBlobAsString(transaction, result.getBlob("F_BLOB_TEXT"))
+                                        .openBlobAsString(transaction, result.getBlob("F_BLOB_TEXT")!)
                                 ).toEqual(fBlobText);
                             }
 
