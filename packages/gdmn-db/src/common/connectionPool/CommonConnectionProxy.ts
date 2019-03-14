@@ -67,15 +67,15 @@ export class CommonConnectionProxy extends AConnection {
     }
 
     public async createDatabase(options: IConnectionOptions): Promise<void> {
-        throw new Error("Invalid operation for connection from the pool");
+        await this._createDatabase(options);
     }
 
     public async dropDatabase(): Promise<void> {
-        throw new Error("Invalid operation for connection from the pool");
+        await this._dropDatabase();
     }
 
     public async connect(options: IConnectionOptions): Promise<void> {
-        throw new Error("Invalid operation for connection from the pool");
+        await this._connect(options);
     }
 
     public async disconnect(): Promise<void> {
@@ -88,20 +88,43 @@ export class CommonConnectionProxy extends AConnection {
         }
     }
 
+    public async startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
+        return await this._startTransaction(options);
+    }
+
+    public async prepare(transaction: ATransaction, sql: string): Promise<AStatement> {
+        return await this._prepare(transaction, sql);
+    }
+
+    public async executeQuery(transaction: ATransaction,
+                              sql: string,
+                              params?: IParams,
+                              type?: CursorType): Promise<AResultSet> {
+        return await this._executeQuery(transaction, sql, params, type);
+    }
+
+    public async execute(transaction: ATransaction, sql: string, params?: IParams): Promise<void> {
+        await this._execute(transaction, sql, params);
+    }
+
+    public async executeReturning(transaction: ATransaction, sql: string, params?: IParams): Promise<AResult> {
+        return await this._executeReturning(transaction, sql, params);
+    }
+
     protected async _createDatabase(options: IConnectionOptions): Promise<void> {
-        // never call
+        throw new Error("Invalid operation for connection from the pool");
     }
 
     protected async _dropDatabase(): Promise<void> {
-        // never call
+        throw new Error("Invalid operation for connection from the pool");
     }
 
     protected async _connect(options: IConnectionOptions): Promise<void> {
-        // never call
+        throw new Error("Invalid operation for connection from the pool");
     }
 
     protected async _disconnect(): Promise<void> {
-        // never call
+        throw new Error("Invalid operation for connection from the pool");
     }
 
     protected async _startTransaction(options?: ITransactionOptions): Promise<ATransaction> {
