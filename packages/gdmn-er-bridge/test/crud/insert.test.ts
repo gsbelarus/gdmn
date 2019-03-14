@@ -6,6 +6,7 @@ import {
   EntityAttribute,
   EntityInsert,
   ERModel,
+  IntegerAttribute,
   ParentAttribute,
   SetAttribute,
   StringAttribute
@@ -13,6 +14,7 @@ import {
 import {resolve} from "path";
 import {ERBridge} from "../../src";
 import {Insert} from "../../src/crud/insert/Insert";
+import {DDLHelper} from "../../src/ddl/DDLHelper";
 
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
@@ -106,6 +108,17 @@ describe("Insert", () => {
               lName: {},
               entities: [DetailEntity]
             }));
+
+            const SelectorEntity2 = await erBuilder.create(erModel, new Entity({
+              name: "SELECTOR_ENTITY2",
+              lName: {},
+              adapter: {relation: [{relationName: "SELECTOR_ENTITY2", selector: {field: "CONTACTTYPE", value: 5}}]}
+            }));
+            await eBuilder.createAttribute(SelectorEntity2, new StringAttribute({
+              name: "TEST_STRING",
+              lName: {}
+            }));
+            console.log(SelectorEntity2);
           }
         });
       }
@@ -401,6 +414,67 @@ describe("Insert", () => {
       "\n" +
       `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2)\n` +
       "  VALUES(:Key1Value, :P$4);\n" +
+      "END");
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => connection.execute(transaction, sql, params)
+    });
+  });
+  it("insert: selector ", async () => {
+    const SELECTOR_ENTITY = erModel.add(new Entity({
+      name: "SELECTOR_ENTITY",
+      lName: {},
+      adapter: {relation: [{relationName: "SELECTOR_ENTITY", selector: {field: "CONTACTTYPE", value: 5}}]}
+    }));
+
+    SELECTOR_ENTITY.add(new IntegerAttribute({
+      name: "ID", lName: {}, adapter: {relation: "SELECTOR_ENTITY", field: "ID"}
+    }));
+
+    SELECTOR_ENTITY.add(new IntegerAttribute({
+      name: "TEST_STRING", lName: {}, adapter: {relation: "SELECTOR_ENTITY", field: "TEST_STRING"}
+    }));
+
+    SELECTOR_ENTITY.add(new IntegerAttribute({
+      name: "CONTACTTYPE", lName: {}, adapter: {relation: "SELECTOR_ENTITY", field: "CONTACTTYPE"}
+    }));
+    console.log(SELECTOR_ENTITY);
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => DDLHelper.executeSelf({
+        connection,
+        transaction,
+        callback: async (ddlHelper) => {
+
+          await ddlHelper.addTable("SELECTOR_ENTITY", [
+            {name: "ID", domain: "DINTKEY"},
+            {name: "TEST_STRING", domain: "DSMALLINT"},
+            {name: "CONTACTTYPE", domain: "DSMALLINT"}
+          ]);
+        }
+      })
+    });
+
+
+    const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
+      entity: "SELECTOR_ENTITY",
+      fields: [
+        {
+          attribute: "ID",
+          value: 1
+        }
+      ]
+    }));
+
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 INTEGER = :P$2)\n" +
+      "AS\n" +
+      "DECLARE Key1Value INTEGER;\n" +
+      "DECLARE ParentID INTEGER;\n" +
+      "BEGIN\n" +
+      "  INSERT INTO SELECTOR_ENTITY(ID, CONTACTTYPE)\n" +
+      "  VALUES(:P$1, :P$2)\n" +
+      "  RETURNING ID INTO :Key1Value;\n" +
       "END");
 
     await AConnection.executeTransaction({

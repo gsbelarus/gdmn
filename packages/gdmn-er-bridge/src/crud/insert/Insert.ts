@@ -1,7 +1,6 @@
 import {Attribute, Entity, EntityInsert, EntityInsertField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
 import {Constants} from "../../ddl/Constants";
 import {Utils} from "../../Utils";
-import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsInsert {
   [paramName: string]: any;
@@ -52,7 +51,7 @@ export class Insert {
   private _getInsert(query: EntityInsert): string {
     const {entity, fields} = query;
 
-    let sql = `EXECUTE BLOCK(${this._getParamSetAttr(fields)})\n` +
+    let sql = `EXECUTE BLOCK(${this._getParamSetAttr(entity, fields)})\n` +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "DECLARE ParentID INTEGER;\n" +
@@ -105,11 +104,20 @@ export class Insert {
         && !(field.attribute.type === "Set")
       )
       .map(field => {
-        return field.attribute.name;
+        if(rel.selector && field.attribute.adapter!.field) {
+          if(rel.selector.field === field.attribute.adapter!.field) {
+            throw new Error(`Field ${field.attribute.adapter!.field} set automatically`);
+          }
+        }
+        return field.attribute.adapter!.field;
       });
     if (mainRelation.relationName !== rel.relationName) {
       from.push(Insert._getPKFieldName(entity, rel.relationName));
     }
+    if (rel.selector) {
+      from.push(rel.selector.field);
+    }
+
     return from.length ? `(${from.join(", ")})\n ` : "\n  DEFAULT";
   }
 
@@ -128,6 +136,10 @@ export class Insert {
 
     if (mainRelation.relationName !== rel.relationName) {
       values.push(":ParentID");
+    }
+
+    if (rel.selector) {
+      values.push(this._addToParams(`${rel.selector.value}`));
     }
 
     return values.length ? `(${values.join(", ")})` : "";
@@ -191,7 +203,7 @@ export class Insert {
     return typeSQL ? `${placeholder} ${typeSQL} :${placeholder}` : `:${placeholder}`;
   }
 
-  private _getParamSetAttr(fields: EntityInsertField[]): string | undefined {
+  private _getParamSetAttr(entity: Entity, fields: EntityInsertField[]): string | undefined {
 
     let ParamText = "";
 
@@ -207,6 +219,18 @@ export class Insert {
         return this._addToParamsBlock(value, typeSQL);
       });
 
+   const relation = entity.adapter!.relation.find((r) => r.selector !== undefined);
+
+   if (relation && relation.selector) {
+     let typeSQL = "INTEGER =";
+     const value = relation.selector.value;
+
+     if (typeof value == "string") {
+       typeSQL = `VARCHAR(${value.length}) =`;
+     }
+
+     listParam.push(this._addToParamsBlock(relation.selector.value, typeSQL));
+   }
     fields
       .filter(field => field.attribute.type === "Set")
       .map((field) => {
@@ -225,7 +249,6 @@ export class Insert {
                   listParam.push(this._addToParamsBlock(p, typeSQL));
                 } else {
                   return Object.entries(p).map((x) => {
-
                     listParam.push(this._addToParamsBlock(x, typeSQL));
                   });
                 }
