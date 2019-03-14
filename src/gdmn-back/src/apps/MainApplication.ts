@@ -609,8 +609,8 @@ export class MainApplication extends Application {
     return {
       id: result.getNumber("ID"),
       login: result.getString("LOGIN"),
-      passwordHash: await result.getBlob("PASSWORD_HASH").asString(),
-      salt: await result.getBlob("SALT").asString(),
+      passwordHash: await connection.openBlobAsString(transaction, result.getBlob("PASSWORD_HASH")!),
+      salt: await connection.openBlobAsString(transaction, result.getBlob("SALT")!),
       creationDate: result.getDate("CREATIONDATE")!,
       admin: result.getBoolean("IS_ADMIN")
     };
@@ -652,8 +652,8 @@ export class MainApplication extends Application {
           return {
             id: resultSet.getNumber("ID"),
             login: resultSet.getString("LOGIN"),
-            passwordHash: await resultSet.getBlob("PASSWORD_HASH").asString(),
-            salt: await resultSet.getBlob("SALT").asString(),
+            passwordHash: await connection.openBlobAsString(transaction, resultSet.getBlob("PASSWORD_HASH")!),
+            salt: await connection.openBlobAsString(transaction, resultSet.getBlob("SALT")!),
             creationDate: resultSet.getDate("CREATIONDATE")!,
             admin: resultSet.getBoolean("IS_ADMIN")
           };

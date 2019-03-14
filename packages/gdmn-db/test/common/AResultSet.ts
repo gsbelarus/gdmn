@@ -1,4 +1,4 @@
-import {AConnection, ADriver, CursorType, IConnectionOptions} from "../../src";
+import {ABlobLink, AConnection, ADriver, CursorType, IConnectionOptions} from "../../src";
 
 export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): void {
     describe("AResultSet", () => {
@@ -20,7 +20,8 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                             onlyDate        DATE NOT NULL,
                             onlyTime        TIME NOT NULL,
                             nullValue       VARCHAR(20),
-                            textBlob        BLOB SUB_TYPE TEXT NOT NULL
+                            textBlob        BLOB SUB_TYPE TEXT NOT NULL,
+                            binaryBlob      BLOB NOT NULL
                         )
                     `);
 
@@ -30,19 +31,27 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         connection: globalConnection,
                         transaction,
                         sql: `
-                            INSERT INTO RESULT_SET_TABLE (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob)
-                            VALUES(:id, :name, :dateTime, :onlyDate, :onlyTime, :nullValue, :textBlob)
-                            RETURNING id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob
+                            INSERT INTO RESULT_SET_TABLE (id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob,
+                              binaryBlob)
+                            VALUES(:id, :name, :dateTime, :onlyDate, :onlyTime, :nullValue, :textBlob, :binaryBlob)
+                            RETURNING id, name, dateTime, onlyDate, onlyTime, nullValue, textBlob, binaryBlob
                         `, callback: async (statement) => {
                             for (const dataItem of arrayData) {
                                 const result = await statement.executeReturning(dataItem);
-                                expect(await result.getAny("ID")).toBe(dataItem.id);
-                                expect(await result.getAny("NAME")).toBe(dataItem.name);
-                                expect(await result.getAny("DATETIME")).toEqual(dataItem.dateTime);
-                                expect(await result.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
-                                expect(await result.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
-                                expect(await result.getAny("NULLVALUE")).toBeNull();
-                                expect(await result.getAny("TEXTBLOB")).toBe(dataItem.textBlob);
+                                expect(result.getAny("ID")).toBe(dataItem.id);
+                                expect(result.getAny("NAME")).toBe(dataItem.name);
+                                expect(result.getAny("DATETIME")).toEqual(dataItem.dateTime);
+                                expect(result.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
+                                expect(result.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
+                                expect(result.getAny("NULLVALUE")).toBeNull();
+                                expect(
+                                    await globalConnection.openBlobAsString(globalConnection.readTransaction,
+                                        result.getBlob("TEXTBLOB")!)
+                                ).toBe(dataItem.textBlob);
+                                expect(
+                                    await globalConnection.openBlobAsBuffer(globalConnection.readTransaction,
+                                        result.getBlob("BINARYBLOB")!)
+                                ).toEqual(dataItem.binaryBlob);
                             }
                         }
                     });
@@ -89,6 +98,7 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         expect(resultSet.isNull("ONLYTIME")).toBe(false);
                         expect(resultSet.isNull("NULLVALUE")).toBe(true);
                         expect(resultSet.isNull("TEXTBLOB")).toBe(false);
+                        expect(resultSet.isNull("BINARYBLOB")).toBe(false);
                     }
                 }
             });
@@ -108,6 +118,7 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         expect(resultSet.isNull("ONLYTIME")).toBe(false);
                         expect(resultSet.isNull("NULLVALUE")).toBe(true);
                         expect(resultSet.isNull("TEXTBLOB")).toBe(false);
+                        expect(resultSet.isNull("BINARYBLOB")).toBe(false);
                     }
                 }
             });
@@ -121,14 +132,15 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
-                        const result = await resultSet.getAll();
+                        const result = resultSet.getAll();
                         expect(result[0]).toBe(dataItem.id);
                         expect(result[1]).toBe(dataItem.name);
                         expect(result[2]).toEqual(dataItem.dateTime);
                         expect(result[3]).toEqual(dataItem.onlyDate);
                         expect(result[4]).toEqual(dataItem.onlyTime);
                         expect(result[5]).toBeNull();
-                        expect(result[6]).toBe(dataItem.textBlob);
+                        expect(result[6]).toBeInstanceOf(ABlobLink);
+                        expect(result[7]).toBeInstanceOf(ABlobLink);
                     }
                 }
             });
@@ -142,13 +154,14 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
-                        expect(await resultSet.getAny("ID")).toBe(dataItem.id);
-                        expect(await resultSet.getAny("NAME")).toBe(dataItem.name);
-                        expect(await resultSet.getAny("DATETIME")).toEqual(dataItem.dateTime);
-                        expect(await resultSet.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
-                        expect(await resultSet.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
-                        expect(await resultSet.getAny("NULLVALUE")).toBeNull();
-                        expect(await resultSet.getAny("TEXTBLOB")).toBe(dataItem.textBlob);
+                        expect(resultSet.getAny("ID")).toBe(dataItem.id);
+                        expect(resultSet.getAny("NAME")).toBe(dataItem.name);
+                        expect(resultSet.getAny("DATETIME")).toEqual(dataItem.dateTime);
+                        expect(resultSet.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
+                        expect(resultSet.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
+                        expect(resultSet.getAny("NULLVALUE")).toBeNull();
+                        expect(resultSet.getAny("TEXTBLOB")).toBeInstanceOf(ABlobLink);
+                        expect(resultSet.getAny("BINARYBLOB")).toBeInstanceOf(ABlobLink);
                     }
                 }
             });
@@ -162,13 +175,20 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                 callback: async (resultSet) => {
                     for (let i = 0; await resultSet.next(); i++) {
                         const dataItem = arrayData[i];
-                        expect(await resultSet.getBlob("ID").asString()).toBe("");
-                        expect(await resultSet.getBlob("NAME").asString()).toBe("");
-                        expect(await resultSet.getBlob("DATETIME").asString()).toBe("");
-                        expect(await resultSet.getBlob("ONLYDATE").asString()).toBe("");
-                        expect(await resultSet.getBlob("ONLYTIME").asString()).toBe("");
-                        expect(await resultSet.getBlob("NULLVALUE").asString()).toBe("");
-                        expect(await resultSet.getBlob("TEXTBLOB").asString()).toBe(dataItem.textBlob);
+                        expect(() => resultSet.getBlob("ID")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getBlob("NAME")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getBlob("DATETIME")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getBlob("ONLYDATE")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getBlob("ONLYTIME")).toThrow(new Error("Invalid typecasting"));
+                        expect(resultSet.getBlob("NULLVALUE")).toBeNull();
+                        expect(
+                            await globalConnection
+                                .openBlobAsString(globalConnection.readTransaction, resultSet.getBlob("TEXTBLOB")!)
+                        ).toBe(dataItem.textBlob);
+                        expect(
+                            await globalConnection
+                                .openBlobAsBuffer(globalConnection.readTransaction, resultSet.getBlob("BINARYBLOB")!)
+                        ).toEqual(dataItem.binaryBlob);
                     }
                 }
             });
@@ -188,6 +208,8 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         expect(resultSet.getString("ONLYDATE")).toBe(dataItem.onlyDate.toString());
                         expect(resultSet.getString("ONLYTIME")).toBe(dataItem.onlyTime.toString());
                         expect(resultSet.getString("NULLVALUE")).toBe("");
+                        expect(() => resultSet.getString("TEXTBLOB")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getString("BINARYBLOB")).toThrow(new Error("Invalid typecasting"));
                     }
                 }
             });
@@ -207,6 +229,8 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         expect(isNaN(resultSet.getNumber("ONLYDATE"))).toBe(true);
                         expect(isNaN(resultSet.getNumber("ONLYTIME"))).toBe(true);
                         expect(resultSet.getNumber("NULLVALUE")).toBe(0);
+                        expect(() => resultSet.getString("TEXTBLOB")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getString("BINARYBLOB")).toThrow(new Error("Invalid typecasting"));
                     }
                 }
             });
@@ -225,6 +249,8 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         expect(resultSet.getBoolean("ONLYDATE")).toBe(true);
                         expect(resultSet.getBoolean("ONLYTIME")).toBe(true);
                         expect(resultSet.getBoolean("NULLVALUE")).toBe(false);
+                        expect(() => resultSet.getString("TEXTBLOB")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getString("BINARYBLOB")).toThrow(new Error("Invalid typecasting"));
                     }
                 }
             });
@@ -244,6 +270,8 @@ export function resultSetTest(driver: ADriver, dbOptions: IConnectionOptions): v
                         expect(resultSet.getDate("ONLYDATE")).toEqual(dataItem.onlyDate);
                         expect(resultSet.getDate("ONLYTIME")).toEqual(dataItem.onlyTime);
                         expect(resultSet.getDate("NULLVALUE")).toBeNull();
+                        expect(() => resultSet.getString("TEXTBLOB")).toThrow(new Error("Invalid typecasting"));
+                        expect(() => resultSet.getString("BINARYBLOB")).toThrow(new Error("Invalid typecasting"));
                     }
                 }
             });
@@ -278,6 +306,7 @@ interface IDataItem {
     onlyTime: Date;
     nullValue: null;
     textBlob: string;
+    binaryBlob: Buffer;
 }
 
 const arrayData = getData(10);
@@ -297,7 +326,8 @@ function getData(count: number): IDataItem[] {
             onlyDate,
             onlyTime,
             nullValue: null,
-            textBlob: "Test text blob field"
+            textBlob: "Test text blob field",
+            binaryBlob: Buffer.from("Test binary blob field")
         });
     }
     return data;

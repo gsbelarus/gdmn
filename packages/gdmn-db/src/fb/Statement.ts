@@ -95,7 +95,7 @@ export class Statement extends AStatement {
             const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
             const outBuffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
-            await dataWrite(this, inDescriptors, inBuffer, this._paramsAnalyzer.prepareParams(params));
+            await dataWrite(this.transaction, inDescriptors, inBuffer, this._paramsAnalyzer.prepareParams(params));
 
             const newTransaction = await this.source!.handler.executeAsync(status, this.transaction.handler,
                 inMetadata, inBuffer, outMetadata, outBuffer);

@@ -3,9 +3,11 @@ import {endianness} from "os";
 import {StringDecoder} from "string_decoder";
 import {IConnectionOptions} from "../../AConnection";
 import {AccessMode, Isolation, ITransactionOptions} from "../../ATransaction";
+import {BlobLink} from "../BlobLink";
+import {BlobStream} from "../BlobStream";
+import {Connection} from "../Connection";
 import {Statement} from "../Statement";
-import {BlobLink} from "./BlobLink";
-import {BlobStream} from "./BlobStream";
+import {Transaction} from "../Transaction";
 import {isc_dpb, isc_tpb, SQL_BLOB_SUB_TYPE, SQLTypes, XpbBuilderParams} from "./constants";
 import {decodeDate, decodeTime, encodeDate, encodeTime} from "./date-time";
 
@@ -167,8 +169,7 @@ export function createDescriptors(status: Status, metadata?: MessageMetadata): I
     return ret;
 }
 
-export function bufferToValue(statement: Statement,
-                              outDescriptor: IDescriptor,
+export function bufferToValue(outDescriptor: IDescriptor,
                               outBuffer: Uint8Array): any {
     const dataView = new DataView(outBuffer.buffer);
 
@@ -222,8 +223,7 @@ export function bufferToValue(statement: Statement,
             return dataView.getInt8(outDescriptor.offset) !== 0;
 
         case SQLTypes.SQL_BLOB:
-            return new BlobLink(statement.transaction.connection,
-                outBuffer.slice(outDescriptor.offset, outDescriptor.offset + 8));
+            return new BlobLink(outBuffer.slice(outDescriptor.offset, outDescriptor.offset + 8));
 
         case SQLTypes.SQL_NULL:
             return null;
@@ -233,7 +233,7 @@ export function bufferToValue(statement: Statement,
     }
 }
 
-export async function valueToBuffer(statement: Statement,
+export async function valueToBuffer(transaction: Transaction,
                                     inDescriptor: IDescriptor,
                                     inBuffer: Uint8Array,
                                     value: any): Promise<void> {
@@ -327,7 +327,7 @@ export async function valueToBuffer(statement: Statement,
             }
 
             if (value instanceof Buffer) {
-                const blobStream = await BlobStream.create(statement.transaction);
+                const blobStream = await BlobStream.create(transaction);
                 try {
                     await blobStream.write(value);
                 } catch (e) {
@@ -340,14 +340,14 @@ export async function valueToBuffer(statement: Statement,
                 targetBlobId.set(blobStream.blobLink.id);
 
             } else if (value instanceof BlobLink) {
-                if (value.connection === statement.transaction.connection) {
+                // if (value.connection === transaction.connection) {
                     targetBlobId.set(value.id);
-                } else {
-                    throw new Error("Cannot pass a BLOB from another handler as parameter.");
-                    //// TODO: add support for it
-                }
+                // } else {
+                //     throw new Error("Cannot pass a BLOB from another handler as parameter.");
+                //     //// TODO: add support for it
+                // }
             } else {
-                throw new Error("Unrecognized type used as BLOB. Must be: Buffer or BlobLink.");
+                throw new Error("Unrecognized type used as BLOB. Must be: Buffer or ABlobLink.");
             }
             break;
         }
@@ -360,13 +360,12 @@ export async function valueToBuffer(statement: Statement,
     }
 }
 
-export function dataRead(statement: Statement,
-                         outDescriptors: IDescriptor[],
+export function dataRead(outDescriptors: IDescriptor[],
                          outBuffer: Uint8Array): any[] {
-    return outDescriptors.map((descriptor) => bufferToValue(statement, descriptor, outBuffer));
+    return outDescriptors.map((descriptor) => bufferToValue(descriptor, outBuffer));
 }
 
-export async function dataWrite(statement: Statement,
+export async function dataWrite(transaction: Transaction,
                                 inDescriptors: IDescriptor[],
                                 inBuffer: Uint8Array,
                                 values: any[]): Promise<void> {
@@ -377,7 +376,7 @@ export async function dataWrite(statement: Statement,
 
     for (let i = 0; i < inDescriptors.length; i++) {
         const descriptor = inDescriptors[i];
-        await valueToBuffer(statement, descriptor, inBuffer, values[i]);
+        await valueToBuffer(transaction, descriptor, inBuffer, values[i]);
     }
 }
 

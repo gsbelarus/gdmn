@@ -61,13 +61,16 @@ export function serviceTest(driver: ADriver, serviceOptions: IServiceOptions, db
                             callback: async (statement) => {
                                 for (const dataItem of fixtureArrayData) {
                                     const result = await statement.executeReturning(dataItem);
-                                    expect(await result.getAny("ID")).toEqual(dataItem.id);
-                                    expect(await result.getAny("NAME")).toEqual(dataItem.name);
-                                    expect(await result.getAny("DATETIME")).toEqual(dataItem.dateTime);
-                                    expect(await result.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
-                                    expect(await result.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
-                                    expect(await result.getAny("NULLVALUE")).toBeNull();
-                                    expect(await result.getAny("TEXTBLOB")).toEqual(dataItem.textBlob);
+                                    expect(result.getAny("ID")).toEqual(dataItem.id);
+                                    expect(result.getAny("NAME")).toEqual(dataItem.name);
+                                    expect(result.getAny("DATETIME")).toEqual(dataItem.dateTime);
+                                    expect(result.getAny("ONLYDATE")).toEqual(dataItem.onlyDate);
+                                    expect(result.getAny("ONLYTIME")).toEqual(dataItem.onlyTime);
+                                    expect(result.getAny("NULLVALUE")).toBeNull();
+                                    expect(
+                                        await connection
+                                            .openBlobAsString(connection.readTransaction, result.getBlob("TEXTBLOB"))
+                                    ).toBe(dataItem.textBlob);
                                 }
                             }
                         })

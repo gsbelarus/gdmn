@@ -1,4 +1,6 @@
 import {Semaphore} from "gdmn-internals";
+import {ABlobLink} from "./ABlobLink";
+import {ABlobStream} from "./ABlobStream";
 import {ADriver} from "./ADriver";
 import {AResult} from "./AResult";
 import {AResultSet, CursorType} from "./AResultSet";
@@ -199,6 +201,58 @@ export abstract class AConnection {
         return await this._startTransaction(options);
     }
 
+    // TODO docs
+    public async openBlobStream(transaction: ATransaction, blob: ABlobLink): Promise<ABlobStream> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
+        this._checkTransaction(transaction);
+        return await this._openBlobStream(transaction, blob);
+    }
+
+    // TODO docs
+    public async openBlobAsBuffer(transaction: ATransaction, blob: ABlobLink): Promise<Buffer> {
+        const blobStream = await this.openBlobStream(transaction, blob);
+        try {
+            const length = await blobStream.getLength();
+            const buffer = Buffer.alloc(length);
+            await blobStream.read(buffer);
+
+            return buffer;
+
+        } catch (error) {
+            if (!blobStream.finished) {
+                await blobStream.cancel();
+            }
+            throw error;
+        } finally {
+            if (!blobStream.finished) {
+                await blobStream.close();
+            }
+        }
+    }
+
+    // TODO docs
+    public async openBlobAsString(transaction: ATransaction, blob: ABlobLink): Promise<string> {
+        const buffer = await this.openBlobAsBuffer(transaction, blob);
+        return buffer.toString();
+    }
+
+    // TODO docs
+    public async createBlobStream(transaction: ATransaction): Promise<ABlobStream> {
+        if (this.isLock) {
+            await this.waitUnlock();
+        }
+        if (!this._connected) {
+            throw new Error("Need to database connection");
+        }
+        this._checkTransaction(transaction);
+        return await this._createBlobStream(transaction);
+    }
+
     /**
      * Creates a Statement object for sending parameterized SQL statements
      * to the database.
@@ -332,6 +386,10 @@ export abstract class AConnection {
     protected abstract async _disconnect(): Promise<void>;
 
     protected abstract async _startTransaction(options?: ITransactionOptions): Promise<ATransaction>;
+
+    protected abstract async _openBlobStream(transaction: ATransaction, blob: ABlobLink): Promise<ABlobStream>;
+
+    protected abstract async _createBlobStream(transaction: ATransaction): Promise<ABlobStream>;
 
     protected abstract async _prepare(transaction: ATransaction, sql: string): Promise<AStatement>;
 

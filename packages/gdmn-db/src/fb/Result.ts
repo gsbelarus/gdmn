@@ -1,9 +1,7 @@
 import {AResult} from "../AResult";
-import {BlobImpl} from "./BlobImpl";
+import {BlobLink} from "./BlobLink";
 import {ResultMetadata} from "./ResultMetadata";
 import {Statement} from "./Statement";
-import {BlobLink} from "./utils/BlobLink";
-import {SQL_BLOB_SUB_TYPE} from "./utils/constants";
 import {bufferToValue, dataWrite, IDescriptor} from "./utils/fb-utils";
 
 export interface IResultSource {
@@ -15,13 +13,9 @@ export class Result extends AResult {
 
     public source: IResultSource;
 
-    protected constructor(statement: Statement, source: IResultSource) {
-        super(statement);
+    protected constructor(source: IResultSource) {
+        super();
         this.source = source;
-    }
-
-    get statement(): Statement {
-        return super.statement as Statement;
     }
 
     get metadata(): ResultMetadata {
@@ -37,7 +31,7 @@ export class Result extends AResult {
                 const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
                 const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
-                await dataWrite(statement, inDescriptors, inBuffer, source);
+                await dataWrite(statement.transaction, inDescriptors, inBuffer, source);
 
                 const newTransaction = await statement.source!.handler.executeAsync(status,
                     statement.transaction.handler, inMetadata, inBuffer, outMetadata, buffer);
@@ -52,7 +46,7 @@ export class Result extends AResult {
                 };
             });
         }
-        return new Result(statement, source);
+        return new Result(source);
     }
 
     private static _throwIfBlob(value: any): void {
@@ -61,10 +55,14 @@ export class Result extends AResult {
         }
     }
 
-    public getBlob(i: number): BlobImpl;
-    public getBlob(name: string): BlobImpl;
-    public getBlob(field: any): BlobImpl {
-        return new BlobImpl(this.statement.transaction, this._getValue(field));
+    public getBlob(i: number): null | BlobLink;
+    public getBlob(name: string): null | BlobLink;
+    public getBlob(field: any): null | BlobLink {
+        const value = this._getValue(field);
+        if (value !== null && value !== undefined && !(value instanceof BlobLink)) {
+            throw new Error("Invalid typecasting");
+        }
+        return value;
     }
 
     public getBoolean(i: number): boolean;
@@ -119,25 +117,16 @@ export class Result extends AResult {
         return String(value);
     }
 
-    public async getAny(i: number): Promise<any>;
-    public async getAny(name: string): Promise<any>;
-    public async getAny(field: any): Promise<any> {
-        const value = this._getValue(field);
-        if (value instanceof BlobLink) {
-            const descriptor = this.getOutDescriptor(field);
-            if (descriptor.subType === SQL_BLOB_SUB_TYPE.TEXT) {
-                return await this.getBlob(field).asString();
-            } else {
-                return await this.getBlob(field).asBuffer();
-            }
-        }
-        return value;
+    public getAny(i: number): any;
+    public getAny(name: string): any;
+    public getAny(field: any): any {
+        return this._getValue(field);
     }
 
-    public async getAll(): Promise<any[]> {
+    public getAll(): any[] {
         const result = [];
         for (let i = 0; i < this.metadata.columnCount; i++) {
-            result.push(await this.getAny(i));
+            result.push(this.getAny(i));
         }
         return result;
     }
@@ -151,7 +140,7 @@ export class Result extends AResult {
 
     private _getValue(field: number | string): any {
         const descriptor = this.getOutDescriptor(field);
-        return bufferToValue(this.statement, descriptor, this.source.buffer);
+        return bufferToValue(descriptor, this.source.buffer);
     }
 
     private getOutDescriptor(field: number | string): IDescriptor {

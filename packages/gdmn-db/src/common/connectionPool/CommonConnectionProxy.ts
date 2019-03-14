@@ -1,4 +1,6 @@
 import {Pool} from "generic-pool";
+import {ABlobLink} from "../../ABlobLink";
+import {ABlobStream} from "../../ABlobStream";
 import {AConnection, IConnectionOptions} from "../../AConnection";
 import {ADriver} from "../../ADriver";
 import {AResult} from "../../AResult";
@@ -92,6 +94,14 @@ export class CommonConnectionProxy extends AConnection {
         return await this._startTransaction(options);
     }
 
+    public async createBlobStream(transaction: ATransaction): Promise<ABlobStream> {
+        return await this._createBlobStream(transaction);
+    }
+
+    public async openBlobStream(transaction: ATransaction, blob: ABlobLink): Promise<ABlobStream> {
+        return await this._openBlobStream(transaction, blob);
+    }
+
     public async prepare(transaction: ATransaction, sql: string): Promise<AStatement> {
         return await this._prepare(transaction, sql);
     }
@@ -132,6 +142,20 @@ export class CommonConnectionProxy extends AConnection {
             throw new Error("Need database connection");
         }
         return await this._connection.startTransaction(options);
+    }
+
+    protected async _createBlobStream(transaction: ATransaction): Promise<ABlobStream> {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
+            throw new Error("Need database connection");
+        }
+        return await this._connection.createBlobStream(transaction);
+    }
+
+    protected async _openBlobStream(transaction: ATransaction, blob: ABlobLink): Promise<ABlobStream> {
+        if (!this._connection || !this._pool.isBorrowedResource(this)) {
+            throw new Error("Need database connection");
+        }
+        return await this._connection.openBlobStream(transaction, blob);
     }
 
     protected async _prepare(transaction: ATransaction, sql: string): Promise<AStatement> {

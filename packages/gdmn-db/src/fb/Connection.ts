@@ -3,6 +3,8 @@ import {AConnection, IConnectionOptions} from "../AConnection";
 import {CursorType} from "../AResultSet";
 import {IParams} from "../AStatement";
 import {ITransactionOptions} from "../ATransaction";
+import {BlobLink} from "./BlobLink";
+import {BlobStream} from "./BlobStream";
 import {Client} from "./Client";
 import {Driver} from "./Driver";
 import {Result} from "./Result";
@@ -99,6 +101,14 @@ export class Connection extends AConnection {
 
     protected async _startTransaction(options?: ITransactionOptions): Promise<Transaction> {
         return await Transaction.create(this, options);
+    }
+
+    protected async _openBlobStream(transaction: Transaction, blob: BlobLink): Promise<BlobStream> {
+        return BlobStream.open(transaction, blob);
+    }
+
+    protected async _createBlobStream(transaction: Transaction): Promise<BlobStream> {
+        return BlobStream.create(transaction);
     }
 
     protected async _execute(transaction: Transaction, sql: string, params?: IParams): Promise<void> {

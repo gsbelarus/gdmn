@@ -7,8 +7,8 @@
  */
 
 import {AConnection, AResultSet, ATransaction} from "gdmn-db";
+import {ITName, LName} from "gdmn-internals";
 import {SemCategory, str2SemCategories} from "gdmn-nlp";
-import {LName, ITName} from "gdmn-internals";
 
 /**
  * Дополнительная информация по доменам.
@@ -101,7 +101,9 @@ export async function load(connection: AConnection, transaction: ATransaction): 
           setTable: getTrimmedString("SETTABLE"),
           setListField: getTrimmedString("SETLISTFIELD"),
           setCondition: getTrimmedString("SETCONDITION"),
-          numeration: await resultSet.getBlob("NUMERATION").asString()
+          numeration: resultSet.isNull("NUMERATION")
+            ? undefined
+            : await connection.openBlobAsString(transaction, resultSet.getBlob("NUMERATION")!)
         };
       }
       return fields;

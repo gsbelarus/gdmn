@@ -37,12 +37,14 @@ export class RDBReader {
                         RDB$FIELD_NAME: resultSet.getString("fieldName"),
                         RDB$FIELD_TYPE: resultSet.getNumber("fieldType"),
                         RDB$NULL_FLAG: resultSet.getNumber("nullFlag") as NullFlag,
-                        RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource") ? null
-                            : await resultSet.getBlob("defaultSource").asString(),
+                        RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource")
+                            ? null
+                            : await connection.openBlobAsString(transaction, resultSet.getBlob("defaultSource")!),
                         RDB$FIELD_LENGTH: resultSet.getNumber("fieldLength"),
                         RDB$FIELD_SCALE: resultSet.getNumber("fieldScale"),
-                        RDB$VALIDATION_SOURCE: resultSet.isNull("validationSource") ? null
-                            : await resultSet.getBlob("validationSource").asString(),
+                        RDB$VALIDATION_SOURCE: resultSet.isNull("validationSource")
+                            ? null
+                            : await connection.openBlobAsString(transaction, resultSet.getBlob("validationSource")!),
                         RDB$FIELD_SUB_TYPE: resultSet.isNull("fieldSubType") ? null
                             : resultSet.getNumber("fieldSubType"),
                         RDB$FIELD_PRECISION: resultSet.getNumber("fieldPrecision")
@@ -76,8 +78,9 @@ export class RDBReader {
                         RDB$FIELD_NAME: resultSet.getString("fieldName"),
                         RDB$FIELD_SOURCE: resultSet.getString("fieldSource"),
                         RDB$NULL_FLAG: resultSet.getNumber("nullFlag") as NullFlag,
-                        RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource") ? null
-                            : await resultSet.getBlob("defaultSource").asString()
+                        RDB$DEFAULT_SOURCE: resultSet.isNull("defaultSource")
+                            ? null
+                            : await connection.openBlobAsString(transaction, resultSet.getBlob("defaultSource")!)
                     });
                 }
                 return array;

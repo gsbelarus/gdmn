@@ -1,4 +1,4 @@
-import {AConnection, AResultSet, ATransaction} from "gdmn-db";
+import {AConnection, AResultSet, ATransaction, Types} from "gdmn-db";
 import {Semaphore} from "gdmn-internals";
 import {EntityQuery, IEntityQueryResponse, IEntityQueryResponseFieldAliases} from "gdmn-orm";
 import {Select} from "./crud/query/Select";
@@ -40,7 +40,13 @@ export class EQueryCursor {
       const row: { [key: string]: any } = {};
       for (let j = 0; j < this._resultSet.metadata.columnCount; j++) {
         // TODO binary blob support
-        row[this._resultSet.metadata.getColumnLabel(j)!] = await this._resultSet.getAny(j);
+        if (this._resultSet.metadata.getColumnType(j) === Types.BLOB) {
+          row[this._resultSet.metadata.getColumnLabel(j)!] = this._resultSet.isNull(j)
+            ? null
+            : await this._connection.openBlobAsString(this._transaction, this._resultSet.getBlob(j)!);
+        } else {
+          row[this._resultSet.metadata.getColumnLabel(j)!] = this._resultSet.getAny(j);
+        }
       }
       data.push(row);
     }

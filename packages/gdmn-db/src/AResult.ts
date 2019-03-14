@@ -1,18 +1,7 @@
-import {ABlob} from "./ABlob";
+import {ABlobLink} from "./ABlobLink";
 import {AResultMetadata} from "./AResultMetadata";
-import {AStatement} from "./AStatement";
 
 export abstract class AResult {
-
-    protected readonly _statement: AStatement;
-
-    protected constructor(statement: AStatement) {
-        this._statement = statement;
-    }
-
-    get statement(): AStatement {
-        return this._statement;
-    }
 
     abstract get metadata(): AResultMetadata;
 
@@ -25,7 +14,7 @@ export abstract class AResult {
      * @returns {B}
      * the blob object for column value
      */
-    public abstract getBlob(i: number): ABlob;
+    public abstract getBlob(i: number): null | ABlobLink;
 
     /**
      * Retrieves the value of the designated column in the current
@@ -38,7 +27,7 @@ export abstract class AResult {
      * @returns {B}
      * the blob object for column value
      */
-    public abstract getBlob(name: string): ABlob;
+    public abstract getBlob(name: string): null | ABlobLink;
 
     /**
      * Retrieves the value of the designated column in the current
@@ -142,10 +131,10 @@ export abstract class AResult {
      *
      * @param {number} i
      * the first column is 0, the second is 1, ...
-     * @returns {Promise<any>}
+     * @returns {any}
      * the column value
      */
-    public abstract async getAny(i: number): Promise<any>;
+    public abstract getAny(i: number): any;
 
     /**
      * Retrieves the value of the designated column in the current
@@ -155,19 +144,19 @@ export abstract class AResult {
      * the label for the column specified with the SQL AS clause.
      * If the SQL AS clause was not specified, then the label is
      * the name of the column
-     * @returns {Promise<any>}
+     * @returns {any}
      * the column value
      */
-    public abstract async getAny(name: string): Promise<any>;
+    public abstract getAny(name: string): any;
 
     /**
      * Retrieves the values of all columns in the current
      * row of this Result object as a any type
      *
-     * @returns {Promise<any[]>}
+     * @returns {any[]}
      * the array of columns values
      */
-    public abstract async getAll(): Promise<any[]>;
+    public abstract getAll(): any[];
 
     /**
      * Testing a column for null value.

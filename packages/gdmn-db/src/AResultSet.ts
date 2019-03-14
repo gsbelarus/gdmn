@@ -12,13 +12,21 @@ export abstract class AResultSet extends AResult {
 
     public static DEFAULT_TYPE = CursorType.FORWARD_ONLY;
 
+    protected readonly _statement: AStatement;
     protected readonly _type: CursorType;
+
+    protected _closed = false;
 
     private readonly _lock = new Semaphore();
 
     protected constructor(statement: AStatement, type: CursorType = AResultSet.DEFAULT_TYPE) {
-        super(statement);
+        super();
+        this._statement = statement;
         this._type = type;
+    }
+
+    get statement(): AStatement {
+        return this._statement;
     }
 
     get type(): CursorType {
@@ -38,7 +46,9 @@ export abstract class AResultSet extends AResult {
      * true if this ResultSet object is closed;
      * false if it is still open
      */
-    abstract get closed(): boolean;
+    get closed(): boolean {
+        return this._closed;
+    }
 
     public static async executeSelf<R>(selfReceiver: TExecutor<null, AResultSet>,
                                        callback: TExecutor<AResultSet, R>): Promise<R> {
@@ -55,12 +65,21 @@ export abstract class AResultSet extends AResult {
 
     /** Releases this ResultSet object's database and resources. */
     public async close(): Promise<void> {
-        await this._executeWithLock(() => this._close());
+        await this._executeWithLock(async () => {
+            if (this._closed) {
+                throw new Error("ResultSet already closed");
+            }
+            await this._close();
+            this._closed = true;
+        });
     }
 
     public async next(): Promise<boolean> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
         }
         return await this._next();
     }
@@ -69,12 +88,18 @@ export abstract class AResultSet extends AResult {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
+        }
         return await this._previous();
     }
 
     public async absolute(i: number): Promise<boolean> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
         }
         return await this._absolute(i);
     }
@@ -83,12 +108,18 @@ export abstract class AResultSet extends AResult {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
+        }
         return await this._relative(i);
     }
 
     public async first(): Promise<boolean> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
         }
         return await this._first();
     }
@@ -97,6 +128,9 @@ export abstract class AResultSet extends AResult {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
+        }
         return await this._last();
     }
 
@@ -104,12 +138,18 @@ export abstract class AResultSet extends AResult {
         if (this.isLock) {
             await this.waitUnlock();
         }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
+        }
         return await this._isBof();
     }
 
     public async isEof(): Promise<boolean> {
         if (this.isLock) {
             await this.waitUnlock();
+        }
+        if (this._closed) {
+            throw new Error("ResultSet already closed");
         }
         return await this._isEof();
     }

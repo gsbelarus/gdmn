@@ -342,7 +342,10 @@ describe("Firebird driver tests", () => {
                                 time.setFullYear(fTime.getFullYear(), fTime.getMonth(), fTime.getDate());
                                 expect(date).toEqual(fDate);
                                 expect(time).toEqual(fTime);
-                                expect(await result.getBlob("F_BLOB_TEXT").asString()).toEqual(fBlobText);
+                                expect(
+                                    await globalConnection
+                                        .openBlobAsString(transaction, result.getBlob("F_BLOB_TEXT"))
+                                ).toEqual(fBlobText);
                             }
 
                             if (id % 2 === 0) {
