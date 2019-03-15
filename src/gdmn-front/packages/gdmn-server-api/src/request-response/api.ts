@@ -1,39 +1,39 @@
-interface IAccountLoginRequest {
+export interface IAccountLoginRequest {
   login: string;
   password: string;
 }
 
-interface IAccountCreateRequest extends IAccountLoginRequest {
+export interface IAccountCreateRequest extends IAccountLoginRequest {
   name: string;
 }
 
-interface IAccountLoginResponse {
+export interface IAccountLoginResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
 }
 
-type TAccountRefreshTokenResponse = IAccountLoginResponse;
+export type TAccountRefreshTokenResponse = IAccountLoginResponse;
 
-type TAccountCreateResponse = IAccountLoginResponse;
+export type TAccountCreateResponse = IAccountLoginResponse;
 
-interface IAppCreateRequest {
+export interface IAppCreateRequest {
   alias: string;
 }
 
-interface IAppCreateResponse {
+export interface IAppCreateResponse {
   uid: string;
 }
 
-interface IAppDeleteResponse {
+export interface IAppDeleteResponse {
   uid: string;
 }
 
-type TAppGetResponse = Array<{ uid: string; alias: string; creationDate: Date }>;
+export type TAppGetResponse = Array<{ uid: string; alias: string; creationDate: Date }>;
 
-type TBackupGetResponse = Array<{ uid: string; alias: string; creationDate: Date; size: number }>;
+export type TBackupGetResponse = Array<{ uid: string; alias: string; creationDate: Date; size: number }>;
 
-const enum TResponseErrorCode {
+export const enum TResponseErrorCode {
   INTERNAL,
   NOT_FOUND,
   NOT_UNIQUE,
@@ -41,7 +41,7 @@ const enum TResponseErrorCode {
   INVALID_ARGUMENTS
 }
 
-interface IResponseError {
+export interface IResponseError {
   error: string;
   stack?: string;
   originalError: {
@@ -53,18 +53,3 @@ interface IResponseError {
   };
   message?: string;
 }
-
-export {
-  IAccountLoginRequest,
-  IAccountCreateRequest,
-  IAccountLoginResponse,
-  TAccountRefreshTokenResponse,
-  TAccountCreateResponse,
-  IAppCreateRequest,
-  IAppCreateResponse,
-  IAppDeleteResponse,
-  TAppGetResponse,
-  TBackupGetResponse,
-  TResponseErrorCode,
-  IResponseError
-};

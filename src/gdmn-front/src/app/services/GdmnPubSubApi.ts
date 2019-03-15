@@ -56,7 +56,7 @@ import ExtendableError from 'es6-error';
 import { EMPTY, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
 
-class GdmnPubSubError extends ExtendableError {
+export class GdmnPubSubError extends ExtendableError {
   public errorData: IGdmnMessageError<TGdmnErrorCodes>;
 
   constructor(errMessage: IPubSubMessage<TGdmnReceivedErrorMeta>) {
@@ -71,7 +71,7 @@ class GdmnPubSubError extends ExtendableError {
   }
 }
 
-class GdmnPubSubApi {
+export class GdmnPubSubApi {
   public pubSubClient: PubSubClient;
 
   public taskActionResultObservable?: Observable<IPubSubMessage<TGdmnReceivedMessageMeta>>; // todo ReplaySubject
@@ -548,5 +548,3 @@ class GdmnPubSubApi {
     return replyMode ? observ.pipe(first()).toPromise() : observ;
   }
 }
-
-export {GdmnPubSubApi, GdmnPubSubError};

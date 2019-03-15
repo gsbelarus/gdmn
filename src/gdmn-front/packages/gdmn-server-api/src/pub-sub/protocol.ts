@@ -1,87 +1,70 @@
 import { IPubSubMessageMeta } from '@gdmn/client-core';
 
-interface _IMessageMeta<TActionTypes extends string> {
+export interface _IMessageMeta<TActionTypes extends string> {
   action: TActionTypes;
   [k: string]: string | undefined;
 }
-interface _ISignRequestMeta {
+export interface _ISignRequestMeta {
   login: string;
   passcode: string;
 }
-interface _ISignResponseMeta {
+export interface _ISignResponseMeta {
   session: string; // todo: || undefined (for all meta)
   'access-token': string;
   'refresh-token': string;
 }
-interface _IAuthRequestMeta {
+export interface _IAuthRequestMeta {
   'app-uid'?: string;
   session?: string;
   authorization: string;
 }
 
 // sign up
-interface ISignUpRequestMeta extends _ISignRequestMeta {
+export interface ISignUpRequestMeta extends _ISignRequestMeta {
   'create-user': 1;
 }
-type TSignUpResponseMeta = _ISignResponseMeta;
+export type TSignUpResponseMeta = _ISignResponseMeta;
 
 // sign in
-interface ISignInRequestMeta extends _ISignRequestMeta {
+export interface ISignInRequestMeta extends _ISignRequestMeta {
   'create-user': 0;
   'app-uid'?: string;
   session?: string;
 }
-type TSignInResponseMeta = _ISignResponseMeta;
+export type TSignInResponseMeta = _ISignResponseMeta;
 
 // access token auth
-type TAccessAuthRequestMeta = _IAuthRequestMeta;
-interface IAccessAuthResponseMeta {
+export type TAccessAuthRequestMeta = _IAuthRequestMeta;
+export interface IAccessAuthResponseMeta {
   session: string;
 }
 
 // refresh token auth
-type TRefreshAuthRequestMeta = _IAuthRequestMeta;
-type TRefreshAuthResponseMeta = _ISignResponseMeta;
+export type TRefreshAuthRequestMeta = _IAuthRequestMeta;
+export type TRefreshAuthResponseMeta = _ISignResponseMeta;
 
 // delete account
-type TAccountDeleteRequestMeta = TAccessAuthRequestMeta & {
+export type TAccountDeleteRequestMeta = TAccessAuthRequestMeta & {
   'delete-user': 1;
 };
-type TAccountDeleteResponseMeta = IAccessAuthResponseMeta;
+export type TAccountDeleteResponseMeta = IAccessAuthResponseMeta;
 
 // publish
-type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes> & {
+export type TPublishMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes> & {
   'reply-mode'?: '1';
 };
 
 // receive
-type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
+export type TReceivedMessageMeta<TActionTypes extends string> = _IMessageMeta<TActionTypes>;
 
 // interface IReceivedErrorMeta<TErrorCodes extends string> extends IPubSubMessageMeta {
 //   code: TErrorCodes;
 //   message: string;
 // } //& IPubSubMessageMeta;
 
-type IReceivedErrorMeta<TErrorCodes extends string> = IPubSubMessageMeta & {
+export type IReceivedErrorMeta<TErrorCodes extends string> = IPubSubMessageMeta & {
   code: TErrorCodes;
   message: string;
 };
 
 // todo reconnect (session)
-
-export {
-  ISignInRequestMeta,
-  TSignInResponseMeta,
-  ISignUpRequestMeta,
-  TSignUpResponseMeta,
-  TAccessAuthRequestMeta,
-  IAccessAuthResponseMeta,
-  TRefreshAuthRequestMeta,
-  TRefreshAuthResponseMeta,
-  TAccountDeleteRequestMeta,
-  TAccountDeleteResponseMeta,
-  TPublishMessageMeta,
-  TReceivedMessageMeta,
-  IReceivedErrorMeta,
-  _ISignResponseMeta
-};

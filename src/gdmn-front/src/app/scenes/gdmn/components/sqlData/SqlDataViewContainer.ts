@@ -1,7 +1,6 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
 import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
-import {ISqlDataViewProps, SqlDataView} from "@src/app/scenes/gdmn/components/sqlData/SqlDataView";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";

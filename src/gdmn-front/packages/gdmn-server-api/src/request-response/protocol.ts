@@ -1,10 +1,10 @@
-interface IApiEndpoints {
+export interface IApiEndpoints {
   signUp: string;
   signIn: string;
   refreshAccessToken: string;
 }
 
-interface IGdmnApiEndpoints extends IApiEndpoints {
+export interface IGdmnApiEndpoints extends IApiEndpoints {
   data: string;
   er: string;
   app: string;
@@ -15,5 +15,3 @@ interface IGdmnApiEndpoints extends IApiEndpoints {
   deleteBackup: string;
   ws: string;
 }
-
-export { IApiEndpoints, IGdmnApiEndpoints };

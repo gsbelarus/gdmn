@@ -2,7 +2,7 @@ import { IEntityQueryInspector, IEntityQueryResponse, IERModel } from 'gdmn-orm'
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 
-enum TGdmnTopic {
+export enum TGdmnTopic {
   TASK = '/task',
   TASK_STATUS = '/task/status',
   TASK_PROGRESS = '/task/progress'
@@ -11,12 +11,12 @@ enum TGdmnTopic {
 // MESSAGES META
 
 // type TGdmnActionType = TTaskActionNames;
-type TGdmnPublishMessageMeta = TPublishMessageMeta<TTaskActionNames>;
-type TGdmnReceivedMessageMeta = TReceivedMessageMeta<TTaskActionNames>;
-type TGdmnReceivedErrorMeta = IReceivedErrorMeta<TGdmnErrorCodes>;
+export type TGdmnPublishMessageMeta = TPublishMessageMeta<TTaskActionNames>;
+export type TGdmnReceivedMessageMeta = TReceivedMessageMeta<TTaskActionNames>;
+export type TGdmnReceivedErrorMeta = IReceivedErrorMeta<TGdmnErrorCodes>;
 
 // -- error
-const enum TGdmnErrorCodes {
+export const enum TGdmnErrorCodes {
   INTERNAL = '0',
   UNSUPPORTED = '1',
   UNAUTHORIZED = '2',
@@ -25,7 +25,7 @@ const enum TGdmnErrorCodes {
   NOT_UNIQUE = '5'
 }
 // -- task
-const enum TTaskActionNames {
+export const enum TTaskActionNames {
   DEMO = 'DEMO',
   QUERY = 'QUERY',
   SQL_QUERY = 'SQL_QUERY',
@@ -44,16 +44,16 @@ const enum TTaskActionNames {
 
 // MESSAGES DATA
 
-interface IGdmnMessageData<TPayload = any> {
+export interface IGdmnMessageData<TPayload = any> {
   payload: TPayload;
 }
 
-interface IGdmnMessageReply<TResult = any, TPayload = any, TErrorCode = string> extends IGdmnMessageData<TPayload> {
+export interface IGdmnMessageReply<TResult = any, TPayload = any, TErrorCode = string> extends IGdmnMessageData<TPayload> {
   result: TResult;
   error: IGdmnMessageError<TErrorCode>;
 }
 
-interface IGdmnMessageError<TErrorCode = string> {
+export interface IGdmnMessageError<TErrorCode = string> {
   code: TErrorCode;
   message: string;
 }
@@ -61,11 +61,11 @@ interface IGdmnMessageError<TErrorCode = string> {
 // -- TASK-ACTION
 // pub: /task
 
-type TTaskActionMessageData<TActionName extends keyof TTaskActionPayloadTypes> = IGdmnMessageData<
+export type TTaskActionMessageData<TActionName extends keyof TTaskActionPayloadTypes> = IGdmnMessageData<
   TTaskActionPayloadTypes[TActionName]
 >;
 
-interface TTaskActionPayloadTypes {
+export interface TTaskActionPayloadTypes {
   [TTaskActionNames.DEMO]: {
     withError: boolean;
   };
@@ -124,14 +124,14 @@ interface TTaskActionPayloadTypes {
 // -- TASK-RESULT
 // sub: /task
 
-type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = IGdmnMessageReply<
+export type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = IGdmnMessageReply<
   TTaskActionResultTypes[TActionName],
   TTaskActionPayloadTypes[TActionName]
 > & {
   status: TTaskStatus; // TTaskFinishStatus;
 };
 
-interface TTaskActionResultTypes {
+export interface TTaskActionResultTypes {
   [TTaskActionNames.DEMO]: undefined;
   [TTaskActionNames.QUERY]: IEntityQueryResponse;
   [TTaskActionNames.SQL_QUERY]: any;  // TODO make type
@@ -148,7 +148,7 @@ interface TTaskActionResultTypes {
   [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];
 }
 
-interface IApplicationInfo {
+export interface IApplicationInfo {
   uid: string;
   alias: string;
   creationDate: Date;
@@ -159,12 +159,12 @@ export const TTaskFinishStatus = [TTaskStatus.INTERRUPTED, TTaskStatus.FAILED, T
 // -- TASK-STATUS
 // sub: /task/status
 
-interface ITaskStatusMessageData<TActionName extends keyof TTaskActionPayloadTypes>
+export interface ITaskStatusMessageData<TActionName extends keyof TTaskActionPayloadTypes>
   extends TTaskActionMessageData<TActionName> {
   status: TTaskStatus;
 }
 
-const enum TTaskStatus {
+export const enum TTaskStatus {
   RUNNING = 1,
   PAUSED = 2,
   INTERRUPTED = 3,
@@ -175,36 +175,15 @@ const enum TTaskStatus {
 // -- TASK-PROGRESS
 // sub: /task/progress
 
-interface ITaskProgressMessageData<TActionName extends keyof TTaskActionPayloadTypes>
+export interface ITaskProgressMessageData<TActionName extends keyof TTaskActionPayloadTypes>
   extends TTaskActionMessageData<TActionName> {
   progress: ITaskProgress;
   status: TTaskStatus;
 }
 
-interface ITaskProgress {
+export interface ITaskProgress {
   min: number;
   max: number;
   value: number; // 0-100
   description: string;
 }
-
-export {
-  TGdmnTopic,
-  TGdmnPublishMessageMeta,
-  TGdmnReceivedMessageMeta,
-  TGdmnReceivedErrorMeta,
-  TGdmnErrorCodes,
-  TTaskActionNames,
-  IGdmnMessageData,
-  IGdmnMessageReply,
-  IGdmnMessageError,
-  TTaskActionMessageData,
-  TTaskActionPayloadTypes,
-  TTaskResultMessageData,
-  TTaskActionResultTypes,
-  IApplicationInfo,
-  ITaskStatusMessageData,
-  TTaskStatus,
-  ITaskProgressMessageData,
-  ITaskProgress
-};
