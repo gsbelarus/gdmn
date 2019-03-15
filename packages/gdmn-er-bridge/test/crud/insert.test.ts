@@ -108,16 +108,6 @@ describe("Insert", () => {
               lName: {},
               entities: [DetailEntity]
             }));
-
-            const SelectorEntity2 = await erBuilder.create(erModel, new Entity({
-              name: "SELECTOR_ENTITY2",
-              lName: {},
-              adapter: {relation: [{relationName: "SELECTOR_ENTITY2", selector: {field: "CONTACTTYPE", value: 5}}]}
-            }));
-            await eBuilder.createAttribute(SelectorEntity2, new StringAttribute({
-              name: "TEST_STRING",
-              lName: {}
-            }));
           }
         });
       }
