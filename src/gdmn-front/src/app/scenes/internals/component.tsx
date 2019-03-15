@@ -19,6 +19,10 @@ export class Internals extends View<IInternalsProps, {}> {
     return 120;
   }
 
+  public getViewCaption(): string {
+    return "Internals";
+  }
+
   render () {
 
     const { erModel, recordSet, rsMeta, viewTabs } = this.props;

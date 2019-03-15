@@ -31,6 +31,10 @@ export class ERModelBox extends View<IERModelBoxProps, IERModelBoxState> {
     filtering: false
   }
 
+  public getViewCaption(): string {
+    return "ERModel2";
+  }
+
   componentDidUpdate() {
     const { erModel } = this.props;
     const { text, searchInEntity, searchInAttribute, maxCount, filtering } = this.state;

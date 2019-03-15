@@ -23,18 +23,18 @@ interface ICmd<TPayload> {
   payload: TPayload;
 }
 
-interface ICmdResult<TPayload, IError = IGdmnMessageError, IMeta = { [key: string]: string | undefined }> {
+export interface ICmdResult<TPayload, IError = IGdmnMessageError, IMeta = { [key: string]: string | undefined }> {
   payload: TPayload;
   error?: IError;
   meta?: IMeta;
 }
 
 // TGdmnPublishMessageMeta & // todo: tmp
-type TTaskCmd<TActionName extends TTaskActionNames> =
+export type TTaskCmd<TActionName extends TTaskActionNames> =
   ICmd<{ action: TActionName } & TTaskActionMessageData<TActionName>>;
 
 // TGdmnReceivedMessageMeta & // todo: tmp
-type TTaskCmdResult<TActionName extends TTaskActionNames> =
+export type TTaskCmdResult<TActionName extends TTaskActionNames> =
   ICmdResult<
 {
   result?: TTaskActionResultTypes[TActionName];
@@ -45,142 +45,114 @@ type TTaskCmdResult<TActionName extends TTaskActionNames> =
 
 // sign up
 
-type TSignUpCmd = ICmd<ISignUpRequestMeta>;
+export type TSignUpCmd = ICmd<ISignUpRequestMeta>;
 
-type TSignUpCmdResult = ICmdResult<TSignUpResponseMeta, null>; // only protocol errors
+export type TSignUpCmdResult = ICmdResult<TSignUpResponseMeta, null>; // only protocol errors
 
 // sign in
 
-type TSignInCmd = ICmd<ISignInRequestMeta>;
+export type TSignInCmd = ICmd<ISignInRequestMeta>;
 
-type TSignInCmdResult = ICmdResult<TSignInResponseMeta, null>; // only protocol errors
+export type TSignInCmdResult = ICmdResult<TSignInResponseMeta, null>; // only protocol errors
 
 // sign out
 
-type TSignOutCmd = ICmd<null>;
+export type TSignOutCmd = ICmd<null>;
 
-type TSignOutCmdResult = ICmdResult<null, null>; // only protocol errors
+export type TSignOutCmdResult = ICmdResult<null, null>; // only protocol errors
 
 // access token auth
 
-type TAuthCmd = ICmd<TAccessAuthRequestMeta>;
+export type TAuthCmd = ICmd<TAccessAuthRequestMeta>;
 
-type TAuthCmdResult = ICmdResult<IAccessAuthResponseMeta, null>; // only protocol errors
+export type TAuthCmdResult = ICmdResult<IAccessAuthResponseMeta, null>; // only protocol errors
 
 // refresh token auth
 
-type TRefreshAuthCmd = ICmd<TRefreshAuthRequestMeta>;
+export type TRefreshAuthCmd = ICmd<TRefreshAuthRequestMeta>;
 
-type TRefreshAuthCmdResult = ICmdResult<TRefreshAuthResponseMeta, null>; // only protocol errors
+export type TRefreshAuthCmdResult = ICmdResult<TRefreshAuthResponseMeta, null>; // only protocol errors
 
 // delete account
 
-type TDeleteAccountCmd = ICmd<TAccountDeleteRequestMeta>;
+export type TDeleteAccountCmd = ICmd<TAccountDeleteRequestMeta>;
 
-type TDeleteAccountCmdResult = ICmdResult<TAccountDeleteResponseMeta, null>; // only protocol errors
+export type TDeleteAccountCmdResult = ICmdResult<TAccountDeleteResponseMeta, null>; // only protocol errors
 
 // interrupt
 
-type TInterruptTaskCmd = TTaskCmd<TTaskActionNames.INTERRUPT>;
+export type TInterruptTaskCmd = TTaskCmd<TTaskActionNames.INTERRUPT>;
 
-type TInterruptTaskCmdResult = TTaskCmdResult<TTaskActionNames.INTERRUPT>;
+export type TInterruptTaskCmdResult = TTaskCmdResult<TTaskActionNames.INTERRUPT>;
 
 // reload schema
 
-type TReloadSchemaTaskCmd  = TTaskCmd<TTaskActionNames.RELOAD_SCHEMA>;
+export type TReloadSchemaTaskCmd  = TTaskCmd<TTaskActionNames.RELOAD_SCHEMA>;
 
-type TReloadSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.RELOAD_SCHEMA>;
+export type TReloadSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.RELOAD_SCHEMA>;
 
 // demo task
 
-type TDemoTaskCmd = TTaskCmd<TTaskActionNames.DEMO>;
+export type TDemoTaskCmd = TTaskCmd<TTaskActionNames.DEMO>;
 
-type TDemoTaskCmdResult = TTaskCmdResult<TTaskActionNames.DEMO>;
+export type TDemoTaskCmdResult = TTaskCmdResult<TTaskActionNames.DEMO>;
 
 // ping task
 
-type TPingTaskCmd = TTaskCmd<TTaskActionNames.PING>;
+export type TPingTaskCmd = TTaskCmd<TTaskActionNames.PING>;
 
-type TPingTaskCmdResult = TTaskCmdResult<TTaskActionNames.PING>;
+export type TPingTaskCmdResult = TTaskCmdResult<TTaskActionNames.PING>;
 
 // get schema task
 
-type TGetSchemaTaskCmd = TTaskCmd<TTaskActionNames.GET_SCHEMA>;
+export type TGetSchemaTaskCmd = TTaskCmd<TTaskActionNames.GET_SCHEMA>;
 
-type TGetSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_SCHEMA>;
+export type TGetSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_SCHEMA>;
 
 // query
 
-type TQueryTaskCmd = TTaskCmd<TTaskActionNames.QUERY>;
+export type TQueryTaskCmd = TTaskCmd<TTaskActionNames.QUERY>;
 
-type TQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY>;
+export type TQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY>;
+
+export type TSqlQueryTaskCmd = TTaskCmd<TTaskActionNames.SQL_QUERY>;
+
+export type TSqlQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.SQL_QUERY>;
 
 // prepare query
 
-type TPrepareQueryTaskCmd = TTaskCmd<TTaskActionNames.PREPARE_QUERY>;
+export type TPrepareQueryTaskCmd = TTaskCmd<TTaskActionNames.PREPARE_QUERY>;
 
-type TPrepareQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.PREPARE_QUERY>;
+export type TPrepareQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.PREPARE_QUERY>;
+
+export type TPrepareSqlQueryTaskCmd = TTaskCmd<TTaskActionNames.PREPARE_SQL_QUERY>;
+
+export type TPrepareSqlQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.PREPARE_SQL_QUERY>;
 
 // fetch query
 
-type TFetchQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_QUERY>;
+export type TFetchQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_QUERY>;
 
-type TFetchQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.FETCH_QUERY>;
+export type TFetchQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.FETCH_QUERY>;
+
+export type TFetchSqlQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_SQL_QUERY>;
+
+export type TFetchSqlQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.FETCH_SQL_QUERY>;
 
 // create app task
 
-type TCreateAppTaskCmd = TTaskCmd<TTaskActionNames.CREATE_APP>;
+export type TCreateAppTaskCmd = TTaskCmd<TTaskActionNames.CREATE_APP>;
 
-type TCreateAppTaskCmdResult = TTaskCmdResult<TTaskActionNames.CREATE_APP>;
+export type TCreateAppTaskCmdResult = TTaskCmdResult<TTaskActionNames.CREATE_APP>;
 
 // delete app task
 
-type TDeleteAppTaskCmd = TTaskCmd<TTaskActionNames.DELETE_APP>;
+export type TDeleteAppTaskCmd = TTaskCmd<TTaskActionNames.DELETE_APP>;
 
-type TDeleteAppTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_APP>;
+export type TDeleteAppTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_APP>;
 
 // get apps task
 
-type TGetAppsTaskCmd = TTaskCmd<TTaskActionNames.GET_APPS>;
+export type TGetAppsTaskCmd = TTaskCmd<TTaskActionNames.GET_APPS>;
 
-type TGetAppsTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APPS>;
-
-export {
-  TTaskCmd,
-  TTaskCmdResult,
-  TSignUpCmd,
-  TSignUpCmdResult,
-  TSignInCmd,
-  TSignInCmdResult,
-  TSignOutCmd,
-  TSignOutCmdResult,
-  TAuthCmd,
-  TAuthCmdResult,
-  TRefreshAuthCmd,
-  TRefreshAuthCmdResult,
-  TDeleteAccountCmd,
-  TDeleteAccountCmdResult,
-  TDemoTaskCmd,
-  TDemoTaskCmdResult,
-  TInterruptTaskCmd,
-  TInterruptTaskCmdResult,
-  TReloadSchemaTaskCmd,
-  TReloadSchemaTaskCmdResult,
-  TPingTaskCmd,
-  TPingTaskCmdResult,
-  TGetSchemaTaskCmd,
-  TGetSchemaTaskCmdResult,
-  TQueryTaskCmd,
-  TQueryTaskCmdResult,
-  TPrepareQueryTaskCmd,
-  TPrepareQueryTaskCmdResult,
-  TFetchQueryTaskCmd,
-  TFetchQueryTaskCmdResult,
-  TCreateAppTaskCmd,
-  TCreateAppTaskCmdResult,
-  TDeleteAppTaskCmd,
-  TDeleteAppTaskCmdResult,
-  TGetAppsTaskCmd,
-  TGetAppsTaskCmdResult,
-  ICmdResult
-};
+export type TGetAppsTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APPS>;

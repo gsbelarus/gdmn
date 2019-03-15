@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
-import {AConnection} from "gdmn-db";
-import {EQueryCursor, ERBridge} from "gdmn-er-bridge";
+import {AConnection, IParams} from "gdmn-db";
+import {EQueryCursor, ERBridge, ICursorResponse, SimpleCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   EntityDelete,
@@ -31,8 +31,11 @@ export type AppAction =
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
   | "QUERY"
+  | "SQL_QUERY"
   | "PREPARE_QUERY"
+  | "PREPARE_SQL_QUERY"
   | "FETCH_QUERY"
+  | "FETCH_SQL_QUERY"
   | "CREATE"
   | "UPDATE"
   | "DELETE";
@@ -44,9 +47,12 @@ export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildPr
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
-export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector, sequentially?: boolean }>;
+export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector }>;
+export type SqlQueryCmd = AppCmd<"SQL_QUERY", { select: string, params: IParams }>;
 export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
+export type PrepareSqlQueryCmd = AppCmd<"PREPARE_SQL_QUERY", { select: string, params: IParams }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
+export type FetchSqlQueryCmd = AppCmd<"FETCH_SQL_QUERY", { taskKey: string, rowsCount: number }>;
 export type CreateCmd = AppCmd<"CREATE", { create: IEntityInsertInspector }>;
 export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
 export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
@@ -278,7 +284,6 @@ export class Application extends ADatabase {
       session,
       command,
       level: Level.SESSION,
-      unlimited: true,
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
@@ -289,6 +294,30 @@ export class Application extends ADatabase {
 
         const result = await context.session.executeConnection((connection) => (
           ERBridge.query(connection, connection.readTransaction, entityQuery))
+        );
+        await context.checkStatus();
+        return result;
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushSqlQueryCmd(session: Session, command: SqlQueryCmd): Task<SqlQueryCmd, ICursorResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {select, params} = context.command.payload;
+
+        const result = await context.session.executeConnection((connection) => (
+          ERBridge.sqlQuery(connection, connection.readTransaction, select, params))
         );
         await context.checkStatus();
         return result;
@@ -349,6 +378,55 @@ export class Application extends ADatabase {
     return task;
   }
 
+  public pushPrepareSqlQueryCmd(session: Session, command: PrepareSqlQueryCmd): Task<PrepareSqlQueryCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      unlimited: true,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        const {select, params} = context.command.payload;
+
+        const cursorEmitter = new EventEmitter();
+        const cursorPromise = new Promise<SimpleCursor>((resolve, reject) => {
+          cursorEmitter.once("cursor", resolve);
+          cursorEmitter.once("error", reject);
+        });
+        context.session.cursorsPromises.set(task.id, cursorPromise);
+        try {
+          await this.waitUnlock();
+          this.checkSession(context.session);
+
+          await context.session.executeConnection(async (connection) => {
+            const cursor = await ERBridge.openSqlQueryCursor(connection, connection.readTransaction, select, params);
+            try {
+              cursorEmitter.emit("cursor", cursor);
+              await new Promise((resolve, reject) => {
+                // wait for closing cursor
+                cursor.waitForClosing().then(() => resolve()).catch(reject);
+                // or wait for interrupt task
+                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+              });
+            } finally {
+              if (!cursor.closed) {
+                await cursor.close();
+              }
+            }
+          });
+        } catch (error) {
+          cursorEmitter.emit("error", error);
+        } finally {
+          context.session.cursorsPromises.delete(task.id);
+        }
+        await context.checkStatus();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   public pushFetchQueryCmd(session: Session, command: FetchQueryCmd): Task<FetchQueryCmd, IEntityQueryResponse> {
     const task = new Task({
       session,
@@ -376,6 +454,40 @@ export class Application extends ADatabase {
           }
         }
         return cursor.makeEQueryResponse(result.data);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushFetchSqlQueryCmd(session: Session, command: FetchSqlQueryCmd): Task<FetchSqlQueryCmd, ICursorResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {taskKey, rowsCount} = context.command.payload;
+
+        const cursor = await context.session.cursorsPromises.get(taskKey);
+        if (!cursor || !(cursor instanceof SimpleCursor)) {
+          throw new Error("Cursor is not found");
+        }
+
+        const result = await cursor.fetch(rowsCount);
+        if (result.finished && !cursor.closed) {
+          await cursor.close();
+          // wait for finish query task
+          const findTask = context.session.taskManager.find(taskKey);
+          if (findTask) {
+            await findTask.waitDoneStatus();
+          }
+        }
+        return cursor.makeCursorResponse(result.data);
       }
     });
     session.taskManager.add(task);

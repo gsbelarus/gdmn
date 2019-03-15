@@ -205,34 +205,8 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           default:
             throw new Error("Never thrown");
         }
-      },
-
-      // loadFully: (rs: RecordSet) => thunkDispatch(
-      //   async (dispatch, getState) => {
-      //     while (getState().recordSet[rs.name].status === TStatus.PARTIAL) {
-      //       dispatchProps.loadingData(rs.name);
-      //       const res = await apiService.fetchQuery({
-      //         rowsCount: 500,
-      //         taskKey: getState().rsMeta[rs.name].taskKey!
-      //       });
-      //       switch (res.payload.status) {
-      //         case TTaskStatus.SUCCESS: {
-      //           dispatchProps.addData(rs.name, res.payload.result!.data);
-      //           break;
-      //         }
-      //         case TTaskStatus.FAILED: {
-      //           dispatchProps.setError(rs.name, {message: res.error!.message});
-      //           break;
-      //         }
-      //         case TTaskStatus.INTERRUPTED:
-      //         case TTaskStatus.PAUSED:
-      //         default:
-      //           throw new Error("Never thrown");
-      //       }
-      //     }
-      //   }
-      // )
-    }),
+      }
+    })
   ),
   connectDataView
 )(EntityDataView);

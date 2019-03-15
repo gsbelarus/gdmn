@@ -10,6 +10,7 @@ export interface IViewProps<R = any> extends RouteComponentProps<R> {
 }
 
 export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Component<P, S> {
+
   public getViewCaption(): string {
     return 'The View...';
   }

@@ -28,8 +28,11 @@ const enum TGdmnErrorCodes {
 const enum TTaskActionNames {
   DEMO = 'DEMO',
   QUERY = 'QUERY',
+  SQL_QUERY = 'SQL_QUERY',
   PREPARE_QUERY = 'PREPARE_QUERY',
+  PREPARE_SQL_QUERY = 'PREPARE_SQL_QUERY',
   FETCH_QUERY = 'FETCH_QUERY',
+  FETCH_SQL_QUERY = 'FETCH_SQL_QUERY',
   INTERRUPT = 'INTERRUPT',
   RELOAD_SCHEMA = 'RELOAD_SCHEMA',
   PING = 'PING',
@@ -69,10 +72,22 @@ interface TTaskActionPayloadTypes {
   [TTaskActionNames.QUERY]: {
     query: IEntityQueryInspector;
   };
+  [TTaskActionNames.SQL_QUERY]: {
+    select: string;
+    params: {[alias: string]: any}
+  };
   [TTaskActionNames.PREPARE_QUERY]: {
     query: IEntityQueryInspector;
   };
+  [TTaskActionNames.PREPARE_SQL_QUERY]: {
+    select: string;
+    params: {[alias: string]: any}
+  };
   [TTaskActionNames.FETCH_QUERY]: {
+    taskKey: string;
+    rowsCount: number;
+  };
+  [TTaskActionNames.FETCH_SQL_QUERY]: {
     taskKey: string;
     rowsCount: number;
   };
@@ -119,8 +134,11 @@ type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTypes> = 
 interface TTaskActionResultTypes {
   [TTaskActionNames.DEMO]: undefined;
   [TTaskActionNames.QUERY]: IEntityQueryResponse;
+  [TTaskActionNames.SQL_QUERY]: any;  // TODO make type
   [TTaskActionNames.PREPARE_QUERY]: undefined;
+  [TTaskActionNames.PREPARE_SQL_QUERY]: undefined;
   [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse;
+  [TTaskActionNames.FETCH_SQL_QUERY]: any;  // TODO make type
   [TTaskActionNames.INTERRUPT]: undefined;
   [TTaskActionNames.RELOAD_SCHEMA]: IERModel;
   [TTaskActionNames.PING]: undefined;

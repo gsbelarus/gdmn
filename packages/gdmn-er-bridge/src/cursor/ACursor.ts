@@ -10,7 +10,7 @@ export interface IFetchResponse {
   data: IFetchResponseDataItem[];
 }
 
-export interface IFetchResponseInfo {
+export interface IFetchResponseAliases {
   [alias: string]: {
     type: Types;
     field?: string;
@@ -20,7 +20,7 @@ export interface IFetchResponseInfo {
 
 export interface ICursorResponse {
   data: IFetchResponseDataItem[];
-  info: IFetchResponseInfo;
+  aliases: IFetchResponseAliases;
 }
 
 export abstract class ACursor {
@@ -74,9 +74,9 @@ export abstract class ACursor {
 
   public makeCursorResponse(data: any[]): ICursorResponse {
     const metadata = this._resultSet.metadata;
-    const info: IFetchResponseInfo = {};
+    const aliases: IFetchResponseAliases = {};
     for (let i = 0; i < this._resultSet.metadata.columnCount; i++) {
-      info[metadata.getColumnLabel(i)!] = {
+      aliases[metadata.getColumnLabel(i)!] = {
         type: metadata.getColumnType(i),
         field: metadata.getColumnName(i),
         relation: metadata.getColumnRelation(i)
@@ -85,7 +85,7 @@ export abstract class ACursor {
 
     return {
       data,
-      info
+      aliases
     };
   }
 

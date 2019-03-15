@@ -22,6 +22,7 @@ import {
   TDeleteAppTaskCmdResult,
   TDemoTaskCmdResult,
   TFetchQueryTaskCmdResult,
+  TFetchSqlQueryTaskCmdResult,
   TGdmnErrorCodes,
   TGdmnPublishMessageMeta,
   TGdmnReceivedErrorMeta,
@@ -32,7 +33,9 @@ import {
   TInterruptTaskCmdResult,
   TPingTaskCmdResult,
   TPrepareQueryTaskCmdResult,
+  TPrepareSqlQueryTaskCmdResult,
   TQueryTaskCmdResult,
+  TSqlQueryTaskCmdResult,
   TRefreshAuthCmd,
   TRefreshAuthCmdResult,
   TReloadSchemaTaskCmdResult,
@@ -213,6 +216,15 @@ class GdmnPubSubApi {
     });
   }
 
+  public sqlQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.SQL_QUERY]): Promise<TSqlQueryTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.SQL_QUERY,
+        payload
+      }
+    });
+  }
+
   public prepareQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.PREPARE_QUERY]): Observable<TPrepareQueryTaskCmdResult> {
     return this.runTaskCmd({
       payload: {
@@ -222,10 +234,28 @@ class GdmnPubSubApi {
     });
   }
 
+  public prepareSqlQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.PREPARE_SQL_QUERY]): Observable<TPrepareSqlQueryTaskCmdResult> {
+    return this.runTaskCmd({
+      payload: {
+        action: TTaskActionNames.PREPARE_SQL_QUERY,
+        payload
+      }
+    });
+  }
+
   public fetchQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.FETCH_QUERY]): Promise<TFetchQueryTaskCmdResult> {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.FETCH_QUERY,
+        payload
+      }
+    });
+  }
+
+  public fetchSqlQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.FETCH_SQL_QUERY]): Promise<TFetchSqlQueryTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.FETCH_SQL_QUERY,
         payload
       }
     });

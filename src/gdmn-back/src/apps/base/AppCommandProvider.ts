@@ -5,12 +5,15 @@ import {
   DeleteCmd,
   DemoCmd,
   FetchQueryCmd,
+  FetchSqlQueryCmd,
   GetSchemaCmd,
   InterruptCmd,
   PingCmd,
   PrepareQueryCmd,
+  PrepareSqlQueryCmd,
   QueryCmd,
   ReloadSchemaCmd,
+  SqlQueryCmd,
   UpdateCmd
 } from "./Application";
 import {Session} from "./session/Session";
@@ -55,6 +58,15 @@ export class AppCommandProvider {
     // TODO
   }
 
+  private static _verifySqlQueryCmd(command: ICmd<AppAction, any>): command is SqlQueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "select" in command.payload
+      && typeof command.payload.select === "string"
+      && "params" in command.payload
+      && typeof command.payload.params === "object";
+  }
+
   private static _verifyPrepareQueryCmd(command: ICmd<AppAction, any>): command is PrepareQueryCmd {
     return typeof command.payload === "object"
       && !!command.payload
@@ -63,7 +75,25 @@ export class AppCommandProvider {
     // TODO
   }
 
+  private static _verifyPrepareSqlQueryCmd(command: ICmd<AppAction, any>): command is PrepareSqlQueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "select" in command.payload
+      && typeof command.payload.select === "string"
+      && "params" in command.payload
+      && typeof command.payload.params === "object";
+  }
+
   private static _verifyFetchQueryCmd(command: ICmd<AppAction, any>): command is FetchQueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "taskKey" in command.payload
+      && typeof command.payload.taskKey === "string"
+      && "rowsCount" in command.payload
+      && typeof command.payload.rowsCount === "number";
+  }
+
+  private static _verifyFetchSqlQueryCmd(command: ICmd<AppAction, any>): command is FetchSqlQueryCmd {
     return typeof command.payload === "object"
       && !!command.payload
       && "taskKey" in command.payload
@@ -131,17 +161,35 @@ export class AppCommandProvider {
         }
         return this._application.pushQueryCmd(session, command);
       }
+      case "SQL_QUERY": {
+        if (!AppCommandProvider._verifySqlQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushSqlQueryCmd(session, command);
+      }
       case "PREPARE_QUERY": {
         if (!AppCommandProvider._verifyPrepareQueryCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushPrepareQueryCmd(session, command);
       }
+      case "PREPARE_SQL_QUERY": {
+        if (!AppCommandProvider._verifyPrepareSqlQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushPrepareSqlQueryCmd(session, command);
+      }
       case "FETCH_QUERY": {
         if (!AppCommandProvider._verifyFetchQueryCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushFetchQueryCmd(session, command);
+      }
+      case "FETCH_SQL_QUERY": {
+        if (!AppCommandProvider._verifyFetchSqlQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushFetchSqlQueryCmd(session, command);
       }
       case "CREATE": {
         if (!AppCommandProvider._verifyCreateCmd(command)) {

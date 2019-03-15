@@ -1,9 +1,11 @@
-import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions} from "gdmn-db";
+import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams} from "gdmn-db";
 import {EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse} from "gdmn-orm";
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
 import {Update} from "./crud/update/Update";
+import {ICursorResponse} from "./cursor/ACursor";
 import {EQueryCursor} from "./cursor/EQueryCursor";
+import {SimpleCursor} from "./cursor/SimpleCursor";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
 import {DDLHelper} from "./ddl/DDLHelper";
@@ -107,6 +109,34 @@ export class ERBridge {
                                       transaction: ATransaction,
                                       query: EntityQuery): Promise<EQueryCursor> {
     return await EQueryCursor.open(connection, transaction, query);
+  }
+
+  public static async openSqlQueryCursor(connection: AConnection,
+                                         transaction: ATransaction,
+                                         select: string,
+                                         params: IParams): Promise<SimpleCursor> {
+    return await SimpleCursor.open(connection, transaction, select, params);
+  }
+
+  public static async sqlQuery(connection: AConnection,
+                               transaction: ATransaction,
+                               select: string,
+                               params: IParams): Promise<ICursorResponse> {
+    const cursor = await SimpleCursor.open(connection, transaction, select, params);
+    try {
+      let data: any[] = [];
+      while (true) {
+        const rows = await cursor.fetch(100);
+        data = data.concat(rows.data);
+        if (rows.finished) {
+          break;
+        }
+      }
+
+      return cursor.makeCursorResponse(data);
+    } finally {
+      await cursor.close();
+    }
   }
 
   public static async query(connection: AConnection,
