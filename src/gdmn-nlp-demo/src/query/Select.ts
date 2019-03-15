@@ -12,8 +12,8 @@ import {
   SetAttribute
 } from "gdmn-orm";
 import {Constants} from "./Constants";
-import {Utils} from "./Utils";
 import {SQLTemplates} from "./SQLTemplates";
+import {Utils} from "./Utils";
 import {VirtualQueries} from "./VirtualQueries";
 
 export interface IParams {
@@ -22,16 +22,16 @@ export interface IParams {
 
 export class Select {
 
+  public readonly query: EntityQuery;
   public readonly sql: string = "";
   public readonly params: IParams = {};
   public readonly fieldAliases = new Map<EntityQueryField, Map<Attribute, string>>();
 
-  private readonly _query: EntityQuery;
   private readonly _linkAliases = new Map<EntityLink, { [relationName: string]: string }>();
 
   constructor(query: EntityQuery) {
-    this._query = query;
-    this.sql = this._getSelect(this._query, true);
+    this.query = query;
+    this.sql = this._getSelect(this.query, true);
   }
 
   private static _arrayJoinWithBracket(array: string[], separator: string): string {
@@ -121,7 +121,7 @@ export class Select {
       if (rel.relationName == mainRelation.relationName) {
         if (!link.entity.isIntervalTree && link.entity.isTree && first) {
 
-          const virtualTree = this._query.link.fields
+          const virtualTree = this.query.link.fields
             .filter((field) => field.attribute.type === "Parent")
             .map((field) => {
               const virtualQuery = VirtualQueries.makeVirtualQuery(query);
@@ -137,7 +137,7 @@ export class Select {
                   const tableWithRecursive = this._getSelect(virtualQuery, false, true);
 
                   // TODO field.links![0]
-                  return SQLTemplates.fromWithTree(this._getTableAlias(field.links![0], this._query.link.entity.name),
+                  return SQLTemplates.fromWithTree(this._getTableAlias(field.links![0], this.query.link.entity.name),
                     rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
                 }
               });
@@ -271,7 +271,7 @@ export class Select {
                     const tableWithRecursive = this._getSelect(virtualQuery, false, true);
 
 
-                    const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(fLink, this._query.link.entity.name),
+                    const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(fLink, this.query.link.entity.name),
                       rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
 
                     const attr = field.attribute as EntityAttribute;
@@ -405,8 +405,8 @@ export class Select {
   }
 
   private _makeOrder(link: EntityLink): string[] {
-    if (this._query.options && this._query.options.order) {
-      return this._query.options.order.reduce((orders, order) => {
+    if (this.query.options && this.query.options.order) {
+      return this.query.options.order.reduce((orders, order) => {
         const getlink = this._getLink(order.alias, link);
         const alias = this._getTableAlias(getlink, order.attribute.adapter!.relation);
         orders.push(
@@ -464,7 +464,7 @@ export class Select {
       return true;
     }
 
-    const where = this._query.options && this._query.options.where;
+    const where = this.query.options && this.query.options.where;
     if (where) {
       const existsInWhere = where.some((filter) => this._isExistsInWhere(filter, relationName));
       if (existsInWhere) {
@@ -472,7 +472,7 @@ export class Select {
       }
     }
 
-    const order = this._query.options && this._query.options.order;
+    const order = this.query.options && this.query.options.order;
     if (order) {
       const existsInOrder = order.some((opt) => opt.attribute.adapter!.relation === relationName);
       if (existsInOrder) {

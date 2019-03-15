@@ -1,3 +1,4 @@
 export * from "./ERBridge";
-export * from "./EQueryCursor";
+export * from "./cursor/ACursor";
+export * from "./cursor/EQueryCursor";
 export * from "./crud/query/Select";

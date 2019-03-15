@@ -273,9 +273,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushQueryCmd(session: Session,
-                      command: QueryCmd
-  ): Task<QueryCmd, IEntityQueryResponse> {
+  public pushQueryCmd(session: Session, command: QueryCmd): Task<QueryCmd, IEntityQueryResponse> {
     const task = new Task({
       session,
       command,
@@ -301,9 +299,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushPrepareQueryCmd(session: Session,
-                             command: PrepareQueryCmd
-  ): Task<PrepareQueryCmd, void> {
+  public pushPrepareQueryCmd(session: Session, command: PrepareQueryCmd): Task<PrepareQueryCmd, void> {
     const task = new Task({
       session,
       command,
@@ -330,7 +326,7 @@ export class Application extends ADatabase {
               cursorEmitter.emit("cursor", cursor);
               await new Promise((resolve, reject) => {
                 // wait for closing cursor
-                cursor.waitClose().then(() => resolve()).catch(reject);
+                cursor.waitForClosing().then(() => resolve()).catch(reject);
                 // or wait for interrupt task
                 task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
               });
@@ -353,9 +349,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushFetchQueryCmd(session: Session,
-                           command: FetchQueryCmd
-  ): Task<FetchQueryCmd, IEntityQueryResponse> {
+  public pushFetchQueryCmd(session: Session, command: FetchQueryCmd): Task<FetchQueryCmd, IEntityQueryResponse> {
     const task = new Task({
       session,
       command,
@@ -368,8 +362,8 @@ export class Application extends ADatabase {
         const {taskKey, rowsCount} = context.command.payload;
 
         const cursor = await context.session.cursorsPromises.get(taskKey);
-        if (!cursor) {
-          throw new Error("Unknown taskKey");
+        if (!cursor || !(cursor instanceof EQueryCursor)) {
+          throw new Error("Cursor is not found");
         }
 
         const result = await cursor.fetch(rowsCount);
@@ -381,7 +375,7 @@ export class Application extends ADatabase {
             await findTask.waitDoneStatus();
           }
         }
-        return cursor.makeEntityQueryResponse(result.data);
+        return cursor.makeEQueryResponse(result.data);
       }
     });
     session.taskManager.add(task);

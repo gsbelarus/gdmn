@@ -3,12 +3,12 @@ import {EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQ
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
 import {Update} from "./crud/update/Update";
+import {EQueryCursor} from "./cursor/EQueryCursor";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
 import {DDLHelper} from "./ddl/DDLHelper";
 import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
-import {EQueryCursor} from "./EQueryCursor";
 
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
@@ -123,7 +123,7 @@ export class ERBridge {
         }
       }
 
-      return cursor.makeEntityQueryResponse(data);
+      return cursor.makeEQueryResponse(data);
     } finally {
       await cursor.close();
     }

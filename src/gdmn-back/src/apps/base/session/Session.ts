@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {AConnection, AConnectionPool, ICommonConnectionPoolOptions, TExecutor} from "gdmn-db";
-import {EQueryCursor} from "gdmn-er-bridge";
+import {ACursor, EQueryCursor} from "gdmn-er-bridge";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {Constants} from "../../../Constants";
@@ -44,7 +44,7 @@ export class Session {
   private readonly _options: IOptions;
   private readonly _taskManager = new TaskManager();
   private readonly _usesConnections: IUsesConnections[] = [];
-  private readonly _cursorsPromises = new Map<string, Promise<EQueryCursor>>();
+  private readonly _cursorsPromises = new Map<string, Promise<ACursor>>();
 
   private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
@@ -71,7 +71,7 @@ export class Session {
     return this._taskManager;
   }
 
-  get cursorsPromises(): Map<string, Promise<EQueryCursor>> {
+  get cursorsPromises(): Map<string, Promise<ACursor>> {
     return this._cursorsPromises;
   }
 
