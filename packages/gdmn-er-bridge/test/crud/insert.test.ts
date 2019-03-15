@@ -118,7 +118,6 @@ describe("Insert", () => {
               name: "TEST_STRING",
               lName: {}
             }));
-            console.log(SelectorEntity2);
           }
         });
       }
@@ -439,7 +438,7 @@ describe("Insert", () => {
     SELECTOR_ENTITY.add(new IntegerAttribute({
       name: "CONTACTTYPE", lName: {}, adapter: {relation: "SELECTOR_ENTITY", field: "CONTACTTYPE"}
     }));
-    console.log(SELECTOR_ENTITY);
+
     await AConnection.executeTransaction({
       connection,
       callback: (transaction) => DDLHelper.executeSelf({
@@ -455,7 +454,6 @@ describe("Insert", () => {
         }
       })
     });
-
 
     const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
       entity: "SELECTOR_ENTITY",
