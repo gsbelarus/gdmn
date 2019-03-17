@@ -1,5 +1,4 @@
 import { SemCategory, semCategories2Str } from "./categories";
-import { RusNoun } from "../morphology/rusNoun";
 
 export interface IRusNounSemCategory {
   [stem: string]: SemCategory[];
@@ -7,5 +6,7 @@ export interface IRusNounSemCategory {
 
 export const RusNounSemCategory: IRusNounSemCategory = {
   'минск': [SemCategory.Place],
-  'организаци': [SemCategory.Organization]
+  'пинск': [SemCategory.Place],
+  'организаци': [SemCategory.Organization],
+  'школ': [SemCategory.Organization]
 };
