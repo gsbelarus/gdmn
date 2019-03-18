@@ -3,7 +3,9 @@ import {ICommandBarItemProps, TextField} from "office-ui-fabric-react";
 import React from "react";
 
 export interface ISqlViewProps extends IViewProps {
+  expression: string;
   run: () => void;
+  clear: () => void;
   onChange: (ev: any, text?: string) => void;
 }
 
@@ -21,12 +23,21 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
     const items = super.getCommandBarItems();
 
     items.push({
-      key: "reloadERModel",
+      key: "run",
       text: "Run",
       iconProps: {
         iconName: "Play"
       },
       onClick: this.props.run
+    });
+    items.push({
+      key: "clear",
+      text: "Clear",
+      disabled: !this.props.expression || !this.props.expression.length,
+      iconProps: {
+        iconName: "Clear"
+      },
+      onClick: this.props.clear
     });
     return items;
   }
@@ -34,7 +45,7 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
   public render() {
     return this.renderWide(undefined,
       <div>
-        <TextField multiline rows={10} resizable={false} onChange={this.props.onChange}/>
+        <TextField value={this.props.expression} multiline rows={10} resizable={false} onChange={this.props.onChange}/>
       </div>
     );
   }

@@ -1,8 +1,5 @@
 import {TTaskStatus} from "@gdmn/server-api";
-import {connectDataView} from "@src/app/components/connectDataView";
-import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
-import {apiService} from "@src/app/services/apiService";
-import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
+import {ISqlDataViewProps} from "@src/app/scenes/sql/data/SqlDataView";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
 import {EntityLink, EntityQuery, EntityQueryField, ScalarAttribute} from "gdmn-orm";
 import {
@@ -22,6 +19,10 @@ import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
+import {connectDataView} from "src/app/components/connectDataView";
+import {TGdmnActions} from "src/app/scenes/gdmn/actions";
+import {apiService} from "src/app/services/apiService";
+import {IState, rsMetaActions, TRsMetaActions} from "src/app/store/reducer";
 
 // export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentProps<any>>(
 //   connect(

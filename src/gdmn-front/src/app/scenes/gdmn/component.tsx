@@ -11,7 +11,7 @@ import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
-import { SqlViewContainer } from './components/sql/SqlViewContainer';
+import { SqlViewContainer } from '../sql/container';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
