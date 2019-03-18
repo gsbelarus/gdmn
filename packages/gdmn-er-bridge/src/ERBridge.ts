@@ -3,9 +3,8 @@ import {EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQ
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
 import {Update} from "./crud/update/Update";
-import {ICursorResponse} from "./cursor/ACursor";
 import {EQueryCursor} from "./cursor/EQueryCursor";
-import {SimpleCursor} from "./cursor/SimpleCursor";
+import {ISqlQueryResponse, SqlQueryCursor} from "./cursor/SqlQueryCursor";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
 import {DDLHelper} from "./ddl/DDLHelper";
@@ -113,16 +112,18 @@ export class ERBridge {
 
   public static async openSqlQueryCursor(connection: AConnection,
                                          transaction: ATransaction,
+                                         erModel: ERModel,
                                          select: string,
-                                         params: IParams): Promise<SimpleCursor> {
-    return await SimpleCursor.open(connection, transaction, select, params);
+                                         params: IParams): Promise<SqlQueryCursor> {
+    return await SqlQueryCursor.open(connection, transaction, erModel, select, params);
   }
 
   public static async sqlQuery(connection: AConnection,
                                transaction: ATransaction,
+                               erModel: ERModel,
                                select: string,
-                               params: IParams): Promise<ICursorResponse> {
-    const cursor = await SimpleCursor.open(connection, transaction, select, params);
+                               params: IParams): Promise<ISqlQueryResponse> {
+    const cursor = await SqlQueryCursor.open(connection, transaction, erModel, select, params);
     try {
       let data: any[] = [];
       while (true) {
@@ -133,7 +134,7 @@ export class ERBridge {
         }
       }
 
-      return cursor.makeCursorResponse(data);
+      return cursor.makeSqlQueryResponse(data);
     } finally {
       await cursor.close();
     }

@@ -10,19 +10,6 @@ export interface IFetchResponse {
   data: IFetchResponseDataItem[];
 }
 
-export interface IFetchResponseAliases {
-  [alias: string]: {
-    type: Types;
-    field?: string;
-    relation?: string;
-  }
-}
-
-export interface ICursorResponse {
-  data: IFetchResponseDataItem[];
-  aliases: IFetchResponseAliases;
-}
-
 export abstract class ACursor {
 
   protected readonly _resultSet: AResultSet;
@@ -70,23 +57,6 @@ export abstract class ACursor {
     }
 
     return {finished: await this._resultSet.isEof(), data};
-  }
-
-  public makeCursorResponse(data: any[]): ICursorResponse {
-    const metadata = this._resultSet.metadata;
-    const aliases: IFetchResponseAliases = {};
-    for (let i = 0; i < this._resultSet.metadata.columnCount; i++) {
-      aliases[metadata.getColumnLabel(i)!] = {
-        type: metadata.getColumnType(i),
-        field: metadata.getColumnName(i),
-        relation: metadata.getColumnRelation(i)
-      };
-    }
-
-    return {
-      data,
-      aliases
-    };
   }
 
   public async close(): Promise<void> {

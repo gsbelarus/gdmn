@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
-import {EQueryCursor, ERBridge, ICursorResponse, SimpleCursor} from "gdmn-er-bridge";
+import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   EntityDelete,
@@ -304,7 +304,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushSqlQueryCmd(session: Session, command: SqlQueryCmd): Task<SqlQueryCmd, ICursorResponse> {
+  public pushSqlQueryCmd(session: Session, command: SqlQueryCmd): Task<SqlQueryCmd, ISqlQueryResponse> {
     const task = new Task({
       session,
       command,
@@ -317,7 +317,7 @@ export class Application extends ADatabase {
         const {select, params} = context.command.payload;
 
         const result = await context.session.executeConnection((connection) => (
-          ERBridge.sqlQuery(connection, connection.readTransaction, select, params))
+          ERBridge.sqlQuery(connection, connection.readTransaction, this.erModel, select, params))
         );
         await context.checkStatus();
         return result;
@@ -389,7 +389,7 @@ export class Application extends ADatabase {
         const {select, params} = context.command.payload;
 
         const cursorEmitter = new EventEmitter();
-        const cursorPromise = new Promise<SimpleCursor>((resolve, reject) => {
+        const cursorPromise = new Promise<SqlQueryCursor>((resolve, reject) => {
           cursorEmitter.once("cursor", resolve);
           cursorEmitter.once("error", reject);
         });
@@ -399,7 +399,8 @@ export class Application extends ADatabase {
           this.checkSession(context.session);
 
           await context.session.executeConnection(async (connection) => {
-            const cursor = await ERBridge.openSqlQueryCursor(connection, connection.readTransaction, select, params);
+            const cursor = await ERBridge.openSqlQueryCursor(connection, connection.readTransaction, this.erModel,
+              select, params);
             try {
               cursorEmitter.emit("cursor", cursor);
               await new Promise((resolve, reject) => {
@@ -461,7 +462,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushFetchSqlQueryCmd(session: Session, command: FetchSqlQueryCmd): Task<FetchSqlQueryCmd, ICursorResponse> {
+  public pushFetchSqlQueryCmd(session: Session, command: FetchSqlQueryCmd): Task<FetchSqlQueryCmd, ISqlQueryResponse> {
     const task = new Task({
       session,
       command,
@@ -474,7 +475,7 @@ export class Application extends ADatabase {
         const {taskKey, rowsCount} = context.command.payload;
 
         const cursor = await context.session.cursorsPromises.get(taskKey);
-        if (!cursor || !(cursor instanceof SimpleCursor)) {
+        if (!cursor || !(cursor instanceof SqlQueryCursor)) {
           throw new Error("Cursor is not found");
         }
 
@@ -487,7 +488,7 @@ export class Application extends ADatabase {
             await findTask.waitDoneStatus();
           }
         }
-        return cursor.makeCursorResponse(result.data);
+        return cursor.makeSqlQueryResponse(result.data);
       }
     });
     session.taskManager.add(task);
