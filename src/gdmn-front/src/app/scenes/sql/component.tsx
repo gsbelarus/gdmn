@@ -1,6 +1,8 @@
-import {IViewProps, View} from "@src/app/components/View";
-import {ICommandBarItemProps, TextField} from "office-ui-fabric-react";
-import React from "react";
+import { IViewProps, View } from '@src/app/components/View';
+import { ICommandBarItemProps, IComponentAsProps, TextField } from 'office-ui-fabric-react';
+import React from 'react';
+
+import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 
 export interface ISqlViewProps extends IViewProps {
   expression: string;
@@ -9,33 +11,34 @@ export interface ISqlViewProps extends IViewProps {
   onChange: (ev: any, text?: string) => void;
 }
 
-export interface ISqlViewState {
-
-}
+export interface ISqlViewState {}
 
 export class SqlView extends View<ISqlViewProps, ISqlViewState> {
-
   public getViewCaption(): string {
-    return "SQL";
+    return 'SQL';
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
+    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+    };
     const items = super.getCommandBarItems();
 
     items.push({
-      key: "run",
-      text: "Run",
+      key: 'run',
+      text: 'Run',
       iconProps: {
-        iconName: "Play"
+        iconName: 'Play'
       },
-      onClick: this.props.run
+      commandBarButtonAs: btn('sql/data-view')
+      // onClick: this.props.run
     });
     items.push({
-      key: "clear",
-      text: "Clear",
+      key: 'clear',
+      text: 'Clear',
       disabled: !this.props.expression || !this.props.expression.length,
       iconProps: {
-        iconName: "Clear"
+        iconName: 'Clear'
       },
       onClick: this.props.clear
     });
@@ -43,9 +46,10 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
   }
 
   public render() {
-    return this.renderWide(undefined,
+    return this.renderWide(
+      undefined,
       <div>
-        <TextField value={this.props.expression} multiline rows={10} resizable={false} onChange={this.props.onChange}/>
+        <TextField value={this.props.expression} multiline rows={10} resizable={false} onChange={this.props.onChange} />
       </div>
     );
   }
