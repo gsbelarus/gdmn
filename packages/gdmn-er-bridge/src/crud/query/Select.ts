@@ -329,13 +329,35 @@ export class Select {
       .filter((rel) => this._isExistsInLink(link, rel.relationName))
       .reduce((equals, rel) => {
         if (rel.selector) {
-          equals.push(
-            SQLTemplates.equals(
-              this._getTableAlias(link, rel.relationName),
-              rel.selector.field,
-              this._addToParams(rel.selector.value)
-            )
-          );
+          if (Array.isArray(rel.selector.value)) {
+            let s;
+
+            if (typeof rel.selector.value[1] === 'number') {
+              s = (rel.selector.value as number[]).map( v => v.toString() ).join(',');
+            }
+            else if (typeof rel.selector.value[1] === 'string') {
+              s = (rel.selector.value as string[]).map( v => `'${v}'` ).join(',');
+            }
+            else {
+              throw new Error(`Empty array for SQL IN operator`);
+            }
+
+            equals.push(
+              SQLTemplates.inOperator(
+                this._getTableAlias(link, rel.relationName),
+                rel.selector.field,
+                s
+              )
+            );
+          } else {
+            equals.push(
+              SQLTemplates.equals(
+                this._getTableAlias(link, rel.relationName),
+                rel.selector.field,
+                this._addToParams(rel.selector.value)
+              )
+            );
+          }
         }
         return equals;
       }, [] as string[]);

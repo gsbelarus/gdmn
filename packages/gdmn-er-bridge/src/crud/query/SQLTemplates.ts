@@ -71,8 +71,13 @@ export abstract class SQLTemplates {
   public static assign(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "=", value);
   }
+
   public static equals(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "=", value);
+  }
+
+  public static inOperator(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, " IN ", `(${value})`);
   }
 
   public static equalsWithUpper(alias: string, fieldName: string, value: string): string {

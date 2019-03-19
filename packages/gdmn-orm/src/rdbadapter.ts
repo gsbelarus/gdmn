@@ -24,7 +24,40 @@ export interface ISequenceAdapter {
 
 export interface IEntitySelector {
   field: string;
-  value: number | string;
+  value: number | string | number[] | string[];
+}
+
+export function sameSelector(selA: IEntitySelector | undefined, selB: IEntitySelector | undefined): boolean {
+  if (selA === undefined && selB === undefined) {
+    return true;
+  }
+
+  if (selA === undefined || selB === undefined) {
+    return false;
+  }
+
+  if (selA.field !== selB.field) {
+    return false;
+  }
+
+  if (typeof selA.value !== typeof selB.value) {
+    return false;
+  }
+
+  if (Array.isArray(selA.value) && Array.isArray(selB.value)) {
+    if (typeof selA.value[0] === 'number' && typeof selB.value[0] === 'number') {
+      return JSON.stringify((selA.value as number[]).sort( (a, b) => a - b )) ===
+        JSON.stringify((selB.value as number[]).sort( (a, b) => a - b ));
+    }
+
+    if (typeof selA.value[0] === 'string' && typeof selB.value[0] === 'string') {
+      return JSON.stringify(selA.value.sort()) === JSON.stringify(selB.value.sort());
+    }
+
+    return !selA.value.length && !selB.value.length;
+  }
+
+  return selA.value === selB.value;
 }
 
 export type Weak = true;
@@ -125,7 +158,7 @@ export function sameAdapter(mapA: IEntityAdapter, mapB: IEntityAdapter): boolean
   const arrB = mapB.relation.filter((r) => !r.weak);
   return arrA.length === arrB.length
     && arrA.every((a, idx) => a.relationName === arrB[idx].relationName
-      && JSON.stringify(a.selector) === JSON.stringify(arrB[idx].selector));
+      && sameSelector(a.selector, arrB[idx].selector));
 }
 
 export function hasField(em: IEntityAdapter, rn: string, fn: string): boolean {
