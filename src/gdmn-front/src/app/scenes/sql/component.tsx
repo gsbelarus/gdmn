@@ -30,8 +30,9 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
       iconProps: {
         iconName: 'Play'
       },
-      commandBarButtonAs: btn('sql/data-view')
-      // onClick: this.props.run
+      // commandBarButtonAs: btn('sql/data-view')
+      onClick: this.props.run,
+
     });
     items.push({
       key: 'clear',

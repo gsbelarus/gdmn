@@ -16,4 +16,4 @@ export const clear = createAction("SQL/CLEAR", resolve => {
   return () => resolve();
 });
 
-export type ClearExpression = typeof setExpression;
+export type ClearExpression = typeof clear;

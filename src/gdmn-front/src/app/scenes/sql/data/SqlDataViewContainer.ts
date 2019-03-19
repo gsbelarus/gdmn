@@ -40,33 +40,12 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>, ownProps) => ({
       attachRs: () => thunkDispatch((dispatch, getState) => {
 
-        const erModel = getState().gdmnState.erModel;
+        // запрос на бэк
+        apiService.prepareSqlQuery({select: '', params: []})
+        .subscribe(
 
-        if (!erModel || !Object.keys(erModel.entities).length) return;
-        const entityName = ownProps.match ? ownProps.match.params.entityName : "";
-        const entity = erModel.entity(entityName);
-
-        const query = new EntityQuery(
-          new EntityLink(
-            entity,
-            "z",
-            Object.values(entity.attributes)
-              .filter(attr => attr instanceof ScalarAttribute && attr.type !== "Blob")
-              .map(attr => new EntityQueryField(attr)
-                /*{
-                  if (attr instanceof EntityAttribute) {
-
-                    return new EntityQueryField(attr, new EntityLink(
-                      attr.e
-                    ))
-                  } else {
-                    return new EntityQueryField(attr)
-                  }*/
-              )
-          )
-        );
-
-        dispatch(rsMetaActions.setRsMeta(entity.name, {}));
+        )
+        // dispatch(rsMetaActions.setRsMeta(entity.name, {}));
 
        /*  apiService
           .prepareQuery({
