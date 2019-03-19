@@ -1,0 +1,937 @@
+{
+  "className": "TgdcBase",
+  "abstract": true,
+  "children": [
+    {
+      "className": "TgdcCustomFunction",
+      "abstract": true,
+      "children": [
+        {
+          "className": "TgdcFunction",
+          "displayName": "Скрипт-функция",
+          "listTable": {"name": "GD_FUNCTION"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcTree",
+      "abstract": true,
+      "children": [
+        {
+          "className": "TgdcLBRBTree",
+          "abstract": true,
+          "children": [
+            {
+              "className": "TgdcDelphiObject",
+              "listTable": {"name": "EVT_OBJECT"}
+            },
+            {
+              "className": "TgdcAcctBase",
+              "abstract": true,
+              "displayName": "Бухгалтерский план счетов",
+              "listTable": {"name": "AC_ACCOUNT"},
+              "children": [
+                {
+                  "className": "TgdcAcctChart",
+                  "displayName": "План счетов",
+                  "listTable": {"name": "AC_ACCOUNT"}
+                },
+                {
+                  "className": "TgdcAcctFolder",
+                  "displayName": "Раздел плана счетов",
+                  "listTable": {"name": "AC_ACCOUNT"},
+                  "restrictCondition": "z.accounttype = 'F'"
+                },
+                {
+                  "className": "TgdcAcctAccount",
+                  "displayName": "Счет",
+                  "listTable": {"name": "AC_ACCOUNT"},
+                  "restrictCondition": "z.accounttype IN ('A', 'S')",
+                  "children": [
+                    {
+                      "className": "TgdcAcctSubAccount",
+                      "displayName": "Субсчет",
+                      "listTable": {"name": "AC_ACCOUNT"},
+                      "restrictCondition": "z.accounttype='S'"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "className": "TgdcBaseContact",
+              "abstract": true,
+              "displayName": "Адресная книга",
+              "listTable": {"name": "GD_CONTACT"},
+              "children": [
+                {
+                  "className": "TgdcFolder",
+                  "displayName": "Папка",
+                  "listTable": {"name": "GD_CONTACT"},
+                  "restrictCondition": "z.contacttype=0"
+                },
+                {
+                  "className": "TgdcGroup",
+                  "displayName": "Группа",
+                  "listTable": {"name": "GD_CONTACT"},
+                  "restrictCondition": "z.contacttype=1"
+                },
+                {
+                  "className": "TgdcContact",
+                  "displayName": "Физическое лицо",
+                  "listTable": {"name": "GD_CONTACT"},
+                  "distinctRelation": {"name": "GD_PEOPLE", "pk": "CONTACTKEY"},
+                  "restrictCondition": "z.contacttype=2",
+                  "children": [
+                    {
+                      "className": "TgdcEmployee",
+                      "displayName": "Сотрудник предприятия",
+                      "listTable": {"name": "GD_CONTACT"},
+                      "distinctRelation": {"name": "GD_EMPLOYEE", "pk": "CONTACTKEY"},
+                      "restrictCondition": "z.contacttype=2"
+                    }
+                  ]
+                },
+                {
+                  "className": "TgdcDepartment",
+                  "displayName": "Подразделение",
+                  "listTable": {"name": "GD_CONTACT"},
+                  "restrictCondition": "z.contacttype=4"
+                },
+                {
+                  "className": "TgdcCompany",
+                  "displayName": "Организация",
+                  "listTable": {"name": "GD_CONTACT"},
+                  "distinctRelation": {"name": "GD_COMPANY", "pk": "CONTACTKEY"},
+                  "restrictCondition": "z.contacttype in (3, 5)",
+                  "semCategory": "organization,company",
+                  "children": [
+                    {
+                      "className": "TgdcOurCompany",
+                      "displayName": "Рабочая организация",
+                      "listTable": {"name": "GD_CONTACT"},
+                      "distinctRelation": {"name": "GD_OURCOMPANY", "pk": "COMPANYKEY"},
+                      "restrictCondition": " EXISTS(SELECT * FROM gd_ourcompany our WHERE our.companykey = z.id) "
+                    },
+                    {
+                      "className": "TgdcBank",
+                      "displayName": "Банк",
+                      "listTable": {"name": "GD_CONTACT"},
+                      "distinctRelation": {"name": "GD_BANK", "pk": "BANKKEY"},
+                      "restrictCondition": "z.contacttype=5"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "className": "TgdcAttrUserDefinedLBRBTree",
+              "displayName": "Таблица пользователя (интервальное дерево)"
+            },
+            {
+              "className": "TgdcBaseFile",
+              "displayName": "Файл (базовый класс)",
+              "listTable": {"name": "GD_FILE"},
+              "children": [
+                {
+                  "className": "TgdcFile",
+                  "displayName": "Файл",
+                  "listTable": {"name": "GD_FILE"},
+                  "restrictCondition": "z.filetype = 'F'"
+                },
+                {
+                  "className": "TgdcFileFolder",
+                  "displayName": "Папка",
+                  "listTable": {"name": "GD_FILE"},
+                  "restrictCondition": "z.filetype = 'D'"
+                }
+              ]
+            },
+            {
+              "className": "TgdcBaseAcctTransaction",
+              "abstract": true,
+              "listTable": {"name": "AC_TRANSACTION"},
+              "children": [
+                {
+                  "className": "TgdcAcctTransaction",
+                  "displayName": "Типовая операция",
+                  "listTable": {"name": "AC_TRANSACTION"},
+                  "restrictCondition": " (Z.AUTOTRANSACTION IS NULL OR Z.AUTOTRANSACTION = 0) "
+                },
+                {
+                  "className": "TgdcAutoTransaction",
+                  "displayName": "Автоматическая операция",
+                  "listTable": {"name": "AC_TRANSACTION"},
+                  "restrictCondition": " (Z.AUTOTRANSACTION = 1) "
+                }
+              ]
+            },
+            {
+              "className": "TgdcReportGroup",
+              "displayName": "Папка отчетов",
+              "listTable": {"name": "RP_REPORTGROUP"}
+            },
+            {
+              "className": "TgdcMacrosGroup",
+              "displayName": "Папка макросов",
+              "listTable": {"name": "EVT_MACROSGROUP"}
+            },
+            {
+              "className": "TgdcGoodGroup",
+              "displayName": "Товарная группа",
+              "listTable": {"name": "GD_GOODGROUP"}
+            },
+            {
+              "className": "TgdcBaseDocumentType",
+              "abstract": true,
+              "listTable": {"name": "GD_DOCUMENTTYPE"},
+              "children": [
+                {
+                  "className": "TgdcDocumentType",
+                  "abstract": true,
+                  "displayName": "Тип документа",
+                  "listTable": {"name": "GD_DOCUMENTTYPE"},
+                  "restrictCondition": "z.documenttype = 'D'",
+                  "children": [
+                    {
+                      "className": "TgdcInvDocumentType",
+                      "displayName": "Тип складского документа",
+                      "listTable": {"name": "GD_DOCUMENTTYPE"}
+                    },
+                    {
+                      "className": "TgdcInvPriceListType",
+                      "displayName": "Прайс-лист",
+                      "listTable": {"name": "GD_DOCUMENTTYPE"}
+                    },
+                    {
+                      "className": "TgdcUserDocumentType",
+                      "displayName": "Тип пользовательского документа",
+                      "listTable": {"name": "GD_DOCUMENTTYPE"}
+                    }
+                  ]
+                },
+                {
+                  "className": "TgdcDocumentBranch",
+                  "displayName": "Папка",
+                  "listTable": {"name": "GD_DOCUMENTTYPE"},
+                  "restrictCondition": "z.documenttype = 'B'"
+                }
+              ]
+            },
+            {
+              "className": "TgdcPlace",
+              "displayName": "Административно-территориальная единица",
+              "listTable": {"name": "GD_PLACE"},
+              "semCategory": "place"
+            },
+            {
+              "className": "TgdcMessageBox",
+              "displayName": "Почтовый ящик",
+              "listTable": {"name": "MSG_BOX"}
+            }
+          ]
+        },
+        {
+          "className": "TgdcAttrUserDefinedTree",
+          "displayName": "Таблица пользователя (простое дерево)"
+        },
+        {
+          "className": "TgdcStorage",
+          "listTable": {"name": "GD_STORAGE_DATA"},
+          "children": [
+            {
+              "className": "TgdcStorageFolder",
+              "listTable": {"name": "GD_STORAGE_DATA"},
+              "restrictCondition": "z.data_type IN ('F', 'G', 'U', 'O', 'T')"
+            },
+            {
+              "className": "TgdcStorageValue",
+              "listTable": {"name": "GD_STORAGE_DATA"},
+              "restrictCondition": "z.data_type IN ('S', 'I', 'C', 'D', 'L', 'B')"
+            }
+          ]
+        },
+        {
+          "className": "TgdcDocument",
+          "displayName": "Документ",
+          "listTable": {"name": "GD_DOCUMENT"},
+          "children": [
+            {
+              "className": "TgdcAcctDocument",
+              "displayName": "Документ",
+              "listTable": {"name": "GD_DOCUMENT"}
+            },
+            {
+              "className": "TgdcTaxResult",
+              "displayName": "Позиция",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "distinctRelation": {"name": "GD_TAXRESULT", "pk": "DOCUMENTKEY"}
+            },
+            {
+              "className": "TgdcTaxDesignDate",
+              "displayName": "Документ",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "distinctRelation": {"name": "GD_TAXDESIGNDATE", "pk": "DOCUMENTKEY"}
+            },
+            {
+              "className": "TgdcBaseBank",
+              "displayName": "Документ",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "children": [
+                {
+                  "className": "TgdcBankCatalogue",
+                  "displayName": "Документ",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "distinctRelation": {"name": "BN_BANKCATALOGUE", "pk": "DOCUMENTKEY"}
+                },
+                {
+                  "className": "TgdcBankStatement",
+                  "displayName": "Документ",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "distinctRelation": {"name": "BN_BANKSTATEMENT", "pk": "DOCUMENTKEY"}
+                }
+              ]
+            },
+            {
+              "className": "TgdcInvBaseDocument",
+              "abstract": true,
+              "displayName": "Документ",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "children": [
+                {
+                  "className": "TgdcInvDocument",
+                  "displayName": "Документ",
+                  "listTable": {"name": "GD_DOCUMENT"}
+                },
+                {
+                  "className": "TgdcInvDocumentLine",
+                  "displayName": "Позиция",
+                  "listTable": {"name": "GD_DOCUMENT"}
+                }
+              ]
+            },
+            {
+              "className": "TgdcInvBasePriceList",
+              "abstract": true,
+              "displayName": "Документ",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "children": [
+                {
+                  "className": "TgdcInvPriceList",
+                  "displayName": "Документ",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "distinctRelation": {"name": "INV_PRICE", "pk": "DOCUMENTKEY"}
+                },
+                {
+                  "className": "TgdcInvPriceListLine",
+                  "displayName": "Позиция",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "distinctRelation": {"name": "INV_PRICELINE", "pk": "DOCUMENTKEY"}
+                }
+              ]
+            },
+            {
+              "className": "TgdcUserBaseDocument",
+              "abstract": true,
+              "displayName": "Документ",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "restrictCondition": "z.documenttypekey = -1 AND z.parent + 0 IS NULL ",
+              "children": [
+                {
+                  "className": "TgdcUserDocument",
+                  "displayName": "Документ",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "restrictCondition": "z.documenttypekey = -1 AND z.parent + 0 IS NULL "
+                },
+                {
+                  "className": "TgdcUserDocumentLine",
+                  "displayName": "Позиция",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "restrictCondition": "z.documenttypekey = -1 AND z.parent IS NOT NULL "
+                }
+              ]
+            },
+            {
+              "className": "TgdcBaseLine",
+              "abstract": true,
+              "displayName": "Позиция",
+              "listTable": {"name": "GD_DOCUMENT"},
+              "children": [
+                {
+                  "className": "TgdcBankCatalogueLine",
+                  "displayName": "Позиция",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "distinctRelation": {"name": "BN_BANKCATALOGUELINE", "pk": "DOCUMENTKEY"}
+                },
+                {
+                  "className": "TgdcBaseStatementLine",
+                  "abstract": true,
+                  "displayName": "Позиция",
+                  "listTable": {"name": "GD_DOCUMENT"},
+                  "children": [
+                    {
+                      "className": "TgdcBankStatementLine",
+                      "displayName": "Позиция",
+                      "listTable": {"name": "GD_DOCUMENT"},
+                      "distinctRelation": {"name": "BN_BANKSTATEMENTLINE", "pk": "ID"}
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "className": "TgdcExplorer",
+          "listTable": {"name": "GD_COMMAND"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcConst",
+      "listTable": {"name": "GD_CONST"}
+    },
+    {
+      "className": "TgdcConstValue",
+      "listTable": {"name": "GD_CONSTVALUE"}
+    },
+    {
+      "className": "TgdcAccount",
+      "displayName": "Расчетный счет",
+      "listTable": {"name": "GD_COMPANYACCOUNT"}
+    },
+    {
+      "className": "TgdcAttrUserDefined",
+      "displayName": "Таблица пользователя"
+    },
+    {
+      "className": "TgdcRplDatabase2",
+      "listTable": {"name": "RPL_DATABASE"}
+    },
+    {
+      "className": "TgdcWgPosition",
+      "displayName": "Должность",
+      "listTable": {"name": "WG_POSITION"}
+    },
+    {
+      "className": "TgdcLink",
+      "displayName": "Прикрепление",
+      "listTable": {"name": "GD_LINK"}
+    },
+    {
+      "className": "TgdcEvent",
+      "displayName": "Событие",
+      "listTable": {"name": "EVT_OBJECTEVENT"}
+    },
+    {
+      "className": "TgdcAutoTask",
+      "listTable": {"name": "GD_AUTOTASK"}
+    },
+    {
+      "className": "TgdcAutoTaskLog",
+      "listTable": {"name": "GD_AUTOTASK_LOG"}
+    },
+    {
+      "className": "TgdcNamespace",
+      "listTable": {"name": "AT_NAMESPACE"}
+    },
+    {
+      "className": "TgdcNamespaceObject",
+      "listTable": {"name": "AT_OBJECT"}
+    },
+    {
+      "className": "TgdcUser",
+      "listTable": {"name": "GD_USER"}
+    },
+    {
+      "className": "TgdcUserGroup",
+      "listTable": {"name": "GD_USERGROUP"}
+    },
+    {
+      "className": "TgdcCurr",
+      "displayName": "Валюта",
+      "listTable": {"name": "GD_CURR"}
+    },
+    {
+      "className": "TgdcCurrRate",
+      "displayName": "Курс валюты",
+      "listTable": {"name": "GD_CURRRATE"}
+    },
+    {
+      "className": "TgdcAcctBaseEntryRegister",
+      "abstract": true,
+      "listTable": {"name": "AC_RECORD"},
+      "children": [
+        {
+          "className": "TgdcAcctEntryRegister",
+          "listTable": {"name": "AC_RECORD"}
+        },
+        {
+          "className": "TgdcAcctViewEntryRegister",
+          "listTable": {"name": "AC_RECORD"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcAcctEntryLine",
+      "listTable": {"name": "AC_ENTRY"}
+    },
+    {
+      "className": "TgdcAcctSimpleRecord",
+      "listTable": {"name": "AC_RECORD"}
+    },
+    {
+      "className": "TgdcAcctQuantity",
+      "listTable": {"name": "AC_QUANTITY"}
+    },
+    {
+      "className": "TgdcAcctComplexRecord",
+      "listTable": {"name": "AC_RECORD"}
+    },
+    {
+      "className": "TgdcBaseAcctTransactionEntry",
+      "listTable": {"name": "AC_TRRECORD"},
+      "children": [
+        {
+          "className": "TgdcAcctTransactionEntry",
+          "displayName": "Типовая проводка",
+          "listTable": {"name": "AC_TRRECORD"}
+        },
+        {
+          "className": "TgdcAutoTrRecord",
+          "displayName": "Автоматическая проводка",
+          "listTable": {"name": "AC_TRRECORD"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcTaxActual",
+      "listTable": {"name": "GD_TAXACTUAL"}
+    },
+    {
+      "className": "TgdcTaxName",
+      "displayName": "Бухгалтерский отчет",
+      "listTable": {"name": "GD_TAXNAME"}
+    },
+    {
+      "className": "TgdcReport",
+      "displayName": "Отчет",
+      "listTable": {"name": "RP_REPORTLIST"}
+    },
+    {
+      "className": "TgdcInvDocumentTypeOptions",
+      "displayName": "Параметры типа складского документа",
+      "listTable": {"name": "GD_DOCUMENTTYPE_OPTION"}
+    },
+    {
+      "className": "TgdcMetaBase",
+      "abstract": true,
+      "children": [
+        {
+          "className": "TgdcField",
+          "displayName": "Домен",
+          "listTable": {"name": "AT_FIELDS"}
+        },
+        {
+          "className": "TgdcRelation",
+          "abstract": true,
+          "displayName": "Отношение",
+          "listTable": {"name": "AT_RELATIONS"},
+          "children": [
+            {
+              "className": "TgdcBaseTable",
+              "abstract": true,
+              "displayName": "Таблица",
+              "listTable": {"name": "AT_RELATIONS"},
+              "children": [
+                {
+                  "className": "TgdcTable",
+                  "abstract": true,
+                  "listTable": {"name": "AT_RELATIONS"},
+                  "children": [
+                    {
+                      "className": "TgdcSimpleTable",
+                      "displayName": "Таблица с идентификатором и служебными полями",
+                      "listTable": {"name": "AT_RELATIONS"}
+                    },
+                    {
+                      "className": "TgdcPrimeTable",
+                      "displayName": "Таблица с идентификатором",
+                      "listTable": {"name": "AT_RELATIONS"}
+                    },
+                    {
+                      "className": "TgdcTableToTable",
+                      "displayName": "Таблица, связанная 1-к-1",
+                      "listTable": {"name": "AT_RELATIONS"},
+                      "children": [
+                        {
+                          "className": "TgdcInheritedTable",
+                          "displayName": "Наследованная таблица",
+                          "listTable": {"name": "AT_RELATIONS"}
+                        }
+                      ]
+                    },
+                    {
+                      "className": "TgdcTreeTable",
+                      "displayName": "Простое дерево",
+                      "listTable": {"name": "AT_RELATIONS"}
+                    },
+                    {
+                      "className": "TgdcLBRBTreeTable",
+                      "displayName": "Интервальное дерево",
+                      "listTable": {"name": "AT_RELATIONS"}
+                    }
+                  ]
+                },
+                {
+                  "className": "TgdcUnknownTable",
+                  "displayName": "Таблица",
+                  "listTable": {"name": "AT_RELATIONS"}
+                },
+                {
+                  "className": "TgdcCustomTable",
+                  "listTable": {"name": "AT_RELATIONS"},
+                  "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')",
+                  "children": [
+                    {
+                      "className": "TgdcBaseDocumentTable",
+                      "listTable": {"name": "AT_RELATIONS"},
+                      "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')",
+                      "children": [
+                        {
+                          "className": "TgdcInheritedDocumentTable",
+                          "listTable": {"name": "AT_RELATIONS"},
+                          "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')"
+                        },
+                        {
+                          "className": "TgdcDocumentTable",
+                          "listTable": {"name": "AT_RELATIONS"},
+                          "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')"
+                        },
+                        {
+                          "className": "TgdcBaseDocumentLineTable",
+                          "listTable": {"name": "AT_RELATIONS"},
+                          "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')",
+                          "children": [
+                            {
+                              "className": "TgdcDocumentLineTable",
+                              "listTable": {"name": "AT_RELATIONS"},
+                              "restrictCondition": "z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY') AND z.relationname LIKE '%LINE' "
+                            },
+                            {
+                              "className": "TgdcInvSimpleDocumentLineTable",
+                              "listTable": {"name": "AT_RELATIONS"},
+                              "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')"
+                            },
+                            {
+                              "className": "TgdcInvFeatureDocumentLineTable",
+                              "listTable": {"name": "AT_RELATIONS"},
+                              "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')"
+                            },
+                            {
+                              "className": "TgdcInvInventDocumentLineTable",
+                              "listTable": {"name": "AT_RELATIONS"},
+                              "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')"
+                            },
+                            {
+                              "className": "TgdcInvTransformDocumentLineTable",
+                              "listTable": {"name": "AT_RELATIONS"},
+                              "restrictCondition": "(z.id IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'DOCUMENTKEY')) \nAND \n(z.id NOT IN (SELECT d.relationkey FROM at_relation_fields d WHERE d.fieldname = 'MASTERKEY')) \nAND \n(z.relationname NOT IN ('INV_CARD', 'INV_MOVEMENT', 'AC_RECORD', 'AC_ENTRY')) \nAND \n(z.relationname NOT LIKE '%LINE')"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "className": "TgdcView",
+              "displayName": "Представление",
+              "listTable": {"name": "AT_RELATIONS"}
+            }
+          ]
+        },
+        {
+          "className": "TgdcRelationField",
+          "displayName": "Поле",
+          "listTable": {"name": "AT_RELATION_FIELDS"},
+          "children": [
+            {
+              "className": "TgdcTableField",
+              "listTable": {"name": "AT_RELATION_FIELDS"}
+            },
+            {
+              "className": "TgdcViewField",
+              "listTable": {"name": "AT_RELATION_FIELDS"}
+            }
+          ]
+        },
+        {
+          "className": "TgdcStoredProc",
+          "displayName": "Процедура",
+          "listTable": {"name": "AT_PROCEDURES"}
+        },
+        {
+          "className": "TgdcException",
+          "displayName": "Исключение",
+          "listTable": {"name": "AT_EXCEPTIONS"}
+        },
+        {
+          "className": "TgdcIndex",
+          "displayName": "Индекс",
+          "listTable": {"name": "AT_INDICES"}
+        },
+        {
+          "className": "TgdcBaseTrigger",
+          "listTable": {"name": "AT_TRIGGERS"},
+          "children": [
+            {
+              "className": "TgdcTrigger",
+              "displayName": "Триггер",
+              "listTable": {"name": "AT_TRIGGERS"}
+            },
+            {
+              "className": "TgdcDBTrigger",
+              "displayName": "Триггер БД",
+              "listTable": {"name": "AT_TRIGGERS"}
+            }
+          ]
+        },
+        {
+          "className": "TgdcGenerator",
+          "displayName": "Генератор",
+          "listTable": {"name": "AT_GENERATORS"}
+        },
+        {
+          "className": "TgdcCheckConstraint",
+          "displayName": "Ограничение",
+          "listTable": {"name": "AT_CHECK_CONSTRAINTS"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcComponentFilter",
+      "displayName": "Фильтр",
+      "listTable": {"name": "FLT_COMPONENTFILTER"}
+    },
+    {
+      "className": "TgdcSavedFilter",
+      "listTable": {"name": "FLT_SAVEDFILTER"}
+    },
+    {
+      "className": "TgdcCompanyAccountType",
+      "displayName": "Тип банковского счета",
+      "listTable": {"name": "GD_COMPACCTYPE"}
+    },
+    {
+      "className": "TgdcSetting",
+      "displayName": "Настройка",
+      "listTable": {"name": "AT_SETTING"}
+    },
+    {
+      "className": "TgdcSettingPos",
+      "displayName": "Позиция настройки",
+      "listTable": {"name": "AT_SETTINGPOS"}
+    },
+    {
+      "className": "TgdcSettingStorage",
+      "displayName": "Позиция настройки хранилища",
+      "listTable": {"name": "AT_SETTING_STORAGE"}
+    },
+    {
+      "className": "TgdcMacros",
+      "displayName": "Макрос",
+      "listTable": {"name": "EVT_MACROSLIST"}
+    },
+    {
+      "className": "TgdcTemplate",
+      "displayName": "Шаблон отчета",
+      "listTable": {"name": "RP_REPORTTEMPLATE"}
+    },
+    {
+      "className": "TgdcTNVD",
+      "displayName": "Код ТНВД",
+      "listTable": {"name": "GD_TNVD"}
+    },
+    {
+      "className": "TgdcGoodBarCode",
+      "displayName": "Штрих код товара",
+      "listTable": {"name": "GD_GOODBARCODE"}
+    },
+    {
+      "className": "TgdcGood",
+      "displayName": "ТМЦ",
+      "listTable": {"name": "GD_GOOD"},
+      "children": [
+        {
+          "className": "TgdcSelectedGood",
+          "listTable": {"name": "GD_GOOD"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcValue",
+      "displayName": "Единица измерения",
+      "listTable": {"name": "GD_VALUE"}
+    },
+    {
+      "className": "TgdcTax",
+      "displayName": "Налог",
+      "listTable": {"name": "GD_TAX"}
+    },
+    {
+      "className": "TgdcMetal",
+      "displayName": "Драгоценный металл",
+      "listTable": {"name": "GD_PRECIOUSEMETAL"}
+    },
+    {
+      "className": "TgdcBaseAcctConfig",
+      "abstract": true,
+      "listTable": {"name": "AC_ACCT_CONFIG"},
+      "children": [
+        {
+          "className": "TgdcAcctBaseConfig",
+          "abstract": true,
+          "listTable": {"name": "AC_ACCT_CONFIG"},
+          "children": [
+            {
+              "className": "TgdcAcctAccConfig",
+              "displayName": "Конфигурация карты счета",
+              "listTable": {"name": "AC_ACCT_CONFIG"}
+            },
+            {
+              "className": "TgdcAcctLedgerConfig",
+              "displayName": "Конфигурация журнал-ордера",
+              "listTable": {"name": "AC_ACCT_CONFIG"}
+            },
+            {
+              "className": "TgdcAcctCicrilationListConfig",
+              "displayName": "Конфигурация оборотной ведомости",
+              "listTable": {"name": "AC_ACCT_CONFIG"}
+            },
+            {
+              "className": "TgdcAcctGeneralLedgerConfig",
+              "displayName": "Конфигурация главной книги",
+              "listTable": {"name": "AC_ACCT_CONFIG"}
+            },
+            {
+              "className": "TgdcAcctAccReviewConfig",
+              "displayName": "Конфигурация анализа счета",
+              "listTable": {"name": "AC_ACCT_CONFIG"}
+            }
+          ]
+        },
+        {
+          "className": "TgdcInvCardConfig",
+          "listTable": {"name": "AC_ACCT_CONFIG"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcInvBaseRemains",
+      "abstract": true,
+      "displayName": "Остатки ТМЦ",
+      "listTable": {"name": "INV_MOVEMENT"},
+      "children": [
+        {
+          "className": "TgdcInvRemains",
+          "displayName": "Остатки ТМЦ",
+          "listTable": {"name": "INV_MOVEMENT"},
+          "children": [
+            {
+              "className": "TgdcInvGoodRemains",
+              "displayName": "Остатки ТМЦ",
+              "listTable": {"name": "INV_MOVEMENT"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "className": "TgdcInvMovement",
+      "listTable": {"name": "INV_MOVEMENT"}
+    },
+    {
+      "className": "TgdcInvCard",
+      "listTable": {"name": "INV_MOVEMENT"}
+    },
+    {
+      "className": "TgdcInvRemainsOption",
+      "listTable": {"name": "INV_BALANCEOPTION"}
+    },
+    {
+      "className": "TgdcJournal",
+      "displayName": "Журнал событий",
+      "listTable": {"name": "GD_JOURNAL"}
+    },
+    {
+      "className": "TgdcSQLHistory",
+      "listTable": {"name": "GD_SQL_HISTORY"}
+    },
+    {
+      "className": "TgdcBugBase",
+      "displayName": "Памылка",
+      "listTable": {"name": "BUG_BUGBASE"}
+    },
+    {
+      "className": "TgdcBlockRule",
+      "listTable": {"name": "GD_BLOCK_RULE"}
+    },
+    {
+      "className": "TgdcRUID",
+      "listTable": {"name": "GD_RUID"}
+    },
+    {
+      "className": "TgdcHoliday",
+      "displayName": "Государственный праздник праздник",
+      "listTable": {"name": "WG_HOLIDAY"}
+    },
+    {
+      "className": "TgdcTableCalendar",
+      "displayName": "График рабочего времени",
+      "listTable": {"name": "WG_TBLCAL"}
+    },
+    {
+      "className": "TgdcTableCalendarDay",
+      "displayName": "День графика рабочего времени",
+      "listTable": {"name": "WG_TBLCALDAY"}
+    },
+    {
+      "className": "TgdcBaseMessage",
+      "abstract": true,
+      "listTable": {"name": "MSG_MESSAGE"},
+      "children": [
+        {
+          "className": "TgdcPhoneCall",
+          "displayName": "Телефонный звонок",
+          "listTable": {"name": "MSG_MESSAGE"}
+        }
+      ]
+    },
+    {
+      "className": "TgdcAttachment",
+      "displayName": "Прикрепление",
+      "listTable": {"name": "MSG_ATTACHMENT"}
+    },
+    {
+      "className": "TgdcFKManager",
+      "displayName": "Внешний ключ",
+      "listTable": {"name": "GD_REF_CONSTRAINTS"}
+    },
+    {
+      "className": "TgdcGeneralLedger",
+      "listTable": {"name": "AC_GENERALLEDGER"}
+    },
+    {
+      "className": "TgdcSQLStatement",
+      "listTable": {"name": "GD_SQL_STATEMENT"}
+    },
+    {
+      "className": "TgdcSMTP",
+      "displayName": "Почтовый ящик",
+      "listTable": {"name": "GD_SMTP"}
+    }
+  ]
+}

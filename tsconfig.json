@@ -11,6 +11,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": false
+    "forceConsistentCasingInFileNames": false,
+    "resolveJsonModule": true
   }
 }
