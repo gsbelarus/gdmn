@@ -1,3 +1,4 @@
+import {LName} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import {Attribute} from "./model/Attribute";
 import {Entity} from "./model/Entity";
@@ -19,7 +20,6 @@ import {SequenceAttribute} from "./model/scalar/SequenceAttribute";
 import {StringAttribute} from "./model/scalar/StringAttribute";
 import {Sequence} from "./model/Sequence";
 import {AttributeTypes, ContextVariables, IEnumValue} from "./types";
-import {LName} from "gdmn-internals";
 
 export interface IAttribute {
   name: string;
@@ -85,19 +85,31 @@ export interface IEntity {
   adapter?: any;
 }
 
+export interface ISequence {
+  name: string;
+  adapter?: any;
+}
+
 export interface IERModel {
   entities: IEntity[];
+  sequences: ISequence[];
 }
 
 // TODO serialize adapter - tmp
 export function deserializeERModel(serialized: IERModel, withAdapter?: boolean): ERModel {
   const erModel = new ERModel();
 
-  const createSequence = (sequence: string): Sequence => {
-    let result = erModel.sequencies[sequence];
+  const createSequence = (s: ISequence): Sequence => {
+    if (!withAdapter) {
+      s.adapter = undefined;
+    }
+    let result = erModel.sequencies[s.name];
 
     if (!result) {
-      erModel.add(result = new Sequence({name: sequence}));
+      result = erModel.add(new Sequence({
+        name: s.name,
+        adapter: s.adapter
+      }));
     }
 
     return result;
@@ -180,7 +192,7 @@ export function deserializeERModel(serialized: IERModel, withAdapter?: boolean):
 
       case "Sequence": {
         const attr = _attr as ISequenceAttribute;
-        return new SequenceAttribute({name, lName, sequence: createSequence(attr.sequence), semCategories, adapter});
+        return new SequenceAttribute({name, lName, sequence: erModel.sequence(attr.sequence), semCategories, adapter});
       }
 
       case "Integer": {
@@ -247,6 +259,7 @@ export function deserializeERModel(serialized: IERModel, withAdapter?: boolean):
     values.forEach((attrs) => entity.addUnique(attrs));
   };
 
+  serialized.sequences.forEach((s) => createSequence(s));
   serialized.entities.forEach((e) => createEntity(e));
   serialized.entities.forEach((e) => createAttributes(e));
   serialized.entities.forEach((e) => createUnique(e));

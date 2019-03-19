@@ -111,12 +111,20 @@ export class ERModel {
   }
 
   public serialize(withAdapter?: boolean): IERModel {
-    return {entities: Object.values(this._entities).map((e) => e.serialize(withAdapter))};
+    return {
+      entities: Object.values(this._entities).map((e) => e.serialize(withAdapter)),
+      sequences: Object.values(this._sequencies).map((s) => s.serialize(withAdapter))
+    };
   }
 
   public inspect(): string[] {
-    return Object.values(this._entities).reduce((p, e) => {
-      return [...e.inspect(), ...p];
-    }, [] as string[]);
+    return [
+      ...Object.values(this._sequencies).reduce((p, s) => {
+        return [...s.inspect(), ...p];
+      }, [] as string[]),
+      ...Object.values(this._entities).reduce((p, e) => {
+        return [...e.inspect(), ...p];
+      }, [] as string[])
+    ];
   }
 }

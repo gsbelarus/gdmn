@@ -1,12 +1,16 @@
-import {Entity, ERModel, StringAttribute} from "../src";
+import {Entity, ERModel, Sequence, SequenceAttribute, StringAttribute} from "../src";
 import {deserializeERModel} from "../src/serialize";
 
-describe("ERModel",  () => {
+describe("ERModel", () => {
 
   const erModel = new ERModel();
 
   beforeAll(() => {
+    const sequence = erModel.add(new Sequence({name: "TestSequence"}));
     const entity = erModel.add(new Entity({name: "Test", lName: {en: {name: "Test"}}}));
+    entity.add(new SequenceAttribute({
+      name: "TEST_ID", lName: {en: {name: "Test id"}}, sequence
+    }));
     const testAttr = entity.add(new StringAttribute({
       name: "TEST_FIELD", lName: {en: {name: "Test field"}}
     }));
