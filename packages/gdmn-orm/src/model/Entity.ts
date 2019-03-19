@@ -78,7 +78,7 @@ export class Entity {
   }
 
   public attributesBySemCategory(cat: SemCategory): Attribute[] {
-    return Object.values(this._attributes).filter((attr) => attr.semCategories.some((c) => c === cat));
+    return Object.values(this.attributes).filter((attr) => attr.semCategories.some((c) => c === cat));
   }
 
   public attribute(name: string): Attribute {
