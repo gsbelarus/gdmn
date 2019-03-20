@@ -10,10 +10,15 @@ export interface ISequencies {
   [name: string]: Sequence;
 }
 
+export interface IRelation2Entity {
+  [name: string]: Entity;
+}
+
 export class ERModel {
 
   private _entities: IEntities = {};
   private _sequencies: ISequencies = {};
+  private _relation2Entity: IRelation2Entity = {};
 
   get sequencies(): ISequencies {
     return this._sequencies;
@@ -21,6 +26,10 @@ export class ERModel {
 
   get entities(): IEntities {
     return this._entities;
+  }
+
+  get relation2Entity(): IRelation2Entity {
+    return this._relation2Entity;
   }
 
   public entity(name: string): Entity {
@@ -67,6 +76,23 @@ export class ERModel {
       if (this.has(entity)) {
         throw new Error(`Entity ${entity.name} already exists`);
       }
+
+      if (entity.adapter) {
+        const distinctRelation = entity.adapter.relation.filter( r => !r.weak ).reverse()[0];
+
+        if (!distinctRelation || !distinctRelation.relationName) {
+          throw new Error(`Invalid entity adapter`);
+        }
+
+        /**
+         * мы полагаемся на то, что базовые (родительские) сущности будут создаваться
+         * первее наследованных.
+         */
+        if (!this._relation2Entity[distinctRelation.relationName]) {
+          this._relation2Entity[distinctRelation.relationName] = entity;
+        }
+      }
+
       return this._entities[entity.name] = entity;
 
     } else {
