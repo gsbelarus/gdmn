@@ -282,7 +282,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           </div>
         </div>
         {
-          command.payload.options &&
+          command.payload.options && (command.payload.options.where || command.payload.options.order) &&
           <div className="options">
             {
               command.payload.options.where && command.payload.options.where.length &&
