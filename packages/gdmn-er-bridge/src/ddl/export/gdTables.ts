@@ -16,6 +16,7 @@
 
 */
 
+/*
 export const gedeminTables = [
   "AC_ACCANALYTICSEXT",
   "AC_ACCOUNT",  // План счетов
@@ -164,3 +165,4 @@ export const gedeminTables = [
   "WG_TBLCAL",  // График рабочего времени
   "WG_TBLCALDAY"  // График рабочего времени (день)
 ];
+*/

@@ -48,7 +48,7 @@ describe("erModel", () => {
   });
 
   it("phrase", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -64,11 +64,11 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
   });
 
   it("phrase2", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -84,7 +84,7 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].or).toBeDefined();
@@ -97,7 +97,7 @@ describe("erModel", () => {
   });
 
   it("phrase3", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -113,11 +113,11 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
   });
 
   it("phrase4", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -133,7 +133,7 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].or).toBeDefined();
@@ -146,7 +146,7 @@ describe("erModel", () => {
   });
 
   it("phrase5", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -162,7 +162,7 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].or).toBeDefined();
@@ -182,7 +182,7 @@ describe("erModel", () => {
   });
 
   it("phrase6", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -198,7 +198,7 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].or).toBeDefined();
@@ -211,7 +211,7 @@ describe("erModel", () => {
   });
 
   it("phrase7", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -227,7 +227,7 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].or).toBeDefined();
@@ -247,7 +247,7 @@ describe("erModel", () => {
   });
 
   it("phrase8", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -263,7 +263,7 @@ describe("erModel", () => {
 
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(company);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.where).toBeDefined();
     expect(commands[0].payload.options!.where![0].or).toBeDefined();
@@ -284,7 +284,7 @@ describe("erModel", () => {
 
    /*
    it("phrase9", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -301,7 +301,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     commands[0].payload.options!.first
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.TgdcCompany);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.first).toBeDefined();
     expect(commands[0].payload.options!.first).toEqual(909568013476);
@@ -316,7 +316,7 @@ describe("erModel", () => {
    });
 
    it("phrase10", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -333,7 +333,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     commands[0].payload.options!.first
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.TgdcCompany);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.first).toBeDefined();
     expect(commands[0].payload.options!.first).toEqual(909560013406);
@@ -348,7 +348,7 @@ describe("erModel", () => {
    });
 
    it("phrase11", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -365,7 +365,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     commands[0].payload.options!.first
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.TgdcCompany);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.first).toBeDefined();
     expect(commands[0].payload.options!.first).toEqual(45);
@@ -380,7 +380,7 @@ describe("erModel", () => {
    });
 
    it("phrase12", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -397,7 +397,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     commands[0].payload.options!.first
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.TgdcCompany);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.first).toBeDefined();
     expect(commands[0].payload.options!.first).toEqual(55);
@@ -412,7 +412,7 @@ describe("erModel", () => {
    });
 
    it("phrase13", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -429,7 +429,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     commands[0].payload.options!.first
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.TgdcCompany);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.first).toBeDefined();
     expect(commands[0].payload.options!.first).toEqual(100000000);
@@ -444,7 +444,7 @@ describe("erModel", () => {
    });
 
    it("phrase14", () => {
-    const company = erModel.entities.Company;
+    const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
     const placeKey = company.attributes.PLACEKEY;
@@ -461,7 +461,7 @@ describe("erModel", () => {
     expect(commands[0].action).toEqual("QUERY");
     expect(commands[0].payload).toBeDefined();
     commands[0].payload.options!.first
-    expect(commands[0].payload.link.entity).toEqual(erModel.entities.Company);
+    expect(commands[0].payload.link.entity).toEqual(erModel.entities.TgdcCompany);
     expect(commands[0].payload.options).toBeDefined();
     expect(commands[0].payload.options!.first).toBeDefined();
     expect(commands[0].payload.options!.first).toEqual(100000000);

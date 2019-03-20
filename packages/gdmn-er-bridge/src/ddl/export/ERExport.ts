@@ -33,7 +33,8 @@ import {
   StringAttribute,
   systemFields,
   TimeAttribute,
-  TimeStampAttribute
+  TimeStampAttribute,
+  sameSelector
 } from "gdmn-orm";
 import {Utils} from "../../Utils";
 import {Constants} from "../Constants";
@@ -58,6 +59,8 @@ import {
   IRange,
   isCheckForBoolean
 } from "./util";
+import { LoadDocumentFunc, loadDocument } from "./document";
+import { ResolvePlugin } from "webpack";
 
 export class ERExport {
 
@@ -80,16 +83,17 @@ export class ERExport {
     this._atResult = await load(this._connection, this._transaction);
 
     this._erModel.add(new Sequence({name: Constants.GLOBAL_GENERATOR}));
-    await this._gdEntities.create(this._getATResult());
 
-    this._createEntities();
-    Object.values(this._erModel.entities)
-      .sort((a, b) => {
-        if (a.adapter!.relation.length < b.adapter!.relation.length) return -1;
-        else if (a.adapter!.relation.length > b.adapter!.relation.length) return 1;
-        return 0;
-      })
-      .forEach((entity) => this._createAttributes(entity));
+    if (this._dbSchema.relations['GD_DOCUMENT']) {
+      await this._gdEntities.create(this._getATResult());
+      this._createEntities(true);
+      await this._createDocuments();
+    } else {
+      this._createEntities(false);
+    }
+
+    Object.values(this._erModel.entities).sort( (a, b) => a.adapter!.relation.length - b.adapter!.relation.length )
+      .forEach( entity => this._createAttributes(entity) );
     this._createDetailAttributes();
     this._createSetAttributes();
 
@@ -103,24 +107,132 @@ export class ERExport {
     return this._atResult;
   }
 
-  private _createEntities(): void {
-    Object.entries(this._getATResult().atRelations).forEach(([atRelationName, atRelation]) => {
-      const relation = this._dbSchema.relations[atRelationName];
-      if (!this._isCrossRelation(relation)) {
-        const inheritedFk = Object.values(relation.foreignKeys)
-          .find((fk) => fk.fields.includes(Constants.DEFAULT_INHERITED_KEY_NAME));
-        let parent: Entity | undefined;
-        if (inheritedFk) {
-          const refRelation = this._dbSchema.relationByUqConstraint(inheritedFk.constNameUq);
-          const refEntities = this._findEntities(refRelation.name);
-          parent = refEntities[0];
+  private _addEntity(entity: Entity) {
+    if (!this._erModel.entities[entity.name]) {
+      this._erModel.add(entity);
+    } else {
+      console.log(`Entity ${entity.name} already exists`);
+    }
+  }
+
+  private _createDocuments() {
+
+    const TgdcUserDocument = this._erModel.entities['TgdcUserDocument'];
+
+    if (!TgdcUserDocument) {
+      // это не бд гедымина
+      return Promise.resolve();
+    }
+
+    const createDocEntity = (classPrefix: string, namePrefix: string, ruid: string, parent_ruid: string, name: string, r: string) => {
+      const parentClassName = `${classPrefix}${parent_ruid}`;
+      const className = `${classPrefix}${ruid}`;
+      const atRelation = this._getATResult().atRelations[r];
+      const semCategories = atRelation ? atRelation.semCategories : undefined;
+      const parent = this._erModel.entities[parentClassName];
+      const adapter = parent ? appendAdapter(parent.adapter!, r) : (r ? relationName2Adapter(r) : undefined);
+
+      const entity = new Entity({
+        parent,
+        name: className,
+        lName: {ru: {name: `${namePrefix} ${name}`}},
+        semCategories,
+        adapter
+      });
+
+      this._addEntity(entity);
+    }
+
+    const loadDocumentFunc: LoadDocumentFunc = (id: number, ruid: string, parent_ruid: string, name: string, className: string, hr: string, lr: string) => {
+      switch (className) {
+        case 'TgdcUserDocumentType': {
+          createDocEntity('TgdcUserDocument', 'Документ', ruid, parent_ruid, name, hr);
+          if (lr) {
+            createDocEntity('TgdcUserDocumentLine', 'Позиция', ruid, parent_ruid, name, lr);
+          }
+          return;
         }
-        const entity = this._createEntity(parent, relation, atRelation);
-        if (!this._erModel.entities[entity.name]) {
-          this._erModel.add(entity);
+        case 'TgdcInvDocumentType': {
+          createDocEntity('TgdcInvDocument', 'Документ', ruid, parent_ruid, name, hr);
+          if (lr) {
+            createDocEntity('TgdcInvDocumentLine', 'Позиция', ruid, parent_ruid, name, lr);
+          }
+          return;
+        }
+        case 'TgdcInvPriceListType': {
+          createDocEntity('TgdcInvPriceList', 'Документ', ruid, parent_ruid, name, hr);
+          if (lr) {
+            createDocEntity('TgdcInvPriceListLine', 'Позиция', ruid, parent_ruid, name, lr);
+          }
+          return;
+        }
+        case 'TgdcDocumentType': {
+          createDocEntity('TgdcDocument', 'Документ', ruid, parent_ruid, name, hr);
+          return;
         }
       }
-    });
+    }
+
+    return loadDocument(this._connection, this._transaction, loadDocumentFunc);
+  }
+
+  private _createEntities(onlyUSRRelations: boolean): void {
+    interface IRelationLink {
+      atRelationName: string;
+      atRelation: IATRelation;
+      relation: Relation;
+    }
+
+    const usrRelations = Object.entries(this._getATResult().atRelations).filter( ([atRelationName]) => !onlyUSRRelations || atRelationName.startsWith('USR$') );
+
+    let inheritedRelations = usrRelations.reduce((p, [atRelationName, atRelation]) => {
+      const relation = this._dbSchema.relations[atRelationName];
+
+      if (relation.primaryKey) {
+        if (relation.primaryKey.fields[0] === Constants.DEFAULT_ID_NAME) {
+          this._addEntity(this._createEntity(undefined, relation, atRelation));
+        }
+        else if (relation.primaryKey.fields[0] === Constants.DEFAULT_INHERITED_KEY_NAME) {
+          p.push({
+            atRelationName,
+            atRelation,
+            relation
+          })
+        }
+      }
+
+      return p;
+    }, [] as IRelationLink[]);
+
+    /**
+     * В случае если внешний ключ ведет на таблицу, для которой нет сущности
+     * в модели, код сканирования может зациклится. Мы ограничиваем число циклов.
+     * Это же ограничение и будет ограничением максимального числа уровней
+     * наследования.
+     */
+    let infiniteLoadingPreventer = 12;
+
+    while (--infiniteLoadingPreventer && inheritedRelations.length) {
+      inheritedRelations = inheritedRelations.reduce((p, r) => {
+        const { relation, atRelation } = r;
+        const inheritedFk = Object.values(relation.foreignKeys)
+          .find((fk) => fk.fields.includes(Constants.DEFAULT_INHERITED_KEY_NAME));
+        if (inheritedFk) {
+          const refRelation = this._dbSchema.relationByUqConstraint(inheritedFk.constNameUq);
+          const parent = this._erModel.relation2Entity[refRelation.name];
+          if (parent) {
+            this._addEntity(this._createEntity(parent, relation, atRelation));
+          } else {
+            p.push(r);
+          }
+        }
+        return p;
+      }, [] as IRelationLink[]);
+    }
+
+    if (!infiniteLoadingPreventer) {
+      console.log(`There are inherited entities with unknown parent.`);
+    }
   }
 
   private _createEntity(parent: Entity | undefined, relation: Relation, atRelation: IATRelation): Entity {
@@ -161,6 +273,11 @@ export class ERExport {
     const ownRelationName = Utils.getOwnRelationName(entity);
     entity.adapter!.relation.forEach(rel => {
       const relation = this._dbSchema.relations[rel.relationName];
+
+      if (!relation) {
+        throw new Error(`Relation ${rel.relationName} not found in db schema.`);
+      }
+
       const atRelation = this._getATResult().atRelations[relation.name];
 
       if (!atRelation) {
@@ -568,17 +685,16 @@ export class ERExport {
   private _findEntities(relationName: string, selectors: IEntitySelector[] = []): Entity[] {
     const found = Object.values(this._erModel.entities).reduce((p, entity) => {
       if (entity.adapter) {
-        entity.adapter.relation.forEach((rel) => {
-          if (rel.relationName === relationName && !rel.weak) {
-            if (rel.selector && selectors.length) {
-              if (selectors.find((s) => s.field === rel.selector!.field && s.value === rel.selector!.value)) {
-                p.push(entity);
-              }
-            } else {
+        const rel = entity.adapter.relation.find( r => r.relationName === relationName && !r.weak );
+        if (rel) {
+          if (rel.selector && selectors.length) {
+            if (selectors.find( s => sameSelector(s, rel.selector) )) {
               p.push(entity);
             }
+          } else {
+            p.push(entity);
           }
-        });
+        }
       }
 
       return p;

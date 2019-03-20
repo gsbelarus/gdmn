@@ -10,6 +10,7 @@ export async function loadDocument(connection: AConnection, transaction: ATransa
     sql: `
       SELECT
         dt.id,
+        dt.parent,
         dt.ruid,
         prnt.ruid AS parent_ruid,
         prnt.documenttype AS parent_documenttype,
@@ -37,11 +38,11 @@ export async function loadDocument(connection: AConnection, transaction: ATransa
           loadDocumentFunc(
             rs.getNumber("ID"),
             rs.getString("RUID"),
-            !rs.isNull("PARENT_RUID") && rs.getString("PARENT_DOCUMENTTYPE") === "D" ? rs.getString("PARENT_RUID") : "",
+            rs.getString("PARENT_DOCUMENTTYPE") === "D" ? rs.getString("PARENT_RUID") : "",
             rs.getString("NAME"),
             rs.getString("CLASSNAME") ? rs.getString("CLASSNAME") : rs.getString("ROOT_CLASSNAME"),
             rs.getString("HR"),
-            rs.isNull("LR") ? "" : rs.getString("LR")
+            rs.getString("LR")
           );
         }
       }

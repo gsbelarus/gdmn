@@ -72,25 +72,25 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder}) => {
       await erBuilder.create(erModel, new Entity({
-        name: "TEST1",
+        name: "USR$TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         semCategories: [SemCategory.Company],
         adapter: {
-          relation: [{relationName: "TEST_ADAPTER"}]
+          relation: [{relationName: "USR$TEST_ADAPTER"}]
         }
       }));
 
       await erBuilder.create(erModel, new Entity({
-        name: "TEST2",
+        name: "USR$TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
     });
 
     const loadedERModel = await initERModel();
-    const entity1 = erModel.entity("TEST1");
-    const entity2 = erModel.entity("TEST2");
-    const loadEntity1 = loadedERModel.entity("TEST1");
-    const loadEntity2 = loadedERModel.entity("TEST2");
+    const entity1 = erModel.entity("USR$TEST1");
+    const entity2 = erModel.entity("USR$TEST2");
+    const loadEntity1 = loadedERModel.entity("USR$TEST1");
+    const loadEntity2 = loadedERModel.entity("USR$TEST2");
     expect(loadEntity1).toEqual(entity1);
     expect(loadEntity2).toEqual(entity2);
     expect(loadEntity1.serialize()).toEqual(entity1.serialize());
@@ -101,14 +101,14 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT, defaultValue: -10000,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
@@ -129,8 +129,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -139,14 +139,14 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new NumericAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         precision: 4, scale: 2, minValue: 40, maxValue: 1000, defaultValue: 40.36,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new NumericAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -159,8 +159,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -169,13 +169,13 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new BlobAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new BlobAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}}
@@ -183,8 +183,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -193,13 +193,13 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new BooleanAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
-        defaultValue: true, adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        defaultValue: true, adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new BooleanAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}}
@@ -207,8 +207,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -217,14 +217,14 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minLength: 5, maxLength: 30, defaultValue: "test default", autoTrim: true,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -241,8 +241,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -251,7 +251,7 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -260,7 +260,7 @@ describe("ERBridge", () => {
         minValue: moment.utc().year(1999).month(10).date(3).startOf("date").local().toDate(),
         maxValue: moment.utc().year(2099).startOf("year").local().toDate(),
         defaultValue: moment.utc().startOf("date").local().toDate(),
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new DateAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -276,8 +276,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -286,7 +286,7 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -298,7 +298,7 @@ describe("ERBridge", () => {
           .date(Constants.MIN_TIMESTAMP.getDate()).endOf("date").local().toDate(),
         defaultValue: moment.utc().year(Constants.MIN_TIMESTAMP.getUTCFullYear()).month(Constants.MIN_TIMESTAMP.getUTCMonth())
           .date(Constants.MIN_TIMESTAMP.getDate()).local().toDate(),
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new TimeAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -318,8 +318,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -328,7 +328,7 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -337,7 +337,7 @@ describe("ERBridge", () => {
         minValue: moment.utc().year(1999).month(10).startOf("month").local().toDate(),
         maxValue: moment.utc().year(2099).month(1).date(1).endOf("date").local().toDate(),
         defaultValue: moment.utc().local().toDate(),
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new TimeStampAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -353,8 +353,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -363,14 +363,14 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new FloatAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123, defaultValue: 40,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       // await eBuilder.createAttribute(entity, new FloatAttribute({
       //   name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -383,8 +383,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -393,7 +393,7 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -413,7 +413,7 @@ describe("ERBridge", () => {
             lName: {ru: {name: "Перечисление Y"}}
           }
         ], defaultValue: "Z",
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER"}
       }));
       await eBuilder.createAttribute(entity, new EnumAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2"}},
@@ -426,8 +426,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -436,11 +436,11 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity1 = await erBuilder.create(erModel, new Entity({
-        name: "TEST1",
+        name: "USR$TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
       const entity2 = await erBuilder.create(erModel, new Entity({
-        name: "TEST2",
+        name: "USR$TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -453,10 +453,10 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity1 = erModel.entity("TEST1");
-    const entity2 = erModel.entity("TEST2");
-    const loadEntity1 = loadedERModel.entity("TEST1");
-    const loadEntity2 = loadedERModel.entity("TEST2");
+    const entity1 = erModel.entity("USR$TEST1");
+    const entity2 = erModel.entity("USR$TEST2");
+    const loadEntity1 = loadedERModel.entity("USR$TEST1");
+    const loadEntity2 = loadedERModel.entity("USR$TEST2");
     expect(loadEntity1).toEqual(entity1);
     expect(loadEntity2).toEqual(entity2);
     expect(loadEntity1.serialize()).toEqual(entity1.serialize());
@@ -467,7 +467,7 @@ describe("ERBridge", () => {
   //   const erModel = await initERModel();
   //   await execute(async ({erBuilder, eBuilder}) => {
   //     const entity = await erBuilder.create(erModel, new Entity({
-  //       name: "TEST",
+  //       name: "USR$TEST",
   //       lName: {ru: {name: "entity name", fullName: "full entity name"}}
   //     }));
   //
@@ -477,8 +477,8 @@ describe("ERBridge", () => {
   //   });
   //
   //   const loadedERModel = await initERModel();
-  //   const entity = erModel.entity("TEST");
-  //   const loadEntity = loadedERModel.entity("TEST");
+  //   const entity = erModel.entity("USR$TEST");
+  //   const loadEntity = loadedERModel.entity("USR$TEST");
   //   expect(loadEntity).toEqual(entity);
   //   expect(loadEntity.serialize()).toEqual(entity.serialize());
   // });
@@ -487,15 +487,15 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity2 = await erBuilder.create(erModel, new Entity({
-        name: "TEST2",
+        name: "USR$TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
       const entity1 = await erBuilder.create(erModel, new Entity({
-        name: "TEST1",
+        name: "USR$TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
       const entity3 = await erBuilder.create(erModel, new Entity({
-        name: "TEST3",
+        name: "USR$TEST3",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -503,23 +503,23 @@ describe("ERBridge", () => {
         name: "DETAILLINK", lName: {ru: {name: "Позиции 1"}}, required: true, entities: [entity2],
         adapter: {
           masterLinks: [{
-            detailRelation: "TEST2",
+            detailRelation: "USR$TEST2",
             link2masterField: "MASTER_KEY"
           }]
         }
       }));
       await eBuilder.createAttribute(entity1, new DetailAttribute({
-        name: "TEST3", lName: {ru: {name: "Позиции 2"}}, required: true, entities: [entity3]
+        name: "USR$TEST3", lName: {ru: {name: "Позиции 2"}}, required: true, entities: [entity3]
       }));
     });
 
     const loadedERModel = await initERModel();
-    const entity1 = erModel.entity("TEST1");
-    const entity2 = erModel.entity("TEST2");
-    const entity3 = erModel.entity("TEST3");
-    const loadEntity1 = loadedERModel.entity("TEST1");
-    const loadEntity2 = loadedERModel.entity("TEST2");
-    const loadEntity3 = loadedERModel.entity("TEST3");
+    const entity1 = erModel.entity("USR$TEST1");
+    const entity2 = erModel.entity("USR$TEST2");
+    const entity3 = erModel.entity("USR$TEST3");
+    const loadEntity1 = loadedERModel.entity("USR$TEST1");
+    const loadEntity2 = loadedERModel.entity("USR$TEST2");
+    const loadEntity3 = loadedERModel.entity("USR$TEST3");
     expect(loadEntity1).toEqual(entity1);
     expect(loadEntity2).toEqual(entity2);
     expect(loadEntity3).toEqual(entity3);
@@ -532,11 +532,11 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity1 = await erBuilder.create(erModel, new Entity({
-        name: "TEST1",
+        name: "USR$TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
       const entity2 = await erBuilder.create(erModel, new Entity({
-        name: "TEST2",
+        name: "USR$TEST2",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
@@ -571,10 +571,10 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity1 = erModel.entity("TEST1");
-    const entity2 = erModel.entity("TEST2");
-    const loadEntity1 = loadedERModel.entity("TEST1");
-    const loadEntity2 = loadedERModel.entity("TEST2");
+    const entity1 = erModel.entity("USR$TEST1");
+    const entity2 = erModel.entity("USR$TEST2");
+    const loadEntity1 = loadedERModel.entity("USR$TEST1");
+    const loadEntity2 = loadedERModel.entity("USR$TEST2");
     expect(loadEntity1).toEqual(entity1);
     expect(loadEntity2).toEqual(entity2);
     expect(loadEntity1.serialize()).toEqual(entity1.serialize());
@@ -585,24 +585,24 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity = await erBuilder.create(erModel, new Entity({
-        name: "TEST",
+        name: "USR$TEST",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
 
       await eBuilder.createAttribute(entity, new StringAttribute({
         name: "FIELD1", lName: {ru: {name: "Поле 1"}}, required: true,
         minLength: 5, maxLength: 30, defaultValue: "test default", autoTrim: true,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER1"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER1"}
       }));
       await eBuilder.createAttribute(entity, new IntegerAttribute({
         name: "FIELD2", lName: {ru: {name: "Поле 2", fullName: "FULLNAME"}}, required: true,
         minValue: MIN_16BIT_INT, maxValue: MAX_16BIT_INT, defaultValue: -100,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER2"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER2"}
       }));
       await eBuilder.createAttribute(entity, new FloatAttribute({
         name: "FIELD3", lName: {ru: {name: "Поле 3"}}, required: true,
         minValue: -123, maxValue: 123123123123123123123123, defaultValue: 40,
-        adapter: {relation: "TEST", field: "FIELD_ADAPTER3"}
+        adapter: {relation: "USR$TEST", field: "FIELD_ADAPTER3"}
       }));
 
       await eBuilder.addUnique(entity, [entity.attribute("FIELD1"), entity.attribute("FIELD2")]);
@@ -610,8 +610,8 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity = erModel.entity("TEST");
-    const loadEntity = loadedERModel.entity("TEST");
+    const entity = erModel.entity("USR$TEST");
+    const loadEntity = loadedERModel.entity("USR$TEST");
     expect(loadEntity).toEqual(entity);
     expect(loadEntity.serialize()).toEqual(entity.serialize());
   });
@@ -620,33 +620,33 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const entity1 = await erBuilder.create(erModel, new Entity({
-        name: "TEST1",
+        name: "USR$TEST1",
         lName: {ru: {name: "entity name", fullName: "full entity name"}}
       }));
       await eBuilder.createAttribute(entity1, new StringAttribute({
         name: "TEST_FIELD1", lName: {ru: {name: "Поле 1"}},
-        adapter: {relation: "TEST1", field: "FIELD_ADAPTER1"}
+        adapter: {relation: "USR$TEST1", field: "FIELD_ADAPTER1"}
       }));
 
       const entity2 = await erBuilder.create(erModel, new Entity({
-        name: "TEST2",
+        name: "USR$TEST2",
         parent: entity1,
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         adapter: {
-          relation: [...entity1.adapter!.relation, {relationName: "TEST2"}]
+          relation: [...entity1.adapter!.relation, {relationName: "USR$TEST2"}]
         }
       }));
       await eBuilder.createAttribute(entity2, new StringAttribute({
         name: "TEST_FIELD2", lName: {ru: {name: "Поле 2"}},
-        adapter: {relation: "TEST2", field: "FIELD_ADAPTER2"}
+        adapter: {relation: "USR$TEST2", field: "FIELD_ADAPTER2"}
       }));
 
       const entity3 = await erBuilder.create(erModel, new Entity({
-        name: "TEST3",
+        name: "USR$TEST3",
         parent: entity1,
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         adapter: {
-          relation: [...entity1.adapter!.relation, {relationName: "TEST3"}]
+          relation: [...entity1.adapter!.relation, {relationName: "USR$TEST3"}]
         }
       }));
       await eBuilder.createAttribute(entity3, new StringAttribute({
@@ -660,12 +660,12 @@ describe("ERBridge", () => {
     });
 
     const loadedERModel = await initERModel();
-    const entity1 = erModel.entity("TEST1");
-    const entity2 = erModel.entity("TEST2");
-    const entity3 = erModel.entity("TEST3");
-    const loadEntity1 = loadedERModel.entity("TEST1");
-    const loadEntity2 = loadedERModel.entity("TEST2");
-    const loadEntity3 = loadedERModel.entity("TEST3");
+    const entity1 = erModel.entity("USR$TEST1");
+    const entity2 = erModel.entity("USR$TEST2");
+    const entity3 = erModel.entity("USR$TEST3");
+    const loadEntity1 = loadedERModel.entity("USR$TEST1");
+    const loadEntity2 = loadedERModel.entity("USR$TEST2");
+    const loadEntity3 = loadedERModel.entity("USR$TEST3");
     expect(loadEntity1).toEqual(entity1);
     expect(loadEntity2).toEqual(entity2);
     expect(loadEntity3).toEqual(entity3);
