@@ -10,7 +10,6 @@ import {
   RusCase,
   RusHmNouns,
   RusImperativeVP,
-  RusNNP,
   RusNoun,
   RusPhrase,
   RusPP,
@@ -18,7 +17,8 @@ import {
   RusVerb,
   SemCategory,
   SemContext,
-  RusPTimeP
+  RusPTimeP,
+  DefinitionValue
 } from "gdmn-nlp";
 import {
   Entity,
@@ -90,8 +90,6 @@ export class ERTranslatorRU {
     const objectANP = (() => {
       if (np.noun instanceof RusANP) {
         return (np.noun as RusANP).noun;
-      } else if (np.noun instanceof RusNNP) {
-        return (np.noun as RusNNP).noun;
       } else {
         return np.noun;
       }
@@ -114,7 +112,9 @@ export class ERTranslatorRU {
       const equals: IEntityQueryWhereValue[] = [];
       if (np.noun instanceof RusANP) {
         const adjective = (np.noun as RusANP).adjf;
-        if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
+        if (adjective instanceof DefinitionValue) {
+          first = adjective.quantity;
+        } else if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
           const nounLexeme = (adjective.lexeme as RusAdjectiveLexeme).getNounLexeme();
           if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
             const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
@@ -151,27 +151,6 @@ export class ERTranslatorRU {
           }
         }
       }
-
-      //const cn = (np.noun instanceof RusNNP) && ((np.noun as RusNNP).items[0] instanceof RusCN) ? (np.noun as RusNNP).items[0] as RusCN : undefined;
-      //if (np.noun instanceof RusNNP) {
-      //  const numeral = (np.noun as RusNNP).numr;
-      //  if ((numeral.lexeme as RusNumeralLexeme).numeralValue === NumeralValue.Quantitative) {
-      //    if (cn instanceof RusCN) {
-      //      first = cn.items.map(item => {
-      //        if (item instanceof RusNumeral) {
-      //        return Number(item.lexeme.digitalWrite)
-      //        }
-      //      }).reduce( (res, curr) => {
-      //        curr = (curr) ? curr : 0;
-      //        res = (res) ? res : 0;
-      //        const mid = (curr % 1000 === 0 && res % 1000 > 0) ? res % 1000 : 1;
-      //        return ((res !== 0 && mid !== 1) ? (res - mid) : res) + mid * curr;
-      //      }, 0)
-      //    } else {
-      //      first = Number((numeral.lexeme as RusNumeralLexeme).digitalWrite);
-      //    }
-      //  }
-      //}
 
       if (np.items[1] instanceof RusPTimeP) {
         const pTimeP: RusPTimeP = np.items[1] as RusPTimeP;
@@ -283,8 +262,9 @@ export class ERTranslatorRU {
         options = new EntityQueryOptions(first, undefined, [{or: or}]);
       } else if (equals.length !== 0) {
         options = new EntityQueryOptions(first, undefined, [{equals}]);
+      } else {
+        options = new EntityQueryOptions(first, undefined, undefined);
       }
-
       const entityLink = new EntityLink(entity, "alias1", fields);
       return {
         action,

@@ -1,7 +1,7 @@
 import { VPParser1 } from "./VPParser1";
-import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusNNP, RusCN, RusPTimeP } from "../../rusSyntax";
-import { tokenToWordOrHomogeneous, tokenToWordOrCompositeNumerals } from "../../parser";
-import { DateValue, parseDate } from "../../value";
+import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusPTimeP } from "../../rusSyntax";
+import { tokenToWordOrHomogeneous } from "../../parser";
+import { DateValue, parseDate, DefinitionValue } from "../../value";
 
 export const vpParser1 = new VPParser1();
 
@@ -41,16 +41,12 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   }
 
   public qualImperativeNoun = (ctx: any) => {
-    if (ctx.qualImperativeANPNoun) {
       return this.visit(ctx.qualImperativeANPNoun);
-    } else {
-      return this.visit(ctx.qualImperativeNNPNoun);
-    };
   }
 
   public qualImperativeANPNoun = (ctx: any) => {
     if (ctx.imperativeDets) {
-      const impN = this.visit(ctx.imperativeNoun);
+      const impN = this.visit(ctx.imperativeNouns);
 
       if (Array.isArray(impN)) {
         return new RusANP(this.visit(ctx.imperativeDets), new RusHmNouns(impN));
@@ -58,31 +54,16 @@ export class VPVisitor1 extends BaseVPVisitor1 {
         return new RusANP(this.visit(ctx.imperativeDets), impN);
       }
     } else {
-      return this.visit(ctx.imperativeNoun);
+      return this.visit(ctx.imperativeNouns);
     };
   }
-
-  public qualImperativeNNPNoun = (ctx: any) => {
-      const impCN = this.visit(ctx.imperativeNNPNumr);
-      const impN = this.visit(ctx.imperativeNNPNoun);
-
-      if (Array.isArray(impN)) {
-        if (Array.isArray(impCN)) {
-          return new RusNNP(new RusCN(impCN), new RusHmNouns(impN));
-        } else {
-          return new RusNNP( impCN, new RusHmNouns(impN));
-        }
-      } else {
-        if (Array.isArray(impCN)) {
-          return new RusNNP(new RusCN(impCN), impN);
-        } else {
-          return new RusNNP(impCN, impN);
-        }
-      };
-  }
-
+  
   public imperativeDets = (ctx: any) => {
-    return this.visit(ctx.imperativeDet);
+    if(ctx.imperativeDet) {
+      return this.visit(ctx.imperativeDet);
+    } else {
+      return this.visit(ctx.imperativeDefin);
+    }
   }
 
   public imperativeDet = (ctx: any) => {
@@ -92,32 +73,29 @@ export class VPVisitor1 extends BaseVPVisitor1 {
       : undefined;
   }
 
-  public imperativeNNPNumr = (ctx: any) => {
-    return tokenToWordOrCompositeNumerals( ctx.NUMRAccs ? ctx.NUMRAccs[0]
-    : ctx.NUMRInanAccs ? ctx.NUMRInanAccs[0]
-    : ctx.NUMRAnimAccs ? ctx.NUMRAnimAccs[0]
-    : ctx.NUMRInanMascAccs ? ctx.NUMRInanMascAccs[0]
-    : ctx.NUMRInanFemnAccs ? ctx.NUMRInanFemnAccs[0]
-    : ctx.NUMRInanNeutAccs ? ctx.NUMRInanNeutAccs[0]
-    : ctx.NUMRAnimMascAccs ? ctx.NUMRAnimMascAccs[0]
-    : ctx.NUMRAnimFemnAccs ? ctx.NUMRAnimFemnAccs[0]
-    : ctx.NUMRAnimNeutAccs ? ctx.NUMRAnimNeutAccs[0]
-    : undefined);
+  public imperativeDefin = (ctx: any) => {
+    return new DefinitionValue(ctx.DefinitionToken[0].image, ctx.DefinitionToken[0].quantity, ctx.DefinitionToken[0].kInd);
   }
 
-  public imperativeNNPNoun = (ctx: any) => {
+  public imperativeNouns = (ctx: any) => {
+    if(ctx.nounAccs) {
+      return this.visit(ctx.nounAccs);
+    } else {
+      return this.visit(ctx.nounGent);
+    }
+  }
+
+  public imperativeNoun = (ctx: any) => {
+    return this.visit(ctx.nounAccs);
+  }
+
+  public nounAccs = (ctx: any) => {
     return tokenToWordOrHomogeneous(ctx.NOUNAnimMascSingAccs ? ctx.NOUNAnimMascSingAccs[0]
       : ctx.NOUNAnimFemnSingAccs ? ctx.NOUNAnimFemnSingAccs[0]
       : ctx.NOUNAnimNeutSingAccs ? ctx.NOUNAnimNeutSingAccs[0]
       : ctx.NOUNAnimMascPlurAccs ? ctx.NOUNAnimMascPlurAccs[0]
       : ctx.NOUNAnimFemnPlurAccs ? ctx.NOUNAnimFemnPlurAccs[0]
       : ctx.NOUNAnimNeutPlurAccs ? ctx.NOUNAnimNeutPlurAccs[0]
-      : ctx.NOUNInanMascSingGent ? ctx.NOUNInanMascSingGent[0]
-      : ctx.NOUNInanFemnSingGent ? ctx.NOUNInanFemnSingGent[0]
-      : ctx.NOUNInanNeutSingGent ? ctx.NOUNInanNeutSingGent[0]
-      : ctx.NOUNInanMascPlurGent ? ctx.NOUNInanMascPlurGent[0]
-      : ctx.NOUNInanFemnPlurGent ? ctx.NOUNInanFemnPlurGent[0]
-      : ctx.NOUNInanNeutPlurGent ? ctx.NOUNInanNeutPlurGent[0]
       : ctx.NOUNInanMascSingAccs ? ctx.NOUNInanMascSingAccs[0]
       : ctx.NOUNInanFemnSingAccs ? ctx.NOUNInanFemnSingAccs[0]
       : ctx.NOUNInanNeutSingAccs ? ctx.NOUNInanNeutSingAccs[0]
@@ -125,20 +103,6 @@ export class VPVisitor1 extends BaseVPVisitor1 {
       : ctx.NOUNInanFemnPlurAccs ? ctx.NOUNInanFemnPlurAccs[0]
       : ctx.NOUNInanNeutPlurAccs ? ctx.NOUNInanNeutPlurAccs[0]
       : undefined);
-    }
-
-  public imperativeNoun = (ctx: any) => {
-    return this.visit(ctx.nounAccs);
-  }
-
-  public nounAccs = (ctx: any) => {
-    return tokenToWordOrHomogeneous(ctx.NOUNAnimMascPlurAccs ? ctx.NOUNAnimMascPlurAccs[0]
-    : ctx.NOUNAnimFemnPlurAccs ? ctx.NOUNAnimFemnPlurAccs[0]
-    : ctx.NOUNAnimNeutPlurAccs ? ctx.NOUNAnimNeutPlurAccs[0]
-    : ctx.NOUNInanMascPlurAccs ? ctx.NOUNInanMascPlurAccs[0]
-    : ctx.NOUNInanFemnPlurAccs ? ctx.NOUNInanFemnPlurAccs[0]
-    : ctx.NOUNInanNeutPlurAccs ? ctx.NOUNInanNeutPlurAccs[0]
-    : undefined);
   }
 
   public pp = (ctx: any) => {

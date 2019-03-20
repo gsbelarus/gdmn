@@ -17,6 +17,14 @@ export const rusAdjectives: RusAdjectiveInterface[] = [
     category: RusAdjectiveCategory.Pron,
     declensionZ: '1a'
   },
+  // первый
+  {
+    stem: 'перв',
+    stem1: '',
+    stem2: '',
+    category: RusAdjectiveCategory.Rel,
+    declensionZ: '1a'
+  },
   // новый
   {
     stem: 'нов',

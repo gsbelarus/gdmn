@@ -1,13 +1,13 @@
-import { AnyWord, Numeral } from '../morphology/morphology';
+import { AnyWord } from '../morphology/morphology';
 import { CyrillicWord, tokenize, Comma, Numeric, DateToken } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
 import { morphTokens } from './rusMorphTokens';
-import { IMorphToken, isMorphToken } from './types';
+import { IMorphToken, isMorphToken, IDefinition } from './types';
 import { IToken } from 'chevrotain';
 import { RusNoun } from '../morphology/rusNoun';
 import { RusConjunction } from '../morphology/rusConjunction';
-import { RusNumeral, RusNumeralLexemes } from '../morphology/rusNumeral';
-import { RusCase, RusGender } from '..';
+import { RusNumeral } from '../morphology/rusNumeral';
+import { RusAdjective } from '../morphology/rusAdjective';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -22,8 +22,7 @@ import { RusCase, RusGender } from '..';
  *
  * @param text слово, словосочетание или предложение.
  */
-export function combinatorialMorph(text: string): IToken[][]
-{
+export function combinatorialMorph(text: string): IToken[][] {
   function createTokenInstance(w: AnyWord): IMorphToken {
     const tokType = morphTokens[w.getSignature()];
 
@@ -216,10 +215,77 @@ export function combinatorialMorph(text: string): IToken[][]
           const hsm = parts.splice(startIdx + 1, cnt - 1).filter( t => t[0].tokenType !== Comma ).map(
             p => p.reduce( (prev, w) => isMorphToken(w) ? [...prev, w.word] : prev, [] as AnyWord[] )
           );
-          parts[startIdx] = firstParts.map( p => isMorphToken(p) ? {...p, hsm} : p );
+          parts[startIdx] = firstParts.map(p => isMorphToken(p) ? { ...p, hsm } : p);
         }
       }
 
+      startIdx++;
+    }
+  }
+
+  /**
+   * Замена числительного на новый токен
+   */
+  let currIdx = 0;
+  while (currIdx < parts.length) {
+    let firstParts = [...parts[currIdx]];
+    let firstToken = firstParts[0];
+
+    if(isMorphToken(firstToken) && firstToken.word instanceof RusNumeral || firstToken.tokenType === Numeric) {
+      parts.splice(currIdx , 1, [{image: firstToken.image, tokenType: morphTokens.DefinitionToken, tokenTypeIdx: morphTokens.DefinitionToken.tokenTypeIdx, quantity: Number(firstToken.image) } as IDefinition]);
+      
+    }
+    currIdx++;
+  }
+
+  /**
+   * Найдём фразу число с дополнением
+   */
+
+  startIdx = 0;
+  while (startIdx < parts.length) {
+    let firstParts = [...parts[startIdx]];
+    let firstToken = firstParts[0];
+
+    if (!(firstToken.tokenType === morphTokens.DefinitionToken) && (!isMorphToken(firstToken) || !(firstToken.word instanceof RusAdjective))) {
+      startIdx++;
+    } else {
+      let found = false;
+
+      const nextToken = parts[startIdx + 1][0];
+      let kind;
+
+      if (firstToken.tokenType === morphTokens.DefinitionToken) {
+        if (!isMorphToken(nextToken)) {
+          break;
+        }
+        if (!(nextToken.word instanceof RusAdjective)) {
+          break;
+        }
+        if (nextToken.word.lexeme.stem !== "перв" && nextToken.word.lexeme.stem !== "последн") {
+          break;
+        }
+        kind = nextToken.word.lexeme.stem === "перв" ? "FIRST" : nextToken.word.lexeme.stem === "последн" ? "LAST" : "ALL";
+        found = true;
+      } else if (isMorphToken(firstToken) && firstToken.word instanceof RusAdjective) {
+        if (firstToken.word.lexeme.stem !== "перв" && firstToken.word.lexeme.stem !== "последн") {
+          break;
+        }
+        if (isMorphToken(nextToken)) {
+          break;
+        }
+        if (nextToken.tokenType !== morphTokens.DefinitionToken) {
+          break;
+        }
+        kind = firstToken.word.lexeme.stem === "перв" ? "FIRST" : firstToken.word.lexeme.stem === "последн" ? "LAST" : "ALL";
+        found = true;
+      }
+
+      if(found) {
+        const quantity = Number((firstToken.tokenType === morphTokens.DefinitionToken) ? firstToken.image : nextToken.image);
+        const image = isMorphToken(firstToken) ? `${nextToken.image} ${firstToken.image}` : `${firstToken.image} ${nextToken.image}`;
+        parts.splice(startIdx, 2, [{image: image, tokenType: morphTokens.DefinitionToken, tokenTypeIdx: morphTokens.DefinitionToken.tokenTypeIdx, quantity: quantity, kInd: kind} as IDefinition]);
+      }
       startIdx++;
     }
   }
@@ -228,9 +294,9 @@ export function combinatorialMorph(text: string): IToken[][]
 
   function recurs(curr: IToken[]): void {
     if (curr.length >= parts.length - 1) {
-      parts[parts.length - 1].forEach( p => cmbn.push([...curr, p]) );
+      parts[parts.length - 1].forEach(p => cmbn.push([...curr, p]));
     } else {
-      parts[curr.length].forEach( p => recurs([...curr, p]) );
+      parts[curr.length].forEach(p => recurs([...curr, p]));
     }
   }
 

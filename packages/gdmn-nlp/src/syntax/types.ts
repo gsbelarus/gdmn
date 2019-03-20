@@ -7,6 +7,11 @@ export interface IMorphToken extends IToken {
   cn?: AnyWord[][];
 };
 
+export interface IDefinition extends IToken {
+  quantity?: number;
+  kInd?: string;
+}
+
 export interface ParserName {
   label: string;
   description: string;

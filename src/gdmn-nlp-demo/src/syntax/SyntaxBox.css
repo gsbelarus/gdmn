@@ -117,6 +117,10 @@
   background-color: midnightblue;
 }
 
+.NumeColor {
+  background-color: brown;
+}
+
 .NOUNColor {
   background-color: darkolivegreen;
 }
@@ -135,6 +139,11 @@
 
 .DateColor {
   background-color: grey;
+}
+
+.DefiColor {
+  background-color: seagreen;
+  color: white;
 }
 
 .ACTIVEColor {

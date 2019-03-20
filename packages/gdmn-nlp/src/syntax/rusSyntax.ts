@@ -5,8 +5,7 @@ import { RusPreposition } from '../morphology/rusPreposition';
 import { RusWord } from '../morphology/rusMorphology';
 import { Phrase, PhraseName } from './syntax';
 import { AnyWord } from '../morphology/morphology';
-import { RusNumeral } from '../morphology/rusNumeral';
-import { DateValue } from './value';
+import { DateValue, DefinitionValue } from './value';
 
 export class RusPhrase extends Phrase<RusWord> {};
 
@@ -49,7 +48,7 @@ export class RusImperativeVP extends RusVP {
 }
 
 export class RusNP extends RusPhrase {
-  constructor (n: RusNoun | RusHmNouns | RusANP | RusNNP, pp?: RusPP) {
+  constructor (n: RusNoun | RusHmNouns | RusANP, pp?: RusPP) {
     if (pp) {
       super([n, pp]);
     } else {
@@ -57,13 +56,11 @@ export class RusNP extends RusPhrase {
     }
   }
 
-  get noun(): RusNoun | RusANP | RusNNP {
+  get noun(): RusNoun | RusANP {
     if (this.items[0] instanceof RusNoun) {
       return this.items[0] as RusNoun;
-    } else if (this.items[0] instanceof RusANP) {
-      return this.items[0] as RusANP;
     } else {
-      return this.items[0] as RusNNP;
+      return this.items[0] as RusANP;
     }
   }
 
@@ -84,12 +81,16 @@ export class RusNP extends RusPhrase {
 }
 
 export class RusANP extends RusPhrase {
-  constructor (adjf: RusAdjective, noun: RusNoun | RusHmNouns) {
+  constructor (adjf: RusAdjective | DefinitionValue, noun: RusNoun | RusHmNouns) {
     super([adjf, noun]);
   }
 
-  get adjf(): RusAdjective {
-    return this.items[0] as RusAdjective;
+  get adjf(): RusAdjective | DefinitionValue {
+    if(this.items[0] instanceof RusAdjective) {
+      return this.items[0] as RusAdjective;
+    } else {
+      return this.items[0] as DefinitionValue;
+    }
   }
 
   get noun(): RusNoun {
@@ -104,52 +105,6 @@ export class RusANP extends RusPhrase {
     return {
       label: 'RusANP',
       description: 'Словосочетание прилагательное-существительное'
-    }
-  }
-}
-
-export class RusNNP extends RusPhrase {
-  constructor (numr: RusNumeral | RusCN, noun: RusNoun | RusHmNouns) {
-    super([numr, noun]);
-  }
-
-  get numr(): RusNumeral {
-    if (this.items[0] instanceof RusCN) {
-      return (this.items[0] as RusCN).items[0] as RusNumeral;
-    } else {
-      return this.items[0] as RusNumeral;
-    }
-  }
-
-  get noun(): RusNoun {
-    if (this.items[1] instanceof RusNoun) {
-      return this.items[1] as RusNoun;
-    } else {
-      return (this.items[1] as RusHmNouns).items[0] as RusNoun;
-    }
-  }
-
-  getName(): PhraseName {
-    return {
-      label: 'RusNNP',
-      description: 'Словосочетание числительное-существительное'
-    }
-  }
-}
-
-export class RusCN extends RusPhrase {
-  constructor (numerals: AnyWord[]) {
-    if (!numerals.length || !(numerals[0] instanceof RusNumeral)) {
-      throw new Error(`Invalid composite numeral`);
-    }
-
-    super(numerals as RusWord[]);
-  }
-
-  getName(): PhraseName {
-    return {
-      label: 'RusCN',
-      description: 'Составное числительное'
     }
   }
 }
