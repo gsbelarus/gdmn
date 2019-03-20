@@ -63,6 +63,8 @@ export class ApplicationProcess {
         throw new Error("Process worker need created");
       }
 
+      this._process.once("exit", () => reject());
+
       const callback = (data: IAppWorkerResponse<R>) => {
         if (!this._process) {
           throw new Error("Process worker need created");
@@ -100,6 +102,11 @@ if (ApplicationProcess.isProcess) {
 
   const application = new Application(dbDetail);
   const creating = application.connect();
+
+  creating.catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 
   process.on("SIGINT", exit);
   process.on("SIGTERM", exit);
