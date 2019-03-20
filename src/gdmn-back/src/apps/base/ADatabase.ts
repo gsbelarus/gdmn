@@ -92,105 +92,99 @@ export abstract class ADatabase {
   }
 
   public async create(): Promise<void> {
-    await this._lock.acquire();
-
-    if (this._status === DBStatus.CONNECTED) {
-      this._logger.error("Database already created");
-      throw new Error("Database already created");
-    }
-
-    this._updateStatus(DBStatus.CREATING);
-
-    const {driver, connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
-    try {
-      const connection = driver.newConnection();
-      await connection.createDatabase(connectionOptions);
-      await connection.disconnect();
-      await this.connectionPool.create(connectionOptions, poolOptions);
-      await this._onCreate();
-
-      this._updateStatus(DBStatus.CONNECTED);
-
-    } catch (error) {
-      if (this.connectionPool.created) {
-        await this.connectionPool.destroy();
+    await this._executeWithLock(async () => {
+      if (this._status === DBStatus.CONNECTED) {
+        this._logger.error("Database already created");
+        throw new Error("Database already created");
       }
-      this._updateStatus(DBStatus.IDLE);
-      throw error;
-    } finally {
-      this._lock.release();
-    }
+
+      this._updateStatus(DBStatus.CREATING);
+
+      const {driver, connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
+      try {
+        const connection = driver.newConnection();
+        await connection.createDatabase(connectionOptions);
+        await connection.disconnect();
+        await this.connectionPool.create(connectionOptions, poolOptions);
+        await this._onCreate();
+
+        this._updateStatus(DBStatus.CONNECTED);
+
+      } catch (error) {
+        if (this.connectionPool.created) {
+          await this.connectionPool.destroy();
+        }
+        this._updateStatus(DBStatus.IDLE);
+        throw error;
+      }
+    });
   }
 
   public async delete(): Promise<void> {
-    await this._lock.acquire();
+    await this._executeWithLock(async () => {
+      if (this._status === DBStatus.CONNECTED) {
+        this._logger.info("Database is connected");
+        await this.disconnect();
+      }
+      this._updateStatus(DBStatus.DELETING);
 
-    if (this._status === DBStatus.CONNECTED) {
-      this._logger.info("Database is connected");
-      await this.disconnect();
-    }
-    this._updateStatus(DBStatus.DELETING);
+      const {driver, connectionOptions}: IDBDetail = this.dbDetail;
+      try {
+        await this._onDelete();
+        const connection = driver.newConnection();
+        await connection.connect(connectionOptions);
+        await connection.dropDatabase();
 
-    const {driver, connectionOptions}: IDBDetail = this.dbDetail;
-    try {
-      await this._onDelete();
-      const connection = driver.newConnection();
-      await connection.connect(connectionOptions);
-      await connection.dropDatabase();
-
-    } finally {
-      this._updateStatus(DBStatus.IDLE);
-      this._lock.release();
-    }
+      } finally {
+        this._updateStatus(DBStatus.IDLE);
+      }
+    });
   }
 
   public async connect(): Promise<void> {
-    await this._lock.acquire();
-
-    if (this._status === DBStatus.CONNECTED) {
-      this._logger.error("Database already connected");
-      throw new Error("Database already connected");
-    }
-    this._updateStatus(DBStatus.CONNECTING);
-
-    const {connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
-    try {
-      await this.connectionPool.create(connectionOptions, poolOptions);
-      await this._onConnect();
-
-      this._updateStatus(DBStatus.CONNECTED);
-
-    } catch (error) {
-      if (this.connectionPool.created) {
-        await this.connectionPool.destroy();
+    await this._executeWithLock(async () => {
+      if (this._status === DBStatus.CONNECTED) {
+        this._logger.error("Database already connected");
+        throw new Error("Database already connected");
       }
-      this._updateStatus(DBStatus.IDLE);
-      throw error;
-    } finally {
-      this._lock.release();
-    }
+      this._updateStatus(DBStatus.CONNECTING);
+
+      const {connectionOptions, poolOptions}: IDBDetail = this.dbDetail;
+      try {
+        await this.connectionPool.create(connectionOptions, poolOptions);
+        await this._onConnect();
+
+        this._updateStatus(DBStatus.CONNECTED);
+
+      } catch (error) {
+        if (this.connectionPool.created) {
+          await this.connectionPool.destroy();
+        }
+        this._updateStatus(DBStatus.IDLE);
+        throw error;
+      }
+    });
   }
 
   public async disconnect(): Promise<void> {
-    await this._lock.acquire();
-
-    if (this._status !== DBStatus.CONNECTED) {
-      this._logger.error("Database is not connected");
-      throw new Error("Database is not connected");
-    }
-    this._updateStatus(DBStatus.DISCONNECTING);
-
-    try {
-      await this._onDisconnect();
-      await this.connectionPool.destroy();
-
-    } finally {
-      if (this.connectionPool.created) {
-        await this.connectionPool.destroy();
+    await this._executeWithLock(async () => {
+      if (this._status !== DBStatus.CONNECTED) {
+        this._logger.error("Database is not connected");
+        throw new Error("Database is not connected");
       }
-      this._updateStatus(DBStatus.IDLE);
-      await this._lock.release();
-    }
+      this._updateStatus(DBStatus.DISCONNECTING);
+
+      try {
+        await this._onDisconnect();
+        await this.connectionPool.destroy();
+
+      } finally {
+        if (this.connectionPool.created) {
+          await this.connectionPool.destroy();
+        }
+        this._updateStatus(DBStatus.IDLE);
+      }
+    });
   }
 
   public async executeConnection<R>(callback: TExecutor<AConnection, R>): Promise<R> {
@@ -202,6 +196,15 @@ export abstract class ADatabase {
   public async waitUnlock(): Promise<void> {
     if (!this._lock.permits) {
       await this._lock.acquire();
+      this._lock.release();
+    }
+  }
+
+  protected async _executeWithLock<R>(callback: TExecutor<void, R>): Promise<R> {
+    await this._lock.acquire();
+    try {
+      return await callback();
+    } finally {
       this._lock.release();
     }
   }

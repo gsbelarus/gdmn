@@ -258,8 +258,7 @@ export class Application extends ADatabase {
 
         const {withAdapter} = context.command.payload;
 
-        await this._lock.acquire();
-        try {
+        return await this._executeWithLock(async () => {
           if (!ApplicationProcess.isProcess) {
             this.erModel = await ApplicationProcessPool.executeWorker({
               pool: this.processPool,
@@ -269,9 +268,7 @@ export class Application extends ADatabase {
             this.erModel = await this._readERModel();
           }
           return this.erModel.serialize(withAdapter);
-        } finally {
-          this._lock.release();
-        }
+        });
       }
     });
     session.taskManager.add(task);
