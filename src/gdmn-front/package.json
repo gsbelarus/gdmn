@@ -40,7 +40,7 @@
     "react-css-modules": "^4",
     "react-dom": "^16",
     "react-redux": "^6",
-    "react-router-dom": "^4.4.0-beta.6",
+    "react-router-dom": "^5",
     "recompose": "^0",
     "redux": "^4",
     "redux-persist": "^5.11.0-alpha",
