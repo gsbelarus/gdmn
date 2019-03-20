@@ -87,8 +87,9 @@ export class ERBridge {
       return await AConnectionPool.executeConnection({
         connectionPool: param1,
         callback: async (connection) => {
+          let readTransaction;
           try {
-            return await new ERExport(connection, connection.readTransaction, dbSchema, param2).execute();
+            readTransaction = connection.readTransaction;
           } catch (error) {
             return await AConnection.executeTransaction({
               connection,
@@ -98,6 +99,7 @@ export class ERBridge {
               }
             });
           }
+          return await new ERExport(connection, readTransaction, dbSchema, param2).execute();
         }
       });
     }
