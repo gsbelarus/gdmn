@@ -8,17 +8,16 @@ import {
   Entity,
   EntityAttribute,
   EntityDelete,
-  EntityInsert,
   EntityQuery,
-  Utils,
   EntityUpdate,
   IEntityQueryResponseRow,
+  IEntityQueryWhereValueInspector,
   IntegerAttribute,
   SetAttribute,
   StringAttribute,
-  TimeStampAttribute
+  TimeStampAttribute,
+  Utils
 } from "gdmn-orm";
-import {IEntityQueryWhereValueInspector} from "gdmn-orm/src";
 import path from "path";
 import {v1 as uuidV1} from "uuid";
 import {Constants} from "../Constants";
@@ -354,9 +353,7 @@ export class MainApplication extends Application {
   protected async _getUserApplicationsInfo(connection: AConnection,
                                            transaction: ATransaction,
                                            userKey: number): Promise<IUserApplicationInfo[]> {
-
-    let entityQuery: EntityQuery | undefined;
-    entityQuery = EntityQuery.inspectorToObject(this.erModel, {
+    const entityQuery = EntityQuery.inspectorToObject(this.erModel, {
       link: {
         entity: "APP_USER",
         alias: "user",
@@ -449,7 +446,6 @@ export class MainApplication extends Application {
     //   }
     // });
     const result = await ERBridge.query(connection, transaction, entityQuery);
-    //
     return result.data.map((row) => {
       const host = Utils.findAttrValue<string>(row, result.aliases, "application", "HOST");
       const port = Utils.findAttrValue<number>(row, result.aliases, "application", "PORT");
@@ -472,7 +468,6 @@ export class MainApplication extends Application {
         path: Utils.findAttrValue<string>(row, result.aliases, "application", "PATH")
       };
     });
-
   }
 
   protected async _onCreate(): Promise<void> {
@@ -589,37 +584,18 @@ export class MainApplication extends Application {
     };
   }
 
+  // TODO Igor
   private async _addUserApplicationInfo(connection: AConnection,
                                         transaction: ATransaction,
                                         userApplication: ICreateUserApplicationInfo): Promise<void> {
-
-    const insert = EntityInsert.inspectorToObject(this.erModel, {
-      entity: "APP_USER_APPLICATIONS",
-      fields: [
-        {
-          attribute: "KEY1",
-          value: userApplication.userKey
-        },
-        {
-          attribute: "KEY2",
-          value: userApplication.appKey
-        },
-        {
-          attribute: "ALIAS",
-          value: userApplication.alias
-        }
-      ]
+    await connection.execute(transaction, `
+      INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS)
+      VALUES (:userKey, :appKey, :alias)
+    `, {
+      userKey: userApplication.userKey,
+      appKey: userApplication.appKey,
+      alias: userApplication.alias
     });
-
-    await ERBridge.insert(connection, transaction, insert);
-    // await connection.execute(transaction, `
-    //   INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS)
-    //   VALUES (:userKey, :appKey, :alias)
-    // `, {
-    //   userKey: userApplication.userKey,
-    //   appKey: userApplication.appKey,
-    //   alias: userApplication.alias
-    // });
   }
 
   private async _deleteApplicationInfo(connection: AConnection,
@@ -635,79 +611,28 @@ export class MainApplication extends Application {
         ]
       },
       options: {
-        where: [
-          {
-            equals: [
-              {
-                alias: "app",
-                attribute: "UID",
-                value: uid
-              }, {
-                alias: "app",
-                attribute: "OWNER",
-                value: ownerKey
-              }
-            ]
-          }
-        ]
+        where: [{
+          equals: [{
+            alias: "app",
+            attribute: "UID",
+            value: uid
+          }, {
+            alias: "app",
+            attribute: "OWNER",
+            value: ownerKey
+          }]
+        }]
       }
     });
     const result = await ERBridge.query(connection, transaction, entityQuery);
-    const arrAttribute = Utils.findAttrValues(result, "app", "ID");
-    if (arrAttribute) {
-      const deleteID = EntityDelete.inspectorToObject(this.erModel, {
-        entity: "APPLICATION",
-        pkValue: arrAttribute
-      });
-      await ERBridge.delete(connection, transaction, deleteID);
-      // await connection.execute(transaction, `
-      //   DELETE
-      //   FROM APPLICATION
-      //   WHERE UID = :uid
-      //     AND OWNER = :ownerKey
-      // `, {
-      //   ownerKey,
-      //   uid
-      // });
-    }
+    const deleteApps = EntityDelete.inspectorToObject(this.erModel, {
+      entity: "APPLICATION",
+      pkValue: Utils.findAttrValues(result, "app", "ID")
+    });
+    await ERBridge.delete(connection, transaction, deleteApps);
   }
 
-  // private _findAttrValues<R>(result: IEntityQueryResponse,
-  //                            linkAlias: string,
-  //                            attribute: string,
-  //                            setAttribute?: string): R[] {
-  //   return result.data.map((row: any) =>
-  //     this._findAttrValue(row,
-  //       result.aliases,
-  //       linkAlias,
-  //       attribute,
-  //       setAttribute));
-  // }
-  //
-  // private _findAttrValue<R>(row: any,
-  //                           aliases: IEntityQueryResponseFieldAliases,
-  //                           linkAlias: string,
-  //                           attribute: string,
-  //                           setAttribute?: string): R {
-  //   const c = Object.entries(aliases);
-  //
-  //   const aliasEntry = c.find(([key, value]) => {
-  //     if (setAttribute && value.linkAlias === linkAlias && value.setAttribute === setAttribute) {
-  //       return true;
-  //     }
-  //     if (attribute && value.linkAlias === linkAlias && value.attribute === attribute) {
-  //       return true;
-  //     }
-  //     return false;
-  //   });
-  //
-  //   if (!aliasEntry) {
-  //     throw new Error(`Attribute '${attribute}' is not found for linkAlias '${linkAlias}'`);
-  //   }
-  //
-  //   return row[aliasEntry[0]];
-  // }
-
+  // TODO Igor
   private async _deleteUserApplicationInfo(connection: AConnection,
                                            transaction: ATransaction,
                                            userKey: number,
@@ -790,22 +715,15 @@ export class MainApplication extends Application {
 
   private async _deleteUser(connection: AConnection, transaction: ATransaction, id: number): Promise<void> {
     const update = EntityUpdate.inspectorToObject(this.erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "DELETED",
-          value: 1
-        }
-      ],
+      entity: "APP_USER",
+      fields: [{
+        attribute: "DELETED",
+        value: 1
+      }],
       pkValue: id
     });
 
     await ERBridge.update(connection, transaction, update);
-    // await connection.execute(transaction, `
-    //   UPDATE APP_USER
-    //   SET DELETED = 1
-    //   WHERE ID = :id
-    // `, {id});
   }
 
   private async _findUser(connection: AConnection,
@@ -814,60 +732,24 @@ export class MainApplication extends Application {
     if ((id === undefined || id === null) && !login) {
       throw new Error("Incorrect arguments");
     }
-    // let condition = "";
-    // if (id !== undefined && id != null && login) {
-    //   condition = "usr.LOGIN = :login AND usr.ID = :id";
-    // } else if (login) {
-    //   condition = "usr.LOGIN = :login";
-    // } else {
-    //   condition = "usr.ID = :id";
-    // }
-    // return await AConnection.executeQueryResultSet({
-    //   connection,
-    //   transaction,
-    //   sql: `
-    //     SELECT FIRST 1 *
-    //     FROM APP_USER usr
-    //     WHERE DELETED != 1 AND ${condition}
-    //   `,
-    //   params: {id, login},
-    //   callback: async (resultSet) => {
-    //     if (await resultSet.next()) {
-    //       return {
-    //         id: resultSet.getNumber("ID"),
-    //         login: resultSet.getString("LOGIN"),
-    //         passwordHash: await connection.openBlobAsString(transaction, resultSet.getBlob("PASSWORD_HASH")!),
-    //         salt: await connection.openBlobAsString(transaction, resultSet.getBlob("SALT")!),
-    //         creationDate: resultSet.getDate("CREATIONDATE")!,
-    //         admin: resultSet.getBoolean("IS_ADMIN")
-    //       };
-    //     }
-    //   }
-    // });
-    const whereEquals: IEntityQueryWhereValueInspector[] = [{
-      alias: "user",
-      attribute: "DELETED",
-      value: 0
-    }];
 
+    const additionalEquals: IEntityQueryWhereValueInspector[] = [];
     if (login) {
-      whereEquals.push({
+      additionalEquals.push({
         alias: "user",
         attribute: "LOGIN",
         value: login
       });
     }
     if (id !== undefined && id != null) {
-      whereEquals.push({
+      additionalEquals.push({
         alias: "user",
         attribute: "ID",
         value: id
       });
     }
 
-    let entityQuery: EntityQuery | undefined;
-
-    entityQuery = EntityQuery.inspectorToObject(this.erModel, {
+    const entityQuery = EntityQuery.inspectorToObject(this.erModel, {
       link: {
         entity: "APP_USER",
         alias: "user",
@@ -892,30 +774,29 @@ export class MainApplication extends Application {
         ]
       },
       options: {
-        where: [
-          {
-            equals: whereEquals
-          }
-        ]
+        where: [{
+          equals: [{
+            alias: "user",
+            attribute: "DELETED",
+            value: false
+          }].concat(additionalEquals)
+        }]
       }
     });
 
     const result = await ERBridge.query(connection, transaction, entityQuery);
 
-    const arrUser = result.data.map((row: IEntityQueryResponseRow) => {
+    const users = result.data.map((row: IEntityQueryResponseRow) => ({
+      id: Utils.findAttrValue<number>(row, result.aliases, "user", "ID"),
+      login: Utils.findAttrValue<string>(row, result.aliases, "user", "LOGIN"),
+      passwordHash: Utils.findAttrValue<string>(row, result.aliases, "user", "PASSWORD_HASH"),
+      salt: Utils.findAttrValue<string>(row, result.aliases, "user", "SALT"),
+      creationDate: Utils.findAttrValue<Date>(row, result.aliases, "user", "CREATIONDATE"),
+      admin: Utils.findAttrValue<boolean>(row, result.aliases, "user", "IS_ADMIN")
+    }));
 
-      return {
-        id: Utils.findAttrValue<number>(row, result.aliases, "user", "ID"),
-        login: Utils.findAttrValue<string>(row, result.aliases, "user", "LOGIN"),
-        passwordHash: Utils.findAttrValue<string>(row, result.aliases, "user", "PASSWORD_HASH"),
-        salt: Utils.findAttrValue<string>(row, result.aliases, "user", "SALT"),
-        creationDate: Utils.findAttrValue<Date>(row, result.aliases, "user", "CREATIONDATE"),
-        admin: Utils.findAttrValue<boolean>(row, result.aliases, "user", "IS_ADMIN")
-      };
-    });
-
-    if (arrUser) {
-      return arrUser[0];
+    if (users.length) {
+      return users[0];
     }
   }
 }
