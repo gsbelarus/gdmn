@@ -8,6 +8,7 @@ import {
   DetailAttribute,
   Entity,
   EntityAttribute,
+  EntityQuery,
   EnumAttribute,
   ERModel,
   FloatAttribute,
@@ -20,7 +21,8 @@ import {
   SetAttribute,
   StringAttribute,
   TimeAttribute,
-  TimeStampAttribute
+  TimeStampAttribute,
+  Utils
 } from "gdmn-orm";
 import moment from "moment";
 import {resolve} from "path";
@@ -690,13 +692,42 @@ describe("ERBridge", () => {
       await eBuilder.createAttribute(userEntity, new BlobAttribute({
         name: "SALT", lName: {ru: {name: "Примесь"}}, required: true
       }));
+      await eBuilder.createAttribute(userEntity, new TimeStampAttribute({
+        name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
+        minValue: Constants.MIN_TIMESTAMP, maxValue: Constants.MAX_TIMESTAMP, defaultValue: "CURRENT_TIMESTAMP"
+      }));
       await eBuilder.createAttribute(userEntity, new BooleanAttribute({
-        name: "IS_ADMIN", lName: {ru: {name: "Флаг администратора"}}
+        name: "IS_ADMIN", lName: {ru: {name: "Пользователь - администратор"}}
+      }));
+      await eBuilder.createAttribute(userEntity, new BooleanAttribute({
+        name: "DELETED", lName: {ru: {name: "Удален"}}
       }));
 
       // APPLICATION
       const appEntity = await erBuilder.create(erModel, new Entity({
         name: "APPLICATION", lName: {ru: {name: "Приложение"}}
+      }));
+      await eBuilder.createAttribute(appEntity, new EntityAttribute({
+        name: "OWNER", lName: {ru: {name: "Создатель"}}, required: true, entities: [userEntity]
+      }));
+      await eBuilder.createAttribute(appEntity, new BooleanAttribute({
+        name: "IS_EXTERNAL", lName: {ru: {name: "Является внешним"}}, required: true
+      }));
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
+        name: "HOST", lName: {ru: {name: "Хост"}}, maxLength: 260
+      }));
+      await eBuilder.createAttribute(appEntity, new IntegerAttribute({
+        name: "PORT", lName: {ru: {name: "Хост"}},
+        minValue: -2147483648, maxValue: 2147483647
+      }));
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
+        name: "USERNAME", lName: {ru: {name: "Имя пользователя"}}, maxLength: 260
+      }));
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
+        name: "PASSWORD", lName: {ru: {name: "Пароль"}}, maxLength: 260
+      }));
+      await eBuilder.createAttribute(appEntity, new StringAttribute({
+        name: "PATH", lName: {ru: {name: "Путь"}}, maxLength: 260
       }));
       const appUid = new StringAttribute({
         name: "UID",
@@ -720,27 +751,6 @@ describe("ERBridge", () => {
       }));
 
       await eBuilder.createAttribute(userEntity, appSet);
-
-      // APPLICATION_BACKUPS
-      const backupEntity = await erBuilder.create(erModel, new Entity({
-        name: "APPLICATION_BACKUPS", lName: {ru: {name: "Резервная копия"}}
-      }));
-      const backupUid = new StringAttribute({
-        name: "UID", lName: {ru: {name: "Идентификатор бэкапа"}}, required: true, minLength: 1, maxLength: 36
-      });
-      await eBuilder.createAttribute(backupEntity, backupUid);
-      await eBuilder.addUnique(backupEntity, [backupUid]);
-
-      await eBuilder.createAttribute(backupEntity, new EntityAttribute({
-        name: "APP", lName: {ru: {name: "Приложение"}}, required: true, entities: [appEntity]
-      }));
-      await eBuilder.createAttribute(backupEntity, new TimeStampAttribute({
-        name: "CREATIONDATE", lName: {ru: {name: "Дата создания"}}, required: true,
-        minValue: Constants.MIN_TIMESTAMP, maxValue: Constants.MAX_TIMESTAMP, defaultValue: "CURRENT_TIMESTAMP"
-      }));
-      await eBuilder.createAttribute(backupEntity, new StringAttribute({
-        name: "ALIAS", lName: {ru: {name: "Название бэкапа"}}, required: true, minLength: 1, maxLength: 120
-      }));
     });
 
     const loadedERModel = await initERModel();
@@ -752,5 +762,205 @@ describe("ERBridge", () => {
     expect(loadAppEntity).toEqual(appEntity);
     expect(loadUserEntity.serialize()).toEqual(userEntity.serialize());
     expect(loadAppEntity.serialize()).toEqual(appEntity.serialize());
+
+
+    const sql = "EXECUTE BLOCK\n" +
+      "AS\n" +
+      "BEGIN\n" +
+      " INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN, DELETED, CREATIONDATE )\n" +
+      " VALUES ('Ford', 'T', 0, 0, 0, '10.01.2014 13:32:02');\n" +
+      " INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN, DELETED, CREATIONDATE )\n" +
+      " VALUES ('tom', 'Karl', 0, 0, 0, '10.01.2014 13:32:02');\n" +
+      " INSERT INTO APPLICATION (OWNER, IS_EXTERNAL, HOST, PORT, USERNAME, PASSWORD, UID, CREATIONDATE )\n" +
+      " VALUES (50, 0, 1000, 5050, 'a', 'b', 'a', '10.01.2014 13:32:02');\n" +
+      " INSERT INTO APPLICATION (OWNER, IS_EXTERNAL, HOST, PORT, USERNAME, PASSWORD, UID, CREATIONDATE )\n" +
+      " VALUES (51, 0, 1000, 5050, 'd' , 'e', 'f', '10.01.2014 13:32:02');\n" +
+      " INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS )\n" +
+      " VALUES (50, 52, 'Незабудка');\n" +
+      " INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS )\n" +
+      " VALUES (51, 53, 'Мокрые кроссы');\n" +
+      "END";
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => connection.executeReturning(transaction, sql)
+    });
+
+    let entityQuery: EntityQuery | undefined;
+
+    entityQuery = EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "APP_USER",
+        alias: "app",
+        fields: [
+          {
+            attribute: "APPLICATIONS",
+            setAttributes: ["ALIAS"],
+            links: [{
+              entity: "APPLICATION",
+              alias: "s",
+              fields: [
+                {attribute: "ID"},
+                {attribute: "UID"},
+                {attribute: "CREATIONDATE"},
+                {
+                  attribute: "OWNER",
+                  links: [{
+                    entity: "APP_USER",
+                    alias: "au",
+                    fields: [
+                      {attribute: "ID"}
+                    ]
+                  }]
+                },
+                {attribute: "IS_EXTERNAL"},
+                {attribute: "HOST"},
+                {attribute: "PORT"},
+                {attribute: "USERNAME"},
+                {attribute: "PASSWORD"},
+                {attribute: "PATH"}
+              ]
+            }]
+          }
+        ]
+      }
+      ,
+      options: {
+        where: [
+          {
+            equals: [
+              {
+                alias: "au",
+                attribute: "ID",
+                value: 50
+              }
+            ]
+          }
+        ]
+      }
+    });
+
+    const result = await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.query(connection, transaction, entityQuery!)
+    });
+
+    const user = result.data.map((row) => {
+      const host = Utils.findAttrValue(row, result.aliases, "s", "HOST");
+      const port = Utils.findAttrValue(row, result.aliases, "s", "PORT");
+
+      return {
+        alias: Utils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
+        id: Utils.findAttrValue(row, result.aliases, "s", "ID"),
+        uid: Utils.findAttrValue(row, result.aliases, "s", "UID"),
+        creationDate: Utils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
+        ownerKey: Utils.findAttrValue(row, result.aliases, "au", "ID"),
+        external: Utils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
+        server: host && port ? {host, port} : undefined,
+        username: Utils.findAttrValue(row, result.aliases, "s", "USERNAME"),
+        password: Utils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
+        path: Utils.findAttrValue(row, result.aliases, "s", "PATH")
+      };
+    });
+
+    expect(user).toEqual([
+        {
+          alias: "Незабудка",
+          id: 52,
+          uid: "a",
+          creationDate: new Date("2014-01-10T10:32:02.000Z"),
+          ownerKey: 50,
+          external: 0,
+          server: {host: "1000", port: 5050},
+          username: "a",
+          password: "b",
+          path: null
+        }
+      ]
+    );
+
+    const id: any = undefined;
+    const login = "Ford";
+    let whereEquals = [{
+      alias: "user",
+      attribute: "DELETED",
+      value: "0"
+    }];
+    if (login) {
+      whereEquals.push({
+        alias: "user",
+        attribute: "LOGIN",
+        value: login
+      });
+    }
+    if (id !== undefined && id != null) {
+      whereEquals.push({
+        alias: "user",
+        attribute: "ID",
+        value: id
+      });
+    }
+
+    let entityQueryUser: EntityQuery | undefined;
+
+    entityQueryUser = EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "APP_USER",
+        alias: "user",
+        fields: [
+          {attribute: "ID"},
+          {attribute: "LOGIN"},
+          {attribute: "PASSWORD_HASH"},
+          {attribute: "SALT"},
+          {attribute: "CREATIONDATE"},
+          {attribute: "IS_ADMIN"},
+          {attribute: "DELETED"},
+          {
+            attribute: "APPLICATIONS",
+            links: [{
+              entity: "APPLICATION",
+              alias: "application",
+              fields: [
+                {attribute: "ID"}
+              ]
+            }]
+          }
+        ]
+      },
+      options: {
+        where: [
+          {
+            equals: whereEquals
+          }
+        ]
+      }
+    });
+
+    const resultQuery = await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.query(connection, transaction, entityQueryUser!)
+    });
+    const users = resultQuery.data.map((row) => {
+
+      return {
+        id: Utils.findAttrValue<number>(row, resultQuery.aliases, "user", "ID"),
+        login: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "LOGIN"),
+        passwordHash: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "PASSWORD_HASH"),
+        salt: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "SALT"),
+        creationDate: Utils.findAttrValue<Date>(row, resultQuery.aliases, "user", "CREATIONDATE"),
+        admin: Utils.findAttrValue<boolean>(row, resultQuery.aliases, "user", "IS_ADMIN")
+      };
+    });
+    expect(users).toEqual([
+        {
+          id: 50,
+          login: "Ford",
+          passwordHash: "T",
+          salt: "0",
+          creationDate: new Date("2014-01-10T10:32:02.000Z"),
+          admin: 0
+        }
+      ]
+    );
   });
 });

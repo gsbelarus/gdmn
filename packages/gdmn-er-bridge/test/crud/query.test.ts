@@ -135,8 +135,14 @@ describe("Query", () => {
               name: "TEST_STRING2",
               lName: {}
             }));
-            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "RB", lName: {}}));
-            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({name: "LB", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({
+              name: "RB",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(ChildEntity2, new StringAttribute({
+              name: "LB",
+              lName: {}
+            }));
             await eBuilder.createAttribute(ChildEntity2, new ParentAttribute({
               name: "PARENT",
               lName: {},
@@ -217,7 +223,6 @@ describe("Query", () => {
               lName: {},
               entities: [TestEntity10]
             }));
-
           }
         });
       }

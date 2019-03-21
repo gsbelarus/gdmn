@@ -1,14 +1,15 @@
 import {existsSync, unlinkSync} from "fs";
 import {AConnection, Factory, IConnectionOptions} from "gdmn-db";
 import {
-  DetailAttribute,
-  Entity,
-  EntityAttribute,
-  EntityDelete,
-  ERModel,
-  ParentAttribute,
-  SetAttribute,
-  StringAttribute
+    DetailAttribute,
+    Entity,
+    EntityAttribute,
+    EntityDelete,
+    ERModel,
+    ParentAttribute,
+    SetAttribute,
+    StringAttribute,
+    IntegerAttribute, ScalarAttribute
 } from "gdmn-orm";
 import {resolve} from "path";
 import {ERBridge} from "../../src";
@@ -108,7 +109,6 @@ describe("Delete", () => {
   });
 
   it("delete: MAIN_ENTITY", async () => {
-
     const {sql, params} = new Delete(EntityDelete.inspectorToObject(erModel, {
       entity: "MAIN_ENTITY",
       pkValue: [36]
@@ -125,7 +125,6 @@ describe("Delete", () => {
   });
 
   it("delete: CHILD_ENTITY", async () => {
-
     const {sql, params} = new Delete(EntityDelete.inspectorToObject(erModel, {
       entity: "CHILD_ENTITY",
       pkValue: [36]

@@ -35,3 +35,5 @@ export * from "./insert-models/EntityInsertField";
 
 export * from "./update-models/EntityUpdate";
 export * from "./update-models/EntityUpdateField";
+
+export * from "./query-models/Utils";

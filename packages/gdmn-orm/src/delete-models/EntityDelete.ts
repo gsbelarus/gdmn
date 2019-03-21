@@ -3,15 +3,15 @@ import {ERModel} from "../model/ERModel";
 
 export interface IEntityDeleteInspector {
   entity: string;
-  pkValue: number[];
+  pkValue: any[];
 }
 
 export class EntityDelete {
 
   public readonly entity: Entity;
-  public readonly pkValue: number[];
+  public readonly pkValue: any[];
 
-  constructor(entity: Entity, pkValue: number[]) {
+  constructor(entity: Entity, pkValue: any[]) {
     this.entity = entity;
     this.pkValue = pkValue;
   }

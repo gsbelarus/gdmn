@@ -12,8 +12,12 @@ export interface IEntityQueryResponseFieldAliases {
   [alias: string]: IEntityQueryResponseFieldAlias;
 }
 
+export interface IEntityQueryResponseRow {
+  [alias: string]: any;
+}
+
 export interface IEntityQueryResponse {
-  data: any[];
+  data: IEntityQueryResponseRow[];
   aliases: IEntityQueryResponseFieldAliases;
   info: any;
 }
