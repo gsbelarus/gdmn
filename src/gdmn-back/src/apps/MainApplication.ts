@@ -104,7 +104,7 @@ export class MainApplication extends Application {
   private static _createDBDetail(alias: string, dbPath: string, appInfo?: IUserApplicationInfo): IDBDetail {
     return {
       alias,
-      driver: Factory.FBDriver,
+      driver: Factory.getDriver(Constants.DB.DRIVER),
       poolOptions: {
         min: Constants.DB.POOL.MIN,
         max: Constants.DB.POOL.MAX,
@@ -439,7 +439,7 @@ export class MainApplication extends Application {
             name: "HOST", lName: {ru: {name: "Хост"}}, maxLength: 260
           }));
           await eBuilder.createAttribute(appEntity, new IntegerAttribute({
-            name: "PORT", lName: {ru: {name: "Хост"}}
+            name: "PORT", lName: {ru: {name: "Порт"}}
           }));
           await eBuilder.createAttribute(appEntity, new StringAttribute({
             name: "USERNAME", lName: {ru: {name: "Имя пользователя"}}, maxLength: 260

@@ -1,4 +1,5 @@
 import config from "config";
+import {DriverNames} from "gdmn-db";
 import ms from "ms";
 import os from "os";
 import path from "path";
@@ -60,6 +61,7 @@ export class Constants {
   };
 
   public static readonly DB = {
+    DRIVER: config.get("db.driver") as DriverNames,
     SERVER: config.has("db.server") && config.get("db.server") ? {
       HOST: config.get("db.server.host") as string,
       PORT: config.get("db.server.port") as number

@@ -44,6 +44,7 @@
     }
   },
   "db": {
+    "driver": "firebird",
     "server": {
       "host": "localhost",
       "port": 3050
