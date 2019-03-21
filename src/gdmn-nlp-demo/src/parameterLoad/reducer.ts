@@ -10,9 +10,9 @@ export interface ISetParameterState {
 }
 
 const initialState: ISetParameterState = {
-  host: '',
-  port: '',
-  isReadFile: true,
+  host: 'localhost',
+  port: '3001',
+  isReadFile: false,
 };
 
 export function reducer(state: ISetParameterState = initialState, action: ParameterLoadAction): ISetParameterState {
