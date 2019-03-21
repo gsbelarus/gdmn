@@ -77,7 +77,7 @@ export abstract class SQLTemplates {
   }
 
   public static inOperator(alias: string, fieldName: string, value: string): string {
-    return SQLTemplates.condition(alias, fieldName, " IN ", `(${value})`);
+    return SQLTemplates.condition(alias, fieldName, "IN", `(${value})`);
   }
 
   public static equalsWithUpper(alias: string, fieldName: string, value: string): string {

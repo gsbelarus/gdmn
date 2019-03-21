@@ -63,7 +63,7 @@ export class GDEntities {
     const groups = rg.exec(restrictCondition);
     if (groups) {
       return {
-        field: groups[1].toUpperCase(),
+        field: groups[1].toUpperCase().trim(),
         value: parseInt(groups[2])
       }
     } else {
@@ -74,12 +74,12 @@ export class GDEntities {
         const arr = groups[2].split(',').map( s => parseInt(s.trim()) );
         if (arr.length === 1) {
           return {
-            field: groups[1].toUpperCase(),
+            field: groups[1].toUpperCase().trim(),
             value: arr[0]
           }
         } else {
           return {
-            field: groups[1].toUpperCase(),
+            field: groups[1].toUpperCase().trim(),
             value: arr
           }
         }
@@ -89,7 +89,7 @@ export class GDEntities {
         const groups = rg.exec(restrictCondition);
         if (groups) {
           return {
-            field: groups[1].toUpperCase(),
+            field: groups[1].toUpperCase().trim(),
             value: groups[2]
           }
         } else {
@@ -103,12 +103,12 @@ export class GDEntities {
             });
             if (arr.length === 1) {
               return {
-                field: groups[1].toUpperCase(),
+                field: groups[1].toUpperCase().trim(),
                 value: arr[0]
               }
             } else {
               return {
-                field: groups[1].toUpperCase(),
+                field: groups[1].toUpperCase().trim(),
                 value: arr
               }
             }

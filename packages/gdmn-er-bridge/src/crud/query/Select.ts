@@ -330,15 +330,7 @@ export class Select {
       .reduce((equals, rel) => {
         if (rel.selector) {
           if (Array.isArray(rel.selector.value)) {
-            let s;
-
-            if (typeof rel.selector.value[1] === 'number') {
-              s = (rel.selector.value as number[]).map( v => v.toString() ).join(',');
-            }
-            else if (typeof rel.selector.value[1] === 'string') {
-              s = (rel.selector.value as string[]).map( v => `'${v}'` ).join(',');
-            }
-            else {
+            if (!rel.selector.value.length) {
               throw new Error(`Empty array for SQL IN operator`);
             }
 
@@ -346,7 +338,7 @@ export class Select {
               SQLTemplates.inOperator(
                 this._getTableAlias(link, rel.relationName),
                 rel.selector.field,
-                s
+                rel.selector.value.map((value) => this._addToParams(value)).join(",")
               )
             );
           } else {
