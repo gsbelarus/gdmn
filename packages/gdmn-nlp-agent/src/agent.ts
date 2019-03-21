@@ -133,7 +133,7 @@ export class ERTranslatorRU {
 
               equals.push({
                 alias: "alias2",
-                attribute: attr,
+                attribute: linkEntity.attribute("NAME"),
                 value: words
               });
 
