@@ -327,7 +327,7 @@ function getData(count: number): IDataItem[] {
             onlyTime,
             nullValue: null,
             textBlob: "Test text blob field",
-            binaryBlob: Buffer.from("Test binary blob field")
+            binaryBlob: Buffer.from("#".repeat(7E4))
         });
     }
     return data;

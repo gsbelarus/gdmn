@@ -7,6 +7,8 @@ import {getPortableInteger} from "./utils/fb-utils";
 
 export class BlobStream extends ABlobStream {
 
+    public static readonly MAX_SEGMENT_SIZE = 65535;
+
     public blobLink: BlobLink;
     public handler?: Blob;
 
@@ -70,19 +72,29 @@ export class BlobStream extends ABlobStream {
 
     protected async _read(buffer: Buffer): Promise<number> {
         return await this.transaction.connection.client.statusAction(async (status) => {
-            const segLength = new Uint32Array(1);
-            const result = await this.handler!.getSegmentAsync(status, buffer.length, buffer, segLength);
+            let size = 0;
+            while (buffer.length > 0) {
+                const readingBytes = Math.min(buffer.length, BlobStream.MAX_SEGMENT_SIZE);
+                const segLength = new Uint32Array(1);
+                const result = await this.handler!.getSegmentAsync(status, readingBytes, buffer, segLength);
+                buffer = buffer.slice(readingBytes);
 
-            if (result === Status.RESULT_NO_DATA) {
-                return -1;
+                size += segLength[0];
+                if (result === Status.RESULT_NO_DATA) {
+                    break;
+                }
             }
-
-            return segLength[0];
+            return size;
         });
     }
 
     protected async _write(buffer: Buffer): Promise<void> {
-        await this.transaction.connection.client.statusAction((status) =>
-            this.handler!.putSegmentAsync(status, buffer.length, buffer));
+        await this.transaction.connection.client.statusAction(async (status) => {
+            while (buffer.length > 0) {
+                const writingBytes = Math.min(buffer.length, BlobStream.MAX_SEGMENT_SIZE);
+                await this.handler!.putSegmentAsync(status, writingBytes, buffer);
+                buffer = buffer.slice(writingBytes);
+            }
+        });
     }
 }

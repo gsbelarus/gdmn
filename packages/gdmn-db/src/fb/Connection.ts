@@ -104,11 +104,11 @@ export class Connection extends AConnection {
     }
 
     protected async _openBlobStream(transaction: Transaction, blob: BlobLink): Promise<BlobStream> {
-        return BlobStream.open(transaction, blob);
+        return await BlobStream.open(transaction, blob);
     }
 
     protected async _createBlobStream(transaction: Transaction): Promise<BlobStream> {
-        return BlobStream.create(transaction);
+        return await BlobStream.create(transaction);
     }
 
     protected async _execute(transaction: Transaction, sql: string, params?: IParams): Promise<void> {
