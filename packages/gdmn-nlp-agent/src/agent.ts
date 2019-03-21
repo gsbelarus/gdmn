@@ -131,13 +131,11 @@ export class ERTranslatorRU {
                 fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
               }
 
-              const orEquals: IEntityQueryWhereValue[] = [];
-              orEquals.push({
+              equals.push({
                 alias: "alias2",
-                attribute: linkEntity.attribute("NAME"),
+                attribute: attr,
                 value: words
               });
-              or.push({equals: orEquals});
 
             } else {
               equals.push({
@@ -239,13 +237,11 @@ export class ERTranslatorRU {
                   fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
                 }
 
-                const orEquals: IEntityQueryWhereValue[] = [];
-                orEquals.push({
+                equals.push({
                   alias: "alias2",
                   attribute: linkEntity.attribute("NAME"),
                   value: words
                 });
-                or.push({equals: orEquals});
 
               } else {
                 equals.push({

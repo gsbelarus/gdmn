@@ -187,7 +187,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayEQUALS(equals: IEntityQueryWhereValue[]) {
-    return equals && <div className="equals">
+    return equals && (equals.length !== 1 ? <div className="equals">
             {equals.map((equal, idx1) =>
               <div className="equal" key={idx1}>
                 <div className="alias">{equal.alias}</div>
@@ -197,10 +197,16 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
               </div>
             )}
           </div>
+          : <div className="equal">
+              <div className="alias">{equals[0].alias}</div>
+              <div className="attr">{equals[0].attribute.name}</div>
+              <div className="opEQ" />
+              <div className="value"> {equals[0].value} </div>
+            </div>)
   }
 
   private displayISNULL(isNulls: IEntityQueryAlias<ScalarAttribute>[]) {
-    return isNulls && <div className="allisNulls">
+    return isNulls && (isNulls.length !== 1 ? <div className="allisNulls">
             { isNulls.map( (isNull, idx1) =>
               <div  key={`isNull${idx1}`}>
                 { <div>IsNULL</div> }
@@ -210,11 +216,17 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                 </div>
               </div>
              ) }</div>
-
+             : <div  key={`isNull`}>
+                 { <div>IsNULL</div> }
+                 <div className="isNull">
+                   <div className="alias">{isNulls[0].alias}</div>
+                   <div className="attr">{isNulls[0].attribute.name}</div>
+                 </div>
+               </div>)
   }
 
   private displayNOT(nots: IEntityQueryWhere[]) {
-    return nots && <div className="allNots">
+    return nots && (nots.length !== 1 ? <div className="allNots">
             { nots.map( (not, idx1) =>
               <div  key={`not${idx1}`}>
                 { <div>NOT</div> }
@@ -227,6 +239,16 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
               </div>
             </div>
           ) }</div>
+          : <div  key={`not`}>
+              { <div>NOT</div> }
+              { nots[0].and ? this.displayAND(nots[0].and) : undefined }
+              { nots[0].or ? this.displayOR(nots[0].or) : undefined }
+              { nots[0].not ? this.displayNOT(nots[0].not) : undefined }
+              { nots[0].isNull ? this.displayISNULL(nots[0].isNull) : undefined }
+              <div className="not">
+              {nots[0].equals && this.displayEQUALS(nots[0].equals)}
+            </div>
+          </div>)
   }
 
   private _renderCommand(command: ICommand) {
@@ -256,23 +278,23 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                   <div className="field">{field.attribute.name}
                   {field.links && field.links.length && // TODO
                     <div className="payload">
-                      <div className="alias">{field.links[0].alias}</div>
-                      <div className="entityName">{field.links[0].entity.name}</div>
-                      { field.links[0].fields && <div className="fields">
-                        <div id={`scrollUp${field.links[0].alias}/${idx}`} className="scrollUp">
-                          <div className="s">
-                            {field.links[0].fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
-                          </div>
+                    <div className="alias">{field.links[0].alias}</div>
+                    <div className="entityName">{field.links[0].entity.name}</div>
+                    { field.links[0].fields && <div className="fields">
+                      <div id={`scrollUp${field.links[0].alias}/${idx}`} className="scrollUp">
+                        <div className="s">
+                          {field.links[0].fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
                         </div>
-                        <button id={`buttonForScroll${field.links[0].alias}/${idx}`} className="buttonForScroll"
-                          onClick={ field && field.links && field.links[0] ? () =>
-                            this.collUpsFields(
-                              `scrollUp${field!.links![0]!.alias}/${idx}`,
-                              `buttonForScroll${field!.links![0]!.alias}/${idx}`
-                            ) : undefined }>...</button>
-                      </div> }
-                    </div>
-                  } </div>
+                      </div>
+                      <button id={`buttonForScroll${field.links[0].alias}/${idx}`} className="buttonForScroll"
+                        onClick={ field && field.links && field.links[0] ? () =>
+                          this.collUpsFields(
+                            `scrollUp${field!.links![0]!.alias}/${idx}`,
+                            `buttonForScroll${field!.links![0]!.alias}/${idx}`
+                          ) : undefined }>...</button>
+                    </div> }
+                  </div>
+                } </div>
                 </div>
               ) }
               </div>
