@@ -62,7 +62,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         if (!stacks[j]) {
           stacks[j] = [];
         }
-        if (!stacks[j].find( k => k === coombinations[i][j])) {
+        if (!stacks[j].find(k => k === coombinations[i][j])) {
           stacks[j].push(coombinations[i][j]);
         }
       }
@@ -75,24 +75,24 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
             <div>
               Total combinatorial count: {coombinations.length}
             </div>
-          : undefined
+            : undefined
         }
         <div className="SyntaxCoombinations">
           {
-            stacks.map( (s, idx) => (
+            stacks.map((s, idx) => (
               <div key={idx}>
                 <div className={this._getColor(s[0])}>
                   {s[0].image}
                   {
                     isMorphToken(s[0]) && (s[0] as IMorphToken).hsm ?
                       <sup>
-                        {(s[0] as IMorphToken).hsm!.map( (h, idx) => h[0] && <span key={idx}>{h[0].word}</span> )}
+                        {(s[0] as IMorphToken).hsm!.map((h, idx) => h[0] && <span key={idx}>{h[0].word}</span>)}
                       </sup>
-                    : undefined
+                      : undefined
                   }
                 </div>
                 {
-                  s.map( (w, wi) => (
+                  s.map((w, wi) => (
                     w.tokenType && <div key={wi} className={getClassName(idx, w.tokenType.name)}>
                       {w.tokenType.name}
                     </div>
@@ -133,7 +133,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayORDER(orders: IEntityQueryOrder[]) {
-    return orders.map( (order, idx) =>
+    return orders.map((order, idx) =>
       <div className="order" key={idx}>
         <div className="alias">{order.alias}</div>
         <div className="attr">{order.attribute.name}</div>
@@ -143,7 +143,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
   }
 
   private displayWHERE(wheres: IEntityQueryWhere[]) {
-    return wheres.map( (where, idx1) =>
+    return wheres.map((where, idx1) =>
       where && <div className="where" key={idx1}>
         {where.or && this.displayOR(where.or)}
         {where.and && this.displayAND(where.and)}
@@ -156,107 +156,107 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
 
   private displayAND(ands: IEntityQueryWhere[]) {
     return ands && <div className="allAnds">
-            { ands.map( (and, idx1) =>
-              <div  key={`and${idx1}`}>
-                { idx1 !== 0 ? <div>AND</div> : undefined }
-                { and.or ? this.displayOR(and.or) : undefined }
-                { and.and ? this.displayAND(and.and) : undefined }
-                { and.not ? this.displayNOT(and.not) : undefined }
-                { and.isNull ? this.displayISNULL(and.isNull) : undefined }
-                <div className="and" key={idx1}>
-                  {and.equals && this.displayEQUALS(and.equals)}
-              </div>
-            </div>
-          ) }</div>
+      {ands.map((and, idx1) =>
+        <div key={`and${idx1}`}>
+          {idx1 !== 0 ? <div>AND</div> : undefined}
+          {and.or ? this.displayOR(and.or) : undefined}
+          {and.and ? this.displayAND(and.and) : undefined}
+          {and.not ? this.displayNOT(and.not) : undefined}
+          {and.isNull ? this.displayISNULL(and.isNull) : undefined}
+          <div className="and" key={idx1}>
+            {and.equals && this.displayEQUALS(and.equals)}
+          </div>
+        </div>
+      )}</div>
   }
 
   private displayOR(ors: IEntityQueryWhere[]) {
     return ors && <div className="allOrs">
-            { ors.map( (or, idx1) =>
-              <div  key={`or${idx1}`}>
-                { idx1 !== 0 ? <div>OR</div> : undefined }
-                { or.and ? this.displayAND(or.and) : undefined }
-                { or.or ? this.displayOR(or.or) : undefined }
-                { or.not ? this.displayNOT(or.not) : undefined }
-                { or.isNull ? this.displayISNULL(or.isNull) : undefined }
-                <div className="or" key={idx1}>
-                {or.equals && this.displayEQUALS(or.equals)}
-              </div>
-            </div>
-          ) }</div>
+      {ors.map((or, idx1) =>
+        <div key={`or${idx1}`}>
+          {idx1 !== 0 ? <div>OR</div> : undefined}
+          {or.and ? this.displayAND(or.and) : undefined}
+          {or.or ? this.displayOR(or.or) : undefined}
+          {or.not ? this.displayNOT(or.not) : undefined}
+          {or.isNull ? this.displayISNULL(or.isNull) : undefined}
+          <div className="or" key={idx1}>
+            {or.equals && this.displayEQUALS(or.equals)}
+          </div>
+        </div>
+      )}</div>
   }
 
   private displayEQUALS(equals: IEntityQueryWhereValue[]) {
     return equals && (equals.length !== 1 ? <div className="equals">
-            {equals.map((equal, idx1) =>
-              <div className="equal" key={idx1}>
-                <div className="alias">{equal.alias}</div>
-                <div className="attr">{equal.attribute.name}</div>
-                <div className="opEQ" />
-                <div className="value"> {equal.value} </div>
-              </div>
-            )}
-          </div>
-          : <div className="equal">
-              <div className="alias">{equals[0].alias}</div>
-              <div className="attr">{equals[0].attribute.name}</div>
-              <div className="opEQ" />
-              <div className="value"> {equals[0].value} </div>
-            </div>)
+      {equals.map((equal, idx1) =>
+        <div className="equal" key={idx1}>
+          <div className="alias">{equal.alias}</div>
+          <div className="attr">{equal.attribute.name}</div>
+          <div className="opEQ" />
+          <div className="value"> {equal.value} </div>
+        </div>
+      )}
+    </div>
+      : <div className="equal">
+        <div className="alias">{equals[0].alias}</div>
+        <div className="attr">{equals[0].attribute.name}</div>
+        <div className="opEQ" />
+        <div className="value"> {equals[0].value} </div>
+      </div>)
   }
 
   private displayISNULL(isNulls: IEntityQueryAlias<ScalarAttribute>[]) {
     return isNulls && (isNulls.length !== 1 ? <div className="allisNulls">
-            { isNulls.map( (isNull, idx1) =>
-              <div  key={`isNull${idx1}`}>
-                { <div>IsNULL</div> }
-                <div className="isNull" key={idx1}>
-                  <div className="alias">{isNull.alias}</div>
-                  <div className="attr">{isNull.attribute.name}</div>
-                </div>
-              </div>
-             ) }</div>
-             : <div  key={`isNull`}>
-                 { <div>IsNULL</div> }
-                 <div className="isNull">
-                   <div className="alias">{isNulls[0].alias}</div>
-                   <div className="attr">{isNulls[0].attribute.name}</div>
-                 </div>
-               </div>)
+      {isNulls.map((isNull, idx1) =>
+        <div key={`isNull${idx1}`}>
+          {<div>IsNULL</div>}
+          <div className="isNull" key={idx1}>
+            <div className="alias">{isNull.alias}</div>
+            <div className="attr">{isNull.attribute.name}</div>
+          </div>
+        </div>
+      )}</div>
+      : <div key={`isNull`}>
+        {<div>IsNULL</div>}
+        <div className="isNull">
+          <div className="alias">{isNulls[0].alias}</div>
+          <div className="attr">{isNulls[0].attribute.name}</div>
+        </div>
+      </div>)
   }
 
   private displayNOT(nots: IEntityQueryWhere[]) {
     return nots && (nots.length !== 1 ? <div className="allNots">
-            { nots.map( (not, idx1) =>
-              <div  key={`not${idx1}`}>
-                { <div>NOT</div> }
-                { not.and ? this.displayAND(not.and) : undefined }
-                { not.or ? this.displayOR(not.or) : undefined }
-                { not.not ? this.displayNOT(not.not) : undefined }
-                { not.isNull ? this.displayISNULL(not.isNull) : undefined }
-                <div className="not" key={idx1}>
-                {not.equals && this.displayEQUALS(not.equals)}
-              </div>
-            </div>
-          ) }</div>
-          : <div  key={`not`}>
-              { <div>NOT</div> }
-              { nots[0].and ? this.displayAND(nots[0].and) : undefined }
-              { nots[0].or ? this.displayOR(nots[0].or) : undefined }
-              { nots[0].not ? this.displayNOT(nots[0].not) : undefined }
-              { nots[0].isNull ? this.displayISNULL(nots[0].isNull) : undefined }
-              <div className="not">
-              {nots[0].equals && this.displayEQUALS(nots[0].equals)}
-            </div>
-          </div>)
+      {nots.map((not, idx1) =>
+        <div key={`not${idx1}`}>
+          {<div>NOT</div>}
+          {not.and ? this.displayAND(not.and) : undefined}
+          {not.or ? this.displayOR(not.or) : undefined}
+          {not.not ? this.displayNOT(not.not) : undefined}
+          {not.isNull ? this.displayISNULL(not.isNull) : undefined}
+          <div className="not" key={idx1}>
+            {not.equals && this.displayEQUALS(not.equals)}
+          </div>
+        </div>
+      )}</div>
+      : <div key={`not`}>
+        {<div>NOT</div>}
+        {nots[0].and ? this.displayAND(nots[0].and) : undefined}
+        {nots[0].or ? this.displayOR(nots[0].or) : undefined}
+        {nots[0].not ? this.displayNOT(nots[0].not) : undefined}
+        {nots[0].isNull ? this.displayISNULL(nots[0].isNull) : undefined}
+        <div className="not">
+          {nots[0].equals && this.displayEQUALS(nots[0].equals)}
+        </div>
+      </div>)
   }
 
   private _renderCommand(command: ICommand) {
     return (
       <div className="command">
         <div className="commandAction">
-         <div className={`action${command.action}`} />
-         {command.payload.options && <div>
+          <div className={`action${command.action}`} />
+          {command.payload.options && <div>
             {
               command.payload.options.skip &&
               this.displaySKIP(command.payload.options.skip)
@@ -268,39 +268,43 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           </div>}
         </div>
         <div className="payload" >
-        <div className="alias">{command.payload.link.alias}</div>
-        <div className="entityName"> {command.payload.link.entity.name} </div>
-        <div className="fields">
-          <div id="scrollUp0" className="scrollUp">
-            <div className="s">
-              { command.payload.link.fields.map( (field, idx) =>
-                <div key={idx}>
-                  <div className="field">{field.attribute.name}
-                  {field.links && field.links.length && // TODO
-                    <div className="payload">
-                    <div className="alias">{field.links[0].alias}</div>
-                    <div className="entityName">{field.links[0].entity.name}</div>
-                    { field.links[0].fields && <div className="fields">
-                      <div id={`scrollUp${field.links[0].alias}/${idx}`} className="scrollUp">
-                        <div className="s">
-                          {field.links[0].fields.map( (f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div> )}
+          <div className="alias">{command.payload.link.alias}</div>
+          <div className="entityName"> {command.payload.link.entity.name} </div>
+          <div className="fields">
+            <div id="scrollUp0" className="scrollUp">
+              <div className="s">
+                {command.payload.link.fields.map((field, idx) =>
+                  <div key={idx}>
+                    {field.links && field.links.length ?
+                      field.links.map((payload, idxp) => {
+                        return <div className="field">
+                          <div>{field.attribute.name}</div>
+                          <div className="payload">
+                            <div className="alias">{payload.alias}</div>
+                            <div className="entityName">{payload.entity.name}</div>
+                            {payload.fields && <div className="fields">
+                              <div id={`scrollUp${payload.alias}/${idxp}-${idx}`} className="scrollUp">
+                                <div className="s">
+                                  {payload.fields.map((f, idxf) => <div className="field" key={idxf}>{f.attribute.name}</div>)}
+                                </div>
+                              </div>
+                              <button id={`buttonForScroll${payload.alias}/${idxp}-${idx}`} className="buttonForScroll"
+                                onClick={field && field.links && field.links[idxp] ? () =>
+                                  this.collUpsFields(
+                                    `scrollUp${field!.links![idxp]!.alias}/${idxp}-${idx}`,
+                                    `buttonForScroll${field!.links![idxp]!.alias}/${idxp}-${idx}`
+                                  ) : undefined}>...</button>
+                            </div>}
+                          </div>
                         </div>
-                      </div>
-                      <button id={`buttonForScroll${field.links[0].alias}/${idx}`} className="buttonForScroll"
-                        onClick={ field && field.links && field.links[0] ? () =>
-                          this.collUpsFields(
-                            `scrollUp${field!.links![0]!.alias}/${idx}`,
-                            `buttonForScroll${field!.links![0]!.alias}/${idx}`
-                          ) : undefined }>...</button>
-                    </div> }
-                  </div>
-                } </div>
-                </div>
-              ) }
+                      })
+                      : <div className="field">{field.attribute.name}</div>
+                    } </div>
+                )}
               </div>
             </div>
             <button id="buttonForScroll0" className="buttonForScroll"
-              onClick={ () => this.collUpsFields("scrollUp0", "buttonForScroll0") }>...</button>
+              onClick={() => this.collUpsFields("scrollUp0", "buttonForScroll0")}>...</button>
           </div>
         </div>
         {
@@ -369,7 +373,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                     tokens
                   });
                 }
-                catch(err) {
+                catch (err) {
                   this.setState({
                     editedText: err.message,
                     tokens: []
@@ -388,13 +392,13 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         <DefaultButton
           text="..."
           style={{ maxWidth: '48px' }}
-          onClick={ () => this.setState({ showPhrases: true, selectedERModel }) }
+          onClick={() => this.setState({ showPhrases: true, selectedERModel })}
         />
         <ComboBox
           selectedKey={selectedERModel ? (erModels[selectedERModel] ? selectedERModel : undefined) : undefined}
           label="ER-Model"
           autoComplete="on"
-          options={Object.keys(erModels).map( key => ({ key, text: key }) )}
+          options={Object.keys(erModels).map(key => ({ key, text: key }))}
           onPendingValueChanged={(option, _pendingIndex, _newSelectedERModel) => {
             if (option && erModels[option.text]) this.setState({ selectedERModel: option.text });
           }}
@@ -402,33 +406,33 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         <DefaultButton
           text="Analyze"
           disabled={!tokens.length || !selectedERModel || !erModels[selectedERModel] || erModels[selectedERModel].loading}
-          onClick={ selectedERModel ? () => { this.setState({ showPhrases: false }); onAnalyze(selectedERModel, editedText); } : undefined }
+          onClick={selectedERModel ? () => { this.setState({ showPhrases: false }); onAnalyze(selectedERModel, editedText); } : undefined}
         />
         <DefaultButton
           text="Query"
           disabled={!canQuery}
-          onClick={ selectedERModel ? () => onQuery(selectedERModel) : undefined }
+          onClick={selectedERModel ? () => onQuery(selectedERModel) : undefined}
         />
         <DefaultButton
           text="Clear"
           disabled={!selectedERModel || (!parsedText && !parserDebug)}
-          onClick={ selectedERModel ? () => onClear(selectedERModel) : undefined }
+          onClick={selectedERModel ? () => onClear(selectedERModel) : undefined}
         />
       </div>
       <div className="SyntaxTokens">
         {
-          tokens.map( (t, idx) =>
+          tokens.map((t, idx) =>
             t.tokenType && <div key={idx}>
               <div className={`Token${t.tokenType.name}`}>
-                {t.image.split('').map( (ch, idx) => ch === ' ' ? <span key={idx}>&nbsp;</span> : ch)}
+                {t.image.split('').map((ch, idx) => ch === ' ' ? <span key={idx}>&nbsp;</span> : ch)}
               </div>
               {
-                t.tokenType === CyrillicWord ? morphAnalyzer(t.image).map( w =>
+                t.tokenType === CyrillicWord ? morphAnalyzer(t.image).map(w =>
                   <div key={w.getSignature()}>
                     {w.getSignature()}
                   </div>)
-                :
-                undefined
+                  :
+                  undefined
               }
             </div>
           )
@@ -437,16 +441,16 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
       {errorMsg && <div className="SyntaxError">{errorMsg}</div>}
       {showPhrases ?
         <div>
-          {predefinedPhrases.map( (p, idx) => <DefaultButton key={idx} text={p} onClick={
+          {predefinedPhrases.map((p, idx) => <DefaultButton key={idx} text={p} onClick={
             () => this.setState({
               editedText: p,
               tokens: tokenize(p),
               showPhrases: false
             })
-          }/> )}
+          } />)}
         </div>
-      : undefined}
-      <div className={ text === editedText || parserDebug ? '' : 'SemiTransparent' }>
+        : undefined}
+      <div className={text === editedText || parserDebug ? '' : 'SemiTransparent'}>
         {this._getCoombinations()}
         <PhraseSyntaxTree parsedText={parsedText} />
         {commandError && <div className="SyntaxError">{commandError}</div>}
@@ -454,45 +458,45 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {command && command[0].payload.link.entity.adapter && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
         {parserDebug ?
           <div className="ParserDebug">
-            {parserDebug.map( (pd, idx) =>
-                pd.parser && <div key={idx}>
-                  <div>
-                    Parser: {pd.parser.getName().label}
-                  </div>
-                  <div className="DebugWordSignatures">
-                    {pd.wordsSignatures.map( (ws, wi) => <div key={wi}>{ws}</div> )}
-                  </div>
-                  {
-                    pd.errors[0] ?
+            {parserDebug.map((pd, idx) =>
+              pd.parser && <div key={idx}>
+                <div>
+                  Parser: {pd.parser.getName().label}
+                </div>
+                <div className="DebugWordSignatures">
+                  {pd.wordsSignatures.map((ws, wi) => <div key={wi}>{ws}</div>)}
+                </div>
+                {
+                  pd.errors[0] ?
                     <div>
                       <div>
                         {pd.errors[0].message}
                       </div>
                       {
                         verboseErrors === pd.errors ?
-                        <div>
-                          <pre className="ParserError">
-                            {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
-                          </pre>
+                          <div>
+                            <pre className="ParserError">
+                              {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
+                            </pre>
+                            <DefaultButton
+                              text="Hide"
+                              onClick={() => this.setState({ verboseErrors: undefined })}
+                            />
+                          </div>
+                          :
                           <DefaultButton
-                            text="Hide"
-                            onClick={ () => this.setState({ verboseErrors: undefined }) }
+                            text="Verbose..."
+                            onClick={() => this.setState({ verboseErrors: pd.errors })}
                           />
-                        </div>
-                        :
-                        <DefaultButton
-                          text="Verbose..."
-                          onClick={ () => this.setState({ verboseErrors: pd.errors }) }
-                        />
                       }
                     </div>
                     :
                     undefined
-                  }
-                </div>
+                }
+              </div>
             )}
           </div>
-        :undefined}
+          : undefined}
       </div>
     </div>);
   }
