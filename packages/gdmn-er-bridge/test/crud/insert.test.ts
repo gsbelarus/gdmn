@@ -19,7 +19,8 @@ import {DDLHelper} from "../../src/ddl/DDLHelper";
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_INSERT.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_INSERT.FDB"),
+  readTransaction: true
 };
 
 jest.setTimeout(60 * 1000);
@@ -38,11 +39,11 @@ describe("Insert", () => {
     }
     await connection.createDatabase(dbOptions);
     await ERBridge.initDatabase(connection);
+    await ERBridge.reloadERModel(connection, connection.readTransaction, erModel);
 
     await AConnection.executeTransaction({
       connection,
       callback: async (transaction) => {
-        await ERBridge.reloadERModel(connection, transaction, erModel);
         await ERBridge.executeSelf({
           connection,
           transaction,

@@ -32,7 +32,8 @@ import {Constants} from "../src/ddl/Constants";
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_ER_BRIDGE.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_ER_BRIDGE.FDB"),
+  readTransaction: true
 };
 
 jest.setTimeout(60 * 1000);
@@ -41,10 +42,7 @@ describe("ERBridge", () => {
   const connection = Factory.FBDriver.newConnection();
 
   const initERModel = async () => {
-    return await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => ERBridge.reloadERModel(connection, transaction, new ERModel())
-    });
+    return await ERBridge.reloadERModel(connection, connection.readTransaction, new ERModel());
   };
 
   const execute = async <R>(callback: TExecutor<ERBridge, R>): Promise<R> => {
@@ -763,7 +761,6 @@ describe("ERBridge", () => {
     expect(loadUserEntity.serialize()).toEqual(userEntity.serialize());
     expect(loadAppEntity.serialize()).toEqual(appEntity.serialize());
 
-
     const sql = "EXECUTE BLOCK\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -786,9 +783,7 @@ describe("ERBridge", () => {
       callback: (transaction) => connection.executeReturning(transaction, sql)
     });
 
-    let entityQuery: EntityQuery | undefined;
-
-    entityQuery = EntityQuery.inspectorToObject(erModel, {
+    const entityQuery = EntityQuery.inspectorToObject(erModel, {
       link: {
         entity: "APP_USER",
         alias: "app",
@@ -826,58 +821,47 @@ describe("ERBridge", () => {
       }
       ,
       options: {
-        where: [
-          {
-            equals: [
-              {
-                alias: "au",
-                attribute: "ID",
-                value: 50
-              }
-            ]
-          }
-        ]
+        where: [{
+          equals: [{
+            alias: "au",
+            attribute: "ID",
+            value: 50
+          }]
+        }]
       }
     });
 
-    const result = await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => ERBridge.query(connection, transaction, entityQuery!)
-    });
+    const result = await ERBridge.query(connection, connection.readTransaction, entityQuery!);
+    expect(
+      result.data.map((row) => {
+        const host = Utils.findAttrValue(row, result.aliases, "s", "HOST");
+        const port = Utils.findAttrValue(row, result.aliases, "s", "PORT");
 
-    const user = result.data.map((row) => {
-      const host = Utils.findAttrValue(row, result.aliases, "s", "HOST");
-      const port = Utils.findAttrValue(row, result.aliases, "s", "PORT");
-
-      return {
-        alias: Utils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
-        id: Utils.findAttrValue(row, result.aliases, "s", "ID"),
-        uid: Utils.findAttrValue(row, result.aliases, "s", "UID"),
-        creationDate: Utils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
-        ownerKey: Utils.findAttrValue(row, result.aliases, "au", "ID"),
-        external: Utils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
-        server: host && port ? {host, port} : undefined,
-        username: Utils.findAttrValue(row, result.aliases, "s", "USERNAME"),
-        password: Utils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
-        path: Utils.findAttrValue(row, result.aliases, "s", "PATH")
-      };
-    });
-
-    expect(user).toEqual([
-        {
-          alias: "Незабудка",
-          id: 52,
-          uid: "a",
-          creationDate: new Date("2014-01-10T10:32:02.000Z"),
-          ownerKey: 50,
-          external: 0,
-          server: {host: "1000", port: 5050},
-          username: "a",
-          password: "b",
-          path: null
-        }
-      ]
-    );
+        return {
+          alias: Utils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
+          id: Utils.findAttrValue(row, result.aliases, "s", "ID"),
+          uid: Utils.findAttrValue(row, result.aliases, "s", "UID"),
+          creationDate: Utils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
+          ownerKey: Utils.findAttrValue(row, result.aliases, "au", "ID"),
+          external: Utils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
+          server: host && port ? {host, port} : undefined,
+          username: Utils.findAttrValue(row, result.aliases, "s", "USERNAME"),
+          password: Utils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
+          path: Utils.findAttrValue(row, result.aliases, "s", "PATH")
+        };
+      })
+    ).toEqual([{
+      alias: "Незабудка",
+      id: 52,
+      uid: "a",
+      creationDate: new Date("2014-01-10T10:32:02.000Z"),
+      ownerKey: 50,
+      external: 0,
+      server: {host: "1000", port: 5050},
+      username: "a",
+      password: "b",
+      path: null
+    }]);
 
     const id: any = undefined;
     const login = "Ford";
@@ -901,9 +885,7 @@ describe("ERBridge", () => {
       });
     }
 
-    let entityQueryUser: EntityQuery | undefined;
-
-    entityQueryUser = EntityQuery.inspectorToObject(erModel, {
+    const entityQueryUser = EntityQuery.inspectorToObject(erModel, {
       link: {
         entity: "APP_USER",
         alias: "user",
@@ -928,39 +910,29 @@ describe("ERBridge", () => {
         ]
       },
       options: {
-        where: [
-          {
-            equals: whereEquals
-          }
-        ]
+        where: [{
+          equals: whereEquals
+        }]
       }
     });
 
-    const resultQuery = await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => ERBridge.query(connection, transaction, entityQueryUser!)
-    });
-    const users = resultQuery.data.map((row) => {
-
-      return {
+    const resultQuery = await ERBridge.query(connection, connection.readTransaction, entityQueryUser!);
+    expect(
+      resultQuery.data.map((row) => ({
         id: Utils.findAttrValue<number>(row, resultQuery.aliases, "user", "ID"),
         login: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "LOGIN"),
         passwordHash: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "PASSWORD_HASH"),
         salt: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "SALT"),
         creationDate: Utils.findAttrValue<Date>(row, resultQuery.aliases, "user", "CREATIONDATE"),
         admin: Utils.findAttrValue<boolean>(row, resultQuery.aliases, "user", "IS_ADMIN")
-      };
-    });
-    expect(users).toEqual([
-        {
-          id: 50,
-          login: "Ford",
-          passwordHash: "T",
-          salt: "0",
-          creationDate: new Date("2014-01-10T10:32:02.000Z"),
-          admin: 0
-        }
-      ]
-    );
+      }))
+    ).toEqual([{
+      id: 50,
+      login: "Ford",
+      passwordHash: "T",
+      salt: "0",
+      creationDate: new Date("2014-01-10T10:32:02.000Z"),
+      admin: 0
+    }]);
   });
 });

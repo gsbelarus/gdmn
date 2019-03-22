@@ -36,11 +36,11 @@ describe("Query", () => {
     }
     await connection.createDatabase(dbOptions);
     await ERBridge.initDatabase(connection);
+    await ERBridge.reloadERModel(connection, connection.readTransaction, erModel);
 
     await AConnection.executeTransaction({
       connection,
       callback: async (transaction) => {
-        await ERBridge.reloadERModel(connection, transaction, erModel);
         await ERBridge.executeSelf({
           connection,
           transaction,

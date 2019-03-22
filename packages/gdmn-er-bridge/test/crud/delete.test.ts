@@ -1,15 +1,14 @@
 import {existsSync, unlinkSync} from "fs";
 import {AConnection, Factory, IConnectionOptions} from "gdmn-db";
 import {
-    DetailAttribute,
-    Entity,
-    EntityAttribute,
-    EntityDelete,
-    ERModel,
-    ParentAttribute,
-    SetAttribute,
-    StringAttribute,
-    IntegerAttribute, ScalarAttribute
+  DetailAttribute,
+  Entity,
+  EntityAttribute,
+  EntityDelete,
+  ERModel,
+  ParentAttribute,
+  SetAttribute,
+  StringAttribute
 } from "gdmn-orm";
 import {resolve} from "path";
 import {ERBridge} from "../../src";
@@ -18,7 +17,8 @@ import {Delete} from "../../src/crud/delete/Delete";
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_DELETE.FDB")
+  path: resolve("./GDMN_ER_BRIDGE_DELETE.FDB"),
+  readTransaction: true
 };
 
 jest.setTimeout(60 * 1000);
@@ -34,11 +34,11 @@ describe("Delete", () => {
     }
     await connection.createDatabase(dbOptions);
     await ERBridge.initDatabase(connection);
+    await ERBridge.reloadERModel(connection, connection.readTransaction, erModel);
 
     await AConnection.executeTransaction({
       connection,
       callback: async (transaction) => {
-        await ERBridge.reloadERModel(connection, transaction, erModel);
         await ERBridge.executeSelf({
           connection,
           transaction,

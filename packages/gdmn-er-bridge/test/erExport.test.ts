@@ -10,6 +10,7 @@ jest.setTimeout(120000);
 describe("ERExport", () => {
 
   const dbDetail = loadDBDetails()[0];
+  dbDetail.connectionOptions.readTransaction = true;
   const connection = dbDetail.driver.newConnection();
   const erModel = new ERModel();
 
@@ -17,10 +18,7 @@ describe("ERExport", () => {
     await connection.connect(dbDetail.connectionOptions);
     await ERBridge.initDatabase(connection);
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => ERBridge.reloadERModel(connection, transaction, erModel)
-    });
+    await ERBridge.reloadERModel(connection, connection.readTransaction, erModel);
   });
 
   afterAll(async () => {
@@ -83,12 +81,9 @@ describe("ERExport", () => {
       "  LEFT JOIN GD_COMPANYCODE T$3 ON T$3.COMPANYKEY = T$2.ID\n" +
       "  JOIN GD_OURCOMPANY T$4 ON T$4.COMPANYKEY = T$2.ID");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params,
+      callback: () => 0
     });
   });
 
@@ -110,12 +105,9 @@ describe("ERExport", () => {
       "  LEFT JOIN GD_COMPANYCODE T$3 ON T$3.COMPANYKEY = T$1.ID\n" +
       "  JOIN GD_OURCOMPANY T$4 ON T$4.COMPANYKEY = T$1.ID");
 
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => AConnection.executeQueryResultSet({
-        connection, transaction, sql, params,
-        callback: () => 0
-      })
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params,
+      callback: () => 0
     });
   });
 
@@ -138,20 +130,20 @@ describe("ERExport", () => {
   //                 {attribute: "NAME"}
   //               ]
   //             },
-  //             // {
-  //             //   entity: "TgdcCompany",
-  //             //   alias: "com2",
-  //             //   fields: [
-  //             //     {attribute: "ID"},
-  //             //     {attribute: "FULLNAME"}
-  //             //   ]
-  //             // }
+  //             {
+  //               entity: "TgdcCompany",
+  //               alias: "com2",
+  //               fields: [
+  //                 {attribute: "ID"},
+  //                 {attribute: "FULLNAME"}
+  //               ]
+  //             }
   //           ]
   //         }
   //       ]
   //     }
   //   }));
-
+  //
   //   expect(sql).toEqual("SELECT\n" +
   //     "  T$1.ID AS F$1,\n" +
   //     "  T$1.NAME AS F$2,\n" +
@@ -167,13 +159,10 @@ describe("ERExport", () => {
   //     "  LEFT JOIN GD_CONTACT T$4 ON T$4.ID = T$1.EDITORKEY\n" +
   //     "  LEFT JOIN GD_COMPANY T$5 ON T$5.CONTACTKEY = T$4.ID\n" +
   //     "WHERE T$1.CONTACTTYPE = :P$1");
-
-  //   await AConnection.executeTransaction({
-  //     connection,
-  //     callback: (transaction) => AConnection.executeQueryResultSet({
-  //       connection, transaction, sql, params,
-  //       callback: () => 0
-  //     })
+  //
+  //   await AConnection.executeQueryResultSet({
+  //     connection, transaction: connection.readTransaction, sql, params,
+  //     callback: () => 0
   //   });
   // });
 });
