@@ -37,6 +37,7 @@
 
 .SignInFormTabText {
   flex: 1 0 auto;
+  height: 30px;
   padding: 2px 4px 0px 4px;
   text-align: center;
 }

@@ -9,7 +9,8 @@ import { ISignInBoxStateProps, SignInBox } from './components/SignInBox';
 export const SignInBoxContainer = connect(
   (state: IState): ISignInBoxStateProps => ({
     signInInitialValues: selectAuthState(state).signInInitialValues!,
-    signInRequesting: selectAuthState(state).signInRequesting!
+    signInRequesting: selectAuthState(state).signInRequesting!,
+    signUpRequesting: selectAuthState(state).signUpRequesting!
   }),
   dispatch => ({
     onSignIn: bindActionCreators(authActionsAsync.signIn, dispatch),

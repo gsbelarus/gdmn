@@ -15,6 +15,7 @@ export interface ISignInBoxData {
 export interface ISignInBoxStateProps {
   signInInitialValues: ISignInBoxData;
   signInRequesting: boolean;
+  signUpRequesting: boolean;
 }
 
 export interface ISignInBoxProps extends ISignInBoxStateProps {
@@ -27,7 +28,6 @@ interface ISignInBoxState {
   userName: string;
   password: string;
   repeatPassword: string;
-  correctPassword: boolean;
 }
 
 export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
@@ -35,12 +35,11 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
     ...this.props.signInInitialValues,
     activeTab: 'Вход',
     repeatPassword: '',
-    correctPassword: true,
   };
 
   render() {
-    const { onSignIn, signInRequesting, onSignUp } = this.props;
-    const { userName, password, repeatPassword, correctPassword, activeTab } = this.state;
+    const { onSignIn, signInRequesting, onSignUp, signUpRequesting } = this.props;
+    const { userName, password, repeatPassword, activeTab } = this.state;
     const tabs = ['Вход', 'Регистрация'];
 
     return (
@@ -103,13 +102,13 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                 <>
                   <TextField
                     label="Пользователь:"
-                    disabled={signInRequesting}
+                    disabled={signUpRequesting}
                     value={userName}
                     onBeforeChange={userName => this.setState({ userName })}
                   />
                   <PasswordInput
                     label="Пароль:"
-                    disabled={signInRequesting}
+                    disabled={signUpRequesting}
                     value={password}
                     onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
                       this.setState({ password: newValue ? newValue : '' });
@@ -117,23 +116,22 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                   />
                   <PasswordInput
                     label="Повторите пароль:"
-                    disabled={signInRequesting}
+                    disabled={signUpRequesting}
                     value={repeatPassword}
                     onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-                      this.setState({ repeatPassword: newValue ? newValue : '' }); this.setState({ correctPassword: true }); console.log(correctPassword);
+                      this.setState({ repeatPassword: newValue ? newValue : '' });
                     }}
                     onGetErrorMessage={(value) => value === '' ? "Повторите пароль" : value === password ? "" : "Неправильный пароль"}
                   />
                   <div className="SignUpButtons">
                     <PrimaryButton
                       text="Регистрация"
-                      disabled={signInRequesting}
+                      disabled={signUpRequesting || userName === '' || password === '' || repeatPassword === '' || password !== repeatPassword}
                       onRenderIcon={
-                        signInRequesting ? (_props, _defaultRenderer) => <Spinner size={SpinnerSize.xSmall} /> : undefined
+                        signUpRequesting ? (_props, _defaultRenderer) => <Spinner size={SpinnerSize.xSmall} /> : undefined
                       }
                       onClick={() => {
-                        password === repeatPassword ?
-                        onSignUp({ userName, password }) : this.setState({ correctPassword: false });
+                        onSignUp({ userName, password });
                       }}
                     />
                   </div>
