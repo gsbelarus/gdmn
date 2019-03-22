@@ -24,7 +24,7 @@ export interface ISequenceAdapter {
 
 export interface IEntitySelector {
   field: string;
-  value: (number | string) | Array<(number | string)>;
+  value: number | string;
 }
 
 export function sameSelector(selA: IEntitySelector | undefined, selB: IEntitySelector | undefined): boolean {
@@ -42,19 +42,6 @@ export function sameSelector(selA: IEntitySelector | undefined, selB: IEntitySel
 
   if (typeof selA.value !== typeof selB.value) {
     return false;
-  }
-
-  if (Array.isArray(selA.value) && Array.isArray(selB.value)) {
-    if (typeof selA.value[0] === "number" && typeof selB.value[0] === "number") {
-      return JSON.stringify((selA.value as number[]).sort((a, b) => a - b)) ===
-        JSON.stringify((selB.value as number[]).sort((a, b) => a - b));
-    }
-
-    if (typeof selA.value[0] === "string" && typeof selB.value[0] === "string") {
-      return JSON.stringify(selA.value.sort()) === JSON.stringify(selB.value.sort());
-    }
-
-    return !selA.value.length && !selB.value.length;
   }
 
   return selA.value === selB.value;

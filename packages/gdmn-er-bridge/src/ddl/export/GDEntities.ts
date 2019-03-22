@@ -72,17 +72,20 @@ export class GDEntities {
       const groups = rg.exec(restrictCondition);
       if (groups) {
         const arr = groups[2].split(',').map( s => parseInt(s.trim()) );
-        if (arr.length === 1) {
+        //if (arr.length === 1) {
           return {
             field: groups[1].toUpperCase().trim(),
             value: arr[0]
           }
-        } else {
+        /*
+        }
+        else {
           return {
             field: groups[1].toUpperCase().trim(),
             value: arr
           }
         }
+        */
       } else {
         // z.accounttype = 'F'
         const rg = /z\.(.+)\s*=\s*'(.+)'/gi;
@@ -101,17 +104,19 @@ export class GDEntities {
               const ss = s.trim();
               return ss.substring(1, ss.length - 2);
             });
-            if (arr.length === 1) {
+            //if (arr.length === 1) {
               return {
                 field: groups[1].toUpperCase().trim(),
                 value: arr[0]
               }
+            /*
             } else {
               return {
                 field: groups[1].toUpperCase().trim(),
                 value: arr
               }
             }
+            */
           } else {
             console.log(`Can't process restrict condition: ${restrictCondition}`);
           }
