@@ -2111,9 +2111,9 @@
     "@types/node" "*"
 
 "@types/node@*", "@types/node@^11":
-  version "11.11.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-11.11.4.tgz#8808bd5a82bbf6f5d412eff1c228d178e7c24bb3"
-  integrity sha512-02tIL+QIi/RW4E5xILdoAMjeJ9kYq5t5S2vciUdFPXv/ikFTb0zK8q9vXkg4+WAJuYXGiVT1H28AkD2C+IkXVw==
+  version "11.11.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-11.11.5.tgz#0c57e12eb44d44e5b6735593925286553ee7cebf"
+  integrity sha512-pz6wNe/XwyesgfVX7P6B0hY3TnTAYXk6KSTLdpQfbuq3be+hnMoCuFzE+yLTskPdBwmNiGRL2TAsnF09aRugvQ==
 
 "@types/node@^8.10.19":
   version "8.10.44"
@@ -5488,9 +5488,9 @@ ejs@^2.6.1:
   integrity sha512-0xy4A/twfrRCnkhfk8ErDi5DqdAsAqeGxht4xkCUrsvhhbQNs7E+4jV0CN7+NKIY0aHE72+XvqtBIXzD31ZbXQ==
 
 electron-to-chromium@^1.3.103, electron-to-chromium@^1.3.116:
-  version "1.3.118"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.118.tgz#5c82b0445a40934e6cae9c2f40bfaaa986ea44a3"
-  integrity sha512-/1FpHvmKmKo2Z6CCza2HfkrKvKhU7Rq4nvyX1FOherdTrdTufhVrJbCrcrIqgqUCI+BG6JC2rlY4z5QA1G0NOw==
+  version "1.3.119"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.119.tgz#9a7770da667252aeb81f667853f67c2b26e00197"
+  integrity sha512-3mtqcAWa4HgG+Djh/oNXlPH0cOH6MmtwxN1nHSaReb9P0Vn51qYPqYwLeoSuAX9loU1wrOBhFbiX3CkeIxPfgg==
 
 elliptic@^6.0.0:
   version "6.4.1"
@@ -5578,9 +5578,9 @@ error-inject@^1.0.0:
   integrity sha1-4rPZG1Su1nLzCdlQ0VSFD6EdTzc=
 
 error-overlay-webpack-plugin@^0:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/error-overlay-webpack-plugin/-/error-overlay-webpack-plugin-0.1.7.tgz#fb00474664859ad686248bf84c4fca7f0448339c"
-  integrity sha512-GC7egBRun++duA1Yhm6rxCeUGMNDd9sFvqziqv41VsF/nlFCKgBfO2FeYac/L4SroIBa6Oj2b2PtrvJ829za2Q==
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/error-overlay-webpack-plugin/-/error-overlay-webpack-plugin-0.2.0.tgz#0304943c3e3e84c6ebf5eda750f6a972676877af"
+  integrity sha512-q6GUiMka3ouMw9R6u6apirTBSr/KR9sHfF787+oHcGSwH0cmXrHsIOc0WCu68qBnn2IY27glMeYIfSpW2BdZdA==
   dependencies:
     react-dev-utils "^8.0.0"
     react-error-overlay "^5.1.4"
@@ -10478,9 +10478,9 @@ octokit-pagination-methods@^1.1.0:
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
 "office-ui-fabric-react@>=6.110.1 <7.0.0", "office-ui-fabric-react@>=6.157.0 <7.0.0", office-ui-fabric-react@^6:
-  version "6.158.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.158.0.tgz#ddce1ea25ba1c23573e803ebc5389c8f8f6fc562"
-  integrity sha512-Y6hviVAUj3S4qNhPdLBJK/+t39PZT4DQ/+yDiLB7DFdmMiXewP7eWJvaSm3/ahXxayjW5M8KHs4B6y8xeguSzA==
+  version "6.159.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.159.0.tgz#b4c43ba1189a93e5136ff68b2187148ca47f5058"
+  integrity sha512-cmhTIVmYObJKZMknCEb4H4Hf7uVwSyfYn+KdfidoM5/T5Nb8lDjG6UnM3g5eH9+rjJuqOj5siGhFNZEiLxDmOg==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/foundation" ">=0.7.2 <1.0.0"
