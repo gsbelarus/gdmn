@@ -34,7 +34,8 @@ import {
   systemFields,
   TimeAttribute,
   TimeStampAttribute,
-  sameSelector
+  sameSelector,
+  IEntityAdapter
 } from "gdmn-orm";
 import {Utils} from "../../Utils";
 import {Constants} from "../Constants";
@@ -124,16 +125,27 @@ export class ERExport {
       return Promise.resolve();
     }
 
-    const createDocEntity = (classPrefix: string, namePrefix: string, ruid: string, parent_ruid: string, name: string, r: string) => {
+    const createDocEntity = (classPrefix: string, namePrefix: string, ruid: string, parent_ruid: string, name: string, r: string, docTypeID?: number) => {
       const parentClassName = `${classPrefix}${parent_ruid}`;
       const className = `${classPrefix}${ruid}`;
       const atRelation = this._getATResult().atRelations[r];
       const semCategories = atRelation ? atRelation.semCategories : undefined;
       const parent = this._erModel.entities[parentClassName];
-      const adapter = parent ?
-        appendAdapter(parent.adapter!, r, ['DOCUMENTKEY'])
-        :
-        (r ? relationName2Adapter(r) : undefined);
+
+      let adapter: IEntityAdapter | undefined;
+
+      if (parent && parent.adapter) {
+        adapter = appendAdapter(parent.adapter, r, ['DOCUMENTKEY']);
+      } else {
+        adapter = (r ? relationName2Adapter(r) : undefined);
+      }
+
+      if (adapter && docTypeID) {
+        adapter.relation[0].selector = {
+          field: 'DOCUMENTTYPEKEY',
+          value: docTypeID
+        }
+      }
 
       const entity = new Entity({
         parent,
@@ -149,28 +161,28 @@ export class ERExport {
     const loadDocumentFunc: LoadDocumentFunc = (id: number, ruid: string, parent_ruid: string, name: string, className: string, hr: string, lr: string) => {
       switch (className) {
         case 'TgdcUserDocumentType': {
-          createDocEntity('TgdcUserDocument', 'Документ', ruid, parent_ruid, name, hr);
+          createDocEntity('TgdcUserDocument', 'Документ', ruid, parent_ruid, name, hr, id);
           if (lr) {
-            createDocEntity('TgdcUserDocumentLine', 'Позиция', ruid, parent_ruid, name, lr);
+            createDocEntity('TgdcUserDocumentLine', 'Позиция', ruid, parent_ruid, name, lr, id);
           }
           return;
         }
         case 'TgdcInvDocumentType': {
-          createDocEntity('TgdcInvDocument', 'Документ', ruid, parent_ruid, name, hr);
+          createDocEntity('TgdcInvDocument', 'Документ', ruid, parent_ruid, name, hr, id);
           if (lr) {
-            createDocEntity('TgdcInvDocumentLine', 'Позиция', ruid, parent_ruid, name, lr);
+            createDocEntity('TgdcInvDocumentLine', 'Позиция', ruid, parent_ruid, name, lr, id);
           }
           return;
         }
         case 'TgdcInvPriceListType': {
-          createDocEntity('TgdcInvPriceList', 'Документ', ruid, parent_ruid, name, hr);
+          createDocEntity('TgdcInvPriceList', 'Документ', ruid, parent_ruid, name, hr, id);
           if (lr) {
-            createDocEntity('TgdcInvPriceListLine', 'Позиция', ruid, parent_ruid, name, lr);
+            createDocEntity('TgdcInvPriceListLine', 'Позиция', ruid, parent_ruid, name, lr, id);
           }
           return;
         }
         case 'TgdcDocumentType': {
-          createDocEntity('TgdcDocument', 'Документ', ruid, parent_ruid, name, hr);
+          createDocEntity('TgdcDocument', 'Документ', ruid, parent_ruid, name, hr, id);
           return;
         }
       }
