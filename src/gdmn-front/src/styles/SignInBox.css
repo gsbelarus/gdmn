@@ -111,3 +111,11 @@
   text-decoration: underline;
   color: dodgerblue;
 }
+
+.SignUpButtons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin-top: 10px;
+  width: 100%;
+}

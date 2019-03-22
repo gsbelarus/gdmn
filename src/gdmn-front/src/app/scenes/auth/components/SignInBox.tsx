@@ -19,23 +19,28 @@ export interface ISignInBoxStateProps {
 
 export interface ISignInBoxProps extends ISignInBoxStateProps {
   onSignIn: (data: ISignInBoxData) => void;
+  onSignUp: (data: ISignInBoxData) => void;
 }
 
 interface ISignInBoxState {
   activeTab: string;
   userName: string;
   password: string;
+  repeatPassword: string;
+  correctPassword: boolean;
 }
 
 export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
   state: ISignInBoxState = {
     ...this.props.signInInitialValues,
-    activeTab: 'Вход'
+    activeTab: 'Вход',
+    repeatPassword: '',
+    correctPassword: true,
   };
 
   render() {
-    const { onSignIn, signInRequesting } = this.props;
-    const { userName, password, activeTab } = this.state;
+    const { onSignIn, signInRequesting, onSignUp } = this.props;
+    const { userName, password, repeatPassword, correctPassword, activeTab } = this.state;
     const tabs = ['Вход', 'Регистрация'];
 
     return (
@@ -52,14 +57,14 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                   <div className="SignInFormTabSpace" />
                 </Fragment>
               ) : (
-                <Fragment key={t}>
-                  <div className="SignInFormTab" onClick={() => signInRequesting || this.setState({ activeTab: t })}>
-                    <div className="SignInFormTabText SignInFormInactiveTab">{t}</div>
-                    <div className="SignInFormInactiveShadow" />
-                  </div>
-                  <div className="SignInFormTabSpace" />
-                </Fragment>
-              )
+                  <Fragment key={t}>
+                    <div className="SignInFormTab" onClick={() => signInRequesting || this.setState({ activeTab: t })}>
+                      <div className="SignInFormTabText SignInFormInactiveTab">{t}</div>
+                      <div className="SignInFormInactiveShadow" />
+                    </div>
+                    <div className="SignInFormTabSpace" />
+                  </Fragment>
+                )
             )}
             <div className="SignInFormRestSpace" />
           </div>
@@ -76,7 +81,9 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                   label="Пароль:"
                   disabled={signInRequesting}
                   value={password}
-                  onBeforeChange={password => this.setState({ password })}
+                  onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+                    this.setState({ password: newValue ? newValue : '' });
+                  }}
                 />
                 <div className="SignInText">Забыли пароль?</div>
                 <div className="SignInButtons">
@@ -93,8 +100,45 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                 </div>
               </>
             ) : (
-              <div>Скоро будет...</div>
-            )}
+                <>
+                  <TextField
+                    label="Пользователь:"
+                    disabled={signInRequesting}
+                    value={userName}
+                    onBeforeChange={userName => this.setState({ userName })}
+                  />
+                  <PasswordInput
+                    label="Пароль:"
+                    disabled={signInRequesting}
+                    value={password}
+                    onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+                      this.setState({ password: newValue ? newValue : '' });
+                    }}
+                  />
+                  <PasswordInput
+                    label="Повторите пароль:"
+                    disabled={signInRequesting}
+                    value={repeatPassword}
+                    onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+                      this.setState({ repeatPassword: newValue ? newValue : '' }); this.setState({ correctPassword: true }); console.log(correctPassword);
+                    }}
+                    onGetErrorMessage={(value) => value === '' ? "Повторите пароль" : value === password ? "" : "Неправильный пароль"}
+                  />
+                  <div className="SignUpButtons">
+                    <PrimaryButton
+                      text="Регистрация"
+                      disabled={signInRequesting}
+                      onRenderIcon={
+                        signInRequesting ? (_props, _defaultRenderer) => <Spinner size={SpinnerSize.xSmall} /> : undefined
+                      }
+                      onClick={() => {
+                        password === repeatPassword ?
+                        onSignUp({ userName, password }) : this.setState({ correctPassword: false });
+                      }}
+                    />
+                  </div>
+                </>
+              )}
           </div>
         </div>
       </div>

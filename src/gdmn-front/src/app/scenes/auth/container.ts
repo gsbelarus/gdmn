@@ -12,41 +12,7 @@ export const SignInBoxContainer = connect(
     signInRequesting: selectAuthState(state).signInRequesting!
   }),
   dispatch => ({
-    onSignIn: bindActionCreators(authActionsAsync.signIn, dispatch)
+    onSignIn: bindActionCreators(authActionsAsync.signIn, dispatch),
+    onSignUp: bindActionCreators(authActionsAsync.signUp, dispatch)
   })
 )(SignInBox);
-
-/*
-onSignUp: async (formData: Partial<ISignUpFormData>) => {
-  // todo: async action
-
-  dispatch(authActions.signUp.request());
-
-  try {
-    const response = await apiService.signUp({
-      payload: {
-        'create-user': 1,
-        login: formData.username || '',
-        passcode: formData.password || ''
-      }
-    });
-
-    const refreshTokenPayload = Auth.decodeToken<IRefreshTokenPayload>(response.payload['refresh-token']);
-    const accessTokenPayload = Auth.decodeToken<IAccessTokenPayload>(response.payload['access-token']);
-    accessTokenPayload.role = TUserRoleType.USER; // todo: tmp
-
-    dispatch(
-      authActions.signUp.success({
-        accessTokenPayload,
-        refreshTokenPayload,
-        accessToken: response.payload['access-token'] || '',
-        refreshToken: response.payload['refresh-token'] || ''
-      })
-    );
-  } catch (error) {
-    //-//console.log('[GDMN] ', error);
-    dispatch(authActions.signUp.failure(error));
-  }
-}
-})
-*/

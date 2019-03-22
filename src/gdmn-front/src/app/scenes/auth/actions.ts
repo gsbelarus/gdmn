@@ -36,6 +36,35 @@ const authActionsAsync = {
       dispatch(authActions.signIn.failure(error));
     }
   },
+  signUp: (data: ISignInBoxData): TThunkAction => async (dispatch, getState, { apiService }) => {
+    dispatch(authActions.signUp.request());
+
+    try {
+      const response = await apiService.signUp({
+        payload: {
+          'create-user': 1,
+          login: data.userName || '',
+          passcode: data.password || ''
+        }
+      });
+
+      const refreshTokenPayload = Auth.decodeToken<IRefreshTokenPayload>(response.payload['refresh-token']);
+      const accessTokenPayload = Auth.decodeToken<IAccessTokenPayload>(response.payload['access-token']);
+      accessTokenPayload.role = TUserRoleType.USER; // todo: tmp
+
+      dispatch(
+        authActions.signUp.success({
+          accessTokenPayload,
+          refreshTokenPayload,
+          accessToken: response.payload['access-token'] || '',
+          refreshToken: response.payload['refresh-token'] || ''
+        })
+      );
+    } catch (error) {
+      //-//console.log('[GDMN] ', error);
+      dispatch(authActions.signUp.failure(error));
+    }
+  },
   signOut: (): TThunkAction => async (dispatch, getState, { apiService }) => {
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut()); // todo test
