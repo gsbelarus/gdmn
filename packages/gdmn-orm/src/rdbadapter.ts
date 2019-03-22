@@ -145,10 +145,10 @@ export function relationNames2Adapter(relationNames: string[]): IEntityAdapter {
   return {relation: relationNames.map((relationName) => ({relationName}))};
 }
 
-export function appendAdapter(src: IEntityAdapter, relationName: string): IEntityAdapter {
+export function appendAdapter(src: IEntityAdapter, relationName: string, pk?: string[]): IEntityAdapter {
   const em = clone(src);
   if (relationName && !em.relation.find((r) => r.relationName === relationName)) {
-    em.relation.push({relationName});
+    em.relation.push({ relationName, pk });
   }
   return em;
 }

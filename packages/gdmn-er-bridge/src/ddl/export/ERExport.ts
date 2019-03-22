@@ -130,7 +130,10 @@ export class ERExport {
       const atRelation = this._getATResult().atRelations[r];
       const semCategories = atRelation ? atRelation.semCategories : undefined;
       const parent = this._erModel.entities[parentClassName];
-      const adapter = parent ? appendAdapter(parent.adapter!, r) : (r ? relationName2Adapter(r) : undefined);
+      const adapter = parent ?
+        appendAdapter(parent.adapter!, r, ['DOCUMENTKEY'])
+        :
+        (r ? relationName2Adapter(r) : undefined);
 
       const entity = new Entity({
         parent,
