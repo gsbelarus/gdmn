@@ -187,14 +187,24 @@ export class GDEntities {
 
     if (this._dbSchema.findRelation((rel) => rel.name === "GD_CONTACT")) {
       convert(undefined, gdbase, entity => {
-        if (entity.name === 'TgdcCompany') {
-          entity.adapter!.relation.push(
-            {
-              relationName: "GD_COMPANYCODE",
-              pk: ["COMPANYKEY"],
-              weak: true
-            }
-          );
+        switch (entity.name) {
+          case 'TgdcCompany':
+            entity.adapter!.relation.push(
+              {
+                relationName: "GD_COMPANYCODE",
+                pk: ["COMPANYKEY"],
+                weak: true
+              }
+            );
+            break;
+
+          case 'TgdcFolder':
+          case 'TgdcGroup':
+            entity.adapter!.relation[0].fields = [
+              Constants.DEFAULT_PARENT_KEY_NAME,
+              "NAME"
+            ];
+            break;
         }
         return entity;
       });

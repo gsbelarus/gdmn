@@ -77,7 +77,7 @@ export class ERModelView extends DataView<IERModelViewProps, IERModelViewState, 
       if (entity) {
         return (
           <InspectorForm
-            serializedEntity={entity.serialize(true)}
+            entity={entity}
             onDismiss={ () => this.setState({ showInspector: false }) }
           />
         );

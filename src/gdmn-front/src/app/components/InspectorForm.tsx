@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Dialog, mergeStyleSets, DialogType, DialogFooter, PrimaryButton, getTheme } from 'office-ui-fabric-react';
-import { IEntity } from 'gdmn-orm';
+import { Entity } from 'gdmn-orm';
 
 const theme = getTheme();
 
@@ -19,13 +19,22 @@ const classNames = mergeStyleSets({
 });
 
 export interface IInspectorFormProps {
-  serializedEntity: IEntity,
+  entity: Entity,
   onDismiss: () => void
 }
 
 export class InspectorForm extends PureComponent<IInspectorFormProps> {
   public render() {
-    const { onDismiss, serializedEntity } = this.props;
+    const { onDismiss, entity } = this.props;
+
+    function recursParent(entity: Entity): string {
+      if (entity.parent) {
+        return `${entity.name} -> ${recursParent(entity.parent)}`;
+      } else {
+        return entity.name;
+      }
+    }
+
     return (
       <Dialog
         minWidth="70vw"
@@ -41,8 +50,11 @@ export class InspectorForm extends PureComponent<IInspectorFormProps> {
           isBlocking: false
         }}
       >
+        <h2>
+          {recursParent(entity)}
+        </h2>
         <pre className={classNames.textContent}>
-          {JSON.stringify(serializedEntity, undefined, 2)}
+          {JSON.stringify(entity.serialize(true), undefined, 2)}
         </pre>
         <DialogFooter>
           <PrimaryButton onClick={onDismiss} text="Close" />
