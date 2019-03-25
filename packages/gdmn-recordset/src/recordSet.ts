@@ -540,6 +540,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures<R>): RecordSet<R> {
+    if (this.status !== TStatus.FULL) {
+      throw new Error(`Can't sort partially loaded recordset`);
+    }
+
     this._checkFields(sortFields);
 
     if (!this._params.data.size) {
@@ -1028,6 +1032,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setFilter(filter: IFilter | undefined): RecordSet<R> {
+    if (this.status !== TStatus.FULL) {
+      throw new Error(`Can't filterks partially loaded recordset`);
+    }
+
     if (equal(this._params.filter, filter)) {
       return this;
     }
