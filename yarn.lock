@@ -10498,9 +10498,9 @@ octokit-pagination-methods@^1.1.0:
     tslib "^1.7.1"
 
 office-ui-fabric-react@^6:
-  version "6.159.1"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.159.1.tgz#59fe835c4e88bdc67c7144d78361a1992d54e538"
-  integrity sha512-nP588+L3/xiJz3meo4ASxvPLro+mfDY65qKOIEeIe6TrdOnzGoTU2fLt9/ZqcHFvLZlkT0Y3n9TcxPOlbnUzAA==
+  version "6.160.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.160.0.tgz#8c971305705d52f97451425221c0dfba089d78a7"
+  integrity sha512-CiUSvMtx83YkHESKgWzgPHH83YtYj0F1USqwaDC5+oCbBLOsTF/iXgKK2UPxI92IhWVBHMVpk8ADsJU2Czv8vA==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/foundation" ">=0.7.2 <1.0.0"
