@@ -69,18 +69,19 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
   }
 
   public async componentDidMount() {
-    super.componentDidMount();
-
     const { rs } = this.state;
     if (rs) return;
 
     const { entityName, id } = this.props.match.params;
     const { erModel } = this.props;
 
-    console.log(entityName);
-    console.log(id);
-
-    const entity = erModel.entities[entityName];
+    // TODO tmp
+    const result = await apiService.defineEntity({entity: erModel.entity(entityName).name, pkValues: [id]});
+    const entity = erModel.entity(result.payload.result!.entity);
+    if (entityName !== entity.name) {
+      this.props.history.replace(this.props.match.url.replace(entityName, entity.name));
+    }
+    super.componentDidMount();
 
     const q = new EntityQuery(
       new EntityLink(
