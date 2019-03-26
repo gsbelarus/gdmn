@@ -199,7 +199,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               />
               {
               <Route
-                path={`${match.path}/entity/:entityName/edit/:id`}
+                path={`${match.path}/entity/:entityName/edit/:pkSet`}
                 render={props => (
                   <DlgViewContainer {...props} />
                 )}
