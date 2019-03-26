@@ -105,7 +105,6 @@ export class EntityDefiner {
     sql += SQLTemplates.from("", relation) + "\n";
     const conditions = Object.keys(params).map((field) => SQLTemplates.equals("", field, `:${field}`));
     sql += `WHERE ${conditions.join("\n  AND ")} \n`;
-    console.log(sql, params);
 
     const result = await this._connection.executeReturning(this._transaction, sql, params);
     return result.getAny(selectorField);
@@ -120,7 +119,6 @@ export class EntityDefiner {
     sql += SQLTemplates.from("", relation) + "\n";
     const conditions = Object.keys(params).map((field) => SQLTemplates.equals("", field, `:${field}`));
     sql += `WHERE ${conditions.join("\n  AND ")} \n`;
-    console.log(sql, params);
 
     return await AConnection.executeQueryResultSet({
       connection: this._connection,

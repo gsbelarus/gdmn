@@ -94,4 +94,3 @@ export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>
     })
   )
 )(DlgView);
-
