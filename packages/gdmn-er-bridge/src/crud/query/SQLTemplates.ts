@@ -6,6 +6,7 @@ export abstract class SQLTemplates {
     return `FROM ${tableName}${alias && ` ${alias}`}`;
   }
 
+  // TODO remove (withoutFieldAlias: boolean) argument
   public static field(alias: string, fieldAlias: string, fieldName: string, withoutFieldAlias?: boolean): string {
     if (withoutFieldAlias) {
       return `  ${alias && `${alias}.`}${fieldName}`;

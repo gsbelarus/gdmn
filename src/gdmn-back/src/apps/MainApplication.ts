@@ -9,14 +9,14 @@ import {
   EntityAttribute,
   EntityDelete,
   EntityQuery,
+  EntityQueryUtils,
   EntityUpdate,
   IEntityQueryResponseRow,
   IEntityQueryWhereValueInspector,
   IntegerAttribute,
   SetAttribute,
   StringAttribute,
-  TimeStampAttribute,
-  Utils
+  TimeStampAttribute
 } from "gdmn-orm";
 import path from "path";
 import {v1 as uuidV1} from "uuid";
@@ -447,25 +447,25 @@ export class MainApplication extends Application {
     // });
     const result = await ERBridge.query(connection, transaction, entityQuery);
     return result.data.map((row) => {
-      const host = Utils.findAttrValue<string>(row, result.aliases, "application", "HOST");
-      const port = Utils.findAttrValue<number>(row, result.aliases, "application", "PORT");
+      const host = EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "HOST");
+      const port = EntityQueryUtils.findAttrValue<number>(row, result.aliases, "application", "PORT");
 
       return {
-        alias: Utils.findAttrValue<string>(
+        alias: EntityQueryUtils.findAttrValue<string>(
           row,
           result.aliases,
           "user",
           "APPLICATIONS",
           "ALIAS"),
-        id: Utils.findAttrValue<number>(row, result.aliases, "userOwner", "ID"),
-        uid: Utils.findAttrValue<string>(row, result.aliases, "application", "UID"),
-        creationDate: Utils.findAttrValue<Date>(row, result.aliases, "application", "CREATIONDATE"),
-        ownerKey: Utils.findAttrValue<number>(row, result.aliases, "userOwner", "ID"),
-        external: Utils.findAttrValue<boolean>(row, result.aliases, "application", "IS_EXTERNAL"),
+        id: EntityQueryUtils.findAttrValue<number>(row, result.aliases, "userOwner", "ID"),
+        uid: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "UID"),
+        creationDate: EntityQueryUtils.findAttrValue<Date>(row, result.aliases, "application", "CREATIONDATE"),
+        ownerKey: EntityQueryUtils.findAttrValue<number>(row, result.aliases, "userOwner", "ID"),
+        external: EntityQueryUtils.findAttrValue<boolean>(row, result.aliases, "application", "IS_EXTERNAL"),
         server: host && port ? {host, port} : undefined,
-        username: Utils.findAttrValue<string>(row, result.aliases, "application", "USERNAME"),
-        password: Utils.findAttrValue<string>(row, result.aliases, "application", "PASSWORD"),
-        path: Utils.findAttrValue<string>(row, result.aliases, "application", "PATH")
+        username: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "USERNAME"),
+        password: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "PASSWORD"),
+        path: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "PATH")
       };
     });
   }
@@ -627,7 +627,7 @@ export class MainApplication extends Application {
     const result = await ERBridge.query(connection, transaction, entityQuery);
     const deleteApps = EntityDelete.inspectorToObject(this.erModel, {
       entity: "APPLICATION",
-      pkValue: Utils.findAttrValues(result, "app", "ID")
+      pkValue: EntityQueryUtils.findAttrValues(result, "app", "ID")
     });
     await ERBridge.delete(connection, transaction, deleteApps);
   }
@@ -787,12 +787,12 @@ export class MainApplication extends Application {
     const result = await ERBridge.query(connection, transaction, entityQuery);
 
     const users = result.data.map((row: IEntityQueryResponseRow) => ({
-      id: Utils.findAttrValue<number>(row, result.aliases, "user", "ID"),
-      login: Utils.findAttrValue<string>(row, result.aliases, "user", "LOGIN"),
-      passwordHash: Utils.findAttrValue<string>(row, result.aliases, "user", "PASSWORD_HASH"),
-      salt: Utils.findAttrValue<string>(row, result.aliases, "user", "SALT"),
-      creationDate: Utils.findAttrValue<Date>(row, result.aliases, "user", "CREATIONDATE"),
-      admin: Utils.findAttrValue<boolean>(row, result.aliases, "user", "IS_ADMIN")
+      id: EntityQueryUtils.findAttrValue<number>(row, result.aliases, "user", "ID"),
+      login: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "user", "LOGIN"),
+      passwordHash: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "user", "PASSWORD_HASH"),
+      salt: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "user", "SALT"),
+      creationDate: EntityQueryUtils.findAttrValue<Date>(row, result.aliases, "user", "CREATIONDATE"),
+      admin: EntityQueryUtils.findAttrValue<boolean>(row, result.aliases, "user", "IS_ADMIN")
     }));
 
     if (users.length) {

@@ -37,6 +37,7 @@ export const enum TTaskActionNames {
   RELOAD_SCHEMA = 'RELOAD_SCHEMA',
   PING = 'PING',
   GET_SCHEMA = 'GET_SCHEMA',
+  DEFINE_ENTITY = 'DEFINE_ENTITY',
   DELETE_APP = 'DELETE_APP',
   CREATE_APP = 'CREATE_APP',
   GET_APPS = 'GET_APPS'
@@ -105,6 +106,10 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.GET_SCHEMA]: {
     withAdapter: boolean;
   };
+  [TTaskActionNames.DEFINE_ENTITY]: {
+    entity: string;
+    pkValues: any[];
+  };
   [TTaskActionNames.CREATE_APP]: {
     alias: string;
     connectionOptions?: {
@@ -143,9 +148,14 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.RELOAD_SCHEMA]: IERModel;
   [TTaskActionNames.PING]: undefined;
   [TTaskActionNames.GET_SCHEMA]: IERModel;
+  [TTaskActionNames.DEFINE_ENTITY]: IDefinedEntity;
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];
+}
+
+export interface IDefinedEntity {
+  entity: string;
 }
 
 export interface IApplicationInfo {

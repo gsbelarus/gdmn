@@ -8,7 +8,6 @@ export interface ISqlQueryResponseAliases {
     field?: string;
     relation?: string;
     entity?: string;
-    attribute?: string;
   }
 }
 
@@ -48,19 +47,10 @@ export class SqlQueryCursor extends ACursor {
         field,
         relation
       };
-      if (relation && field) {
-        for (const entity of Object.values(this.erModel.entities)) {
-          // TODO check base entity and cross tables
-          if (entity.adapter!.relation.some((rel) => rel.relationName === relation)) {
-            aliases[label].entity = entity.name;
-            for (const attribute of Object.values(entity.ownAttributes)) {
-              if (attribute.adapter.relation === relation && attribute.adapter.field1 === field) {
-                aliases[label].attribute = attribute.name;
-                break;
-              }
-            }
-            break;
-          }
+      if (relation) {
+        const entity = this.erModel.relation2Entity[relation];
+        if (entity) {
+          aliases[label].entity = entity.name;
         }
       }
     }

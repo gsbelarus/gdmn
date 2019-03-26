@@ -109,6 +109,12 @@ export type TGetSchemaTaskCmd = TTaskCmd<TTaskActionNames.GET_SCHEMA>;
 
 export type TGetSchemaTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_SCHEMA>;
 
+// define entity
+
+export type TDefineEntityTaskCmd = TTaskCmd<TTaskActionNames.DEFINE_ENTITY>;
+
+export type TDefineEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.DEFINE_ENTITY>;
+
 // query
 
 export type TQueryTaskCmd = TTaskCmd<TTaskActionNames.QUERY>;

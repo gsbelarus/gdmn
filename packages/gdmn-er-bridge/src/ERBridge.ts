@@ -1,5 +1,5 @@
 import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams} from "gdmn-db";
-import {EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse} from "gdmn-orm";
+import {Entity, EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse} from "gdmn-orm";
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
 import {Update} from "./crud/update/Update";
@@ -10,6 +10,7 @@ import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
 import {DDLHelper} from "./ddl/DDLHelper";
 import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
+import {EntityDefiner} from "./EntityDefiner";
 
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
@@ -104,6 +105,14 @@ export class ERBridge {
       });
     }
     throw new Error("Incorrect arguments");
+  }
+
+  public static async defineEntity(connection: AConnection,
+                                   transaction: ATransaction,
+                                   erModel: ERModel,
+                                   entity: Entity,
+                                   pkValues: any[]): Promise<Entity> {
+    return await new EntityDefiner(connection, transaction, erModel).defineEntity(entity, pkValues);
   }
 
   public static async openQueryCursor(connection: AConnection,

@@ -49,6 +49,11 @@ export class Utils {
     return entity.adapter!.relation[0];
   }
 
+  public static getOwnRelation(entity: Entity): IRelation {
+    const relations = entity.adapter!.relation.filter((rel) => !rel.weak);
+    return relations[relations.length - 1];
+  }
+
   public static getMainCrossRelationName(attribute: Attribute): [] {
     return attribute.adapter!.crossRelation;
   }

@@ -1,9 +1,9 @@
+import {LName} from "gdmn-internals";
 import {semCategories2Str, SemCategory} from "gdmn-nlp";
 import {IEntityAdapter} from "../rdbadapter";
 import {IEntity} from "../serialize";
 import {IBaseSemOptions} from "../types";
 import {Attribute} from "./Attribute";
-import {LName} from "gdmn-internals";
 
 export interface IAttributes {
   [name: string]: Attribute;
@@ -49,6 +49,13 @@ export class Entity {
     } else {
       return this.ownUnique;
     }
+  }
+
+  get baseParent(): Entity {
+    if (this.parent) {
+      return this.parent.baseParent;
+    }
+    return this;
   }
 
   get ownUnique(): Attribute[][] {

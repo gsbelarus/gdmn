@@ -30,6 +30,7 @@ export type AppAction =
   | "INTERRUPT"
   | "RELOAD_SCHEMA"
   | "GET_SCHEMA"
+  | "DEFINE_ENTITY"
   | "QUERY"
   | "SQL_QUERY"
   | "PREPARE_QUERY"
@@ -47,6 +48,7 @@ export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildPr
 export type InterruptCmd = AppCmd<"INTERRUPT", { taskKey: string }>;
 export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>;
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
+export type DefineEntityCmd = AppCmd<"DEFINE_ENTITY", { entity: string, pkValues: any[] }>;
 export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector }>;
 export type SqlQueryCmd = AppCmd<"SQL_QUERY", { select: string, params: IParams }>;
 export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
@@ -239,6 +241,35 @@ export class Application extends ADatabase {
         const {withAdapter} = context.command.payload;
 
         return this.erModel.serialize(withAdapter);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushDefineEntityCmd(session: Session, command: DefineEntityCmd): Task<DefineEntityCmd, { entity: string }> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {entity: entityName, pkValues} = context.command.payload;
+
+        const entity = await context.session.executeConnection((connection) => (
+          ERBridge.defineEntity(
+            connection,
+            connection.readTransaction,
+            this.erModel,
+            this.erModel.entity(entityName),
+            pkValues
+          )
+        ));
+        return {entity: entity.name};
       }
     });
     session.taskManager.add(task);

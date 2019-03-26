@@ -78,7 +78,7 @@ export class ERModel {
       }
 
       if (entity.adapter) {
-        const distinctRelation = entity.adapter.relation.filter( r => !r.weak ).reverse()[0];
+        const distinctRelation = entity.adapter.relation.filter((r) => !r.weak).reverse()[0];
 
         if (!distinctRelation || !distinctRelation.relationName) {
           throw new Error(`Invalid entity adapter`);

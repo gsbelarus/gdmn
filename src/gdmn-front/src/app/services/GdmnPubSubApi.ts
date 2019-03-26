@@ -30,6 +30,7 @@ import {
   TGdmnTopic,
   TGetAppsTaskCmdResult,
   TGetSchemaTaskCmdResult,
+  TDefineEntityTaskCmdResult,
   TInterruptTaskCmdResult,
   TPingTaskCmdResult,
   TPrepareQueryTaskCmdResult,
@@ -202,6 +203,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.GET_SCHEMA,
+        payload
+      }
+    });
+  }
+
+  public defineEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.DEFINE_ENTITY]): Promise<TDefineEntityTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.DEFINE_ENTITY,
         payload
       }
     });

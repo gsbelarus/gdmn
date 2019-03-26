@@ -2,6 +2,7 @@ import {
   AppAction,
   Application,
   CreateCmd,
+  DefineEntityCmd,
   DeleteCmd,
   DemoCmd,
   FetchQueryCmd,
@@ -48,6 +49,15 @@ export class AppCommandProvider {
       && !!command.payload
       && "taskKey" in command.payload
       && typeof command.payload.taskKey === "string";
+  }
+
+  private static _verifyDefineEntityCmd(command: ICmd<AppAction, any>): command is DefineEntityCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "entity" in command.payload
+      && typeof command.payload.entity === "string"
+      && "pkValues" in command.payload
+      && Array.isArray(command.payload.pkValues);
   }
 
   private static _verifyQueryCmd(command: ICmd<AppAction, any>): command is QueryCmd {
@@ -154,6 +164,12 @@ export class AppCommandProvider {
       }
       case "GET_SCHEMA": {
         return this._application.pushGetSchemaCmd(session, command as GetSchemaCmd);
+      }
+      case "DEFINE_ENTITY": {
+        if (!AppCommandProvider._verifyDefineEntityCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushDefineEntityCmd(session, command);
       }
       case "QUERY": {
         if (!AppCommandProvider._verifyQueryCmd(command)) {

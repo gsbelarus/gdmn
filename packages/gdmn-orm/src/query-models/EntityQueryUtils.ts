@@ -1,8 +1,8 @@
-import {IEntityQueryResponse, IEntityQueryResponseFieldAliases} from "../index";
+import {IEntityQueryResponse, IEntityQueryResponseFieldAliases, IEntityQueryResponseRow} from "./EntityQuery";
 
-export class Utils {
+export class EntityQueryUtils {
 
-  public static findAttrValue<R>(row: any,
+  public static findAttrValue<R>(row: IEntityQueryResponseRow,
                                  aliases: IEntityQueryResponseFieldAliases,
                                  linkAlias: string,
                                  attribute: string,

@@ -9,6 +9,7 @@ import {
   Entity,
   EntityAttribute,
   EntityQuery,
+  EntityQueryUtils,
   EnumAttribute,
   ERModel,
   FloatAttribute,
@@ -21,8 +22,7 @@ import {
   SetAttribute,
   StringAttribute,
   TimeAttribute,
-  TimeStampAttribute,
-  Utils
+  TimeStampAttribute
 } from "gdmn-orm";
 import moment from "moment";
 import {resolve} from "path";
@@ -834,20 +834,20 @@ describe("ERBridge", () => {
     const result = await ERBridge.query(connection, connection.readTransaction, entityQuery!);
     expect(
       result.data.map((row) => {
-        const host = Utils.findAttrValue(row, result.aliases, "s", "HOST");
-        const port = Utils.findAttrValue(row, result.aliases, "s", "PORT");
+        const host = EntityQueryUtils.findAttrValue(row, result.aliases, "s", "HOST");
+        const port = EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PORT");
 
         return {
-          alias: Utils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
-          id: Utils.findAttrValue(row, result.aliases, "s", "ID"),
-          uid: Utils.findAttrValue(row, result.aliases, "s", "UID"),
-          creationDate: Utils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
-          ownerKey: Utils.findAttrValue(row, result.aliases, "au", "ID"),
-          external: Utils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
+          alias: EntityQueryUtils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
+          id: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "ID"),
+          uid: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "UID"),
+          creationDate: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
+          ownerKey: EntityQueryUtils.findAttrValue(row, result.aliases, "au", "ID"),
+          external: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
           server: host && port ? {host, port} : undefined,
-          username: Utils.findAttrValue(row, result.aliases, "s", "USERNAME"),
-          password: Utils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
-          path: Utils.findAttrValue(row, result.aliases, "s", "PATH")
+          username: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "USERNAME"),
+          password: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
+          path: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PATH")
         };
       })
     ).toEqual([{
@@ -919,12 +919,12 @@ describe("ERBridge", () => {
     const resultQuery = await ERBridge.query(connection, connection.readTransaction, entityQueryUser!);
     expect(
       resultQuery.data.map((row) => ({
-        id: Utils.findAttrValue<number>(row, resultQuery.aliases, "user", "ID"),
-        login: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "LOGIN"),
-        passwordHash: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "PASSWORD_HASH"),
-        salt: Utils.findAttrValue<string>(row, resultQuery.aliases, "user", "SALT"),
-        creationDate: Utils.findAttrValue<Date>(row, resultQuery.aliases, "user", "CREATIONDATE"),
-        admin: Utils.findAttrValue<boolean>(row, resultQuery.aliases, "user", "IS_ADMIN")
+        id: EntityQueryUtils.findAttrValue<number>(row, resultQuery.aliases, "user", "ID"),
+        login: EntityQueryUtils.findAttrValue<string>(row, resultQuery.aliases, "user", "LOGIN"),
+        passwordHash: EntityQueryUtils.findAttrValue<string>(row, resultQuery.aliases, "user", "PASSWORD_HASH"),
+        salt: EntityQueryUtils.findAttrValue<string>(row, resultQuery.aliases, "user", "SALT"),
+        creationDate: EntityQueryUtils.findAttrValue<Date>(row, resultQuery.aliases, "user", "CREATIONDATE"),
+        admin: EntityQueryUtils.findAttrValue<boolean>(row, resultQuery.aliases, "user", "IS_ADMIN")
       }))
     ).toEqual([{
       id: 50,
