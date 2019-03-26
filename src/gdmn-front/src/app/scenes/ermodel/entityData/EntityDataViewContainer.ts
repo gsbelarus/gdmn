@@ -39,6 +39,25 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>, ownProps) => ({
+      onEdit: (url: string, pkSet: string) => thunkDispatch(async (dispatch, getState) => {
+        const erModel = getState().gdmnState.erModel;
+        const entityName = ownProps.match ? ownProps.match.params.entityName : "";
+        const pkValues = pkSet.split("-");
+
+        const result = await apiService.defineEntity({
+          entity: erModel.entity(entityName).name,
+          pkValues
+        });
+
+        if (!getState().rsMeta[entityName]) return;
+
+        const entity = erModel.entity(result.payload.result!.entity);
+        if (entityName !== entity.name) {
+          ownProps.history!.push(url.replace(entityName, entity.name));
+        } else {
+          ownProps.history!.push(url);
+        }
+      }),
       attachRs: () => thunkDispatch((dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 

@@ -1,12 +1,10 @@
-import {TTaskStatus} from "@gdmn/server-api";
+import {disposeMutex, getMutex} from "@src/app/components/dataViewMutexes";
 import {IViewProps, View} from "@src/app/components/View";
-import {apiService} from "@src/app/services/apiService";
-import {EntityLink, EntityQuery, EntityQueryField, EntityQueryOptions, ERModel, ScalarAttribute} from "gdmn-orm";
-import {IDataRow, RecordSet} from "gdmn-recordset";
-import {List} from "immutable";
+import {Semaphore} from "gdmn-internals";
+import {ERModel} from "gdmn-orm";
+import {RecordSet} from "gdmn-recordset";
 import {ICommandBarItemProps, TextField} from "office-ui-fabric-react";
 import React, {Fragment} from "react";
-import {attr2fd} from "../entityData/utils";
 
 export enum DlgState {
   dsBrowse,
@@ -21,16 +19,16 @@ export interface IDlgViewMatchParams {
 
 export interface IDlgViewProps extends IViewProps<IDlgViewMatchParams> {
   src?: RecordSet;
+  rs?: RecordSet;
   erModel: ERModel;
   dlgState: DlgState;
+  attachRs: (mutex?: Semaphore) => void;
 }
 
 export interface IDlgViewState {
-  rs?: RecordSet;
 }
 
 export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchParams> {
-  state: IDlgViewState = {};
 
   public getViewCaption(): string {
     if (this.props.match) {
@@ -38,6 +36,24 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
     } else {
       return "";
     }
+  }
+
+  public getDataViewKey() {
+    return this.getRecordSetList()[0];
+  }
+
+  public getRecordSetList() {
+    const {entityName, pkSet} = this.props.match.params;
+
+    if (!entityName || !pkSet) {
+      throw new Error("Invalid entity name or pk values");
+    }
+
+    return [`${entityName}/${pkSet}`];
+  }
+
+  public isDataLoaded(): boolean {
+    return !!this.props.rs;
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -59,71 +75,38 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
     ];
   }
 
-  public async componentDidMount() {
-    const {entityName, pkSet} = this.props.match.params;
-    const {erModel} = this.props;
-    const pkValues = pkSet.split("-");
+  public addViewTab() {
+    const {addViewTab, match} = this.props;
 
-    // TODO tmp
-    const result = await apiService.defineEntity({
-      entity: erModel.entity(entityName).name,
-      pkValues
+    addViewTab({
+      caption: this.getViewCaption(),
+      url: match.url,
+      rs: this.getRecordSetList()
     });
-    const entity = erModel.entity(result.payload.result!.entity);
-    if (entityName !== entity.name) {
-      this.props.history.replace(this.props.match.url.replace(entityName, entity.name));
+  }
+
+  public componentDidMount() {
+    const {rs} = this.props;
+    if (!rs) {
+      this.props.attachRs(getMutex(this.getDataViewKey()));
     }
+
     super.componentDidMount();
+  }
 
-    const q = new EntityQuery(
-      new EntityLink(
-        entity,
-        "z",
-        Object.values(entity.attributes)
-          .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
-          .map(attr => new EntityQueryField(attr))
-      ),
-      new EntityQueryOptions(
-        undefined,
-        undefined,
-        [{
-          equals: pkValues.map((value, index) => ({
-            alias: "z",
-            attribute: entity.pk[index],
-            value
-          }))
-        }])
-    );
-
-    const value = await apiService.query({
-      query: q.inspect()
-    });
-
-    switch (value.payload.status) {
-      case TTaskStatus.SUCCESS: {
-        const fieldDefs = Object.entries(value.payload.result!.aliases)
-          .map(([fieldAlias, data]) => {
-            const attr = entity.attributes[data.attribute];
-            if (!attr) {
-              throw new Error(`Unknown attribute ${data.attribute}`);
-            }
-            return attr2fd(q!, fieldAlias, data);
-          });
-
-        const rs = RecordSet.create({
-          name: `${entity.name}\\${pkSet}`,
-          fieldDefs,
-          data: List(value.payload.result!.data as IDataRow[]),
-          eq: q
-        });
-
-        this.setState({rs});
-      }
+  public componentDidUpdate(prevProps: IDlgViewProps) {
+    const {attachRs} = this.props;
+    if (prevProps.erModel !== this.props.erModel) {
+      attachRs(getMutex(this.getDataViewKey()));
     }
   }
 
+  public componentWillUnmount() {
+    disposeMutex(this.getDataViewKey());
+  }
+
   public render() {
-    const {rs} = this.state;
+    const {rs} = this.props;
 
     if (!rs) {
       return this.renderLoading();

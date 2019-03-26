@@ -12,7 +12,7 @@ export class SqlDataView extends DataView<ISqlDataViewProps, ISqlDataViewState> 
     return 'sql-data-view';
   }
 
-  public getRecordsetList() {
+  public getRecordSetList() {
     return ['sql'];
   }
 

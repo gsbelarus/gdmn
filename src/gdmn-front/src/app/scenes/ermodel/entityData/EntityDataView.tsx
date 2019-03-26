@@ -7,7 +7,9 @@ export interface IEntityMatchParams {
   entityName: string
 }
 
-export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> { }
+export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
+  onEdit: (url: string, pkSet: string) => void;
+}
 
 export interface IEntityDataViewState {
   showSQL: boolean
@@ -23,10 +25,10 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
   }
 
   public getDataViewKey() {
-    return this.getRecordsetList()[0];
+    return this.getRecordSetList()[0];
   }
 
-  public getRecordsetList() {
+  public getRecordSetList() {
     const entityName = this.props.match ? this.props.match.params.entityName : '';
 
     if (!entityName) {
@@ -49,6 +51,14 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
       return items;
     }
 
+    const edit = items.find((item) => item.key === 'edit');
+    if (edit) {
+      edit.commandBarButtonAs = undefined;
+      edit.onClick = () => {
+        const pkSet = data.rs.pk2s.join('-');
+        this.props.onEdit(`${this.props.match.url}/edit/${data.rs.pk2s.join('-')}`, pkSet)
+      }
+    }
     return [...items,
       {
         key: 'sql',

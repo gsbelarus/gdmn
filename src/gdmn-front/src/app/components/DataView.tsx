@@ -56,7 +56,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
   public abstract getDataViewKey(): string;
 
-  public abstract getRecordsetList(): string[];
+  public abstract getRecordSetList(): string[];
 
   public isDataLoaded(): boolean {
     const { data } = this.props;
@@ -69,7 +69,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     addViewTab({
       caption: this.getViewCaption(),
       url: match.url,
-      rs: this.getRecordsetList()
+      rs: this.getRecordSetList()
     });
   }
 

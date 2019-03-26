@@ -22,7 +22,7 @@ export class ERModelView extends DataView<IERModelViewProps, IERModelViewState, 
     return 'ermodel';
   }
 
-  public getRecordsetList() {
+  public getRecordSetList() {
     return ['entities', 'attributes'];
   }
 
