@@ -20,10 +20,17 @@ export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonPro
     const onRenderText = supText ? (props: IButtonProps) => <>{props.text}<sup>{supText}</sup></> : undefined;
     const DefaultRender = defaultRender ? defaultRender as any : CommandBarButton;
 
-    return (
-      <Link to={link}>
-        <DefaultRender {...buttonProps} onRenderText={onRenderText} />
-      </Link>
+    const render = (
+      <DefaultRender {...buttonProps} onRenderText={onRenderText}/>
     );
+    if (buttonProps.disabled) {
+      return render;
+    } else {
+      return (
+        <Link to={link}>
+          {render}
+        </Link>
+      );
+    }
   }
 }

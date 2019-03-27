@@ -48,14 +48,20 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           entity: erModel.entity(entityName).name,
           pkValues
         });
+        switch (result.payload.status) {
+          case TTaskStatus.SUCCESS: {
+            if (!getState().rsMeta[entityName]) return;
 
-        if (!getState().rsMeta[entityName]) return;
-
-        const entity = erModel.entity(result.payload.result!.entity);
-        if (entityName !== entity.name) {
-          ownProps.history!.push(url.replace(entityName, entity.name));
-        } else {
-          ownProps.history!.push(url);
+            const entity = erModel.entity(result.payload.result!.entity);
+            if (entityName !== entity.name) {
+              ownProps.history!.push(url.replace(entityName, entity.name));
+            } else {
+              ownProps.history!.push(url);
+            }
+            break;
+          }
+          default:
+            return;
         }
       }),
       attachRs: () => thunkDispatch((dispatch, getState) => {

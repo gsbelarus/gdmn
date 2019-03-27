@@ -36,8 +36,12 @@ export class ERModelView extends DataView<IERModelViewProps, IERModelViewState, 
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
     };
 
+    const items = super.getCommandBarItems();
+    items
+      .filter((item) => item.key === "add" || item.key === "edit" || item.key === "delete")
+      .forEach((item) => item.disabled = true);
     return [
-      ...super.getCommandBarItems(),
+      ...items,
       {
         key: 'loadEntity',
         text: 'Load entity',
