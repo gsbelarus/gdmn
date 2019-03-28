@@ -1,4 +1,4 @@
-import { IEntityQueryInspector, IEntityQueryResponse, IERModel } from 'gdmn-orm';
+import { IEntityInsertInspector, IEntityUpdateInspector, IEntityDeleteInspector, IEntityQueryInspector, IEntityQueryResponse, IERModel } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 
@@ -38,6 +38,9 @@ export const enum TTaskActionNames {
   PING = 'PING',
   GET_SCHEMA = 'GET_SCHEMA',
   DEFINE_ENTITY = 'DEFINE_ENTITY',
+  INSERT = 'INSERT',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
   DELETE_APP = 'DELETE_APP',
   CREATE_APP = 'CREATE_APP',
   GET_APPS = 'GET_APPS'
@@ -110,6 +113,15 @@ export interface TTaskActionPayloadTypes {
     entity: string;
     pkValues: any[];
   };
+  [TTaskActionNames.INSERT]: {
+    insert: IEntityInsertInspector;
+  };
+  [TTaskActionNames.UPDATE]: {
+    update: IEntityUpdateInspector;
+  };
+  [TTaskActionNames.DELETE]: {
+    delete: IEntityDeleteInspector;
+  };
   [TTaskActionNames.CREATE_APP]: {
     alias: string;
     connectionOptions?: {
@@ -149,6 +161,9 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.PING]: undefined;
   [TTaskActionNames.GET_SCHEMA]: IERModel;
   [TTaskActionNames.DEFINE_ENTITY]: IDefinedEntity;
+  [TTaskActionNames.INSERT]: undefined;
+  [TTaskActionNames.UPDATE]: undefined;
+  [TTaskActionNames.DELETE]: undefined;
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];

@@ -37,7 +37,7 @@ export type AppAction =
   | "PREPARE_SQL_QUERY"
   | "FETCH_QUERY"
   | "FETCH_SQL_QUERY"
-  | "CREATE"
+  | "INSERT"
   | "UPDATE"
   | "DELETE";
 
@@ -55,7 +55,7 @@ export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspe
 export type PrepareSqlQueryCmd = AppCmd<"PREPARE_SQL_QUERY", { select: string, params: IParams }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 export type FetchSqlQueryCmd = AppCmd<"FETCH_SQL_QUERY", { taskKey: string, rowsCount: number }>;
-export type CreateCmd = AppCmd<"CREATE", { create: IEntityInsertInspector }>;
+export type InsertCmd = AppCmd<"INSERT", { insert: IEntityInsertInspector }>;
 export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
 export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 
@@ -524,7 +524,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushCreateCmd(session: Session, command: CreateCmd): Task<CreateCmd, void> {
+  public pushInsertCmd(session: Session, command: InsertCmd): Task<InsertCmd, void> {
     const task = new Task({
       session,
       command,
@@ -534,9 +534,9 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {create} = context.command.payload;
+        const {insert} = context.command.payload;
 
-        const entityInsert = EntityInsert.inspectorToObject(this.erModel, create);
+        const entityInsert = EntityInsert.inspectorToObject(this.erModel, insert);
 
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,

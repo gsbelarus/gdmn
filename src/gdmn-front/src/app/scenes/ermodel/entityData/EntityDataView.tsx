@@ -8,7 +8,8 @@ export interface IEntityMatchParams {
 }
 
 export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  onEdit: (url: string, pkSet: string) => void;
+  onEdit: (url: string) => void;
+  onDelete: () => void;
 }
 
 export interface IEntityDataViewState {
@@ -55,9 +56,12 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
     if (edit) {
       edit.commandBarButtonAs = undefined;
       edit.onClick = () => {
-        const pkSet = data.rs.pk2s.join('-');
-        this.props.onEdit(`${this.props.match.url}/edit/${data.rs.pk2s.join('-')}`, pkSet)
+        this.props.onEdit(`${this.props.match.url}/edit/${data.rs.pk2s.join('-')}`)
       }
+    }
+    const deleteItem = items.find((item) => item.key === 'delete');
+    if (deleteItem) {
+      deleteItem.onClick = this.props.onDelete;
     }
     return [...items,
       {

@@ -1,13 +1,13 @@
 import {
   AppAction,
   Application,
-  CreateCmd,
   DefineEntityCmd,
   DeleteCmd,
   DemoCmd,
   FetchQueryCmd,
   FetchSqlQueryCmd,
   GetSchemaCmd,
+  InsertCmd,
   InterruptCmd,
   PingCmd,
   PrepareQueryCmd,
@@ -112,11 +112,11 @@ export class AppCommandProvider {
       && typeof command.payload.rowsCount === "number";
   }
 
-  private static _verifyCreateCmd(command: ICmd<AppAction, any>): command is CreateCmd {
+  private static _verifyInsertCmd(command: ICmd<AppAction, any>): command is InsertCmd {
     return typeof command.payload === "object"
       && !!command.payload
-      && "create" in command.payload
-      && typeof command.payload.create === "object";
+      && "insert" in command.payload
+      && typeof command.payload.insert === "object";
     // TODO
   }
 
@@ -207,11 +207,11 @@ export class AppCommandProvider {
         }
         return this._application.pushFetchSqlQueryCmd(session, command);
       }
-      case "CREATE": {
-        if (!AppCommandProvider._verifyCreateCmd(command)) {
+      case "INSERT": {
+        if (!AppCommandProvider._verifyInsertCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
-        return this._application.pushCreateCmd(session, command);
+        return this._application.pushInsertCmd(session, command);
       }
       case "UPDATE": {
         if (!AppCommandProvider._verifyUpdateCmd(command)) {

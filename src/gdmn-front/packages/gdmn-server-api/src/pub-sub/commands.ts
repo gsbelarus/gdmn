@@ -145,6 +145,24 @@ export type TFetchSqlQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_SQL_QUERY>;
 
 export type TFetchSqlQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.FETCH_SQL_QUERY>;
 
+// insert item
+
+export type TInsertTaskCmd = TTaskCmd<TTaskActionNames.INSERT>;
+
+export type TInsertTaskCmdResult = TTaskCmdResult<TTaskActionNames.INSERT>;
+
+// update item
+
+export type TUpdateTaskCmd = TTaskCmd<TTaskActionNames.UPDATE>;
+
+export type TUpdateTaskCmdResult = TTaskCmdResult<TTaskActionNames.UPDATE>;
+
+// delete item
+
+export type TDeleteTaskCmd = TTaskCmd<TTaskActionNames.DELETE>;
+
+export type TDeleteTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE>;
+
 // create app task
 
 export type TCreateAppTaskCmd = TTaskCmd<TTaskActionNames.CREATE_APP>;

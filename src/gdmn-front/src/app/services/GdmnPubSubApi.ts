@@ -50,7 +50,10 @@ import {
   TTaskActionPayloadTypes,
   TTaskCmd,
   TTaskCmdResult,
-  TTaskResultMessageData
+  TTaskResultMessageData,
+  TInsertTaskCmdResult,
+  TUpdateTaskCmdResult,
+  TDeleteTaskCmdResult
 } from '@gdmn/server-api';
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -266,6 +269,33 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.FETCH_SQL_QUERY,
+        payload
+      }
+    });
+  }
+
+  public insert(payload: TTaskActionPayloadTypes[TTaskActionNames.INSERT]): Promise<TInsertTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.INSERT,
+        payload
+      }
+    });
+  }
+
+  public update(payload: TTaskActionPayloadTypes[TTaskActionNames.UPDATE]): Promise<TUpdateTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.UPDATE,
+        payload
+      }
+    });
+  }
+
+  public delete(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE]): Promise<TDeleteTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.DELETE,
         payload
       }
     });

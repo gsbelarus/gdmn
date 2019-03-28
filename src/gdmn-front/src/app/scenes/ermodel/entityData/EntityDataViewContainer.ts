@@ -39,25 +39,45 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>, ownProps) => ({
-      onEdit: (url: string, pkSet: string) => thunkDispatch(async (dispatch, getState) => {
+      onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
-        const pkValues = pkSet.split("-");
+        const rs = getState().recordSet[name];
+        if (!rs) return;
 
         const result = await apiService.defineEntity({
           entity: erModel.entity(entityName).name,
-          pkValues
+          pkValues: rs.pk2s
         });
         switch (result.payload.status) {
           case TTaskStatus.SUCCESS: {
-            if (!getState().rsMeta[entityName]) return;
-
             const entity = erModel.entity(result.payload.result!.entity);
             if (entityName !== entity.name) {
               ownProps.history!.push(url.replace(entityName, entity.name));
             } else {
               ownProps.history!.push(url);
             }
+            break;
+          }
+          default:
+            return;
+        }
+      }),
+      onDelete: () => thunkDispatch(async (dispatch, getState) => {
+        const entityName = ownProps.match ? ownProps.match.params.entityName : "";
+        const rs = getState().recordSet[entityName];
+        if (!rs) return;
+
+        const result = await apiService.delete({
+          delete: {
+            entity: entityName,
+            pkValue: rs.pk2s
+          }
+        });
+        switch (result.payload.status) {
+          case TTaskStatus.SUCCESS: {
+            // TODO
+            alert("Successful, please update RecordSet (tmp)");
             break;
           }
           default:
