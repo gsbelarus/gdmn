@@ -116,7 +116,7 @@ export class AppCommandProvider {
     return typeof command.payload === "object"
       && !!command.payload
       && "create" in command.payload
-      && typeof command.payload.query === "object";
+      && typeof command.payload.create === "object";
     // TODO
   }
 
@@ -124,7 +124,7 @@ export class AppCommandProvider {
     return typeof command.payload === "object"
       && !!command.payload
       && "update" in command.payload
-      && typeof command.payload.query === "object";
+      && typeof command.payload.update === "object";
     // TODO
   }
 
@@ -132,7 +132,7 @@ export class AppCommandProvider {
     return typeof command.payload === "object"
       && !!command.payload
       && "delete" in command.payload
-      && typeof command.payload.query === "object";
+      && typeof command.payload.delete === "object";
     // TODO
   }
 
