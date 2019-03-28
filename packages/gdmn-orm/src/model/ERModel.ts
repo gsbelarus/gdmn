@@ -78,9 +78,9 @@ export class ERModel {
       }
 
       if (entity.adapter) {
-        const distinctRelation = entity.adapter.relation.filter((r) => !r.weak).reverse()[0];
+        const ownRelation = entity.adapter.relation.filter((r) => !r.weak).reverse()[0];
 
-        if (!distinctRelation || !distinctRelation.relationName) {
+        if (!ownRelation || !ownRelation.relationName) {
           throw new Error(`Invalid entity adapter`);
         }
 
@@ -88,8 +88,8 @@ export class ERModel {
          * мы полагаемся на то, что базовые (родительские) сущности будут создаваться
          * первее наследованных.
          */
-        if (!this._relation2Entity[distinctRelation.relationName]) {
-          this._relation2Entity[distinctRelation.relationName] = entity;
+        if (!this._relation2Entity[ownRelation.relationName]) {
+          this._relation2Entity[ownRelation.relationName] = entity;
         }
       }
 

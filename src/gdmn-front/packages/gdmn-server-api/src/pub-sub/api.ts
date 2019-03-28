@@ -139,11 +139,11 @@ export type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTy
 export interface TTaskActionResultTypes {
   [TTaskActionNames.DEMO]: undefined;
   [TTaskActionNames.QUERY]: IEntityQueryResponse;
-  [TTaskActionNames.SQL_QUERY]: any;  // TODO make type
+  [TTaskActionNames.SQL_QUERY]: ISqlQueryResponse;
   [TTaskActionNames.PREPARE_QUERY]: undefined;
   [TTaskActionNames.PREPARE_SQL_QUERY]: undefined;
   [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse;
-  [TTaskActionNames.FETCH_SQL_QUERY]: any;  // TODO make type
+  [TTaskActionNames.FETCH_SQL_QUERY]: ISqlQueryResponse;
   [TTaskActionNames.INTERRUPT]: undefined;
   [TTaskActionNames.RELOAD_SCHEMA]: IERModel;
   [TTaskActionNames.PING]: undefined;
@@ -152,6 +152,33 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];
+}
+
+export interface ISqlQueryResponseDataItem {
+  [alias: string]: any;
+}
+
+export interface ISqlQueryResponseAliasesRdb {
+  type: number;   // TODO number to enum
+  field?: string;
+  relation?: string;
+}
+
+export interface ISqlQueryResponseAliasesOrm {
+  type: string;
+  entity?: string;
+}
+
+export interface ISqlQueryResponseAliases {
+  [alias: string]: {
+    rdb: ISqlQueryResponseAliasesRdb;
+    orm?: ISqlQueryResponseAliasesOrm;
+  }
+}
+
+export interface ISqlQueryResponse {
+  data: ISqlQueryResponseDataItem[];
+  aliases: ISqlQueryResponseAliases;
 }
 
 export interface IDefinedEntity {

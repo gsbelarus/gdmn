@@ -1,13 +1,22 @@
 import {AConnection, AResultSet, ATransaction, IParams, Types} from "gdmn-db";
-import {ERModel} from "gdmn-orm";
+import {Attribute, AttributeTypes, Entity, EntityAttribute, ERModel, ScalarAttribute} from "gdmn-orm";
 import {ACursor, IFetchResponseDataItem} from "./ACursor";
+
+export interface ISqlQueryResponseAliasesRdb {
+  type: Types;
+  field?: string;
+  relation?: string;
+}
+
+export interface ISqlQueryResponseAliasesOrm {
+  type: AttributeTypes;
+  entity?: string;
+}
 
 export interface ISqlQueryResponseAliases {
   [alias: string]: {
-    type: Types;
-    field?: string;
-    relation?: string;
-    entity?: string;
+    rdb: ISqlQueryResponseAliasesRdb,
+    orm?: ISqlQueryResponseAliasesOrm;
   }
 }
 
@@ -42,15 +51,30 @@ export class SqlQueryCursor extends ACursor {
       const type = metadata.getColumnType(i);
       const relation = metadata.getColumnRelation(i);
       const field = metadata.getColumnName(i);
+
       aliases[label] = {
-        type,
-        field,
-        relation
+        rdb: {
+          type,
+          relation,
+          field
+        }
       };
-      if (relation) {
+
+      if (relation && field) {
         const entity = this.erModel.relation2Entity[relation];
         if (entity) {
-          aliases[label].entity = entity.name;
+          const attribute = this._defineAttribute(entity, relation, field);
+          if (attribute) {
+            const orm: ISqlQueryResponseAliasesOrm = {
+              type: attribute.type
+            };
+            if (attribute instanceof EntityAttribute) {
+              orm.entity = attribute.entities[0].name;
+            } else if (entity.pk.includes(attribute)) {
+              orm.entity = entity.name;
+            }
+            aliases[label].orm = orm;
+          }
         }
       }
     }
@@ -59,5 +83,34 @@ export class SqlQueryCursor extends ACursor {
       data,
       aliases
     };
+  }
+
+  private _defineAttribute(entity: Entity, relation: string, field: string): Attribute | undefined {
+    const attribute = Object.values(entity.ownAttributes).find((attr) => {
+      if (attr instanceof ScalarAttribute) {
+        return attr.adapter.relation === relation && attr.adapter.field === field;
+
+      } else if (attr instanceof EntityAttribute) {
+        switch (attr.type) {
+          case "Entity":
+            return attr.adapter.relation === relation && attr.adapter.field === field;
+          default:
+            return false;
+        }
+      }
+      return false;
+    });
+
+    if (attribute) {
+      return attribute;
+    }
+
+    const children0 = Object.values(this.erModel.entities).filter((e) => e.parent === entity);
+    for (const child of children0) {
+      const definedAttribute = this._defineAttribute(child, relation, field);
+      if (definedAttribute) {
+        return definedAttribute;
+      }
+    }
   }
 }
