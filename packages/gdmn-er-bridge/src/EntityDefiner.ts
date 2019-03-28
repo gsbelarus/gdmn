@@ -63,11 +63,8 @@ export class EntityDefiner {
     if (mainRelation.selector) {
       if (mainRelation.selector.value === selectorValue) {
         const ownRelation = Utils.getOwnRelation(entity);
-        const pk = ownRelation.pk!.map((item, index) => ({
-          field: item,
-          value: pkValues[index]
-        }));
-        if (await this._exists(ownRelation.relationName, pk)) {
+        const pkName = Utils.getPKFieldName(entity, ownRelation.relationName);
+        if (await this._exists(ownRelation.relationName, [{field: pkName, value: pkValues[0]}])) {
           return entity;
         }
       }
@@ -85,11 +82,8 @@ export class EntityDefiner {
     }
 
     const ownRelation = Utils.getOwnRelation(entity);
-    const pk = ownRelation.pk!.map((item, index) => ({
-      field: item,
-      value: pkValues[index]
-    }));
-    if (await this._exists(ownRelation.relationName, pk)) {
+    const pkName = Utils.getPKFieldName(entity, ownRelation.relationName);
+    if (await this._exists(ownRelation.relationName, [{field: pkName, value: pkValues[0]}])) {
       return entity;
     }
   }
