@@ -12,6 +12,7 @@ import { TActions } from '@src/app/store/TActions';
 import { IAuthState, reducer as authReducer } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
 import { ISqlState, reducer as sqlReducer} from '@src/app/scenes/sql/reducer';
+import { ISqlDataViewState, reducer as sqlDataViewReducer} from '@src/app/scenes/sql/data/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
@@ -62,6 +63,7 @@ interface IState {
   readonly authState: IAuthState;
   readonly gdmnState: TGdmnState;
   readonly sqlState: ISqlState;
+  readonly sqlDataViewState: ISqlDataViewState;
   readonly recordSet: RecordSetReducerState;
   readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
@@ -87,6 +89,7 @@ const reducer = combineReducers<IState>({
   rootState: withReset(rootReducer),
   gdmnState: withReset(gdmnReducer),
   authState: persistReducer(authPersistConfig, withReset(authReducer)),
+  sqlDataViewState: withReset(sqlDataViewReducer),
   sqlState: withReset(sqlReducer),
   recordSet: withReset(recordSetReducer),
   rsMeta: withReset(rsMetaReducer),

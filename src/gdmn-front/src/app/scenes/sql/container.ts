@@ -8,6 +8,7 @@ import {IState} from "@src/app/store/reducer";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
+import uuid from "uuid";
 
 export const SqlViewContainer = compose<any, RouteComponentProps<any>>(
   connectView,
@@ -20,9 +21,12 @@ export const SqlViewContainer = compose<any, RouteComponentProps<any>>(
         dispatch(init(viewTab.url));
         ownProps.addViewTab(viewTab); // call super
       },
-      run: () => {
-        dispatch(createQuery())
-        console.log("run")
+      run: (expression: string) => {
+        const id = uuid();
+        dispatch(createQuery(expression, id))
+        console.log("run");
+        // sql/data-view?id=${id}
+        ownProps.addViewTab({caption: 'SQL Data View', url: `sql/data-view`});
       },
       clear: () => dispatch(clear()),
       onChange: (ev: any, text?: string) => dispatch(setExpression(text || ""))

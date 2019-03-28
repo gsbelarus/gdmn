@@ -6,7 +6,7 @@ import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 
 export interface ISqlViewProps extends IViewProps {
   expression: string;
-  run: () => void;
+  run: (expression: string) => void;
   clear: () => void;
   onChange: (ev: any, text?: string) => void;
 }
@@ -19,9 +19,9 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
-    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+ /*    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
-    };
+    }; */
     const items = super.getCommandBarItems();
 
     items.push({
@@ -30,9 +30,8 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
       iconProps: {
         iconName: 'Play'
       },
+      onClick: () => this.props.run(this.props.expression),
       // commandBarButtonAs: btn('sql/data-view')
-      onClick: this.props.run,
-
     });
     items.push({
       key: 'clear',
