@@ -176,7 +176,7 @@ describe("EntityQuery", () => {
           attribute: "SET_LINK",
           value: [
             {
-              value: 36,
+              pkValues: [36],
               setAttributes: [{attribute: "TOTAL", value: "111"}]
             }
           ]
@@ -190,7 +190,7 @@ describe("EntityQuery", () => {
   it("Delete: serialize/deserialize", () => {
     const inspectorDelete: IEntityDeleteInspector = {
       entity: "CHILD_ENTITY",
-      pkValue: [36]
+      pkValues: [36]
     };
 
     expect(inspectorDelete).toEqual(EntityDelete.inspectorToObject(erModel, inspectorDelete).inspect());
@@ -212,13 +212,13 @@ describe("EntityQuery", () => {
           attribute: "SET_LINK",
           value: [
             {
-              value: 36,
+              pkValues: [36],
               setAttributes: [{attribute: "TEST_INTEGER", value: "111"}]
             }
           ]
         }
       ],
-      pkValue: 36
+      pkValues: [36]
     };
 
     expect(inspectorUpdate).toEqual(EntityUpdate.inspectorToObject(erModel, inspectorUpdate).inspect());

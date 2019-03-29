@@ -19,7 +19,7 @@ export class Delete {
   }
 
   private _getDelete(query: EntityDelete): string {
-    const {entity, pkValue} = query;
+    const {entity, pkValues} = query;
 
     let sql = `DELETE`;
 
@@ -29,7 +29,7 @@ export class Delete {
 
     const PKFieldName = AdapterUtils.getPKFieldName(entity, mainRelationName.relationName);
 
-    sql += `\nWHERE ${PKFieldName} = ${this._addToParams(pkValue)}`;
+    sql += `\nWHERE ${PKFieldName} = ${this._addToParams(pkValues)}`;
 
     return sql;
   }

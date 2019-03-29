@@ -1,18 +1,18 @@
 import {existsSync, unlinkSync} from "fs";
 import {AConnection, Factory, IConnectionOptions} from "gdmn-db";
 import {
-  DetailAttribute,
-  Entity,
-  EntityAttribute,
-  EntityUpdate,
-  ERModel,
-  ParentAttribute,
-  SetAttribute,
-  StringAttribute
+    DetailAttribute,
+    Entity,
+    EntityAttribute,
+    EntityInsert,
+    EntityUpdate,
+    ERModel,
+    ParentAttribute,
+    SetAttribute,
+    StringAttribute
 } from "gdmn-orm";
 import {resolve} from "path";
-import {ERBridge} from "../../src";
-import {Update} from "../../src/crud/update/Update";
+import {ERBridge, Update} from "gdmn-er-bridge";
 
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
@@ -28,6 +28,7 @@ describe("Update", () => {
   const erModel = new ERModel();
   const connection = Factory.FBDriver.newConnection();
   let setAttributeTableName = "";
+  let childID = 0;
 
   beforeAll(async () => {
     if (existsSync(dbOptions.path)) {
@@ -97,6 +98,10 @@ describe("Update", () => {
               name: "TOTAL",
               lName: {}
             }));
+              setAttr.add(new StringAttribute({
+                  name: "ALIES",
+                  lName: {}
+              }));
 
 
             const setAttribute = await eBuilder.createAttribute(ChildEntity, setAttr);
@@ -108,6 +113,36 @@ describe("Update", () => {
               lName: {},
               entities: [DetailEntity]
             }));
+
+              const entityInsert = EntityInsert.inspectorToObject(erModel, {
+                  entity: "CHILD_ENTITY",
+                  fields: [{
+                          attribute: "TEST_STRING1",
+                          value: "asdasdas"
+                      }]
+              });
+
+              const result = await AConnection.executeTransaction({
+                  connection,
+                  callback: (transaction) => ERBridge.insert(connection, transaction, entityInsert)
+              });
+              childID = result[0];
+
+              const entityUpdate = EntityUpdate.inspectorToObject(erModel, {
+                  entity: "CHILD_ENTITY",
+                  fields: [{
+                          attribute: "SET_LINK",
+                          value: [{
+                            pkValues: [childID],
+                            setAttributes: [{attribute: "TOTAL", value: "111"},{attribute: "ALIES", value: "111"} ]
+                          }]
+                      }],
+                  pkValues: [childID]
+              });
+              await AConnection.executeTransaction({
+                  connection,
+                  callback: (transaction) => ERBridge.update(connection, transaction, entityUpdate)
+              });
           }
         });
       }
@@ -117,7 +152,6 @@ describe("Update", () => {
   afterAll(async () => {
     await connection.dropDatabase();
   });
-
   it("Update: two string", async () => {
 
     const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
@@ -132,7 +166,7 @@ describe("Update", () => {
           value: "asa"
         }
       ],
-      pkValue: 36
+      pkValues: [36]
 
     }));
 
@@ -165,7 +199,7 @@ describe("Update", () => {
           value: "asas"
         }
       ],
-      pkValue: 36
+      pkValues: [36]
 
     }));
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(3) = :P$1, P$2 VARCHAR(4) = :P$2, ParentID INTEGER = :ParentID)\n" +
@@ -202,7 +236,7 @@ describe("Update", () => {
         }
 
       ],
-      pkValue: 36
+      pkValues: [36]
     }));
     expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 VARCHAR(3) = :P$2, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
@@ -234,7 +268,7 @@ describe("Update", () => {
           value: 36
         }
       ],
-      pkValue: 36
+      pkValues: [36]
 
     }));
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1, P$2 INTEGER = :P$2, ParentID INTEGER = :ParentID)\n" +
@@ -265,7 +299,7 @@ describe("Update", () => {
             value: [11]
           }
         ],
-        pkValue: 36
+        pkValues: [36]
 
       }));
     }).toThrowError(new Error("Attribute Detail not support yet"));
@@ -280,21 +314,25 @@ describe("Update", () => {
           attribute: "SET_LINK",
           value: [
             {
-              value: 36,
+              pkValues: [childID],
               setAttributes: [{attribute: "TOTAL", value: "111"}]
+
             }
           ]
         }
       ],
-      pkValue: 36
+      pkValues: [childID]
     }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 VARCHAR(3) = :P$2, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
-      `  UPDATE ${setAttributeTableName} SET\n` +
-      "  TOTAL = :P$1\n" +
-      "  WHERE KEY1 = :ParentID;\n" +
+      `  DELETE\n` +
+      `  FROM ${setAttributeTableName}\n` +
+      `  WHERE KEY1 = :ParentID;\n` +
+      "\n" +
+      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      "  VALUES(:ParentID, :P$1, :P$2);\n" +
       "END");
     await AConnection.executeTransaction({
       connection,
@@ -313,26 +351,26 @@ describe("Update", () => {
         },
         {
           attribute: "PARENT",
-          value: 36
+          value: childID
         },
         {
           attribute: "LINK",
-          value: 36
+          value: childID
         },
         {
           attribute: "SET_LINK",
           value: [
             {
-              value: 36,
+              pkValues: [childID],
               setAttributes: [{attribute: "TOTAL", value: "111"}]
             }
           ]
         }
       ],
-      pkValue: 36
+      pkValues: [childID]
     }));
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1," +
-      " P$2 INTEGER = :P$2, P$3 INTEGER = :P$3, P$4 INTEGER = :P$4, ParentID INTEGER = :ParentID)\n" +
+      " P$2 INTEGER = :P$2, P$3 INTEGER = :P$3, P$4 INTEGER = :P$4, P$5 VARCHAR(3) = :P$5, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
@@ -340,9 +378,12 @@ describe("Update", () => {
       "  TEST_STRING1 = :P$1, PARENT = :P$2, LINK = :P$3\n" +
       "  WHERE INHERITEDKEY = :ParentID;\n" +
       "\n" +
-      `  UPDATE ${setAttributeTableName} SET\n` +
-      "  TOTAL = :P$4\n" +
+      "  DELETE\n" +
+      "  FROM TABLE_18\n" +
       "  WHERE KEY1 = :ParentID;\n" +
+      "\n" +
+      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      "  VALUES(:ParentID, :P$4, :P$5);\n" +
       "END");
 
 
@@ -351,7 +392,7 @@ describe("Update", () => {
       callback: (transaction) => connection.execute(transaction, sql, params)
     });
   });
-
+  //
   it("Update: not tree ", async () => {
     const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
 
@@ -362,7 +403,7 @@ describe("Update", () => {
           value: "sdsd"
         }
       ],
-      pkValue: 36
+      pkValues: [36]
 
     }));
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1, ParentID INTEGER = :ParentID)\n" +

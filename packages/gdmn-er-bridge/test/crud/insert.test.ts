@@ -116,7 +116,6 @@ describe("Insert", () => {
     const sql = "EXECUTE BLOCK\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value int;\n" +
       "BEGIN\n" +
       " INSERT INTO\n" +
       " MAIN_ENTITY\n" +
@@ -158,9 +157,8 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1, P$2 VARCHAR(3) = :P$2)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY\n" +
       "  DEFAULT VALUES\n" +
@@ -168,7 +166,8 @@ describe("Insert", () => {
       "\n" +
       "  INSERT INTO CHILD_ENTITY(TEST_STRING1, TEST_STRING2, INHERITEDKEY)\n" +
       "  VALUES(:P$1, :P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
+      "  RETURNING INHERITEDKEY INTO :ID;\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({
@@ -193,9 +192,8 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(3) = :P$1, P$2 VARCHAR(4) = :P$2)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY(TEST_STRING)\n" +
       "  VALUES(:P$1)\n" +
@@ -203,7 +201,8 @@ describe("Insert", () => {
       "\n" +
       "  INSERT INTO CHILD_ENTITY(TEST_STRING1, INHERITEDKEY)\n" +
       "  VALUES(:P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
+      "  RETURNING INHERITEDKEY INTO :ID;\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({
@@ -228,9 +227,8 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 VARCHAR(3) = :P$2)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY\n" +
       "  DEFAULT VALUES\n" +
@@ -238,7 +236,8 @@ describe("Insert", () => {
       "\n" +
       "  INSERT INTO CHILD_ENTITY(LINK, TEST_STRING2, INHERITEDKEY)\n" +
       "  VALUES(:P$1, :P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
+      "  RETURNING INHERITEDKEY INTO :ID;\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({
@@ -282,9 +281,8 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 INTEGER = :P$2)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY\n" +
       "  DEFAULT VALUES\n" +
@@ -292,10 +290,11 @@ describe("Insert", () => {
       "\n" +
       "  INSERT INTO CHILD_ENTITY(INHERITEDKEY)\n" +
       "  VALUES(:ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
+      "  RETURNING INHERITEDKEY INTO :ID;\n" +
       "\n" +
       `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
-      "  VALUES(:Key1Value, :P$1, :P$2);\n" +
+      "  VALUES(:ID, :P$1, :P$2);\n" +
+      "SUSPEND;\n" +
       "END");
     await AConnection.executeTransaction({
       connection,
@@ -315,13 +314,13 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY(TEST_STRING)\n" +
       "  VALUES(:P$1)\n" +
-      "  RETURNING ID INTO :Key1Value;\n" +
+      "  RETURNING ID INTO :ID;\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({
@@ -346,9 +345,8 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1, P$2 INTEGER = :P$2)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY\n" +
       "  DEFAULT VALUES\n" +
@@ -356,7 +354,8 @@ describe("Insert", () => {
       "\n" +
       "  INSERT INTO CHILD_ENTITY(TEST_STRING1, PARENT, INHERITEDKEY)\n" +
       "  VALUES(:P$1, :P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
+      "  RETURNING INHERITEDKEY INTO :ID;\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({
@@ -390,9 +389,8 @@ describe("Insert", () => {
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1, " +
       "P$2 INTEGER = :P$2, P$3 INTEGER = :P$3, P$4 INTEGER = :P$4)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO MAIN_ENTITY\n" +
       "  DEFAULT VALUES\n" +
@@ -400,10 +398,11 @@ describe("Insert", () => {
       "\n" +
       "  INSERT INTO CHILD_ENTITY(TEST_STRING1, PARENT, LINK, INHERITEDKEY)\n" +
       "  VALUES(:P$1, :P$2, :P$3, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :Key1Value;\n" +
+      "  RETURNING INHERITEDKEY INTO :ID;\n" +
       "\n" +
       `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2)\n` +
-      "  VALUES(:Key1Value, :P$4);\n" +
+      "  VALUES(:ID, :P$4);\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({
@@ -457,13 +456,13 @@ describe("Insert", () => {
     }));
 
     expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 INTEGER = :P$2)\n" +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n" +
       "  INSERT INTO SELECTOR_ENTITY(ID, CONTACTTYPE)\n" +
       "  VALUES(:P$1, :P$2)\n" +
-      "  RETURNING ID INTO :Key1Value;\n" +
+      "  RETURNING ID INTO :ID;\n" +
+      "SUSPEND;\n" +
       "END");
 
     await AConnection.executeTransaction({

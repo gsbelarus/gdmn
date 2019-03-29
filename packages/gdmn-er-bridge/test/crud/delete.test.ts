@@ -111,7 +111,7 @@ describe("Delete", () => {
   it("delete: MAIN_ENTITY", async () => {
     const {sql, params} = new Delete(EntityDelete.inspectorToObject(erModel, {
       entity: "MAIN_ENTITY",
-      pkValue: [36]
+      pkValues: [36]
     }));
 
     expect(sql).toEqual("DELETE\n" +
@@ -127,7 +127,7 @@ describe("Delete", () => {
   it("delete: CHILD_ENTITY", async () => {
     const {sql, params} = new Delete(EntityDelete.inspectorToObject(erModel, {
       entity: "CHILD_ENTITY",
-      pkValue: [36]
+      pkValues: [36]
     }));
 
     expect(sql).toEqual("DELETE\n" +

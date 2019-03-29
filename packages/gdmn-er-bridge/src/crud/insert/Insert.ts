@@ -52,9 +52,8 @@ export class Insert {
     const {entity, fields} = query;
 
     let sql = `EXECUTE BLOCK(${this._getParamSetAttr(entity, fields)})\n` +
+      "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "DECLARE ParentID INTEGER;\n" +
       "BEGIN\n";
 
     entity.adapter!.relation.map(
@@ -70,6 +69,7 @@ export class Insert {
     if (Insert._getFirstSetAttr(fields)) {
       sql += `${this._getMappingTable(query)}`;
     }
+    sql += `SUSPEND;\n`;
     sql += `END`;
     return sql;
   }
@@ -86,9 +86,9 @@ export class Insert {
     const PKFieldName = AdapterUtils.getPKFieldName(entity, rel.relationName);
 
     if (mainRelation.relationName !== rel.relationName) {
-      return `\n  RETURNING ${PKFieldName} INTO :Key1Value;\n`; //INHERITEDKEY
+      return `\n  RETURNING ${PKFieldName} INTO :ID;\n`; //INHERITEDKEY
     } else if (mainRelation.relationName === ownRelation) {
-      return `\n  RETURNING ${PKFieldName} INTO :Key1Value;\n`; //ID
+      return `\n  RETURNING ${PKFieldName} INTO :ID;\n`; //ID
     } else {
       return `\n  RETURNING ${PKFieldName} INTO :ParentID;\n\n`; //ID
     }
@@ -175,13 +175,13 @@ export class Insert {
           return `\n  INSERT INTO` +
             ` ${MainCrossRelationName}` +
             `(${MainCross})\n` +
-            `  VALUES(:Key1Value, ${val});\n`;
+            `  VALUES(:ID, ${val});\n`;
 
         } else if (typeof v === "number") {
           return `\n  INSERT INTO` +
             ` ${MainCrossRelationName}` +
             `(${MainCrossPk})\n` +
-            `  VALUES(:Key1Value, ${this._addToParams(v)});\n`;
+            `  VALUES(:ID, ${this._addToParams(v)});\n`;
         }
       }
     );

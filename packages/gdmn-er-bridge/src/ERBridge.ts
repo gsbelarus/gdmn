@@ -173,10 +173,11 @@ export class ERBridge {
 
   public static async insert(connection: AConnection,
                              transaction: ATransaction,
-                             entityInsert: EntityInsert): Promise<void> {
+                             entityInsert: EntityInsert): Promise<any[]> {
     const insert = new Insert(entityInsert);
+    const result = await connection.executeReturning(transaction, insert.sql, insert.params);
 
-    await connection.execute(transaction, insert.sql, insert.params);
+    return result.getAll();
   }
 
   public static async update(connection: AConnection,

@@ -5,19 +5,19 @@ import {EntityUpdateField, IEntityUpdateFieldInspector} from "./EntityUpdateFiel
 export interface IEntityUpdateInspector {
   entity: string;
   fields: IEntityUpdateFieldInspector[];
-  pkValue: number;
+  pkValues: number[];
 }
 
 export class EntityUpdate {
 
   public readonly entity: Entity;
   public readonly fields: EntityUpdateField[];
-  public readonly pkValue: number;
+  public readonly pkValues: number[];
 
-  constructor(entity: Entity, fields: EntityUpdateField[], pkValue: number) {
+  constructor(entity: Entity, fields: EntityUpdateField[], pkValues: number[]) {
     this.entity = entity;
     this.fields = fields;
-    this.pkValue = pkValue;
+    this.pkValues = pkValues;
   }
 
   public static deserialize(erModel: ERModel, text: string): EntityUpdate {
@@ -25,14 +25,12 @@ export class EntityUpdate {
   }
 
   public static inspectorToObject(erModel: ERModel, inspector: IEntityUpdateInspector): EntityUpdate {
-
     const entity = erModel.entity(inspector.entity);
     const fields = inspector.fields.map((inspectorField) => (
       EntityUpdateField.inspectorToObject(erModel, entity, inspectorField)
     ));
-    const pkValue = inspector.pkValue;
 
-    return new EntityUpdate(entity, fields, pkValue);
+    return new EntityUpdate(entity, fields, inspector.pkValues);
   }
 
   public serialize(): string {
@@ -43,7 +41,7 @@ export class EntityUpdate {
     return {
       entity: this.entity.name,
       fields: this.fields.map((field) => field.inspect()),
-      pkValue: this.pkValue
+      pkValues: this.pkValues
     };
   }
 }

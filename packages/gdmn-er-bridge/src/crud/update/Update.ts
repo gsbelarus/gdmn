@@ -1,5 +1,7 @@
-import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
+import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute} from "gdmn-orm";
+import {TEntityUpdateFieldSet} from "gdmn-orm/src";
 import {AdapterUtils} from "../../AdapterUtils";
+import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsUpdate {
@@ -7,6 +9,9 @@ export interface IParamsUpdate {
 }
 
 export class Update {
+
+  private static readonly PARENT_ID = "ParentID";
+  private static readonly KEY1_VALUE = "Key1Value";
 
   public readonly sql: string = "";
   public readonly params: IParamsUpdate = {};
@@ -17,76 +22,42 @@ export class Update {
 
   constructor(update: EntityUpdate) {
     this._update = update;
-    this.sql = this._getUpdate(this._update);
-    this.params["ParentID"] = update.pkValue;
+    this.sql = this._getUpdate();
+    this.params[Update.PARENT_ID] = update.pkValues[0];
   }
 
-  private static _getFirstSetAttr(fields: EntityUpdateField[]): EntityUpdateField | undefined {
-    return fields.find((l) => l.attribute.type === "Set");
-  }
-
-  private _makeWhere(query: EntityUpdate, rel: IRelation): string {
-    const {entity} = query;
-
-    const mainRelationName = AdapterUtils.getOwnRelationName(entity);
-    const PKFieldName = AdapterUtils.getPKFieldName(entity, rel.relationName);
+  private _makeWhere(rel: IRelation): string {
+    const mainRelationName = AdapterUtils.getOwnRelationName(this._update.entity);
+    const PKFieldName = AdapterUtils.getPKFieldName(this._update.entity, rel.relationName);
     const lineBreak = mainRelationName === rel.relationName ? "\n" : "\n";
-    return `\n  WHERE ${PKFieldName} = :ParentID;${lineBreak}`;
+    return `\n  WHERE ${PKFieldName} = :${Update.PARENT_ID};${lineBreak}`;
   }
 
-  private _checkFields(fields: EntityUpdateField[], rel: IRelation): number {
-
-    const arrFields = fields
-      .filter(field =>
-        field.attribute.adapter!.relation == rel.relationName);
-
-    return arrFields.length;
-  }
-
-  private _getUpdate(query: EntityUpdate): string {
-    const {entity, fields} = query;
-    let sql = `EXECUTE BLOCK(${this._getParamSetAttr(query)})\n` +
+  private _getUpdate(): string {
+    let sql = `EXECUTE BLOCK(${this._getParamSetAttr()})\n` +
       "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
+      `DECLARE ${Update.KEY1_VALUE} INTEGER;\n` +
       "BEGIN";
-    entity.adapter!.relation.map(
-      (rel) => {
-        if (this._checkFields(fields, rel)) {
-          sql += `\n  UPDATE`;
-          sql += ` ${this._makeFrom(query, rel)}`;
-          sql += ` SET`;
-          sql += `\n  ${this._makeFields(fields, rel).join(", ")}`;
-          sql += `${this._makeWhere(query, rel)}`;
-        }
-      });
-    if (Update._getFirstSetAttr(fields)) {
-      sql += `${this._getMappingTable(query)}`;
-    }
+    this._update.entity.adapter!.relation.map((rel) => {
+      if (this._update.fields.filter((field) => field.attribute.adapter!.relation == rel.relationName).length) {
+        sql += `\n  UPDATE`;
+        sql += ` ${rel.relationName}`;
+        sql += ` SET`;
+        sql += `\n  ${this._makeFields(rel).join(", ")}`;
+        sql += `${this._makeWhere(rel)}`;
+      }
+    });
+    sql += `${this._getMappingTable()}`;
     sql += `END`;
     return sql;
   }
 
-  private _makeFrom(update: EntityUpdate, rel?: IRelation): string {
-    const {entity} = update;
-    const ownRelation = AdapterUtils.getOwnRelationName(entity);
-
-    if (rel) {
-      return rel.relationName;
-    }
-    return ownRelation;
-  }
-
-  private _makeFields(fields: EntityUpdateField[], rel?: IRelation): string[] {
-
-    return fields
-      .filter(field =>
-        field.attribute.adapter!.relation == rel!.relationName
-        && !(field.attribute.type === "Set")
-      )
+  private _makeFields(rel?: IRelation): string[] {
+    return this._update.fields
+      .filter((field) => field.attribute.adapter!.relation == rel!.relationName && field.attribute.type !== "Set")
       .map((field) => {
         const attribute = field.attribute as ScalarAttribute;
-        const value = field.value;
-        return SQLTemplates.assign("", attribute.adapter!.field, this._addToParams(value));
+        return SQLTemplates.assign("", AdapterUtils.getFieldName(attribute), this._addToParams(field.value));
       });
   }
 
@@ -97,48 +68,41 @@ export class Update {
     return `:${placeholder}`;
   }
 
-  private _getMappingTable(query: EntityUpdate): string {
-    const {fields} = query;
-    const _getFirstSetAttr = Update._getFirstSetAttr(fields);
+  private _getMappingTable(): string {
+    return this._update.fields
+      .filter((field: EntityUpdateField) => field.attribute.type === "Set")
+      .map((field: EntityUpdateField) => {
+        const set = field.value as TEntityUpdateFieldSet;
+        const mainCrossRelationName = AdapterUtils.getMainCrossRelationName(field.attribute);
 
-    const attribute = _getFirstSetAttr!.attribute as SetAttribute;
+        return "\n  DELETE\n" +
+          `  FROM ${mainCrossRelationName}\n` +
+          `  WHERE ${Constants.DEFAULT_CROSS_PK_OWN_NAME} = :${Update.PARENT_ID};\n` + set.map((entry) => {
+              const values: string[] = [];
+              const mainCross: string[] = [];
 
-    const MainCrossRelationName = AdapterUtils.getMainCrossRelationName(attribute);
+              return entry.pkValues.map((pk) => {
+                values.push(`${this._addToParams(pk)}`);
 
-    const values = _getFirstSetAttr!.value;
+                entry.setAttributes && entry.setAttributes.map((s) => {
+                  values.push(`${this._addToParams(s.value)}`);
+                  mainCross.push(`${AdapterUtils.getFieldName(s.attribute)}`);
+                });
 
-    const sqlMappingtable = values.map((v: any) => {
-        if (typeof v === "object") {
-          const param = Object.values(v);
-          const MainCross = param
-            .filter((p) => typeof p === "object")
-            .map((p) => {
-                if (typeof p === "number") {
-                  return this._addToParams(p.toString());
-                } else {
-                  return Object.values(p).map(x => {
-                    return x.attribute + " = " + `${this._addToParams(x.value)}`;
-                  });
-                }
-              }
-            );
-          return `\n  UPDATE` +
-            ` ${MainCrossRelationName} SET` +
-            `\n  ${MainCross.join(", ")}` +
-            `\n  WHERE KEY1 = :ParentID;\n`;
-        }
-      }
-    );
-
-    return sqlMappingtable.join("");
+                return `\n  INSERT INTO` +
+                  ` ${mainCrossRelationName}(${Constants.DEFAULT_CROSS_PK_OWN_NAME}, ` +
+                  `${Constants.DEFAULT_CROSS_PK_REF_NAME}${mainCross.length ? ", " + mainCross.join(", ") : ""})` +
+                  `\n  VALUES(:${Update.PARENT_ID}, ${values.join(", ")});\n`;
+              });
+            }
+          ).join("\n");
+      }).join("\n");
   }
 
-  private _getParamSetAttr(query: EntityUpdate): string | undefined {
-    const {fields} = query;
-
-    const listParam = fields
-      .filter(field => field.attribute.type !== "Set")
-      .map((field) => {
+  private _getParamSetAttr(): string | undefined {
+    const listParam = this._update.fields
+      .filter((field: EntityUpdateField) => field.attribute.type !== "Set")
+      .map((field: EntityUpdateField) => {
 
         let typeSQL = "INTEGER =";
         const value = field.value;
@@ -149,36 +113,30 @@ export class Update {
         return this._addToParamsBlock(value, typeSQL);
       });
 
-    fields
-      .filter(field => field.attribute.type === "Set")
-      .map((field) => {
-        const value = field.value;
+    this._update.fields
+      .filter((field: EntityUpdateField) => field.attribute.type === "Set")
+      .map((field: EntityUpdateField) => {
+        const set = field.value as TEntityUpdateFieldSet;
         let typeSQL = "INTEGER =";
-        if (typeof value == "object") {
-          value.map((v: any) => {
-            if (typeof v == "number") {
-              listParam.push(this._addToParamsBlock(v, typeSQL));
-            }
-            const param = Object.values(v);
-            param
-              .filter((p) => typeof p === "object")
-              .map((p) => {
-                  if (typeof p === "number") {
-                    typeSQL = "INTEGER =";
-                    listParam.push(this._addToParamsBlock(p, typeSQL));
-                  } else {
-                    return Object.entries(p).map((x) => {
+        return set.map((entry) => {
 
-                      listParam.push(this._addToParamsBlock(x, typeSQL));
-                    });
-                  }
+            return entry.pkValues.map((pk) => {
+              typeSQL = "INTEGER =";
+              listParam.push(`${this._addToParamsBlock(pk, typeSQL)}`);
+
+              entry.setAttributes && entry.setAttributes.map((s) => {
+
+                if (typeof s.value === "string") {
+                  typeSQL = `VARCHAR(${s.value.length}) =`;
                 }
-              );
-          });
-        }
+                listParam.push(`${this._addToParamsBlock(s.value, typeSQL)}`);
+              });
+            });
+          }
+        );
       });
 
-    listParam.push("ParentID INTEGER = :ParentID");
+    listParam.push(`${Update.PARENT_ID} INTEGER = :${Update.PARENT_ID}`);
 
     return listParam.join(", ");
   }

@@ -1,5 +1,5 @@
 import {existsSync, unlinkSync} from "fs";
-import {AConnection, Factory, IConnectionOptions, TExecutor} from "gdmn-db";
+import {AConnection, ATransaction, Factory, IConnectionOptions, TExecutor} from "gdmn-db";
 import {SemCategory} from "gdmn-nlp";
 import {
   BlobAttribute,
@@ -8,11 +8,14 @@ import {
   DetailAttribute,
   Entity,
   EntityAttribute,
+  EntityInsert,
   EntityQuery,
+  EntityUpdate,
   EntityQueryUtils,
   EnumAttribute,
   ERModel,
   FloatAttribute,
+  IEntityQueryResponse,
   IntegerAttribute,
   MAX_16BIT_INT,
   MAX_32BIT_INT,
@@ -767,178 +770,291 @@ describe("ERBridge", () => {
     expect(loadUserEntity.serialize()).toEqual(userEntity.serialize());
     expect(loadAppEntity.serialize()).toEqual(appEntity.serialize());
 
-    const sql = "EXECUTE BLOCK\n" +
-      "AS\n" +
-      "BEGIN\n" +
-      " INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN, DELETED, CREATIONDATE )\n" +
-      " VALUES ('Ford', 'T', 0, 0, 0, '10.01.2014 13:32:02');\n" +
-      " INSERT INTO APP_USER (LOGIN, PASSWORD_HASH, SALT, IS_ADMIN, DELETED, CREATIONDATE )\n" +
-      " VALUES ('tom', 'Karl', 0, 0, 0, '10.01.2014 13:32:02');\n" +
-      " INSERT INTO APPLICATION (OWNER, IS_EXTERNAL, HOST, PORT, USERNAME, PASSWORD, UID, CREATIONDATE )\n" +
-      " VALUES (50, 0, 1000, 5050, 'a', 'b', 'a', '10.01.2014 13:32:02');\n" +
-      " INSERT INTO APPLICATION (OWNER, IS_EXTERNAL, HOST, PORT, USERNAME, PASSWORD, UID, CREATIONDATE )\n" +
-      " VALUES (51, 0, 1000, 5050, 'd' , 'e', 'f', '10.01.2014 13:32:02');\n" +
-      " INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS )\n" +
-      " VALUES (50, 52, 'Незабудка');\n" +
-      " INSERT INTO APP_USER_APPLICATIONS (KEY1, KEY2, ALIAS )\n" +
-      " VALUES (51, 53, 'Мокрые кроссы');\n" +
-      "END";
+    const APP_USER = EntityInsert.inspectorToObject(erModel, {
+      entity: "APP_USER",
+      fields: [{
+        attribute: "LOGIN",
+        value: "asdasdas"
+      }, {
+        attribute: "PASSWORD_HASH",
+        value: "asdasdasdasd"
+      }, {
+        attribute: "SALT",
+        value: 0
+      }, {
+        attribute: "IS_ADMIN",
+        value: false
+      }, {
+        attribute: "DELETED",
+        value: false
+      }, {
+        attribute: "CREATIONDATE",
+        value: "10.01.2014 13:32:02"
+      }]
+    });
+
+    const resultUserId = await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.insert(connection, transaction, APP_USER)
+    });
+    const user = resultUserId[0];
+
+    const APPLICATION = EntityInsert.inspectorToObject(erModel, {
+      entity: "APPLICATION",
+      fields: [{
+        attribute: "OWNER",
+        value: user
+      }, {
+        attribute: "IS_EXTERNAL",
+        value: false
+      }, {
+        attribute: "UID",
+        value: "a"
+      }, {
+        attribute: "CREATIONDATE",
+        value: "10.01.2014 13:32:02"
+      }, {
+        attribute: "HOST",
+        value: "1000"
+      }, {
+        attribute: "PORT",
+        value: "5050"
+      }, {
+        attribute: "PASSWORD",
+        value: "b"
+      }, {
+        attribute: "USERNAME",
+        value: "a"
+      }]
+    });
+    const resultApp = await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.insert(connection, transaction, APPLICATION)
+    });
+
+    const apllicaionID = resultApp[0];
+    const APPLICATION2 = EntityInsert.inspectorToObject(erModel, {
+      entity: "APPLICATION",
+      fields: [{
+        attribute: "OWNER",
+        value: user
+      }, {
+        attribute: "IS_EXTERNAL",
+        value: false
+      }, {
+        attribute: "UID",
+        value: "d"
+      }, {
+        attribute: "CREATIONDATE",
+        value: "10.01.2014 13:33:02"
+      }, {
+        attribute: "HOST",
+        value: "1000"
+      }, {
+        attribute: "PORT",
+        value: "5050"
+      }, {
+        attribute: "PASSWORD",
+        value: "aaa"
+      }, {
+        attribute: "USERNAME",
+        value: "bbb"
+      }]
+    });
+
+    const resultApp2 = await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.insert(connection, transaction, APPLICATION2)
+    });
+    const apllicaion2ID = resultApp2[0];
+
+    const APP_USER_Update = EntityUpdate.inspectorToObject(erModel, {
+      entity: "APP_USER",
+      fields: [
+        {
+          attribute: "APPLICATIONS",
+          value: [{
+            pkValues: [apllicaionID],
+            setAttributes: [{attribute: "ALIAS", value: "Незабудка"}]
+          }, {
+            pkValues: [apllicaion2ID],
+            setAttributes: [{attribute: "ALIAS", value: "Мокрыекроссы"}]
+          }]
+        }
+      ],
+      pkValues: [user]
+    });
 
     await AConnection.executeTransaction({
       connection,
-      callback: (transaction) => connection.executeReturning(transaction, sql)
+      callback: (transaction) => ERBridge.update(connection, transaction, APP_USER_Update)
+    });
+
+    const resultUser2 = await _getUser(connection, connection.readTransaction, user, erModel);
+
+    const value = resultUser2.data
+      .filter((row) =>
+        (EntityQueryUtils.findAttrValue<string>(row, resultUser2.aliases, "application", "UID") !== "d")
+        && (EntityQueryUtils.findAttrValue<string>(row, resultUser2.aliases, "application", "UID") !== "a"))
+      .map((row) => ({
+        pkValues: [EntityQueryUtils.findAttrValue<number>(row, resultUser2.aliases, "application", "ID")],
+        setAttributes: [{
+          attribute: "ALIAS",
+          value: EntityQueryUtils.findAttrValue<string>(row, resultUser2.aliases, "user", "APPLICATIONS", "ALIAS")
+        }]
+      }));
+
+    value.push({
+      pkValues: [apllicaion2ID],
+      setAttributes: [{
+        attribute: "ALIAS",
+        value: "НовоеЗначение"
+      }]
+    });
+
+    const userUpdate = EntityUpdate.inspectorToObject(erModel, {
+      entity: "APP_USER",
+      fields: [{
+        attribute: "APPLICATIONS",
+        value
+      }],
+      pkValues: [user]
+    });
+
+    await AConnection.executeTransaction({
+      connection,
+      callback: (transaction) => ERBridge.update(connection, transaction, userUpdate)
     });
 
     const entityQuery = EntityQuery.inspectorToObject(erModel, {
       link: {
         entity: "APP_USER",
         alias: "app",
-        fields: [
-          {
-            attribute: "APPLICATIONS",
-            setAttributes: ["ALIAS"],
-            links: [{
-              entity: "APPLICATION",
-              alias: "s",
-              fields: [
-                {attribute: "ID"},
-                {attribute: "UID"},
-                {attribute: "CREATIONDATE"},
-                {
-                  attribute: "OWNER",
-                  links: [{
-                    entity: "APP_USER",
-                    alias: "au",
-                    fields: [
-                      {attribute: "ID"}
-                    ]
-                  }]
-                },
-                {attribute: "IS_EXTERNAL"},
-                {attribute: "HOST"},
-                {attribute: "PORT"},
-                {attribute: "USERNAME"},
-                {attribute: "PASSWORD"},
-                {attribute: "PATH"}
-              ]
-            }]
-          }
-        ]
-      }
-      ,
+        fields: [{
+          attribute: "APPLICATIONS",
+          setAttributes: ["ALIAS"],
+          links: [{
+            entity: "APPLICATION",
+            alias: "s",
+            fields: [
+              {attribute: "ID"},
+              {attribute: "UID"},
+              {attribute: "CREATIONDATE"},
+              {
+                attribute: "OWNER",
+                links: [{
+                  entity: "APP_USER",
+                  alias: "au",
+                  fields: [
+                    {attribute: "ID"}
+                  ]
+                }]
+              },
+              {attribute: "IS_EXTERNAL"},
+              {attribute: "HOST"},
+              {attribute: "PORT"},
+              {attribute: "USERNAME"},
+              {attribute: "PASSWORD"},
+              {attribute: "PATH"}
+            ]
+          }]
+        }]
+      },
       options: {
         where: [{
           equals: [{
             alias: "au",
             attribute: "ID",
-            value: 50
+            value: user
           }]
         }]
       }
     });
-
     const result = await ERBridge.query(connection, connection.readTransaction, entityQuery!);
-    expect(
-      result.data.map((row) => {
-        const host = EntityQueryUtils.findAttrValue(row, result.aliases, "s", "HOST");
-        const port = EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PORT");
-
-        return {
-          alias: EntityQueryUtils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
-          id: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "ID"),
-          uid: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "UID"),
-          creationDate: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
-          ownerKey: EntityQueryUtils.findAttrValue(row, result.aliases, "au", "ID"),
-          external: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
-          server: host && port ? {host, port} : undefined,
-          username: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "USERNAME"),
-          password: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
-          path: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PATH")
-        };
-      })
-    ).toEqual([{
-      alias: "Незабудка",
-      id: 52,
-      uid: "a",
-      creationDate: new Date("2014-01-10T10:32:02.000Z"),
-      ownerKey: 50,
-      external: 0,
-      server: {host: "1000", port: 5050},
-      username: "a",
-      password: "b",
-      path: null
-    }]);
-
-    const id: any = undefined;
-    const login = "Ford";
-    let whereEquals = [{
-      alias: "user",
-      attribute: "DELETED",
-      value: "0"
-    }];
-    if (login) {
-      whereEquals.push({
-        alias: "user",
-        attribute: "LOGIN",
-        value: login
-      });
-    }
-    if (id !== undefined && id != null) {
-      whereEquals.push({
-        alias: "user",
-        attribute: "ID",
-        value: id
-      });
-    }
-
-    const entityQueryUser = EntityQuery.inspectorToObject(erModel, {
-      link: {
-        entity: "APP_USER",
-        alias: "user",
-        fields: [
-          {attribute: "ID"},
-          {attribute: "LOGIN"},
-          {attribute: "PASSWORD_HASH"},
-          {attribute: "SALT"},
-          {attribute: "CREATIONDATE"},
-          {attribute: "IS_ADMIN"},
-          {attribute: "DELETED"},
-          {
-            attribute: "APPLICATIONS",
-            links: [{
-              entity: "APPLICATION",
-              alias: "application",
-              fields: [
-                {attribute: "ID"}
-              ]
-            }]
-          }
-        ]
-      },
-      options: {
-        where: [{
-          equals: whereEquals
-        }]
-      }
-    });
-
-    const resultQuery = await ERBridge.query(connection, connection.readTransaction, entityQueryUser!);
-    expect(
-      resultQuery.data.map((row) => ({
-        id: EntityQueryUtils.findAttrValue<number>(row, resultQuery.aliases, "user", "ID"),
-        login: EntityQueryUtils.findAttrValue<string>(row, resultQuery.aliases, "user", "LOGIN"),
-        passwordHash: EntityQueryUtils.findAttrValue<string>(row, resultQuery.aliases, "user", "PASSWORD_HASH"),
-        salt: EntityQueryUtils.findAttrValue<string>(row, resultQuery.aliases, "user", "SALT"),
-        creationDate: EntityQueryUtils.findAttrValue<Date>(row, resultQuery.aliases, "user", "CREATIONDATE"),
-        admin: EntityQueryUtils.findAttrValue<boolean>(row, resultQuery.aliases, "user", "IS_ADMIN")
-      }))
-    ).toEqual([{
-      id: 50,
-      login: "Ford",
-      passwordHash: "T",
-      salt: "0",
-      creationDate: new Date("2014-01-10T10:32:02.000Z"),
-      admin: 0
-    }]);
+    expect(result.data.map((row) => {
+      const host = EntityQueryUtils.findAttrValue(row, result.aliases, "s", "HOST");
+      const port = EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PORT");
+      return {
+        alias: EntityQueryUtils.findAttrValue(row, result.aliases, "app", "APPLICATIONS", "ALIAS"),
+        id: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "ID"),
+        uid: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "UID"),
+        creationDate: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "CREATIONDATE"),
+        ownerKey: EntityQueryUtils.findAttrValue(row, result.aliases, "au", "ID"),
+        external: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "IS_EXTERNAL"),
+        server: host && port ? {host, port} : undefined,
+        username: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "USERNAME"),
+        password: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PASSWORD"),
+        path: EntityQueryUtils.findAttrValue(row, result.aliases, "s", "PATH")
+      };
+    })).toEqual([{
+        alias: "НовоеЗначение",
+        id: apllicaion2ID,
+        uid: "d",
+        creationDate: new Date("2014-01-10T10:33:02.000Z"),
+        ownerKey: user,
+        external: 0,
+        server: {host: "1000", port: 5050},
+        username: "bbb",
+        password: "aaa",
+        path: null
+      }]
+    );
   });
 });
+
+function _getUser(connection: AConnection,
+                  transaction: ATransaction,
+                  userKey: number,
+                  erModel: ERModel): Promise<IEntityQueryResponse> {
+  const entityQuery = EntityQuery.inspectorToObject(erModel, {
+    link: {
+      entity: "APP_USER",
+      alias: "user",
+      fields: [
+        {
+          attribute: "APPLICATIONS",
+          setAttributes: ["ALIAS"],
+          links: [{
+            entity: "APPLICATION",
+            alias: "application",
+            fields: [
+              {attribute: "ID"},
+              {attribute: "UID"},
+              {attribute: "CREATIONDATE"},
+              {
+                attribute: "OWNER",
+                links: [{
+                  entity: "APP_USER",
+                  alias: "userOwner",
+                  fields: [
+                    {attribute: "ID"}
+                  ]
+                }]
+              },
+              {attribute: "IS_EXTERNAL"},
+              {attribute: "HOST"},
+              {attribute: "PORT"},
+              {attribute: "USERNAME"},
+              {attribute: "PASSWORD"},
+              {attribute: "PATH"}
+            ]
+          }]
+        }
+      ]
+    },
+    options: {
+      where: [
+        {
+          equals: [
+            {
+              alias: "userOwner",
+              attribute: "ID",
+              value: userKey
+            }
+          ]
+        }
+      ]
+    }
+  });
+  return ERBridge.query(connection, transaction, entityQuery);
+}

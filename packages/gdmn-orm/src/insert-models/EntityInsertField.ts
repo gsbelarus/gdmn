@@ -48,13 +48,10 @@ export class EntityInsertField {
       if (attribute instanceof SetAttribute) {
         return new EntityInsertField(attribute,
           inspector.value,
-          inspector.setAttributes && inspector.setAttributes.map((attr) => {
-            const findItem = Object.values(attribute.attributes).find((item) => item.name === attr.attribute);
-            return {
-              attribute: findItem ? findItem : attribute as ScalarAttribute,
-              value: attr.value.value
-            };
-          })
+          inspector.setAttributes && inspector.setAttributes.map((attr) => ({
+            attribute: attribute.attribute(attr.attribute),
+            value: attr.value.value
+          }))
         );
       }
 
@@ -73,7 +70,8 @@ export class EntityInsertField {
     const inspect: IEntityInsertFieldInspector = {attribute: this.attribute.name, value: this.value};
     if (this.setAttributes) {
       inspect.setAttributes = this.setAttributes.map((attr) => ({
-        attribute: attr.attribute.name, value: attr.value
+        attribute: attr.attribute.name,
+        value: attr.value
       }));
     }
 
