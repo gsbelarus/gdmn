@@ -71,7 +71,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         const result = await apiService.delete({
           delete: {
             entity: entityName,
-            pkValue: rs.pk2s
+            pkValues: rs.pk2s
           }
         });
         switch (result.payload.status) {
