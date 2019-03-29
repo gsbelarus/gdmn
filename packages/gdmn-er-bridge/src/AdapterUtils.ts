@@ -15,6 +15,16 @@ export class AdapterUtils {
     return attr.name;
   }
 
+  public static getPKNames(entity: Entity, relationName: string): string[] {
+    if (entity.adapter) {
+      const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);
+      if (relation && relation.pk && relation.pk.length) {
+        return relation.pk;
+      }
+    }
+    return [Constants.DEFAULT_ID_NAME];
+  }
+
   public static getPKFieldName(entity: Entity, relationName: string): string {
     if (entity.adapter) {
       const relation = entity.adapter.relation.find((rel) => rel.relationName === relationName);

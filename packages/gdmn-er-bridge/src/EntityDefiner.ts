@@ -1,7 +1,7 @@
 import {AConnection, ATransaction, IParams} from "gdmn-db";
 import {Entity, ERModel} from "gdmn-orm";
-import {SQLTemplates} from "./crud/query/SQLTemplates";
 import {AdapterUtils} from "./AdapterUtils";
+import {SQLTemplates} from "./crud/query/SQLTemplates";
 
 interface IPK {
   field: string;
@@ -27,7 +27,7 @@ export class EntityDefiner {
     const childWithSelector = children0.find((child) => !!AdapterUtils.getMainRelation(child).selector);
     if (childWithSelector) {
       const mainRelation = AdapterUtils.getMainRelation(childWithSelector);
-      const pk = mainRelation.pk!.map((item, index) => ({
+      const pk = AdapterUtils.getPKNames(entity, mainRelation.relationName).map((item, index) => ({
         field: item,
         value: pkValues[index]
       }));
@@ -63,8 +63,11 @@ export class EntityDefiner {
     if (mainRelation.selector) {
       if (mainRelation.selector.value === selectorValue) {
         const ownRelation = AdapterUtils.getOwnRelation(entity);
-        const pkName = AdapterUtils.getPKFieldName(entity, ownRelation.relationName);
-        if (await this._exists(ownRelation.relationName, [{field: pkName, value: pkValues[0]}])) {
+        const pk = AdapterUtils.getPKNames(entity, ownRelation.relationName).map((item, index) => ({
+          field: item,
+          value: pkValues[index]
+        }));
+        if (await this._exists(ownRelation.relationName, pk)) {
           return entity;
         }
       }
@@ -82,8 +85,11 @@ export class EntityDefiner {
     }
 
     const ownRelation = AdapterUtils.getOwnRelation(entity);
-    const pkName = AdapterUtils.getPKFieldName(entity, ownRelation.relationName);
-    if (await this._exists(ownRelation.relationName, [{field: pkName, value: pkValues[0]}])) {
+    const pk = AdapterUtils.getPKNames(entity, ownRelation.relationName).map((item, index) => ({
+      field: item,
+      value: pkValues[index]
+    }));
+    if (await this._exists(ownRelation.relationName, pk)) {
       return entity;
     }
   }

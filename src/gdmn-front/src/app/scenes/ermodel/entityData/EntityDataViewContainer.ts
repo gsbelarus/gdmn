@@ -42,7 +42,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
-        const rs = getState().recordSet[name];
+        const rs = getState().recordSet[entityName];
         if (!rs) return;
 
         const result = await apiService.defineEntity({
