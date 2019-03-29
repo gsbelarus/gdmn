@@ -24,9 +24,8 @@ export const SqlViewContainer = compose<any, RouteComponentProps<any>>(
       run: (expression: string) => {
         const id = uuid();
         dispatch(createQuery(expression, id))
-        console.log("run");
-        // sql/data-view?id=${id}
-        ownProps.addViewTab({caption: 'SQL Data View', url: `sql/data-view`});
+        // console.log("run");
+        ownProps.history!.push(`sql/${id}`)
       },
       clear: () => dispatch(clear()),
       onChange: (ev: any, text?: string) => dispatch(setExpression(text || ""))

@@ -181,7 +181,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 }}
               />
               <Route
-                path={`${match.path}/sql/data-view`}
+                path={`${match.path}/sql/:id`}
                 render={props => {
                   return (
                     <SqlDataViewContainer {...props} />
