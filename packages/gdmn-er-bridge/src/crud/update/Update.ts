@@ -1,5 +1,5 @@
 import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, SetAttribute} from "gdmn-orm";
-import {Utils} from "../../Utils";
+import {AdapterUtils} from "../../AdapterUtils";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsUpdate {
@@ -28,8 +28,8 @@ export class Update {
   private _makeWhere(query: EntityUpdate, rel: IRelation): string {
     const {entity} = query;
 
-    const mainRelationName = Utils.getOwnRelationName(entity);
-    const PKFieldName = Utils.getPKFieldName(entity, rel.relationName);
+    const mainRelationName = AdapterUtils.getOwnRelationName(entity);
+    const PKFieldName = AdapterUtils.getPKFieldName(entity, rel.relationName);
     const lineBreak = mainRelationName === rel.relationName ? "\n" : "\n";
     return `\n  WHERE ${PKFieldName} = :ParentID;${lineBreak}`;
   }
@@ -68,7 +68,7 @@ export class Update {
 
   private _makeFrom(update: EntityUpdate, rel?: IRelation): string {
     const {entity} = update;
-    const ownRelation = Utils.getOwnRelationName(entity);
+    const ownRelation = AdapterUtils.getOwnRelationName(entity);
 
     if (rel) {
       return rel.relationName;
@@ -103,7 +103,7 @@ export class Update {
 
     const attribute = _getFirstSetAttr!.attribute as SetAttribute;
 
-    const MainCrossRelationName = Utils.getMainCrossRelationName(attribute);
+    const MainCrossRelationName = AdapterUtils.getMainCrossRelationName(attribute);
 
     const values = _getFirstSetAttr!.value;
 

@@ -633,7 +633,10 @@ describe("ERBridge", () => {
         parent: entity1,
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         adapter: {
-          relation: [...entity1.adapter!.relation, {relationName: "USR$TEST2"}]
+          relation: [...entity1.adapter!.relation, {
+            relationName: "USR$TEST2",
+            pk: [Constants.DEFAULT_INHERITED_KEY_NAME]
+          }]
         }
       }));
       await eBuilder.createAttribute(entity2, new StringAttribute({
@@ -646,7 +649,10 @@ describe("ERBridge", () => {
         parent: entity1,
         lName: {ru: {name: "entity name", fullName: "full entity name"}},
         adapter: {
-          relation: [...entity1.adapter!.relation, {relationName: "USR$TEST3"}]
+          relation: [...entity1.adapter!.relation, {
+            relationName: "USR$TEST3",
+            pk: [Constants.DEFAULT_INHERITED_KEY_NAME]
+          }]
         }
       }));
       await eBuilder.createAttribute(entity3, new StringAttribute({

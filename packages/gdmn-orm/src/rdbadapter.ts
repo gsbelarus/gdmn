@@ -120,16 +120,13 @@ export interface ICrossRelations {
   [name: string]: ICrossRelation;
 }
 
-export function relationName2Adapter(relationName: string): IEntityAdapter {
+export function relationName2Adapter(relationName: string, pk?: string[]): IEntityAdapter {
   return {
     relation: [{
-      relationName
+      relationName,
+      pk
     }]
   };
-}
-
-export function relationNames2Adapter(relationNames: string[]): IEntityAdapter {
-  return {relation: relationNames.map((relationName) => ({relationName}))};
 }
 
 export function appendAdapter(src: IEntityAdapter, relationName: string, pk?: string[]): IEntityAdapter {

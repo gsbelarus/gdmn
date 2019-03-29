@@ -14,6 +14,7 @@ import {
   FloatAttribute,
   hasField,
   IAttributeAdapter,
+  IEntityAdapter,
   IEntitySelector,
   IntegerAttribute,
   ISetAttributeAdapter,
@@ -27,19 +28,19 @@ import {
   NumericAttribute,
   ParentAttribute,
   relationName2Adapter,
+  sameSelector,
   Sequence,
   SequenceAttribute,
   SetAttribute,
   StringAttribute,
   systemFields,
   TimeAttribute,
-  TimeStampAttribute,
-  sameSelector,
-  IEntityAdapter
+  TimeStampAttribute
 } from "gdmn-orm";
-import {Utils} from "../../Utils";
+import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../Constants";
 import {IATLoadResult, IATRelation, load} from "./atData";
+import {loadDocument, LoadDocumentFunc} from "./document";
 import {gdDomains} from "./gddomains";
 import {GDEntities} from "./GDEntities";
 import {
@@ -60,8 +61,6 @@ import {
   IRange,
   isCheckForBoolean
 } from "./util";
-import { LoadDocumentFunc, loadDocument } from "./document";
-import { ResolvePlugin } from "webpack";
 
 export class ERExport {
 
@@ -85,7 +84,7 @@ export class ERExport {
 
     this._erModel.add(new Sequence({name: Constants.GLOBAL_GENERATOR}));
 
-    if (this._dbSchema.relations['GD_DOCUMENT']) {
+    if (this._dbSchema.relations["GD_DOCUMENT"]) {
       await this._gdEntities.create(this._getATResult());
       this._createEntities(true);
       await this._createDocuments();
@@ -93,8 +92,8 @@ export class ERExport {
       this._createEntities(false);
     }
 
-    Object.values(this._erModel.entities).sort( (a, b) => a.adapter!.relation.length - b.adapter!.relation.length )
-      .forEach( entity => this._createAttributes(entity) );
+    Object.values(this._erModel.entities).sort((a, b) => a.adapter!.relation.length - b.adapter!.relation.length)
+      .forEach(entity => this._createAttributes(entity));
     this._createDetailAttributes();
     this._createSetAttributes();
 
@@ -118,7 +117,7 @@ export class ERExport {
 
   private _createDocuments() {
 
-    const TgdcUserDocument = this._erModel.entities['TgdcUserDocument'];
+    const TgdcUserDocument = this._erModel.entities["TgdcUserDocument"];
 
     if (!TgdcUserDocument) {
       // это не бд гедымина
@@ -134,17 +133,18 @@ export class ERExport {
 
       let adapter: IEntityAdapter | undefined;
 
+      const pk = AdapterUtils.getPK4Adapter(["DOCUMENTKEY"]);
       if (parent && parent.adapter) {
-        adapter = appendAdapter(parent.adapter, r, ['DOCUMENTKEY']);
+        adapter = appendAdapter(parent.adapter, r, pk);
       } else {
-        adapter = (r ? relationName2Adapter(r) : undefined);
+        adapter = (r ? relationName2Adapter(r, pk) : undefined);
       }
 
       if (adapter && docTypeID) {
         adapter.relation[0].selector = {
-          field: 'DOCUMENTTYPEKEY',
+          field: "DOCUMENTTYPEKEY",
           value: docTypeID
-        }
+        };
       }
 
       const entity = new Entity({
@@ -156,37 +156,37 @@ export class ERExport {
       });
 
       this._addEntity(entity);
-    }
+    };
 
     const loadDocumentFunc: LoadDocumentFunc = (id: number, ruid: string, parent_ruid: string, name: string, className: string, hr: string, lr: string) => {
       switch (className) {
-        case 'TgdcUserDocumentType': {
-          createDocEntity('TgdcUserDocument', 'Документ', ruid, parent_ruid, name, hr, id);
+        case "TgdcUserDocumentType": {
+          createDocEntity("TgdcUserDocument", "Документ", ruid, parent_ruid, name, hr, id);
           if (lr) {
-            createDocEntity('TgdcUserDocumentLine', 'Позиция', ruid, parent_ruid, name, lr, id);
+            createDocEntity("TgdcUserDocumentLine", "Позиция", ruid, parent_ruid, name, lr, id);
           }
           return;
         }
-        case 'TgdcInvDocumentType': {
-          createDocEntity('TgdcInvDocument', 'Документ', ruid, parent_ruid, name, hr, id);
+        case "TgdcInvDocumentType": {
+          createDocEntity("TgdcInvDocument", "Документ", ruid, parent_ruid, name, hr, id);
           if (lr) {
-            createDocEntity('TgdcInvDocumentLine', 'Позиция', ruid, parent_ruid, name, lr, id);
+            createDocEntity("TgdcInvDocumentLine", "Позиция", ruid, parent_ruid, name, lr, id);
           }
           return;
         }
-        case 'TgdcInvPriceListType': {
-          createDocEntity('TgdcInvPriceList', 'Документ', ruid, parent_ruid, name, hr, id);
+        case "TgdcInvPriceListType": {
+          createDocEntity("TgdcInvPriceList", "Документ", ruid, parent_ruid, name, hr, id);
           if (lr) {
-            createDocEntity('TgdcInvPriceListLine', 'Позиция', ruid, parent_ruid, name, lr, id);
+            createDocEntity("TgdcInvPriceListLine", "Позиция", ruid, parent_ruid, name, lr, id);
           }
           return;
         }
-        case 'TgdcDocumentType': {
-          createDocEntity('TgdcDocument', 'Документ', ruid, parent_ruid, name, hr, id);
+        case "TgdcDocumentType": {
+          createDocEntity("TgdcDocument", "Документ", ruid, parent_ruid, name, hr, id);
           return;
         }
       }
-    }
+    };
 
     return loadDocument(this._connection, this._transaction, loadDocumentFunc);
   }
@@ -198,7 +198,7 @@ export class ERExport {
       relation: Relation;
     }
 
-    const usrRelations = Object.entries(this._getATResult().atRelations).filter( ([atRelationName]) => !onlyUSRRelations || atRelationName.startsWith('USR$') );
+    const usrRelations = Object.entries(this._getATResult().atRelations).filter(([atRelationName]) => !onlyUSRRelations || atRelationName.startsWith("USR$"));
 
     let inheritedRelations = usrRelations.reduce((p, [atRelationName, atRelation]) => {
       const relation = this._dbSchema.relations[atRelationName];
@@ -206,13 +206,12 @@ export class ERExport {
       if (relation.primaryKey) {
         if (relation.primaryKey.fields[0] === Constants.DEFAULT_ID_NAME) {
           this._addEntity(this._createEntity(undefined, relation, atRelation));
-        }
-        else if (relation.primaryKey.fields[0] === Constants.DEFAULT_INHERITED_KEY_NAME) {
+        } else if (relation.primaryKey.fields[0] === Constants.DEFAULT_INHERITED_KEY_NAME) {
           p.push({
             atRelationName,
             atRelation,
             relation
-          })
+          });
         }
       }
 
@@ -229,7 +228,7 @@ export class ERExport {
 
     while (--infiniteLoadingPreventer && inheritedRelations.length) {
       inheritedRelations = inheritedRelations.reduce((p, r) => {
-        const { relation, atRelation } = r;
+        const {relation, atRelation} = r;
         const inheritedFk = Object.values(relation.foreignKeys)
           .find((fk) => fk.fields.includes(Constants.DEFAULT_INHERITED_KEY_NAME));
         if (inheritedFk) {
@@ -254,7 +253,10 @@ export class ERExport {
     const name = atRelation && atRelation.entityName ? atRelation.entityName : relation.name;
     const lName = atRelation ? atRelation.lName : {};
     const semCategories = atRelation ? atRelation.semCategories : undefined;
-    const adapter = parent ? appendAdapter(parent.adapter!, relation.name) : relationName2Adapter(relation.name);
+    const pk = AdapterUtils.getPK4Adapter(relation.primaryKey!.fields);
+    const adapter = parent
+      ? appendAdapter(parent.adapter!, relation.name, pk)
+      : relationName2Adapter(relation.name, pk);
 
     const entity = new Entity({parent, name, lName, semCategories, adapter});
     if (parent) {
@@ -264,7 +266,7 @@ export class ERExport {
         lName: {ru: {name: "Родитель"}},
         entities: [parent],
         adapter: {
-          relation: Utils.getOwnRelationName(entity),
+          relation: AdapterUtils.getOwnRelationName(entity),
           field: Constants.DEFAULT_INHERITED_KEY_NAME
         }
       }));
@@ -275,7 +277,7 @@ export class ERExport {
           lName: {ru: {name: "Идентификатор"}},
           sequence: this._erModel.sequencies[Constants.GLOBAL_GENERATOR],
           adapter: {
-            relation: Utils.getOwnRelationName(entity),
+            relation: AdapterUtils.getOwnRelationName(entity),
             field: Constants.DEFAULT_ID_NAME
           }
         })
@@ -285,7 +287,7 @@ export class ERExport {
   }
 
   private _createAttributes(entity: Entity): void {
-    const ownRelationName = Utils.getOwnRelationName(entity);
+    const ownRelationName = AdapterUtils.getOwnRelationName(entity);
     entity.adapter!.relation.forEach(rel => {
       const relation = this._dbSchema.relations[rel.relationName];
 
@@ -700,10 +702,10 @@ export class ERExport {
   private _findEntities(relationName: string, selectors: IEntitySelector[] = []): Entity[] {
     const found = Object.values(this._erModel.entities).reduce((p, entity) => {
       if (entity.adapter) {
-        const rel = entity.adapter.relation.find( r => r.relationName === relationName && !r.weak );
+        const rel = entity.adapter.relation.find(r => r.relationName === relationName && !r.weak);
         if (rel) {
           if (rel.selector && selectors.length) {
-            if (selectors.find( s => sameSelector(s, rel.selector) )) {
+            if (selectors.find(s => sameSelector(s, rel.selector))) {
               p.push(entity);
             }
           } else {

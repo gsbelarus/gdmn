@@ -8,7 +8,7 @@ import {
   Sequence,
   SequenceAttribute
 } from "gdmn-orm";
-import {Utils} from "../../Utils";
+import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../Constants";
 import {DDLHelper, IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
@@ -46,7 +46,7 @@ export class ERModelBuilder extends Builder {
               lName: {ru: {name: "Родитель"}},
               entities: [entity.parent],
               adapter: {
-                relation: Utils.getOwnRelationName(entity),
+                relation: AdapterUtils.getOwnRelationName(entity),
                 field: Constants.DEFAULT_INHERITED_KEY_NAME
               }
             }))
@@ -59,7 +59,7 @@ export class ERModelBuilder extends Builder {
             lName: {ru: {name: "Идентификатор"}},
             sequence: erModel.sequence(Constants.GLOBAL_GENERATOR),
             adapter: {
-              relation: Utils.getOwnRelationName(entity),
+              relation: AdapterUtils.getOwnRelationName(entity),
               field: Constants.DEFAULT_ID_NAME
             }
           }));
@@ -67,10 +67,10 @@ export class ERModelBuilder extends Builder {
         }
       }
 
-      const tableName = Utils.getOwnRelationName(entity);
+      const tableName = AdapterUtils.getOwnRelationName(entity);
       const fields: IFieldProps[] = [];
       for (const pkAttr of pkAttrs) {
-        const fieldName = Utils.getFieldName(pkAttr);
+        const fieldName = AdapterUtils.getFieldName(pkAttr);
         const domainName = Prefix.domain(await this.nextDDLUnique());
         await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
         await this._updateATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
@@ -95,7 +95,7 @@ export class ERModelBuilder extends Builder {
         switch (pkAttr.type) {
           case "Sequence": {
             const _attr = pkAttr as SequenceAttribute;
-            const fieldName = Utils.getFieldName(pkAttr);
+            const fieldName = AdapterUtils.getFieldName(pkAttr);
             const seqAdapter = _attr.sequence.adapter;
             const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
             await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName,
@@ -105,13 +105,13 @@ export class ERModelBuilder extends Builder {
           case "Entity": {
             const _attr = pkAttr as EntityAttribute;
             const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
-            const fieldName = Utils.getFieldName(_attr);
+            const fieldName = AdapterUtils.getFieldName(_attr);
             await this.ddlHelper.addForeignKey(fkConstName, {
               tableName,
               fieldName
             }, {
-              tableName: Utils.getOwnRelationName(_attr.entities[0]),
-              fieldName: Utils.getPKFieldName(_attr.entities[0], Utils.getOwnRelationName(_attr.entities[0]))
+              tableName: AdapterUtils.getOwnRelationName(_attr.entities[0]),
+              fieldName: AdapterUtils.getPKFieldName(_attr.entities[0], AdapterUtils.getOwnRelationName(_attr.entities[0]))
               //fieldName: Builder._getFieldName(_attr.entities[0].pk[0])
             }, {
               onUpdate: "CASCADE",
@@ -139,9 +139,10 @@ export class ERModelBuilder extends Builder {
       }
 
       if (!entity.adapter) {
+        const adapterPK = AdapterUtils.getPK4Adapter(fields.map((field) => field.name));
         entity.adapter = entity.parent
-          ? appendAdapter(entity.parent.adapter!, tableName)
-          : relationName2Adapter(tableName);
+          ? appendAdapter(entity.parent.adapter!, tableName, adapterPK)
+          : relationName2Adapter(tableName, adapterPK);
       }
       return erModel.add(entity);
     } else {

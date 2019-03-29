@@ -10,7 +10,7 @@ import {
   StringAttribute
 } from "gdmn-orm";
 import {Constants} from "../../ddl/Constants";
-import {Utils} from "../../Utils";
+import {AdapterUtils} from "../../AdapterUtils";
 
 export class VirtualQueries {
 
@@ -77,7 +77,7 @@ export class VirtualQueries {
       name: Constants.DEFAULT_ID_NAME,
       lName: {ru: {name: "Идентификатор"}},
       adapter: {
-        relation: Utils.getOwnRelationName(queryToTree),
+        relation: AdapterUtils.getOwnRelationName(queryToTree),
         field: Constants.DEFAULT_ID_NAME
       }
     }));
@@ -127,10 +127,10 @@ export class VirtualQueries {
 
   private static _makeSecondVirtualEntity(link: EntityLink): Entity {
     let query = new Entity({
-      name: Utils.getOwnRelationName(link.entity),
+      name: AdapterUtils.getOwnRelationName(link.entity),
       lName: {},
       adapter: {
-        relation: [{relationName: Utils.getOwnRelationName(link.entity), pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]
+        relation: [{relationName: AdapterUtils.getOwnRelationName(link.entity), pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]
       }
     });
 
@@ -138,7 +138,7 @@ export class VirtualQueries {
       name: Constants.DEFAULT_ID_NAME,
       lName: {},
       adapter: {
-        relation: Utils.getOwnRelationName(query),
+        relation: AdapterUtils.getOwnRelationName(query),
         field: Constants.DEFAULT_ID_NAME
       }
     }));
@@ -146,7 +146,7 @@ export class VirtualQueries {
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
       adapter: {
-        relation: Utils.getOwnRelationName(query),
+        relation: AdapterUtils.getOwnRelationName(query),
         field: Constants.DEFAULT_PARENT_KEY_NAME
       }
     }));
@@ -181,11 +181,11 @@ export class VirtualQueries {
 
   private static _makeThirdVirtualEntity(link: EntityLink): Entity {
     let query = new Entity({
-      name: Utils.getOwnRelationName(link.entity),
+      name: AdapterUtils.getOwnRelationName(link.entity),
       lName: {},
       adapter: {
         relation: [{
-          relationName: Utils.getOwnRelationName(link.entity),
+          relationName: AdapterUtils.getOwnRelationName(link.entity),
           pk: [Constants.DEFAULT_PARENT_KEY_NAME]
         }, {
           relationName: "TREE",

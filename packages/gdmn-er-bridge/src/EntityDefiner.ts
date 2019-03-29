@@ -1,7 +1,7 @@
 import {AConnection, ATransaction, IParams} from "gdmn-db";
 import {Entity, ERModel} from "gdmn-orm";
 import {SQLTemplates} from "./crud/query/SQLTemplates";
-import {Utils} from "./Utils";
+import {AdapterUtils} from "./AdapterUtils";
 
 interface IPK {
   field: string;
@@ -24,9 +24,9 @@ export class EntityDefiner {
     const baseEntity = entity.baseParent;
 
     const children0 = Object.values(this._erModel.entities).filter((e) => e.parent === baseEntity);
-    const childWithSelector = children0.find((child) => !!Utils.getMainRelation(child).selector);
+    const childWithSelector = children0.find((child) => !!AdapterUtils.getMainRelation(child).selector);
     if (childWithSelector) {
-      const mainRelation = Utils.getMainRelation(childWithSelector);
+      const mainRelation = AdapterUtils.getMainRelation(childWithSelector);
       const pk = mainRelation.pk!.map((item, index) => ({
         field: item,
         value: pkValues[index]
@@ -59,11 +59,11 @@ export class EntityDefiner {
       }
     }
 
-    const mainRelation = Utils.getMainRelation(entity);
+    const mainRelation = AdapterUtils.getMainRelation(entity);
     if (mainRelation.selector) {
       if (mainRelation.selector.value === selectorValue) {
-        const ownRelation = Utils.getOwnRelation(entity);
-        const pkName = Utils.getPKFieldName(entity, ownRelation.relationName);
+        const ownRelation = AdapterUtils.getOwnRelation(entity);
+        const pkName = AdapterUtils.getPKFieldName(entity, ownRelation.relationName);
         if (await this._exists(ownRelation.relationName, [{field: pkName, value: pkValues[0]}])) {
           return entity;
         }
@@ -81,8 +81,8 @@ export class EntityDefiner {
       }
     }
 
-    const ownRelation = Utils.getOwnRelation(entity);
-    const pkName = Utils.getPKFieldName(entity, ownRelation.relationName);
+    const ownRelation = AdapterUtils.getOwnRelation(entity);
+    const pkName = AdapterUtils.getPKFieldName(entity, ownRelation.relationName);
     if (await this._exists(ownRelation.relationName, [{field: pkName, value: pkValues[0]}])) {
       return entity;
     }

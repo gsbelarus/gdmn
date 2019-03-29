@@ -13,7 +13,7 @@ import {
 } from "gdmn-orm";
 import {IParams} from "../..";
 import {Constants} from "../../ddl/Constants";
-import {Utils} from "../../Utils";
+import {AdapterUtils} from "../../AdapterUtils";
 import {SQLTemplates} from "./SQLTemplates";
 import {VirtualQueries} from "./VirtualQueries";
 
@@ -117,7 +117,7 @@ export class Select {
   private _makeFrom(query: EntityQuery, first?: boolean): string {
     const {link} = query;
 
-    const mainRelation = Utils.getMainRelation(link.entity);
+    const mainRelation = AdapterUtils.getMainRelation(link.entity);
     const from = link.entity.adapter!.relation.map((rel) => {
       if (rel.relationName == mainRelation.relationName) {
         if (!link.entity.isIntervalTree && link.entity.isTree && first) {
@@ -129,7 +129,7 @@ export class Select {
               const virtualQuery2 = VirtualQueries.makeSecondVirtualQuery(query, true);
               const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(query, false);
 
-              const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
+              const mainRelation = AdapterUtils.getMainRelation(virtualQuery.link.entity);
               const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
                 if (rel.relationName == mainRelation.relationName) {
@@ -154,9 +154,9 @@ export class Select {
         return SQLTemplates.join(
           rel.relationName,
           this._getTableAlias(link, rel.relationName),
-          Utils.getPKFieldName(link.entity, rel.relationName),
+          AdapterUtils.getPKFieldName(link.entity, rel.relationName),
           this._getTableAlias(link, mainRelation.relationName),
-          Utils.getPKFieldName(link.entity, mainRelation.relationName),
+          AdapterUtils.getPKFieldName(link.entity, mainRelation.relationName),
           rel.weak ? "LEFT" : ""
         );
       }
@@ -171,7 +171,7 @@ export class Select {
       existsRelations.push(link.entity.adapter!.relation[0]);
     }
     const firstRelationName = existsRelations[0].relationName;
-    const firstPKFieldName = Utils.getPKFieldName(link.entity, firstRelationName);
+    const firstPKFieldName = AdapterUtils.getPKFieldName(link.entity, firstRelationName);
 
     return link.fields.reduce((joins, field) => {
       if (field.links) {
@@ -181,7 +181,7 @@ export class Select {
             linkExistsRelations.push(fLink.entity.adapter!.relation[0]);
           }
           const linkFirstRelationName = linkExistsRelations[0].relationName;
-          const linkFirstPKFieldName = Utils.getPKFieldName(fLink.entity, linkFirstRelationName);
+          const linkFirstPKFieldName = AdapterUtils.getPKFieldName(fLink.entity, linkFirstRelationName);
 
           switch (field.attribute.type) {
             case "Parent": {
@@ -220,7 +220,7 @@ export class Select {
                   this._getTableAlias(link, attr.adapter!.crossRelation),
                   attr.adapter!.crossPk[0],
                   this._getTableAlias(link, firstRelationName),
-                  Utils.getPKFieldName(link.entity, firstRelationName),
+                  AdapterUtils.getPKFieldName(link.entity, firstRelationName),
                   "LEFT"
                 )
               );
@@ -263,7 +263,7 @@ export class Select {
                 const virtualQuery2 = VirtualQueries.makeSecondVirtualQuery(forTreeQuery, true);
                 const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(forTreeQuery, false);
 
-                const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
+                const mainRelation = AdapterUtils.getMainRelation(virtualQuery.link.entity);
                 const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
                   if (rel.relationName == mainRelation.relationName) {
@@ -308,9 +308,9 @@ export class Select {
               relJoins.push(SQLTemplates.join(
                 rel.relationName,
                 this._getTableAlias(fLink, rel.relationName),
-                Utils.getPKFieldName(fLink.entity, rel.relationName),
+                AdapterUtils.getPKFieldName(fLink.entity, rel.relationName),
                 this._getTableAlias(fLink, linkFirstRelationName),
-                Utils.getPKFieldName(fLink.entity, linkFirstRelationName),
+                AdapterUtils.getPKFieldName(fLink.entity, linkFirstRelationName),
                 "LEFT"
               ));
             }
