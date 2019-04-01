@@ -8,14 +8,23 @@ import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 
 export interface IEntityInsertFieldInspector {
   attribute: string;
-  value: any;
-  setAttributes?: IEntityInsertSetAttributesInspector[];
+  value: any | TEntityInsertFieldSetInspector;
 }
 
 export interface IEntityInsertSetAttributesInspector {
   attribute: string;
   value: any;
 }
+
+export type TEntityInsertFieldSetInspector = Array<{
+  pkValues: any[];
+  setAttributes?: IEntityInsertSetAttributesInspector[];
+}>;
+
+export type TEntityInsertFieldSet = Array<{
+  pkValues: any[];
+  setAttributes?: IEntityInsertSetAttributes[];
+}>;
 
 export interface IEntityInsertSetAttributes {
   attribute: ScalarAttribute;
@@ -25,16 +34,23 @@ export interface IEntityInsertSetAttributes {
 export class EntityInsertField {
 
   public readonly attribute: Attribute;
-  public readonly value: any;
-  public readonly setAttributes?: IEntityInsertSetAttributes[];
+  public readonly value: any | TEntityInsertFieldSet;
 
-  constructor(attribute: Attribute, value: any, setAttributes?: IEntityInsertSetAttributes[]) {
+  constructor(attribute: Attribute, value: any | TEntityInsertFieldSet) {
     if (attribute.type === "Detail") {
       throw new Error("Attribute Detail not support yet");
     }
+    if (attribute.type === "Set") {
+      if (Array.isArray(value)) {
+        value.map((entry) => {
+          if (!entry.pkValues && !entry.setAttributes) {
+            throw new Error("Value pkValues and setAttributes should not be undefined");
+          }
+        });
+      }
+    }
     this.attribute = attribute;
     this.value = value;
-    this.setAttributes = setAttributes;
   }
 
   public static inspectorToObject(erModel: ERModel,
@@ -46,35 +62,47 @@ export class EntityInsertField {
         throw new Error("Attribute Detail not support yet");
       }
       if (attribute instanceof SetAttribute) {
-        return new EntityInsertField(attribute,
-          inspector.value,
-          inspector.setAttributes && inspector.setAttributes.map((attr) => ({
-            attribute: attribute.attribute(attr.attribute),
-            value: attr.value.value
-          }))
-        );
+        if (Array.isArray(inspector.value)) {
+          return new EntityInsertField(attribute,
+            (inspector.value as TEntityInsertFieldSetInspector).map((attr) => {
+                return {
+                  pkValues: attr.pkValues,
+                  setAttributes: attr.setAttributes && attr.setAttributes.map((s) => {
+                    const setAttribute = attribute.attribute(s.attribute);
+                    return {
+                      attribute: setAttribute,
+                      value: s.value
+                    };
+                  })
+                };
+              }
+            ));
+        }
       }
-
       return new EntityInsertField(attribute, inspector.value);
     }
     if (attribute instanceof ScalarAttribute) {
-      if (inspector.setAttributes) {
-        throw new Error("EntityInsertField with ScalarAttribute must hasn't 'setAttributes' property");
-      }
       return new EntityInsertField(attribute, inspector.value);
     }
     throw new Error("Should never happened");
   }
 
   public inspect(): IEntityInsertFieldInspector {
-    const inspect: IEntityInsertFieldInspector = {attribute: this.attribute.name, value: this.value};
-    if (this.setAttributes) {
-      inspect.setAttributes = this.setAttributes.map((attr) => ({
-        attribute: attr.attribute.name,
-        value: attr.value
+    let value: any | TEntityInsertFieldSet;
+    if (Array.isArray(this.value)) {
+      value = (this.value as TEntityInsertFieldSet).map((attr) => ({
+        pkValues: attr.pkValues,
+        setAttributes: attr.setAttributes && attr.setAttributes.map((s) => ({
+          attribute: s.attribute.name,
+          value: s.value
+        }))
       }));
+    } else {
+      value = this.value;
     }
-
-    return inspect;
+    return {
+      attribute: this.attribute.name,
+      value
+    };
   }
 }

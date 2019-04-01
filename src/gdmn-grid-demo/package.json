@@ -33,7 +33,7 @@
     "react-virtualized": "^9",
     "redux": "^4",
     "redux-thunk": "^2",
-    "typesafe-actions": "^3",
+    "typesafe-actions": "^3.3.0-rc",
     "typescript": "^3"
   },
   "devDependencies": {

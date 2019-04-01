@@ -177,7 +177,7 @@ describe("EntityQuery", () => {
           value: [
             {
               pkValues: [36],
-              setAttributes: [{attribute: "TOTAL", value: "111"}]
+              setAttributes: [{attribute: "TEST_INTEGER", value: "111"}]
             }
           ]
         }
