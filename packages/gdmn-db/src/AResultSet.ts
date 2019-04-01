@@ -1,5 +1,7 @@
 import {Semaphore} from "gdmn-internals";
+import {ABlobLink} from "./ABlobLink";
 import {AResult} from "./AResult";
+import {AResultMetadata} from "./AResultMetadata";
 import {AStatement} from "./AStatement";
 import {TExecutor} from "./types";
 
@@ -13,20 +15,30 @@ export abstract class AResultSet extends AResult {
     public static DEFAULT_TYPE = CursorType.FORWARD_ONLY;
 
     protected readonly _statement: AStatement;
+    protected readonly _result: AResult;
     protected readonly _type: CursorType;
 
     protected _closed = false;
 
     private readonly _lock = new Semaphore();
 
-    protected constructor(statement: AStatement, type: CursorType = AResultSet.DEFAULT_TYPE) {
+    protected constructor(statement: AStatement, result: AResult, type: CursorType = AResultSet.DEFAULT_TYPE) {
         super();
         this._statement = statement;
+        this._result = result;
         this._type = type;
     }
 
     get statement(): AStatement {
         return this._statement;
+    }
+
+    get metadata(): AResultMetadata {
+        return this._result.metadata;
+    }
+
+    get result(): AResult {
+        return this._result;
     }
 
     get type(): CursorType {
@@ -152,6 +164,52 @@ export abstract class AResultSet extends AResult {
             throw new Error("ResultSet already closed");
         }
         return await this._isEof();
+    }
+
+    public getBlob(i: number): null | ABlobLink;
+    public getBlob(name: string): null | ABlobLink;
+    public getBlob(field: any): null | ABlobLink {
+        return this._result.getBlob(field);
+    }
+
+    public getBoolean(i: number): boolean;
+    public getBoolean(name: string): boolean;
+    public getBoolean(field: any): boolean {
+        return this._result.getBoolean(field);
+    }
+
+    public getDate(i: number): null | Date;
+    public getDate(name: string): null | Date;
+    public getDate(field: any): null | Date {
+        return this._result.getDate(field);
+    }
+
+    public getNumber(i: number): number;
+    public getNumber(name: string): number;
+    public getNumber(field: any): number {
+        return this._result.getNumber(field);
+    }
+
+    public getString(i: number): string;
+    public getString(name: string): string;
+    public getString(field: any): string {
+        return this._result.getString(field);
+    }
+
+    public getAny(i: number): any;
+    public getAny(name: string): any;
+    public getAny(field: any): any {
+        return this._result.getAny(field);
+    }
+
+    public getAll(): any[] {
+        return this._result.getAll();
+    }
+
+    public isNull(i: number): boolean;
+    public isNull(name: string): boolean;
+    public isNull(field: any): boolean {
+        return this._result.isNull(field);
     }
 
     /**

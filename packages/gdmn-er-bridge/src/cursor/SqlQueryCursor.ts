@@ -46,7 +46,7 @@ export class SqlQueryCursor extends ACursor {
   public makeSqlQueryResponse(data: any[]): ISqlQueryResponse {
     const metadata = this._resultSet.metadata;
     const aliases: ISqlQueryResponseAliases = {};
-    for (let i = 0; i < this._resultSet.metadata.columnCount; i++) {
+    for (let i = 0; i < metadata.columnCount; i++) {
       const label = metadata.getColumnLabel(i)!;
       const type = metadata.getColumnType(i);
       const relation = metadata.getColumnRelation(i);

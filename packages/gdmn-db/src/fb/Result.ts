@@ -40,8 +40,10 @@ export class Result extends AResult {
                     //// FIXME: newTransaction.releaseSync();
                 }
 
+                const metadata = await ResultMetadata.getMetadata(statement);
+
                 return {
-                    metadata: await ResultMetadata.getMetadata(statement),
+                    metadata,
                     buffer
                 };
             });

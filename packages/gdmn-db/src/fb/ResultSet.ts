@@ -1,6 +1,5 @@
 import {ResultSet as NativeResultSet, Statement as NativeStatement, Status} from "node-firebird-native-api";
 import {AResultSet, CursorType} from "../AResultSet";
-import {BlobLink} from "./BlobLink";
 import {Result} from "./Result";
 import {ResultMetadata} from "./ResultMetadata";
 import {IStatementSource, Statement} from "./Statement";
@@ -8,7 +7,6 @@ import {dataWrite} from "./utils/fb-utils";
 
 export interface IResultSetSource {
     handler: NativeResultSet;
-    result: Result;
 }
 
 enum ResultStatus {
@@ -23,8 +21,8 @@ export class ResultSet extends AResultSet {
     public disposeStatementOnClose: boolean = false;
     public source?: IResultSetSource;
 
-    protected constructor(statement: Statement, source: IResultSetSource, type?: CursorType) {
-        super(statement, type);
+    protected constructor(statement: Statement, result: Result, source: IResultSetSource, type?: CursorType) {
+        super(statement, result, type);
         this.source = source;
         this.statement.resultSetsCount++;
     }
@@ -33,12 +31,17 @@ export class ResultSet extends AResultSet {
         return super.statement as Statement;
     }
 
+    get result(): Result {
+        return super.result as Result;
+    }
+
     get metadata(): ResultMetadata {
-        return this.source!.result.metadata;
+        return super.metadata as ResultMetadata;
     }
 
     public static async open(statement: Statement, params: any[], type?: CursorType): Promise<ResultSet> {
-        const source: IResultSetSource = await statement.transaction.connection.client.statusAction(async (status) => {
+        const source: IResultSetSource & { result: Result }
+            = await statement.transaction.connection.client.statusAction(async (status) => {
             const {inMetadata, outMetadata, inDescriptors}: IStatementSource = statement.source!;
             const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
             const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
@@ -49,58 +52,16 @@ export class ResultSet extends AResultSet {
                 inMetadata, inBuffer, outMetadata, type || AResultSet.DEFAULT_TYPE === CursorType.SCROLLABLE
                     ? NativeStatement.CURSOR_TYPE_SCROLLABLE : 0);
 
+            const metadata = await ResultMetadata.getMetadata(statement);
+            const result = await Result.get(statement, {metadata, buffer});
+
             return {
                 handler: handler!,
-                result: await Result.get(statement, {metadata: await ResultMetadata.getMetadata(statement), buffer})
+                result
             };
         });
-        return new ResultSet(statement, source, type);
-    }
 
-    public getBlob(i: number): null | BlobLink;
-    public getBlob(name: string): null | BlobLink;
-    public getBlob(field: any): null | BlobLink {
-        return this.source!.result.getBlob(field);
-    }
-
-    public getBoolean(i: number): boolean;
-    public getBoolean(name: string): boolean;
-    public getBoolean(field: any): boolean {
-        return this.source!.result.getBoolean(field);
-    }
-
-    public getDate(i: number): null | Date;
-    public getDate(name: string): null | Date;
-    public getDate(field: any): null | Date {
-        return this.source!.result.getDate(field);
-    }
-
-    public getNumber(i: number): number;
-    public getNumber(name: string): number;
-    public getNumber(field: any): number {
-        return this.source!.result.getNumber(field);
-    }
-
-    public getString(i: number): string;
-    public getString(name: string): string;
-    public getString(field: any): string {
-        return this.source!.result.getString(field);
-    }
-
-    public getAny(i: number): any;
-    public getAny(name: string): any;
-    public getAny(field: any): any {
-        return this.source!.result.getAny(field);
-    }
-
-    public getAll(): any[] {
-        return this.source!.result.getAll();
-    }
-
-    public isNull(i: number): boolean;
-    public isNull(name: string): boolean;
-    public isNull(field: any): boolean {
-        return this.source!.result.isNull(field);
+        return new ResultSet(statement, source.result, source, type);
     }
 
     protected async _close(): Promise<void> {
@@ -116,37 +77,37 @@ export class ResultSet extends AResultSet {
 
     protected async _next(): Promise<boolean> {
         return await this._executeMove((status) => (
-            this.source!.handler.fetchNextAsync(status, this.source!.result.source.buffer)
+            this.source!.handler.fetchNextAsync(status, this.result.source.buffer)
         ));
     }
 
     protected async _previous(): Promise<boolean> {
         return await this._executeMove((status) => (
-            this.source!.handler.fetchPriorAsync(status, this.source!.result.source.buffer)
+            this.source!.handler.fetchPriorAsync(status, this.result.source.buffer)
         ));
     }
 
     protected async _absolute(i: number): Promise<boolean> {
         return await this._executeMove((status) => (
-            this.source!.handler.fetchAbsoluteAsync(status, i, this.source!.result.source.buffer)
+            this.source!.handler.fetchAbsoluteAsync(status, i, this.result.source.buffer)
         ));
     }
 
     protected async _relative(i: number): Promise<boolean> {
         return await this._executeMove((status) => (
-            this.source!.handler.fetchRelativeAsync(status, i, this.source!.result.source.buffer)
+            this.source!.handler.fetchRelativeAsync(status, i, this.result.source.buffer)
         ));
     }
 
     protected async _first(): Promise<boolean> {
         return await this._executeMove((status) => (
-            this.source!.handler.fetchFirstAsync(status, this.source!.result.source.buffer)
+            this.source!.handler.fetchFirstAsync(status, this.result.source.buffer)
         ));
     }
 
     protected async _last(): Promise<boolean> {
         return await this._executeMove((status) => (
-            this.source!.handler.fetchLastAsync(status, this.source!.result.source.buffer)
+            this.source!.handler.fetchLastAsync(status, this.result.source.buffer)
         ));
     }
 
