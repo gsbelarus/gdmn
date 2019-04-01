@@ -22,13 +22,6 @@ export function reducer(state: ISqlDataViewState = initialState, action: SqlQuer
         requests: [...state.requests, action.payload]
       }
     }
-    case getType(gdmnActions.deleteViewTab): {
-      // console.log('url:', action.payload.url)
-      // if (action.payload.url. === state.requests[]) {
-      //   return {...initialState};
-      // }
-      return state;
-    }
     default:
       return state;
   }

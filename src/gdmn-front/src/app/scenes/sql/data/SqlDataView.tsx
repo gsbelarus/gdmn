@@ -24,7 +24,6 @@ export class SqlDataView extends DataView<ISqlDataViewProps, ISqlDataViewState> 
   }
 
   public renderModal() {
-    const { data } = this.props;
     return super.renderModal();
   }
 }

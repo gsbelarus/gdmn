@@ -35,10 +35,6 @@ export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliases
       break;
     case Types.BOOLEAN:
       dataType = TFieldType.Boolean;
-    //   break;
-    // case "Numeric":
-    //   dataType = TFieldType.Currency;
-    //   break;
     default:
       console.log(eqfa.rdb);
       throw new Error(`Unsupported attribute type ${eqfa.rdb.type} of ${eqfa.rdb.field!}`);

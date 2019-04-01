@@ -8,7 +8,7 @@ export interface ISqlState {
 }
 
 const initialState: ISqlState = {
-  expression: "",
+  expression: "select * from gd_contact",
   url: ""
 };
 

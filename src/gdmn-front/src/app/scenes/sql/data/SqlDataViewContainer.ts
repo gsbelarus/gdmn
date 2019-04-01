@@ -91,8 +91,6 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
                         });
                         dispatch(createRecordSet({name: rs.name, rs}));
 
-                        // console.log(rs);
-
                         if (!getState().grid[rs.name]) {
                           dispatch(
                             createGrid({
@@ -170,7 +168,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
         const fetchRecordCount = event.stopIndex - (event.rs ? event.rs.size : 0);
 
         loadingData(event.rs.name);
-        const res = await apiService.fetchQuery({
+        const res = await apiService.fetchSqlQuery({
           rowsCount: fetchRecordCount,
           taskKey: rsMeta.taskKey!
         });
