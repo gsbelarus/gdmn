@@ -30,7 +30,7 @@ export class DomainResolver {
     };
   }
 
-  private static _getType(attr: Attribute): string {
+  public static _getType(attr: Attribute): string {
     switch (attr.type) {
       case "String": {
         const _attr = attr as StringAttribute;

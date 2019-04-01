@@ -1,5 +1,4 @@
-import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute} from "gdmn-orm";
-import {TEntityUpdateFieldSet} from "gdmn-orm/src";
+import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, TEntityUpdateFieldSet} from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "../query/SQLTemplates";
@@ -77,7 +76,8 @@ export class Update {
 
         return "\n  DELETE\n" +
           `  FROM ${mainCrossRelationName}\n` +
-          `  WHERE ${Constants.DEFAULT_CROSS_PK_OWN_NAME} = :${Update.PARENT_ID};\n` + set.map((entry) => {
+          `  WHERE ${Constants.DEFAULT_CROSS_PK_OWN_NAME} = :${Update.PARENT_ID};\n`
+          + set.map((entry) => {
               const values: string[] = [];
               const mainCross: string[] = [];
 

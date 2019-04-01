@@ -29,7 +29,7 @@ import {
 } from "gdmn-orm";
 import moment from "moment";
 import {resolve} from "path";
-import {ERBridge} from "../src";
+import {ERBridge} from "gdmn-er-bridge";
 import {Constants} from "../src/ddl/Constants";
 
 const dbOptions: IConnectionOptions = {
@@ -770,6 +770,7 @@ describe("ERBridge", () => {
     expect(loadUserEntity.serialize()).toEqual(userEntity.serialize());
     expect(loadAppEntity.serialize()).toEqual(appEntity.serialize());
 
+    const newDate = new Date();
     const APP_USER = EntityInsert.inspectorToObject(erModel, {
       entity: "APP_USER",
       fields: [{
@@ -777,10 +778,10 @@ describe("ERBridge", () => {
         value: "asdasdas"
       }, {
         attribute: "PASSWORD_HASH",
-        value: "asdasdasdasd"
+        value: Buffer.from("asdasdasdasd")
       }, {
         attribute: "SALT",
-        value: 0
+        value: Buffer.from("asdasdasdasd")
       }, {
         attribute: "IS_ADMIN",
         value: false
@@ -789,7 +790,7 @@ describe("ERBridge", () => {
         value: false
       }, {
         attribute: "CREATIONDATE",
-        value: "10.01.2014 13:32:02"
+        value: newDate
       }]
     });
 
@@ -812,7 +813,7 @@ describe("ERBridge", () => {
         value: "a"
       }, {
         attribute: "CREATIONDATE",
-        value: "10.01.2014 13:32:02"
+        value: newDate
       }, {
         attribute: "HOST",
         value: "1000"
@@ -846,7 +847,7 @@ describe("ERBridge", () => {
         value: "d"
       }, {
         attribute: "CREATIONDATE",
-        value: "10.01.2014 13:33:02"
+        value: newDate
       }, {
         attribute: "HOST",
         value: "1000"
@@ -990,7 +991,7 @@ describe("ERBridge", () => {
         alias: "НовоеЗначение",
         id: apllicaion2ID,
         uid: "d",
-        creationDate: new Date("2014-01-10T10:33:02.000Z"),
+        creationDate: newDate,
         ownerKey: user,
         external: 0,
         server: {host: "1000", port: 5050},

@@ -41,6 +41,15 @@ export class EntityUpdateField {
     if (attribute.type === "Detail") {
       throw new Error("Attribute Detail not support yet");
     }
+    if (attribute.type === "Set") {
+      if (Array.isArray(value)) {
+        value.map((entry) => {
+          if (!entry.pkValues && !entry.setAttributes) {
+            throw new Error("Value pkValues and setAttributes should not be undefined");
+          }
+        });
+      }
+    }
     this.value = value;
   }
 

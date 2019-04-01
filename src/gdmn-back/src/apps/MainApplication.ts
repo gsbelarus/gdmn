@@ -833,6 +833,9 @@ export class MainApplication extends Application {
     });
     const resultUser = await ERBridge.insert(connection, transaction, entity);
 
+    // TODO tmp - remove
+    await this._addTmpDatabasesToUser(connection, transaction, resultUser[0]);
+
     const entityQuery = EntityQuery.inspectorToObject(this.erModel, {
       link: {
         entity: "APP_USER",
@@ -865,10 +868,8 @@ export class MainApplication extends Application {
         };
       });
 
-    if (list.length) {
-      await this._addTmpDatabasesToUser(connection, transaction, list[0].id);
-      return list[0];
-    }
+    return list[0];
+
     throw new Error("application not found");
 
     // TODO tmp - remove

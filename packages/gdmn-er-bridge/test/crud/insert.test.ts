@@ -156,7 +156,7 @@ describe("Insert", () => {
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1, P$2 VARCHAR(3) = :P$2)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -191,7 +191,7 @@ describe("Insert", () => {
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(3) = :P$1, P$2 VARCHAR(4) = :P$2)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -226,7 +226,7 @@ describe("Insert", () => {
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 VARCHAR(3) = :P$2)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -272,7 +272,7 @@ describe("Insert", () => {
           attribute: "SET_LINK",
           value: [
             {
-              value: ParentKey,
+              pkValues: [ParentKey],
               setAttributes: [{attribute: "TOTAL", value: "111"}]
             }
           ]
@@ -280,7 +280,7 @@ describe("Insert", () => {
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 INTEGER = :P$2)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -313,7 +313,7 @@ describe("Insert", () => {
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -344,7 +344,7 @@ describe("Insert", () => {
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1, P$2 INTEGER = :P$2)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, P$2 INTEGER = :P$2)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -382,13 +382,18 @@ describe("Insert", () => {
         },
         {
           attribute: "SET_LINK",
-          value: [ParentKey]
+          value: [
+            {
+              pkValues: [ParentKey],
+              setAttributes: [{attribute: "TOTAL", value: "111"}]
+            }
+          ]
         }
       ]
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1, " +
-      "P$2 INTEGER = :P$2, P$3 INTEGER = :P$3, P$4 INTEGER = :P$4)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1," +
+      " P$2 INTEGER = :P$2, P$3 INTEGER = :P$3, P$4 INTEGER = :P$4, P$5 BLOB SUB_TYPE TEXT = :P$5)\n" +
       "RETURNS (ID int, ParentID int)\n" +
       "AS\n" +
       "BEGIN\n" +
@@ -400,8 +405,8 @@ describe("Insert", () => {
       "  VALUES(:P$1, :P$2, :P$3, :ParentID)\n" +
       "  RETURNING INHERITEDKEY INTO :ID;\n" +
       "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2)\n` +
-      "  VALUES(:ID, :P$4);\n" +
+      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      "  VALUES(:ID, :P$4, :P$5);\n" +
       "SUSPEND;\n" +
       "END");
 
@@ -470,6 +475,18 @@ describe("Insert", () => {
       callback: (transaction) => connection.execute(transaction, sql, params)
     });
   });
+
+  it("insert: SET_LINK error ", async () => {
+    expect(() => { new Insert(EntityInsert.inspectorToObject(erModel, {
+      entity: "CHILD_ENTITY",
+      fields: [
+        {
+          attribute: "SET_LINK",
+          value: [ParentKey]
+        }
+      ]
+    }));
+
+    }).toThrowError(new Error("Value pkValues and setAttributes should not be undefined"));
+  });
 });
-
-
