@@ -173,21 +173,31 @@ export interface ISqlQueryResponseDataItem {
   [alias: string]: any;
 }
 
-export enum TSQLFieldType {
-  SMALL_INTEGER = 7,
-  INTEGER = 8,
-  FLOAT = 10,
-  DATE = 12,
-  TIME = 13,
-  CHAR = 14,
-  BIG_INTEGER = 16,
-  DOUBLE = 27,
-  TIMESTAMP = 35,
-  VARCHAR = 37,
-  BLOB = 261
+export enum Types {
+  BIGINT,
+  INTEGER,
+  SMALLINT,
+
+  BLOB,
+  BOOLEAN,
+
+  CHAR,
+  VARCHAR,
+
+  DATE,
+  TIME,
+  TIMESTAMP,
+
+  DOUBLE,
+  FLOAT,
+
+  NULL,
+
+  OTHER
 }
+
 export interface ISqlQueryResponseAliasesRdb {
-  type: TSQLFieldType;
+  type: Types;
   field?: string;
   relation?: string;
 }

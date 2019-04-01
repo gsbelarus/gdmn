@@ -1,4 +1,4 @@
-import { TSQLFieldType, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from '@gdmn/server-api';
+import { Types, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from '@gdmn/server-api';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
 export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliasesRdb, orm?: ISqlQueryResponseAliasesOrm} ): IFieldDef {
@@ -14,32 +14,33 @@ export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliases
 
   // dataType = TFieldType.String;
    switch(eqfa.rdb.type) {
-    case TSQLFieldType.CHAR:
-    case TSQLFieldType.VARCHAR:
-    case TSQLFieldType.BLOB:
+    case Types.CHAR:
+    case Types.VARCHAR:
+    case Types.BLOB:
       dataType = TFieldType.String;
       break;
-    case TSQLFieldType.SMALL_INTEGER:
-    case TSQLFieldType.BIG_INTEGER:
-    case TSQLFieldType.INTEGER:
+    case Types.SMALLINT:
+    case Types.BIGINT:
+    case Types.INTEGER:
       dataType = TFieldType.Integer;
       break;
-    case TSQLFieldType.DOUBLE:
-    case TSQLFieldType.FLOAT:
+    case Types.DOUBLE:
+    case Types.FLOAT:
       dataType = TFieldType.Float;
       break;
-    case TSQLFieldType.DATE:
-    case TSQLFieldType.TIME:
-    case TSQLFieldType.TIMESTAMP:
+    case Types.DATE:
+    case Types.TIME:
+    case Types.TIMESTAMP:
       dataType = TFieldType.Date;
       break;
-    // case "Boolean":
-    //   dataType = TFieldType.Boolean;
+    case Types.BOOLEAN:
+      dataType = TFieldType.Boolean;
     //   break;
     // case "Numeric":
     //   dataType = TFieldType.Currency;
     //   break;
     default:
+      console.log(eqfa.rdb);
       throw new Error(`Unsupported attribute type ${eqfa.rdb.type} of ${eqfa.rdb.field!}`);
   }
 
