@@ -1,5 +1,6 @@
 import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, TEntityUpdateFieldSet} from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
+import {DomainResolver} from "../../ddl/builder/DomainResolver";
 import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "../query/SQLTemplates";
 
@@ -103,14 +104,7 @@ export class Update {
     const listParam = this._update.fields
       .filter((field: EntityUpdateField) => field.attribute.type !== "Set")
       .map((field: EntityUpdateField) => {
-
-        let typeSQL = "INTEGER =";
-        const value = field.value;
-
-        if (typeof value == "string") {
-          typeSQL = `VARCHAR(${value.length}) =`;
-        }
-        return this._addToParamsBlock(value, typeSQL);
+        return this._addToParamsBlock(field.value, DomainResolver._getType(field.attribute) + " =");
       });
 
     this._update.fields

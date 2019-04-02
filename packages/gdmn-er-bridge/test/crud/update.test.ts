@@ -170,7 +170,8 @@ describe("Update", () => {
 
     }));
 
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1, P$2 VARCHAR(3) = :P$2, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1," +
+      " P$2 BLOB SUB_TYPE TEXT = :P$2, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
@@ -202,7 +203,8 @@ describe("Update", () => {
       pkValues: [36]
 
     }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(3) = :P$1, P$2 VARCHAR(4) = :P$2, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1," +
+      " P$2 BLOB SUB_TYPE TEXT = :P$2, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
@@ -238,7 +240,8 @@ describe("Update", () => {
       ],
       pkValues: [36]
     }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 VARCHAR(3) = :P$2, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1," +
+      " P$2 BLOB SUB_TYPE TEXT = :P$2, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
@@ -271,7 +274,8 @@ describe("Update", () => {
       pkValues: [36]
 
     }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1, P$2 INTEGER = :P$2, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1," +
+      " P$2 INTEGER = :P$2, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
@@ -369,8 +373,8 @@ describe("Update", () => {
       ],
       pkValues: [childID]
     }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(5) = :P$1," +
-      " P$2 INTEGER = :P$2, P$3 INTEGER = :P$3, P$4 INTEGER = :P$4, P$5 VARCHAR(3) = :P$5, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, P$2 INTEGER = :P$2," +
+      " P$3 INTEGER = :P$3, P$4 INTEGER = :P$4, P$5 VARCHAR(3) = :P$5, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
@@ -406,7 +410,7 @@ describe("Update", () => {
       pkValues: [36]
 
     }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 VARCHAR(4) = :P$1, ParentID INTEGER = :ParentID)\n" +
+    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, ParentID INTEGER = :ParentID)\n" +
       "AS\n" +
       "DECLARE Key1Value INTEGER;\n" +
       "BEGIN\n" +
