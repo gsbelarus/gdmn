@@ -26,7 +26,7 @@ export class EQueryCursor extends ACursor {
         Array.from(values).reduce((map, [attribute, fieldAlias]) => {
             const link = this._select.query.link.deepFindLink(field);
             if (!link) {
-              throw new Error("Field not found");
+              throw new Error(`Field with attribute ${field.attribute.name} is not found`);
             }
             return {
               ...aliases,

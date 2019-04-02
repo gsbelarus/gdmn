@@ -4,7 +4,6 @@ import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {EntityLink, EntityQuery, EntityQueryField, ScalarAttribute} from "gdmn-orm";
 import {
   addData,
   createRecordSet,
@@ -23,7 +22,7 @@ import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {EntityDataView, IEntityDataViewProps} from "./EntityDataView";
-import {attr2fd} from "./utils";
+import {attr2fd, prepareDefaultQuery} from "./utils";
 
 export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
   connect(
@@ -91,25 +90,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
         const entity = erModel.entity(entityName);
 
-        const query = new EntityQuery(
-          new EntityLink(
-            entity,
-            "z",
-            Object.values(entity.attributes)
-              .filter(attr => attr instanceof ScalarAttribute && attr.type !== "Blob")
-              .map(attr => new EntityQueryField(attr)
-                /*{
-                  if (attr instanceof EntityAttribute) {
-
-                    return new EntityQueryField(attr, new EntityLink(
-                      attr.e
-                    ))
-                  } else {
-                    return new EntityQueryField(attr)
-                  }*/
-              )
-          )
-        );
+        const query = prepareDefaultQuery(entity);
 
         dispatch(rsMetaActions.setRsMeta(entity.name, {}));
 
