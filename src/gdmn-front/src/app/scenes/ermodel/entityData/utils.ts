@@ -37,9 +37,7 @@ export function prepareDefaultQuery(entity: Entity): EntityQuery {
       return new EntityLinkField(attr, [link]);
     });
 
-  const link = new EntityLink(entity, "root", scalarFields.concat(linkFields));
-  console.log(link);
-  return new EntityQuery(link);
+  return new EntityQuery(new EntityLink(entity, "root", scalarFields.concat(linkFields)));
 }
 
 export function attr2fd(query: EntityQuery, fieldAlias: string, eqfa: IEntityQueryResponseFieldAlias): IFieldDef {
