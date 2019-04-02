@@ -1044,17 +1044,19 @@ function _getUser(connection: AConnection,
       ]
     },
     options: {
-      where: [
-        {
-          equals: [
-            {
+      where: [{
+          equals: [{
               alias: "userOwner",
               attribute: "ID",
               value: userKey
-            }
-          ]
-        }
-      ]
+            }],
+        not: [{
+          isNull: [{
+            alias: "application",
+            attribute: "ID"
+          }]
+        }]
+      }]
     }
   });
   return ERBridge.query(connection, transaction, entityQuery);

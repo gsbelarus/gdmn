@@ -397,7 +397,7 @@ export class Select {
       if (item.not) {
         const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.not), " AND ");
         if (filter) {
-          filters.push(filter);
+          filters.push(`NOT ${filter}`);
         }
       }
 

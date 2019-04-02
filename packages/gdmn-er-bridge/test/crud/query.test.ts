@@ -564,7 +564,7 @@ describe("Query", () => {
       "FROM DETAIL_ENTITY T$1\n" +
       "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.LINK\n" +
       "WHERE (UPPER(T$1.TEST_STRING1) = UPPER(:P$1) AND T$2.TEST_FLOAT = :P$2)\n" +
-      "  AND (T$1.TEST_STRING1 IS NULL OR T$2.TEST_FLOAT IS NULL)");
+      "  AND (NOT T$1.TEST_STRING1 IS NULL OR NOT T$2.TEST_FLOAT IS NULL)");
     expect(params).toEqual({"P$1": "asd", "P$2": 10});
 
     await AConnection.executeQueryResultSet({

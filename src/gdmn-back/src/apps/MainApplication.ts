@@ -355,7 +355,7 @@ export class MainApplication extends Application {
   protected async _getUserApplicationsInfo(connection: AConnection,
                                            transaction: ATransaction,
                                            userKey: number): Promise<IUserApplicationInfo[]> {
-    const result = await this._getUser(connection, transaction, userKey);
+    const result = await this._getUserWithApplications(connection, transaction, userKey);
 
     return result.data.map((row) => {
       const host = EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "HOST");
@@ -368,7 +368,7 @@ export class MainApplication extends Application {
           "user",
           "APPLICATIONS",
           "ALIAS"),
-        id: EntityQueryUtils.findAttrValue<number>(row, result.aliases, "userOwner", "ID"),
+        id: EntityQueryUtils.findAttrValue<number>(row, result.aliases, "application", "ID"),
         uid: EntityQueryUtils.findAttrValue<string>(row, result.aliases, "application", "UID"),
         creationDate: EntityQueryUtils.findAttrValue<Date>(row, result.aliases, "application", "CREATIONDATE"),
         ownerKey: EntityQueryUtils.findAttrValue<number>(row, result.aliases, "userOwner", "ID"),
@@ -518,7 +518,7 @@ export class MainApplication extends Application {
   private async _addUserApplicationInfo(connection: AConnection,
                                         transaction: ATransaction,
                                         userApplication: ICreateUserApplicationInfo): Promise<void> {
-    const result = await this._getUser(connection, transaction, userApplication.userKey);
+    const result = await this._getUserWithApplications(connection, transaction, userApplication.userKey);
 
     const value = result.data.map((row) => ({
       pkValues: [EntityQueryUtils.findAttrValue<number>(row, result.aliases, "application", "ID")],
@@ -587,7 +587,7 @@ export class MainApplication extends Application {
                                            transaction: ATransaction,
                                            userKey: number,
                                            uid: string): Promise<void> {
-    const result = await this._getUser(connection, transaction, userKey);
+    const result = await this._getUserWithApplications(connection, transaction, userKey);
 
     const value = result.data
       .filter((row) => (
@@ -690,9 +690,9 @@ export class MainApplication extends Application {
     };
   }
 
-  private async _getUser(connection: AConnection,
-                         transaction: ATransaction,
-                         userKey: number): Promise<IEntityQueryResponse> {
+  private async _getUserWithApplications(connection: AConnection,
+                                         transaction: ATransaction,
+                                         userKey: number): Promise<IEntityQueryResponse> {
     const queryUser = EntityQuery.inspectorToObject(this.erModel, {
       link: {
         entity: "APP_USER",
@@ -734,11 +734,17 @@ export class MainApplication extends Application {
           {
             equals: [
               {
-                alias: "userOwner",
+                alias: "user",
                 attribute: "ID",
                 value: userKey
               }
-            ]
+            ],
+            not: [{
+              isNull: [{
+                alias: "application",
+                attribute: "ID"
+              }]
+            }]
           }
         ]
       }
