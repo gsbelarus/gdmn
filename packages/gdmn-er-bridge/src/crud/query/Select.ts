@@ -86,8 +86,8 @@ export class Select {
       .map((field) => {
         const attribute = field.attribute as ScalarAttribute;
         const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
-        const fieldAlias = this._getFieldAlias(field);
-        return SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field, withoutAlias);
+        const fieldAlias = withoutAlias ? "" : this._getFieldAlias(field);
+        return SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field);
       });
 
     const joinedFields = link.fields.reduce((items, field) => {
@@ -256,7 +256,7 @@ export class Select {
             }
             case "Entity":
             default: {
-              if (!fLink.entity.isIntervalTree && fLink.entity.isTree) {
+              if (!fLink.entity.isIntervalTree && fLink.entity.isTree && fLink.entity.parent) {
                 const forTreeQuery = new EntityQuery(fLink);
 
                 const virtualQuery = VirtualQueries.makeVirtualQuery(forTreeQuery);

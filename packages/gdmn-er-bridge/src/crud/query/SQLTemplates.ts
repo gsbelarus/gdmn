@@ -6,12 +6,8 @@ export abstract class SQLTemplates {
     return `FROM ${tableName}${alias && ` ${alias}`}`;
   }
 
-  // TODO remove (withoutFieldAlias: boolean) argument
-  public static field(alias: string, fieldAlias: string, fieldName: string, withoutFieldAlias?: boolean): string {
-    if (withoutFieldAlias) {
-      return `  ${alias && `${alias}.`}${fieldName}`;
-    }
-    return `  ${alias && `${alias}.`}${fieldName} AS ${fieldAlias}`;
+  public static field(alias: string, fieldAlias: string, fieldName: string): string {
+    return `  ${alias && `${alias}.`}${fieldName}${fieldAlias && ` AS ${fieldAlias}`}`;
   }
 
   public static fromWithTree(alias: string, tableName: string, Query1: string, Query2: string, Query3: string): string {

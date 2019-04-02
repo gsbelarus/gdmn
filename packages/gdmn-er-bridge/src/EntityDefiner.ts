@@ -101,7 +101,7 @@ export class EntityDefiner {
     pk.forEach((item) => params[item.field] = item.value);
 
     let sql = `SELECT\n`;
-    sql += SQLTemplates.field("", "", selectorField, true) + "\n";
+    sql += SQLTemplates.field("", "", selectorField) + "\n";
     sql += SQLTemplates.from("", relation) + "\n";
     const conditions = Object.keys(params).map((field) => SQLTemplates.equals("", field, `:${field}`));
     sql += `WHERE ${conditions.join("\n  AND ")} \n`;
@@ -115,7 +115,7 @@ export class EntityDefiner {
     pk.forEach((item) => params[item.field] = item.value);
 
     let sql = `SELECT\n`;
-    sql += pk.map((item) => SQLTemplates.field("", "", item.field, true) + "\n");
+    sql += pk.map((item) => SQLTemplates.field("", "", item.field) + "\n");
     sql += SQLTemplates.from("", relation) + "\n";
     const conditions = Object.keys(params).map((field) => SQLTemplates.equals("", field, `:${field}`));
     sql += `WHERE ${conditions.join("\n  AND ")} \n`;

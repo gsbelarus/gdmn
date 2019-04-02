@@ -905,28 +905,7 @@ describe("Query", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING1 AS F$1\n" +
       "FROM MASTER_ENTITY6 T$2\n" +
-      "  JOIN  (\n" +
-      "  WITH RECURSIVE TREE AS (\n" +
-      "    SELECT\n" +
-      "      T$3.ID,\n" +
-      "      T$3.PARENT,\n" +
-      "      T$3.TEST_STRING1\n" +
-      "    FROM TEST_ENTITY5 T$3\n" +
-      "    WHERE T$3.PARENT = :P$1" +
-      "\n\n    UNION ALL\n\n" +
-      "    SELECT\n" +
-      "      T$4.ID,\n" +
-      "      T$4.PARENT,\n" +
-      "      T$4.TEST_STRING1\n" +
-      "    FROM TEST_ENTITY5 T$4\n" +
-      "      JOIN TREE T$5 ON T$5.ID = T$4.PARENT\n" +
-      "  )\n" +
-      "  SELECT\n" +
-      "    T$6.ID,\n" +
-      "    T$6.PARENT,\n" +
-      "    T$6.TEST_STRING1\n" +
-      "  FROM TREE T$6\n" +
-      ")  T$1 ON T$1.ID = T$2.LINK");
+      "  LEFT JOIN TEST_ENTITY5 T$1 ON T$1.ID = T$2.LINK");
 
     await AConnection.executeQueryResultSet({
       connection, transaction: connection.readTransaction, sql, params, callback: () => 0
