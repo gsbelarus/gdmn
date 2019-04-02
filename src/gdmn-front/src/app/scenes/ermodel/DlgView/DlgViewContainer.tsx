@@ -1,11 +1,10 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectView} from "@src/app/components/connectView";
-import {attr2fd} from "@src/app/scenes/ermodel/entityData/utils";
-import {gdmnActions, TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {attr2fd, prepareDefaultEntityQuery} from "@src/app/scenes/ermodel/entityData/utils";
+import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {Semaphore} from "gdmn-internals";
-import {EntityLink, EntityLinkField, EntityQuery, EntityQueryOptions, ScalarAttribute} from "gdmn-orm";
 import {createRecordSet, IDataRow, RecordSet, RecordSetAction} from "gdmn-recordset";
 import {List} from "immutable";
 import {connect} from "react-redux";
@@ -41,48 +40,24 @@ export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>
 
         await mutex.acquire();
         try {
-          const q = new EntityQuery(
-            new EntityLink(
-              entity,
-              "z",
-              Object.values(entity.attributes)
-                .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
-                .map(attr => new EntityLinkField(attr))
-            ),
-            new EntityQueryOptions(
-              undefined,
-              undefined,
-              [{
-                equals: pkValues.map((value, index) => ({
-                  alias: "z",
-                  attribute: entity.pk[index],
-                  value
-                }))
-              }])
-          );
+          const query = prepareDefaultEntityQuery(entity, pkValues);
 
-          const value = await apiService.query({
-            query: q.inspect()
+          const response = await apiService.query({
+            query: query.inspect()
           });
 
           if (!getState().rsMeta[name]) return;
 
-          switch (value.payload.status) {
+          switch (response.payload.status) {
             case TTaskStatus.SUCCESS: {
-              const fieldDefs = Object.entries(value.payload.result!.aliases)
-                .map(([fieldAlias, data]) => {
-                  const attr = entity.attributes[data.attribute];
-                  if (!attr) {
-                    throw new Error(`Unknown attribute ${data.attribute}`);
-                  }
-                  return attr2fd(q!, fieldAlias, data);
-                });
+              const fieldDefs = Object.entries(response.payload.result!.aliases)
+                .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
 
               const rs = RecordSet.create({
                 name: `${entity.name}/${pkSet}`,
                 fieldDefs,
-                data: List(value.payload.result!.data as IDataRow[]),
-                eq: q
+                data: List(response.payload.result!.data as IDataRow[]),
+                eq: query
               });
               dispatch(createRecordSet({name: rs.name, rs}));
             }

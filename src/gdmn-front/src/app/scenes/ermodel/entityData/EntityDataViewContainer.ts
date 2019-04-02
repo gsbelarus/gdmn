@@ -22,7 +22,7 @@ import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {EntityDataView, IEntityDataViewProps} from "./EntityDataView";
-import {attr2fd, prepareDefaultQuery} from "./utils";
+import {attr2fd, prepareDefaultEntityQuery} from "./utils";
 
 export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
   connect(
@@ -90,7 +90,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
         const entity = erModel.entity(entityName);
 
-        const query = prepareDefaultQuery(entity);
+        const query = prepareDefaultEntityQuery(entity);
 
         dispatch(rsMetaActions.setRsMeta(entity.name, {}));
 

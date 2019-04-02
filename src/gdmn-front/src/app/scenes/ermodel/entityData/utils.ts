@@ -4,12 +4,13 @@ import {
   EntityLink,
   EntityLinkField,
   EntityQuery,
+  EntityQueryOptions,
   IEntityQueryResponseFieldAlias,
   ScalarAttribute
 } from "gdmn-orm";
 import {IFieldDef, TFieldType} from "gdmn-recordset";
 
-export function prepareDefaultQuery(entity: Entity): EntityQuery {
+export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[]): EntityQuery {
   const scalarFields = Object.values(entity.attributes)
     .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
     .map((attr) => new EntityLinkField(attr));
@@ -37,7 +38,19 @@ export function prepareDefaultQuery(entity: Entity): EntityQuery {
       return new EntityLinkField(attr, [link]);
     });
 
-  return new EntityQuery(new EntityLink(entity, "root", scalarFields.concat(linkFields)));
+  return new EntityQuery(
+    new EntityLink(entity, "root", scalarFields.concat(linkFields)),
+    pkValues && new EntityQueryOptions(
+    undefined,
+    undefined,
+    [{
+      equals: pkValues.map((value, index) => ({
+        alias: "root",
+        attribute: entity.pk[index],
+        value
+      }))
+    }])
+  );
 }
 
 export function attr2fd(query: EntityQuery, fieldAlias: string, eqfa: IEntityQueryResponseFieldAlias): IFieldDef {
