@@ -110,62 +110,62 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
                 }
                 dispatch(rsMetaActions.setRsMeta(entity.name, {taskKey}));
 
-                apiService.fetchQuery({
+                const response = await apiService.fetchQuery({
                   rowsCount: 100,
                   taskKey
-                })
-                  .then((res) => {
-                    const rsm = getState().rsMeta[entity.name];
-                    if (!rsm) {
-                      console.warn("ViewTab was closed, interrupt task");
-                      apiService.interruptTask({taskKey}).catch(console.error);
-                      return;
-                    }
-                    switch (res.payload.status) {
-                      case TTaskStatus.SUCCESS: {
-                        const fieldDefs = Object.entries(res.payload.result!.aliases)
-                          .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
+                });
 
-                        const rs = RecordSet.create({
-                          name: entity.name,
-                          fieldDefs,
-                          data: List(res.payload.result!.data as IDataRow[]),
-                          eq: query,
-                          sequentially: !!rsm.taskKey,
-                          sql: res.payload.result!.info
-                        });
-                        dispatch(createRecordSet({name: rs.name, rs}));
+                const rsm = getState().rsMeta[entity.name];
+                if (!rsm) {
+                  console.warn("ViewTab was closed, interrupt task");
+                  apiService.interruptTask({taskKey}).catch(console.error);
+                  return;
+                }
 
-                        if (!getState().grid[rs.name]) {
-                          dispatch(
-                            createGrid({
-                              name: rs.name,
-                              columns: rs.fieldDefs.map(fd => ({
-                                name: fd.fieldName,
-                                caption: [fd.caption || fd.fieldName],
-                                fields: [{...fd}],
-                                width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                              })),
-                              leftSideColumns: 0,
-                              rightSideColumns: 0,
-                              hideFooter: true
-                            })
-                          );
-                        }
-                        break;
-                      }
-                      case TTaskStatus.FAILED: {
-                        if (rsm) {
-                          dispatch(rsMetaActions.setRsMeta(entity.name, {}));
-                        }
-                        break;
-                      }
-                      case TTaskStatus.INTERRUPTED:
-                      case TTaskStatus.PAUSED:
-                      default:
-                        throw new Error("Never thrown");
+                switch (response.payload.status) {
+                  case TTaskStatus.SUCCESS: {
+                    const fieldDefs = Object.entries(response.payload.result!.aliases)
+                      .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
+
+                    const rs = RecordSet.create({
+                      name: entity.name,
+                      fieldDefs,
+                      data: List(response.payload.result!.data as IDataRow[]),
+                      eq: query,
+                      sequentially: !!rsm.taskKey,
+                      sql: response.payload.result!.info
+                    });
+                    dispatch(createRecordSet({name: rs.name, rs}));
+
+                    if (!getState().grid[rs.name]) {
+                      dispatch(
+                        createGrid({
+                          name: rs.name,
+                          columns: rs.fieldDefs.map(fd => ({
+                            name: fd.fieldName,
+                            caption: [fd.caption || fd.fieldName],
+                            fields: [{...fd}],
+                            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                          })),
+                          leftSideColumns: 0,
+                          rightSideColumns: 0,
+                          hideFooter: true
+                        })
+                      );
                     }
-                  });
+                    break;
+                  }
+                  case TTaskStatus.FAILED: {
+                    if (rsm) {
+                      dispatch(rsMetaActions.setRsMeta(entity.name, {}));
+                    }
+                    break;
+                  }
+                  case TTaskStatus.INTERRUPTED:
+                  case TTaskStatus.PAUSED:
+                  default:
+                    throw new Error("Never thrown");
+                }
                 break;
               }
               case TTaskStatus.INTERRUPTED:
