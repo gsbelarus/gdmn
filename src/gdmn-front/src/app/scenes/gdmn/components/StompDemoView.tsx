@@ -1,5 +1,5 @@
 import React from 'react';
-import { EntityLink, EntityQuery, EntityQueryField, ERModel, ScalarAttribute } from 'gdmn-orm';
+import { EntityLink, EntityLinkField, EntityQuery, ERModel, ScalarAttribute } from 'gdmn-orm';
 import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
@@ -129,7 +129,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
       const entity = Object.values(this.props.erModel!.entities)[0];
       const query = new EntityQuery(
         new EntityLink(entity, 'alias', [
-          new EntityQueryField(
+          new EntityLinkField(
             Object.values(entity!.attributes)
               .filter(value => value instanceof ScalarAttribute)
               .pop()!
@@ -214,7 +214,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     const entity = Object.values(this.props.erModel!.entities)[0];
     const query = new EntityQuery(
       new EntityLink(entity, 'alias', [
-        new EntityQueryField(
+        new EntityLinkField(
           Object.values(entity!.attributes)
             .filter(value => value instanceof ScalarAttribute)
             .pop()!

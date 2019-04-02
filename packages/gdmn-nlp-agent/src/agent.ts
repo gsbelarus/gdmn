@@ -1,4 +1,5 @@
 import {
+  DefinitionValue,
   hasMeaning,
   morphAnalyzer,
   Noun,
@@ -14,18 +15,18 @@ import {
   RusPhrase,
   RusPP,
   RusPrepositionLexeme,
+  RusPTimeP,
   RusVerb,
   SemCategory,
-  SemContext,
-  RusPTimeP,
-  DefinitionValue
+  SemContext
 } from "gdmn-nlp";
+import {DateValue} from "gdmn-nlp/dist/definitions/syntax/value";
 import {
   Entity,
   EntityAttribute,
   EntityLink,
+  EntityLinkField,
   EntityQuery,
-  EntityQueryField,
   EntityQueryOptions,
   ERModel,
   IEntityQueryWhere,
@@ -33,7 +34,6 @@ import {
   ScalarAttribute
 } from "gdmn-orm";
 import {Action, ICommand} from "./command";
-import { DateValue } from 'gdmn-nlp/dist/definitions/syntax/value';
 
 export class ERTranslatorRU {
 
@@ -104,7 +104,7 @@ export class ERTranslatorRU {
     return entities.map(entity => {
       const fields = Object.values(entity.attributes)
         .filter(attr => attr instanceof ScalarAttribute)
-        .map(attr => new EntityQueryField(attr));
+        .map(attr => new EntityLinkField(attr));
 
       let options;
       let first: number | undefined;
@@ -128,7 +128,7 @@ export class ERTranslatorRU {
                   .some((field) =>
                     field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
               ) {
-                fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+                fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
               }
 
               equals.push({
@@ -162,7 +162,7 @@ export class ERTranslatorRU {
               .some((field) =>
                 field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
           ) {
-            fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+            fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
           }
 
           const orEquals: IEntityQueryWhereValue[] = [];
@@ -203,7 +203,7 @@ export class ERTranslatorRU {
                         .some((field) =>
                           field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
                     ) {
-                      fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+                      fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
                     }
 
                     const orEquals: IEntityQueryWhereValue[] = [];
@@ -234,7 +234,7 @@ export class ERTranslatorRU {
                     .some((field) =>
                       field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
                 ) {
-                  fields.push(new EntityQueryField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+                  fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
                 }
 
                 equals.push({

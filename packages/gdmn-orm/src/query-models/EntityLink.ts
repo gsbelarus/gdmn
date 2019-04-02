@@ -1,11 +1,11 @@
 import {Entity} from "../model/Entity";
 import {ERModel} from "../model/ERModel";
-import {EntityQueryField, IEntityQueryFieldInspector} from "./EntityQueryField";
+import {EntityLinkField, IEntityLinkFieldInspector} from "./EntityLinkField";
 
 export interface IEntityLinkInspector {
   entity: string;
   alias: string;
-  fields: IEntityQueryFieldInspector[];
+  fields: IEntityLinkFieldInspector[];
   options?: IEntityLinkInspectorOptions;
 }
 
@@ -17,10 +17,10 @@ export class EntityLink {
 
   public readonly entity: Entity;
   public readonly alias: string;
-  public readonly fields: EntityQueryField[];
+  public readonly fields: EntityLinkField[];
   public readonly options?: IEntityLinkInspectorOptions;
 
-  constructor(entity: Entity, alias: string, fields: EntityQueryField[], options?: IEntityLinkInspectorOptions) {
+  constructor(entity: Entity, alias: string, fields: EntityLinkField[], options?: IEntityLinkInspectorOptions) {
     this.entity = entity;
     this.alias = alias;
     this.fields = fields;
@@ -31,7 +31,7 @@ export class EntityLink {
     const entity = erModel.entity(inspector.entity);
     const alias = inspector.alias;
     const fields = inspector.fields.map((inspectorField) => (
-      EntityQueryField.inspectorToObject(erModel, entity, inspectorField)
+      EntityLinkField.inspectorToObject(erModel, entity, inspectorField)
     ));
     const options = inspector.options;
 
@@ -39,20 +39,18 @@ export class EntityLink {
   }
 
   public deepFindLink(alias: string): EntityLink | undefined;
-  public deepFindLink(field: EntityQueryField): EntityLink | undefined;
-  public deepFindLink(source: string | EntityQueryField): EntityLink | undefined {
-    if (source instanceof EntityQueryField) {
-      const find = this.fields.some((qField) => qField === source);
-      if (find) {
+  public deepFindLink(field: EntityLinkField): EntityLink | undefined;
+  public deepFindLink(source: string | EntityLinkField): EntityLink | undefined {
+    if (source instanceof EntityLinkField) {
+      if (this.fields.some((qField) => qField === source)) {
         return this;
       }
-
-      for (const qField of this.fields) {
-        if (qField.links) {
-          for (const link of qField.links) {
-            const findLink = link.deepFindLink(source);
-            if (findLink) {
-              return findLink;
+      for (const field of this.fields) {
+        if (field.links) {
+          for (const link of field.links) {
+            const find = link.deepFindLink(source);
+            if (find) {
+              return find;
             }
           }
         }

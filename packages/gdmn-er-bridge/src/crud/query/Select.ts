@@ -4,16 +4,16 @@ import {
   Entity,
   EntityAttribute,
   EntityLink,
+  EntityLinkField,
   EntityQuery,
-  EntityQueryField,
   IEntityQueryWhere,
   IRelation,
   ScalarAttribute,
   SetAttribute
 } from "gdmn-orm";
 import {IParams} from "../..";
-import {Constants} from "../../ddl/Constants";
 import {AdapterUtils} from "../../AdapterUtils";
+import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "./SQLTemplates";
 import {VirtualQueries} from "./VirtualQueries";
 
@@ -26,7 +26,7 @@ export class Select {
   public readonly query: EntityQuery;
   public readonly sql: string = "";
   public readonly params: IParams = {};
-  public readonly fieldAliases = new Map<EntityQueryField, Map<Attribute, string>>();
+  public readonly fieldAliases = new Map<EntityLinkField, Map<Attribute, string>>();
 
   private readonly _linkAliases = new Map<EntityLink, { [relationName: string]: string }>();
 
@@ -533,7 +533,7 @@ export class Select {
     return relAlias;
   }
 
-  private _getFieldAlias(field: EntityQueryField, setAttr?: Attribute): string {
+  private _getFieldAlias(field: EntityLinkField, setAttr?: Attribute): string {
     if ((setAttr && !field.setAttributes)
       || (setAttr && field.setAttributes && !field.setAttributes.some((attr) => attr === setAttr))) {
       throw new Error("Incorrect set attribute");

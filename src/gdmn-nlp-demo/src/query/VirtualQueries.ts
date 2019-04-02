@@ -1,8 +1,8 @@
 import {
   Entity,
   EntityLink,
+  EntityLinkField,
   EntityQuery,
-  EntityQueryField,
   EntityQueryOptions,
   IEntityQueryWhereValue,
   ScalarAttribute,
@@ -18,7 +18,7 @@ export class VirtualQueries {
 
     const linkTree = new EntityLink(virtualTree, "TREE", Object.values(virtualTree!.attributes)
       .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
+      .map(value => new EntityLinkField(value)));
 
     return new EntityQuery(linkTree);
   }
@@ -28,7 +28,7 @@ export class VirtualQueries {
 
     const linkEntity = new EntityLink(virtualEntity, "parent", Object.values(virtualEntity!.attributes)
       .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
+      .map(value => new EntityLinkField(value)));
 
     if (withEquals) {
       const equals: IEntityQueryWhereValue[] = [];
@@ -49,7 +49,7 @@ export class VirtualQueries {
 
     const linkEntity = new EntityLink(virtualEntity, "parent", Object.values(virtualEntity!.attributes)
       .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
+      .map(value => new EntityLinkField(value)));
 
     if (withEquals) {
       const equals: IEntityQueryWhereValue[] = [];

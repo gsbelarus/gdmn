@@ -6,13 +6,13 @@ import {SetAttribute} from "../model/link/SetAttribute";
 import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 import {EntityLink, IEntityLinkInspector} from "./EntityLink";
 
-export interface IEntityQueryFieldInspector {
+export interface IEntityLinkFieldInspector {
   attribute: string;
   setAttributes?: string[];
   links?: IEntityLinkInspector[];
 }
 
-export class EntityQueryField {
+export class EntityLinkField {
 
   public readonly attribute: Attribute;
   public readonly links?: EntityLink[];
@@ -22,7 +22,7 @@ export class EntityQueryField {
     this.attribute = attribute;
     if (attribute instanceof EntityAttribute) {
       if (!links || !links.length) {
-        throw new Error("EntityQueryField with EntityAttribute must has 'links' property");
+        throw new Error("EntityLinkField with EntityAttribute must has 'links' property");
       }
       for (const link of links) {
         if (!attribute.entities.includes(link.entity)) {
@@ -39,16 +39,16 @@ export class EntityQueryField {
         }
       } else {
         if (setAttributes) {
-          throw new Error("EntityQueryField without SetAttribute must hasn't 'setAttributes' property");
+          throw new Error("EntityLinkField without SetAttribute must hasn't 'setAttributes' property");
         }
       }
     }
     if (attribute instanceof ScalarAttribute) {
       if (links && !links.length) {
-        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'links' property");
+        throw new Error("EntityLinkField with ScalarAttribute must hasn't 'links' property");
       }
       if (setAttributes) {
-        throw new Error("EntityQueryField with ScalarAttribute must hasn't 'setAttributes' property");
+        throw new Error("EntityLinkField with ScalarAttribute must hasn't 'setAttributes' property");
       }
     }
     this.links = links;
@@ -57,10 +57,10 @@ export class EntityQueryField {
 
   public static inspectorToObject(erModel: ERModel,
                                   entity: Entity,
-                                  inspector: IEntityQueryFieldInspector): EntityQueryField {
+                                  inspector: IEntityLinkFieldInspector): EntityLinkField {
     const attribute = entity.attribute(inspector.attribute);
 
-    return new EntityQueryField(attribute,
+    return new EntityLinkField(attribute,
       inspector.links && inspector.links.map((link) => EntityLink.inspectorToObject(erModel, link)),
       inspector.setAttributes && inspector.setAttributes.map((attrName) => {
         const setAttr = attribute as SetAttribute;
@@ -69,8 +69,8 @@ export class EntityQueryField {
     );
   }
 
-  public inspect(): IEntityQueryFieldInspector {
-    const inspect: IEntityQueryFieldInspector = {attribute: this.attribute.name};
+  public inspect(): IEntityLinkFieldInspector {
+    const inspect: IEntityLinkFieldInspector = {attribute: this.attribute.name};
     if (this.links) {
       inspect.links = this.links.map((link) => link.inspect());
     }

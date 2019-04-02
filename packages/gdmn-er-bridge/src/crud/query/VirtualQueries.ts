@@ -1,16 +1,16 @@
 import {
   Entity,
   EntityLink,
+  EntityLinkField,
   EntityQuery,
-  EntityQueryField,
   EntityQueryOptions,
   IEntityQueryWhereValue,
   IntegerAttribute,
   ScalarAttribute,
   StringAttribute
 } from "gdmn-orm";
-import {Constants} from "../../ddl/Constants";
 import {AdapterUtils} from "../../AdapterUtils";
+import {Constants} from "../../ddl/Constants";
 
 export class VirtualQueries {
 
@@ -19,7 +19,7 @@ export class VirtualQueries {
 
     const linkTree = new EntityLink(virtualTree, "TREE", Object.values(virtualTree!.attributes)
       .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
+      .map(value => new EntityLinkField(value)));
 
     return new EntityQuery(linkTree);
   }
@@ -29,7 +29,7 @@ export class VirtualQueries {
 
     const linkEntity = new EntityLink(virtualEntity, "parent", Object.values(virtualEntity!.attributes)
       .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
+      .map(value => new EntityLinkField(value)));
 
     if (withEquals) {
       const equals: IEntityQueryWhereValue[] = [];
@@ -50,7 +50,7 @@ export class VirtualQueries {
 
     const linkEntity = new EntityLink(virtualEntity, "parent", Object.values(virtualEntity!.attributes)
       .filter(value => value instanceof ScalarAttribute)
-      .map(value => new EntityQueryField(value)));
+      .map(value => new EntityLinkField(value)));
 
     if (withEquals) {
       const equals: IEntityQueryWhereValue[] = [];
@@ -130,7 +130,10 @@ export class VirtualQueries {
       name: AdapterUtils.getOwnRelationName(link.entity),
       lName: {},
       adapter: {
-        relation: [{relationName: AdapterUtils.getOwnRelationName(link.entity), pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]
+        relation: [{
+          relationName: AdapterUtils.getOwnRelationName(link.entity),
+          pk: [Constants.DEFAULT_PARENT_KEY_NAME]
+        }]
       }
     });
 

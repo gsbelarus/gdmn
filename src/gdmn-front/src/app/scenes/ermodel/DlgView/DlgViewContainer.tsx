@@ -5,7 +5,7 @@ import {gdmnActions, TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
 import {Semaphore} from "gdmn-internals";
-import {EntityLink, EntityQuery, EntityQueryField, EntityQueryOptions, ScalarAttribute} from "gdmn-orm";
+import {EntityLink, EntityLinkField, EntityQuery, EntityQueryOptions, ScalarAttribute} from "gdmn-orm";
 import {createRecordSet, IDataRow, RecordSet, RecordSetAction} from "gdmn-recordset";
 import {List} from "immutable";
 import {connect} from "react-redux";
@@ -47,7 +47,7 @@ export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>
               "z",
               Object.values(entity.attributes)
                 .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
-                .map(attr => new EntityQueryField(attr))
+                .map(attr => new EntityLinkField(attr))
             ),
             new EntityQueryOptions(
               undefined,

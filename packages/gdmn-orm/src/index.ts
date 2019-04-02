@@ -25,7 +25,7 @@ export * from "./types";
 export * from "./serialize";
 export * from "./query-models/EntityLink";
 export * from "./query-models/EntityQuery";
-export * from "./query-models/EntityQueryField";
+export * from "./query-models/EntityLinkField";
 export * from "./query-models/EntityQueryOptions";
 
 export * from "./delete-models/EntityDelete";

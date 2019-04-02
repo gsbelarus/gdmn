@@ -2,8 +2,8 @@ import {
   Entity,
   EntityAttribute,
   EntityLink,
+  EntityLinkField,
   EntityQuery,
-  EntityQueryField,
   IEntityQueryResponseFieldAlias,
   ScalarAttribute
 } from "gdmn-orm";
@@ -12,7 +12,7 @@ import {IFieldDef, TFieldType} from "gdmn-recordset";
 export function prepareDefaultQuery(entity: Entity): EntityQuery {
   const scalarFields = Object.values(entity.attributes)
     .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
-    .map((attr) => new EntityQueryField(attr));
+    .map((attr) => new EntityLinkField(attr));
 
   const linkFields = Object.values(entity.attributes)
     .filter((attr) => attr.type === "Entity")
@@ -21,20 +21,20 @@ export function prepareDefaultQuery(entity: Entity): EntityQuery {
       const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
         .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
 
-      let fields: EntityQueryField[] = [];
+      let fields: EntityLinkField[] = [];
 
       const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
         || scalarAttrs.find((attr) => attr.name === "USR$NAME")
         || scalarAttrs.find((attr) => attr.name === "ALIAS")
         || scalarAttrs.find((attr) => attr.type === "String");
       if (presentField) {
-        fields.push(new EntityQueryField(presentField));
+        fields.push(new EntityLinkField(presentField));
       }
       if (!fields.length) {
-        fields = fields.concat(linkAttr.entities[0].pk.map((attr) => new EntityQueryField(attr)));
+        fields = fields.concat(linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr)));
       }
       const link = new EntityLink(linkAttr.entities[0], attr.name, fields);
-      return new EntityQueryField(attr, [link]);
+      return new EntityLinkField(attr, [link]);
     });
 
   const link = new EntityLink(entity, "root", scalarFields.concat(linkFields));

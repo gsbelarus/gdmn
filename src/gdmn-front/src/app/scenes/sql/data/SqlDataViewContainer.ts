@@ -1,7 +1,6 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {ISqlDataViewProps, SqlDataView} from "@src/app/scenes/sql/data/SqlDataView";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {EntityLink, EntityQuery, EntityQueryField, ScalarAttribute} from "gdmn-orm";
 import {
   addData,
   createRecordSet,
