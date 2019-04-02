@@ -46,7 +46,7 @@
     "redux-persist": "^5.11.0-alpha",
     "redux-thunk": "^2",
     "rxjs": "^6",
-    "typesafe-actions": "^3.3.0-rc"
+    "typesafe-actions": "^3"
   },
   "devDependencies": {
     "@types/html-webpack-plugin": "^3",
