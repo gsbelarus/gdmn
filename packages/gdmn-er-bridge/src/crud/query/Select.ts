@@ -1,7 +1,6 @@
 import {
   Attribute,
   DetailAttribute,
-  Entity,
   EntityAttribute,
   EntityLink,
   EntityLinkField,
@@ -256,7 +255,8 @@ export class Select {
             }
             case "Entity":
             default: {
-              if (!fLink.entity.isIntervalTree && fLink.entity.isTree && fLink.entity.parent) {
+              if (!fLink.entity.isIntervalTree && fLink.entity.isTree
+                && fLink.fields.some((field) => field.attribute.type === "Parent")) {
                 const forTreeQuery = new EntityQuery(fLink);
 
                 const virtualQuery = VirtualQueries.makeVirtualQuery(forTreeQuery);
