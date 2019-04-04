@@ -13,17 +13,14 @@
 
 Выполняем из командной строки с правами Администратора:
 
-        ```
         $ npm install --global --production windows-build-tools --vs2015
-        ```
-
+      
 Добавить в переменную окружения **PATH** путь к папке с библиотекой `fbclient.dll` (располагается в папке, куда был установлен сервер Firebird, по умолчанию -- c:\Program Files\Firebird).
         
 ### Mac OS
 
 Выполняем из командной строки:
 
-        ```
         $ firebirdHome='export FIREBIRD_HOME="/Library/Frameworks/Firebird.framework/Resources"'
         $ grep -q -F "$firebirdHome" ~/.bash_profile || echo "$firebirdHome" >> ~/.bash_profile
         
@@ -32,7 +29,6 @@
         
         $ mkdir -p /usr/local/lib 
         $ ln -s /Library/Frameworks/Firebird.framework/Versions/A/Firebird /usr/local/lib/libfbclient.dylib
-        ```
 
 Выдать пользователю `Firebird Database` права на директорию где локально лежат базы данных Firebird.
 
@@ -44,10 +40,8 @@
 
 Из командной строки:
 
-    ```
     $ git clone https://github.com/gsbelarus/gdmn.git
     $ cd gdmn
-    ```
 
 ## Устанавливаем зависимости и компилируем проект
 
