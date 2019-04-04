@@ -154,7 +154,7 @@ export class MainApplication extends Application {
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
 
-        const userAppInfo = await this.executeConnection((connection) => AConnection.executeTransaction({
+        return await this.executeConnection((connection) => AConnection.executeTransaction({
             connection,
             callback: async (transaction) => {
               const user = await this._findUser(connection, transaction, {id: userKey});
@@ -173,14 +173,19 @@ export class MainApplication extends Application {
                 appKey: id
               });
 
-              return await this._getUserApplicationInfo(connection, transaction, userKey, uid);
+              const userAppInfo = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
+
+              const application = await this.getApplication(context.session, uid);
+              try {
+                await application.create();
+              } finally {
+                this._applications.delete(uid);
+              }
+
+              return userAppInfo;
             }
           })
         );
-
-        const application = await this.getApplication(context.session, userAppInfo.uid);
-        await application.create();
-        return userAppInfo;
       }
     });
     session.taskManager.add(task);
