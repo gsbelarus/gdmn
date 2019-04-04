@@ -122,20 +122,21 @@ export abstract class ADatabase {
 
   public async delete(): Promise<void> {
     await this._executeWithLock(async () => {
-      if (this._status === DBStatus.CONNECTED) {
-        this._logger.info("Database is connected");
-        await this.disconnect();
-      }
       this._updateStatus(DBStatus.DELETING);
 
       const {driver, connectionOptions}: IDBDetail = this.dbDetail;
       try {
         await this._onDelete();
+        await this.connectionPool.destroy();
+
         const connection = driver.newConnection();
         await connection.connect(connectionOptions);
         await connection.dropDatabase();
 
       } finally {
+        if (this.connectionPool.created) {
+          await this.connectionPool.destroy();
+        }
         this._updateStatus(DBStatus.IDLE);
       }
     });

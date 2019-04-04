@@ -218,6 +218,11 @@ export class MainApplication extends Application {
                 await this._deleteApplicationInfo(connection, transaction, userKey, uid);
                 if (!external) {
                   const application = await this.getApplication(context.session, uid);
+                  await application.waitUnlock();
+                  if (application.status !== DBStatus.CONNECTED) {
+                    await application.connect();
+                  }
+
                   await application.delete();
                   this._applications.delete(uid);
                 }
