@@ -100,7 +100,7 @@ export class MainApplication extends Application {
     if (!existsSync(Constants.DB.DIR)) {
       mkdirSync(Constants.DB.DIR);
     }
-    if (!existsSync(Constants.DB.DIR)) {
+    if (!existsSync(MainApplication.WORK_DIR)) {
       mkdirSync(MainApplication.WORK_DIR);
     }
   }
