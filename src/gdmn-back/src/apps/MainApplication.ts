@@ -175,6 +175,7 @@ export class MainApplication extends Application {
 
               const userAppInfo = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
 
+              await transaction.commitRetaining();
               const application = await this.getApplication(context.session, uid);
               try {
                 await application.create();
