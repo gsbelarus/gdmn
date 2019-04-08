@@ -5,7 +5,6 @@ import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { IViewTabsProps, ViewTabs } from './ViewTabs';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { deleteRecordSet } from 'gdmn-recordset';
-import { apiService } from '@src/app/services/apiService';
 
 export const ViewTabsContainer = connect(
   (state: IState) => ({
@@ -45,20 +44,12 @@ export const ViewTabsContainer = connect(
       dispatch(gdmnActions.deleteViewTab(vt));
 
       if (vt.rs) {
-        await Promise.all(
-          vt.rs
-            .filter(name => rsMeta[name])
-            .map(async name => {
-              const rsm = rsMeta[name];
-              dispatch(rsMetaActions.deleteRsMeta(name));
-              if (rsm.taskKey) {
-                await apiService.interruptTask({taskKey: rsm.taskKey});
-              }
-            })
-        );
+        vt.rs
+          .filter(name => rsMeta[name])
+          .map(name => dispatch(rsMetaActions.deleteRsMeta(name)));
         vt.rs
           .filter(rsName => recordSet[rsName])
-          .forEach(rsName => dispatch(deleteRecordSet({name: rsName})))
+          .forEach(rsName => dispatch(deleteRecordSet({name: rsName})));
       }
     }
   })

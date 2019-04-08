@@ -188,17 +188,38 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             }
           });
       }),
-      loadingData: (name: string) => thunkDispatch(loadingData({name})),
-      addData: (name: string, records: IDataRow[]) => thunkDispatch(
+      loadingData: (name: string, taskKey: string) => thunkDispatch(
         (dispatch, getState) => {
           const rsm = getState().rsMeta[name];
+          if (!rsm) {
+            console.warn("ViewTab was closing, interrupt task");
+            apiService.interruptTask({taskKey}).catch(console.error);
+            return;
+          }
+          dispatch(loadingData({name}));
+        }
+      ),
+      addData: (name: string, records: IDataRow[], taskKey: string) => thunkDispatch(
+        (dispatch, getState) => {
+          const rsm = getState().rsMeta[name];
+          if (!rsm) {
+            console.warn("ViewTab was closing, interrupt task");
+            apiService.interruptTask({taskKey}).catch(console.error);
+            return;
+          }
           const rs = getState().recordSet[name];
           if (rs && rs.status === TStatus.LOADING) {
             dispatch(addData({name, records, full: !(rsm && rsm.taskKey)}));
           }
         }),
-      setError: (name: string, error: IError) => thunkDispatch(
+      setError: (name: string, error: IError, taskKey: string) => thunkDispatch(
         (dispatch, getState) => {
+          const rsm = getState().rsMeta[name];
+          if (!rsm) {
+            console.warn("ViewTab was closing, interrupt task");
+            apiService.interruptTask({taskKey}).catch(console.error);
+            return;
+          }
           const rs = getState().recordSet[name];
           if (rs && rs.status === TStatus.LOADING) {
             dispatch(setError({name, error}));
@@ -212,18 +233,20 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       loadMoreRsData: async (event: TLoadMoreRsDataEvent) => {
         const fetchRecordCount = event.stopIndex - (event.rs ? event.rs.size : 0);
 
-        loadingData(event.rs.name);
+        loadingData(event.rs.name, rsMeta.taskKey!);
+
         const res = await apiService.fetchQuery({
           rowsCount: fetchRecordCount,
           taskKey: rsMeta.taskKey!
         });
+
         switch (res.payload.status) {
           case TTaskStatus.SUCCESS: {
-            addData(event.rs.name, res.payload.result!.data);
+            addData(event.rs.name, res.payload.result!.data, rsMeta.taskKey!);
             break;
           }
           case TTaskStatus.FAILED: {
-            setError(event.rs.name, {message: res.error!.message});
+            setError(event.rs.name, {message: res.error!.message}, rsMeta.taskKey!);
             break;
           }
           case TTaskStatus.INTERRUPTED:
