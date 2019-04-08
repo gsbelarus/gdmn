@@ -533,10 +533,7 @@ export class GDEntities {
           const rg = /z\.(.+)\s*in\s*\((['\w\,\s]+)\)/gi;
           const groups = rg.exec(restrictCondition);
           if (groups) {
-            const arr = groups[2].split(",").map(s => {
-              const ss = s.trim();
-              return ss.substring(1, ss.length - 2);
-            });
+            const arr = groups[2].split(",").map( s => s.trim() ).map( s => s.substring(1, s.length - 1) );
             //if (arr.length === 1) {
             return {
               field: groups[1].toUpperCase().trim(),
