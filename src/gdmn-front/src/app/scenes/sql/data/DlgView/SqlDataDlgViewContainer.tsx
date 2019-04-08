@@ -16,7 +16,7 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
   connectView,
   connect(
     (state: IState, ownProps: RouteComponentProps<ISqlDataDlgViewMatchParams>) => {
-      const { id, rowid } = ownProps.match.params;
+      const { id } = ownProps.match.params;
       return {
         src: state.recordSet[id],
         rs: state.recordSet[id],
@@ -25,6 +25,17 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | TRsMetaActions>, ownProps) => ({
+      onView: (url: string) => thunkDispatch(async (dispatch, getState) => {
+        const requestID = ownProps.match ? ownProps.match.params.id : "";
+        const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);
+
+        if (!requestRecord) throw new Error("SQL request was not found"); // temporary throw error
+
+        const rs = getState().recordSet[requestID];
+        if (!rs) return;
+
+        ownProps.history!.push(url);
+      }),
       attachRs: (mutex: Semaphore) => thunkDispatch(async (dispatch, getState) => {
         /*
         const {id : requestID, rowid} = ownProps.match.params;

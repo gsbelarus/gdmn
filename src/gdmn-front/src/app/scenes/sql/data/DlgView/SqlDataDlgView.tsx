@@ -23,6 +23,7 @@ export interface ISqlDataDlgViewProps extends IViewProps<ISqlDataDlgViewMatchPar
   erModel: ERModel;
   dlgState: DlgState;
   attachRs: (mutex?: Semaphore) => void;
+  onView: (url: string) => void;
 }
 
 export interface ISqlDataDlgViewState {}
@@ -51,7 +52,35 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
-    return [];
+    const items = super.getCommandBarItems();
+
+    const rowid = Number(this.props.match.params.rowid);
+
+    const urlNext = this.props.match.url.replace(`/view/${rowid}`, `/view/${rowid + 1}`); // TODO проверять кол-во записей. Если текущая - последняя, то блокировать кнопку next
+    const urlPrev = this.props.match.url.replace(`/view/${rowid}`, `/view/${rowid - 1}`); // TODO проверять кол-во записей. Если текущая - первая, то блокировать кнопку prev
+
+    const nextItem = {
+      key: 'next',
+      text: 'Next',
+      iconProps: {
+        iconName: 'next'
+      },
+      onClick: () => {
+        this.props.onView(urlNext);
+      }
+    };
+    const prevItem = {
+      key: 'previous',
+      text: 'Previous',
+      iconProps: {
+        iconName: 'previous'
+      },
+      onClick: () => {
+        this.props.onView(urlPrev);
+      }
+    };
+
+    return [prevItem, nextItem, ...items];
   }
 
   public addViewTab() {
@@ -91,13 +120,16 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
       return this.renderLoading();
     }
 
+    const rowid = Number(this.props.match.params.rowid);
+
     return this.renderWide(
       undefined,
       <div className="dlgView">
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>
             <span>{f.caption}</span>
-            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(0, f.fieldName, '') : ''} />
+            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(rowid, f.fieldName, '') : ''} />
+            {/* TODO: Делать проверку типа поля и если ссылка то отображать кнопку 'Открыть запись' */}
           </Fragment>
         ))}
       </div>
