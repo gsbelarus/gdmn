@@ -28,7 +28,7 @@
     "fast-deep-equal": "^2",
     "gdmn-orm": "^1",
     "immutable": "^3",
-    "typesafe-actions": "^3"
+    "typesafe-actions": "^4"
   },
   "devDependencies": {
     "@types/jest": "^24",
