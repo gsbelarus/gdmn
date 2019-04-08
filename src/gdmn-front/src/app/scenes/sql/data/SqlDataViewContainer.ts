@@ -41,13 +41,23 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>, ownProps) => ({
+      onView: (url: string) => thunkDispatch(async (dispatch, getState) => {
+        const requestID = ownProps.match ? ownProps.match.params.id : "";
+        const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);
+
+        if (!requestRecord) throw new Error("SQL request was not found"); // temporary throw error
+
+        const rs = getState().recordSet[requestID];
+        if (!rs) return;
+
+        ownProps.history!.push(url);
+      }),
       attachRs: () => thunkDispatch((dispatch, getState) => {
         const requestID = ownProps.match ? ownProps.match.params.id : "";
         const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);
 
         if (!requestRecord) throw new Error("SQL request was not found"); // temporary throw error
 
-        // запрос на бэк
         dispatch(rsMetaActions.setRsMeta(requestID, {}));
 
         apiService

@@ -13,6 +13,7 @@ import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewCon
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { SqlViewContainer } from '../sql/container';
 import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
+import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
@@ -181,10 +182,19 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 }}
               />
               <Route
+                exact={true}
                 path={`${match.path}/sql/:id`}
                 render={props => {
                   return (
                     <SqlDataViewContainer {...props} />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/sql/:id/view/:rowid`}
+                render={props => {
+                  return (
+                    <SqlDataDlgViewContainer {...props} />
                   );
                 }}
               />

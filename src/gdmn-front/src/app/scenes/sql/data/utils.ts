@@ -2,18 +2,11 @@ import { Types, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from 
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
 export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliasesRdb, orm?: ISqlQueryResponseAliasesOrm} ): IFieldDef {
-  // const link = query.link.deepFindLink(eqfa.linkAlias)!;
-  // const findField = link.fields.find( field => field.attribute.name === eqfa.attribute );
-
-  // if (!findField) {
-  // throw new Error('Invalid query data!');
-  // }
 
   let dataType;
   let size: number | undefined = undefined;
 
-  // dataType = TFieldType.String;
-   switch(eqfa.rdb.type) {
+  switch(eqfa.rdb.type) {
     case Types.CHAR:
     case Types.VARCHAR:
     case Types.BLOB:
