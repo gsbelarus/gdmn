@@ -266,12 +266,12 @@ export class StompSession implements StompClientCommandListener {
         throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Incorrect headers");
       }
 
-      // TODO tmp - remove
-      const appsInfo = await this.mainApplication.getUserApplicationsInfo(result.userKey);
-      if (appsInfo.length) {
-        appUid = appsInfo[0].uid;
-      }
-
+      // // TODO tmp - remove
+      // const appsInfo = await this.mainApplication.getUserApplicationsInfo(result.userKey);
+      // if (appsInfo.length) {
+      //   appUid = appsInfo[0].uid;
+      // }
+      
       if (appUid) {
         // auth on main and get application
         const mainSession = await this.mainApplication.sessionManager.open(result.userKey);

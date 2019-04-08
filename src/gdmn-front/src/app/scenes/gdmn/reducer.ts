@@ -9,6 +9,10 @@ export type TGdmnState = {
   loadingCounter: number;
   loadingMessage?: string;
   viewTabs: IViewTab[];
+  apps?: Array<any>;
+  application?: Object;
+  runAction: boolean;
+  actionWithApplication?: string;
 };
 
 const initialState: TGdmnState = {
@@ -16,6 +20,8 @@ const initialState: TGdmnState = {
   loading: false,
   loadingCounter: 0,
   viewTabs: [],
+  apps: undefined,
+  runAction: false,
 };
 
 export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
@@ -24,6 +30,52 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
       return {
         ...state,
         erModel: action.payload
+      };
+    }
+
+    case getType(gdmnActions.createApp): {
+      return {
+        ...state,
+        apps: state.apps ? [...state.apps, action.payload] : [action.payload]
+      };
+    }
+
+    case getType(gdmnActions.deleteApp): {
+      if (state.apps) {
+        const idx = state.apps.findIndex(app => app.uid === action.payload);
+
+        if(idx > -1) {
+          return {
+            ...state,
+            apps: [...state.apps.slice(0, idx), ...state.apps.slice(idx + 1)]
+          };
+        }
+      }
+      else {
+        throw new Error(`${state.apps} not found`);
+      }
+    }
+
+    case getType(gdmnActions.getApps): {
+      return {
+        ...state,
+        apps: action.payload
+      };
+    }
+
+    case getType(gdmnActions.setApplication): {
+      return {
+        ...state,
+        application: action.payload
+      };
+    }
+
+    case getType(gdmnActions.setRunAction): {
+      const { value, uid } = action.payload;
+      return {
+        ...state,
+        runAction: value,
+        actionWithApplication: value ? uid : undefined
       };
     }
 
@@ -93,4 +145,3 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
       return state;
   }
 }
-

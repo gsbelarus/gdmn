@@ -38,6 +38,13 @@ export const uiCommands: IUICommand[] = [
     link: `/internals`
   },
   {
+    command: 'application',
+    form: 'mainHeader',
+    group: 'application',
+    caption: 'Application',
+    link: `/application`
+  },
+  {
     command: 'erModel',
     form: 'mainHeader',
     group: 'ermodel',

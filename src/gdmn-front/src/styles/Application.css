@@ -1,0 +1,63 @@
+
+.ListApplications {
+  overflow: auto;
+  max-height: 500px;
+}
+
+.application {
+  min-height: 54px;
+  padding: 10px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #EAEAEA;
+  display: flex;
+  cursor: pointer;
+}
+
+.application :hover {
+  background-color: #cfcfcf;
+}
+
+.applicationContent {
+  margin-left: 10px;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.applicationAlias {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.applicationInfo {
+  font-size: small;
+  color: #696969;
+  margin-bottom: 10px;
+}
+
+.chevron {
+  align-self: center;
+  margin-left: 10px;
+  color:  #A6A6A6;
+  font-size: large;
+  flex-shrink: 0;
+}
+
+.addApp {
+  color: #009000;
+  border: 1px solid mediumseagreen;
+  margin: 5px;
+  padding: 5px;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.deleteApp {
+  flex-shrink: 0;
+  color: red;
+  border: 1px solid red;
+  margin: 5px;
+  padding: 5px;
+  display: inline-flex;
+  cursor: pointer;
+}

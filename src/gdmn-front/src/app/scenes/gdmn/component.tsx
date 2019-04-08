@@ -21,6 +21,7 @@ import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
 import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
+import { ApplicationViewContainer } from './components/ApplicationViewContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -28,6 +29,7 @@ export interface IGdmnViewProps extends RouteComponentProps<any> {
   errorMessage?: string[];
   lostConnectWarnOpened: boolean;
   dispatch: Dispatch<any>;
+  application?: any;
 };
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
@@ -53,18 +55,24 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               find something...
               <span className="WhereToSearch">/</span>
             </div>
+            <div className="ImportantMenu" hidden={this.props.application ? true : false}>{commandToLink('application', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
             <div className="RightSideHeaderPart">
-              <span className="BigLogo">
+            <div>
+            <span className="BigLogo">
                 <b>
                   <i>#GDMN</i>
                 </b>{' '}
                 &mdash; революционная платформа
               </span>
+              <div>
+                Подключение к базе{this.props.application ? ': ' + this.props.application.alias : ' авторизации'}
+              </div>
+            </div>
               <span className="WithNotificationsCount">
                 <Icon iconName="Ringer" className="NoFrameIcon" />
                 <span className="NotificationsCount">4</span>
@@ -137,6 +145,16 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     {...props}
                   />
                 )}
+              />
+              <Route
+                path={`${match.path}/application`}
+                render={props => {
+                  return (
+                    <ApplicationViewContainer
+                    {...props}
+                    />
+                  );
+                }}
               />
               <Route
                 path={`${match.path}/web-stomp`}

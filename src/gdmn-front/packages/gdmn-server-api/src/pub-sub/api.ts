@@ -124,6 +124,7 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.CREATE_APP]: {
     alias: string;
+    external: boolean;
     connectionOptions?: {
       host?: string;
       port?: number;

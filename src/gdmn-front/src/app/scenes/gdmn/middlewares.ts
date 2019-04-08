@@ -100,6 +100,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
             ////
 
             dispatch(gdmnActionsAsync.apiGetSchema());
+            dispatch(gdmnActionsAsync.apiGetApps());
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
             //-//console.log('[GDMN] auth error: ', error);
