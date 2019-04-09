@@ -69,7 +69,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
             dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
           }
 
-          const currEntity = entitiesRS.size ? entitiesRS.getString(entitiesRS.currentRow, 'name') : undefined;
+          const currEntity = entitiesRS.size ? entitiesRS.getString('name') : undefined;
 
           let attributesRS = getState().recordSet.attributes;
 

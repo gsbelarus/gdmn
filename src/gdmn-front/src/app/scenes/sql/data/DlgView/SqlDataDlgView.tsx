@@ -128,7 +128,7 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>
             <span>{f.caption}</span>
-            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(rowid, f.fieldName, '') : ''} />
+            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(f.fieldName, rowid, '') : ''} />
             {/* TODO: Делать проверку типа поля и если ссылка то отображать кнопку 'Открыть запись' */}
           </Fragment>
         ))}

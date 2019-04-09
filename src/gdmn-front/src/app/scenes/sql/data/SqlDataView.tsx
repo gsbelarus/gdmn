@@ -1,4 +1,3 @@
-import React from 'react';
 import { ICommandBarItemProps } from 'office-ui-fabric-react';
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
 

@@ -117,7 +117,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>
             <span>{f.caption}</span>
-            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(0, f.fieldName, "") : ""}/>
+            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(f.fieldName, 0, "") : ""}/>
           </Fragment>
         ))}
       </div>

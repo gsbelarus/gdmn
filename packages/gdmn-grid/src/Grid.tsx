@@ -1230,11 +1230,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             </span>
           ) : groupRecCount ? (
             <span key={fldidx} className={cellClass}>
-              {rs.getString(rowIndex, fld.fieldName, '')}
+              {rs.getString(fld.fieldName, rowIndex, '')}
               {groupRecCount}
             </span>
           ) :
-            rs.getString(rowIndex, fld.fieldName, '')
+            rs.getString(fld.fieldName, rowIndex, '')
         })
       ) : (
         <span className={cn(styles.CellColumn, textClass)} />

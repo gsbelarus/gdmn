@@ -45,8 +45,8 @@ export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RecordSe
       const getMaxLength = (fn: string) => {
         let len = 0;
         for (let i = 0; i < rs.size; i++) {
-          if (rs.getString(i, fn).length > len) {
-            len = rs.getString(i, fn).length;
+          if (rs.getString(fn, i).length > len) {
+            len = rs.getString(fn, i).length;
           }
         }
         return len;

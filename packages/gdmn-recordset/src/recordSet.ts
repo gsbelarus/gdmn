@@ -274,7 +274,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error('RecordSet is empty');
     }
 
-    return this.pk.map( fd => this.getString(currentRow, fd.fieldName) );
+    return this.pk.map( fd => this.getString(fd.fieldName) );
   }
 
   private _checkFields(fields: INamedField[]) {
@@ -297,8 +297,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   private _findGroup(
     groups: IDataGroup<R>[],
-    rowIdx: number
+    rIdx?: number
   ): { groupIdx: number; group: IDataGroup<R> } {
+    const rowIdx = rIdx === undefined ? this.currentRow : rIdx;
+
     const groupsCount = groups.length;
 
     if (!groupsCount) {
@@ -354,7 +356,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _getData(
     data: Data<R>,
     rowIdx: number,
-    calcFields: TRowCalcFunc<R> | undefined
+    calcFields?: TRowCalcFunc<R>
   ): R {
     if (rowIdx < 0 || rowIdx >= data.size) {
       throw new Error(`Invalid row idx ${rowIdx}`);
@@ -368,9 +370,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _get(
-    rowIdx: number,
-    calcFields: TRowCalcFunc<R> | undefined
+    rIdx?: number,
+    calcFields?: TRowCalcFunc<R>
   ): IRow<R> {
+    const rowIdx = rIdx === undefined ? this.currentRow : rIdx;
+
     const {groups, data} = this._params;
 
     if (!groups || !groups.length) {
@@ -416,12 +420,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._get(rowIdx, calcFields);
   }
 
-  public getValue(rowIdx: number, fieldName: string, defaultValue?: TDataType): TDataType {
+  public getValue(fieldName: string, rowIdx?: number, defaultValue?: TDataType): TDataType {
     const {calcFields} = this._params;
     return checkField(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getString(rowIdx: number, fieldName: string, defaultValue?: string): string {
+  public getString(fieldName: string, rowIdx?: number, defaultValue?: string): string {
     const {calcFields} = this._params;
     const fd = this.fieldDefs.find(fd => fd.fieldName === fieldName);
     if (fd) {
@@ -446,17 +450,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return getAsString(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getNumber(rowIdx: number, fieldName: string, defaultValue?: number): number {
+  public getNumber(fieldName: string, rowIdx?: number, defaultValue?: number): number {
     const {calcFields} = this._params;
     return getAsNumber(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getBoolean(rowIdx: number, fieldName: string, defaultValue?: boolean): boolean {
+  public getBoolean(fieldName: string, rowIdx?: number, defaultValue?: boolean): boolean {
     const {calcFields} = this._params;
     return getAsBoolean(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getDate(rowIdx: number, fieldName: string, defaultValue?: Date): Date {
+  public getDate(fieldName: string, rowIdx?: number, defaultValue?: Date): Date {
     const {calcFields} = this._params;
     return getAsDate(
       this._get(rowIdx, calcFields).data,
@@ -465,7 +469,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     );
   }
 
-  public isNull(rowIdx: number, fieldName: string): boolean {
+  public isNull(fieldName: string, rowIdx?: number): boolean {
     const {calcFields} = this._params;
     return isNull(this._get(rowIdx, calcFields).data, fieldName);
   }

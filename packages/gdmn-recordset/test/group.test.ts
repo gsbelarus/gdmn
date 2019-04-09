@@ -115,13 +115,13 @@ describe('group', () => {
 
     expect(rs.size).toEqual(7);
     expect(rs.fieldDefs.length).toEqual(9);
-    expect(rs.getString(0, 'company')).toEqual('Company A');
-    expect(rs.getString(1, 'company')).toEqual('Company A');
-    expect(rs.getString(2, 'company')).toEqual('Company A');
-    expect(rs.getString(3, 'company')).toEqual('Company A');
-    expect(rs.getString(4, 'company')).toEqual('Company A');
-    expect(rs.getString(5, 'company')).toEqual('Company B');
-    expect(rs.getString(6, 'company')).toEqual('Company B');
+    expect(rs.getString('company', 0)).toEqual('Company A');
+    expect(rs.getString('company', 1)).toEqual('Company A');
+    expect(rs.getString('company', 2)).toEqual('Company A');
+    expect(rs.getString('company', 3)).toEqual('Company A');
+    expect(rs.getString('company', 4)).toEqual('Company A');
+    expect(rs.getString('company', 5)).toEqual('Company B');
+    expect(rs.getString('company', 6)).toEqual('Company B');
   });
 
   it('group 1 level with aggregates', () => {
@@ -141,17 +141,17 @@ describe('group', () => {
 
     expect(rs.size).toEqual(9);
     expect(rs.fieldDefs.length).toEqual(9);
-    expect(rs.getString(0, 'company')).toEqual('Company A');
-    expect(rs.getString(1, 'company')).toEqual('Company A');
-    expect(rs.getString(2, 'company')).toEqual('Company A');
-    expect(rs.getString(3, 'company')).toEqual('Company A');
-    expect(rs.getString(4, 'company')).toEqual('Company A');
-    expect(rs.getString(5, 'company', '')).toEqual('');
-    expect(rs.getString(6, 'company')).toEqual('Company B');
-    expect(rs.getString(7, 'company')).toEqual('Company B');
-    expect(rs.getString(8, 'company', '')).toEqual('');
-    expect(rs.getNumber(5, 'cost')).toEqual(174.5);
-    expect(rs.getNumber(8, 'cost')).toEqual(20);
+    expect(rs.getString('company', 0)).toEqual('Company A');
+    expect(rs.getString('company', 1)).toEqual('Company A');
+    expect(rs.getString('company', 2)).toEqual('Company A');
+    expect(rs.getString('company', 3)).toEqual('Company A');
+    expect(rs.getString('company', 4)).toEqual('Company A');
+    expect(rs.getString('company', 5, '')).toEqual('');
+    expect(rs.getString('company', 6)).toEqual('Company B');
+    expect(rs.getString('company', 7)).toEqual('Company B');
+    expect(rs.getString('company', 8, '')).toEqual('');
+    expect(rs.getNumber('cost', 5)).toEqual(174.5);
+    expect(rs.getNumber('cost', 8)).toEqual(20);
   });
 
   it('group 2 levels without aggregates', () => {
@@ -175,16 +175,16 @@ describe('group', () => {
 
     expect(rs.size).toEqual(10);
     expect(rs.fieldDefs.length).toEqual(9);
-    expect(rs.getString(0, 'company')).toEqual('Company A');
-    expect(rs.getString(1, 'company', '')).toEqual('');
-    expect(rs.getString(2, 'company')).toEqual('Company A');
-    expect(rs.getString(3, 'company')).toEqual('Company A');
-    expect(rs.getString(4, 'company', '')).toEqual('');
-    expect(rs.getString(5, 'company')).toEqual('Company A');
-    expect(rs.getString(6, 'company')).toEqual('Company A');
-    expect(rs.getString(7, 'company')).toEqual('Company B');
-    expect(rs.getString(8, 'company', '')).toEqual('');
-    expect(rs.getString(9, 'company')).toEqual('Company B');
+    expect(rs.getString('company', 0)).toEqual('Company A');
+    expect(rs.getString('company', 1, '')).toEqual('');
+    expect(rs.getString('company', 2)).toEqual('Company A');
+    expect(rs.getString('company', 3)).toEqual('Company A');
+    expect(rs.getString('company', 4, '')).toEqual('');
+    expect(rs.getString('company', 5)).toEqual('Company A');
+    expect(rs.getString('company', 6)).toEqual('Company A');
+    expect(rs.getString('company', 7)).toEqual('Company B');
+    expect(rs.getString('company', 8, '')).toEqual('');
+    expect(rs.getString('company', 9)).toEqual('Company B');
   });
 
   it('group 2 levels with aggregates', () => {
@@ -210,21 +210,21 @@ describe('group', () => {
 
     expect(rs.size).toEqual(13);
     expect(rs.fieldDefs.length).toEqual(9);
-    expect(rs.getString(0, 'company')).toEqual('Company A');
-    expect(rs.getString(1, 'company', '')).toEqual('');
-    expect(rs.getString(2, 'company')).toEqual('Company A');
-    expect(rs.getString(3, 'company')).toEqual('Company A');
-    expect(rs.getString(4, 'company', '')).toEqual('');
-    expect(rs.getString(5, 'company', '')).toEqual('');
-    expect(rs.getString(6, 'company')).toEqual('Company A');
-    expect(rs.getString(7, 'company')).toEqual('Company A');
-    expect(rs.getString(8, 'company', '')).toEqual('');
-    expect(rs.getString(9, 'company')).toEqual('Company B');
-    expect(rs.getString(10, 'company', '')).toEqual('');
-    expect(rs.getString(11, 'company')).toEqual('Company B');
-    expect(rs.getString(12, 'company', '')).toEqual('');
-    expect(rs.getNumber(4, 'cost')).toEqual(15);
-    expect(rs.getNumber(8, 'cost')).toEqual(159.5);
-    expect(rs.getNumber(12, 'cost')).toEqual(20);
+    expect(rs.getString('company', 0)).toEqual('Company A');
+    expect(rs.getString('company', 1, '')).toEqual('');
+    expect(rs.getString('company', 2)).toEqual('Company A');
+    expect(rs.getString('company', 3)).toEqual('Company A');
+    expect(rs.getString('company', 4, '')).toEqual('');
+    expect(rs.getString('company', 5, '')).toEqual('');
+    expect(rs.getString('company', 6)).toEqual('Company A');
+    expect(rs.getString('company', 7)).toEqual('Company A');
+    expect(rs.getString('company', 8, '')).toEqual('');
+    expect(rs.getString('company', 9)).toEqual('Company B');
+    expect(rs.getString('company', 10, '')).toEqual('');
+    expect(rs.getString('company', 11)).toEqual('Company B');
+    expect(rs.getString('company', 12, '')).toEqual('');
+    expect(rs.getNumber('cost', 4)).toEqual(15);
+    expect(rs.getNumber('cost', 8)).toEqual(159.5);
+    expect(rs.getNumber('cost', 12)).toEqual(20);
   });
 });

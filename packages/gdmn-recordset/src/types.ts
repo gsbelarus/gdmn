@@ -85,6 +85,8 @@ export type TRowCalcFunc<R extends IDataRow> = (row: R) => R;
 
 export enum TRowType {
   Data = 0,
+  Deleting,
+  Deleted,
   HeaderCollapsed,
   HeaderExpanded,
   Footer

@@ -102,7 +102,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
         const masterLink = data.detail[0].rs.masterLink!;
         const detailValue = masterLink.values[0].value;
-        const masterValue = data.rs.size > 0 ? data.rs.getValue(data.rs.currentRow, masterLink.values[0].fieldName) : '';
+        const masterValue = data.rs.size > 0 ? data.rs.getValue(masterLink.values[0].fieldName) : '';
         if (detailValue !== masterValue) {
           attachRs(getMutex(this.getDataViewKey()));
         }

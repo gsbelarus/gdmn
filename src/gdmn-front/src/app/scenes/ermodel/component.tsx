@@ -49,7 +49,7 @@ export class ERModelView extends DataView<IERModelViewProps, IERModelViewState, 
           iconName: 'Table'
         },
         commandBarButtonAs: btn(
-          this.isDataLoaded() && data!.rs.size ? `entity/${data!.rs.getString(data!.rs.currentRow, 'name')}` : `${match!.url}`
+          this.isDataLoaded() && data!.rs.size ? `entity/${data!.rs.getString('name')}` : `${match!.url}`
         )
       },
       {
@@ -76,7 +76,7 @@ export class ERModelView extends DataView<IERModelViewProps, IERModelViewState, 
     const { showInspector } = this.state;
 
     if (showInspector && erModel && data && data!.rs && data!.rs!.size) {
-      const entityName = data!.rs.getString(data!.rs.currentRow, 'name');
+      const entityName = data!.rs.getString('name');
       const entity = erModel!.entities[entityName];
       if (entity) {
         return (

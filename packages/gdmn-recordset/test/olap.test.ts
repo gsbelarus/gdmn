@@ -134,8 +134,8 @@ describe('olap', () => {
 
     expect(rs.size).toEqual(1);
     expect(rs.fieldDefs.length).toEqual(2);
-    expect(rs.getString(0, 'company')).toEqual('Company A');
-    expect(rs.getNumber(0, '[sumCost][2018]')).toEqual(3);
+    expect(rs.getString('company', 0)).toEqual('Company A');
+    expect(rs.getNumber('[sumCost][2018]', 0)).toEqual(3);
   });
 
   it('olap - 1 row, 2 columns', () => {
@@ -173,9 +173,9 @@ describe('olap', () => {
 
     expect(rs.size).toEqual(1);
     expect(rs.fieldDefs.length).toEqual(3);
-    expect(rs.getString(0, 'company')).toEqual('Company A');
-    expect(rs.getNumber(0, '[sumCost][2018]')).toEqual(3);
-    expect(rs.getNumber(0, '[sumCost][2017]')).toEqual(12);
+    expect(rs.getString('company')).toEqual('Company A');
+    expect(rs.getNumber('[sumCost][2018]')).toEqual(3);
+    expect(rs.getNumber('[sumCost][2017]')).toEqual(12);
   });
 
   it('olap - 2 rows, 4 columns', () => {
@@ -213,14 +213,14 @@ describe('olap', () => {
 
     expect(rs.size).toEqual(2);
     expect(rs.fieldDefs.length).toEqual(4);
-    expect(rs.getString(0, 'company')).toEqual('Company B');
-    expect(rs.getString(1, 'company')).toEqual('Company A');
-    expect(rs.getNumber(0, '[sumCost][2016]')).toEqual(20);
-    expect(rs.getNumber(0, '[sumCost][2017]', 0)).toEqual(0);
-    expect(rs.getNumber(0, '[sumCost][2018]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2016]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2017]', 0)).toEqual(12);
-    expect(rs.getNumber(1, '[sumCost][2018]', 0)).toEqual(3);
+    expect(rs.getString('company', 0)).toEqual('Company B');
+    expect(rs.getString('company', 1)).toEqual('Company A');
+    expect(rs.getNumber('[sumCost][2016]', 0)).toEqual(20);
+    expect(rs.getNumber('[sumCost][2017]', 0, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2018]', 0, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2016]', 1, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2017]', 1, 0)).toEqual(12);
+    expect(rs.getNumber('[sumCost][2018]', 1, 0)).toEqual(3);
   });
 
   it('olap - 3 rows, 5 columns', () => {
@@ -261,18 +261,18 @@ describe('olap', () => {
 
     expect(rs.size).toEqual(3);
     expect(rs.fieldDefs.length).toEqual(5);
-    expect(rs.getString(0, 'company')).toEqual('Company B');
-    expect(rs.getString(1, 'company')).toEqual('Company A');
-    expect(rs.getString(2, 'company')).toEqual('Company A');
-    expect(rs.getNumber(0, '[sumCost][2016]')).toEqual(20);
-    expect(rs.getNumber(0, '[sumCost][2017]', 0)).toEqual(0);
-    expect(rs.getNumber(0, '[sumCost][2018]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2016]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2017]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2018]')).toEqual(132);
-    expect(rs.getNumber(2, '[sumCost][2016]', 0)).toEqual(0);
-    expect(rs.getNumber(2, '[sumCost][2017]', 0)).toEqual(12);
-    expect(rs.getNumber(2, '[sumCost][2018]', 0)).toEqual(3);
+    expect(rs.getString('company', 0)).toEqual('Company B');
+    expect(rs.getString('company', 1)).toEqual('Company A');
+    expect(rs.getString('company', 2)).toEqual('Company A');
+    expect(rs.getNumber('[sumCost][2016]', 0)).toEqual(20);
+    expect(rs.getNumber('[sumCost][2017]', 0, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2018]', 0, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2016]', 1, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2017]', 1, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2018]', 1)).toEqual(132);
+    expect(rs.getNumber('[sumCost][2016]', 2, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2017]', 2, 0)).toEqual(12);
+    expect(rs.getNumber('[sumCost][2018]', 2, 0)).toEqual(3);
   });
 
   it('olap - 3 rows, 10 columns', () => {
@@ -316,25 +316,25 @@ describe('olap', () => {
 
     expect(rs.size).toEqual(3);
     expect(rs.fieldDefs.length).toEqual(10);
-    expect(rs.getString(0, 'company')).toEqual('Company B');
-    expect(rs.getString(1, 'company')).toEqual('Company A');
-    expect(rs.getString(2, 'company')).toEqual('Company A');
-    expect(rs.getString(0, 'good')).toEqual('Good A');
-    expect(rs.getString(1, 'good')).toEqual('Good B');
-    expect(rs.getString(2, 'good')).toEqual('Good A');
-    expect(rs.getNumber(0, '[sumCost][2016]')).toEqual(20);
-    expect(rs.getNumber(0, '[sumCost][2016][7]')).toEqual(20);
-    expect(rs.getNumber(0, '[sumCost][2017]', 0)).toEqual(0);
-    expect(rs.getNumber(0, '[sumCost][2018]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2016]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2017]', 0)).toEqual(0);
-    expect(rs.getNumber(1, '[sumCost][2018]')).toEqual(159.5);
-    expect(rs.getNumber(1, '[sumCost][2018][6]')).toEqual(132);
-    expect(rs.getNumber(1, '[sumCost][2018][11]')).toEqual(27.5);
-    expect(rs.getNumber(2, '[sumCost][2016]', 0)).toEqual(0);
-    expect(rs.getNumber(2, '[sumCost][2017]', 0)).toEqual(12);
-    expect(rs.getNumber(2, '[sumCost][2017][2]', 0)).toEqual(12);
-    expect(rs.getNumber(2, '[sumCost][2018]', 0)).toEqual(3);
-    expect(rs.getNumber(2, '[sumCost][2018][2]', 0)).toEqual(3);
+    expect(rs.getString('company', 0)).toEqual('Company B');
+    expect(rs.getString('company', 1)).toEqual('Company A');
+    expect(rs.getString('company', 2)).toEqual('Company A');
+    expect(rs.getString('good', 0)).toEqual('Good A');
+    expect(rs.getString('good', 1)).toEqual('Good B');
+    expect(rs.getString('good', 2)).toEqual('Good A');
+    expect(rs.getNumber('[sumCost][2016]', 0)).toEqual(20);
+    expect(rs.getNumber('[sumCost][2016][7]', 0)).toEqual(20);
+    expect(rs.getNumber('[sumCost][2017]', 0, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2018]', 0, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2016]', 1, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2017]', 1, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2018]', 1)).toEqual(159.5);
+    expect(rs.getNumber('[sumCost][2018][6]', 1)).toEqual(132);
+    expect(rs.getNumber('[sumCost][2018][11]', 1)).toEqual(27.5);
+    expect(rs.getNumber('[sumCost][2016]', 2, 0)).toEqual(0);
+    expect(rs.getNumber('[sumCost][2017]', 2, 0)).toEqual(12);
+    expect(rs.getNumber('[sumCost][2017][2]', 2, 0)).toEqual(12);
+    expect(rs.getNumber('[sumCost][2018]', 2, 0)).toEqual(3);
+    expect(rs.getNumber('[sumCost][2018][2]', 2, 0)).toEqual(3);
   });
 });
