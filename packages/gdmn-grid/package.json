@@ -36,7 +36,7 @@
     "react": "^16",
     "react-dom": "^16",
     "react-draggable": "^3",
-    "react-redux": "^6",
+    "react-redux": "^7",
     "react-virtualized": "^9",
     "redux": "^4",
     "redux-thunk": "^2",

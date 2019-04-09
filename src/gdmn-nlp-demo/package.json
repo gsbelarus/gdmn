@@ -16,7 +16,7 @@
     "office-ui-fabric-react": "^6",
     "react": "^16",
     "react-dom": "^16",
-    "react-redux": "^6",
+    "react-redux": "^7",
     "react-router-dom": "^5",
     "react-scripts": "^2",
     "redux": "^4",

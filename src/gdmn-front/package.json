@@ -39,7 +39,7 @@
     "react-content-loader": "^4",
     "react-css-modules": "^4",
     "react-dom": "^16",
-    "react-redux": "^6",
+    "react-redux": "^7",
     "react-router-dom": "^5",
     "recompose": "^0",
     "redux": "^4",
