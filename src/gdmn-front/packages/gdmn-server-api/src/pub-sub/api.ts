@@ -126,8 +126,10 @@ export interface TTaskActionPayloadTypes {
     alias: string;
     external: boolean;
     connectionOptions?: {
-      host?: string;
-      port?: number;
+      server?: {
+        host: string;
+        port: number;
+      };
       username?: string;
       password?: string;
       path?: string;

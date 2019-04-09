@@ -176,7 +176,11 @@ export class MainApplication extends Application {
               const userAppInfo = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
               const application = await this._getApplication(connection, transaction, context.session, uid);
               try {
-                await application.create();
+                if (external) {
+                  await application.connect();
+                } else {
+                  await application.create();
+                }
               } catch (error) {
                 this._applications.delete(uid);
                 throw error;

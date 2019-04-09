@@ -162,24 +162,26 @@ export class ApplicationView extends View<IApplicationViewProps, IAddApplication
             <PrimaryButton
               onClick={() => {
                 const data: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP] = {
-                  alias: this.state.alias ? this.state.alias : '',
+                  alias: this.state.alias ? this.state.alias : "",
                   external: !!this.state.external,
                   connectionOptions: this.state.external
                     ? {
-                      host: this.state.host,
-                      port: this.state.port,
+                      server: this.state.host && this.state.port !== null && this.state.port !== undefined
+                        ? {
+                          host: this.state.host,
+                          port: this.state.port
+                        } : undefined,
                       username: this.state.username,
                       password: this.state.password,
                       path: this.state.path
-                    }
-                    : undefined
+                    } : undefined
                 };
                 apiCreateApplication(data);
-                this.setState({ process: 'add' });
-                this.setState({ add: false });
+                this.setState({process: "add"});
+                this.setState({add: false});
               }}
-              text="Save" />
-            <DefaultButton onClick={() => this.setState({ add: false })} text="Cancel" />
+              text="Save"/>
+            <DefaultButton onClick={() => this.setState({add: false})} text="Cancel"/>
           </DialogFooter>
         </Dialog>
         <div className="addApp" onClick={() => { this.setState({ add: true }) }}>Add application</div>
