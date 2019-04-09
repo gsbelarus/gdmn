@@ -177,8 +177,9 @@ export class MainApplication extends Application {
               const application = await this._getApplication(connection, transaction, context.session, uid);
               try {
                 await application.create();
-              } finally {
+              } catch (error) {
                 this._applications.delete(uid);
+                throw error;
               }
 
               return userAppInfo;
