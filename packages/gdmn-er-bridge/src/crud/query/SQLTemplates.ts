@@ -73,6 +73,10 @@ export abstract class SQLTemplates {
     return SQLTemplates.condition(alias, fieldName, "=", value);
   }
 
+  public static contains(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "CONTAINING", value);
+  }
+
   public static inOperator(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "IN", `(${value})`);
   }

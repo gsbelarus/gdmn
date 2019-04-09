@@ -18,6 +18,7 @@ export interface IEntityQueryWhereInspector {
 
   isNull?: IEntityQueryAliasInspector[];
   equals?: IEntityQueryWhereValueInspector[];
+  contains?: IEntityQueryWhereValueInspector[];
 }
 
 export interface IEntityQueryOrderInspector extends IEntityQueryAliasInspector {
@@ -49,6 +50,7 @@ export interface IEntityQueryWhere {
 
   readonly isNull?: Array<IEntityQueryAlias<ScalarAttribute>>;
   readonly equals?: IEntityQueryWhereValue[];
+  readonly contains?: IEntityQueryWhereValue[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
@@ -122,6 +124,19 @@ export class EntityQueryOptions {
               value: equals.value
             };
           })
+          : undefined,
+        contains: item.contains
+          ? item.contains.map((contains) => {
+            const findLink = link.deepFindLink(contains.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${contains.alias} is not found`);
+            }
+            return {
+              alias: contains.alias,
+              attribute: findLink.entity.attribute(contains.attribute),
+              value: contains.value
+            };
+          })
           : undefined
       };
       if (Object.values(where).some((w) => !!w)) {
@@ -155,6 +170,13 @@ export class EntityQueryOptions {
           alias: equals.alias,
           attribute: equals.attribute.name,
           value: equals.value
+        }));
+      }
+      if (item.contains) {
+        inspector.contains = item.contains.map((contains) => ({
+          alias: contains.alias,
+          attribute: contains.attribute.name,
+          value: contains.value
         }));
       }
       items.push(inspector);

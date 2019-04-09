@@ -933,4 +933,34 @@ describe("Query", () => {
       connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
+
+  it("where: containing", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "DETAIL_ENTITY",
+        alias: "de",
+        fields: [
+          {attribute: "TEST_STRING1"},
+        ]
+      },
+      options: {
+        where: [{
+            contains: [{
+                alias: "de",
+                attribute: "TEST_STRING1",
+                value: "asd"
+              }]
+          }]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM DETAIL_ENTITY T$1\n" +
+      "WHERE T$1.TEST_STRING1 CONTAINING :P$1");
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
+    });
+  });
 });
