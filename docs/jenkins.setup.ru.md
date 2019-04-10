@@ -49,8 +49,29 @@
         * Status result - One of default messages and statuses;
     * Publish JUnit test result report:
       * Test report XMLs: packages/*/junit.xml
-* Нажать `Save`
+* Нажать `Save`  
 
+* Далее переходим в Manage Jenkins в раздел `Configure system`:  
+    * В разделе `GitHub` добавляем новый сервер `Add GitHub Server`:
+        * Name - указываем произвольное имя  
+        * API URL - https://api.github.com
+        * Credentials: добавляем `Secret text` где в поле `Secret` вводим `Personal access tokens` полученный на GitHub  
+        (см. ниже `Настройка GitHub`) в разделе `Developer settings`, и нажимаем `Add`  
+    * Manage hooks: выставить флаг  
+* Если сервер выступает локальной машиной, то требуется перейти в раздел `Jenkins Location` где:  
+    * Jenkins URL: указать сервер с переброщенным портом к примеру с помощью утилиты `ngrok`
+
+## Настройка GitHub
+* в`GitHub` переходим на закладку `Settings` аккаунта:
+    * На закладке `Developer settings` нажимаем `Generate new token`:
+        * Select scopes: repo  
+    * нажать `Generate Token` и скопировать в буфер
+
+* Далее в репозитории `GitHub` выбираем трубемый проект и переходим на закладку `Settings`:
+    * На закладке `Webhooks` добавляем `add webhook`:
+        * Payload URL: указываемый адрес сервера  
+        * Content type: application/json
+        * Secret: вводим `Personal access tokens` полученный в разделе `Developer settings` 
 ## Запуск сборки
 
 После настройки и запуска сервера он будет запукать процесс сборки и тестирования после каждого коммита в нужные ветки.
