@@ -1,0 +1,43 @@
+
+.ListApplications {
+  overflow: auto;
+  max-height: 500px;
+  align-items: center;
+}
+
+.application {
+  display: flex;
+  cursor: pointer;
+  flex-direction: column;
+}
+
+.container :hover >* {
+  background-color: #afafaf;
+  color: #FFFFFF;
+}
+
+.container {
+  min-height: 54px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #EAEAEA;
+}
+
+.applicationAlias {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #000;
+}
+
+.applicationInfo {
+  font-size: small;
+  color: #696969;
+}
+
+.chevron {
+  align-self: center;
+  color:  #A6A6A6;
+  margin: 10px;
+  font-size: large;
+  flex-shrink: 0;
+}

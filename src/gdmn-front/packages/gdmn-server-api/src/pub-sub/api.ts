@@ -122,16 +122,7 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.DELETE]: {
     delete: IEntityDeleteInspector;
   };
-  [TTaskActionNames.CREATE_APP]: {
-    alias: string;
-    connectionOptions?: {
-      host?: string;
-      port?: number;
-      username?: string;
-      password?: string;
-      path?: string;
-    };
-  };
+  [TTaskActionNames.CREATE_APP]: ICreateApplicationInfo;
   [TTaskActionNames.DELETE_APP]: {
     uid: string;
   };
@@ -166,7 +157,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.DELETE]: undefined;
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
-  [TTaskActionNames.GET_APPS]: any; // fixme: type in api.getApps IApplicationInfo[];
+  [TTaskActionNames.GET_APPS]: IApplicationInfo[];
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -223,9 +214,22 @@ export interface IDefinedEntity {
   entity: string;
 }
 
-export interface IApplicationInfo {
-  uid: string;
+export interface ICreateApplicationInfo {
   alias: string;
+  external: boolean;
+  connectionOptions?: {
+    server?: {
+      host: string;
+      port: number;
+    };
+    username?: string;
+    password?: string;
+    path?: string;
+  };
+}
+
+export interface IApplicationInfo extends ICreateApplicationInfo {
+  uid: string;
   creationDate: Date;
 }
 

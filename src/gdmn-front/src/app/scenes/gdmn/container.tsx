@@ -13,7 +13,8 @@ export const GdmnContainer = compose<IGdmnViewProps, RouteComponentProps<any>>(
       loading: selectGdmnState(state).loading,
       loadingMessage: selectGdmnState(state).loadingMessage,
       errorMessage: state.rootState.errorMsgBarText,
-      lostConnectWarnOpened: state.rootState.lostConnectWarnOpened
+      lostConnectWarnOpened: state.rootState.lostConnectWarnOpened,
+      application: state.gdmnState.application
     }),
     dispatch => ({
       dispatch

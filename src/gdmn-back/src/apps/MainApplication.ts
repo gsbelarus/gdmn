@@ -154,7 +154,7 @@ export class MainApplication extends Application {
         const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
 
-        return await this.executeConnection((connection) => AConnection.executeTransaction({
+        return await context.session.executeConnection((connection) => AConnection.executeTransaction({
             connection,
             callback: async (transaction) => {
               const user = await this._findUser(connection, transaction, {id: userKey});
@@ -174,13 +174,16 @@ export class MainApplication extends Application {
               });
 
               const userAppInfo = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
-
-              await transaction.commitRetaining();
-              const application = await this.getApplication(context.session, uid);
+              const application = await this._getApplication(connection, transaction, context.session, uid);
               try {
-                await application.create();
-              } finally {
+                if (external) {
+                  await application.connect();
+                } else {
+                  await application.create();
+                }
+              } catch (error) {
                 this._applications.delete(uid);
+                throw error;
               }
 
               return userAppInfo;
@@ -208,16 +211,17 @@ export class MainApplication extends Application {
         const {uid} = context.command.payload;
         const {userKey} = context.session;
 
-        await this.executeConnection((connection) => AConnection.executeTransaction({
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
             connection,
             callback: async (transaction) => {
               const {ownerKey, external} = await this._getUserApplicationInfo(connection, transaction, userKey, uid);
+              const application = await this._getApplication(connection, transaction, context.session, uid);
+
               await this._deleteUserApplicationInfo(connection, transaction, userKey, uid);
 
               if (ownerKey === userKey) {
                 await this._deleteApplicationInfo(connection, transaction, userKey, uid);
                 if (!external) {
-                  const application = await this.getApplication(context.session, uid);
                   await application.waitUnlock();
                   if (application.status !== DBStatus.CONNECTED) {
                     await application.connect();
@@ -272,47 +276,9 @@ export class MainApplication extends Application {
   }
 
   public async getApplication(session: Session, uid: string): Promise<Application> {
-    await this.waitUnlock();
-
-    if (this.status !== DBStatus.CONNECTED) {
-      throw new Error("MainApplication is not created");
-    }
-    let application = this._applications.get(uid);
-    const userAppInfo = await this.executeConnection((connection) => (
-        this._getUserApplicationInfo(connection, connection.readTransaction, session.userKey, uid)
-      )
+    return await session.executeConnection((connection) =>
+      this._getApplication(connection, connection.readTransaction, session, uid)
     );
-    if (!application) {
-      const alias = userAppInfo ? userAppInfo.alias : "Unknown";
-      const dbDetail = MainApplication._createDBDetail(alias, MainApplication.getAppPath(uid), userAppInfo);
-      application = new GDMNApplication(dbDetail);
-      this._applications.set(uid, application);
-
-      // TODO remake
-      const callback = async (changedSession: Session) => {
-        if (!application) {
-          return;
-        }
-        if (changedSession.status === SessionStatus.FORCE_CLOSED) {
-          if (!application.sessionManager.size()) {
-            await application.waitUnlock();
-            if (application.status === DBStatus.CONNECTED) {
-              try {
-                await application.disconnect();
-                this._applications.delete(uid);
-              } catch (error) {
-                this._logger.warn(error);
-              }
-            } else {
-              this._applications.delete(uid);
-            }
-            application.sessionManager.emitter.removeListener("change", callback);
-          }
-        }
-      };
-      application.sessionManager.emitter.on("change", callback);
-    }
-    return application;
   }
 
   public async getUserApplicationsInfo(userKey: number): Promise<IUserApplicationInfo[]> {
@@ -349,6 +315,51 @@ export class MainApplication extends Application {
     return await this.executeConnection((connection) => (
       this._findUser(connection, connection.readTransaction, user)
     ));
+  }
+
+  protected async _getApplication(connection: AConnection,
+                                  transaction: ATransaction,
+                                  session: Session,
+                                  uid: string): Promise<Application> {
+    await this.waitUnlock();
+
+    if (this.status !== DBStatus.CONNECTED) {
+      throw new Error("MainApplication is not created");
+    }
+    let application = this._applications.get(uid);
+    const userAppInfo = await this._getUserApplicationInfo(connection, transaction, session.userKey, uid);
+
+    if (!application) {
+      const alias = userAppInfo ? userAppInfo.alias : "Unknown";
+      const dbDetail = MainApplication._createDBDetail(alias, MainApplication.getAppPath(uid), userAppInfo);
+      application = new GDMNApplication(dbDetail);
+      this._applications.set(uid, application);
+
+      // TODO remake
+      const callback = async (changedSession: Session) => {
+        if (!application) {
+          return;
+        }
+        if (changedSession.status === SessionStatus.FORCE_CLOSED) {
+          if (!application.sessionManager.size()) {
+            await application.waitUnlock();
+            if (application.status === DBStatus.CONNECTED) {
+              try {
+                await application.disconnect();
+                this._applications.delete(uid);
+              } catch (error) {
+                this._logger.warn(error);
+              }
+            } else {
+              this._applications.delete(uid);
+            }
+            application.sessionManager.emitter.removeListener("change", callback);
+          }
+        }
+      };
+      application.sessionManager.emitter.on("change", callback);
+    }
+    return application;
   }
 
   protected async _getUserApplicationInfo(connection: AConnection,

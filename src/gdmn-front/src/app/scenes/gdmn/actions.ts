@@ -1,12 +1,13 @@
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
-import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus, TSignInCmdResult, IRefreshTokenPayload, IAccessTokenPayload, TUserRoleType, IApplicationInfo, TTaskActionPayloadTypes } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 import { TThunkAction } from '@src/app/store/TActions';
 import { selectAuthState } from '@src/app/store/selectors';
-import { authActionsAsync } from '@src/app/scenes/auth/actions';
+import { authActionsAsync, authActions } from '@src/app/scenes/auth/actions';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { IViewTab } from './types';
+import { ISignInBoxData } from '../auth/components/SignInBox';
 
 const gdmnActionsAsync = {
   apiActivate: (): TThunkAction => async (dispatch, getState, { apiService }) => {
@@ -48,11 +49,101 @@ const gdmnActionsAsync = {
     dispatch(gdmnActions.onApiDeleteAccount); // todo test
   },
   apiGetSchema: (): TThunkAction => async (dispatch, getState, { apiService }) => {
-    const value = await apiService.getSchema({withAdapter: true});
-    if (value.payload.status === TTaskStatus.SUCCESS) {
-      const erModel = deserializeERModel(value.payload.result!, true);
+    const response = await apiService.getSchema({withAdapter: true});
+    if (response.payload.status === TTaskStatus.SUCCESS) {
+      const erModel = deserializeERModel(response.payload.result!, true);
       dispatch(gdmnActions.setSchema(erModel));
     }
+  },
+  apiCreateApp: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]): TThunkAction => async (dispatch, getState, { apiService }) => {
+    const fakeUid = "1";
+    dispatch(gdmnActions.createApp({
+      ...payload,
+      uid: fakeUid,
+      creationDate: new Date(),
+      loading: true
+    }));
+    const response = await apiService.createApp(payload);
+    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO remove
+    switch (response.payload.status) {
+      case TTaskStatus.SUCCESS: {
+        dispatch(gdmnActions.updateApp(fakeUid, {...response.payload.result!, loading: false}));
+        break;
+      }
+      case TTaskStatus.PAUSED: {
+        dispatch(gdmnActions.deleteApp(fakeUid));
+        throw new Error("Unsupported response status");
+      }
+      case TTaskStatus.FAILED:
+      case TTaskStatus.INTERRUPTED: {
+        dispatch(gdmnActions.deleteApp(fakeUid));
+        break;
+      }
+    }
+  },
+  apiDeleteApp: (uid: string): TThunkAction => async (dispatch, getState, { apiService }) => {
+    const deletedApp = getState().gdmnState.apps.find((item) => item.uid === uid);
+    if (!deletedApp) {
+      throw new Error("App is not found");
+    }
+    dispatch(gdmnActions.updateApp(deletedApp.uid, {...deletedApp, loading: true}));
+    const response = await apiService.deleteApp({uid});
+    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO remove
+    switch(response.payload.status) {
+      case TTaskStatus.SUCCESS: {
+        dispatch(gdmnActions.deleteApp(uid));
+        break;
+      }
+      case TTaskStatus.PAUSED: {
+        dispatch(gdmnActions.updateApp(deletedApp.uid, {...deletedApp, loading: false}));
+        throw new Error("Unsupported response status");
+      }
+      case TTaskStatus.FAILED:
+      case TTaskStatus.INTERRUPTED: {
+        dispatch(gdmnActions.updateApp(deletedApp.uid, {...deletedApp, loading: false}));
+        break;
+      }
+    }
+  },
+  apiGetApps: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    const response = await apiService.getApps();
+    if (response.payload.status === TTaskStatus.SUCCESS) {
+      dispatch(gdmnActions.getApps(response.payload.result!));
+    }
+  },
+  signIn: (data: ISignInBoxData): TThunkAction => async (dispatch, getState, { apiService }) => {
+    dispatch(authActions.signIn.request());
+
+    try {
+      const response: TSignInCmdResult = await apiService.signIn({
+        payload: {
+          'create-user': 0,
+          login: data.userName,
+          passcode: data.password,
+          'app-uid': data.uid
+        }
+      });
+
+      const refreshTokenPayload = Auth.decodeToken<IRefreshTokenPayload>(response.payload['refresh-token']);
+      const accessTokenPayload = Auth.decodeToken<IAccessTokenPayload>(response.payload['access-token']);
+      accessTokenPayload.role = TUserRoleType.USER; // todo: tmp
+
+      dispatch(
+        authActions.signIn.success({
+          refreshTokenPayload,
+          accessTokenPayload,
+          accessToken: response.payload['access-token'] || '',
+          refreshToken: response.payload['refresh-token'] || '',
+        })
+      );
+    } catch (error) {
+      //-//console.log('[GDMN] ', error);
+      dispatch(authActions.signIn.failure(error));
+    }
+  },
+  signOut: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    dispatch(gdmnActions.apiDisconnect());
+    dispatch(authActions.onSignOut()); // todo test
   }
 };
 
@@ -75,6 +166,27 @@ const gdmnActions = {
 
   setLoading: createAction('gdmm/SET_LOADING', resolve => {
     return (loading: boolean, message?: string) => resolve({ loading, message });
+  }),
+
+  createApp: createAction('gdmn/CREATE_APP', resolve => {
+    return (application: IApplicationInfo & {loading?: boolean}) => resolve(application);
+  }),
+
+  updateApp: createAction('gdmn/UPDATE_APP', resolve => {
+    return (uid: string, application: IApplicationInfo & {loading?: boolean}) => resolve({uid, application});
+  }),
+
+  deleteApp: createAction('gdmn/DELETE_APP', resolve => {
+    return (uid: string) => resolve(uid);
+  }),
+
+  // TODO rename SET_APPS
+  getApps: createAction('gdmn/GET_APPS', resolve => {
+    return (apps: Array<IApplicationInfo & {loading?: boolean}>) => resolve(apps);
+  }),
+
+  setApplication: createAction('gdmn/SET_APPLICATION', resolve => {
+    return (application: IApplicationInfo) => resolve(application);
   }),
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST'),

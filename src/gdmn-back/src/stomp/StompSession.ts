@@ -192,7 +192,7 @@ export class StompSession implements StompClientCommandListener {
 
   public connect(headers: StompHeaders): void {
     this._try(async () => {
-      let {
+      const {
         session,
         login,
         passcode,
@@ -264,12 +264,6 @@ export class StompSession implements StompClientCommandListener {
 
       } else {
         throw new StompServerError(StompErrorCode.UNAUTHORIZED, "Incorrect headers");
-      }
-
-      // TODO tmp - remove
-      const appsInfo = await this.mainApplication.getUserApplicationsInfo(result.userKey);
-      if (appsInfo.length) {
-        appUid = appsInfo[0].uid;
       }
 
       if (appUid) {

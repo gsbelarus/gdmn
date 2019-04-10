@@ -12,6 +12,7 @@ import { getId } from 'office-ui-fabric-react/lib/Utilities';
 export interface ISignInBoxData {
   userName: string;
   password: string;
+  uid?: string;
 }
 
 export interface ISignInBoxStateProps {
