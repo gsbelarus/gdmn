@@ -9,7 +9,7 @@ import { authActionsAsync } from '@src/app/scenes/auth/actions';
 import { gdmnActions, gdmnActionsAsync, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
-import { selectAuthState } from '@src/app/store/selectors';
+import { selectAuthState, selectGdmnState } from '@src/app/store/selectors';
 import { TThunkMiddleware } from '@src/app/store/middlewares';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
@@ -100,7 +100,12 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
             ////
 
             dispatch(gdmnActionsAsync.apiGetSchema());
-            dispatch(gdmnActionsAsync.apiGetApps());
+
+            const application = selectGdmnState(getState()).application;
+            if(!application) {
+              dispatch(gdmnActionsAsync.apiGetApps());
+            }
+            
             dispatch(gdmnActions.buildCommandList());
           } catch (error) {
             //-//console.log('[GDMN] auth error: ', error);

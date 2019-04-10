@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { Link, Route, RouteComponentProps, Switch } from 'react-router-dom';
+import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
@@ -21,7 +21,8 @@ import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
 import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
-import { ApplicationViewContainer } from './components/ApplicationViewContainer';
+import { ApplicationsViewContainer } from './components/ApplicationsViewContainer';
+import { IApplicationInfo } from '@gdmn/server-api';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -29,7 +30,7 @@ export interface IGdmnViewProps extends RouteComponentProps<any> {
   errorMessage?: string[];
   lostConnectWarnOpened: boolean;
   dispatch: Dispatch<any>;
-  application?: any;
+  application?: IApplicationInfo;
 };
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
@@ -55,7 +56,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               find something...
               <span className="WhereToSearch">/</span>
             </div>
-            <div className="ImportantMenu" hidden={this.props.application ? true : false}>{commandToLink('application', match.url)}</div>
+            <div className="ImportantMenu" hidden={this.props.application ? true : false}>{commandToLink('applications', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
@@ -138,6 +139,11 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
         <main className="WorkArea" style={{ paddingTop: topAreaHeight, marginTop: -topAreaHeight }}>
           <ErrBoundary>
             <Switch>
+              {
+                !this.props.application 
+                ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} /> 
+                : undefined
+              }
               <Route
                 path={`${match.path}/account`}
                 render={props => (
@@ -147,10 +153,10 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 )}
               />
               <Route
-                path={`${match.path}/application`}
+                path={`${match.path}/applications`}
                 render={props => {
                   return (
-                    <ApplicationViewContainer
+                    <ApplicationsViewContainer
                     {...props}
                     />
                   );

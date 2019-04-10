@@ -102,7 +102,7 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                     label="Пользователь:"
                     disabled={signInRequesting}
                     value={userName}
-                    onBeforeChange={userName => this.setState({ userName })}
+                    onBeforeChange={ userName => userName && this.setState({ userName }) }
                   />
                   <PasswordInput
                     label="Пароль:"
@@ -132,7 +132,7 @@ export class SignInBox extends Component<ISignInBoxProps, ISignInBoxState> {
                       label="Пользователь:"
                       disabled={signUpRequesting}
                       value={userName}
-                      onBeforeChange={userName => this.setState({ userName })}
+                      onBeforeChange={ userName => userName && this.setState({ userName }) }
                     />
                     <PasswordInput
                       label="Пароль:"

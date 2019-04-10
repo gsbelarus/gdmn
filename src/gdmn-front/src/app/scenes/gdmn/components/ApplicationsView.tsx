@@ -2,25 +2,23 @@ import React from 'react';
 import { View, IViewProps } from '@src/app/components/View';
 import { ISignInBoxData } from '../../auth/components/SignInBox';
 import '../../../../styles/Application.css';
-import { TextField, DefaultButton, Checkbox, Dialog, DialogFooter, PrimaryButton, Spinner, SpinnerSize, FocusZone, List, FocusZoneDirection } from 'office-ui-fabric-react';
+import { TextField, DefaultButton, Checkbox, Dialog, DialogFooter, PrimaryButton, Spinner, SpinnerSize, FocusZone, List, FocusZoneDirection, IconButton, ICommandBarItemProps } from 'office-ui-fabric-react';
 import { PasswordInput } from '@gdmn/client-core';
 import { TTaskActionPayloadTypes, TTaskActionNames, IApplicationInfo } from '@gdmn/server-api';
 
-export interface IApplicationViewProps extends IViewProps {
+export interface IApplicationsViewProps extends IViewProps {
   userName: string;
   password: string;
-  apps?: Array<any>;
-  runAction: boolean;
-  actionWithApplication?: string;
+  apps: Array<IApplicationInfo & { loading?: boolean }>;
   apiGetApplications: () => void;
   apiCreateApplication: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]) => void;
   apiDeleteApplication: (uid: string) => void;
-  apiSetApplication: (app: Object) => void;
+  apiSetApplication: (app: IApplicationInfo) => void;
   signIn: (data: ISignInBoxData) => void;
   signOut: () => void;
 }
 
-export interface IAddApplicationState {
+export interface IAddApplicationsViewState {
   alias?: string;
   external?: boolean;
   host?: string;
@@ -29,17 +27,18 @@ export interface IAddApplicationState {
   username?: string;
   password?: string;
   add: boolean;
-  apps?: Array<any>;
-  process?: string;
+  selectedAppUid?: string;
 }
 
-export class ApplicationView extends View<IApplicationViewProps, IAddApplicationState> {
+export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicationsViewState> {
 
-  public state: IAddApplicationState = {
+  public state: IAddApplicationsViewState = {
     add: false
   }
 
-  constructor(props: IApplicationViewProps) {
+  private _listRef?: List;
+
+  constructor(props: IApplicationsViewProps) {
     super(props);
     this.onRenderCell = this.onRenderCell.bind(this);
   }
@@ -48,41 +47,76 @@ export class ApplicationView extends View<IApplicationViewProps, IAddApplication
     return 'List application';
   }
 
-  public componentDidMount() {
-    super.componentDidMount();
-
-    this.props.apiGetApplications();
-    this.setState({ apps: this.props.apps });
-  }
-
-  public componentDidUpdate(prevProps: IApplicationViewProps) {
-    if(!this.props.apps) {
-      this.props.apiGetApplications();
-    }
-  }
-
-  private onRenderCell(app?: any, index?: number, isScrolling?: boolean): JSX.Element {
-    const date = new Date(app.creationDate);
-    return (
-      <div className="application" key={`${app.uid}//${app.alias}`} data-is-focusable={true}>
-        <div className="deleteApp" onClick={() => {
-          console.log('delete');
-          this.setState({ process: 'delete' });
-          this.props.apiDeleteApplication(app.uid);
-          this.setState({ apps: this.props.apps ? [...this.props.apps] : [] })
-          this.setState({ process: undefined });
-        } }>Delete</div>
-        <div className="applicationContent" onClick={() => {
+  public getCommandBarItems(): ICommandBarItemProps[] {
+    return [
+      ...super.getCommandBarItems(),
+      {
+        key: 'add',
+        text: 'Add',
+        iconProps: {
+          iconName: 'Add'
+        },
+        onClick: () => {
+          this.setState({ add: true })
+        }
+      },
+      {
+        key: 'delete',
+        text: 'Delete',
+        disabled: !this.state.selectedAppUid,
+        iconProps: {
+          iconName: 'Delete'
+        },
+        onClick: () => {
+          this.props.apiDeleteApplication(this.state.selectedAppUid!)
+          this.setState({ selectedAppUid: undefined });
+        }
+      },
+      {
+        key: 'connect',
+        text: 'Connect',
+        disabled: !this.props.apps.some((item) => item.uid === this.state.selectedAppUid),
+        iconProps: {
+          iconName: 'PlugConnected'
+        },
+        onClick: () => {
+          const app = this.props.apps.find((item) => item.uid === this.state.selectedAppUid);
           const user = this.props.userName;
           const pass = this.props.password;
           this.props.signOut();
-          this.props.signIn({ userName: user, password: pass, uid: app.uid });
-          this.props.apiSetApplication(app);
-        }}>
-          <div className="applicationAlias">Alias: {app.alias}</div>
-          {app.server ? <div className="applicationInfo">IP: {app.server.host}:{app.server.port}</div> : undefined}
-          <div className="applicationInfo">Date create: {date.toLocaleDateString('en-GB')}</div>
-        </div>
+          this.props.signIn({ userName: user, password: pass, uid: app!.uid });
+          this.props.apiSetApplication(app!);
+          this.setState({ selectedAppUid: undefined });
+        }
+      }
+    ];
+  }
+
+  private onRenderCell(app: IApplicationInfo & { loading?: boolean }, index?: number, isScrolling?: boolean): JSX.Element {
+    const server = app.connectionOptions && app.connectionOptions.server;
+    let backgroundColor = undefined
+    if (this.state.selectedAppUid === app.uid) {
+      backgroundColor = "#A6A6A6";
+    } else if (app.loading) {
+      backgroundColor = "gray";
+    }
+    return (
+      <div className="container" style={{ backgroundColor, pointerEvents: app.loading ? "none" : "auto" }} >
+      <div hidden={!app.loading} >
+        <Spinner size={SpinnerSize.medium} />
+      </div>
+      <div
+        className="application"
+        key={`${app.uid}//${app.alias}`}
+        data-is-focusable={!app.loading}
+        onClick={() => {
+          this.setState({ selectedAppUid: app.uid }, () => this._listRef!.forceUpdate());
+        }}
+        >
+        <div className="applicationAlias">Alias: {app.alias}</div>
+        {server ? <div className="applicationInfo">IP: {server.host}:{server.port}</div> : undefined}
+        <div className="applicationInfo">Date create: {app.creationDate.toLocaleString('en-US', { hour12: false })}</div>
+      </div>
       </div>
     );
   }
@@ -127,7 +161,7 @@ export class ApplicationView extends View<IApplicationViewProps, IAddApplication
               <TextField
                 label="Port:"
                 style={{ maxWidth: '300px' }}
-                value={String(this.state.port)}
+                value={this.state.port ? String(this.state.port) : '' }
                 onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
                   this.setState({ port: newValue ? Number(newValue) : undefined });
                 }}
@@ -177,20 +211,24 @@ export class ApplicationView extends View<IApplicationViewProps, IAddApplication
                     } : undefined
                 };
                 apiCreateApplication(data);
-                this.setState({process: "add"});
-                this.setState({add: false});
+                this.setState({ add: false });
               }}
-              text="Save"/>
-            <DefaultButton onClick={() => this.setState({add: false})} text="Cancel"/>
+              text="Save" />
+            <DefaultButton onClick={() => this.setState({ add: false })} text="Cancel" />
           </DialogFooter>
         </Dialog>
-        <div className="addApp" onClick={() => { this.setState({ add: true }) }}>Add application</div>
-        {this.props.apps &&
-          <FocusZone direction={FocusZoneDirection.vertical}>
-            <div className="ListApplications" data-is-scrollable={true}>
-              <List items={this.props.apps} onRenderCell={this.onRenderCell} />
+        {this.props.apps && (
+          <div>
+            <div className="ViewHeader" style={{ height: this.getViewHeaderHeight() }}>
+              {this.renderCommandBar()}
             </div>
-          </FocusZone>
+            <FocusZone direction={FocusZoneDirection.vertical}>
+              <div className="ListApplications" >
+                <List ref={(ref) => this._listRef = ref} items={this.props.apps} onRenderCell={this.onRenderCell} />
+              </div>
+            </FocusZone>
+          </div>
+        )
         }
       </>
     );

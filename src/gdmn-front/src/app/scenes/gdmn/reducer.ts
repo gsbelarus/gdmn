@@ -2,6 +2,7 @@ import { getType } from 'typesafe-actions';
 import { ERModel } from 'gdmn-orm';
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
+import { IApplicationInfo } from '@gdmn/server-api';
 
 export type TGdmnState = {
   erModel: ERModel;
@@ -9,10 +10,8 @@ export type TGdmnState = {
   loadingCounter: number;
   loadingMessage?: string;
   viewTabs: IViewTab[];
-  apps?: Array<any>;
-  application?: Object;
-  runAction: boolean;
-  actionWithApplication?: string;
+  apps: Array<IApplicationInfo & {loading: boolean}>;
+  application?: IApplicationInfo;
 };
 
 const initialState: TGdmnState = {
@@ -20,8 +19,7 @@ const initialState: TGdmnState = {
   loading: false,
   loadingCounter: 0,
   viewTabs: [],
-  apps: undefined,
-  runAction: false,
+  apps: []
 };
 
 export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
@@ -36,23 +34,32 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
     case getType(gdmnActions.createApp): {
       return {
         ...state,
-        apps: state.apps ? [...state.apps, action.payload] : [action.payload]
+        apps: [...state.apps, {...action.payload}]
       };
     }
 
-    case getType(gdmnActions.deleteApp): {
-      if (state.apps) {
-        const idx = state.apps.findIndex(app => app.uid === action.payload);
+    case getType(gdmnActions.updateApp): {
+      const idx = state.apps.findIndex(app => app.uid === action.payload.uid);
 
-        if(idx > -1) {
-          return {
-            ...state,
-            apps: [...state.apps.slice(0, idx), ...state.apps.slice(idx + 1)]
-          };
-        }
+      if (idx > -1) {
+        const apps = [...state.apps];
+        apps[idx] = {...apps[idx], ...action.payload.application};
+        return {...state, apps};
+      } else {
+        throw new Error(`App ${action.payload} is not found`)
       }
-      else {
-        throw new Error(`${state.apps} not found`);
+    }
+
+    case getType(gdmnActions.deleteApp): {
+      const idx = state.apps.findIndex(app => app.uid === action.payload);
+
+      if (idx > -1) {
+        return {
+          ...state,
+          apps: [...state.apps.slice(0, idx), ...state.apps.slice(idx + 1)]
+        };
+      } else {
+        throw new Error(`App ${action.payload} is not found`)
       }
     }
 
@@ -67,15 +74,6 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
       return {
         ...state,
         application: action.payload
-      };
-    }
-
-    case getType(gdmnActions.setRunAction): {
-      const { value, uid } = action.payload;
-      return {
-        ...state,
-        runAction: value,
-        actionWithApplication: value ? uid : undefined
       };
     }
 
