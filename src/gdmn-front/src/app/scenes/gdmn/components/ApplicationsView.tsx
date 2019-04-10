@@ -82,8 +82,13 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           iconName: "Delete"
         },
         onClick: () => {
-          this.props.apiDeleteApplication(this.state.selectedAppUid!);
-          this.setState({selectedAppUid: undefined});
+          const app = this.props.apps.find((item) => item.uid === this.state.selectedAppUid);
+          if (app) {
+            // TODO
+            if (!app.external && !confirm("База данных будет полностью удалена с устройства")) return;
+            this.props.apiDeleteApplication(this.state.selectedAppUid!);
+            this.setState({selectedAppUid: undefined});
+          }
         }
       },
       {
@@ -129,7 +134,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
         </div>
         <div className="application">
           <div className="applicationAlias">
-            Alias: {app.alias}
+            Alias: {app.alias}{app.external ? " (внешняя)" : ""}
           </div>
           {app.server
             ? (
