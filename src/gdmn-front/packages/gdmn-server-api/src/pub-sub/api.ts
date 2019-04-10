@@ -214,22 +214,28 @@ export interface IDefinedEntity {
   entity: string;
 }
 
+export interface IConnectionOptions {
+  server?: {
+    host: string;
+    port: number;
+  };
+  username?: string;
+  password?: string;
+  path?: string;
+}
+
 export interface ICreateApplicationInfo {
   alias: string;
   external: boolean;
-  connectionOptions?: {
-    server?: {
-      host: string;
-      port: number;
-    };
-    username?: string;
-    password?: string;
-    path?: string;
-  };
+  connectionOptions?: IConnectionOptions;
 }
 
-export interface IApplicationInfo extends ICreateApplicationInfo {
+export interface IApplicationInfo extends IConnectionOptions {
+  id: number;
   uid: string;
+  alias: string;
+  ownerKey: number;
+  external: boolean;
   creationDate: Date;
 }
 

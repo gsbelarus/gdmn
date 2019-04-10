@@ -53,7 +53,8 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
 
   constructor(props: IApplicationsViewProps) {
     super(props);
-    this.onRenderCell = this.onRenderCell.bind(this);
+
+    this._onRenderCell = this._onRenderCell.bind(this);
   }
 
   public getViewCaption(): string {
@@ -105,10 +106,9 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
     ];
   }
 
-  private onRenderCell(app?: IApplicationInfo & { loading?: boolean }): JSX.Element {
+  private _onRenderCell(app?: IApplicationInfo & { loading?: boolean }): JSX.Element {
     if (!app) throw new Error("ApplicationInfo is undefined");
 
-    const server = app.connectionOptions && app.connectionOptions.server;
     let backgroundColor = undefined;
     if (this.state.selectedAppUid === app.uid) {
       backgroundColor = "#A6A6A6";
@@ -116,22 +116,30 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
       backgroundColor = "gray";
     }
     return (
-      <div className="container" style={{backgroundColor, pointerEvents: app.loading ? "none" : "auto"}}>
+      <div
+        className="container"
+        data-is-focusable={!app.loading}
+        key={`${app.uid}//${app.alias}`}
+        onClick={() => {
+          this.setState({selectedAppUid: app.uid}, () => this._listRef!.forceUpdate());
+        }}
+        style={{backgroundColor, pointerEvents: app.loading ? "none" : "auto"}}>
         <div hidden={!app.loading}>
           <Spinner size={SpinnerSize.medium}/>
         </div>
-        <div
-          className="application"
-          key={`${app.uid}//${app.alias}`}
-          data-is-focusable={!app.loading}
-          onClick={() => {
-            this.setState({selectedAppUid: app.uid}, () => this._listRef!.forceUpdate());
-          }}
-        >
-          <div className="applicationAlias">Alias: {app.alias}</div>
-          {server ? <div className="applicationInfo">IP: {server.host}:{server.port}</div> : undefined}
-          <div className="applicationInfo">Date
-            create: {app.creationDate.toLocaleString("en-US", {hour12: false})}</div>
+        <div className="application">
+          <div className="applicationAlias">
+            Alias: {app.alias}
+          </div>
+          {app.server
+            ? (
+              <div className="applicationInfo">
+                IP: {app.server.host}:{app.server.port}
+              </div>
+            ) : undefined}
+          <div className="applicationInfo">
+            Date create: {app.creationDate.toLocaleString("en-US", {hour12: false})}
+          </div>
         </div>
       </div>
     );
@@ -148,8 +156,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           modalProps={{
             isBlocking: true,
             topOffsetFixed: true
-          }}
-        >
+          }}>
           <TextField
             label="Alias:"
             style={{maxWidth: "300px"}}
@@ -240,12 +247,11 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
             </div>
             <FocusZone direction={FocusZoneDirection.vertical}>
               <div className="ListApplications">
-                <List ref={(ref) => this._listRef = ref} items={this.props.apps} onRenderCell={this.onRenderCell}/>
+                <List ref={(ref) => this._listRef = ref} items={this.props.apps} onRenderCell={this._onRenderCell}/>
               </div>
             </FocusZone>
           </div>
-        )
-        }
+        )}
       </>
     );
   }

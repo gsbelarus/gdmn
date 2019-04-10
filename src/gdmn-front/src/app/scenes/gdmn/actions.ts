@@ -56,15 +56,18 @@ const gdmnActionsAsync = {
     }
   },
   apiCreateApp: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]): TThunkAction => async (dispatch, getState, { apiService }) => {
-    const fakeUid = "1";
+    const fakeUid = `fakeUID:${new Date()}`; // TODO
     dispatch(gdmnActions.createApp({
-      ...payload,
+      ...payload.connectionOptions && payload.connectionOptions,
+      id: -1,
       uid: fakeUid,
+      alias: payload.alias,
+      ownerKey: -1,
+      external: payload.external,
       creationDate: new Date(),
       loading: true
     }));
     const response = await apiService.createApp(payload);
-    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO remove
     switch (response.payload.status) {
       case TTaskStatus.SUCCESS: {
         dispatch(gdmnActions.updateApp(fakeUid, {...response.payload.result!, loading: false}));
@@ -88,7 +91,6 @@ const gdmnActionsAsync = {
     }
     dispatch(gdmnActions.updateApp(deletedApp.uid, {...deletedApp, loading: true}));
     const response = await apiService.deleteApp({uid});
-    await new Promise(resolve => setTimeout(resolve, 3000));  // TODO remove
     switch(response.payload.status) {
       case TTaskStatus.SUCCESS: {
         dispatch(gdmnActions.deleteApp(uid));
