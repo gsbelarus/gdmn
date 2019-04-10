@@ -1,12 +1,12 @@
-import { bindActionCreators } from "redux";
-import { RouteComponentProps } from "react-router";
-import { connectView } from "@src/app/components/connectView";
-import { connect } from "react-redux";
-import { gdmnActionsAsync, gdmnActions } from "../actions";
-import { compose } from "recompose";
-import { ApplicationsView } from './ApplicationsView';
-import { IState } from '@src/app/store/reducer';
-import { IApplicationInfo } from '@gdmn/server-api';
+import {IApplicationInfo} from "@gdmn/server-api";
+import {connectView} from "@src/app/components/connectView";
+import {IState} from "@src/app/store/reducer";
+import {connect} from "react-redux";
+import {RouteComponentProps} from "react-router";
+import {compose} from "recompose";
+import {bindActionCreators} from "redux";
+import {gdmnActions, gdmnActionsAsync} from "../actions";
+import {ApplicationsView} from "./ApplicationsView";
 
 export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
   connectView,
@@ -15,7 +15,7 @@ export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
       return {
         apps: state.gdmnState.apps,
         userName: state.authState.signInInitialValues.userName,
-        password: state.authState.signInInitialValues.password,
+        password: state.authState.signInInitialValues.password
       };
     },
     dispatch => ({
@@ -24,7 +24,7 @@ export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
       apiDeleteApplication: bindActionCreators(gdmnActionsAsync.apiDeleteApp, dispatch),
       apiSetApplication: (app: IApplicationInfo) => dispatch(gdmnActions.setApplication(app)),
       signIn: bindActionCreators(gdmnActionsAsync.signIn, dispatch),
-      signOut: bindActionCreators(gdmnActionsAsync.signOut, dispatch),
+      signOut: bindActionCreators(gdmnActionsAsync.signOut, dispatch)
     })
   )
 )(ApplicationsView);
