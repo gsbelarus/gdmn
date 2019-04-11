@@ -32,9 +32,11 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
         if (accessTokenPayload && refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
           const token = Auth.isFreshToken(accessTokenPayload) ? accessToken : refreshToken;
 
+          const gdmnState = selectGdmnState(getState());
           try {
             await apiService.auth({
               payload: {
+                'app-uid': gdmnState.application ? gdmnState.application.uid : '',
                 authorization: token || ''
               }
             });
@@ -101,8 +103,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
 
             dispatch(gdmnActionsAsync.apiGetSchema());
 
-            const application = selectGdmnState(getState()).application;
-            if(!application) {
+            if(!gdmnState.application) {
               dispatch(gdmnActionsAsync.apiGetApps());
             }
 
@@ -194,8 +195,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
           connectionStatusSub = undefined;
         }
 
-        apiService.signOut({ payload: null });
-
+        await apiService.signOut({ payload: null });
         break;
       }
     }
