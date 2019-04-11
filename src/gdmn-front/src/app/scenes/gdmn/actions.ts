@@ -114,12 +114,13 @@ const gdmnActionsAsync = {
     }
   },
   reconnectToApp: (app?: IApplicationInfo): TThunkAction => async (dispatch, getState, { apiService }) => {
-    const authState = selectAuthState(getState());
+    const {application, ...authState} = selectAuthState(getState());
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut());
 
+    dispatch(authActions.signIn.request());
+    dispatch(authActions.setApplication(app));
     dispatch(authActions.signIn.success({...authState}));
-    dispatch(gdmnActions.setApplication(app));
 
     dispatch(gdmnActions.apiConnect());
   },
@@ -194,10 +195,6 @@ const gdmnActions = {
 
   setApps: createAction('gdmn/SET_APPS', resolve => {
     return (apps: Array<IApplicationInfo & {loading?: boolean}>) => resolve(apps);
-  }),
-
-  setApplication: createAction('gdmn/SET_APPLICATION', resolve => {
-    return (application?: IApplicationInfo) => resolve(application);
   }),
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST'),

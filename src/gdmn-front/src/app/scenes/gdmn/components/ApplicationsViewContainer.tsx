@@ -17,7 +17,7 @@ export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
       apiGetApplications: bindActionCreators(gdmnActionsAsync.apiGetApps, dispatch),
       apiCreateApplication: bindActionCreators(gdmnActionsAsync.apiCreateApp, dispatch),
       apiDeleteApplication: bindActionCreators(gdmnActionsAsync.apiDeleteApp, dispatch),
-      apiSetApplication: bindActionCreators(gdmnActionsAsync.reconnectToApp, dispatch),
+      reconnectToApplication: bindActionCreators(gdmnActionsAsync.reconnectToApp, dispatch),
       signIn: bindActionCreators(gdmnActionsAsync.signIn, dispatch),
       signOut: bindActionCreators(gdmnActionsAsync.signOut, dispatch)
     })

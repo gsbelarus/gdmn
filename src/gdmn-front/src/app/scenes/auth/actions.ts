@@ -100,7 +100,7 @@ const authActions = {
   >(),
   onSignOut: createAction('auth/ON_SIGN_OUT'),
   setApplication: createAction('gdmn/SET_APPLICATION', resolve => {
-    return (application: IApplicationInfo) => resolve(application);
+    return (application?: IApplicationInfo) => resolve(application);
   })
 };
 

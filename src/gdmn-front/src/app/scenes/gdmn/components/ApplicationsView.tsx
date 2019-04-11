@@ -24,7 +24,7 @@ export interface IApplicationsViewProps extends IViewProps {
   apiGetApplications: () => void;
   apiCreateApplication: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]) => void;
   apiDeleteApplication: (uid: string) => void;
-  apiSetApplication: (app: IApplicationInfo) => void;
+  reconnectToApplication: (app: IApplicationInfo) => void;
   signIn: (data: ISignInBoxData) => void;
   signOut: () => void;
 }
@@ -100,7 +100,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
         },
         onClick: () => {
           const app = this.props.apps.find((item) => item.uid === this.state.selectedAppUid);
-          this.props.apiSetApplication(app!);
+          this.props.reconnectToApplication(app!);
           this.setState({selectedAppUid: undefined});
         }
       }
