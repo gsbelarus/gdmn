@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Checkbox, TextField, PrimaryButton } from 'office-ui-fabric-react';
 import './setParameterLoad.css';
-import { load } from '../appAction';
 import { IERModels } from '../ermodel/reducer';
+import { GroupedListComponent } from '../components/groupedList';
 
 export interface IParameterState {
   host: string;
@@ -31,6 +31,7 @@ export class SetParameterLoad extends Component<ISetParameterProps, IParameterSt
   render() {
 
     return (
+      <>
       <div className='SetParamBox'>
         <TextField
             label="Host"
@@ -71,6 +72,8 @@ export class SetParameterLoad extends Component<ISetParameterProps, IParameterSt
           } }
         />
       </div>
+      <GroupedListComponent />
+      </>
     );
   }
 }
