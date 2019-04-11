@@ -169,13 +169,24 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       items.push({
         key: 'load',
         disabled: data!.rs.status === TStatus.LOADING,
-        text: 'Load fully',
+        text: 'Load all',
         iconProps: {
           iconName: 'Download'
         },
         onClick: () => this._gridRef[data!.rs.name]!.loadFully(500) as any
       });
     }
+
+    items.push({
+      key: 'refresh',
+      disabled: data!.rs.status === TStatus.LOADING,
+      text: 'Refresh',
+      iconProps: {
+        iconName: 'Refresh'
+      },
+      commandBarButtonAs: btn(`${match.url}`)
+    });
+
     return items;
   }
 

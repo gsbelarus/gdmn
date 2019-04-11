@@ -42,7 +42,7 @@ export enum TRowState {
   Deleted
 };
 
-export type TDataType = string | number | boolean | Date | null | TRowState;
+export type TDataType = string | number | boolean | Date | null;
 
 export type TAlignment = 'LEFT' | 'CENTER' | 'RIGHT';
 
@@ -78,7 +78,7 @@ export type SortFields = ISortField[];
 
 
 export interface IDataRow {
-  [fieldName: string]: TDataType;
+  [fieldName: string]: TDataType | TRowState;
 };
 
 export type Data<R extends IDataRow = IDataRow> = List<R>;

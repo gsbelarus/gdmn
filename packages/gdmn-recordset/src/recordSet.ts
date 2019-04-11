@@ -263,17 +263,17 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error('RecordSet is empty');
     }
 
-    const r = this._get().data;
+    const r = this._get();
 
-    return this.pk.map( fd => r[fd.fieldName] );
+    if (r.type !== TRowType.Data) {
+      throw new Error('No data row');
+    }
+
+    return this.pk.map( fd => r.data[fd.fieldName] );
   }
 
   get pk2s(): string[] {
-    if (!this.size) {
-      throw new Error('RecordSet is empty');
-    }
-
-    return this.pk.map( fd => this.getString(fd.fieldName) );
+    return this.pkValue.map( v => v === null ? 'NULL' : v.toString() );
   }
 
   private _checkFields(fields: INamedField[]) {

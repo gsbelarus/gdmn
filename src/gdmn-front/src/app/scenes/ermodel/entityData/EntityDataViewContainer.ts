@@ -14,7 +14,9 @@ import {
   RecordSetAction,
   setError,
   TFieldType,
-  TStatus
+  TStatus,
+  setRowsState,
+  TRowState
 } from "gdmn-recordset";
 import {List} from "immutable";
 import {connect} from "react-redux";
@@ -46,7 +48,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
 
         const result = await apiService.defineEntity({
           entity: erModel.entity(entityName).name,
-          pkValues: rs.pk2s
+          pkValues: rs.pkValue
         });
         switch (result.payload.status) {
           case TTaskStatus.SUCCESS: {
@@ -62,17 +64,23 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             return;
         }
       }),
+
       onDelete: () => thunkDispatch(async (dispatch, getState) => {
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
         const rs = getState().recordSet[entityName];
         if (!rs) return;
 
+        const pkValues = rs.pkValue;
+
+        dispatch(setRowsState({ name: rs.name, state: TRowState.Deleting }));
+
         const result = await apiService.delete({
           delete: {
             entity: entityName,
-            pkValues: rs.pk2s
+            pkValues
           }
         });
+
         switch (result.payload.status) {
           case TTaskStatus.SUCCESS: {
             // TODO
@@ -83,6 +91,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             return;
         }
       }),
+
       attachRs: () => thunkDispatch((dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 
