@@ -1,9 +1,10 @@
-import {AConnection, AResultSet, ATransaction, IParams, Types} from "gdmn-db";
+import {AConnection, AResultMetadata, AResultSet, ATransaction, IParams, Types} from "gdmn-db";
 import {Attribute, AttributeTypes, Entity, EntityAttribute, ERModel, ScalarAttribute} from "gdmn-orm";
 import {ACursor, IFetchResponseDataItem} from "./ACursor";
 
 export interface ISqlQueryResponseAliasesRdb {
   type: Types;
+  label?: string;
   field?: string;
   relation?: string;
 }
@@ -43,18 +44,20 @@ export class SqlQueryCursor extends ACursor {
     return new SqlQueryCursor(resultSet, erModel);
   }
 
+  private static _getAlias(index: number): string {
+    return `F${index + 1}`;
+  }
+
   public makeSqlQueryResponse(data: any[]): ISqlQueryResponse {
     const metadata = this._resultSet.metadata;
     const aliases: ISqlQueryResponseAliases = {};
     for (let i = 0; i < metadata.columnCount; i++) {
-      const label = metadata.getColumnLabel(i)!;
-      const type = metadata.getColumnType(i);
       const relation = metadata.getColumnRelation(i);
       const field = metadata.getColumnName(i);
-
-      aliases[label] = {
+      aliases[SqlQueryCursor._getAlias(i)] = {
         rdb: {
-          type,
+          type: metadata.getColumnType(i),
+          label: metadata.getColumnLabel(i)!,
           relation,
           field
         }
@@ -73,7 +76,7 @@ export class SqlQueryCursor extends ACursor {
             } else if (entity.pk.includes(attribute)) {
               orm.entity = entity.name;
             }
-            aliases[label].orm = orm;
+            aliases[SqlQueryCursor._getAlias(i)].orm = orm;
           }
         }
       }
@@ -83,6 +86,10 @@ export class SqlQueryCursor extends ACursor {
       data,
       aliases
     };
+  }
+
+  protected _getFieldAlias(metadata: AResultMetadata, index: number): string {
+    return SqlQueryCursor._getAlias(index);
   }
 
   private _defineAttribute(entity: Entity, relation: string, field: string): Attribute | undefined {

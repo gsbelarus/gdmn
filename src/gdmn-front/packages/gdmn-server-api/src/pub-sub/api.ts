@@ -189,6 +189,7 @@ export enum Types {
 
 export interface ISqlQueryResponseAliasesRdb {
   type: Types;
+  label?: string;
   field?: string;
   relation?: string;
 }

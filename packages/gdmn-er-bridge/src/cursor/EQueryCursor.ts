@@ -1,4 +1,4 @@
-import {AConnection, AResultSet, ATransaction} from "gdmn-db";
+import {AConnection, AResultMetadata, AResultSet, ATransaction} from "gdmn-db";
 import {EntityQuery, IEntityQueryResponse, IEntityQueryResponseFieldAliases} from "gdmn-orm";
 import {ACursor} from "./ACursor";
 import {Select} from "../crud/query/Select";
@@ -45,5 +45,9 @@ export class EQueryCursor extends ACursor {
         params: this._select.params
       }
     };
+  }
+
+  protected _getFieldAlias(metadata: AResultMetadata, index: number): string {
+    return metadata.getColumnLabel(index)!;
   }
 }

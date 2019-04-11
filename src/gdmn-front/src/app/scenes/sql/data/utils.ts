@@ -28,12 +28,12 @@ export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliases
       break;
     case Types.BOOLEAN:
       dataType = TFieldType.Boolean;
+      break;
     default:
-      console.log(eqfa.rdb);
       throw new Error(`Unsupported attribute type ${eqfa.rdb.type} of ${eqfa.rdb.field!}`);
   }
 
-  const caption = eqfa.rdb.field!;
+  const caption = eqfa.rdb.label || eqfa.rdb.field || fieldAlias;
 
   return {
     fieldName: fieldAlias,

@@ -1,4 +1,4 @@
-import {AResultSet, TExecutor, Types} from "gdmn-db";
+import {AResultMetadata, AResultSet, TExecutor, Types} from "gdmn-db";
 import {Semaphore} from "gdmn-internals";
 
 export interface IFetchResponseDataItem {
@@ -46,11 +46,11 @@ export abstract class ACursor {
       for (let j = 0; j < metadata.columnCount; j++) {
         // TODO binary blob support
         if (metadata.getColumnType(j) === Types.BLOB) {
-          row[metadata.getColumnLabel(j)!] = this._resultSet.isNull(j)
+          row[this._getFieldAlias(metadata, j)] = this._resultSet.isNull(j)
             ? null
             : await connection.openBlobAsString(transaction, this._resultSet.getBlob(j)!);
         } else {
-          row[metadata.getColumnLabel(j)!] = this._resultSet.getAny(j);
+          row[this._getFieldAlias(metadata, j)] = this._resultSet.getAny(j);
         }
       }
       data.push(row);
@@ -94,4 +94,7 @@ export abstract class ACursor {
       this._lock.release();
     }
   }
+
+  protected abstract _getFieldAlias(metadata: AResultMetadata, index: number): string;
 }
+
