@@ -1,5 +1,11 @@
 import { ActionType, createAction, createAsyncAction } from 'typesafe-actions';
-import { IAccessTokenPayload, IRefreshTokenPayload, TSignInCmdResult, TUserRoleType } from '@gdmn/server-api';
+import {
+  IAccessTokenPayload,
+  IRefreshTokenPayload,
+  TSignInCmdResult,
+  TUserRoleType,
+  IApplicationInfo
+} from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 
 import { TThunkAction } from '@src/app/store/TActions';
@@ -92,7 +98,10 @@ const authActions = {
     },
     Error
   >(),
-  onSignOut: createAction('auth/ON_SIGN_OUT')
+  onSignOut: createAction('auth/ON_SIGN_OUT'),
+  setApplication: createAction('gdmn/SET_APPLICATION', resolve => {
+    return (application: IApplicationInfo) => resolve(application);
+  })
 };
 
 type TAuthActions = ActionType<typeof authActions>;

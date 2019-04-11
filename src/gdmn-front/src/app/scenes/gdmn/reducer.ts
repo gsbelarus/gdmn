@@ -11,7 +11,6 @@ export type TGdmnState = {
   loadingMessage?: string;
   viewTabs: IViewTab[];
   apps: Array<IApplicationInfo & {loading: boolean}>;
-  application?: IApplicationInfo;
 };
 
 const initialState: TGdmnState = {
@@ -63,17 +62,10 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
       }
     }
 
-    case getType(gdmnActions.getApps): {
+    case getType(gdmnActions.setApps): {
       return {
         ...state,
         apps: action.payload
-      };
-    }
-
-    case getType(gdmnActions.setApplication): {
-      return {
-        ...state,
-        application: action.payload
       };
     }
 
