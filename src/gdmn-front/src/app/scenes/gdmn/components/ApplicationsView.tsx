@@ -40,14 +40,16 @@ export interface IAddApplicationsViewState {
   path?: string;
   username?: string;
   password?: string;
-  add: boolean;
+  openDialogAdd: boolean;
+  openDialogServer: boolean;
   selectedAppUid?: string;
 }
 
 export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicationsViewState> {
 
   public state: IAddApplicationsViewState = {
-    add: false
+    openDialogAdd: false,
+    openDialogServer: false,
   };
 
   private _listRef: List<IApplicationInfo & { loading?: boolean | undefined; }> | null = null;
@@ -72,7 +74,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           iconName: "Add"
         },
         onClick: () => {
-          this.setState({add: true});
+          this.setState({openDialogAdd: true});
         }
       },
       {
@@ -101,10 +103,6 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
         },
         onClick: () => {
           const app = this.props.apps.find((item) => item.uid === this.state.selectedAppUid);
-          //const user = this.props.userName;
-          //const pass = this.props.password;
-          //this.props.signOut();
-          //this.props.signIn({userName: user, password: pass, uid: app!.uid});
           this.props.apiSetApplication(app!);
           this.setState({selectedAppUid: undefined});
         }
@@ -157,11 +155,11 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
     return (
       <>
         <Dialog
-          hidden={!this.state.add}
-          onDismiss={() => this.setState({add: false})}
+          hidden={!this.state.openDialogAdd}
+          onDismiss={() => this.setState({openDialogAdd: false})}
           modalProps={{
             isBlocking: true,
-            topOffsetFixed: true
+            topOffsetFixed: false
           }}>
           <TextField
             label="Alias:"
@@ -179,22 +177,47 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           />
           {this.state.external && (
             <div>
-              <TextField
-                label="Host:"
-                style={{maxWidth: "300px"}}
-                value={this.state.host}
-                onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-                  this.setState({host: newValue});
-                }}
+              <PrimaryButton 
+                text={this.state.port !== null && this.state.port !== undefined && this.state.host !== '' ? `IP: ${this.state.host}:${this.state.port}` : 'Server'  }
+                onClick={ () => { this.setState({openDialogServer: true}); } }
               />
-              <TextField
-                label="Port:"
-                style={{maxWidth: "300px"}}
-                value={this.state.port ? String(this.state.port) : ""}
-                onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-                  this.setState({port: newValue ? Number(newValue) : undefined});
-                }}
-              />
+              <Dialog
+                hidden={!this.state.openDialogServer}
+                onDismiss={() => this.setState({openDialogServer: false})}
+                modalProps={{
+                  isBlocking: true,
+                  topOffsetFixed: true
+                }}>
+                <TextField
+                  label="Host:"
+                  style={{maxWidth: "300px"}}
+                  value={this.state.host}
+                  onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+                    this.setState({host: newValue});
+                  }}
+                />
+                <TextField
+                  label="Port:"
+                  style={{maxWidth: "300px"}}
+                  value={this.state.port ? String(this.state.port) : ""}
+                  onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+                    this.setState({port: newValue ? Number(newValue) : undefined});
+                  }}
+                />
+                <DialogFooter>
+                  <PrimaryButton
+                    onClick={() => {
+                      this.setState({openDialogServer: false});
+                    }}
+                    text="Save"/>
+                  <DefaultButton
+                    onClick={() => {
+                      this.setState({openDialogServer: false, host: '', port: undefined});
+                    }}
+                    text="Cancel"
+                  />
+                </DialogFooter>
+              </Dialog>
               <TextField
                 label="Path:"
                 style={{maxWidth: "300px"}}
@@ -240,10 +263,10 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
                     } : undefined
                 };
                 apiCreateApplication(data);
-                this.setState({add: false});
+                this.setState({openDialogAdd: false});
               }}
               text="Save"/>
-            <DefaultButton onClick={() => this.setState({add: false})} text="Cancel"/>
+            <DefaultButton onClick={() => this.setState({openDialogAdd: false})} text="Cancel"/>
           </DialogFooter>
         </Dialog>
         {this.props.apps && (
