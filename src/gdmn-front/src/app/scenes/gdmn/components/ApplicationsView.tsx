@@ -18,7 +18,6 @@ import {
 import React from "react";
 import "../../../../styles/Application.css";
 import {ISignInBoxData} from "../../auth/components/SignInBox";
-import { Redirect } from 'react-router';
 
 export interface IApplicationsViewProps extends IViewProps {
   userName: string;

@@ -1,7 +1,7 @@
 import { getType } from 'typesafe-actions';
 // @ts-ignore
 import { PersistPartial } from 'redux-persist';
-import { IAccessTokenPayload, IRefreshTokenPayload } from '@gdmn/server-api';
+import { IAccessTokenPayload, IRefreshTokenPayload, IApplicationInfo } from '@gdmn/server-api';
 
 import { authActions } from '@src/app/scenes/auth/actions';
 import { ISignInBoxStateProps } from '@src/app/scenes/auth/components/SignInBox';
@@ -15,6 +15,7 @@ interface _IAuthState extends ISignInBoxStateProps {
   refreshToken?: string;
   // tmp
   signUpRequesting: boolean;
+  application?: IApplicationInfo;
 }
 
 type IAuthState = _IAuthState & PersistPartial;
@@ -80,6 +81,12 @@ function reducer(state: _IAuthState = initialState, action: TActions) {
 
         signUpRequesting: false,
         signInRequesting: false
+      };
+    }
+    case getType(authActions.setApplication): {
+      return {
+        ...state,
+        application: action.payload
       };
     }
     default:

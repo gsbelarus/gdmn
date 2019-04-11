@@ -7,6 +7,7 @@ import {compose} from "recompose";
 import {bindActionCreators} from "redux";
 import {gdmnActions, gdmnActionsAsync} from "../actions";
 import {ApplicationsView} from "./ApplicationsView";
+import { authActions } from '../../auth/actions';
 
 export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
   connectView,
@@ -23,10 +24,10 @@ export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
       apiCreateApplication: bindActionCreators(gdmnActionsAsync.apiCreateApp, dispatch),
       apiDeleteApplication: bindActionCreators(gdmnActionsAsync.apiDeleteApp, dispatch),
       apiSetApplication: (app: IApplicationInfo) => {
-        dispatch(gdmnActions.getApps([]));
+        dispatch(gdmnActions.setApps([]));
         dispatch(gdmnActions.deleteViewTab({caption: 'List application', url: '/spa/gdmn/applications'}));
         dispatch(gdmnActions.apiDisconnect());
-        dispatch(gdmnActions.setApplication(app));
+        dispatch(authActions.setApplication(app));
         dispatch(gdmnActions.apiConnect());
       },
       signIn: bindActionCreators(gdmnActionsAsync.signIn, dispatch),

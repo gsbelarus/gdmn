@@ -9,7 +9,7 @@ import { authActionsAsync } from '@src/app/scenes/auth/actions';
 import { gdmnActions, gdmnActionsAsync, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
-import { selectAuthState, selectGdmnState } from '@src/app/store/selectors';
+import { selectAuthState } from '@src/app/store/selectors';
 import { TThunkMiddleware } from '@src/app/store/middlewares';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
@@ -32,11 +32,10 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
         if (accessTokenPayload && refreshTokenPayload && Auth.isFreshToken(refreshTokenPayload)) {
           const token = Auth.isFreshToken(accessTokenPayload) ? accessToken : refreshToken;
 
-          const gdmnState = selectGdmnState(getState());
           try {
             await apiService.auth({
               payload: {
-                'app-uid': gdmnState.application ? gdmnState.application.uid : '',
+                'app-uid': authState.application ? authState.application.uid : '',
                 authorization: token || ''
               }
             });
@@ -103,7 +102,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
 
             dispatch(gdmnActionsAsync.apiGetSchema());
 
-            if(!gdmnState.application) {
+            if(!authState.application) {
               dispatch(gdmnActionsAsync.apiGetApps());
             }
 
