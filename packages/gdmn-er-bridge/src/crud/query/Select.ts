@@ -421,6 +421,20 @@ export class Select {
           filters.push(filter);
         }
       }
+      if (item.startingWith) {
+        const filterItems = item.startingWith.map((startingWith) => {
+          const findLink = this._getLink(startingWith.alias, link);
+          const alias = this._getTableAlias(findLink, startingWith.attribute.adapter!.relation);
+          return SQLTemplates.startingWith(
+            alias,
+            startingWith.attribute.adapter!.field,
+            this._addToParams(startingWith.value));
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
 
       if (item.and) {
         const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.and), " AND ");
@@ -544,6 +558,11 @@ export class Select {
     if (where.less &&
       where.less
         .some((less) => less.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.startingWith &&
+      where.startingWith
+        .some((startingWith) => startingWith.attribute.adapter!.relation === relationName)) {
       return true;
     }
 

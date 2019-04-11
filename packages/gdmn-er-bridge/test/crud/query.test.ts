@@ -1001,4 +1001,34 @@ describe("Query", () => {
       connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
+
+  it("where: starting With", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY",
+        alias: "te",
+        fields: [
+          {attribute: "TEST_STRING"},
+        ]
+      },
+      options: {
+        where: [{
+          startingWith: [{
+            alias: "te",
+            attribute: "TEST_STRING",
+            value: 'sdsd'
+          }]
+        }]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM TEST_ENTITY T$1\n" +
+      "WHERE T$1.TEST_STRING STARTING WITH :P$1");
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
+    });
+  });
 });

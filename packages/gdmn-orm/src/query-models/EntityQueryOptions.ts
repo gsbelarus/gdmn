@@ -15,6 +15,10 @@ export interface IEntityQueryWhereValueNumberInspector extends IEntityQueryAlias
   value: number;
 }
 
+export interface IEntityQueryWhereValueStringInspector extends IEntityQueryAliasInspector {
+  value: string;
+}
+
 export interface IEntityQueryWhereInspector {
   and?: IEntityQueryWhereInspector[];
   or?: IEntityQueryWhereInspector[];
@@ -25,6 +29,7 @@ export interface IEntityQueryWhereInspector {
   contains?: IEntityQueryWhereValueInspector[];
   greater?: IEntityQueryWhereValueNumberInspector[];
   less?: IEntityQueryWhereValueNumberInspector[];
+  startingWith?: IEntityQueryWhereValueStringInspector[];
 }
 
 export interface IEntityQueryOrderInspector extends IEntityQueryAliasInspector {
@@ -53,6 +58,10 @@ export interface IEntityQueryWhereValueNumber extends IEntityQueryAlias<ScalarAt
   readonly value: number;
 }
 
+export interface IEntityQueryWhereValueString extends IEntityQueryAlias<ScalarAttribute> {
+  readonly value: string;
+}
+
 export interface IEntityQueryWhere {
   readonly and?: IEntityQueryWhere[];
   readonly or?: IEntityQueryWhere[];
@@ -63,6 +72,7 @@ export interface IEntityQueryWhere {
   readonly contains?: IEntityQueryWhereValue[];
   readonly greater?: IEntityQueryWhereValueNumber[];
   readonly less?: IEntityQueryWhereValueNumber[];
+  readonly startingWith?: IEntityQueryWhereValueString[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
@@ -152,7 +162,7 @@ export class EntityQueryOptions {
           : undefined,
         greater: item.greater
           ? item.greater.map((greater) => {
-            if (typeof  greater.value !== "number") {
+            if (typeof greater.value !== "number") {
               throw new Error(`Value ${greater.value} must have type number`);
             }
             const findLink = link.deepFindLink(greater.alias);
@@ -168,7 +178,7 @@ export class EntityQueryOptions {
           : undefined,
         less: item.less
           ? item.less.map((less) => {
-            if (typeof  less.value !== "number") {
+            if (typeof less.value !== "number") {
               throw new Error(`Value ${less.value} must have type number`);
             }
             const findLink = link.deepFindLink(less.alias);
@@ -179,6 +189,22 @@ export class EntityQueryOptions {
               alias: less.alias,
               attribute: findLink.entity.attribute(less.attribute),
               value: less.value
+            };
+          })
+          : undefined,
+        startingWith: item.startingWith
+          ? item.startingWith.map((startingWith) => {
+            if (typeof startingWith.value !== "string") {
+              throw new Error(`Value ${startingWith.value} must have type string`);
+            }
+            const findLink = link.deepFindLink(startingWith.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${startingWith.alias} is not found`);
+            }
+            return {
+              alias: startingWith.alias,
+              attribute: findLink.entity.attribute(startingWith.attribute),
+              value: startingWith.value
             };
           })
           : undefined
@@ -235,6 +261,13 @@ export class EntityQueryOptions {
           alias: less.alias,
           attribute: less.attribute.name,
           value: less.value
+        }));
+      }
+      if (item.startingWith) {
+        inspector.startingWith = item.startingWith.map((startingWith) => ({
+          alias: startingWith.alias,
+          attribute: startingWith.attribute.name,
+          value: startingWith.value
         }));
       }
       items.push(inspector);

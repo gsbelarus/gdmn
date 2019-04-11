@@ -77,6 +77,10 @@ export abstract class SQLTemplates {
     return SQLTemplates.condition(alias, fieldName, "CONTAINING", value);
   }
 
+  public static startingWith(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "STARTING WITH", value);
+  }
+
   public static inOperator(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "IN", `(${value})`);
   }
