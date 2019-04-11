@@ -72,7 +72,7 @@ interface IState {
 const authPersistConfig = {
   key: 'gdmn::root::authState',
   storage: persistLocalStorage,
-  whitelist: ['authenticated', 'accessTokenPayload', 'refreshTokenPayload', 'accessToken', 'refreshToken']
+  whitelist: ['application', 'authenticated', 'accessTokenPayload', 'refreshTokenPayload', 'accessToken', 'refreshToken']
 };
 
 function withReset(reducer: any) {

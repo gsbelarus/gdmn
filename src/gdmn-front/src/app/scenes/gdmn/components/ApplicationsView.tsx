@@ -20,8 +20,6 @@ import "../../../../styles/Application.css";
 import {ISignInBoxData} from "../../auth/components/SignInBox";
 
 export interface IApplicationsViewProps extends IViewProps {
-  userName: string;
-  password: string;
   apps: Array<IApplicationInfo & { loading?: boolean }>;
   apiGetApplications: () => void;
   apiCreateApplication: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]) => void;
@@ -48,7 +46,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
 
   public state: IAddApplicationsViewState = {
     openDialogAdd: false,
-    openDialogServer: false,
+    openDialogServer: false
   };
 
   private _listRef: List<IApplicationInfo & { loading?: boolean | undefined; }> | null = null;
@@ -134,15 +132,19 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           <div className="applicationAlias">
             Alias: {app.alias}{app.external ? " (внешняя)" : ""}
           </div>
-          {app.server
-            ? (
-              <div className="applicationInfo">
-                IP: {app.server.host}:{app.server.port}
-              </div>
-            ) : undefined}
           <div className="applicationInfo">
             Date create: {app.creationDate.toLocaleString("en-US", {hour12: false})}
           </div>
+          {app.external ? (
+            <>
+              <div className="applicationInfo">
+                IP: {app.server ? `${app.server.host}:${app.server.port}` : "Default"}
+              </div>
+              <div className="applicationInfo">
+                Path: {app.path}
+              </div>
+            </>
+          ) : undefined}
         </div>
       </div>
     );
@@ -176,9 +178,11 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           />
           {this.state.external && (
             <div>
-              <PrimaryButton 
-                text={this.state.port !== null && this.state.port !== undefined && this.state.host !== '' ? `IP: ${this.state.host}:${this.state.port}` : 'Server'  }
-                onClick={ () => { this.setState({openDialogServer: true}); } }
+              <PrimaryButton
+                text={this.state.port !== null && this.state.port !== undefined && this.state.host !== "" ? `IP: ${this.state.host}:${this.state.port}` : "Server"}
+                onClick={() => {
+                  this.setState({openDialogServer: true});
+                }}
               />
               <Dialog
                 hidden={!this.state.openDialogServer}
@@ -211,7 +215,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
                     text="Save"/>
                   <DefaultButton
                     onClick={() => {
-                      this.setState({openDialogServer: false, host: '', port: undefined});
+                      this.setState({openDialogServer: false, host: "", port: undefined});
                     }}
                     text="Cancel"
                   />
