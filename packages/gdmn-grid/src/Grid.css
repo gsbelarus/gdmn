@@ -316,3 +316,23 @@
 .GrayText {
   color: darkgray;
 }
+
+.RowBeingDeleted {
+  animation: row-being-deleted 1s infinite;
+}
+
+@keyframes row-being-deleted {
+  0% {
+    background: #ff4444;
+  }
+  50% {
+    background: #ff9999;
+  }
+  100% {
+    background: #ff4444;
+  }
+}
+
+.RowDeleted {
+  background-color: blueviolet;
+}

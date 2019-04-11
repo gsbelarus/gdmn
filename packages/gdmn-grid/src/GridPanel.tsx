@@ -43,6 +43,8 @@ export interface IGDMNGridPanelProps {
   onParamsDialog: () => void;
   onToggle: (columnName: string) => void;
   onCancelParamsDialog: () => void;
+  onDeleteRow: () => void;
+  onRemoveDeleted: () => void;
 }
 
 export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
@@ -79,7 +81,9 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
       paramsDialog,
       onParamsDialog,
       onCancelParamsDialog,
-      onToggle
+      onToggle,
+      onDeleteRow,
+      onRemoveDeleted
     } = this.props;
     const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     const searchStr = rs.searchStr || '';
@@ -122,6 +126,8 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
         <button onClick={onCollapseAll}>Collapse</button>
         <button onClick={onExpandAll}>Expand</button>
         <button onClick={onParamsDialog}>Params dialog</button>
+        <button onClick={onDeleteRow}>Delete</button>
+        <button onClick={onRemoveDeleted}>Remove</button>
         {paramsDialog ? (
           <ParamsDialog onCancel={onCancelParamsDialog} columns={columns} onToggle={onToggle} />
         ) : (

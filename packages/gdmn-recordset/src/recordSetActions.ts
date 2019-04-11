@@ -1,7 +1,7 @@
 import { createAction } from "typesafe-actions";
 
 import { IRecordSetDataOptions, RecordSet } from "./recordSet";
-import { SortFields, IDataRow, IError } from "./types";
+import { SortFields, IDataRow, IError, TRowState } from "./types";
 import { IFilter } from "./filter";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
@@ -95,3 +95,15 @@ export const collapseExpandGroups = createAction('RECORDSET/COLLAPSE_EXPAND_GROU
 });
 
 export type CollapseExpandGroups = typeof collapseExpandGroups;
+
+export const setRowsState = createAction('RECORDSET/SET_ROWS_STATE', resolve => {
+  return (params: WithComponentName<{ state: TRowState, rowsIdxs?: number[] }>) => resolve(params);
+});
+
+export type SetRowsState = typeof setRowsState;
+
+export const removeRows = createAction('RECORDSET/REMOVE_ROWS', resolve => {
+  return (params: WithComponentName<{ rowsIdxs?: number[] }>) => resolve(params);
+});
+
+export type RemoveRows = typeof removeRows;

@@ -112,6 +112,16 @@ export const recordSetReducer = (
       return newState(rs.setError(error));
     }
 
+    case getType(actions.setRowsState): {
+      const { state, rowsIdxs } = action.payload;
+      return newState(rs.setRowsState(state, rowsIdxs));
+    }
+
+    case getType(actions.removeRows): {
+      const { rowsIdxs } = action.payload;
+      return newState(rs.removeRows(rowsIdxs));
+    }
+
     default:
       return state;
   }
