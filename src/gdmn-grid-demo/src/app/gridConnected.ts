@@ -36,9 +36,9 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet, removeRows, TRowState } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
-import { sortRecordSet, selectRow, setAllRowsSelected } from "gdmn-recordset";
+import { sortRecordSet, selectRow, setAllRowsSelected, setRowsState } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
 
 export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined) {
@@ -197,9 +197,42 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
           }
         });
         getGridRef().scrollIntoView(foundNode.rowIdx, cursorCol);
+      },
+      onDeleteRow: () => {
+        thunkDispatch( (dispatch, getState) => {
+          const recordSet = getState().recordSet[rs.name];
+          if (recordSet.size) {
+            const rowsIdxs = [recordSet.currentRow];
+            dispatch(setRowsState({ name: rs.name, state: TRowState.Deleting, rowsIdxs }));
+            setTimeout( () => {
+              const recordSet = getState().recordSet[rs.name];
+              const rowsIdxs: number[] = [];
+              for (let i = 0; i < recordSet.size; i++) {
+                if (recordSet.getRowState(i) === TRowState.Deleting) {
+                  rowsIdxs.push(i);
+                }
+              }
+              dispatch(setRowsState({ name: rs.name, state: TRowState.Deleted, rowsIdxs }));
+            }, 2000);
+          }
+        });
+      },
+      onRemoveDeleted: () => {
+        thunkDispatch( (dispatch, getState) => {
+          const recordSet = getState().recordSet[rs.name];
+          const rowsIdxs: number[] = [];
+          for(let i = recordSet.size - 1; i >= 0; i--) {
+            if (recordSet.getRowState(i) === TRowState.Deleted) {
+              rowsIdxs.push(i);
+            }
+          }
+          if (rowsIdxs.length) {
+            dispatch(removeRows({ name: rs.name, rowsIdxs }));
+          }
+        });
       }
     })
   )(GDMNGridPanel);
-}; 
+};
 
 export type ConnectedGridPanel = ReturnType<typeof connectGridPanel>;

@@ -22,7 +22,8 @@ import {
   TFieldType,
   TRowCalcFunc,
   TRowType,
-  TStatus
+  TStatus,
+  TRowState
 } from "./types";
 import {checkField, getAsBoolean, getAsDate, getAsNumber, getAsString, isNull} from "./utils";
 
@@ -258,18 +259,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   get pkValue(): TDataType[] {
-    const {currentRow} = this._params;
     if (!this.size) {
       throw new Error('RecordSet is empty');
     }
 
-    const r = this._get(currentRow, undefined).data;
+    const r = this._get().data;
 
     return this.pk.map( fd => r[fd.fieldName] );
   }
 
   get pk2s(): string[] {
-    const {currentRow} = this._params;
     if (!this.size) {
       throw new Error('RecordSet is empty');
     }
@@ -1035,9 +1034,118 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
+  public removeRows(rIdxs?: number[]): RecordSet<R> {
+    const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs.sort( (a, b) => b - a );
+
+    let { data, currentRow, savedData } = this.params;
+    let selectedRows = [...this.params.selectedRows];
+    const { groups } = this.params;
+
+    rowIdxs.forEach( r => {
+      if (r < 0 || r >= this.size) {
+        throw new Error(`Invalid row index ${r}`);
+      }
+
+      if (this._get(r).type === TRowType.Data) {
+
+        if (currentRow > r || currentRow === (this.size - 1)) {
+          currentRow--;
+        }
+
+        selectedRows.splice(r, 1);
+
+        let adjustedIdx: number;
+
+        if (groups && groups.length) {
+          const group = this._findGroup(groups, r).group;
+          adjustedIdx = group.bufferIdx + r - group.rowIdx - 1;
+
+          if (group.bufferCount) {
+            group.bufferCount--;
+          }
+
+          groups.forEach( g => {
+            if (g.rowIdx >= r) {
+              g.rowIdx--;
+            }
+
+            if (g.bufferIdx > adjustedIdx) {
+              g.bufferIdx--;
+            }
+          });
+        } else {
+          adjustedIdx = r;
+        }
+
+        if (savedData) {
+          for (let i = savedData.size - 1; i >= 0; i--) {
+            if (savedData.get(i) === data.get(adjustedIdx)) {
+              savedData = savedData.delete(i);
+              break;
+            }
+          }
+        }
+
+        data = data.delete(adjustedIdx);
+      }
+    });
+
+    const res = new RecordSet<R>({ ...this._params, data, currentRow, selectedRows, savedData });
+
+    if (this.params.foundRows) {
+      return res.search(this.params.searchStr);
+    }
+
+    return res;
+  }
+
+  public getRowState(rowIdx?: number): TRowState {
+    const rs = this._get(rowIdx).data['$$ROW_STATE'];
+    if (rs === undefined) {
+      return TRowState.Normal;
+    } else {
+      return rs as TRowState;
+    }
+  }
+
+  public setRowsState(state: TRowState, rIdxs?: number[]): RecordSet<R> {
+    const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs;
+
+    const { groups } = this._params;
+    let data = this.params.data;
+
+    rowIdxs.forEach( r => {
+      if (r < 0 || r >= this.size) {
+        throw new Error(`Invalid row index ${r}`);
+      }
+
+      if (this._get(r).type === TRowType.Data) {
+        let adjustedIdx;
+
+        if (groups && groups.length) {
+          const group = this._findGroup(groups, r).group;
+          adjustedIdx = group.bufferIdx + r - group.rowIdx - 1;
+        } else {
+          adjustedIdx = r;
+        }
+
+        const row = data.get(adjustedIdx);
+
+        if (state === TRowState.Normal) {
+          delete row['$$ROW_STATE'];
+        } else {
+          row['$$ROW_STATE'] = state;
+        }
+        data = data.set(adjustedIdx, row);
+      }
+    });
+
+    return new RecordSet<R>({ ...this._params, data });
+  }
+
   public setFilter(filter: IFilter | undefined): RecordSet<R> {
     if (this.status !== TStatus.FULL) {
-      throw new Error(`Can't filterks partially loaded recordset`);
+      throw new Error(`Can't filter partially loaded recordset`);
     }
 
     if (equal(this._params.filter, filter)) {

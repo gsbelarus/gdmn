@@ -36,7 +36,13 @@ export interface IFieldAggregator<Acc, Res = TDataType> {
   getTotal: (acc: Acc) => Res | null;
 };
 
-export type TDataType = string | number | boolean | Date | null;
+export enum TRowState {
+  Normal = 0,
+  Deleting,
+  Deleted
+};
+
+export type TDataType = string | number | boolean | Date | null | TRowState;
 
 export type TAlignment = 'LEFT' | 'CENTER' | 'RIGHT';
 
@@ -85,8 +91,6 @@ export type TRowCalcFunc<R extends IDataRow> = (row: R) => R;
 
 export enum TRowType {
   Data = 0,
-  Deleting,
-  Deleted,
   HeaderCollapsed,
   HeaderExpanded,
   Footer

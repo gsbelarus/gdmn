@@ -126,6 +126,16 @@ describe('recordset', () => {
 
     rs = rs.setCurrentRow(10);
     expect(rs.currentRow).toEqual(10);
+
+    rs = rs.removeRows([9, 10]);
+    expect(rs.currentRow).toEqual(9);
+    expect(rs.size).toEqual(222);
+
+    rs = rs.removeRows([]);
+    expect(rs.size).toEqual(222);
+
+    rs = rs.removeRows([221]);
+    expect(rs.size).toEqual(221);
   });
 
 });

@@ -13,7 +13,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus } from 'gdmn-recordset';
+import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
 import { ParamsDialog } from './ParamsDialog';
@@ -132,7 +132,9 @@ export const styles = {
   BorderRight: 'BorderRight',
   FixedBorder: 'FixedBorder',
   BlackText: 'BlackText',
-  GrayText: 'GrayText'
+  GrayText: 'GrayText',
+  Deleting: 'RowBeingDeleted',
+  Deleted: 'RowDeleted'
 };
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -1163,20 +1165,30 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const rowData = rs.get(rowIndex);
     const groupHeader = rowData.type === TRowType.HeaderExpanded || rowData.type === TRowType.HeaderCollapsed;
     const footer = rowData.type === TRowType.Footer;
+    const rowState = rs.getRowState(rowIndex);
 
-    const backgroundClass = fixed
-      ? styles.FixedBackground
-      : currentRow === rowIndex
-      ? adjustedColumnIndex === currentCol
-        ? styles.CurrentCellBackground
-        : styles.CurrentRowBackground
-      : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
-      ? styles.SelectedBackground
-      : groupHeader
-      ? styles.GroupHeaderBackground
-      : rowIndex % 2 === 0
-      ? styles.EvenRowBackground
-      : styles.OddRowBackground;
+    let backgroundClass;
+
+    if (rowState === TRowState.Normal) {
+      backgroundClass = fixed
+        ? styles.FixedBackground
+        : currentRow === rowIndex
+        ? adjustedColumnIndex === currentCol
+          ? styles.CurrentCellBackground
+          : styles.CurrentRowBackground
+        : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
+        ? styles.SelectedBackground
+        : groupHeader
+        ? styles.GroupHeaderBackground
+        : rowIndex % 2 === 0
+        ? styles.EvenRowBackground
+        : styles.OddRowBackground;
+    }
+    else if (rowState === TRowState.Deleting) {
+      backgroundClass = styles.Deleting;
+    } else {
+      backgroundClass = styles.Deleted;
+    }
 
     const borderClass = fixed ? styles.FixedBorder : groupHeader ? styles.BorderBottom : styles.BorderRight;
 
@@ -1206,14 +1218,14 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const cellText =
       (fixed || adjustedColumnIndex !== columns.length - rightSideColumns) ? (
         columns[adjustedColumnIndex].fields.map((fld, fldidx) => {
-          let cellClass =
+          let cellAligntClass =
             fld.alignment === 'RIGHT'
               ? styles.DataCellRight
               : fld.alignment === 'CENTER'
               ? styles.DataCellCenter
               : styles.DataCellLeft;
           return (rs.isFiltered() || (rs.foundRows && rs.foundRows[rowIndex])) ? (
-            <span key={fldidx} className={cellClass}>
+            <span key={fldidx} className={cellAligntClass}>
               {rs.splitMatched(rowIndex, fld.fieldName).map((s, idx) =>
                 s.matchFilter || s.foundIdx ? (
                   <span
@@ -1229,7 +1241,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               {groupRecCount}
             </span>
           ) : groupRecCount ? (
-            <span key={fldidx} className={cellClass}>
+            <span key={fldidx} className={cellAligntClass}>
               {rs.getString(fld.fieldName, rowIndex, '')}
               {groupRecCount}
             </span>
@@ -1241,7 +1253,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       );
 
     const checkMark =
-      selectRows && !adjustedColumnIndex ? (
+      (rowState === TRowState.Normal) && selectRows && !adjustedColumnIndex ? (
         <div
           className={styles.CellMarkArea}
           onClick={e => {
