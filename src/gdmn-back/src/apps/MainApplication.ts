@@ -82,7 +82,7 @@ export type CreateAppCmd = MainCmd<"CREATE_APP", {
   alias: string;
   external: boolean;
   connectionOptions?: IOptConOptions;
-} & { transactionKey?: string; }>;
+}>;
 export type DeleteAppCmd = MainCmd<"DELETE_APP", { uid: string; }>;
 export type GetAppsCmd = MainCmd<"GET_APPS">;
 

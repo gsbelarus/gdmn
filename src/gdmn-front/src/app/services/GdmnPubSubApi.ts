@@ -480,7 +480,14 @@ export class GdmnPubSubApi {
 
           const parseMsgDataMapOperator = map<IPubSubMessage<TGdmnReceivedMessageMeta>, IGdmnMessageData>(message => {
             if (!message.data) throw Error("[GDMN][PUB-SUB] Invalid server response (TaskCmdResult)");
-            return JSON.parse(message.data);
+            // parse date as js Date object
+            const dateFormat = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
+            return JSON.parse(message.data, (key, value) => {
+              if (typeof value === "string" && dateFormat.test(value)) {
+                return new Date(value);
+              }
+              return value;
+            });
           });
 
           const meta = {
