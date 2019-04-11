@@ -392,6 +392,35 @@ export class Select {
           filters.push(filter);
         }
       }
+      if (item.greater) {
+        const filterItems = item.greater.map((greater) => {
+          const findLink = this._getLink(greater.alias, link);
+          const alias = this._getTableAlias(findLink, greater.attribute.adapter!.relation);
+          return SQLTemplates.greater(
+            alias,
+            greater.attribute.adapter!.field,
+            this._addToParams(greater.value));
+        });
+
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+      if (item.less) {
+        const filterItems = item.less.map((less) => {
+          const findLink = this._getLink(less.alias, link);
+          const alias = this._getTableAlias(findLink, less.attribute.adapter!.relation);
+          return SQLTemplates.less(
+            alias,
+            less.attribute.adapter!.field,
+            this._addToParams(less.value));
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
 
       if (item.and) {
         const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.and), " AND ");
@@ -505,6 +534,16 @@ export class Select {
     }
     if (where.contains &&
       where.contains.some((contains) => contains.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.greater &&
+      where.greater
+        .some((greater) => greater.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.less &&
+      where.less
+        .some((less) => less.attribute.adapter!.relation === relationName)) {
       return true;
     }
 
