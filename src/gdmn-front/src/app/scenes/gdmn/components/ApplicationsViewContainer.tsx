@@ -22,7 +22,13 @@ export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
       apiGetApplications: bindActionCreators(gdmnActionsAsync.apiGetApps, dispatch),
       apiCreateApplication: bindActionCreators(gdmnActionsAsync.apiCreateApp, dispatch),
       apiDeleteApplication: bindActionCreators(gdmnActionsAsync.apiDeleteApp, dispatch),
-      apiSetApplication: (app: IApplicationInfo) => dispatch(gdmnActions.setApplication(app)),
+      apiSetApplication: (app: IApplicationInfo) => {
+        dispatch(gdmnActions.getApps([]));
+        dispatch(gdmnActions.deleteViewTab({caption: 'List application', url: '/spa/gdmn/applications'}));
+        dispatch(gdmnActions.apiDisconnect());
+        dispatch(gdmnActions.apiConnect());
+        dispatch(gdmnActions.setApplication(app));
+      },
       signIn: bindActionCreators(gdmnActionsAsync.signIn, dispatch),
       signOut: bindActionCreators(gdmnActionsAsync.signOut, dispatch)
     })

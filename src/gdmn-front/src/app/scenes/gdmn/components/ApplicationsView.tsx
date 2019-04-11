@@ -18,6 +18,7 @@ import {
 import React from "react";
 import "../../../../styles/Application.css";
 import {ISignInBoxData} from "../../auth/components/SignInBox";
+import { Redirect } from 'react-router';
 
 export interface IApplicationsViewProps extends IViewProps {
   userName: string;
@@ -100,10 +101,10 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
         },
         onClick: () => {
           const app = this.props.apps.find((item) => item.uid === this.state.selectedAppUid);
-          const user = this.props.userName;
-          const pass = this.props.password;
-          this.props.signOut();
-          this.props.signIn({userName: user, password: pass, uid: app!.uid});
+          //const user = this.props.userName;
+          //const pass = this.props.password;
+          //this.props.signOut();
+          //this.props.signIn({userName: user, password: pass, uid: app!.uid});
           this.props.apiSetApplication(app!);
           this.setState({selectedAppUid: undefined});
         }

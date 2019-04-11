@@ -142,7 +142,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               {
                 !this.props.application 
                 ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} /> 
-                : undefined
+                : <Redirect exact={true} from={`${match.path}/applications`} to={`${match.path}`} />
               }
               <Route
                 path={`${match.path}/account`}
