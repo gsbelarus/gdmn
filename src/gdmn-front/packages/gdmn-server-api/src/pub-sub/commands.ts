@@ -186,3 +186,9 @@ export type TGetAppsTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APPS>;
 export type TGetAppTemplatesTaskCmd = TTaskCmd<TTaskActionNames.GET_APP_TEMPLATES>;
 
 export type TGetAppTemplatesTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APP_TEMPLATES>;
+
+// sequence query
+
+export type TSequenceQueryTaskCmd = TTaskCmd<TTaskActionNames.SEQUENCE_QUERY>;
+
+export type TSequenceQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.SEQUENCE_QUERY>;

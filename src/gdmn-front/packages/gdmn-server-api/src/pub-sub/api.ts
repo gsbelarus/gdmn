@@ -1,4 +1,4 @@
-import { IEntityInsertInspector, IEntityUpdateInspector, IEntityDeleteInspector, IEntityQueryInspector, IEntityQueryResponse, IERModel } from 'gdmn-orm';
+import { IEntityInsertInspector, IEntityUpdateInspector, IEntityDeleteInspector, IEntityQueryInspector, IEntityQueryResponse, IERModel, ISequenceQueryInspector, ISequenceQueryResponse } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 
@@ -44,7 +44,8 @@ export const enum TTaskActionNames {
   DELETE_APP = 'DELETE_APP',
   CREATE_APP = 'CREATE_APP',
   GET_APPS = 'GET_APPS',
-  GET_APP_TEMPLATES = 'GET_APP_TEMPLATES'
+  GET_APP_TEMPLATES = 'GET_APP_TEMPLATES',
+  SEQUENCE_QUERY = 'SEQUENCE_QUERY'
 }
 
 // MESSAGES DATA
@@ -129,6 +130,9 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.GET_APPS]: undefined;
   [TTaskActionNames.GET_APP_TEMPLATES]: undefined;
+  [TTaskActionNames.SEQUENCE_QUERY]: {
+    query: ISequenceQueryInspector;
+  };
 }
 
 // -- TASK-RESULT
@@ -161,6 +165,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: IApplicationInfo[];
   [TTaskActionNames.GET_APP_TEMPLATES]: ITemplateApplication[];
+  [TTaskActionNames.SEQUENCE_QUERY]: ISequenceQueryResponse;
 }
 
 export interface ISqlQueryResponseDataItem {

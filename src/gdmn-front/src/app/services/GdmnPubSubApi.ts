@@ -53,7 +53,7 @@ import {
   TTaskResultMessageData,
   TInsertTaskCmdResult,
   TUpdateTaskCmdResult,
-  TDeleteTaskCmdResult, TGetAppTemplatesTaskCmdResult
+  TDeleteTaskCmdResult, TGetAppTemplatesTaskCmdResult, TSequenceQueryTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -333,6 +333,15 @@ export class GdmnPubSubApi {
       payload: {
         action: TTaskActionNames.GET_APP_TEMPLATES,
         payload: undefined
+      }
+    });
+  }
+
+  public sequenceQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.SEQUENCE_QUERY]): Promise<TSequenceQueryTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.SEQUENCE_QUERY,
+        payload
       }
     });
   }
