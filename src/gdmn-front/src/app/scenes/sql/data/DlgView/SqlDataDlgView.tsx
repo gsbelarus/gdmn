@@ -1,6 +1,5 @@
 import { disposeMutex, getMutex } from '@src/app/components/dataViewMutexes';
 import { IViewProps, View } from '@src/app/components/View';
-import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
 import { RecordSet } from 'gdmn-recordset';
 import { ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
@@ -14,7 +13,6 @@ export enum DlgState {
 
 export interface ISqlDataDlgViewMatchParams {
   id: string;
-  rowid: string;
 }
 
 export interface ISqlDataDlgViewProps extends IViewProps<ISqlDataDlgViewMatchParams> {
@@ -22,8 +20,7 @@ export interface ISqlDataDlgViewProps extends IViewProps<ISqlDataDlgViewMatchPar
   rs?: RecordSet;
   erModel: ERModel;
   dlgState: DlgState;
-  attachRs: (mutex?: Semaphore) => void;
-  onView: (url: string) => void;
+  setRow: (rowIndex: number) => void;
 }
 
 export interface ISqlDataDlgViewState {}
@@ -38,9 +35,9 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
   }
 
   public getRecordSetList() {
-    const { id, rowid } = this.props.match.params;
+    const { id } = this.props.match.params;
 
-    if (!id || ! rowid) {
+    if (!id) {
       throw new Error("Invalid sql id or row id values");
     }
 
@@ -52,21 +49,29 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
+    const { setRow } = this.props;
+    // const requestID = Number(this.props.match.params.id);
+
+    const rs = this.props.rs;
+
+    if (!rs) return [];
+
+    const currentRow = rs.currentRow;
+
+    const nextRow = (currentRow === (rs.size - 1)) ? currentRow : currentRow + 1;
+    const prevRow = (currentRow === 0) ? currentRow : currentRow - 1;
+
     const items = super.getCommandBarItems();
 
-    const rowid = Number(this.props.match.params.rowid);
-
-    const urlNext = this.props.match.url.replace(`/view/${rowid}`, `/view/${rowid + 1}`); // TODO проверять кол-во записей. Если текущая - последняя, то блокировать кнопку next
-    const urlPrev = this.props.match.url.replace(`/view/${rowid}`, `/view/${rowid - 1}`); // TODO проверять кол-во записей. Если текущая - первая, то блокировать кнопку prev
-
-    const nextItem = {
+    const nextItem: ICommandBarItemProps = {
       key: 'next',
       text: 'Next',
       iconProps: {
         iconName: 'next'
       },
+      disabled: currentRow === (rs.size - 1),
       onClick: () => {
-        this.props.onView(urlNext);
+        setRow(nextRow);
       }
     };
     const prevItem = {
@@ -75,15 +80,16 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
       iconProps: {
         iconName: 'previous'
       },
+      disabled: currentRow === 0,
       onClick: () => {
-        this.props.onView(urlPrev);
+        setRow(prevRow);
       }
     };
 
     return [prevItem, nextItem, ...items];
   }
 
-  public addViewTab() {
+/*   public addViewTab() {
     const { addViewTab, match } = this.props;
 
     addViewTab({
@@ -91,22 +97,17 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
       url: match.url,
       rs: this.getRecordSetList()
     });
-  }
+  } */
 
   public componentDidMount() {
-/*     const { rs } = this.props;
-    if (!rs) {
-      this.props.attachRs(getMutex(this.getDataViewKey()));
-    }
- */
     super.componentDidMount();
   }
 
   public componentDidUpdate(prevProps: ISqlDataDlgViewProps) {
-    const { attachRs } = this.props;
-    if (prevProps.erModel !== this.props.erModel) {
-      attachRs(getMutex(this.getDataViewKey()));
-    }
+    // const { attachRs } = this.props;
+    // if (prevProps.erModel !== this.props.erModel) {
+    //   attachRs(getMutex(this.getDataViewKey()));
+    // }
   }
 
   public componentWillUnmount() {
@@ -120,15 +121,13 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
       return this.renderLoading();
     }
 
-    const rowid = Number(this.props.match.params.rowid);
-
     return this.renderWide(
       undefined,
       <div className="dlgView">
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>
             <span>{f.caption}</span>
-            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(f.fieldName, rowid, '') : ''} />
+            <TextField value={rs.getString(f.fieldName, rs.currentRow, '')} readOnly />
             {/* TODO: Делать проверку типа поля и если ссылка то отображать кнопку 'Открыть запись' */}
           </Fragment>
         ))}

@@ -97,7 +97,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
                       name: requestID,
                       fieldDefs,
                       data: List(response.payload.result!.data as IDataRow[]),
-                      sequentially: !!rsm.taskKey
+                      sequentially: !!rsm.taskKey,
                     });
                     dispatch(createRecordSet({name: rs.name, rs}));
 

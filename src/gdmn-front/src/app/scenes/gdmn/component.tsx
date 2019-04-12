@@ -19,7 +19,6 @@ import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';
-import { gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
 import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
 import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
 import { ApplicationsViewContainer } from './components/ApplicationsViewContainer';
@@ -45,33 +44,19 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
 
     const topAreaHeight = 56 + 36 + ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
 
-    const homeButton = this.props.application
-      ? (
-        <Icon
-          data-is-focusable={true}
-          iconName="Home"
-          className="RoundIcon"
-          onClick={() => {
-            this.props.history.push(match.path);
-            this.props.dispatch(gdmnActionsAsync.reconnectToApp())
-          }}/>
-      )
-      : (
-        <Link to={`${match.path}`}>
-          <Icon iconName="Home" className="RoundIcon"/>
-        </Link>
-      );
     return (
       <>
         <div className="TopArea" style={{ height: topAreaHeight }}>
           <div className="Header">
-            {homeButton}
+            <Link to={`${match.path}`}>
+              <Icon iconName="Home" className="RoundIcon" />
+            </Link>
             <Icon iconName="Chat" className="NoFrameIcon" />
             <div className="SearchBox">
               find something...
               <span className="WhereToSearch">/</span>
             </div>
-            <div className="ImportantMenu" hidden={!!this.props.application}>{commandToLink('applications', match.url)}</div>
+            <div className="ImportantMenu" hidden={this.props.application ? true : false}>{commandToLink('applications', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
@@ -155,8 +140,8 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
           <ErrBoundary>
             <Switch>
               {
-                !this.props.application 
-                ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} /> 
+                !this.props.application
+                ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} />
                 : <Redirect exact={true} from={`${match.path}/applications`} to={`${match.path}`} />
               }
               <Route
@@ -230,7 +215,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 }}
               />
               <Route
-                path={`${match.path}/sql/:id/view/:rowid`}
+                path={`${match.path}/sql/:id/view`}
                 render={props => {
                   return (
                     <SqlDataDlgViewContainer {...props} />

@@ -46,7 +46,7 @@ export class SqlDataView extends DataView<ISqlDataViewProps, ISqlDataViewState> 
         iconName: 'edit'
       },
       onClick: () => {
-        this.props.onView(`${this.props.match.url}/view/${data.rs.currentRow}`)
+        this.props.onView(`${this.props.match.url}/view`)
       }
     }
 
