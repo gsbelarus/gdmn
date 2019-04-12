@@ -903,6 +903,11 @@ export class MainApplication extends Application {
     }
 
     const additionalEquals: IEntityQueryWhereValueInspector[] = [];
+    additionalEquals.push({
+      alias: "user",
+      attribute: "DELETED",
+      value: false
+    });
     if (login) {
       additionalEquals.push({
         alias: "user",
@@ -944,12 +949,7 @@ export class MainApplication extends Application {
       },
       options: {
         where: [{
-          equals: [{
-            alias: "user",
-            attribute: "DELETED",
-            value: false
-          }]
-            // .concat(additionalEquals) сделать в понедельник
+          equals: additionalEquals
         }]
       }
     });
