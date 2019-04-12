@@ -208,8 +208,7 @@ export class MainApplication extends Application {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const template = "DEVEL.FDB";
-        const {alias, external, connectionOptions} = context.command.payload;
+        const {alias, external, template, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
 
         return await context.session.executeConnection((connection) => AConnection.executeTransaction({
