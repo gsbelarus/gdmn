@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import {existsSync, mkdirSync} from "fs";
+import {copyFile, existsSync, mkdirSync, readdir, readFile, unlink, writeFileSync} from "fs";
 import {AConnection, ATransaction, Factory, IConnectionServer} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {
@@ -28,6 +28,16 @@ import {Application} from "./base/Application";
 import {Session, SessionStatus} from "./base/session/Session";
 import {ICmd, Level, Task} from "./base/task/Task";
 import {GDMNApplication} from "./GDMNApplication";
+
+interface ITemplateApplication {
+  name: string;
+  description: string;
+}
+
+interface ITemplateInternalApp extends ITemplateApplication {
+  username: string;
+  password: string;
+}
 
 export interface ICreateUser {
   login: string;
@@ -74,13 +84,15 @@ export interface IUserApplicationInfo extends IApplicationInfo {
   alias: string;
 }
 
-export type MainAction = "DELETE_APP" | "CREATE_APP" | "GET_APPS";
+export type MainAction = "GET_TEMPLATES" | "DELETE_APP" | "CREATE_APP" | "GET_APPS";
 
 export type MainCmd<A extends MainAction, P = undefined> = ICmd<A, P>;
 
+export type GetTemplatesCmd = MainCmd<"GET_TEMPLATES">;
 export type CreateAppCmd = MainCmd<"CREATE_APP", {
   alias: string;
   external: boolean;
+  template?: string;
   connectionOptions?: IOptConOptions;
 }>;
 export type DeleteAppCmd = MainCmd<"DELETE_APP", { uid: string; }>;
@@ -89,6 +101,8 @@ export type GetAppsCmd = MainCmd<"GET_APPS">;
 export class MainApplication extends Application {
 
   public static readonly WORK_DIR = path.resolve(Constants.DB.DIR, "work");
+  public static readonly TEMPLATES_DIR = path.resolve(Constants.DB.DIR, "templates");
+  public static readonly TEMPLATES_CONFIG_NAME = "templates.config.json";
   public static readonly APP_EXT = ".FDB";
   public static readonly MAIN_DB = `MAIN${MainApplication.APP_EXT}`;
 
@@ -103,10 +117,49 @@ export class MainApplication extends Application {
     if (!existsSync(MainApplication.WORK_DIR)) {
       mkdirSync(MainApplication.WORK_DIR);
     }
+    if (!existsSync(MainApplication.TEMPLATES_DIR)) {
+      mkdirSync(MainApplication.TEMPLATES_DIR);
+    }
+    if (!existsSync(path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME))) {
+      writeFileSync(
+        path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME),
+        JSON.stringify([{}] as ITemplateInternalApp[])
+      );
+    }
   }
 
   public static getAppPath(uid: string): string {
     return path.resolve(MainApplication.WORK_DIR, MainApplication._getAppName(uid));
+  }
+
+  private static _getTemplatePath(template: string): string {
+    return path.resolve(MainApplication.TEMPLATES_DIR, template);
+  }
+
+  private static async _getTemplatesConfig(): Promise<ITemplateInternalApp[]> {
+    return await new Promise((resolve, reject) => {
+      readFile(path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME),
+        (error, data) => error ? reject(error) : resolve(JSON.parse(data.toString())));
+    });
+  }
+
+  private static async _getTemplatesFiles(): Promise<string[]> {
+    return await new Promise((resolve, reject) => {
+      readdir(MainApplication.TEMPLATES_DIR, (error, files) => error ? reject(error) : resolve(files));
+    });
+  }
+
+  private static async _copyTemplate(template: string, uid: string): Promise<void> {
+    await new Promise((resolve, reject) => {
+      copyFile(MainApplication._getTemplatePath(template), MainApplication.getAppPath(uid),
+        (error) => error ? reject(error) : resolve());
+    });
+  }
+
+  private static async _removeCopedTemplate(uid: string): Promise<void> {
+    await new Promise((resolve, reject) => {
+      unlink(MainApplication.getAppPath(uid), (error) => error ? reject(error) : resolve());
+    });
   }
 
   private static _createDBDetail(alias: string, dbPath: string, appInfo?: IUserApplicationInfo): IDBDetail {
@@ -140,6 +193,34 @@ export class MainApplication extends Application {
     return crypto.pbkdf2Sync(password, salt, 1, 128, "sha1").toString("base64");
   }
 
+  public pushGetTemplatesCmd(session: Session,
+                             command: GetTemplatesCmd): Task<GetTemplatesCmd, ITemplateApplication[]> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async () => {
+        const templatesConfig = await MainApplication._getTemplatesConfig();
+        const templatesFiles = await MainApplication._getTemplatesFiles();
+        return templatesConfig.reduce((items, item) => {
+          if (templatesFiles.includes(item.name)) {
+            items.push({
+              name: item.name,
+              description: item.description
+            });
+          } else {
+            throw new Error("Template file is not found, check templates config");
+          }
+          return items;
+        }, [] as ITemplateApplication[]);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   // TODO tmp
   public pushCreateAppCmd(session: Session, command: CreateAppCmd): Task<CreateAppCmd, IUserApplicationInfo> {
     const task = new Task({
@@ -151,7 +232,7 @@ export class MainApplication extends Application {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {alias, external, connectionOptions} = context.command.payload;
+        const {alias, external, template, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
 
         return await context.session.executeConnection((connection) => AConnection.executeTransaction({
@@ -179,7 +260,21 @@ export class MainApplication extends Application {
                 if (external) {
                   await application.connect();
                 } else {
-                  await application.create();
+                  if (template) {
+                    const templatesFiles = await MainApplication._getTemplatesFiles();
+                    if (!templatesFiles.includes(template)) {
+                      throw new Error("Template is not found");
+                    }
+                    await MainApplication._copyTemplate(template, uid);
+                    try {
+                      await application.connect();
+                    } catch (error) {
+                      await MainApplication._removeCopedTemplate(uid);
+                      throw error;
+                    }
+                  } else {
+                    await application.create();
+                  }
                 }
               } catch (error) {
                 this._applications.delete(uid);

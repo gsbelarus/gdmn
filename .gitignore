@@ -5,6 +5,7 @@ packages/*/dist
 src/*/dist
 src/*/build
 src/gdmn-back/public
+templates.config.json
 databases.ts
 testDB.ts
 testConfig.json

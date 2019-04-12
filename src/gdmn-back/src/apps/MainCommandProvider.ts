@@ -2,7 +2,7 @@ import {AppCommandProvider} from "./base/AppCommandProvider";
 import {AppAction} from "./base/Application";
 import {Session} from "./base/session/Session";
 import {ICmd, Task} from "./base/task/Task";
-import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, MainAction, MainApplication} from "./MainApplication";
+import {CreateAppCmd, DeleteAppCmd, GetAppsCmd, GetTemplatesCmd, MainAction, MainApplication} from "./MainApplication";
 
 export type Actions = AppAction | MainAction;
 
@@ -26,6 +26,12 @@ export class MainCommandProvider extends AppCommandProvider {
 
   public receive(session: Session, command: ICmd<Actions, unknown>): Task<any, any> {
     switch (command.action) {
+      case "GET_TEMPLATES": {
+        if (!(this._application instanceof MainApplication)) {
+          throw new Error("Unsupported command");
+        }
+        return this._application.pushGetTemplatesCmd(session, command as GetTemplatesCmd);
+      }
       case "DELETE_APP": {
         if (!(this._application instanceof MainApplication)) {
           throw new Error("Unsupported command");
