@@ -15,7 +15,8 @@ import {
   QueryCmd,
   ReloadSchemaCmd,
   SqlQueryCmd,
-  UpdateCmd
+  UpdateCmd,
+  SequenceQueryCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -136,6 +137,13 @@ export class AppCommandProvider {
     // TODO
   }
 
+  private static _verifySequenceQueryCmd(command: ICmd<AppAction, any>): command is SequenceQueryCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "query" in command.payload
+      && typeof command.payload.query === "object";
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -224,6 +232,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushDeleteCmd(session, command);
+      }
+      case "SEQUENCE_QUERY": {
+        if (!AppCommandProvider._verifySequenceQueryCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushSequenceQueryCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");

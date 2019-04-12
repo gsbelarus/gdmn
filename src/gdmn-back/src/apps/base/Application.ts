@@ -13,7 +13,11 @@ import {
   IEntityQueryInspector,
   IEntityQueryResponse,
   IEntityUpdateInspector,
-  IERModel
+  IERModel,
+  ISequenceQueryInspector,
+  Sequence,
+  SequenceQuery,
+  ISequenceQueryResponse
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -39,7 +43,8 @@ export type AppAction =
   | "FETCH_SQL_QUERY"
   | "INSERT"
   | "UPDATE"
-  | "DELETE";
+  | "DELETE"
+  | "SEQUENCE_QUERY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -58,6 +63,7 @@ export type FetchSqlQueryCmd = AppCmd<"FETCH_SQL_QUERY", { taskKey: string, rows
 export type InsertCmd = AppCmd<"INSERT", { insert: IEntityInsertInspector }>;
 export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
 export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
+export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 
 export class Application extends ADatabase {
 
@@ -592,6 +598,31 @@ export class Application extends ADatabase {
           connection,
           callback: (transaction) => ERBridge.delete(connection, transaction, entityDelete)
         }));
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushSequenceQueryCmd(session: Session, command: SequenceQueryCmd): Task<SequenceQueryCmd, ISequenceQueryResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {query} = context.command.payload;
+        const sequenceQuery = SequenceQuery.inspectorToObject(this.erModel, query);
+
+        const result = await context.session.executeConnection((connection) => (
+          ERBridge.getSequence(connection, connection.readTransaction, sequenceQuery))
+        );
+        await context.checkStatus();
+        return result;
       }
     });
     session.taskManager.add(task);
