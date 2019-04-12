@@ -1,17 +1,18 @@
 import {Entity} from "../model/Entity";
 import {ERModel} from "../model/ERModel";
+import {TValue} from "../types";
 
 export interface IEntityDeleteInspector {
   entity: string;
-  pkValues: any[];
+  pkValues: TValue[];
 }
 
 export class EntityDelete {
 
   public readonly entity: Entity;
-  public readonly pkValues: any[];
+  public readonly pkValues: TValue[];
 
-  constructor(entity: Entity, pkValue: any[]) {
+  constructor(entity: Entity, pkValue: TValue[]) {
     this.entity = entity;
     this.pkValues = pkValue;
   }

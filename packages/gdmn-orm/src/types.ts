@@ -1,6 +1,8 @@
 import {SemCategory} from "gdmn-nlp";
 import { LName } from "gdmn-internals";
 
+export type TValue = string | number | boolean | Date | Buffer | null;
+
 export interface IEnumValue {
   value: string | number;
   lName?: LName;

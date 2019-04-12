@@ -1,6 +1,7 @@
 import {Attribute} from "../model/Attribute";
 import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 import {EntityLink} from "./EntityLink";
+import {TValue} from "../types";
 
 export interface IEntityQueryAliasInspector {
   alias: string;
@@ -8,7 +9,7 @@ export interface IEntityQueryAliasInspector {
 }
 
 export interface IEntityQueryWhereValueInspector extends IEntityQueryAliasInspector {
-  value: any;
+  value: TValue;
 }
 
 export interface IEntityQueryWhereValueNumberInspector extends IEntityQueryAliasInspector {
@@ -51,7 +52,7 @@ export interface IEntityQueryAlias<Attr extends Attribute> {
 }
 
 export interface IEntityQueryWhereValue extends IEntityQueryAlias<ScalarAttribute> {
-  readonly value: any;
+  readonly value: TValue;
 }
 
 export interface IEntityQueryWhereValueNumber extends IEntityQueryAlias<ScalarAttribute> {

@@ -5,50 +5,52 @@ import {DetailAttribute} from "../model/link/DetailAttribute";
 import {EntityAttribute} from "../model/link/EntityAttribute";
 import {SetAttribute} from "../model/link/SetAttribute";
 import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
+import {TValue} from "../types";
 
 export interface IEntityUpdateSetAttributesInspector {
   attribute: string;
-  value: any;
+  value: TValue;
 }
 
 export type TEntityUpdateFieldSet = Array<{
-  pkValues: any[];
+  pkValues: TValue[];
   setAttributes?: IEntityUpdateSetAttributes[];
 }>;
 
 export interface IEntityUpdateSetAttributes {
   attribute: ScalarAttribute;
-  value: any;
+  value: TValue;
 }
 
 export type TEntityUpdateFieldSetInspector = Array<{
-  pkValues: any[];
+  pkValues: TValue[];
   setAttributes?: IEntityUpdateSetAttributesInspector[];
 }>;
 
 export interface IEntityUpdateFieldInspector {
   attribute: string;
-  value: any | TEntityUpdateFieldSetInspector;
+  value: TValue | TEntityUpdateFieldSetInspector;
 }
 
 export class EntityUpdateField {
 
   public readonly attribute: Attribute;
-  public readonly value: any | TEntityUpdateFieldSet;
+  public readonly value: TValue | TEntityUpdateFieldSet;
 
-  constructor(attribute: Attribute, value: any | TEntityUpdateFieldSet) {
+  constructor(attribute: Attribute, value: TValue | TEntityUpdateFieldSet) {
     this.attribute = attribute;
     if (attribute.type === "Detail") {
       throw new Error("Attribute Detail not support yet");
     }
-    if (attribute.type === "Set") {
-      if (Array.isArray(value)) {
-        value.map((entry) => {
-          if (!entry.pkValues && !entry.setAttributes) {
-            throw new Error("Value pkValues and setAttributes should not be undefined");
-          }
-        });
-      }
+    if (attribute.type === "Set" && EntityUpdateField._isValuePrimitive(value)) {
+      throw new Error("Value should not be a primitive with SetAttribute");
+    }
+    if (attribute instanceof EntityAttribute
+      && attribute.type !== "Set" && !EntityUpdateField._isValuePrimitive(value)) {
+      throw new Error("Value should be a primitive with EntityAttribute");
+    }
+    if (attribute instanceof ScalarAttribute && !EntityUpdateField._isValuePrimitive(value)) {
+      throw new Error("Value should be a primitive with ScalarAttribute");
     }
     this.value = value;
   }
@@ -62,9 +64,12 @@ export class EntityUpdateField {
         throw new Error("Attribute Detail not support yet");
       }
       if (attribute instanceof SetAttribute) {
-        if (Array.isArray(inspector.value)) {
+        if (EntityUpdateField._isValuePrimitiveInspector(inspector.value)) {
+          throw new Error("Value should be a primitive with SetAttribute");
+        }
+        if (!EntityUpdateField._isValuePrimitiveInspector(inspector.value)) {
           return new EntityUpdateField(attribute,
-            (inspector.value as TEntityUpdateFieldSetInspector).map((attr) => {
+            inspector.value.map((attr) => {
                 return {
                   pkValues: attr.pkValues,
                   setAttributes: attr.setAttributes && attr.setAttributes.map((s) => {
@@ -77,23 +82,32 @@ export class EntityUpdateField {
                 };
               }
             ));
-        }
+        }}
+      if (!EntityUpdateField._isValuePrimitiveInspector(inspector.value)) {
+        throw new Error("Value should be a primitive with EntityAttribute");
       }
       return new EntityUpdateField(attribute, inspector.value);
     }
-    if (attribute instanceof ScalarAttribute) {
-      // if (inspector.setAttributes) {
-      //   throw new Error("EntityUpdateField with ScalarAttribute must hasn't 'setAttributes' property");
-      // }
-      return new EntityUpdateField(attribute, inspector.value);
+    if (!EntityUpdateField._isValuePrimitiveInspector(inspector.value)) {
+      throw new Error("Value should be a primitive with ScalarAttribute");
     }
-    throw new Error("Should never happened");
+    return new EntityUpdateField(attribute, inspector.value);
+  }
+
+  private static _isValuePrimitiveInspector(
+    value: TValue | TEntityUpdateFieldSetInspector
+  ): value is TValue {
+    return !Array.isArray(value);
+  }
+
+  private static _isValuePrimitive(value: TValue | TEntityUpdateFieldSet): value is TValue {
+    return !Array.isArray(value);
   }
 
   public inspect(): IEntityUpdateFieldInspector {
-    let value: any | TEntityUpdateFieldSet;
-    if (Array.isArray(this.value)) {
-      value = (this.value as TEntityUpdateFieldSet).map((attr) => ({
+    let value: TValue | TEntityUpdateFieldSetInspector;
+    if (!EntityUpdateField._isValuePrimitive(this.value)) {
+      value = this.value.map((attr) => ({
         pkValues: attr.pkValues,
         setAttributes: attr.setAttributes && attr.setAttributes.map((s) => ({
           attribute: s.attribute.name,

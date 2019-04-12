@@ -5,51 +5,53 @@ import {DetailAttribute} from "../model/link/DetailAttribute";
 import {EntityAttribute} from "../model/link/EntityAttribute";
 import {SetAttribute} from "../model/link/SetAttribute";
 import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
+import {TValue} from "../types";
 
 export interface IEntityInsertFieldInspector {
   attribute: string;
-  value: any | TEntityInsertFieldSetInspector;
+  value: TValue | TEntityInsertFieldSetInspector;
 }
 
 export interface IEntityInsertSetAttributesInspector {
   attribute: string;
-  value: any;
+  value: TValue;
 }
 
 export type TEntityInsertFieldSetInspector = Array<{
-  pkValues: any[];
+  pkValues: TValue[];
   setAttributes?: IEntityInsertSetAttributesInspector[];
 }>;
 
 export type TEntityInsertFieldSet = Array<{
-  pkValues: any[];
+  pkValues: TValue[];
   setAttributes?: IEntityInsertSetAttributes[];
 }>;
 
 export interface IEntityInsertSetAttributes {
   attribute: ScalarAttribute;
-  value: any;
+  value: TValue;
 }
 
 export class EntityInsertField {
 
   public readonly attribute: Attribute;
-  public readonly value: any | TEntityInsertFieldSet;
+  public readonly value: TValue | TEntityInsertFieldSet;
 
   constructor(attribute: Attribute, value: any | TEntityInsertFieldSet) {
+    this.attribute = attribute;
     if (attribute.type === "Detail") {
       throw new Error("Attribute Detail not support yet");
     }
-    if (attribute.type === "Set") {
-      if (Array.isArray(value)) {
-        value.map((entry) => {
-          if (!entry.pkValues && !entry.setAttributes) {
-            throw new Error("Value pkValues and setAttributes should not be undefined");
-          }
-        });
-      }
+    if (attribute.type === "Set" && EntityInsertField._isValuePrimitive(value)) {
+      throw new Error("Value should not be a primitive with SetAttribute");
     }
-    this.attribute = attribute;
+    if (attribute instanceof EntityAttribute && attribute.type !== "Set"
+      && !EntityInsertField._isValuePrimitive(value)) {
+      throw new Error("Value should be a primitive with EntityAttribute");
+    }
+    if (attribute instanceof ScalarAttribute && !EntityInsertField._isValuePrimitive(value)) {
+      throw new Error("Value should be a primitive with ScalarAttribute");
+    }
     this.value = value;
   }
 
@@ -62,7 +64,10 @@ export class EntityInsertField {
         throw new Error("Attribute Detail not support yet");
       }
       if (attribute instanceof SetAttribute) {
-        if (Array.isArray(inspector.value)) {
+        if (EntityInsertField._isValuePrimitiveInspector(inspector.value)) {
+          throw new Error("Value should be a primitive with SetAttribute");
+        }
+        if (!EntityInsertField._isValuePrimitiveInspector(inspector.value)) {
           return new EntityInsertField(attribute,
             (inspector.value as TEntityInsertFieldSetInspector).map((attr) => {
                 return {
@@ -77,14 +82,26 @@ export class EntityInsertField {
                 };
               }
             ));
-        }
+        }}
+      if (!EntityInsertField._isValuePrimitiveInspector(inspector.value)) {
+        throw new Error("Value should be a primitive with EntityAttribute");
       }
       return new EntityInsertField(attribute, inspector.value);
     }
-    if (attribute instanceof ScalarAttribute) {
-      return new EntityInsertField(attribute, inspector.value);
+    if (!EntityInsertField._isValuePrimitiveInspector(inspector.value)) {
+      throw new Error("Value should be a primitive with ScalarAttribute");
     }
-    throw new Error("Should never happened");
+    return new EntityInsertField(attribute, inspector.value);
+  }
+
+  private static _isValuePrimitiveInspector(
+    value: TValue | TEntityInsertFieldSetInspector
+  ): value is TValue {
+    return !Array.isArray(value);
+  }
+
+  private static _isValuePrimitive(value: TValue | TEntityInsertFieldSet): value is TValue {
+    return !Array.isArray(value);
   }
 
   public inspect(): IEntityInsertFieldInspector {

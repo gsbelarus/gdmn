@@ -300,7 +300,7 @@ describe("Update", () => {
         fields: [
           {
             attribute: "DETAIL_ENTITY",
-            value: [11]
+            value: 11
           }
         ],
         pkValues: [36]

@@ -257,7 +257,7 @@ describe("Insert", () => {
           },
           {
             attribute: "DETAIL_ENTITY",
-            value: [linkKey]
+            value: linkKey
           }
         ]
       }));
@@ -482,11 +482,11 @@ describe("Insert", () => {
       fields: [
         {
           attribute: "SET_LINK",
-          value: [ParentKey]
+          value: ParentKey
         }
       ]
     }));
 
-    }).toThrowError(new Error("Value pkValues and setAttributes should not be undefined"));
+    }).toThrowError(new Error("Value should be a primitive with SetAttribute"));
   });
 });
