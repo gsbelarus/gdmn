@@ -616,19 +616,19 @@ export class MainApplication extends Application {
         value: application.external
       }, {
         attribute: "HOST",
-        value: application.server && application.server.host
+        value: application.server && application.server.host ? application.server && application.server.host : null
       }, {
         attribute: "PORT",
-        value: application.server && application.server.port
+        value: application.server && application.server.host ? application.server && application.server.host : null
       }, {
         attribute: "USERNAME",
-        value: application.username
+        value: application.username ? application.username : null
       }, {
         attribute: "PASSWORD",
-        value: application.password
+        value: application.password ? application.password : null
       }, {
         attribute: "PATH",
-        value: application.path
+        value: application.path ? application.path : null
       }, {
         attribute: "CREATIONDATE",
         value: creationDate
@@ -948,7 +948,8 @@ export class MainApplication extends Application {
             alias: "user",
             attribute: "DELETED",
             value: false
-          }].concat(additionalEquals)
+          }]
+            // .concat(additionalEquals) сделать в понедельник
         }]
       }
     });
