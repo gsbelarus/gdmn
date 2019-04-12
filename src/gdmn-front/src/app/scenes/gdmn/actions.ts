@@ -1,6 +1,6 @@
 import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
-import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus, TSignInCmdResult, IRefreshTokenPayload, IAccessTokenPayload, TUserRoleType, IApplicationInfo, TTaskActionPayloadTypes } from '@gdmn/server-api';
+import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus, TSignInCmdResult, IRefreshTokenPayload, IAccessTokenPayload, TUserRoleType, IApplicationInfo, TTaskActionPayloadTypes, ITemplateApplication } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
 import { TThunkAction } from '@src/app/store/TActions';
 import { selectAuthState } from '@src/app/store/selectors';
@@ -113,6 +113,12 @@ const gdmnActionsAsync = {
       dispatch(gdmnActions.setApps(response.payload.result!));
     }
   },
+  apiGetTemplates: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    const response = await apiService.getAppTemplates();
+    if (response.payload.status === TTaskStatus.SUCCESS) {
+      dispatch(gdmnActions.setTemplates(response.payload.result!));
+    }
+  },
   reconnectToApp: (app?: IApplicationInfo): TThunkAction => async (dispatch, getState, { apiService }) => {
     const {application, ...authState} = selectAuthState(getState());
     dispatch(gdmnActions.apiDisconnect());
@@ -195,6 +201,10 @@ const gdmnActions = {
 
   setApps: createAction('gdmn/SET_APPS', resolve => {
     return (apps: Array<IApplicationInfo & {loading?: boolean}>) => resolve(apps);
+  }),
+
+  setTemplates: createAction('gdmn/SET_TEMPLATES', resolve => {
+    return (templates: Array<ITemplateApplication>) => resolve(templates);
   }),
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST'),

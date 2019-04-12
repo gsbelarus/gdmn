@@ -40,3 +40,7 @@
   font-size: large;
   flex-shrink: 0;
 }
+
+Dialog {
+  align-items: center;
+}

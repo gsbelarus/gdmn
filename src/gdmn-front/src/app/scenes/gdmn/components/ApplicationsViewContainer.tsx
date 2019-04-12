@@ -11,12 +11,13 @@ export const ApplicationsViewContainer = compose<any, RouteComponentProps<any>>(
   connectView,
   connect(
     (state: IState) => ({
-      apps: state.gdmnState.apps
+      apps: state.gdmnState.apps,
+      templates: state.gdmnState.templates,
     }),
     dispatch => ({
-      apiGetApplications: bindActionCreators(gdmnActionsAsync.apiGetApps, dispatch),
       apiCreateApplication: bindActionCreators(gdmnActionsAsync.apiCreateApp, dispatch),
       apiDeleteApplication: bindActionCreators(gdmnActionsAsync.apiDeleteApp, dispatch),
+      apiGetTemplatesApplication: bindActionCreators(gdmnActionsAsync.apiGetTemplates, dispatch),
       reconnectToApplication: bindActionCreators(gdmnActionsAsync.reconnectToApp, dispatch),
       signIn: bindActionCreators(gdmnActionsAsync.signIn, dispatch),
       signOut: bindActionCreators(gdmnActionsAsync.signOut, dispatch)
