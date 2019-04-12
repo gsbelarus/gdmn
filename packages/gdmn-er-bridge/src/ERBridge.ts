@@ -1,5 +1,5 @@
 import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams} from "gdmn-db";
-import {Entity, EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse} from "gdmn-orm";
+import {Entity, EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse, SequenceQuery, ISequenceQueryResponse} from "gdmn-orm";
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
 import {Update} from "./crud/update/Update";
@@ -11,6 +11,7 @@ import {DDLHelper} from "./ddl/DDLHelper";
 import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
 import {EntityDefiner} from "./EntityDefiner";
+import {GetSequence } from "./crud/query/Sequence";
 
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
@@ -194,6 +195,17 @@ export class ERBridge {
     const delete1 = new Delete(entityDelete);
 
     await connection.execute(transaction, delete1.sql, delete1.params);
+  }
+ 
+  public static async getSequence(connection: AConnection,
+                                  transaction: ATransaction,
+                                  sequence: SequenceQuery): Promise<ISequenceQueryResponse>{
+    const getSequence = new GetSequence(sequence);
+
+    const result = await connection.executeReturning(transaction, getSequence.sql);
+    return {
+      value: result.getNumber(0)
+    }
   }
 
   public async dispose(): Promise<void> {
