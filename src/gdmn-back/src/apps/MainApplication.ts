@@ -247,6 +247,14 @@ export class MainApplication extends Application {
                       await MainApplication._removeCopedTemplate(uid);
                       throw error;
                     }
+                    // TODO
+                    const min = 2000;
+                    const max = Number.MAX_VALUE;
+                    const dbID = Math.floor(Math.random() * (max - min + 1) + min);
+                    await application.executeConnection((con) => AConnection.executeTransaction({
+                      connection: con,
+                      callback: (trans) => con.execute(trans, `SET GENERATOR GD_G_DBID TO :dbID`, {dbID})
+                    }));
                   } else {
                     await application.create();
                   }
