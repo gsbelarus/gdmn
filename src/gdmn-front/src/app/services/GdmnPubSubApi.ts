@@ -53,8 +53,8 @@ import {
   TTaskResultMessageData,
   TInsertTaskCmdResult,
   TUpdateTaskCmdResult,
-  TDeleteTaskCmdResult
-} from '@gdmn/server-api';
+  TDeleteTaskCmdResult, TGetAppTemplatesTaskCmdResult
+} from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
 import { EMPTY, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
@@ -323,6 +323,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.GET_APPS,
+        payload: undefined
+      }
+    });
+  }
+
+  public getAppTemplates(): Promise<TGetAppTemplatesTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.GET_APP_TEMPLATES,
         payload: undefined
       }
     });

@@ -43,7 +43,8 @@ export const enum TTaskActionNames {
   DELETE = 'DELETE',
   DELETE_APP = 'DELETE_APP',
   CREATE_APP = 'CREATE_APP',
-  GET_APPS = 'GET_APPS'
+  GET_APPS = 'GET_APPS',
+  GET_APP_TEMPLATES = 'GET_TEMPLATES'
 }
 
 // MESSAGES DATA
@@ -127,6 +128,7 @@ export interface TTaskActionPayloadTypes {
     uid: string;
   };
   [TTaskActionNames.GET_APPS]: undefined;
+  [TTaskActionNames.GET_APP_TEMPLATES]: undefined;
 }
 
 // -- TASK-RESULT
@@ -158,6 +160,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.CREATE_APP]: IApplicationInfo;
   [TTaskActionNames.DELETE_APP]: undefined;
   [TTaskActionNames.GET_APPS]: IApplicationInfo[];
+  [TTaskActionNames.GET_APP_TEMPLATES]: ITemplateApplication[];
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -229,6 +232,7 @@ export interface ICreateApplicationInfo {
   alias: string;
   external: boolean;
   connectionOptions?: IConnectionOptions;
+  template?: string;
 }
 
 export interface IApplicationInfo extends IConnectionOptions {
@@ -238,6 +242,11 @@ export interface IApplicationInfo extends IConnectionOptions {
   ownerKey: number;
   external: boolean;
   creationDate: Date;
+}
+
+export interface ITemplateApplication {
+  name: string;
+  description: string;
 }
 
 export const TTaskFinishStatus = [TTaskStatus.INTERRUPTED, TTaskStatus.FAILED, TTaskStatus.SUCCESS];

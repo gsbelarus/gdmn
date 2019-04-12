@@ -180,3 +180,9 @@ export type TDeleteAppTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_APP
 export type TGetAppsTaskCmd = TTaskCmd<TTaskActionNames.GET_APPS>;
 
 export type TGetAppsTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APPS>;
+
+// get app templates
+
+export type TGetAppTemplatesTaskCmd = TTaskCmd<TTaskActionNames.GET_APP_TEMPLATES>;
+
+export type TGetAppTemplatesTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_APP_TEMPLATES>;

@@ -34,11 +34,6 @@ interface ITemplateApplication {
   description: string;
 }
 
-interface ITemplateInternalApp extends ITemplateApplication {
-  username: string;
-  password: string;
-}
-
 export interface ICreateUser {
   login: string;
   password: string;
@@ -84,11 +79,10 @@ export interface IUserApplicationInfo extends IApplicationInfo {
   alias: string;
 }
 
-export type MainAction = "GET_TEMPLATES" | "DELETE_APP" | "CREATE_APP" | "GET_APPS";
+export type MainAction = "DELETE_APP" | "CREATE_APP" | "GET_APPS" | "GET_APP_TEMPLATES";
 
 export type MainCmd<A extends MainAction, P = undefined> = ICmd<A, P>;
 
-export type GetTemplatesCmd = MainCmd<"GET_TEMPLATES">;
 export type CreateAppCmd = MainCmd<"CREATE_APP", {
   alias: string;
   external: boolean;
@@ -97,6 +91,7 @@ export type CreateAppCmd = MainCmd<"CREATE_APP", {
 }>;
 export type DeleteAppCmd = MainCmd<"DELETE_APP", { uid: string; }>;
 export type GetAppsCmd = MainCmd<"GET_APPS">;
+export type GetAppTemplatesCmd = MainCmd<"GET_APP_TEMPLATES">;
 
 export class MainApplication extends Application {
 
@@ -123,7 +118,7 @@ export class MainApplication extends Application {
     if (!existsSync(path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME))) {
       writeFileSync(
         path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME),
-        JSON.stringify([{}] as ITemplateInternalApp[])
+        JSON.stringify([{}] as ITemplateApplication[])
       );
     }
   }
@@ -136,10 +131,18 @@ export class MainApplication extends Application {
     return path.resolve(MainApplication.TEMPLATES_DIR, template);
   }
 
-  private static async _getTemplatesConfig(): Promise<ITemplateInternalApp[]> {
-    return await new Promise((resolve, reject) => {
+  private static async _getTemplatesConfig(): Promise<ITemplateApplication[]> {
+    const templateConfig: Array<Partial<ITemplateApplication>> = await new Promise((resolve, reject) => {
       readFile(path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME),
         (error, data) => error ? reject(error) : resolve(JSON.parse(data.toString())));
+    });
+
+    return templateConfig.map((template) => {
+      const {name, description} = template;
+      if (!name || !description) {
+        throw new Error("Incorrect template config");
+      }
+      return {name, description};
     });
   }
 
@@ -191,34 +194,6 @@ export class MainApplication extends Application {
 
   private static _createPasswordHash(password: string, salt: string): string {
     return crypto.pbkdf2Sync(password, salt, 1, 128, "sha1").toString("base64");
-  }
-
-  public pushGetTemplatesCmd(session: Session,
-                             command: GetTemplatesCmd): Task<GetTemplatesCmd, ITemplateApplication[]> {
-    const task = new Task({
-      session,
-      command,
-      level: Level.SESSION,
-      logger: this.taskLogger,
-      worker: async () => {
-        const templatesConfig = await MainApplication._getTemplatesConfig();
-        const templatesFiles = await MainApplication._getTemplatesFiles();
-        return templatesConfig.reduce((items, item) => {
-          if (templatesFiles.includes(item.name)) {
-            items.push({
-              name: item.name,
-              description: item.description
-            });
-          } else {
-            throw new Error("Template file is not found, check templates config");
-          }
-          return items;
-        }, [] as ITemplateApplication[]);
-      }
-    });
-    session.taskManager.add(task);
-    this.sessionManager.syncTasks();
-    return task;
   }
 
   // TODO tmp
@@ -352,6 +327,34 @@ export class MainApplication extends Application {
         return await this.executeConnection((connection) => (
           this._getUserApplicationsInfo(connection, connection.readTransaction, userKey)
         ));
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushGetAppTemplatesCmd(session: Session,
+                                command: GetAppTemplatesCmd): Task<GetAppTemplatesCmd, ITemplateApplication[]> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async () => {
+        const templatesConfig = await MainApplication._getTemplatesConfig();
+        const templatesFiles = await MainApplication._getTemplatesFiles();
+        return templatesConfig.reduce((items, item) => {
+          if (templatesFiles.includes(item.name)) {
+            items.push({
+              name: item.name,
+              description: item.description
+            });
+          } else {
+            throw new Error("Template file is not found, check templates config");
+          }
+          return items;
+        }, [] as ITemplateApplication[]);
       }
     });
     session.taskManager.add(task);
