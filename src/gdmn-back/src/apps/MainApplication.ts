@@ -16,6 +16,7 @@ import {
   IEntityQueryResponseRow,
   IEntityQueryWhereValueInspector,
   IntegerAttribute,
+  MAX_32BIT_INT,
   SetAttribute,
   StringAttribute,
   TimeStampAttribute
@@ -207,7 +208,8 @@ export class MainApplication extends Application {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {alias, external, template, connectionOptions} = context.command.payload;
+        const template = "DEVEL.FDB";
+        const {alias, external, connectionOptions} = context.command.payload;
         const {userKey} = context.session;
 
         return await context.session.executeConnection((connection) => AConnection.executeTransaction({
@@ -243,18 +245,18 @@ export class MainApplication extends Application {
                     await MainApplication._copyTemplate(template, uid);
                     try {
                       await application.connect();
+                      // TODO
+                      const min = 2000;
+                      const dbID = Math.floor(Math.random() * (MAX_32BIT_INT - min + 1) + min);
+                      console.log(dbID);
+                      await application.executeConnection((con) => AConnection.executeTransaction({
+                        connection: con,
+                        callback: (trans) => con.execute(trans, `SET GENERATOR GD_G_DBID TO ${dbID}`) // TODO param
+                      }));
                     } catch (error) {
                       await MainApplication._removeCopedTemplate(uid);
                       throw error;
                     }
-                    // TODO
-                    const min = 2000;
-                    const max = Number.MAX_VALUE;
-                    const dbID = Math.floor(Math.random() * (max - min + 1) + min);
-                    await application.executeConnection((con) => AConnection.executeTransaction({
-                      connection: con,
-                      callback: (trans) => con.execute(trans, `SET GENERATOR GD_G_DBID TO :dbID`, {dbID})
-                    }));
                   } else {
                     await application.create();
                   }
