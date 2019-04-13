@@ -53,7 +53,9 @@ import {
   TTaskResultMessageData,
   TInsertTaskCmdResult,
   TUpdateTaskCmdResult,
-  TDeleteTaskCmdResult, TGetAppTemplatesTaskCmdResult, TSequenceQueryTaskCmdResult
+  TDeleteTaskCmdResult,
+  TGetAppTemplatesTaskCmdResult,
+  TSequenceQueryTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -329,6 +331,7 @@ export class GdmnPubSubApi {
   }
 
   public getAppTemplates(): Promise<TGetAppTemplatesTaskCmdResult> {
+    console.log('getAppTemplates')
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.GET_APP_TEMPLATES,

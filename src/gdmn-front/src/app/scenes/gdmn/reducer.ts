@@ -2,7 +2,7 @@ import { getType } from 'typesafe-actions';
 import { ERModel } from 'gdmn-orm';
 import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
-import { IApplicationInfo } from '@gdmn/server-api';
+import { IApplicationInfo, ITemplateApplication } from '@gdmn/server-api';
 
 export type TGdmnState = {
   erModel: ERModel;
@@ -11,6 +11,7 @@ export type TGdmnState = {
   loadingMessage?: string;
   viewTabs: IViewTab[];
   apps: Array<IApplicationInfo & {loading: boolean}>;
+  templates?: Array<ITemplateApplication>;
 };
 
 const initialState: TGdmnState = {
@@ -66,6 +67,13 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
       return {
         ...state,
         apps: action.payload
+      };
+    }
+
+    case getType(gdmnActions.setTemplates): {
+      return {
+        ...state,
+        templates: action.payload
       };
     }
 

@@ -1,5 +1,5 @@
 import {PasswordInput} from "@gdmn/client-core";
-import {IApplicationInfo, TTaskActionNames, TTaskActionPayloadTypes} from "@gdmn/server-api";
+import {IApplicationInfo, TTaskActionNames, TTaskActionPayloadTypes, ITemplateApplication} from "@gdmn/server-api";
 import {IViewProps, View} from "@src/app/components/View";
 import {
   Checkbox,
@@ -13,7 +13,9 @@ import {
   PrimaryButton,
   Spinner,
   SpinnerSize,
-  TextField
+  TextField,
+  Dropdown,
+  IDropdownOption
 } from "office-ui-fabric-react";
 import React from "react";
 import "../../../../styles/Application.css";
@@ -21,9 +23,10 @@ import {ISignInBoxData} from "../../auth/components/SignInBox";
 
 export interface IApplicationsViewProps extends IViewProps {
   apps: Array<IApplicationInfo & { loading?: boolean }>;
-  apiGetApplications: () => void;
+  templates: Array<ITemplateApplication>;
   apiCreateApplication: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]) => void;
   apiDeleteApplication: (uid: string) => void;
+  apiGetTemplatesApplication: () => void;
   reconnectToApplication: (app: IApplicationInfo) => void;
   signIn: (data: ISignInBoxData) => void;
   signOut: () => void;
@@ -32,6 +35,7 @@ export interface IApplicationsViewProps extends IViewProps {
 export interface IAddApplicationsViewState {
   alias?: string;
   external?: boolean;
+  template?: string;
   host?: string;
   port?: number;
   path?: string;
@@ -55,6 +59,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
     super(props);
 
     this._onRenderCell = this._onRenderCell.bind(this);
+    this._onChange = this._onChange.bind(this);
   }
 
   public getViewCaption(): string {
@@ -71,7 +76,8 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           iconName: "Add"
         },
         onClick: () => {
-          this.setState({openDialogAdd: true});
+          this.props.apiGetTemplatesApplication(); //TODO
+          this.setState({ openDialogAdd: true });
         }
       },
       {
@@ -87,7 +93,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
             // TODO
             if (!app.external && !confirm("База данных будет полностью удалена с устройства")) return;
             this.props.apiDeleteApplication(this.state.selectedAppUid!);
-            this.setState({selectedAppUid: undefined});
+            this.setState({ selectedAppUid: undefined });
           }
         }
       },
@@ -101,11 +107,19 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
         onClick: () => {
           const app = this.props.apps.find((item) => item.uid === this.state.selectedAppUid);
           this.props.reconnectToApplication(app!);
-          this.setState({selectedAppUid: undefined});
+          this.setState({ selectedAppUid: undefined });
         }
       }
     ];
   }
+
+  private _onChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number): void => {
+    if (option) {
+      option.key !== undefined
+      ? this.setState({ template: option.text })
+      : this.setState({ template: undefined })
+    }
+  };
 
   private _onRenderCell(app?: IApplicationInfo & { loading?: boolean }): JSX.Element {
     if (!app) throw new Error("ApplicationInfo is undefined");
@@ -122,11 +136,11 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
         data-is-focusable={!app.loading}
         key={`${app.uid}//${app.alias}`}
         onClick={() => {
-          this.setState({selectedAppUid: app.uid}, () => this._listRef!.forceUpdate());
+          this.setState({ selectedAppUid: app.uid }, () => this._listRef!.forceUpdate());
         }}
-        style={{backgroundColor, pointerEvents: app.loading ? "none" : "auto"}}>
+        style={{ backgroundColor, pointerEvents: app.loading ? "none" : "auto" }}>
         <div hidden={!app.loading}>
-          <Spinner size={SpinnerSize.medium}/>
+          <Spinner size={SpinnerSize.medium} />
         </div>
         <div className="application">
           <div className="applicationAlias">
@@ -151,13 +165,16 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
   }
 
   public render() {
-    const {apiCreateApplication} = this.props;
+    const {apiCreateApplication, templates} = this.props;
+    let options: IDropdownOption[] = [
+      { key: 'undefined', text: 'шаблон не выбран' }
+    ];
 
     return (
       <>
         <Dialog
           hidden={!this.state.openDialogAdd}
-          onDismiss={() => this.setState({openDialogAdd: false})}
+          onDismiss={() => this.setState({ openDialogAdd: false, alias: '', template: undefined, host: '', port: undefined, path: '', username: '', password: '' })}
           modalProps={{
             isBlocking: true,
             topOffsetFixed: false
@@ -176,7 +193,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
             checked={this.state.external}
             onChange={(_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => this.setState({external: isChecked})}
           />
-          {this.state.external && (
+          {this.state.external ? (
             <div>
               <PrimaryButton
                 text={this.state.port !== null && this.state.port !== undefined && this.state.host !== "" ? `IP: ${this.state.host}:${this.state.port}` : "Server"}
@@ -186,7 +203,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
               />
               <Dialog
                 hidden={!this.state.openDialogServer}
-                onDismiss={() => this.setState({openDialogServer: false})}
+                onDismiss={() => this.setState({ openDialogServer: false, host: '', port: undefined })}
                 modalProps={{
                   isBlocking: true,
                   topOffsetFixed: true
@@ -246,13 +263,32 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
                 }}
               />
             </div>
-          )}
+          )
+            : (
+              <div>
+                <Spinner hidden={!!templates} size={SpinnerSize.medium} />
+                {
+                  templates ? templates.forEach(template => {
+                    options.push({ key: template.name, text: template.name })
+                  }) : undefined
+                }
+                <Dropdown
+                  placeholder="Select an template"
+                  label="Template: "
+                  options={options}
+                  selectedKey={this.state.template}
+                  onChange={this._onChange}
+                  disabled={!templates}
+                />
+              </div>
+            )}
           <DialogFooter>
             <PrimaryButton
               onClick={() => {
                 const data: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP] = {
                   alias: this.state.alias ? this.state.alias : "",
                   external: !!this.state.external,
+                  template: !this.state.external ? this.state.template : undefined,
                   connectionOptions: this.state.external
                     ? {
                       server: this.state.host && this.state.port !== null && this.state.port !== undefined
@@ -268,8 +304,11 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
                 apiCreateApplication(data);
                 this.setState({openDialogAdd: false});
               }}
-              text="Save"/>
-            <DefaultButton onClick={() => this.setState({openDialogAdd: false})} text="Cancel"/>
+              text="Save" />
+            <DefaultButton
+              onClick={() => this.setState({openDialogAdd: false, alias: '', template: undefined, host: '', port: undefined, path: '', username: '', password: ''})}
+              text="Cancel"
+            />
           </DialogFooter>
         </Dialog>
         {this.props.apps && (
