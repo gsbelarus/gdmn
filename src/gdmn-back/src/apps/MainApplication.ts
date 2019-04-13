@@ -119,7 +119,7 @@ export class MainApplication extends Application {
     if (!existsSync(path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME))) {
       writeFileSync(
         path.resolve(Constants.DB.DIR, MainApplication.TEMPLATES_CONFIG_NAME),
-        JSON.stringify([{}] as ITemplateApplication[])
+        JSON.stringify([] as ITemplateApplication[])
       );
     }
   }

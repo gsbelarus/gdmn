@@ -1,21 +1,21 @@
 import {PasswordInput} from "@gdmn/client-core";
-import {IApplicationInfo, TTaskActionNames, TTaskActionPayloadTypes, ITemplateApplication} from "@gdmn/server-api";
+import {IApplicationInfo, ITemplateApplication, TTaskActionNames, TTaskActionPayloadTypes} from "@gdmn/server-api";
 import {IViewProps, View} from "@src/app/components/View";
 import {
   Checkbox,
   DefaultButton,
   Dialog,
   DialogFooter,
+  Dropdown,
   FocusZone,
   FocusZoneDirection,
   ICommandBarItemProps,
+  IDropdownOption,
   List,
   PrimaryButton,
   Spinner,
   SpinnerSize,
-  TextField,
-  Dropdown,
-  IDropdownOption
+  TextField
 } from "office-ui-fabric-react";
 import React from "react";
 import "../../../../styles/Application.css";
@@ -23,7 +23,7 @@ import {ISignInBoxData} from "../../auth/components/SignInBox";
 
 export interface IApplicationsViewProps extends IViewProps {
   apps: Array<IApplicationInfo & { loading?: boolean }>;
-  templates: Array<ITemplateApplication>;
+  templates: ITemplateApplication[];
   apiCreateApplication: (payload: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP]) => void;
   apiDeleteApplication: (uid: string) => void;
   apiGetTemplatesApplication: () => void;
@@ -113,11 +113,9 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
     ];
   }
 
-  private _onChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number): void => {
+  private _onChange(event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number): void {
     if (option) {
-      option.key !== undefined
-      ? this.setState({ template: option.text })
-      : this.setState({ template: undefined })
+      this.setState({ template: option.key as string });
     }
   };
 
@@ -166,9 +164,14 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
 
   public render() {
     const {apiCreateApplication, templates} = this.props;
-    let options: IDropdownOption[] = [
+    const options: IDropdownOption[] = [
       { key: 'undefined', text: 'шаблон не выбран' }
     ];
+    if (templates) {
+      templates.forEach(template => {
+        options.push({key: template.name, text: template.description});
+      });
+    }
 
     return (
       <>
@@ -266,12 +269,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
           )
             : (
               <div>
-                <Spinner hidden={!!templates} size={SpinnerSize.medium} />
-                {
-                  templates ? templates.forEach(template => {
-                    options.push({ key: template.name, text: template.name })
-                  }) : undefined
-                }
+                {!templates ? (<Spinner size={SpinnerSize.medium} />) : undefined}
                 <Dropdown
                   placeholder="Select an template"
                   label="Template: "
