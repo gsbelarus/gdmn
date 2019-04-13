@@ -1,6 +1,8 @@
 import { IEntityInsertInspector, IEntityUpdateInspector, IEntityDeleteInspector, IEntityQueryInspector, IEntityQueryResponse, IERModel, ISequenceQueryInspector, ISequenceQueryResponse } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
+import { ISqlQueryResponseAliases } from 'gdmn-internals';
+
 
 export enum TGdmnTopic {
   TASK = '/task',
@@ -172,6 +174,7 @@ export interface ISqlQueryResponseDataItem {
   [alias: string]: any;
 }
 
+/*
 export enum Types {
   BIGINT,
   INTEGER,
@@ -213,6 +216,7 @@ export interface ISqlQueryResponseAliases {
     orm?: ISqlQueryResponseAliasesOrm;
   }
 }
+*/
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];

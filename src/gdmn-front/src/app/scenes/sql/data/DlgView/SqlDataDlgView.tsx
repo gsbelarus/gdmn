@@ -1,8 +1,9 @@
-import { disposeMutex, getMutex } from '@src/app/components/dataViewMutexes';
+import { disposeMutex } from '@src/app/components/dataViewMutexes';
 import { IViewProps, View } from '@src/app/components/View';
 import { ERModel } from 'gdmn-orm';
 import { RecordSet } from 'gdmn-recordset';
-import { ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
+import { ISqlQueryResponseAliasesOrm } from 'gdmn-internals';
+import { ICommandBarItemProps, TextField, IconButton, IButtonProps } from 'office-ui-fabric-react';
 import React, { Fragment } from 'react';
 
 export enum DlgState {
@@ -21,6 +22,7 @@ export interface ISqlDataDlgViewProps extends IViewProps<ISqlDataDlgViewMatchPar
   erModel: ERModel;
   dlgState: DlgState;
   setRow: (rowIndex: number) => void;
+  onView: (entityName: string, pk: string) => void;
 }
 
 export interface ISqlDataDlgViewState {}
@@ -50,7 +52,6 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
 
   public getCommandBarItems(): ICommandBarItemProps[] {
     const { setRow } = this.props;
-    // const requestID = Number(this.props.match.params.id);
 
     const rs = this.props.rs;
 
@@ -89,27 +90,6 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
     return [prevItem, nextItem, ...items];
   }
 
-/*   public addViewTab() {
-    const { addViewTab, match } = this.props;
-
-    addViewTab({
-      caption: this.getViewCaption(),
-      url: match.url,
-      rs: this.getRecordSetList()
-    });
-  } */
-
-  public componentDidMount() {
-    super.componentDidMount();
-  }
-
-  public componentDidUpdate(prevProps: ISqlDataDlgViewProps) {
-    // const { attachRs } = this.props;
-    // if (prevProps.erModel !== this.props.erModel) {
-    //   attachRs(getMutex(this.getDataViewKey()));
-    // }
-  }
-
   public componentWillUnmount() {
     disposeMutex(this.getDataViewKey());
   }
@@ -121,13 +101,32 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
       return this.renderLoading();
     }
 
+    const setViewButton = (value: string, field?: ISqlQueryResponseAliasesOrm) => {
+      if (!field) return;
+      if (!((field.type === 'Entity' || field.type === 'Sequence') && field.entity !== '' )) return;
+
+      console.log(field.entity);
+      return (
+        <IconButton
+          iconProps={{ iconName: 'edit' }}
+          title="view"
+          ariaLabel="View"
+          disabled={!value}
+          onClick={() => field.entity ? this.props.onView(field.entity, value) : {} }
+        />
+      )
+    }
+
     return this.renderWide(
       undefined,
       <div className="dlgView">
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>
             <span>{f.caption}</span>
-            <TextField value={rs.getString(f.fieldName, rs.currentRow, '')} readOnly />
+            <div style={{ display: 'flex', alignItems: 'stretch', height: '40px' }}>
+              <TextField value={rs.getString(f.fieldName, rs.currentRow, '')} readOnly />
+              {f.sqlfa ? setViewButton(rs.getString(f.fieldName, rs.currentRow, ''), f.sqlfa.orm) : null}
+            </div>
             {/* TODO: Делать проверку типа поля и если ссылка то отображать кнопку 'Открыть запись' */}
           </Fragment>
         ))}

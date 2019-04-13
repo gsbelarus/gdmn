@@ -1,6 +1,7 @@
 import { List } from "immutable";
 import { INumberFormat, IDateFormat } from "./format";
 import { IEntityQueryResponseFieldAlias } from "gdmn-orm";
+import { ISqlQueryResponseAliasesRdb, ISqlQueryResponseAliasesOrm } from 'gdmn-internals';
 
 export enum TStatus {
   PARTIAL,
@@ -64,6 +65,10 @@ export interface IFieldDef extends INamedField {
   numberFormat?: INumberFormat;
   dateFormat?: IDateFormat;
   eqfa?: IEntityQueryResponseFieldAlias;
+  sqlfa?: {
+    rdb: ISqlQueryResponseAliasesRdb;
+    orm?: ISqlQueryResponseAliasesOrm;
+  };
 };
 
 export type FieldDefs = IFieldDef[];

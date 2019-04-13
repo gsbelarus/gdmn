@@ -1,10 +1,9 @@
-import {TTaskStatus, ISqlQueryResponseAliasesRdb, ISqlQueryResponseAliases} from "@gdmn/server-api";
 import {connectView} from "@src/app/components/connectView";
 import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {apiService} from "@src/app/services/apiService";
 import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
-import {Semaphore} from "gdmn-internals";
 import {createRecordSet, IDataRow, RecordSet, RecordSetAction, setCurrentRow} from "gdmn-recordset";
+import {TTaskStatus} from "@gdmn/server-api";
+import {apiService} from "@src/app/services/apiService";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
@@ -34,6 +33,37 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
         if (!rs) return;
 
         dispatch(setCurrentRow({ name: rs.name, currentRow: rowIndex }));
+      }),
+      onView: (entityName: string, pk: string) => thunkDispatch(async (dispatch, getState) => {
+        const erModel = getState().gdmnState.erModel;
+
+        console.log(entityName, pk);
+        const result = await apiService.defineEntity({
+          entity: erModel.entity(entityName).name,
+          pkValues: [pk]
+        });
+
+        console.log('go');
+        switch (result.payload.status) {
+          case TTaskStatus.SUCCESS: {
+            const entity = erModel.entity(result.payload.result!.entity);
+            console.log('entity', entity);
+            const url = ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, `entity/${entity.name}/edit/${pk}`)
+            ownProps.history!.push(url);
+            // if (entityName !== entity.name) {
+              // ownProps.history!.push(history!.replace(entityName, entity.name));
+            // } else {
+              // ownProps.history!.push(url);
+            // }
+            break;
+          }
+          default:
+            return;
+        }
+        // console.log(ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, url));
+        // ownProps.history!.push(ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, url));
+
+        // ownProps.history!.push(url);
       })
     })
   )

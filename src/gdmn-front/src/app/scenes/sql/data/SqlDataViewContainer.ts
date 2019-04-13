@@ -22,7 +22,7 @@ import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
-import {attr2fd} from "./utils";
+import {sql2fd} from "./utils";
 
 export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentProps<any>>(
   connect(
@@ -91,13 +91,14 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
                 switch (response.payload.status) {
                   case TTaskStatus.SUCCESS: {
                     const fieldDefs = Object.entries(response.payload.result!.aliases)
-                      .map(([fieldAlias, data]) => attr2fd(fieldAlias, data));
+                      .map(([fieldAlias, data]) => sql2fd(fieldAlias, data));
 
                     const rs = RecordSet.create({
                       name: requestID,
                       fieldDefs,
                       data: List(response.payload.result!.data as IDataRow[]),
                       sequentially: !!rsm.taskKey,
+                      sql: {select: requestRecord.expression, params: []}
                     });
                     dispatch(createRecordSet({name: rs.name, rs}));
 

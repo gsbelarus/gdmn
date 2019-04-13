@@ -1,12 +1,12 @@
-import { Types, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from '@gdmn/server-api';
+import { Types, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from 'gdmn-internals';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 
-export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliasesRdb, orm?: ISqlQueryResponseAliasesOrm} ): IFieldDef {
+export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliasesRdb, orm?: ISqlQueryResponseAliasesOrm} ): IFieldDef {
 
   let dataType;
   let size: number | undefined = undefined;
 
-  switch(eqfa.rdb.type) {
+  switch(sqlfa.rdb.type) {
     case Types.CHAR:
     case Types.VARCHAR:
     case Types.BLOB:
@@ -29,20 +29,17 @@ export function attr2fd(fieldAlias: string, eqfa: {rdb: ISqlQueryResponseAliases
     case Types.BOOLEAN:
       dataType = TFieldType.Boolean;
     default:
-      console.log(eqfa.rdb);
-      throw new Error(`Unsupported attribute type ${eqfa.rdb.type} of ${eqfa.rdb.field!}`);
+      console.log(sqlfa.rdb);
+      throw new Error(`Unsupported attribute type ${sqlfa.rdb.type} of ${sqlfa.rdb.field!}`);
   }
 
-  const caption = fieldAlias;
+  const caption = `${sqlfa.rdb.relation}.${sqlfa.rdb.label}`;
 
   return {
     fieldName: fieldAlias,
     dataType,
     size,
     caption,
-    /* eqfa: {
-      attribute: eqfa.orm!,
-      linkAlias:
-    } */
+    sqlfa
   };
 }
