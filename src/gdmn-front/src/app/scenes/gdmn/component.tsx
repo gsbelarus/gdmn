@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
+import { gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
 import { Dispatch } from 'redux';
@@ -43,20 +44,33 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
     if (!match) return null;
 
     const topAreaHeight = 56 + 36 + ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
-
+    const homeButton = this.props.application
+      ? (
+        <Icon
+          data-is-focusable={true}
+          iconName="Home"
+          className="RoundIcon"
+          onClick={() => {
+            this.props.history.push(match.path);
+            this.props.dispatch(gdmnActionsAsync.reconnectToApp())
+          }}/>
+      )
+      : (
+        <Link to={`${match.path}`}>
+          <Icon iconName="Home" className="RoundIcon"/>
+        </Link>
+      );
     return (
       <>
         <div className="TopArea" style={{ height: topAreaHeight }}>
           <div className="Header">
-            <Link to={`${match.path}`}>
-              <Icon iconName="Home" className="RoundIcon" />
-            </Link>
+            {homeButton}
             <Icon iconName="Chat" className="NoFrameIcon" />
             <div className="SearchBox">
               find something...
               <span className="WhereToSearch">/</span>
             </div>
-            <div className="ImportantMenu" hidden={this.props.application ? true : false}>{commandToLink('applications', match.url)}</div>
+            <div className="ImportantMenu" hidden={!!this.props.application}>{commandToLink('applications', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
