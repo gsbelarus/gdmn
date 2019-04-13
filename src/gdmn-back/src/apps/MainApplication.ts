@@ -616,10 +616,10 @@ export class MainApplication extends Application {
         value: application.external
       }, {
         attribute: "HOST",
-        value: application.server && application.server.host ? application.server && application.server.host : null
+        value: application.server && application.server.host ? application.server.host : null
       }, {
         attribute: "PORT",
-        value: application.server && application.server.host ? application.server && application.server.host : null
+        value: application.server && application.server.port ? application.server.port : null
       }, {
         attribute: "USERNAME",
         value: application.username ? application.username : null
