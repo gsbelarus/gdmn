@@ -50,11 +50,6 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
             console.log('entity', entity);
             const url = ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, `entity/${entity.name}/edit/${pk}`)
             ownProps.history!.push(url);
-            // if (entityName !== entity.name) {
-              // ownProps.history!.push(history!.replace(entityName, entity.name));
-            // } else {
-              // ownProps.history!.push(url);
-            // }
             break;
           }
           default:

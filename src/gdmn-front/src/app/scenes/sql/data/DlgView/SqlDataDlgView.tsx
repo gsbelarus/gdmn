@@ -127,7 +127,6 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
               <TextField value={rs.getString(f.fieldName, rs.currentRow, '')} readOnly />
               {f.sqlfa ? setViewButton(rs.getString(f.fieldName, rs.currentRow, ''), f.sqlfa.orm) : null}
             </div>
-            {/* TODO: Делать проверку типа поля и если ссылка то отображать кнопку 'Открыть запись' */}
           </Fragment>
         ))}
       </div>
