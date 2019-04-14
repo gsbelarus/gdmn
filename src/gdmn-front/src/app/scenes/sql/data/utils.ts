@@ -33,7 +33,7 @@ export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliases
       throw new Error(`Unsupported attribute type ${sqlfa.rdb.type} of ${sqlfa.rdb.field!}`);
   }
 
-  const caption = `${sqlfa.rdb.relation}.${sqlfa.rdb.label}`;
+  const caption = sqlfa.rdb.label; // Как вариант выводить с таблицей `${sqlfa.rdb.relation}.${sqlfa.rdb.label}`;
 
   return {
     fieldName: fieldAlias,
