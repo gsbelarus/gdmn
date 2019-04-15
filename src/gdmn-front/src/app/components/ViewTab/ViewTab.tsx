@@ -44,4 +44,4 @@ export const ViewTab = CSSModules(
         <div styleName="ViewTabSpace" />
       </Fragment>
     );
-}, styles);
+}, styles, { allowMultiple: true });

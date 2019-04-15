@@ -26,4 +26,4 @@ export const ViewTabs = CSSModules(
       </div>
     :
       null;
-  }, styles);
+  }, styles, { allowMultiple: true });
