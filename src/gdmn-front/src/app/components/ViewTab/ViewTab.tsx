@@ -11,10 +11,9 @@ export interface IViewTabProps {
   onClose: () => void;
 }
 
-@CSSModules(styles, { allowMultiple: true })
-export class ViewTab extends React.Component<IViewTabProps, {}> {
-  public render() {
-    const { caption, url, loading, onClose } = this.props;
+export const ViewTab = CSSModules(
+  (props: IViewTabProps) => {
+    const { caption, url, loading, onClose } = props;
 
     return url === location.pathname ? (
       <Fragment key={url}>
@@ -45,5 +44,4 @@ export class ViewTab extends React.Component<IViewTabProps, {}> {
         <div styleName="ViewTabSpace" />
       </Fragment>
     );
-  }
-}
+}, styles);

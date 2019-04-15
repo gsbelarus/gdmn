@@ -14,10 +14,9 @@ export interface IViewTabsProps {
   onClose: (vt: IViewTab) => void;
 }
 
-@CSSModules(styles, { allowMultiple: true })
-export class ViewTabs extends React.Component<IViewTabsProps & RouteComponentProps<any>, {}> {
-  public render() {
-    const { viewTabs, onClose, recordSet } = this.props;
+export const ViewTabs = CSSModules(
+  (props: IViewTabsProps & RouteComponentProps<any>) => {
+    const { viewTabs, onClose, recordSet } = props;
 
     return viewTabs.length ?
       <div styleName="ViewTabs">
@@ -26,6 +25,5 @@ export class ViewTabs extends React.Component<IViewTabsProps & RouteComponentPro
         <div styleName="ViewRestSpace" />
       </div>
     :
-      undefined;
-  }
-}
+      null;
+  }, styles);
