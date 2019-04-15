@@ -95,10 +95,18 @@ export class ERTranslatorRU {
       }
     })();
 
-    const entities = this.neMap.get(objectANP.lexeme);
+    const entities = (objectANP instanceof RusNoun)
+      ? this.neMap.get((objectANP as RusNoun).lexeme)
+      : this.erModel.entities[objectANP.image]
+        ? [this.erModel.entities[objectANP.image]]
+        : undefined;
 
     if (!entities) {
-      throw new Error(`Can't find entities for noun ${objectANP.word}`);
+      if(objectANP instanceof RusNoun) {
+        throw new Error(`Can't find entities for noun ${objectANP.word}`);
+      } else {
+        throw new Error(`Can't find entities with a title ${objectANP.image}`);
+      }
     }
 
     return entities.map(entity => {
@@ -145,7 +153,7 @@ export class ERTranslatorRU {
               });
             }
           } else {
-            throw new Error(`Can't find semantic category place for noun ${objectANP.word}`);
+            throw new Error(`Can't find semantic category place for noun ${(objectANP as RusNoun).word}`);
           }
         }
       }

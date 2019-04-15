@@ -340,4 +340,44 @@ describe("erModel", () => {
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(commands[0].payload.options!.where![0].equals![0].value).toEqual("минск");
    });
+
+   it("phrase11", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
+    const phrase = parsePhrase("покажи TgdcCompany").phrase;
+    expect(phrase).toBeDefined();
+    expect(phrase instanceof RusPhrase).toBeTruthy();
+
+    const commands = translator.process(phrase as RusPhrase);
+
+    expect(commands[0].action).toEqual("QUERY");
+    expect(commands[0].payload).toBeDefined();
+    expect(commands[0].payload.link.entity).toEqual(company);
+  });
+
+  it("phrase12", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
+    const phrase = parsePhrase("покажи все TgdcCompany").phrase;
+    expect(phrase).toBeDefined();
+    expect(phrase instanceof RusPhrase).toBeTruthy();
+
+    const commands = translator.process(phrase as RusPhrase);
+
+    expect(commands[0].action).toEqual("QUERY");
+    expect(commands[0].payload).toBeDefined();
+    expect(commands[0].payload.link.entity).toEqual(company);
+  });
 });

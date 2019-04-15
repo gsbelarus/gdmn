@@ -4,7 +4,7 @@ import { RusNP, RusPP, RusANP, RusPhrase, RusPTimeP } from "../rusSyntax";
 import { RusWord } from "../../morphology/rusMorphology";
 import { RusNoun } from "../../morphology/rusNoun";
 import { RusConjunction } from "../../morphology/rusConjunction";
-import { Value, DefinitionValue } from "../value";
+import { Value, DefinitionValue, idEntityValue } from "../value";
 
 describe("vpparser1", () => {
 
@@ -236,5 +236,35 @@ describe("vpparser1", () => {
     expect((pp!.items[0] as RusWord).word).toEqual('из');
     expect(((pp!.items[1] as RusPhrase).items[0] as RusNoun).word).toEqual('минска');
     expect(((pp!.items[1] as RusPhrase).items[1] as RusNoun).word).toEqual('пинска');
+  });
+
+  test("покажи все TgdcCompany", () => {
+    const result = parsePhrase('покажи все TgdcCompany');
+    const vp = result.phrase;
+    expect(vp).toBeDefined();
+    const verb = vp!.items[0] as RusVerb;
+    expect(verb).toBeDefined();
+    expect(verb.word).toEqual('покажи');
+    const np = vp!.items[1] as RusNP;
+    const anp = np!.items[0] as RusANP;
+    const pp = np!.items[1] as RusPP;
+    expect(pp).toBeUndefined();
+    expect((anp!.items[0] as RusWord).word).toEqual('все');
+    expect((anp!.items[1] as idEntityValue).image).toEqual('TgdcCompany');
+  });
+
+  test("покажи Tgdc", () => {
+    const result = parsePhrase('покажи все Tgdc');
+    const vp = result.phrase;
+    expect(vp).toBeDefined();
+    const verb = vp!.items[0] as RusVerb;
+    expect(verb).toBeDefined();
+    expect(verb.word).toEqual('покажи');
+    const np = vp!.items[1] as RusNP;
+    const anp = np!.items[0] as RusANP;
+    const pp = np!.items[1] as RusPP;
+    expect(pp).toBeUndefined();
+    expect((anp!.items[0] as RusWord).word).toEqual('все');
+    expect((anp!.items[1] as idEntityValue).image).toEqual('Tgdc');
   });
 });

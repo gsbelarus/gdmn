@@ -2,14 +2,14 @@ import { Parser } from "chevrotain";
 import { morphTokens } from "../../rusMorphTokens";
 import { IDescribedParser, ParserName } from "../../types";
 import { DateToken } from "../../..";
-import { Numeric } from '../../tokenizer';
+import { Numeric, idEntityToken } from '../../tokenizer';
 
 /**
  * Грамматика для фразы типа "Покажи все организации из Минска"
  */
 export class VPParser1 extends Parser implements IDescribedParser {
   constructor() {
-    super({...morphTokens, DateToken, Numeric});
+    super({...morphTokens, DateToken, Numeric, idEntityToken});
     Parser.performSelfAnalysis(this);
   };
 
@@ -68,9 +68,12 @@ export class VPParser1 extends Parser implements IDescribedParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.nounAccs) },
       { ALT: () => this.SUBRULE(this.nounGent) },
+      { ALT: () => this.SUBRULE(this.idEntity) },
     ]);
   });
 
+  public idEntity = this.RULE('idEntity', () => this.CONSUME(idEntityToken) );
+  
   public imperativeNoun = this.RULE('imperativeNoun', () => this.SUBRULE(this.nounAccs) );
 
   public nounAccs = this.RULE('nounAccs', () => {

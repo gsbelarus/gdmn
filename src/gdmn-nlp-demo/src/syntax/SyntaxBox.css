@@ -72,6 +72,10 @@
   color: white;
 }
 
+.TokenidEntityToken {
+  background-color: orchid;
+}
+
 .SyntaxCoombinations {
   display: flex;
   flex-direction: row;
@@ -148,6 +152,10 @@
 
 .ACTIVEColor {
   background-color: lightskyblue;
+}
+
+.idEnColor {
+  background-color: chocolate;
 }
 
 .SyntaxError {

@@ -1,7 +1,7 @@
 import { VPParser1 } from "./VPParser1";
 import { RusImperativeVP, RusNP, RusANP, RusPP, RusHmNouns, RusPTimeP } from "../../rusSyntax";
 import { tokenToWordOrHomogeneous } from "../../parser";
-import { DateValue, parseDate, DefinitionValue } from "../../value";
+import { DateValue, parseDate, DefinitionValue, idEntityValue } from "../../value";
 
 export const vpParser1 = new VPParser1();
 
@@ -80,9 +80,15 @@ export class VPVisitor1 extends BaseVPVisitor1 {
   public imperativeNouns = (ctx: any) => {
     if(ctx.nounAccs) {
       return this.visit(ctx.nounAccs);
-    } else {
+    } else if(ctx.nounGent) {
       return this.visit(ctx.nounGent);
+    } else {
+      return this.visit(ctx.idEntity);
     }
+  }
+
+  public idEntity = (ctx: any) => {
+    return new idEntityValue(ctx.idEntityToken[0].image);
   }
 
   public imperativeNoun = (ctx: any) => {

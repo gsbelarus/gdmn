@@ -1,5 +1,5 @@
 import { AnyWord } from '../morphology/morphology';
-import { CyrillicWord, tokenize, Comma, Numeric, DateToken } from '../syntax/tokenizer';
+import { CyrillicWord, tokenize, Comma, Numeric, DateToken, idEntityToken } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
 import { morphTokens } from './rusMorphTokens';
 import { IMorphToken, isMorphToken, IDefinition } from './types';
@@ -44,9 +44,9 @@ export function combinatorialMorph(text: string): IToken[][] {
       if (t.tokenType === CyrillicWord) {
         p.push(morphAnalyzer(t.image).map( w => createTokenInstance(w) ));
       }
-      else if (t.tokenType === Comma || t.tokenType === Numeric || t.tokenType === DateToken) {
+      else if (t.tokenType === Comma || t.tokenType === Numeric || t.tokenType === DateToken || t.tokenType === idEntityToken) {
         p.push([t]);
-      }
+      } 
       return p;
     },
     [] as IToken[][]

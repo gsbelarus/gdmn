@@ -5,7 +5,7 @@ import { RusPreposition } from '../morphology/rusPreposition';
 import { RusWord } from '../morphology/rusMorphology';
 import { Phrase, PhraseName } from './syntax';
 import { AnyWord } from '../morphology/morphology';
-import { DateValue, DefinitionValue } from './value';
+import { DateValue, DefinitionValue, idEntityValue } from './value';
 
 export class RusPhrase extends Phrase<RusWord> {};
 
@@ -81,7 +81,7 @@ export class RusNP extends RusPhrase {
 }
 
 export class RusANP extends RusPhrase {
-  constructor (adjf: RusAdjective | DefinitionValue, noun: RusNoun | RusHmNouns) {
+  constructor (adjf: RusAdjective | DefinitionValue, noun: RusNoun | RusHmNouns | idEntityValue) {
     super([adjf, noun]);
   }
 
@@ -93,8 +93,10 @@ export class RusANP extends RusPhrase {
     }
   }
 
-  get noun(): RusNoun {
-    if (this.items[1] instanceof RusNoun) {
+  get noun(): RusNoun | idEntityValue {
+    if (this.items[1] instanceof idEntityValue) {
+      return this.items[1] as idEntityValue;
+    } else if (this.items[1] instanceof RusNoun) {
       return this.items[1] as RusNoun;
     } else {
       return (this.items[1] as RusHmNouns).items[0] as RusNoun;
