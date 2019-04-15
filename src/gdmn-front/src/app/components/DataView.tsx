@@ -113,19 +113,15 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   public componentWillUnmount() {
     disposeMutex(this.getDataViewKey());
 
-    const { updateViewTab, viewTab } = this.props;
+    const savedState = Object.entries(this._gridRef).reduce((p, [name, g]) => {
+      if (g) {
+        return { ...p, [name]: g.state };
+      } else {
+        return p;
+      }
+    }, {});
 
-    if (viewTab) {
-      const savedState = Object.entries(this._gridRef).reduce((p, [name, g]) => {
-        if (g) {
-          return { ...p, [name]: g.state };
-        } else {
-          return p;
-        }
-      }, {});
-
-      updateViewTab({ ...viewTab, savedState });
-    }
+    sessionStorage.setItem(this.getDataViewKey(), JSON.stringify(savedState));
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -191,10 +187,14 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   }
 
   public getSavedState(rs: RecordSet) {
-    const { viewTab } = this.props;
+    const savedItem = sessionStorage.getItem(this.getDataViewKey());
 
-    if (viewTab && viewTab.savedState && viewTab.savedState[rs.name]) {
-      return viewTab.savedState[rs.name] as IGridState;
+    if (savedItem) {
+      const savedState = JSON.parse(savedItem);
+
+      if (savedState && savedState[rs.name]) {
+        return savedState[rs.name] as IGridState;
+      }
     }
 
     return undefined;
