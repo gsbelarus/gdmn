@@ -191,7 +191,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
             }}
           />
           <Checkbox
-            label="Externel"
+            label="External"
             styles={{root: {margin: "8px 0px"}}}
             checked={this.state.external}
             onChange={(_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => this.setState({external: isChecked})}

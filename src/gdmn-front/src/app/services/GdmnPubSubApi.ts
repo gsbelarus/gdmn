@@ -331,7 +331,6 @@ export class GdmnPubSubApi {
   }
 
   public getAppTemplates(): Promise<TGetAppTemplatesTaskCmdResult> {
-    console.log('getAppTemplates')
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.GET_APP_TEMPLATES,
