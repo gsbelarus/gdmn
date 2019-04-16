@@ -10,7 +10,10 @@ export interface ISqlDataViewState {
 }
 
 const initialState: ISqlDataViewState = {
-  requests: []
+  requests: [
+    {id: '1', expression: 'select u.name as username, u.id, c.name, c.id from gd_user u join gd_contact c on c.id = u.contactkey'},
+    {id: '2', expression: 'select * from gd_contact'},
+  ]
 };
 
 export type SqlQueryActions = ActionType<typeof actions>;
@@ -21,6 +24,12 @@ export function reducer(state: ISqlDataViewState = initialState, action: SqlQuer
       return {
         requests: [...state.requests, action.payload]
       }
+    }
+    case getType(actions.updateQuery): {
+      return {
+        requests:
+          state.requests.map(i => i.id === action.payload.id ? action.payload : i)
+      };
     }
     default:
       return state;

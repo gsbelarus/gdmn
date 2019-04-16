@@ -1,9 +1,9 @@
 import { disposeMutex } from '@src/app/components/dataViewMutexes';
 import { IViewProps, View } from '@src/app/components/View';
 import { ERModel } from 'gdmn-orm';
-import { RecordSet } from 'gdmn-recordset';
+import { RecordSet, IFieldDef } from 'gdmn-recordset';
 import { ISqlQueryResponseAliasesOrm } from 'gdmn-internals';
-import { ICommandBarItemProps, TextField, IconButton, IButtonProps } from 'office-ui-fabric-react';
+import { ICommandBarItemProps, TextField, Icon, IconButton, IButtonProps } from 'office-ui-fabric-react';
 import React, { Fragment } from 'react';
 
 export enum DlgState {
@@ -105,7 +105,6 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
       if (!field) return;
       if (!((field.type === 'Entity' || field.type === 'Sequence') && field.entity !== '' )) return;
 
-      console.log(field.entity);
       return (
         <IconButton
           iconProps={{ iconName: 'edit' }}
@@ -123,8 +122,11 @@ export class SqlDataDlgView extends View<ISqlDataDlgViewProps, ISqlDataDlgViewSt
         {rs.fieldDefs.map((f, idx) => (
           <Fragment key={idx}>
             <span>{f.caption}</span>
-            <div style={{ display: 'flex', alignItems: 'stretch', height: '40px' }}>
-              <TextField value={rs.getString(f.fieldName, rs.currentRow, '')} readOnly />
+            <div className="fieldView">
+              <TextField
+                value={rs.getString(f.fieldName, rs.currentRow, '')}
+                readOnly
+              />
               {f.sqlfa ? setViewButton(rs.getString(f.fieldName, rs.currentRow, ''), f.sqlfa.orm) : null}
             </div>
           </Fragment>

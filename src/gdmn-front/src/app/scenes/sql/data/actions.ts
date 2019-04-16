@@ -4,4 +4,8 @@ export const createQuery = createAction("SQL/CREATE_QUERY", resolve => {
   return (expression: string, id: string) => resolve({expression, id});
 });
 
+export const updateQuery = createAction("SQL/UPDATE_QUERY", resolve => {
+  return (expression: string, id: string) => resolve({expression, id});
+});
+
 export type CreateQuery = typeof createQuery;

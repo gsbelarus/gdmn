@@ -6,7 +6,8 @@ import { LinkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 
 export interface ISqlViewProps extends IViewProps {
   expression: string;
-  run: (expression: string) => void;
+  id: string;
+  run: (expression: string, id: string) => void;
   clear: () => void;
   onChange: (ev: any, text?: string) => void;
 }
@@ -15,7 +16,7 @@ export interface ISqlViewState {}
 
 export class SqlView extends View<ISqlViewProps, ISqlViewState> {
   public getViewCaption(): string {
-    return 'SQL';
+    return 'SQL edit';
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -30,7 +31,7 @@ export class SqlView extends View<ISqlViewProps, ISqlViewState> {
       iconProps: {
         iconName: 'Play'
       },
-      onClick: () => this.props.run(this.props.expression, ),
+      onClick: () => this.props.run(this.props.expression, this.props.id),
     });
     items.push({
       key: 'clear',

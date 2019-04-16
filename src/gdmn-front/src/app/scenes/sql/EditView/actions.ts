@@ -1,7 +1,8 @@
 import {createAction} from "typesafe-actions";
 
 export const init = createAction("SQL/INIT", resolve => {
-  return (url: string) => resolve({url});
+  // return (url: string) => resolve({url});
+  return (expression: string, id: string) => resolve({expression, id});
 });
 
 export type Init = typeof init;

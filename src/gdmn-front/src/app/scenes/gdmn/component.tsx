@@ -12,7 +12,8 @@ import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
-import { SqlViewContainer } from '../sql/container';
+import { SqlListContainer } from '../sql/list/container';
+import { SqlViewContainer } from '../sql/EditView/container';
 import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
 import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
@@ -215,7 +216,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 path={`${match.path}/sql`}
                 render={props => {
                   return (
-                    <SqlViewContainer {...props} />
+                    <SqlListContainer {...props} />
                   );
                 }}
               />
@@ -225,6 +226,15 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 render={props => {
                   return (
                     <SqlDataViewContainer {...props} />
+                  );
+                }}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/sql/:id/edit`}
+                render={props => {
+                  return (
+                    <SqlViewContainer {...props} />
                   );
                 }}
               />

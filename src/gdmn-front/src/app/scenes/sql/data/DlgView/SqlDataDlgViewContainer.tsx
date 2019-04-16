@@ -43,11 +43,9 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
           pkValues: [pk]
         });
 
-        console.log('go');
         switch (result.payload.status) {
           case TTaskStatus.SUCCESS: {
             const entity = erModel.entity(result.payload.result!.entity);
-            console.log('entity', entity);
             const url = ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, `entity/${entity.name}/edit/${pk}`)
             ownProps.history!.push(url);
             break;
@@ -55,10 +53,6 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
           default:
             return;
         }
-        // console.log(ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, url));
-        // ownProps.history!.push(ownProps.location.pathname.replace(`sql/${ownProps.match.params.id}/view`, url));
-
-        // ownProps.history!.push(url);
       })
     })
   )

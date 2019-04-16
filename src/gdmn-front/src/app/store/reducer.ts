@@ -11,7 +11,7 @@ import { gridReducer, GridReducerState } from 'gdmn-grid';
 import { TActions } from '@src/app/store/TActions';
 import { IAuthState, reducer as authReducer } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
-import { ISqlState, reducer as sqlReducer} from '@src/app/scenes/sql/reducer';
+import { ISqlState, reducer as sqlReducer} from '@src/app/scenes/sql/EditView/reducer';
 import { ISqlDataViewState, reducer as sqlDataViewReducer} from '@src/app/scenes/sql/data/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
