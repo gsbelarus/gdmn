@@ -41,9 +41,11 @@ export class EntityQuery {
     return EntityQuery.inspectorToObject(erModel, JSON.parse(text));
   }
 
-  public static inspectorToObject(erModel: ERModel, inspector: IEntityQueryInspector): EntityQuery {
+  public static inspectorToObject(erModel: ERModel,
+                                  inspector: IEntityQueryInspector, existlLink?: EntityLink): EntityQuery {
     const link = EntityLink.inspectorToObject(erModel, inspector.link);
-    const options = inspector.options && EntityQueryOptions.inspectorToObject(link, inspector.options);
+    const options = inspector.options &&
+      EntityQueryOptions.inspectorToObject(link, inspector.options, erModel, existlLink);
 
     return new EntityQuery(link, options);
   }

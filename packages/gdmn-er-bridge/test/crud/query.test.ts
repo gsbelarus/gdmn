@@ -167,7 +167,6 @@ describe("Query", () => {
               entities: [TestEntity2]
             }));
 
-
             const TestEntity5 = await erBuilder.create(erModel, new Entity({
               name: "TEST_ENTITY5",
               lName: {}
@@ -222,6 +221,27 @@ describe("Query", () => {
               name: "PARENT",
               lName: {},
               entities: [TestEntity10]
+            }));
+
+            const TestEntityExists = await erBuilder.create(erModel, new Entity({
+              name: "TEST_ENTITY_EXISTS",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(TestEntityExists, new StringAttribute({
+              name: "TEST_STRING",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(TestEntityExists, new StringAttribute({
+              name: "TEST_STRING1",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(TestEntityExists, new StringAttribute({
+              name: "TEST_STRING2",
+              lName: {}
+            }));
+            await eBuilder.createAttribute(TestEntityExists, new StringAttribute({
+              name: "TEST_STRING3",
+              lName: {}
             }));
           }
         });
@@ -1026,6 +1046,81 @@ describe("Query", () => {
       "  T$1.TEST_STRING AS F$1\n" +
       "FROM TEST_ENTITY T$1\n" +
       "WHERE T$1.TEST_STRING STARTING WITH :P$1");
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
+    });
+  });
+
+  it("parameter as Attribute ", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "DETAIL_ENTITY",
+        alias: "de",
+        fields: [
+          {attribute: "TEST_STRING1"},
+        ]
+      },
+      options: {
+        where: [{
+          equals: [{
+            alias: "de",
+            attribute: "TEST_STRING2",
+            value: {alias: 'de', attribute: 'TEST_STRING1'}
+          }]
+        }]
+      }
+    }));
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING1 AS F$1\n" +
+      "FROM DETAIL_ENTITY T$1\n" +
+      "WHERE T$1.TEST_STRING2 = T$1.TEST_STRING1");
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
+    });
+  });
+
+  it("exist", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY_EXISTS",
+        alias: "te1",
+        fields: [
+          {attribute: "TEST_STRING"}
+        ]
+      },
+      options: {
+        where: [{
+          exist: [{
+            link: {
+              entity: "TEST_ENTITY_EXISTS",
+              alias: "te",
+              fields: [
+                {attribute: "TEST_STRING1"}
+              ]
+            },
+            options: {
+              where: [{
+                equals: [{
+                  alias: "te",
+                  attribute: "TEST_STRING2",
+                  value: {alias: 'te1', attribute: 'TEST_STRING3'}
+                }]
+              }]
+            }
+          }]
+        }]
+      }
+    }));
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM TEST_ENTITY_EXISTS T$1\n" +
+      "WHERE EXISTS (SELECT\n" +
+      "  T$2.TEST_STRING1 AS F$2\n" +
+      "FROM TEST_ENTITY_EXISTS T$2\n" +
+      "WHERE T$2.TEST_STRING2 = T$1.TEST_STRING3)");
 
     await AConnection.executeQueryResultSet({
       connection, transaction: connection.readTransaction, sql, params, callback: () => 0

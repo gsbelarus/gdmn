@@ -5,6 +5,7 @@ import {
   EntityLink,
   EntityLinkField,
   EntityQuery,
+  IEntityQueryAlias,
   IEntityQueryWhere,
   IRelation,
   ScalarAttribute,
@@ -43,7 +44,7 @@ export class Select {
     return "";
   }
 
-  private _getSelect(query: EntityQuery, first?: boolean, withoutAlias?: boolean): string {
+  private _getSelect(query: EntityQuery, first?: boolean, withoutAlias?: boolean, existsLink?: EntityLink): string {
     const {options, link} = query;
 
     let sql = `SELECT`;
@@ -65,7 +66,7 @@ export class Select {
     }
 
     const sqlWhere = this._makeWhereLinkConditions(link)
-      .concat(this._makeWhereConditions(link, options && options.where))
+      .concat(this._makeWhereConditions(link, options && options.where, existsLink))
       .join("\n  AND ");
     if (sqlWhere) {
       sql += `\nWHERE ${sqlWhere}`;
@@ -270,11 +271,8 @@ export class Select {
                     const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
                     const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
                     const tableWithRecursive = this._getSelect(virtualQuery, false, true);
-
-
                     const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(fLink, this.query.link.entity.name),
                       rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
-
                     const attr = field.attribute as EntityAttribute;
                     joins.push(
                       SQLTemplates.join(
@@ -289,7 +287,6 @@ export class Select {
                 });
                 break;
               }
-
               const attr = field.attribute as EntityAttribute;
               joins.push(
                 SQLTemplates.join(
@@ -348,7 +345,7 @@ export class Select {
     }, whereEquals);
   }
 
-  private _makeWhereConditions(link: EntityLink, where?: IEntityQueryWhere[]): string[] {
+  private _makeWhereConditions(link: EntityLink, where?: IEntityQueryWhere[], existsLink?: EntityLink): string[] {
     if (!where) {
       return [];
     }
@@ -370,11 +367,32 @@ export class Select {
         const filterItems = item.equals.map((equals) => {
           const findLink = this._getLink(equals.alias, link);
           const alias = this._getTableAlias(findLink, equals.attribute.adapter!.relation);
+          if (equals.value === Object(equals.value)) {
+            const value = (equals.value as IEntityQueryAlias<ScalarAttribute>);
+            const alias = this._getTableAlias(this._getLink(value.alias, link, existsLink),
+              value.attribute.adapter!.relation);
+            const field = `${alias && `${alias}.`}${value.attribute.name}`;
+
+            return SQLTemplates.equals(this._getTableAlias(this._getLink(equals.alias, link, existsLink),
+              value.attribute.adapter!.relation),
+              equals.attribute.adapter!.field,
+              field)
+          }
           if (equals.attribute.type === "String") {
             return SQLTemplates.equalsWithUpper(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
           } else {
             return SQLTemplates.equals(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
           }
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+      if (item.exist) {
+        const filterItems = item.exist.map((exist) => {
+          const existsQuery = new EntityQuery(exist.link, exist.options);
+          return `EXISTS (${this._getSelect(existsQuery, undefined, undefined, link)})`
         });
         const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
         if (filter) {
@@ -576,8 +594,8 @@ export class Select {
 
   }
 
-  private _getLink(alias: string, link: EntityLink): EntityLink {
-    const findLink = link.deepFindLink(alias);
+  private _getLink(alias: string, link: EntityLink, existsLink?: EntityLink): EntityLink {
+    const findLink = link.deepFindLink(alias) ? link.deepFindLink(alias) : existsLink && existsLink.deepFindLink(alias);
     if (!findLink) {
       throw new Error(`Alias ${alias} is not found`);
     }

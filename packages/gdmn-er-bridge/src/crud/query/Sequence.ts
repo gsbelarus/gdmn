@@ -1,5 +1,4 @@
-import { Sequence, 
-  SequenceQuery } from "gdmn-orm";
+import {SequenceQuery} from "gdmn-orm";
 
 export class GetSequence {
 
@@ -11,12 +10,12 @@ export class GetSequence {
     this.sql = this._getSequence(query);
   }
 
-  private  _getSequence(query: SequenceQuery): string {
+  private _getSequence(query: SequenceQuery): string {
     let sql = `SELECT`;
     if (query.increment !== undefined) {
-      sql+= ' GEN_ID (' + query.inspect.name + ', ' + query.increment + ') \nFROM RDB$DATABASE';
+      sql += ' GEN_ID (' + query.inspect.name + ', ' + query.increment + ') \nFROM RDB$DATABASE';
     } else {
-      sql+= ' NEXT VALUE FOR ' + query.inspect.name + '\nFROM RDB$DATABASE';
+      sql += ' NEXT VALUE FOR ' + query.inspect.name + '\nFROM RDB$DATABASE';
     }
     return sql;
   }

@@ -2,6 +2,7 @@ import {Attribute} from "../model/Attribute";
 import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 import {EntityLink} from "./EntityLink";
 import {TValue} from "../types";
+import {EntityQuery, ERModel, IEntityQueryInspector} from "..";
 
 export interface IEntityQueryAliasInspector {
   alias: string;
@@ -9,7 +10,7 @@ export interface IEntityQueryAliasInspector {
 }
 
 export interface IEntityQueryWhereValueInspector extends IEntityQueryAliasInspector {
-  value: TValue;
+  value: TValue | IEntityQueryAliasInspector;
 }
 
 export interface IEntityQueryWhereValueNumberInspector extends IEntityQueryAliasInspector {
@@ -31,6 +32,7 @@ export interface IEntityQueryWhereInspector {
   greater?: IEntityQueryWhereValueNumberInspector[];
   less?: IEntityQueryWhereValueNumberInspector[];
   startingWith?: IEntityQueryWhereValueStringInspector[];
+  exist?: IEntityQueryInspector[];
 }
 
 export interface IEntityQueryOrderInspector extends IEntityQueryAliasInspector {
@@ -52,7 +54,7 @@ export interface IEntityQueryAlias<Attr extends Attribute> {
 }
 
 export interface IEntityQueryWhereValue extends IEntityQueryAlias<ScalarAttribute> {
-  readonly value: TValue;
+  readonly value: TValue | IEntityQueryAlias<ScalarAttribute>;
 }
 
 export interface IEntityQueryWhereValueNumber extends IEntityQueryAlias<ScalarAttribute> {
@@ -74,10 +76,16 @@ export interface IEntityQueryWhere {
   readonly greater?: IEntityQueryWhereValueNumber[];
   readonly less?: IEntityQueryWhereValueNumber[];
   readonly startingWith?: IEntityQueryWhereValueString[];
+  readonly exist?: IEntityQueryWhereExist[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
   readonly type?: EntityQueryOrderType;
+}
+
+export interface IEntityQueryWhereExist {
+  link: EntityLink;
+  options?: EntityQueryOptions;
 }
 
 export class EntityQueryOptions {
@@ -97,11 +105,14 @@ export class EntityQueryOptions {
     this.order = order;
   }
 
-  public static inspectorToObject(link: EntityLink, inspector: IEntityQueryOptionsInspector): EntityQueryOptions {
+  public static inspectorToObject(link: EntityLink,
+                                  inspector: IEntityQueryOptionsInspector,
+                                  erModel?: ERModel, existlLink?: EntityLink): EntityQueryOptions {
     return new EntityQueryOptions(
       inspector.first,
       inspector.skip,
-      inspector.where ? EntityQueryOptions.inspectorWhereToObject(link, inspector.where) : undefined,
+      inspector.where ?
+        EntityQueryOptions.inspectorWhereToObject(link, inspector.where, erModel, existlLink) : undefined,
       inspector.order ? inspector.order.map((opt) => {
         const findLink = link.deepFindLink(opt.alias);
         if (!findLink) {
@@ -117,7 +128,9 @@ export class EntityQueryOptions {
   }
 
   private static inspectorWhereToObject(link: EntityLink,
-                                        inspector: IEntityQueryWhereInspector[]): IEntityQueryWhere[] {
+                                        inspector: IEntityQueryWhereInspector[],
+                                        erModel?: ERModel,
+                                        existlLink?: EntityLink): IEntityQueryWhere[] {
     return inspector.reduce((items, item) => {
       const where: IEntityQueryWhere = {
         and: item.and ? EntityQueryOptions.inspectorWhereToObject(link, item.and) : undefined,
@@ -141,6 +154,18 @@ export class EntityQueryOptions {
             if (!findLink) {
               throw new Error(`Alias ${equals.alias} is not found`);
             }
+            if (!EntityQueryOptions._isValuePrimitiveInspector(equals.value)) {
+                const findLink2 = link.deepFindLink(equals.value.alias) ?
+                  link.deepFindLink(equals.value.alias) : existlLink && existlLink.deepFindLink(equals.value.alias);
+                if (!findLink2) {
+                  throw new Error(`Alias ${equals.value.alias} is not found`);
+                }
+                return {
+                alias: equals.alias,
+                attribute: findLink.entity.attribute(equals.attribute),
+                value: {alias: equals.value.alias, attribute: findLink2.entity.attribute(equals.value.attribute)}
+              };
+            }
             return {
               alias: equals.alias,
               attribute: findLink.entity.attribute(equals.attribute),
@@ -153,6 +178,18 @@ export class EntityQueryOptions {
             const findLink = link.deepFindLink(contains.alias);
             if (!findLink) {
               throw new Error(`Alias ${contains.alias} is not found`);
+            }
+            if (!EntityQueryOptions._isValuePrimitiveInspector(contains.value)) {
+              const findLink2 = link.deepFindLink(contains.value.alias) ?
+                link.deepFindLink(contains.value.alias) : existlLink && existlLink.deepFindLink(contains.value.alias);
+              if (!findLink2) {
+                throw new Error(`Alias ${contains.value.alias} is not found`);
+              }
+              return {
+                alias: contains.alias,
+                attribute: findLink.entity.attribute(contains.attribute),
+                value: {alias: contains.value.alias, attribute: findLink2.entity.attribute(contains.value.attribute)}
+              };
             }
             return {
               alias: contains.alias,
@@ -208,6 +245,15 @@ export class EntityQueryOptions {
               value: startingWith.value
             };
           })
+          : undefined,
+        exist: item.exist
+          ? item.exist.map((exist) => {
+            const inspectorEntityQuery: IEntityQueryInspector = {
+              link: exist.link,
+              options: exist.options
+            };
+            return EntityQuery.inspectorToObject(erModel!, inspectorEntityQuery, link);
+          })
           : undefined
       };
       if (Object.values(where).some((w) => !!w)) {
@@ -237,18 +283,42 @@ export class EntityQueryOptions {
         }));
       }
       if (item.equals) {
-        inspector.equals = item.equals.map((equals) => ({
-          alias: equals.alias,
-          attribute: equals.attribute.name,
-          value: equals.value
-        }));
+        inspector.equals = item.equals.map((equals) => {
+          if (!EntityQueryOptions._isValuePrimitive(equals.value)) {
+            return {
+              alias: equals.alias,
+              attribute: equals.attribute.name,
+              value: {
+                  alias: equals.value.alias,
+                  attribute: equals.value.attribute.name
+                }
+            };
+          }
+          return {
+            alias: equals.alias,
+            attribute: equals.attribute.name,
+            value: equals.value
+          };
+        });
       }
       if (item.contains) {
-        inspector.contains = item.contains.map((contains) => ({
-          alias: contains.alias,
-          attribute: contains.attribute.name,
-          value: contains.value
-        }));
+        inspector.contains = item.contains.map((contains) => {
+          if (!EntityQueryOptions._isValuePrimitive(contains.value)) {
+            return {
+              alias: contains.alias,
+              attribute: contains.attribute.name,
+              value: {
+                alias: contains.value.alias,
+                attribute: contains.value.attribute.name
+              }
+            };
+          }
+          return {
+            alias: contains.alias,
+            attribute: contains.attribute.name,
+            value: contains.value
+          };
+        });
       }
       if (item.greater) {
         inspector.greater = item.greater.map((greater) => ({
@@ -271,9 +341,26 @@ export class EntityQueryOptions {
           value: startingWith.value
         }));
       }
+      if (item.exist) {
+        inspector.exist = item.exist.map((exist) => ({
+          link: exist.link.inspect(),
+          options: exist.options && exist.options.inspect()
+        }));
+      }
+
       items.push(inspector);
       return items;
     }, [] as IEntityQueryWhereInspector[]);
+  }
+
+  private static _isValuePrimitiveInspector(
+    value: TValue | IEntityQueryAliasInspector
+  ): value is TValue {
+    return value !== Object(value);
+  }
+
+  private static _isValuePrimitive(value: TValue | IEntityQueryAlias<ScalarAttribute>): value is TValue {
+    return value !== Object(value);
   }
 
   public inspect(): IEntityQueryOptionsInspector {
