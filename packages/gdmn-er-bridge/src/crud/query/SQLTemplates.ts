@@ -104,4 +104,12 @@ export abstract class SQLTemplates {
   public static greaterOrEquals(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, ">=", value);
   }
+
+  public static between(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "BETWEEN", value);
+  }
+
+  public static like(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "LIKE", value);
+  }
 }

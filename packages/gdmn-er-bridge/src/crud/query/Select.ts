@@ -399,6 +399,18 @@ export class Select {
           filters.push(filter);
         }
       }
+      if (item.between) {
+        const filterItems = item.between.map((between) => {
+          const findLink = this._getLink(between.alias, link);
+          const alias = this._getTableAlias(findLink, between.attribute.adapter!.relation);
+          const valueText = `${between.value.leftValue} AND ${between.value.rightValue}`;
+          return SQLTemplates.between(alias, between.attribute.adapter!.field, valueText)
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
       if (item.contains) {
         const filterItems = item.contains.map((contains) => {
           const findLink = this._getLink(contains.alias, link);
@@ -447,6 +459,20 @@ export class Select {
             alias,
             startingWith.attribute.adapter!.field,
             this._addToParams(startingWith.value));
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+      if (item.like) {
+        const filterItems = item.like.map((like) => {
+          const findLink = this._getLink(like.alias, link);
+          const alias = this._getTableAlias(findLink, like.attribute.adapter!.relation);
+          return SQLTemplates.like(
+            alias,
+            like.attribute.adapter!.field,
+            this._addToParams(like.value));
         });
         const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
         if (filter) {
@@ -564,6 +590,10 @@ export class Select {
       where.equals.some((equals) => equals.attribute.adapter!.relation === relationName)) {
       return true;
     }
+    if (where.between &&
+      where.between.some((between) => between.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
     if (where.contains &&
       where.contains.some((contains) => contains.attribute.adapter!.relation === relationName)) {
       return true;
@@ -581,6 +611,11 @@ export class Select {
     if (where.startingWith &&
       where.startingWith
         .some((startingWith) => startingWith.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.like &&
+      where.like
+        .some((like) => like.attribute.adapter!.relation === relationName)) {
       return true;
     }
 

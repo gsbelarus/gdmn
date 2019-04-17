@@ -1126,4 +1126,64 @@ describe("Query", () => {
       connection, transaction: connection.readTransaction, sql, params, callback: () => 0
     });
   });
+
+  it("between", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY",
+        alias: "te",
+        fields: [
+          {attribute: "TEST_STRING"}
+        ]
+      },
+      options: {
+        where: [{
+          between: [{
+            alias: "te",
+            attribute: "ID",
+            value: {leftValue: 5, rightValue: 10}
+          }
+          ]
+        }]
+      }
+    }));
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM TEST_ENTITY T$1\n" +
+      "WHERE T$1.ID BETWEEN 5 AND 10");
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
+    });
+  });
+
+  it("like", async () => {
+    const {sql, params} = new Select(EntityQuery.inspectorToObject(erModel, {
+      link: {
+        entity: "TEST_ENTITY",
+        alias: "te",
+        fields: [
+          {attribute: "TEST_STRING"}
+        ]
+      },
+      options: {
+        where: [{
+          like: [{
+            alias: "te",
+            attribute: "TEST_STRING",
+            value: '%ghadsd%'
+          }
+          ]
+        }]
+      }
+    }));
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING AS F$1\n" +
+      "FROM TEST_ENTITY T$1\n" +
+      "WHERE T$1.TEST_STRING LIKE :P$1");
+
+    await AConnection.executeQueryResultSet({
+      connection, transaction: connection.readTransaction, sql, params, callback: () => 0
+    });
+  });
 });

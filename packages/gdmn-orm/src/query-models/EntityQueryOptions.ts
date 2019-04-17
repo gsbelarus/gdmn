@@ -9,6 +9,11 @@ export interface IEntityQueryAliasInspector {
   attribute: string;
 }
 
+export interface IEntityQueryWhereBetweenValueInspector {
+  leftValue: TValue;
+  rightValue: TValue;
+}
+
 export interface IEntityQueryWhereValueInspector extends IEntityQueryAliasInspector {
   value: TValue | IEntityQueryAliasInspector;
 }
@@ -19,6 +24,10 @@ export interface IEntityQueryWhereValueNumberInspector extends IEntityQueryAlias
 
 export interface IEntityQueryWhereValueStringInspector extends IEntityQueryAliasInspector {
   value: string;
+}
+
+export interface IEntityQueryWhereValueObjectInspector extends IEntityQueryAliasInspector {
+  value: IEntityQueryWhereBetweenValueInspector;
 }
 
 export interface IEntityQueryWhereInspector {
@@ -33,6 +42,8 @@ export interface IEntityQueryWhereInspector {
   less?: IEntityQueryWhereValueNumberInspector[];
   startingWith?: IEntityQueryWhereValueStringInspector[];
   exist?: IEntityQueryInspector[];
+  between?: IEntityQueryWhereValueObjectInspector[];
+  like?: IEntityQueryWhereValueInspector[];
 }
 
 export interface IEntityQueryOrderInspector extends IEntityQueryAliasInspector {
@@ -65,6 +76,15 @@ export interface IEntityQueryWhereValueString extends IEntityQueryAlias<ScalarAt
   readonly value: string;
 }
 
+export interface IEntityQueryWhereValueObject extends IEntityQueryAlias<ScalarAttribute> {
+  readonly value: IEntityQueryWhereBetweenValue;
+}
+
+export interface IEntityQueryWhereBetweenValue {
+  leftValue: TValue;
+  rightValue: TValue;
+}
+
 export interface IEntityQueryWhere {
   readonly and?: IEntityQueryWhere[];
   readonly or?: IEntityQueryWhere[];
@@ -77,6 +97,8 @@ export interface IEntityQueryWhere {
   readonly less?: IEntityQueryWhereValueNumber[];
   readonly startingWith?: IEntityQueryWhereValueString[];
   readonly exist?: IEntityQueryWhereExist[];
+  readonly between?: IEntityQueryWhereValueObject[];
+  readonly like?: IEntityQueryWhereValue[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
@@ -254,6 +276,37 @@ export class EntityQueryOptions {
             };
             return EntityQuery.inspectorToObject(erModel!, inspectorEntityQuery, link);
           })
+          : undefined,
+        between: item.between
+          ? item.between.map((between) => {
+
+            const findLink = link.deepFindLink(between.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${between.alias} is not found`);
+            }
+
+            return {
+              alias: between.alias,
+              attribute: findLink.entity.attribute(between.attribute),
+              value: between.value
+            };
+          })
+          : undefined,
+        like: item.like
+          ? item.like.map((like) => {
+            const findLink = link.deepFindLink(like.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${like.alias} is not found`);
+            }
+            if (!EntityQueryOptions._isValuePrimitiveInspector(like.value)) {
+              throw new Error(`Value ${like.value} should be primitive type`);
+            }
+            return {
+              alias: like.alias,
+              attribute: findLink.entity.attribute(like.attribute),
+              value: like.value
+            };
+          })
           : undefined
       };
       if (Object.values(where).some((w) => !!w)) {
@@ -346,6 +399,25 @@ export class EntityQueryOptions {
           link: exist.link.inspect(),
           options: exist.options && exist.options.inspect()
         }));
+      }
+      if (item.between) {
+        inspector.between = item.between.map((between) => ({
+          alias: between.alias,
+          attribute: between.attribute.name,
+          value: between.value
+        }));
+      }
+      if (item.like) {
+        inspector.like = item.like.map((like) => {
+          if (!EntityQueryOptions._isValuePrimitive(like.value)) {
+            throw new Error(`Value ${like.value} should be primitive type`);
+          }
+          return {
+            alias: like.alias,
+            attribute: like.attribute.name,
+            value: like.value
+          };
+        });
       }
 
       items.push(inspector);
