@@ -399,6 +399,25 @@ export class Select {
           filters.push(filter);
         }
       }
+      if (item.inOperator) {
+        const filterItems = item.inOperator.map((inOperator) => {
+          const existsQuery = new EntityQuery(inOperator.link, inOperator.options);
+          const fieldName = item.inOperator!.map((operator) => {
+            return operator.link.fields.map((field) => {
+              const attribute = field.attribute as ScalarAttribute;
+              return attribute.adapter!.field
+            }).join('')
+          }).join('');
+
+          const alias = this._getTableAlias(this._getLink(link.alias, link),
+            AdapterUtils.getOwnRelationName(link.entity));
+          return `${alias}.${fieldName} IN (${this._getSelect(existsQuery, undefined, undefined, link)})`
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
       if (item.between) {
         const filterItems = item.between.map((between) => {
           const findLink = this._getLink(between.alias, link);

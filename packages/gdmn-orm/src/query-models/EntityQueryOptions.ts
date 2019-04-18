@@ -44,6 +44,7 @@ export interface IEntityQueryWhereInspector {
   exist?: IEntityQueryInspector[];
   between?: IEntityQueryWhereValueObjectInspector[];
   like?: IEntityQueryWhereValueInspector[];
+  inOperator?: IEntityQueryInspector[];
 }
 
 export interface IEntityQueryOrderInspector extends IEntityQueryAliasInspector {
@@ -96,16 +97,17 @@ export interface IEntityQueryWhere {
   readonly greater?: IEntityQueryWhereValueNumber[];
   readonly less?: IEntityQueryWhereValueNumber[];
   readonly startingWith?: IEntityQueryWhereValueString[];
-  readonly exist?: IEntityQueryWhereExist[];
+  readonly exist?: IEntityQuery[];
   readonly between?: IEntityQueryWhereValueObject[];
   readonly like?: IEntityQueryWhereValue[];
+  readonly inOperator?: IEntityQuery[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
   readonly type?: EntityQueryOrderType;
 }
 
-export interface IEntityQueryWhereExist {
+export interface IEntityQuery {
   link: EntityLink;
   options?: EntityQueryOptions;
 }
@@ -307,6 +309,15 @@ export class EntityQueryOptions {
               value: like.value
             };
           })
+          : undefined,
+        inOperator: item.inOperator
+          ? item.inOperator.map((inOperator) => {
+            const inspectorEntityQuery: IEntityQueryInspector = {
+              link: inOperator.link,
+              options: inOperator.options
+            };
+            return EntityQuery.inspectorToObject(erModel!, inspectorEntityQuery, link);
+          })
           : undefined
       };
       if (Object.values(where).some((w) => !!w)) {
@@ -418,6 +429,12 @@ export class EntityQueryOptions {
             value: like.value
           };
         });
+      }
+      if (item.inOperator) {
+        inspector.inOperator = item.inOperator.map((inOperator) => ({
+          link: inOperator.link.inspect(),
+          options: inOperator.options && inOperator.options.inspect()
+        }));
       }
 
       items.push(inspector);
