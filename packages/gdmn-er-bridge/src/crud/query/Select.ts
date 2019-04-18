@@ -498,6 +498,20 @@ export class Select {
           filters.push(filter);
         }
       }
+      if (item.similarTo) {
+        const filterItems = item.similarTo.map((similarTo) => {
+          const findLink = this._getLink(similarTo.alias, link);
+          const alias = this._getTableAlias(findLink, similarTo.attribute.adapter!.relation);
+          return SQLTemplates.similarTo(
+            alias,
+            similarTo.attribute.adapter!.field,
+            this._addToParams(similarTo.value));
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
 
       if (item.and) {
         const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.and), " AND ");
@@ -635,6 +649,11 @@ export class Select {
     if (where.like &&
       where.like
         .some((like) => like.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.similarTo &&
+      where.similarTo
+        .some((similarTo) => similarTo.attribute.adapter!.relation === relationName)) {
       return true;
     }
 

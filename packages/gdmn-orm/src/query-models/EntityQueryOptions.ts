@@ -45,6 +45,7 @@ export interface IEntityQueryWhereInspector {
   between?: IEntityQueryWhereValueObjectInspector[];
   like?: IEntityQueryWhereValueInspector[];
   inOperator?: IEntityQueryInspector[];
+  similarTo?: IEntityQueryWhereValueInspector[];
 }
 
 export interface IEntityQueryOrderInspector extends IEntityQueryAliasInspector {
@@ -101,6 +102,7 @@ export interface IEntityQueryWhere {
   readonly between?: IEntityQueryWhereValueObject[];
   readonly like?: IEntityQueryWhereValue[];
   readonly inOperator?: IEntityQuery[];
+  readonly similarTo?: IEntityQueryWhereValue[];
 }
 
 export interface IEntityQueryOrder extends IEntityQueryAlias<ScalarAttribute> {
@@ -318,7 +320,23 @@ export class EntityQueryOptions {
             };
             return EntityQuery.inspectorToObject(erModel!, inspectorEntityQuery, link);
           })
-          : undefined
+          : undefined,
+        similarTo: item.similarTo
+          ? item.similarTo.map((similarTo) => {
+            const findLink = link.deepFindLink(similarTo.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${similarTo.alias} is not found`);
+            }
+            if (!EntityQueryOptions._isValuePrimitiveInspector(similarTo.value)) {
+              throw new Error(`Value ${similarTo.value} should be primitive type`);
+            }
+            return {
+              alias: similarTo.alias,
+              attribute: findLink.entity.attribute(similarTo.attribute),
+              value: similarTo.value
+            };
+          })
+          : undefined,
       };
       if (Object.values(where).some((w) => !!w)) {
         items.push(where);
@@ -435,6 +453,18 @@ export class EntityQueryOptions {
           link: inOperator.link.inspect(),
           options: inOperator.options && inOperator.options.inspect()
         }));
+      }
+      if (item.similarTo) {
+        inspector.similarTo = item.similarTo.map((similarTo) => {
+          if (!EntityQueryOptions._isValuePrimitive(similarTo.value)) {
+            throw new Error(`Value ${similarTo.value} should be primitive type`);
+          }
+          return {
+            alias: similarTo.alias,
+            attribute: similarTo.attribute.name,
+            value: similarTo.value
+          };
+        });
       }
 
       items.push(inspector);

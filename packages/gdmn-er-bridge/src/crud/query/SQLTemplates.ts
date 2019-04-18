@@ -112,4 +112,8 @@ export abstract class SQLTemplates {
   public static like(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "LIKE", value);
   }
+
+  public static similarTo(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "SIMILAR TO", value);
+  }
 }
