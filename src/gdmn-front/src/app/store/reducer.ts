@@ -16,49 +16,11 @@ import { ISqlDataViewState, reducer as sqlDataViewReducer} from '@src/app/scenes
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
+import { IRsMetaState, rsMetaReducer } from './rsmeta';
 
 initializeIcons(/* optional base url */);
 
-// RS-META
-
-interface IRsMetaState {
-  [rsName: string]: {
-    taskKey?: string;
-  };
-}
-
-const rsMetaActions = {
-  setRsMeta: createAction('SET_RS_META', resolve => {
-    return (rsName: string, rsMeta: { taskKey?: string; }) => resolve({ rsName, rsMeta });
-  }),
-  deleteRsMeta: createAction('DELETE_RS_META', resolve => {
-    return (rsName: string) => resolve(rsName);
-  })
-};
-
-type TRsMetaActions = ActionType<typeof rsMetaActions>;
-
-function rsMetaReducer(state: IRsMetaState = {}, action: TRsMetaActions) {
-  switch (action.type) {
-    case getType(rsMetaActions.setRsMeta): {
-      return {
-        ...state,
-        [action.payload.rsName]: action.payload.rsMeta || {}
-      };
-    }
-    case getType(rsMetaActions.deleteRsMeta): {
-      const newState = { ...state };
-      delete newState[action.payload];
-      return newState;
-    }
-    default:
-      return state;
-  }
-}
-
-//
-
-interface IState {
+export interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: TGdmnState;
@@ -96,8 +58,7 @@ const reducer = combineReducers<IState>({
   grid: withReset(gridReducer)
 });
 
-type TReducer = Reducer<IState & PersistPartial, TActions>;
+export type TReducer = Reducer<IState & PersistPartial, TActions>;
 
 // tslint:disable-next-line no-default-export
 export default reducer; // TODO test hmr require without default
-export { TReducer, IState, rsMetaActions, TRsMetaActions, IRsMetaState };
