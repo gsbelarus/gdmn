@@ -66,6 +66,7 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, eqfa: IEntityQue
   let size: number | undefined = undefined;
 
   switch (attr.type) {
+    case "Blob":
     case "Enum":
     case "String":
       dataType = TFieldType.String;

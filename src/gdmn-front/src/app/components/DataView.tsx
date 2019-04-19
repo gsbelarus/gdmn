@@ -200,6 +200,26 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return undefined;
   }
 
+  public renderSettings(rs: RecordSet) {
+    const {onSetFilter} = this.props;
+    const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
+
+    return (
+      <div className="GridFilter">
+        <TextField
+          label="Filter:"
+          value={filter}
+          onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+            onSetFilter({
+              rs,
+              filter: newValue ? newValue : ''
+            })
+          }}
+        />
+      </div>
+    );
+  }
+
   public renderGrid(
     gridName: string,
     gcs: GridComponentState,
@@ -215,25 +235,12 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       onSelectAllRows,
       onSetCursorPos,
       onSort,
-      onSetFilter,
       onToggleGroup,
       loadMoreRsData
     } = this.props;
-    const filter = rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
     return (
       <div style={{ width }}>
-        <div className="GridFilter">
-          <TextField
-            label="Filter:"
-            value={filter}
-            onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-              onSetFilter({
-                rs,
-                filter: newValue ? newValue : ''
-              })
-            }}
-          />
-        </div>
+        {this.renderSettings(rs)}
         <div style={{ height: 'calc(100% - 77px)' }}>
           <GDMNGrid
             {...gcs}

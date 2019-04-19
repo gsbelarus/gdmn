@@ -4,6 +4,11 @@ import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 import { IApplicationInfo, ITemplateApplication } from '@gdmn/server-api';
 
+export interface IPhraseForQuery {
+  entityName: string;
+  phrase: string;
+}
+
 export type TGdmnState = {
   erModel: ERModel;
   loading: boolean;
@@ -11,7 +16,8 @@ export type TGdmnState = {
   loadingMessage?: string;
   viewTabs: IViewTab[];
   apps: Array<IApplicationInfo & {loading: boolean}>;
-  templates?: Array<ITemplateApplication>;
+  templates?: ITemplateApplication[];
+  phrasesForQuery: IPhraseForQuery[];
 };
 
 const initialState: TGdmnState = {
@@ -19,7 +25,8 @@ const initialState: TGdmnState = {
   loading: false,
   loadingCounter: 0,
   viewTabs: [],
-  apps: []
+  apps: [],
+  phrasesForQuery: []
 };
 
 export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
@@ -135,6 +142,40 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
         return {
           ...state,
           viewTabs: [...state.viewTabs.slice(0, idx), ...state.viewTabs.slice(idx + 1)]
+        };
+      }
+    }
+
+    case getType(gdmnActions.addPhraseForQuery): {
+      const {entityName, text} = action.payload;
+      const idx = state.phrasesForQuery.findIndex(obj => obj.entityName === entityName);
+      if(idx === -1) {
+        const item: IPhraseForQuery = {entityName, phrase: text};
+        return {
+          ...state,
+          phrasesForQuery: [...state.phrasesForQuery, item]
+        };
+      }
+    }
+
+    case getType(gdmnActions.updatePhraseForQuery): {
+      const {entityName, text} = action.payload;
+      const idx = state.phrasesForQuery.findIndex(obj => obj.entityName === entityName);
+      if(idx !== -1) {
+        return {
+          ...state,
+          phrasesForQuery: [...state.phrasesForQuery.slice(0, idx), {entityName, phrase: text}, ...state.phrasesForQuery.slice(idx + 1)]
+        };
+      }
+    }
+
+    case getType(gdmnActions.deletePhraseForQuery): {
+      const entityName = action.payload;
+      const idx = state.phrasesForQuery.findIndex(obj => obj.entityName === entityName);
+      if(idx !== -1) {
+        return {
+          ...state,
+          phrasesForQuery: [...state.phrasesForQuery.slice(0, idx), ...state.phrasesForQuery.slice(idx + 1)]
         };
       }
     }

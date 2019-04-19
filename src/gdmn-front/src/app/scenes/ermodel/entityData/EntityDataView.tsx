@@ -1,24 +1,44 @@
 import React from 'react';
 import { DataView, IDataViewProps } from '@src/app/components/DataView';
-import { ICommandBarItemProps } from 'office-ui-fabric-react';
+import { ICommandBarItemProps, TextField, DefaultButton } from 'office-ui-fabric-react';
 import { SQLForm } from '@src/app/components/SQLForm';
+import { IPhraseForQuery } from '../../gdmn/reducer';
+import { Semaphore } from 'gdmn-internals';
+import { getMutex } from '../../../components/dataViewMutexes';
 
 export interface IEntityMatchParams {
   entityName: string
 }
 
 export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
+  phrasesForQuery: IPhraseForQuery[];
   onEdit: (url: string) => void;
   onDelete: () => void;
+  onChagne: (text: string) => void;
+  onDeletePhrase: () => void;
+  onAddPhrase: () => void;
+  attachRs: (mutex?: Semaphore) => void;
 }
 
 export interface IEntityDataViewState {
   showSQL: boolean
+  phrase: string;
 }
 
 export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataViewState, IEntityMatchParams> {
   public state: IEntityDataViewState = {
-    showSQL: false
+    showSQL: false,
+    phrase: ''
+  }
+
+  public componentWillMount() {
+    this.props.onAddPhrase();
+    const entityName = this.props.match ? this.props.match.params.entityName : '';
+    entityName ? this.setState({phrase: `покажи все ${entityName}`}) : undefined
+  }
+
+  public componentWillUnmount() {
+    this.props.onDeletePhrase();
   }
 
   private onCloseSQL = () => {
@@ -95,5 +115,24 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
     }
 
     return super.renderModal();
+  }
+
+  public renderSettings() {
+    const { data, onChagne, attachRs } = this.props;
+    return(
+      <>
+        <div className="GridPhraseForQuery">
+          <TextField
+            label="Phrase for query:"
+            value={this.state.phrase}
+            onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
+              this.setState({phrase: newValue ? newValue : ''})
+            }}
+          />
+          <DefaultButton text="Получить" onClick={() => {onChagne(this.state.phrase); attachRs(getMutex(this.getDataViewKey()))}} />
+        </div>
+        {super.renderSettings(data!.rs!)}
+      </>
+    )
   }
 }

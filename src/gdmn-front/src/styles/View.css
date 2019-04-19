@@ -61,7 +61,24 @@
   margin-bottom: 16px;
 }
 
-.GridFilter{
+.GridFilter {
   padding: 8px;
   width: 250px;
+}
+
+.GridPhraseForQuery {
+  padding: 8px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+
+.GridPhraseForQuery > *:first-child {
+  flex: 1;
+  padding-right: 12px;
+}
+
+.GridPhraseForQuery > :not(:first-child) {
+  width: 120px;
+  margin-left: 4px;
 }

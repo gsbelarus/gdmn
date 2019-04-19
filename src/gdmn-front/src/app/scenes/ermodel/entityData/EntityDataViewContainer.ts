@@ -1,26 +1,19 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
-import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {
-  addData,
-  IDataRow,
-  loadingData,
-  RecordSetAction,
-  TStatus,
-  setRowsState,
-  TRowState
-} from "gdmn-recordset";
+import {RecordSetAction, setRowsState, TRowState} from "gdmn-recordset";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {EntityDataView, IEntityDataViewProps} from "./EntityDataView";
-import {prepareDefaultEntityQuery} from "./utils";
 import { TRsMetaActions } from "@src/app/store/rsmeta";
 import * as loadRSActions from "@src/app/store/loadRSActions";
+import { ParsedText, parsePhrase, RusPhrase } from 'gdmn-nlp';
+import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
 
 export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
   connect(
@@ -29,6 +22,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       return {
         rsMeta: state.rsMeta[entityName],
         erModel: state.gdmnState.erModel,
+        phraseForQuery: state.gdmnState.phrasesForQuery,
         data: {
           rs: state.recordSet[entityName],
           gcs: state.grid[entityName]
@@ -36,6 +30,16 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | loadRSActions.LoadRSActions>, ownProps) => ({
+      onChagne: (text: string) => thunkDispatch((dispatch, getState) => {
+        ownProps.match ? dispatch(gdmnActions.updatePhraseForQuery({entityName: ownProps.match.params.entityName, text})) : undefined;
+      }),
+      onDeletePhrase: () => thunkDispatch((dispatch, getState) => {
+        ownProps.match ? dispatch(gdmnActions.deletePhraseForQuery(ownProps.match.params.entityName)) : undefined;
+      }),
+      onAddPhrase: () => thunkDispatch((dispatch, getState) => {
+        const entityName = ownProps.match ? ownProps.match.params.entityName : "";
+        entityName ? dispatch(gdmnActions.addPhraseForQuery({entityName, text: `покажи все ${entityName}`})) : undefined;
+      }),
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
@@ -89,13 +93,24 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       }),
 
       attachRs: () => thunkDispatch((dispatch, getState) => {
-        const erModel = getState().gdmnState.erModel;
+      const erModel = getState().gdmnState.erModel;
 
         if (erModel && Object.keys(erModel.entities).length) {
           const name = ownProps.match ? ownProps.match.params.entityName : "";
-          const entity = erModel.entity(name);
-          const eq = prepareDefaultEntityQuery(entity);
-          dispatch(loadRSActions.attachRS({ name, eq }));
+          const phrases = getState().gdmnState.phrasesForQuery.find(phrase => phrase.entityName === name);
+          const text = phrases ? phrases.phrase : '';
+
+          let parsedText: ParsedText = parsePhrase(text);
+          let command: ICommand[];
+          if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
+            const erTranslatorRU = new ERTranslatorRU(erModel)
+            command = erTranslatorRU.process(parsedText.phrase);
+
+            const eq = command[0] ? command[0].payload : undefined;
+            if (eq) {
+              dispatch(loadRSActions.attachRS({ name, eq }));
+            }
+          }
         }
       }),
 
