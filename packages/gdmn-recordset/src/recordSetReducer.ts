@@ -25,7 +25,7 @@ export const recordSetReducer = (
   if (action.type === getType(actions.createRecordSet)) {
     const { rs } = action.payload;
 
-    if (state[name]) {
+    if (state[name] && !action.payload.override) {
       throw new Error(`Duplicate recordset name ${name}`);
     }
 

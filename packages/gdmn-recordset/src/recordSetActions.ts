@@ -7,7 +7,7 @@ import { IFilter } from "./filter";
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
 
 export const createRecordSet = createAction('RECORDSET/CREATE', resolve => {
-  return (params: WithComponentName<{ rs: RecordSet }>) => resolve(params);
+  return (params: WithComponentName<{ rs: RecordSet, override?: boolean }>) => resolve(params);
 });
 
 export type CreateRecordSet = typeof createRecordSet;
