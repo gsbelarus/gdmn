@@ -8,12 +8,20 @@
 }
 
 .ViewTab {
-  background-color: white;
-  color: #404040;
   min-width: 96px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+.ViewTabNormal {
+  background-color: white;
+  color: #404040;
+}
+
+.ViewTabError {
+  background-color: red;
+  color: white;
 }
 
 .ViewTabText {
@@ -31,9 +39,16 @@
   cursor: default;
 }
 
-.ViewActiveColor {
+.ViewActiveColorNormal {
   height: 5px;
   background-image: linear-gradient(lime, white);
+  border-left: 1px solid #404040;
+  border-right: 1px solid #404040;
+}
+
+.ViewActiveColorError {
+  height: 5px;
+  background-image: linear-gradient(maroon, red);
   border-left: 1px solid #404040;
   border-right: 1px solid #404040;
 }

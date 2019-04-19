@@ -1,11 +1,10 @@
-import { apiService } from '@src/app/services/apiService';
 import { connect } from 'react-redux';
-import { IState, rsMetaActions } from '@src/app/store/reducer';
+import { IState } from '@src/app/store/reducer';
 import { IViewTab } from '@src/app/scenes/gdmn/types';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { IViewTabsProps, ViewTabs } from './ViewTabs';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
-import { deleteRecordSet } from 'gdmn-recordset';
+import { deleteRS } from '@src/app/store/loadRSActions';
 
 export const ViewTabsContainer = connect(
   (state: IState) => ({
@@ -18,10 +17,9 @@ export const ViewTabsContainer = connect(
   }),
   (stateProps, dispatchProps, ownProps: RouteComponentProps<any>): IViewTabsProps => ({
     ...stateProps,
-    ...dispatchProps,
     onClose: async (vt: IViewTab) => {
       const {history, location} = ownProps;
-      const {viewTabs, rsMeta, recordSet} = stateProps;
+      const {viewTabs} = stateProps;
       const {dispatch} = dispatchProps;
 
       const foundIdx = viewTabs.findIndex(t => t === vt);
@@ -45,20 +43,9 @@ export const ViewTabsContainer = connect(
       dispatch(gdmnActions.deleteViewTab(vt));
 
       if (vt.rs) {
-        await Promise.all(
-          vt.rs
-            .filter(name => rsMeta[name])
-            .map(async name => {
-              const rsm = rsMeta[name];
-              dispatch(rsMetaActions.deleteRsMeta(name));
-              if (rsm.taskKey) {
-                await apiService.interruptTask({taskKey: rsm.taskKey});
-              }
-            })
-        );
         vt.rs
-          .filter(rsName => recordSet[rsName])
-          .forEach(rsName => dispatch(deleteRecordSet({name: rsName})));
+          .filter( name => !viewTabs.find( t => t !== vt && !!t.rs && !!t.rs.find( n => n === name ) ) )
+          .forEach( name => dispatch(deleteRS({ name })) );
       }
     }
   })

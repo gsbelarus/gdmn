@@ -7,18 +7,20 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react';
 export interface IViewTabProps {
   caption: string;
   url: string;
+  error: boolean;
   loading: boolean;
   onClose: () => void;
 }
 
 export const ViewTab = CSSModules(
   (props: IViewTabProps) => {
-    const { caption, url, loading, onClose } = props;
+    const { caption, url, loading, error, onClose } = props;
+    const viewTabStyle = error ? 'ViewTab ViewTabError': 'ViewTab ViewTabNormal';
 
     return url === location.pathname ? (
       <Fragment key={url}>
-        <div styleName="ViewTab" onMouseDown={event => event.button === 1 ? onClose() : undefined}>
-          <div styleName="ViewActiveColor" />
+        <div styleName={viewTabStyle} onMouseDown={event => event.button === 1 ? onClose() : undefined}>
+          <div styleName={error ? "ViewActiveColorError" : "ViewActiveColorNormal"} />
             <div styleName="ViewTabText ViewActiveTab">
               {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
               <Link to={url}>
@@ -31,7 +33,7 @@ export const ViewTab = CSSModules(
       </Fragment>
     ) : (
       <Fragment key={url}>
-        <div styleName="ViewTab" onMouseDown={event => event.button === 1 ? onClose() : undefined}>
+        <div styleName={viewTabStyle} onMouseDown={event => event.button === 1 ? onClose() : undefined}>
           <div styleName="ViewTabText ViewInactiveTab">
             {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
             <Link to={url}>
