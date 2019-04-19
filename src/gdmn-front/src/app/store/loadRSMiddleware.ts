@@ -29,17 +29,19 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
   switch (action.type) {
     case getType(actions.attachRS): {
-      const { eq } = action.payload;
+      const { eq, override } = action.payload;
 
-      if (getState().recordSet[name]) {
-        throw new Error(`Recordset ${name} already exists.`);
+      const prevRsm = getRsMeta();
+
+      if (prevRsm && prevRsm.taskKey) {
+        setRsMeta({});
+        const res = await apiService.interruptTask({ taskKey: prevRsm.taskKey });
+        if (res.error) {
+          throw new Error(`Can't interrup task. Error: ${res.error.message}`);
+        }
+      } else {
+        setRsMeta({});
       }
-
-      if (getRsMeta()) {
-        throw new Error(`Loading of recordset ${name} is in progress.`);
-      }
-
-      setRsMeta({});
 
       apiService
         .prepareQuery({ query: eq.inspect() })
@@ -86,7 +88,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     sql: result.info
                   });
 
-                  dispatch(createRecordSet({ name, rs }));
+                  dispatch(createRecordSet({ name, rs, override }));
 
                   if (!getState().grid[name]) {
                     dispatch(

@@ -35,6 +35,7 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   erModel?: ERModel;
   attachRs: (mutex?: Semaphore) => void;
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
+  refreshRs?: (rs: RecordSet) => void;
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
   onColumnResize: TEventCallback<TColumnResizeEvent>;
@@ -129,7 +130,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       return [];
     }
 
-    const { data, match } = this.props;
+    const { data, match, refreshRs } = this.props;
 
     const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
       return <LinkCommandBarButton {...props} link={link} supText={supText} />;
@@ -175,12 +176,12 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     items.push({
       key: 'refresh',
-      disabled: data!.rs.status === TStatus.LOADING,
+      disabled: !refreshRs || (data!.rs.status === TStatus.LOADING),
       text: 'Refresh',
       iconProps: {
         iconName: 'Refresh'
       },
-      commandBarButtonAs: btn(`${match.url}`)
+      onClick: () => refreshRs!(data!.rs)
     });
 
     return items;
@@ -241,7 +242,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     return (
       <div style={{ width }}>
         {this.renderSettings(rs)}
-        <div style={{ height: 'calc(100% - 77px)' }}>
+        <div style={{ height: 'calc(100% - 154px)' }}>
           <GDMNGrid
             {...gcs}
             rs={rs}

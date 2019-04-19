@@ -1,7 +1,7 @@
 import { createAction, ActionType } from "typesafe-actions";
 import { EntityQuery } from "gdmn-orm";
 
-export const attachRS = createAction('LOADRS/ATTACH_RS', resolve => (params: { name: string, eq: EntityQuery }) => resolve(params) );
+export const attachRS = createAction('LOADRS/ATTACH_RS', resolve => (params: { name: string, eq: EntityQuery, override?: boolean }) => resolve(params) );
 
 export type AttachRS = typeof attachRS;
 

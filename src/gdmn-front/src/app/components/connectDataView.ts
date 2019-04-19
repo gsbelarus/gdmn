@@ -26,12 +26,15 @@ import {
   setRecordSet,
   sortRecordSet,
   toggleGroup,
-  setFilter
+  setFilter,
+  RecordSet
 } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
 import { TGdmnActions } from '../scenes/gdmn/actions';
 import { IDataViewProps } from './DataView';
+import { attachRS } from '../store/loadRSActions';
+import { RSAction } from '../store/loadRSMiddleware';
 
 export const connectDataView = compose<any, IDataViewProps<any>>(
   connect(
@@ -41,7 +44,13 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           ? state.gdmnState.erModel
           : undefined, // todo перенести
     }),
-    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
+    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions | RSAction>) => ({
+
+      refreshRs: (rs: RecordSet) => {
+        if (rs.eq) {
+          dispatch(attachRS({ name: rs.name, eq: rs.eq, override: true }))
+        }
+      },
 
       onCancelSortDialog: (event: TCancelSortDialogEvent) =>
         dispatch(
