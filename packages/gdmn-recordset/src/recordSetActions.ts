@@ -1,7 +1,7 @@
 import { createAction } from "typesafe-actions";
 
 import { IRecordSetDataOptions, RecordSet } from "./recordSet";
-import { SortFields, IDataRow, IError, TRowState } from "./types";
+import { SortFields, IDataRow, TRowState } from "./types";
 import { IFilter } from "./filter";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
@@ -42,11 +42,13 @@ export const addData = createAction('RECORDSET/ADD_DATA', resolve => {
 
 export type AddData = typeof addData;
 
+/*
 export const setError = createAction('RECORDSET/SET_ERROR', resolve => {
   return (params: WithComponentName<{ error: IError}>) => resolve(params);
 });
 
 export type SetError = typeof setError;
+*/
 
 export const sortRecordSet = createAction('RECORDSET/SORT', resolve => {
   return (params: WithComponentName<{ sortFields: SortFields }>) => resolve(params);

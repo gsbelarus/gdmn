@@ -107,10 +107,12 @@ export const recordSetReducer = (
       return newState(rs.addData(records, full));
     }
 
+    /*
     case getType(actions.setError): {
       const { error } = action.payload;
       return newState(rs.setError(error));
     }
+    */
 
     case getType(actions.setRowsState): {
       const { state, rowsIdxs } = action.payload;

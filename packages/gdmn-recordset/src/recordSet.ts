@@ -10,7 +10,6 @@ import {
   FoundRows,
   IDataGroup,
   IDataRow,
-  IError,
   IFieldDef,
   IMasterLink,
   IMatchedSubString,
@@ -59,7 +58,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   calcFields: TRowCalcFunc<R> | undefined;
   data: Data<R>;
   status: TStatus;
-  error?: IError;
+  //error?: IError;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
@@ -1404,6 +1403,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
+  /*
   public setError(error: IError): RecordSet<R> {
     switch (this._params.status) {
       case TStatus.FULL:
@@ -1417,8 +1417,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         return new RecordSet<R>({
           ...this._params,
           status: TStatus.ERROR,
-          error: error
+          error
         });
     }
   }
+  */
 }

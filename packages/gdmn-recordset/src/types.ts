@@ -10,9 +10,11 @@ export enum TStatus {
   ERROR
 };
 
+/*
 export interface IError {
   message: string;
 }
+*/
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
