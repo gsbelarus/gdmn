@@ -2,29 +2,25 @@ import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
 import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
-import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
-import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
+import {IState} from "@src/app/store/reducer";
+import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
 import {
   addData,
-  createRecordSet,
   IDataRow,
-  IError,
   loadingData,
-  RecordSet,
   RecordSetAction,
-  setError,
-  TFieldType,
   TStatus,
   setRowsState,
   TRowState
 } from "gdmn-recordset";
-import {List} from "immutable";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {EntityDataView, IEntityDataViewProps} from "./EntityDataView";
-import {attr2fd, prepareDefaultEntityQuery} from "./utils";
+import {prepareDefaultEntityQuery} from "./utils";
+import { TRsMetaActions } from "@src/app/store/rsmeta";
+import * as loadRSActions from "@src/app/store/loadRSActions";
 
 export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
   connect(
@@ -39,7 +35,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | loadRSActions.LoadRSActions>, ownProps) => ({
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
@@ -95,108 +91,20 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       attachRs: () => thunkDispatch((dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 
-        if (!erModel || !Object.keys(erModel.entities).length) return;
-        const entityName = ownProps.match ? ownProps.match.params.entityName : "";
-        const entity = erModel.entity(entityName);
-
-        const query = prepareDefaultEntityQuery(entity);
-
-        dispatch(rsMetaActions.setRsMeta(entity.name, {}));
-
-        apiService
-          .prepareQuery({
-            query: query.inspect()
-          })
-          .subscribe(async value => {
-            switch (value.payload.status) {
-              case TTaskStatus.RUNNING: {
-                const taskKey = value.meta!.taskKey!;
-
-                if (!getState().rsMeta[entity.name]) {
-                  console.warn("ViewTab was closing, interrupt task");
-                  apiService.interruptTask({taskKey}).catch(console.error);
-                  return;
-                }
-                dispatch(rsMetaActions.setRsMeta(entity.name, {taskKey}));
-
-                const response = await apiService.fetchQuery({
-                  rowsCount: 100,
-                  taskKey
-                });
-
-                const rsm = getState().rsMeta[entity.name];
-                if (!rsm) {
-                  console.warn("ViewTab was closed, interrupt task");
-                  apiService.interruptTask({taskKey}).catch(console.error);
-                  return;
-                }
-
-                switch (response.payload.status) {
-                  case TTaskStatus.SUCCESS: {
-                    const fieldDefs = Object.entries(response.payload.result!.aliases)
-                      .map(([fieldAlias, data]) => attr2fd(query, fieldAlias, data));
-
-                    const rs = RecordSet.create({
-                      name: entity.name,
-                      fieldDefs,
-                      data: List(response.payload.result!.data as IDataRow[]),
-                      eq: query,
-                      sequentially: !!rsm.taskKey,
-                      sql: response.payload.result!.info
-                    });
-                    dispatch(createRecordSet({name: rs.name, rs}));
-
-                    if (!getState().grid[rs.name]) {
-                      dispatch(
-                        createGrid({
-                          name: rs.name,
-                          columns: rs.fieldDefs.map(fd => ({
-                            name: fd.fieldName,
-                            caption: [fd.caption || fd.fieldName],
-                            fields: [{...fd}],
-                            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                          })),
-                          leftSideColumns: 0,
-                          rightSideColumns: 0,
-                          hideFooter: true
-                        })
-                      );
-                    }
-                    break;
-                  }
-                  case TTaskStatus.FAILED: {
-                    if (rsm) {
-                      dispatch(rsMetaActions.setRsMeta(entity.name, {}));
-                    }
-                    break;
-                  }
-                  case TTaskStatus.INTERRUPTED:
-                  case TTaskStatus.PAUSED:
-                  default:
-                    throw new Error("Never thrown");
-                }
-                break;
-              }
-              case TTaskStatus.INTERRUPTED:
-              case TTaskStatus.FAILED: {
-                if (getState().rsMeta[entity.name]) {
-                  dispatch(rsMetaActions.setRsMeta(entity.name, {}));
-                }
-                break;
-              }
-              case TTaskStatus.SUCCESS: {
-                if (getState().rsMeta[entity.name]) {
-                  dispatch(rsMetaActions.setRsMeta(entity.name, {}));
-                }
-                break;
-              }
-              case TTaskStatus.PAUSED:
-              default: {
-                throw new Error("Unsupported");
-              }
-            }
-          });
+        if (erModel && Object.keys(erModel.entities).length) {
+          const name = ownProps.match ? ownProps.match.params.entityName : "";
+          const entity = erModel.entity(name);
+          const eq = prepareDefaultEntityQuery(entity);
+          dispatch(loadRSActions.attachRS({ name, eq }));
+        }
       }),
+
+      loadMoreRsData: async (event: TLoadMoreRsDataEvent) => {
+        const rowsCount = event.stopIndex - (event.rs ? event.rs.size : 0);
+        thunkDispatch(loadRSActions.loadMoreRsData({ name: event.rs.name, rowsCount }));
+      }
+
+      /*
       loadingData: (name: string, taskKey: string) => thunkDispatch(
         (dispatch, getState) => {
           const rsm = getState().rsMeta[name];
@@ -208,6 +116,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           dispatch(loadingData({name}));
         }
       ),
+
       addData: (name: string, records: IDataRow[], taskKey: string) => thunkDispatch(
         (dispatch, getState) => {
           const rsm = getState().rsMeta[name];
@@ -221,6 +130,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             dispatch(addData({name, records, full: !(rsm && rsm.taskKey)}));
           }
         }),
+
       setError: (name: string, error: IError, taskKey: string) => thunkDispatch(
         (dispatch, getState) => {
           const rsm = getState().rsMeta[name];
@@ -234,7 +144,10 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             dispatch(setError({name, error}));
           }
         })
+      */
     }),
+
+    /*
     ({rsMeta, ...stateProps}, {loadingData, addData, setError, ...dispatchProps}) => ({
       ...stateProps,
       ...dispatchProps,
@@ -265,6 +178,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       }
     })
+  */
   ),
   connectDataView
 )(EntityDataView);

@@ -2,9 +2,9 @@ import React from "react";
 import { ERModel } from "gdmn-orm";
 import { IViewProps, View } from "@src/app/components/View";
 import { RecordSetReducerState, TStatus } from "gdmn-recordset";
-import { IRsMetaState } from "@src/app/store/reducer";
 import { IViewTab } from "../gdmn/types";
 import { StompLogPanelContainer, ConnectBtnContainer } from "./container";
+import { IRsMetaState } from "@src/app/store/rsmeta";
 
 export interface IInternalsProps extends IViewProps<any> {
   erModel?: ERModel;

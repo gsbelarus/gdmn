@@ -1,6 +1,6 @@
 import {connectView} from "@src/app/components/connectView";
 import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
+import {IState} from "@src/app/store/reducer";
 import {createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType, IFieldDef, setCurrentRow} from "gdmn-recordset";
 import {TTaskStatus} from "@gdmn/server-api";
 import {apiService} from "@src/app/services/apiService";

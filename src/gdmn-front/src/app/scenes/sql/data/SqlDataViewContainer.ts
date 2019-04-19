@@ -3,17 +3,15 @@ import {connectDataView} from "@src/app/components/connectDataView";
 import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {ISqlDataViewProps, SqlDataView} from "@src/app/scenes/sql/data/SqlDataView";
 import {apiService} from "@src/app/services/apiService";
-import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
+import {IState} from "@src/app/store/reducer";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
 import {
   addData,
   createRecordSet,
   IDataRow,
-  IError,
   loadingData,
   RecordSet,
   RecordSetAction,
-  setError,
   TFieldType,
   TStatus
 } from "gdmn-recordset";
@@ -23,6 +21,7 @@ import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {sql2fd} from "./utils";
+import { TRsMetaActions, rsMetaActions } from "@src/app/store/rsmeta";
 
 export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentProps<any>>(
   connect(
@@ -177,6 +176,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
             dispatch(addData({name, records, full: !(rsm && rsm.taskKey)}));
           }
         }),
+      /*
       setError: (name: string, error: IError, taskKey: string) => thunkDispatch(
         (dispatch, getState) => {
           const rsm = getState().rsMeta[name];
@@ -190,8 +190,9 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
             dispatch(setError({name, error}));
           }
         })
+      */
     }),
-    ({rsMeta, ...stateProps}, {loadingData, addData, setError, ...dispatchProps}) => ({
+    ({rsMeta, ...stateProps}, {loadingData, addData, ...dispatchProps}) => ({
       ...stateProps,
       ...dispatchProps,
 
@@ -211,7 +212,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
             break;
           }
           case TTaskStatus.FAILED: {
-            setError(event.rs.name, {message: res.error!.message}, rsMeta.taskKey!);
+            //setError(event.rs.name, {message: res.error!.message}, rsMeta.taskKey!);
             break;
           }
           case TTaskStatus.INTERRUPTED:

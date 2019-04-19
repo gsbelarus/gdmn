@@ -1,6 +1,6 @@
 import {connectView} from "@src/app/components/connectView";
 import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
+import {IState} from "@src/app/store/reducer";
 import {createRecordSet, IDataRow, RecordSet, RecordSetAction, setCurrentRow} from "gdmn-recordset";
 import {TTaskStatus} from "@gdmn/server-api";
 import {apiService} from "@src/app/services/apiService";
@@ -9,6 +9,7 @@ import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {DlgState, SqlDataDlgView, ISqlDataDlgViewMatchParams, ISqlDataDlgViewProps} from "./SqlDataDlgView";
+import { TRsMetaActions } from "@src/app/store/rsmeta";
 
 export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteComponentProps<any>>(
   connectView,

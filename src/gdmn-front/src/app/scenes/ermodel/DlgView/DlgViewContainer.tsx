@@ -3,7 +3,7 @@ import {connectView} from "@src/app/components/connectView";
 import {attr2fd, prepareDefaultEntityQuery} from "@src/app/scenes/ermodel/entityData/utils";
 import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
-import {IState, rsMetaActions, TRsMetaActions} from "@src/app/store/reducer";
+import {IState} from "@src/app/store/reducer";
 import {Semaphore} from "gdmn-internals";
 import {createRecordSet, IDataRow, RecordSet, RecordSetAction} from "gdmn-recordset";
 import {List} from "immutable";
@@ -12,6 +12,7 @@ import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {DlgState, DlgView, IDlgViewMatchParams, IDlgViewProps} from "./DlgView";
+import { TRsMetaActions, rsMetaActions } from "@src/app/store/rsmeta";
 
 export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>(
   connectView,
