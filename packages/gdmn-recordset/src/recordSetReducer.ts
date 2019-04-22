@@ -124,6 +124,16 @@ export const recordSetReducer = (
       return newState(rs.removeRows(rowsIdxs));
     }
 
+    case getType(actions.doVerb): {
+      const { verb } = action.payload;
+      switch (verb) {
+        case 'EDIT': return newState(rs.edit());
+        case 'INSERT': return newState(rs.insert());
+        case 'POST': return newState(rs.post());
+        case 'CANCEL': return newState(rs.cancel());
+      }
+    }
+
     default:
       return state;
   }

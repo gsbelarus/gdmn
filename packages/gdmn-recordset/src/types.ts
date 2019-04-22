@@ -7,7 +7,13 @@ export enum TStatus {
   PARTIAL,
   LOADING,
   FULL,
-  ERROR
+  //ERROR
+};
+
+export enum TRecordsetState {
+  BROWSE,
+  INSERT,
+  EDIT
 };
 
 /*
@@ -17,6 +23,8 @@ export interface IError {
 */
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
+
+export type TRecordsetVerb = 'EDIT' | 'INSERT' | 'POST' | 'CANCEL';
 
 export enum TFieldType {
   String = 0,

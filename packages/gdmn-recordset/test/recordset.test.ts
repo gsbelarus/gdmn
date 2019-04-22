@@ -136,6 +136,20 @@ describe('recordset', () => {
 
     rs = rs.removeRows([221]);
     expect(rs.size).toEqual(221);
+
+    /**
+     * Тестируем редактирование данных.
+     */
+    const d = new Date();
+
+    rs = rs.setCurrentRow(0);
+    rs = rs.edit();
+    rs = rs.setDate('Cur_DateStart', d);
+    rs = rs.post();
+    expect(rs.getDate('Cur_DateStart')).toEqual(d);
+
+    const t = () => rs = rs.setDate('Cur_DateStart', d);
+    expect(t).toThrow(Error);
   });
 
 });

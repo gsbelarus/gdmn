@@ -36,7 +36,7 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet, removeRows, TRowState } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet, removeRows, TRowState, setCurrentRow, doVerb } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, selectRow, setAllRowsSelected, setRowsState } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -90,7 +90,7 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
           (dispatch, getState) => {
             const recordSet = getState().recordSet[event.rs.name];
             if (recordSet) {
-              dispatch(setRecordSet({ name: event.rs.name, rs: recordSet.setCurrentRow(event.cursorRow) }));
+              dispatch(setCurrentRow({ name: event.rs.name, currentRow: event.cursorRow }));
               dispatch(setCursorCol({ name: event.rs.name, cursorCol: event.cursorCol }));
             }
           }
@@ -103,7 +103,11 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
         ),
       onToggleGroup: (event: TToggleGroupEvent) => thunkDispatch(
           toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
-        )
+        ),
+      onEdit: () => thunkDispatch(doVerb({ name: rs.name, verb: 'EDIT' })),
+      onInsert: () => thunkDispatch(doVerb({ name: rs.name, verb: 'INSERT' })),
+      onPost: () => thunkDispatch(doVerb({ name: rs.name, verb: 'POST' })),
+      onCancel: () => thunkDispatch(doVerb({ name: rs.name, verb: 'CANCEL' }))
     }),
     undefined,
     {forwardRef: true}
@@ -139,7 +143,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         (rowNumber: number) => thunkDispatch( (dispatch, getState) => {
           const recordSet = getState().recordSet[rs.name];
           if (recordSet) {
-            dispatch(setRecordSet({ name: rs.name, rs: recordSet.setCurrentRow(rowNumber) }));
+            dispatch(setCurrentRow({ name: rs.name, currentRow: rowNumber }));
             getGridRef().scrollIntoView(rowNumber);
           }
         }),
@@ -193,7 +197,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         thunkDispatch( (dispatch, getState) => {
           const recordSet = getState().recordSet[rs.name];
           if (recordSet) {
-            dispatch(setRecordSet({ name: rs.name, rs: recordSet.setCurrentRow(foundNode.rowIdx) }));
+            dispatch(setCurrentRow({ name: rs.name, currentRow: foundNode.rowIdx }));
           }
         });
         getGridRef().scrollIntoView(foundNode.rowIdx, cursorCol);

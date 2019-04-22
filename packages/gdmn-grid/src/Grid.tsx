@@ -13,7 +13,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState } from 'gdmn-recordset';
+import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState, TRecordsetState } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
 import { ParamsDialog } from './ParamsDialog';
@@ -45,6 +45,10 @@ export type TSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
 export type TSelectAllRowsEvent = IGridEvent & {value: boolean};
 export type TToggleGroupEvent = IGridEvent & {rowIdx: number};
 export type TLoadMoreRsDataEvent = IGridEvent & IndexRange;
+export type TRecordsetEditEvent = IGridEvent;
+export type TRecordsetInsertEvent = IGridEvent;
+export type TRecordsetPostEvent = IGridEvent;
+export type TRecordsetCancelEvent = IGridEvent;
 
 export type TEventCallback<T, R = void> = (event: T) => R;
 
@@ -68,6 +72,10 @@ export interface IGridProps {
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
+  onEdit: TEventCallback<TRecordsetEditEvent>;
+  onInsert: TEventCallback<TRecordsetInsertEvent>;
+  onPost: TEventCallback<TRecordsetPostEvent>;
+  onCancel: TEventCallback<TRecordsetCancelEvent>;
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
   loadMoreThresholdPages?: number;
   loadMoreMinBatchPagesRatio?: number;
@@ -452,6 +460,23 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           case 'F10':
             this.setState({ showDialogParams: true });
             break;
+
+          case 'F2': {
+            if (rs.state === TRecordsetState.BROWSE) {
+              const { onEdit } = this.props;
+              onEdit({ ref: this, rs });
+            }
+            break;
+          }
+
+          case 'Esc':
+          case 'Escape': {
+            if (rs.state === TRecordsetState.EDIT || rs.state === TRecordsetState.INSERT) {
+              const { onCancel } = this.props;
+              onCancel({ ref: this, rs });
+            }
+            break;
+          }
 
           default:
             return;
@@ -1371,7 +1396,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _isRowLoaded = ({ index }: Index) => {
     return this.props.rs.status === TStatus.FULL
-      || this.props.rs.status === TStatus.ERROR
+      //|| this.props.rs.status === TStatus.ERROR
       || index < this.props.rs.size;
   };
 }
