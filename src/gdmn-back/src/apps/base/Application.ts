@@ -15,14 +15,13 @@ import {
   IEntityUpdateInspector,
   IERModel,
   ISequenceQueryInspector,
-  Sequence,
-  SequenceQuery,
-  ISequenceQueryResponse
+  ISequenceQueryResponse,
+  SequenceQuery
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
 import {ADatabase, DBStatus, IDBDetail} from "./ADatabase";
-import {Session, SessionStatus} from "./session/Session";
+import {ISessionInfo, ITask, Session, SessionStatus} from "./session/Session";
 import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
@@ -44,7 +43,8 @@ export type AppAction =
   | "INSERT"
   | "UPDATE"
   | "DELETE"
-  | "SEQUENCE_QUERY";
+  | "SEQUENCE_QUERY"
+  | "GET_SESSIONS_INFO";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -64,6 +64,7 @@ export type InsertCmd = AppCmd<"INSERT", { insert: IEntityInsertInspector }>;
 export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
 export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
+export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 
 export class Application extends ADatabase {
 
@@ -227,6 +228,48 @@ export class Application extends ADatabase {
           throw new Error("No permissions");
         }
         findTask.interrupt();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushSessionsInfoCmd(session: Session, command: GetSessionsInfoCmd): Task<GetSessionsInfoCmd, ISessionInfo[] > {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const sessionsInfo: ISessionInfo[] = [];
+        this.sessionManager.sessions.map((ses) => {
+          const taskInfo: ITask[] = [];
+          for (const item of ses.taskManager.getAll().values()) {
+            taskInfo.push({
+              id: item.id,
+              status: item.status,
+              command: item.options.command
+            });
+          }
+          if (taskInfo.length) {
+            sessionsInfo.push({
+              id: ses.options.id,
+              user: ses.options.userKey,
+              usesConnections: ses.usesConnections.map((conn) => conn.uses),
+              tasks: taskInfo
+            });
+          }
+          sessionsInfo.push({
+            id: ses.options.id,
+            user: ses.options.userKey,
+            usesConnections: ses.usesConnections.map((conn) => conn.uses),
+          });
+        });
+        return sessionsInfo;
       }
     });
     session.taskManager.add(task);
@@ -605,7 +648,8 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushSequenceQueryCmd(session: Session, command: SequenceQueryCmd): Task<SequenceQueryCmd, ISequenceQueryResponse> {
+  public pushSequenceQueryCmd(session: Session,
+                              command: SequenceQueryCmd): Task<SequenceQueryCmd, ISequenceQueryResponse> {
     const task = new Task({
       session,
       command,

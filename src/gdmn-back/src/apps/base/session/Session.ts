@@ -1,11 +1,12 @@
 import {EventEmitter} from "events";
 import {AConnection, AConnectionPool, ICommonConnectionPoolOptions, TExecutor} from "gdmn-db";
-import {ACursor, EQueryCursor} from "gdmn-er-bridge";
+import {ACursor} from "gdmn-er-bridge";
 import {Logger} from "log4js";
 import StrictEventEmitter from "strict-event-emitter-types";
 import {Constants} from "../../../Constants";
-import {Task, TaskStatus} from "../task/Task";
+import {ICmd, Task, TaskStatus} from "../task/Task";
 import {TaskManager} from "../task/TaskManager";
+import {AppAction} from "../Application";
 
 export interface IOptions {
   readonly id: string;
@@ -25,12 +26,61 @@ export enum SessionStatus {
   FORCE_CLOSED
 }
 
+export const enum TTaskStatus {
+  RUNNING = 1,
+  PAUSED = 2,
+  INTERRUPTED = 3,
+  FAILED = 4,
+  SUCCESS = 5
+}
+
+export interface ISessionInfo {
+  id: string;
+  user: number;
+  usesConnections?: number[];
+  tasks?: ITask[];
+}
+
+export interface ITask {
+  id: string;
+  status: TaskStatus;
+  command?: ICmd<AppAction, any>;
+}
+
 interface IUsesConnections {
   waitConnection: Promise<AConnection>;
   uses: number;
 }
 
 export class Session {
+
+  get id(): string {
+    return this._options.id;
+  }
+
+  get userKey(): number {
+    return this._options.userKey;
+  }
+
+  get taskManager(): TaskManager {
+    return this._taskManager;
+  }
+
+  get options(): IOptions {
+    return this._options;
+  }
+
+  get usesConnections(): IUsesConnections[] {
+    return this._usesConnections;
+  }
+
+  get status(): SessionStatus {
+    return this._status;
+  }
+
+  get cursorsPromises(): Map<string, Promise<ACursor>> {
+    return this._cursorsPromises;
+  }
 
   public static readonly DONE_SESSION_STATUSES = [
     SessionStatus.CLOSED,
@@ -45,34 +95,13 @@ export class Session {
   private readonly _taskManager = new TaskManager();
   private readonly _usesConnections: IUsesConnections[] = [];
   private readonly _cursorsPromises = new Map<string, Promise<ACursor>>();
-
-  private _status: SessionStatus = SessionStatus.OPENED;
   private _closeTimer?: NodeJS.Timer;
+  private _status: SessionStatus = SessionStatus.OPENED;
 
   constructor(options: IOptions) {
     this._options = options;
     this._logger = options.logger || console;
     this._updateStatus(this._status);
-  }
-
-  get id(): string {
-    return this._options.id;
-  }
-
-  get userKey(): number {
-    return this._options.userKey;
-  }
-
-  get status(): SessionStatus {
-    return this._status;
-  }
-
-  get taskManager(): TaskManager {
-    return this._taskManager;
-  }
-
-  get cursorsPromises(): Map<string, Promise<ACursor>> {
-    return this._cursorsPromises;
   }
 
   public setCloseTimer(timeout: number = Constants.SERVER.SESSION.TIMEOUT): void {

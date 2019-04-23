@@ -192,3 +192,9 @@ export type TGetAppTemplatesTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_
 export type TSequenceQueryTaskCmd = TTaskCmd<TTaskActionNames.SEQUENCE_QUERY>;
 
 export type TSequenceQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.SEQUENCE_QUERY>;
+
+// sessions info
+
+export type TGetSessionsInfoTaskCmd = TTaskCmd<TTaskActionNames.GET_SESSIONS_INFO>;
+
+export type TGetSessionsInfoCmdResult = TTaskCmdResult<TTaskActionNames.GET_SESSIONS_INFO>;

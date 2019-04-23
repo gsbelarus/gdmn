@@ -47,7 +47,8 @@ export const enum TTaskActionNames {
   CREATE_APP = 'CREATE_APP',
   GET_APPS = 'GET_APPS',
   GET_APP_TEMPLATES = 'GET_APP_TEMPLATES',
-  SEQUENCE_QUERY = 'SEQUENCE_QUERY'
+  SEQUENCE_QUERY = 'SEQUENCE_QUERY',
+  GET_SESSIONS_INFO = 'GET_SESSIONS_INFO'
 }
 
 // MESSAGES DATA
@@ -135,6 +136,9 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.SEQUENCE_QUERY]: {
     query: ISequenceQueryInspector;
   };
+  [TTaskActionNames.GET_SESSIONS_INFO]: {
+    withError: boolean;
+  };
 }
 
 // -- TASK-RESULT
@@ -168,6 +172,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_APPS]: IApplicationInfo[];
   [TTaskActionNames.GET_APP_TEMPLATES]: ITemplateApplication[];
   [TTaskActionNames.SEQUENCE_QUERY]: ISequenceQueryResponse;
+  [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -217,6 +222,45 @@ export interface ISqlQueryResponseAliases {
   }
 }
 */
+
+export interface ISessionInfo {
+  id: string;
+  user: number;
+  usesConnections?: number[];
+  tasks?: ITask[];
+}
+
+export interface ITask {
+  id: string;
+  status: TTaskStatus;
+  command?: ICmd<AppAction, any>;
+}
+
+export interface ICmd<A, P = any> {
+  readonly id?: string;
+  readonly replyMode?: boolean;
+  readonly action: A;
+  readonly payload: P;
+}
+
+export type AppAction =
+  "DEMO"
+  | "PING"
+  | "INTERRUPT"
+  | "RELOAD_SCHEMA"
+  | "GET_SCHEMA"
+  | "DEFINE_ENTITY"
+  | "QUERY"
+  | "SQL_QUERY"
+  | "PREPARE_QUERY"
+  | "PREPARE_SQL_QUERY"
+  | "FETCH_QUERY"
+  | "FETCH_SQL_QUERY"
+  | "INSERT"
+  | "UPDATE"
+  | "DELETE"
+  | "SEQUENCE_QUERY"
+  | "GET_SESSIONS_INFO";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];

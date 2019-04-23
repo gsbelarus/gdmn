@@ -55,7 +55,8 @@ import {
   TUpdateTaskCmdResult,
   TDeleteTaskCmdResult,
   TGetAppTemplatesTaskCmdResult,
-  TSequenceQueryTaskCmdResult
+  TSequenceQueryTaskCmdResult,
+  TGetSessionsInfoCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -343,6 +344,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.SEQUENCE_QUERY,
+        payload
+      }
+    });
+  }
+
+  public getSessionsInfo(payload: TTaskActionPayloadTypes[TTaskActionNames.GET_SESSIONS_INFO]): Promise<TGetSessionsInfoCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.GET_SESSIONS_INFO,
         payload
       }
     });

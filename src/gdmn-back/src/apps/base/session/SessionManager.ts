@@ -31,6 +31,10 @@ export class SessionManager {
     return this._sessions.length;
   }
 
+  get sessions(): Session[] {
+    return this._sessions;
+  }
+
   public async open(userKey: number): Promise<Session> {
     const uid = uuidV1().toUpperCase();
     const session = new Session({
