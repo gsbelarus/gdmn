@@ -13,10 +13,11 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState, TRecordsetState } from 'gdmn-recordset';
+import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState, TRecordsetState, TDataType } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
 import { ParamsDialog } from './ParamsDialog';
+import { TextCellEditor } from './editors/TextCellEditor';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
@@ -49,6 +50,7 @@ export type TRecordsetEditEvent = IGridEvent;
 export type TRecordsetInsertEvent = IGridEvent;
 export type TRecordsetPostEvent = IGridEvent;
 export type TRecordsetCancelEvent = IGridEvent;
+export type TRecordsetSetFieldValue = IGridEvent & {fieldName: string, value: TDataType};
 
 export type TEventCallback<T, R = void> = (event: T) => R;
 
@@ -76,6 +78,7 @@ export interface IGridProps {
   onInsert: TEventCallback<TRecordsetInsertEvent>;
   onPost: TEventCallback<TRecordsetPostEvent>;
   onCancel: TEventCallback<TRecordsetCancelEvent>;
+  onSetFieldValue: TEventCallback<TRecordsetSetFieldValue>;
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
   loadMoreThresholdPages?: number;
   loadMoreMinBatchPagesRatio?: number;
@@ -90,6 +93,7 @@ export interface IGridState {
   scrollLeft: number;
   scrollTop: number;
   showDialogParams: boolean;
+  fieldEditor: boolean;
 }
 
 export const styles = {
@@ -142,7 +146,8 @@ export const styles = {
   BlackText: 'BlackText',
   GrayText: 'GrayText',
   Deleting: 'RowBeingDeleted',
-  Deleted: 'RowDeleted'
+  Deleted: 'RowDeleted',
+  Editing: 'RowBeingEdited'
 };
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -183,6 +188,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _columnSizingDeltaX: number = 0;
   private _scrollIntoView?: ScrollIntoView = undefined;
   private _deltaWidth: number = 0;
+  private _containerRef: React.RefObject<HTMLDivElement> = React.createRef();
+  private _captureFocus: boolean = false;
 
   private onCloseDialogParams = () => {
     this.setState({ showDialogParams: false });
@@ -210,7 +217,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       columnBeingResized: false,
       scrollLeft: 0,
       scrollTop: 0,
-      showDialogParams: false
+      showDialogParams: false,
+      fieldEditor: false
     };
   }
 
@@ -246,6 +254,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       recompute(this._rightSideFooterGrid);
     }
     return true;
+  }
+
+  public componentDidUpdate() {
+    if (this._captureFocus) {
+      this._captureFocus = false;
+      if (this._containerRef.current) {
+        this._containerRef.current.focus();
+      }
+    }
   }
 
   public componentWillUnmount() {
@@ -462,9 +479,19 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             break;
 
           case 'F2': {
-            if (rs.state === TRecordsetState.BROWSE) {
-              const { onEdit } = this.props;
-              onEdit({ ref: this, rs });
+            if (rs.get(currentRow).type === TRowType.Data) {
+              const { fieldEditor } = this.state;
+              if (!fieldEditor) {
+                this.setState({ fieldEditor: true });
+              }
+            }
+            break;
+          }
+
+          case 'Insert': {
+            if (!rs.size || rs.get(currentRow).type === TRowType.Data) {
+              const { onInsert } = this.props;
+              onInsert({ ref: this, rs });
             }
             break;
           }
@@ -895,7 +922,12 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       };
 
       return (
-        <div className={styles.GridContainer} onKeyDown={e => onKeyDown(e)}>
+        <div
+          tabIndex={0}
+          className={styles.GridContainer}
+          onKeyDown={onKeyDown}
+          ref={this._containerRef}
+        >
           {leftSide()}
           {body()}
           {rightSide()}
@@ -1163,7 +1195,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       selectRows,
       onSelectRow,
       onToggleGroup,
-      rightSideColumns
+      rightSideColumns,
+      onEdit,
+      onSetFieldValue
     } = this.props;
     const currentRow = rs.currentRow;
     const adjustedColumnIndex = adjustFunc(columnIndex);
@@ -1200,7 +1234,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         : currentRow === rowIndex
         ? adjustedColumnIndex === currentCol
           ? styles.CurrentCellBackground
-          : styles.CurrentRowBackground
+          : rs.state === TRecordsetState.EDIT || rs.state === TRecordsetState.INSERT
+            ? styles.Editing
+            : styles.CurrentRowBackground
         : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
         ? styles.SelectedBackground
         : groupHeader
@@ -1216,9 +1252,41 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     }
 
     const borderClass = fixed ? styles.FixedBorder : groupHeader ? styles.BorderBottom : styles.BorderRight;
+    const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText : styles.BlackText;
+    const { fieldEditor } = this.state;
 
-    const textClass =
-      !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText : styles.BlackText;
+    if (
+      fieldEditor
+      &&
+      currentRow === rowIndex
+      &&
+      adjustedColumnIndex === currentCol)
+    {
+      const fieldName = columns[adjustedColumnIndex].fields[0].fieldName;
+      return (
+        <TextCellEditor
+          key={key}
+          style={style}
+          value={rs.getString(fieldName)}
+          onSave={
+            (value: string) => {
+              if (rs.state === TRecordsetState.BROWSE) {
+                onEdit({ ref: this, rs });
+              }
+              onSetFieldValue({ ref: this, rs, fieldName, value });
+              this._captureFocus = true;
+              this.setState({ fieldEditor: false });
+            }
+          }
+          onCancel={
+            () => {
+              this._captureFocus = true;
+              this.setState({ fieldEditor: false });
+            }
+          }
+        />
+      );
+    }
 
     if (groupHeader && rowData.group && adjustedColumnIndex > rowData.group.level) {
       return (
@@ -1396,7 +1464,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
   private _isRowLoaded = ({ index }: Index) => {
     return this.props.rs.status === TStatus.FULL
-      //|| this.props.rs.status === TStatus.ERROR
       || index < this.props.rs.size;
   };
 }

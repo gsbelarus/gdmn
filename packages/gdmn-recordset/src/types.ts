@@ -6,8 +6,7 @@ import { ISqlQueryResponseAliasesRdb, ISqlQueryResponseAliasesOrm } from 'gdmn-i
 export enum TStatus {
   PARTIAL,
   LOADING,
-  FULL,
-  //ERROR
+  FULL
 };
 
 export enum TRecordsetState {
@@ -15,12 +14,6 @@ export enum TRecordsetState {
   INSERT,
   EDIT
 };
-
-/*
-export interface IError {
-  message: string;
-}
-*/
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
@@ -63,6 +56,7 @@ export interface IFieldDef extends INamedField {
   precision?: number;
   required?: boolean;
   readOnly?: boolean;
+  defaultValue?: TDataType;
   calculated?: boolean;
   calcFunc?: TFieldCalcFunc;
   mask?: RegExp;

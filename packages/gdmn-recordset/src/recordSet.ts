@@ -60,7 +60,6 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   data: Data<R>;
   status: TStatus;
   state: TRecordsetState;
-  //error?: IError;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
@@ -72,6 +71,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   groups?: IDataGroup<R>[];
   aggregates?: R;
   masterLink?: IMasterLink;
+  prevRow?: R;
 }
 
 export class RecordSet<R extends IDataRow = IDataRow> {
@@ -441,9 +441,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         throw new Error('Not a data row.');
       }
 
+      const { data } = this.params;
+      const adjustedIdx = this._adjustIdx(this.currentRow);
+      const prevRow = data.get(adjustedIdx);
+
       return new RecordSet<R>({
         ...this._params,
-        state: TRecordsetState.EDIT
+        state: TRecordsetState.EDIT,
+        prevRow
       });
     } else {
       return this.insert();
@@ -452,10 +457,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   public insert(): RecordSet<R> {
     this._checkInBrowseMode();
-    // TODO: add row of data
+
+    const { data } = this.params;
+    const adjustedIdx = this._adjustIdx(this.currentRow);
+    const r = this.fieldDefs.reduce( (r, fd) => ({...r, [fd.fieldName]: null}), {} as R );
+
     return new RecordSet<R>({
       ...this._params,
-      state: TRecordsetState.INSERT
+      state: TRecordsetState.INSERT,
+      data: data.insert(adjustedIdx, r),
+      prevRow: undefined
     });
   }
 
@@ -463,16 +474,33 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     this._checkInEditMode();
     return new RecordSet<R>({
       ...this._params,
-      state: TRecordsetState.BROWSE
+      state: TRecordsetState.BROWSE,
+      prevRow: undefined
     });
   }
 
   public cancel(): RecordSet<R> {
     this._checkInEditMode();
-    return new RecordSet<R>({
-      ...this._params,
-      state: TRecordsetState.BROWSE
-    });
+
+    const { data, prevRow, state, currentRow } = this.params;
+    const adjustedIdx = this._adjustIdx(this.currentRow);
+
+    if (state === TRecordsetState.EDIT) {
+      return new RecordSet<R>({
+        ...this._params,
+        state: TRecordsetState.BROWSE,
+        data: prevRow ? data.set(adjustedIdx, prevRow) : data,
+        prevRow: undefined
+      });
+    } else {
+      return new RecordSet<R>({
+        ...this._params,
+        state: TRecordsetState.BROWSE,
+        currentRow: currentRow === this.size - 1 ? currentRow - 1 : currentRow,
+        data: data.delete(adjustedIdx),
+        prevRow: undefined
+      });
+    }
   }
 
   public getFieldDef(fieldName: string): IFieldDef {
@@ -543,14 +571,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return isNull(this._get(rowIdx, calcFields).data, fieldName);
   }
 
-  public setDate(fieldName: string, value: Date): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
-
-    if (fd.dataType !== TFieldType.Date) {
-      throw new Error(`Invalid data type for field ${fieldName}`);
-    }
-
+  private _setFieldValue(fieldName: string, value: TDataType): RecordSet<R> {
     const { data } = this.params;
     const adjustedIdx = this._adjustIdx(this.currentRow);
     const row = data.get(adjustedIdx);
@@ -559,6 +580,145 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       ...this.params,
       data: data.set(adjustedIdx, { ...row, [fieldName]: value })
     })
+  }
+
+  public setValue(fieldName: string, value: TDataType): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.required && value === null) {
+      throw new Error('Required field value.');
+    }
+
+    let v: TDataType;
+
+    if (value === null) {
+      v = null;
+    } else {
+      switch (fd.dataType) {
+        case TFieldType.String: {
+          v = value.toString();
+          break;
+        }
+
+        case TFieldType.Integer: {
+          switch (typeof value) {
+            case 'string':
+              v = parseInt(value);
+              break;
+
+            case 'boolean':
+              v = value ? 1 : 0;
+              break;
+
+            default:
+              if (value instanceof Date) {
+                v = value.valueOf();
+              } else {
+                v = Math.trunc(value);
+              }
+          }
+          break;
+        }
+
+        case TFieldType.Currency:
+        case TFieldType.Float: {
+          switch (typeof value) {
+            case 'string':
+              v = parseFloat(value);
+              break;
+
+            case 'boolean':
+              v = value ? 1 : 0;
+              break;
+
+            default:
+              if (value instanceof Date) {
+                v = value.valueOf();
+              } else {
+                v = value;
+              }
+          }
+          break;
+        }
+
+        case TFieldType.Boolean: {
+          v = !!value;
+          break;
+        }
+
+        default:
+          throw new Error('Unknown data type.');
+      }
+    }
+
+    return this._setFieldValue(fieldName, v);
+  }
+
+  public setDate(fieldName: string, value: Date): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.dataType !== TFieldType.Date) {
+      throw new Error(`Invalid data type for field ${fieldName}`);
+    }
+
+    return this._setFieldValue(fieldName, value);
+  }
+
+  public setBoolean(fieldName: string, value: boolean): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.dataType !== TFieldType.Boolean) {
+      throw new Error(`Invalid data type for field ${fieldName}`);
+    }
+
+    return this._setFieldValue(fieldName, value);
+  }
+
+  public setInteger(fieldName: string, value: number): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.dataType !== TFieldType.Integer) {
+      throw new Error(`Invalid data type for field ${fieldName}`);
+    }
+
+    return this._setFieldValue(fieldName, Math.trunc(value));
+  }
+
+  public setFloat(fieldName: string, value: number): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.dataType !== TFieldType.Float) {
+      throw new Error(`Invalid data type for field ${fieldName}`);
+    }
+
+    return this._setFieldValue(fieldName, value);
+  }
+
+  public setString(fieldName: string, value: string): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.dataType !== TFieldType.String) {
+      throw new Error(`Invalid data type for field ${fieldName}`);
+    }
+
+    return this._setFieldValue(fieldName, value);
+  }
+
+  public setNull(fieldName: string): RecordSet<R> {
+    this._checkInEditMode();
+    const fd = this.getFieldDef(fieldName);
+
+    if (fd.required) {
+      throw new Error(`Field ${fieldName} cann't be null`);
+    }
+
+    return this._setFieldValue(fieldName, null);
   }
 
   public toArray(): IRow<R>[] {
@@ -1433,8 +1593,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   public setData(options: IRecordSetDataOptions<R>): RecordSet<R> {
     switch (this._params.status) {
-      //case TStatus.ERROR:
-      //  throw new Error("RecordSet already has error");
       case TStatus.LOADING:
         throw new Error("RecordSet is being loaded");
       case TStatus.PARTIAL:
@@ -1463,8 +1621,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     switch (this._params.status) {
       case TStatus.FULL:
         throw new Error("RecordSet is a completely loaded");
-      //case TStatus.ERROR:
-      //  throw new Error("RecordSet already has error");
       case TStatus.LOADING:
         throw new Error("RecordSet is being loaded");
       case TStatus.PARTIAL:
@@ -1480,8 +1636,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     switch (this._params.status) {
       case TStatus.FULL:
         throw new Error("RecordSet is a completely loaded");
-      //case TStatus.ERROR:
-      //  throw new Error("RecordSet already has error");
       case TStatus.PARTIAL:
         throw new Error("RecordSet is being loaded");
       case TStatus.LOADING:
@@ -1493,24 +1647,4 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         });
     }
   }
-
-  /*
-  public setError(error: IError): RecordSet<R> {
-    switch (this._params.status) {
-      case TStatus.FULL:
-        throw new Error("RecordSet already is full");
-      case TStatus.ERROR:
-        throw new Error("RecordSet already has error");
-      case TStatus.PARTIAL:
-        throw new Error("RecordSet already is loading");
-      case TStatus.LOADING:
-      default:
-        return new RecordSet<R>({
-          ...this._params,
-          status: TStatus.ERROR,
-          error
-        });
-    }
-  }
-  */
 }

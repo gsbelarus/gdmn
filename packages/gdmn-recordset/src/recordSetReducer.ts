@@ -107,13 +107,6 @@ export const recordSetReducer = (
       return newState(rs.addData(records, full));
     }
 
-    /*
-    case getType(actions.setError): {
-      const { error } = action.payload;
-      return newState(rs.setError(error));
-    }
-    */
-
     case getType(actions.setRowsState): {
       const { state, rowsIdxs } = action.payload;
       return newState(rs.setRowsState(state, rowsIdxs));
@@ -130,8 +123,15 @@ export const recordSetReducer = (
         case 'EDIT': return newState(rs.edit());
         case 'INSERT': return newState(rs.insert());
         case 'POST': return newState(rs.post());
-        case 'CANCEL': return newState(rs.cancel());
+        case 'CANCEL':
+        default:
+          return newState(rs.cancel());
       }
+    }
+
+    case getType(actions.setFieldValue): {
+      const { fieldName, value } = action.payload;
+      return newState(rs.setValue(fieldName, value));
     }
 
     default:

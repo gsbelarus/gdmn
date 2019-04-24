@@ -12,7 +12,8 @@ import {
   TSelectAllRowsEvent,
   TSetCursorPosEvent,
   TSortEvent,
-  TToggleGroupEvent
+  TToggleGroupEvent,
+  TRecordsetSetFieldValue
 } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
@@ -36,7 +37,7 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, setRecordSet, removeRows, TRowState, setCurrentRow, doVerb } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, removeRows, TRowState, setCurrentRow, doVerb, setFieldValue } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, selectRow, setAllRowsSelected, setRowsState } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -107,7 +108,8 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       onEdit: () => thunkDispatch(doVerb({ name: rs.name, verb: 'EDIT' })),
       onInsert: () => thunkDispatch(doVerb({ name: rs.name, verb: 'INSERT' })),
       onPost: () => thunkDispatch(doVerb({ name: rs.name, verb: 'POST' })),
-      onCancel: () => thunkDispatch(doVerb({ name: rs.name, verb: 'CANCEL' }))
+      onCancel: () => thunkDispatch(doVerb({ name: rs.name, verb: 'CANCEL' })),
+      onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
     }),
     undefined,
     {forwardRef: true}

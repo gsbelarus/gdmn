@@ -336,3 +336,7 @@
 .RowDeleted {
   background-color: blueviolet;
 }
+
+.RowBeingEdited {
+  background-color: peachpuff;
+}
