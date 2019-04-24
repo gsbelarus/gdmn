@@ -6,6 +6,8 @@ import { Internals } from './component';
 import { StompLogPanel } from './components/StompLogPanel';
 import { rootActions } from '../root/actions';
 import { DefaultButton } from 'office-ui-fabric-react';
+import {gdmnActionsAsync, TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import { ThunkDispatch } from 'redux-thunk';
 
 export const StompLogPanelContainer = connect((state: IState) => ({
   logItems: state.rootState.logItems
@@ -29,9 +31,14 @@ export const InternalsContainer = compose<any, any>(
         erModel: state.gdmnState.erModel,
         recordSet: state.recordSet,
         rsMeta: state.rsMeta,
-        viewTabs: state.gdmnState.viewTabs
+        viewTabs: state.gdmnState.viewTabs,
+        sessionInfo: state.gdmnState.sessionInfo
       }
-    }
+    },
+    function (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions>)
+    { return ({
+        getSessionInfo: () => thunkDispatch(gdmnActionsAsync.getSessionInfo())
+      })}
   ),
   connectView
 )(Internals);

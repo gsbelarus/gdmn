@@ -163,7 +163,13 @@ const gdmnActionsAsync = {
   signOut: (): TThunkAction => async (dispatch, getState, { apiService }) => {
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut()); // todo test
-  }
+  },
+ getSessionInfo: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+    const response = await apiService.getSessionsInfo({withError: true});
+    if (response.payload.status === TTaskStatus.SUCCESS) {
+      dispatch(gdmnActions.getSessionInfo(response.payload.result!));
+    }
+  },
 };
 
 const gdmnActions = {
@@ -231,6 +237,10 @@ const gdmnActions = {
 
   deletePhraseForQuery: createAction('gdmn/DELETE_PHRASE_FOR_QUERY', resolve => {
     return (entityName: string) => resolve(entityName);
+  }),
+
+  getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
+    return (sessionInfo: any[]) => resolve(sessionInfo)
   })
 };
 

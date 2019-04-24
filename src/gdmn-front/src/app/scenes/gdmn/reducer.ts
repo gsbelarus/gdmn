@@ -18,6 +18,7 @@ export type TGdmnState = {
   apps: Array<IApplicationInfo & {loading: boolean}>;
   templates?: ITemplateApplication[];
   phrasesForQuery: IPhraseForQuery[];
+  sessionInfo: any[];
 };
 
 const initialState: TGdmnState = {
@@ -26,7 +27,8 @@ const initialState: TGdmnState = {
   loadingCounter: 0,
   viewTabs: [],
   apps: [],
-  phrasesForQuery: []
+  phrasesForQuery: [],
+  sessionInfo: []
 };
 
 export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
@@ -178,6 +180,13 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
           phrasesForQuery: [...state.phrasesForQuery.slice(0, idx), ...state.phrasesForQuery.slice(idx + 1)]
         };
       }
+    }
+
+    case getType(gdmnActions.getSessionInfo): {
+      return {
+        ...state,
+        sessionInfo: action.payload
+      };
     }
 
     default:
