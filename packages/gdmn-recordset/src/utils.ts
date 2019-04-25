@@ -2,7 +2,7 @@ import { IDataRow, TDataType } from "./types";
 import { INumberFormat, formatNumber, IDateFormat, formatDate } from "./format";
 
 export function checkField<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: TDataType): TDataType {
-  const value = row[fieldName];
+  const value = row[fieldName] as TDataType;
 
   if (value === undefined) {
     if (defaultValue === undefined) {
@@ -57,6 +57,10 @@ export function getAsNumber<R extends IDataRow = IDataRow>(row: R, fieldName: st
     return 0;
   }
 
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
   throw new Error(`Field ${fieldName} can't be converted to number`);
 };
 
@@ -81,6 +85,10 @@ export function getAsBoolean<R extends IDataRow = IDataRow>(row: R, fieldName: s
 
   if (value.toString().toUpperCase() === 'FALSE') {
     return false;
+  }
+
+  if (value instanceof Date) {
+    return true;
   }
 
   throw new Error(`Field ${fieldName} can't be converted to boolean`);

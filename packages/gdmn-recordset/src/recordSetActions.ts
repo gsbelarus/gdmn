@@ -90,17 +90,11 @@ export const collapseExpandGroups = createAction('RECORDSET/COLLAPSE_EXPAND_GROU
 
 export type CollapseExpandGroups = typeof collapseExpandGroups;
 
-export const setRowsState = createAction('RECORDSET/SET_ROWS_STATE', resolve => {
-  return (params: WithComponentName<{ state: TRowState, rowsIdxs?: number[] }>) => resolve(params);
+export const deleteRows = createAction('RECORDSET/DELETE_ROWS', resolve => {
+  return (params: WithComponentName<{ remove?: boolean, rowsIdxs?: number[] }>) => resolve(params);
 });
 
-export type SetRowsState = typeof setRowsState;
-
-export const removeRows = createAction('RECORDSET/REMOVE_ROWS', resolve => {
-  return (params: WithComponentName<{ rowsIdxs?: number[] }>) => resolve(params);
-});
-
-export type RemoveRows = typeof removeRows;
+export type DeleteRows = typeof deleteRows;
 
 export const doVerb = createAction('RECORDSET/DO_VERB', resolve => {
   return (params: WithComponentName<{ verb: TRecordsetVerb }>) => resolve(params);

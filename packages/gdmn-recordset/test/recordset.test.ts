@@ -1,4 +1,4 @@
-import { RecordSet, TFieldType } from '../src';
+import { RecordSet, TFieldType, IDataRow } from '../src';
 import { List } from 'immutable';
 import { nbrbCurrencies, INBRBCurrency } from './nbrbcurrencies';
 
@@ -124,32 +124,232 @@ describe('recordset', () => {
 
     expect(rs.size).toEqual(224);
 
+    /**
+     * setCurrentRow
+     */
+
     rs = rs.setCurrentRow(10);
     expect(rs.currentRow).toEqual(10);
 
-    rs = rs.removeRows([9, 10]);
+    /**
+     * remove rows
+     */
+
+    rs = rs.delete(true, [9, 10]);
     expect(rs.currentRow).toEqual(9);
     expect(rs.size).toEqual(222);
 
-    rs = rs.removeRows([]);
+    rs = rs.delete(true, []);
     expect(rs.size).toEqual(222);
 
-    rs = rs.removeRows([221]);
+    rs = rs.delete(true, [221]);
     expect(rs.size).toEqual(221);
-
-    /**
-     * Тестируем редактирование данных.
-     */
-    const d = new Date();
-
-    rs = rs.setCurrentRow(0);
-    rs = rs.edit();
-    rs = rs.setDate('Cur_DateStart', d);
-    rs = rs.post();
-    expect(rs.getDate('Cur_DateStart')).toEqual(d);
-
-    const t = () => rs = rs.setDate('Cur_DateStart', d);
-    expect(t).toThrow(Error);
   });
 
+  it('crud', () => {
+    const fieldDefs = [
+      {
+        fieldName: 'i',
+        dataType: TFieldType.Integer,
+        caption: 'Integer'
+      },
+      {
+        fieldName: 'f',
+        dataType: TFieldType.Float,
+        caption: 'Float'
+      },
+      {
+        fieldName: 'c',
+        dataType: TFieldType.Currency,
+        caption: 'Currency'
+      },
+      {
+        fieldName: 'd',
+        dataType: TFieldType.Date,
+        caption: 'Date'
+      },
+      {
+        fieldName: 's',
+        dataType: TFieldType.String,
+        caption: 'String'
+      },
+      {
+        fieldName: 'b',
+        dataType: TFieldType.Boolean,
+        caption: 'Boolean'
+      },
+    ];
+
+    const data = [
+      {
+        i: 5,
+        f: 555.0123456789,
+        c: 5.1234,
+        d: new Date(2019, 4, 25),
+        s: 'abc',
+        b: true
+      }
+    ];
+
+    let rs = RecordSet.create({
+      name: 'test',
+      fieldDefs,
+      data: List<IDataRow>(data as any)
+    });
+
+    expect(rs.size).toEqual(1);
+
+    /**
+     * Test read type conversions
+     */
+
+    expect(rs.getInteger('i') === 5).toBeTruthy();
+    expect(rs.getFloat('i') === 5).toBeTruthy();
+    expect(rs.getCurrency('i') === 5).toBeTruthy();
+    expect(rs.getString('i') === '5').toBeTruthy();
+    expect(rs.getBoolean('i') === true).toBeTruthy();
+    expect( () => rs.getDate('i') ).toThrowError();
+
+    expect( () => rs.getInteger('f') ).toThrowError();
+    expect(rs.getFloat('f') === 555.0123456789).toBeTruthy();
+    expect(rs.getCurrency('f') === 555.0123456789).toBeTruthy();
+    expect(rs.getString('f') === '555.0123456789').toBeTruthy();
+    expect(rs.getBoolean('f') === true).toBeTruthy();
+    expect( () => rs.getDate('f') ).toThrowError();
+
+    expect( () => rs.getInteger('c') ).toThrowError();
+    expect(rs.getFloat('c') === 5.1234).toBeTruthy();
+    expect(rs.getCurrency('c') === 5.1234).toBeTruthy();
+    expect(rs.getString('c') === '5.1234').toBeTruthy();
+    expect(rs.getBoolean('c') === true).toBeTruthy();
+    expect( () => rs.getDate('c') ).toThrowError();
+
+    expect(rs.getInteger('d')).toEqual(new Date(2019, 4, 25).getTime());
+    expect(rs.getFloat('d')).toEqual(new Date(2019, 4, 25).getTime());
+    expect(rs.getCurrency('d')).toEqual(new Date(2019, 4, 25).getTime());
+    expect(rs.getString('d')).toEqual(new Date(2019, 4, 25).toString());
+    expect(rs.getBoolean('d')).toBeTruthy();
+    expect(rs.getDate('d')).toEqual(new Date(2019, 4, 25));
+
+    /**
+     * Test set as integer
+     */
+    rs = rs.setInteger('i', 100);
+    expect(rs.getInteger('i')).toEqual(100);
+    expect( () => rs.setInteger('i', 100.1) ).toThrowError();
+    expect(rs.getInteger('i')).toEqual(100);
+    rs = rs.setInteger('f', 100);
+    expect(rs.getFloat('f')).toEqual(100);
+    rs = rs.setInteger('c', 100);
+    expect(rs.getCurrency('c')).toEqual(100);
+    rs = rs.setInteger('s', 100);
+    expect(rs.getString('s')).toEqual('100');
+    rs = rs.setInteger('b', 100);
+    expect(rs.getBoolean('b')).toEqual(true);
+    rs = rs.setInteger('d', 100);
+    expect(rs.getDate('d')).toEqual(new Date(100));
+
+    /**
+     * Test set as float
+     */
+
+    expect( () => rs.setFloat('i', 222.32323232) ).toThrowError();
+    rs = rs.setFloat('f', 222.32323232);
+    expect(rs.getFloat('f')).toEqual(222.32323232);
+    rs = rs.setFloat('c', 222.32323232);
+    expect(rs.getCurrency('c')).toEqual(222.32323232);
+    rs = rs.setFloat('s', 222.32323232);
+    expect(rs.getString('s')).toEqual('222.32323232');
+    rs = rs.setFloat('b', 222.32323232);
+    expect(rs.getBoolean('b')).toEqual(true);
+    rs = rs.setFloat('d', 222.32323232);
+    expect(rs.getDate('d')).toEqual(new Date(222.32323232));
+
+    /**
+     * Test set as currency
+     */
+
+    expect( () => rs.setCurrency('i', -7.7777) ).toThrowError();
+    rs = rs.setCurrency('f', -7.7777);
+    expect(rs.getFloat('f')).toEqual(-7.7777);
+    rs = rs.setCurrency('c', -7.7777);
+    expect(rs.getCurrency('c')).toEqual(-7.7777);
+    rs = rs.setCurrency('s', -7.7777);
+    expect(rs.getString('s')).toEqual('-7.7777');
+    rs = rs.setCurrency('b', -7.7777);
+    expect(rs.getBoolean('b')).toEqual(true);
+    rs = rs.setCurrency('d', -7.7777);
+    expect(rs.getDate('d')).toEqual(new Date(-7.7777));
+
+    /**
+     * Test set as string
+     */
+
+    expect( () => rs.setString('i', '-7.7777') ).toThrowError();
+    rs = rs.setString('i', '12');
+    expect(rs.getInteger('i')).toEqual(12);
+
+    expect( () => rs.setString('f', 'abc') ).toThrowError();
+    expect( () => rs.setString('f', '') ).toThrowError();
+    rs = rs.setString('f', '-7.7777');
+    expect(rs.getFloat('f')).toEqual(-7.7777);
+
+    rs = rs.setString('c', '-7.7777');
+    expect(rs.getCurrency('c')).toEqual(-7.7777);
+    rs = rs.setString('s', '-7.7777');
+    expect(rs.getString('s')).toEqual('-7.7777');
+
+    expect( () => rs.setString('b', 'abc') ).toThrowError();
+    expect( () => rs.setString('b', '') ).toThrowError();
+    rs = rs.setString('b', 'FALSE');
+    expect(rs.getBoolean('b')).toEqual(false);
+
+    rs = rs.setString('d', '1995-12-17');
+    expect(rs.getDate('d')).toEqual(new Date('1995-12-17'));
+
+    /**
+     * Test set as boolean
+     */
+
+    rs = rs.setBoolean('i', false);
+    expect(rs.getInteger('i')).toEqual(0);
+
+    rs = rs.setBoolean('f', true);
+    expect(rs.getFloat('f')).toEqual(1);
+
+    rs = rs.setBoolean('c', true);
+    expect(rs.getCurrency('c')).toEqual(1);
+    rs = rs.setBoolean('s', true);
+    expect(rs.getString('s')).toEqual('TRUE');
+
+    rs = rs.setBoolean('b', false);
+    expect(rs.getBoolean('b')).toEqual(false);
+
+    expect( () => rs.setBoolean('d', false) ).toThrowError();
+
+    /**
+     * Test set as date
+     */
+
+    const tempDate = new Date('2019-02-02');
+    const tempMs = tempDate.getTime();
+
+    rs = rs.setDate('i', tempDate);
+    expect(rs.getInteger('i')).toEqual(tempMs);
+
+    rs = rs.setDate('f', tempDate);
+    expect(rs.getFloat('f')).toEqual(tempMs);
+
+    rs = rs.setDate('c', tempDate);
+    expect(rs.getCurrency('c')).toEqual(tempMs);
+    rs = rs.setDate('s', tempDate);
+    expect(rs.getString('s')).toEqual(tempDate.toString());
+
+    rs = rs.setDate('b', tempDate);
+    expect(rs.getBoolean('b')).toEqual(true);
+
+    rs = rs.setDate('d', tempDate);
+    expect(rs.getDate('d')).toEqual(tempDate);
+
+  });
 });

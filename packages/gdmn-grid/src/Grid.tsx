@@ -13,7 +13,7 @@ import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
-import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState, TRecordsetState, TDataType } from 'gdmn-recordset';
+import { FieldDefs, RecordSet, SortFields, TRowType, TSortOrder, TStatus, TRowState, TDataType } from 'gdmn-recordset';
 import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
 import { ParamsDialog } from './ParamsDialog';
@@ -76,7 +76,6 @@ export interface IGridProps {
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
   onEdit: TEventCallback<TRecordsetEditEvent>;
   onInsert: TEventCallback<TRecordsetInsertEvent>;
-  onPost: TEventCallback<TRecordsetPostEvent>;
   onCancel: TEventCallback<TRecordsetCancelEvent>;
   onSetFieldValue: TEventCallback<TRecordsetSetFieldValue>;
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
@@ -498,7 +497,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
           case 'Esc':
           case 'Escape': {
-            if (rs.state === TRecordsetState.EDIT || rs.state === TRecordsetState.INSERT) {
+            if (rs.getRowState() === TRowState.Edited || rs.getRowState() === TRowState.Inserted || rs.getRowState() === TRowState.Deleted) {
               const { onCancel } = this.props;
               onCancel({ ref: this, rs });
             }
@@ -1228,28 +1227,23 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
     let backgroundClass;
 
-    if (rowState === TRowState.Normal) {
-      backgroundClass = fixed
-        ? styles.FixedBackground
-        : currentRow === rowIndex
-        ? adjustedColumnIndex === currentCol
-          ? styles.CurrentCellBackground
-          : rs.state === TRecordsetState.EDIT || rs.state === TRecordsetState.INSERT
+    backgroundClass = fixed
+      ? styles.FixedBackground
+      : currentRow === rowIndex
+      ? adjustedColumnIndex === currentCol
+        ? styles.CurrentCellBackground
+        : rowState !== TRowState.Normal
+          ? rowState === TRowState.Edited || rowState === TRowState.Inserted
             ? styles.Editing
-            : styles.CurrentRowBackground
-        : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
-        ? styles.SelectedBackground
-        : groupHeader
-        ? styles.GroupHeaderBackground
-        : rowIndex % 2 === 0
-        ? styles.EvenRowBackground
-        : styles.OddRowBackground;
-    }
-    else if (rowState === TRowState.Deleting) {
-      backgroundClass = styles.Deleting;
-    } else {
-      backgroundClass = styles.Deleted;
-    }
+            : styles.Deleted
+          : styles.CurrentRowBackground
+      : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
+      ? styles.SelectedBackground
+      : groupHeader
+      ? styles.GroupHeaderBackground
+      : rowIndex % 2 === 0
+      ? styles.EvenRowBackground
+      : styles.OddRowBackground;
 
     const borderClass = fixed ? styles.FixedBorder : groupHeader ? styles.BorderBottom : styles.BorderRight;
     const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText : styles.BlackText;
@@ -1270,9 +1264,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           value={rs.getString(fieldName)}
           onSave={
             (value: string) => {
-              if (rs.state === TRecordsetState.BROWSE) {
-                onEdit({ ref: this, rs });
-              }
               onSetFieldValue({ ref: this, rs, fieldName, value });
               this._captureFocus = true;
               this.setState({ fieldEditor: false });

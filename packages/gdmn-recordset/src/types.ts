@@ -9,15 +9,9 @@ export enum TStatus {
   FULL
 };
 
-export enum TRecordsetState {
-  BROWSE,
-  INSERT,
-  EDIT
-};
-
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
-export type TRecordsetVerb = 'EDIT' | 'INSERT' | 'POST' | 'CANCEL';
+export type TRecordsetVerb = 'EDIT' | 'INSERT' | 'CANCEL';
 
 export enum TFieldType {
   String = 0,
@@ -42,8 +36,9 @@ export interface IFieldAggregator<Acc, Res = TDataType> {
 
 export enum TRowState {
   Normal = 0,
-  Deleting,
-  Deleted
+  Deleted,
+  Edited,
+  Inserted
 };
 
 export type TDataType = string | number | boolean | Date | null;
@@ -85,9 +80,8 @@ export interface ISortField extends INamedField {
 
 export type SortFields = ISortField[];
 
-
 export interface IDataRow {
-  [fieldName: string]: TDataType | TRowState;
+  [fieldName: string]: TDataType | TRowState | IDataRow;
 };
 
 export type Data<R extends IDataRow = IDataRow> = List<R>;

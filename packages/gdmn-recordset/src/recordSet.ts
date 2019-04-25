@@ -22,8 +22,7 @@ import {
   TRowCalcFunc,
   TRowType,
   TStatus,
-  TRowState,
-  TRecordsetState
+  TRowState
 } from "./types";
 import {checkField, getAsBoolean, getAsDate, getAsNumber, getAsString, isNull} from "./utils";
 
@@ -59,7 +58,6 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   calcFields: TRowCalcFunc<R> | undefined;
   data: Data<R>;
   status: TStatus;
-  state: TRecordsetState;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
@@ -71,7 +69,6 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   groups?: IDataGroup<R>[];
   aggregates?: R;
   masterLink?: IMasterLink;
-  prevRow?: R;
 }
 
 export class RecordSet<R extends IDataRow = IDataRow> {
@@ -105,7 +102,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           return res;
         },
         status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
-        state: TRecordsetState.BROWSE,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
@@ -115,7 +111,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return new RecordSet<R>({
         ...options,
         status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
-        state: TRecordsetState.BROWSE,
         calcFields: undefined,
         currentRow: 0,
         sortFields: [],
@@ -147,10 +142,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get status() {
     return this._params.status;
-  }
-
-  get state() {
-    return this._params.state;
   }
 
   get size() {
@@ -276,7 +267,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error('No data row');
     }
 
-    return this.pk.map( fd => r.data[fd.fieldName] );
+    return this.pk.map( fd => r.data[fd.fieldName] as TDataType );
   }
 
   get pk2s(): string[] {
@@ -421,86 +412,165 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     };
   }
 
-  private _checkInBrowseMode() {
-    if (this.state !== TRecordsetState.BROWSE) {
-      throw new Error('Not in browse state.');
-    }
-  }
-
-  private _checkInEditMode() {
-    if (this.state === TRecordsetState.BROWSE) {
-      throw new Error('Not in edit or insert state.');
-    }
-  }
-
   public edit(): RecordSet<R> {
-    if (this.size) {
-      this._checkInBrowseMode();
-
-      if (this._get().type !== TRowType.Data) {
-        throw new Error('Not a data row.');
-      }
-
-      const { data } = this.params;
-      const adjustedIdx = this._adjustIdx(this.currentRow);
-      const prevRow = data.get(adjustedIdx);
-
-      return new RecordSet<R>({
-        ...this._params,
-        state: TRecordsetState.EDIT,
-        prevRow
-      });
-    } else {
-      return this.insert();
+    if (!this.size) {
+      throw new Error('Empty recordset.')
     }
-  }
 
-  public insert(): RecordSet<R> {
-    this._checkInBrowseMode();
+    const row = this._get();
+
+    if (row.type !== TRowType.Data) {
+      throw new Error('Not a data row.');
+    }
 
     const { data } = this.params;
     const adjustedIdx = this._adjustIdx(this.currentRow);
-    const r = this.fieldDefs.reduce( (r, fd) => ({...r, [fd.fieldName]: null}), {} as R );
+    const rowData = data.get(adjustedIdx);
+    const rs = rowData['$$ROW_STATE'];
+
+    if (rs === TRowState.Deleted) {
+      throw new Error(`Can't edit deleted row.`)
+    }
+
+    if (!rowData['$$PREV_ROW']) {
+      rowData['$$PREV_ROW'] = {...rowData};
+    }
+
+    if (rs !== TRowState.Inserted) {
+      rowData['$$ROW_STATE'] = TRowState.Edited;
+    }
 
     return new RecordSet<R>({
       ...this._params,
-      state: TRecordsetState.INSERT,
-      data: data.insert(adjustedIdx, r),
-      prevRow: undefined
+      data: data.set(adjustedIdx, rowData)
     });
   }
 
-  public post(): RecordSet<R> {
-    this._checkInEditMode();
+  public insert(): RecordSet<R> {
+    if (this.size) {
+      const row = this._get();
+
+      if (row.type !== TRowType.Data) {
+        throw new Error('Not a data row.');
+      }
+    }
+
+    const { data } = this.params;
+    const adjustedIdx = this._adjustIdx(this.currentRow);
+    const r = this.fieldDefs.reduce(
+      (r, fd) => ({...r, [fd.fieldName]: null}),
+      {} as R
+    );
+
+    r['$$ROW_STATE'] = TRowState.Inserted;
+
     return new RecordSet<R>({
       ...this._params,
-      state: TRecordsetState.BROWSE,
-      prevRow: undefined
+      data: data.insert(adjustedIdx, r)
     });
+  }
+
+  public delete(remove?: boolean, rIdxs?: number[]): RecordSet<R> {
+    if (remove) {
+      const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs.sort( (a, b) => b - a );
+
+      let { data, currentRow, savedData } = this.params;
+      let selectedRows = [...this.params.selectedRows];
+      const { groups } = this.params;
+
+      rowIdxs.forEach( r => {
+        if (r < 0 || r >= this.size) {
+          throw new Error(`Invalid row index ${r}`);
+        }
+
+        if (this._get(r).type === TRowType.Data) {
+
+          if (currentRow > r || currentRow === (this.size - 1)) {
+            currentRow--;
+          }
+
+          selectedRows.splice(r, 1);
+
+          let adjustedIdx: number;
+
+          if (groups && groups.length) {
+            const group = this._findGroup(groups, r).group;
+            adjustedIdx = group.bufferIdx + r - group.rowIdx - 1;
+
+            if (group.bufferCount) {
+              group.bufferCount--;
+            }
+
+            groups.forEach( g => {
+              if (g.rowIdx >= r) {
+                g.rowIdx--;
+              }
+
+              if (g.bufferIdx > adjustedIdx) {
+                g.bufferIdx--;
+              }
+            });
+          } else {
+            adjustedIdx = r;
+          }
+
+          if (savedData) {
+            for (let i = savedData.size - 1; i >= 0; i--) {
+              if (savedData.get(i) === data.get(adjustedIdx)) {
+                savedData = savedData.delete(i);
+                break;
+              }
+            }
+          }
+
+          data = data.delete(adjustedIdx);
+        }
+      });
+
+      const res = new RecordSet<R>({ ...this._params, data, currentRow, selectedRows, savedData });
+
+      if (this.params.foundRows) {
+        return res.search(this.params.searchStr);
+      }
+
+      return res;
+    } else {
+      return this._setRowsState(TRowState.Deleted, rIdxs);
+    }
   }
 
   public cancel(): RecordSet<R> {
-    this._checkInEditMode();
+    if (!this.size) {
+      throw new Error('Empty recordset.')
+    }
 
-    const { data, prevRow, state, currentRow } = this.params;
+    const row = this._get();
+
+    if (row.type !== TRowType.Data) {
+      throw new Error('Not a data row.');
+    }
+
+    const { data } = this.params;
     const adjustedIdx = this._adjustIdx(this.currentRow);
+    const rowData = data.get(adjustedIdx);
+    const rs = rowData['$$ROW_STATE'];
 
-    if (state === TRecordsetState.EDIT) {
+    if (rs === TRowState.Deleted) {
+      delete rowData['$$ROW_STATE'];
       return new RecordSet<R>({
         ...this._params,
-        state: TRecordsetState.BROWSE,
-        data: prevRow ? data.set(adjustedIdx, prevRow) : data,
-        prevRow: undefined
-      });
-    } else {
-      return new RecordSet<R>({
-        ...this._params,
-        state: TRecordsetState.BROWSE,
-        currentRow: currentRow === this.size - 1 ? currentRow - 1 : currentRow,
-        data: data.delete(adjustedIdx),
-        prevRow: undefined
+        data: data.set(adjustedIdx, rowData)
       });
     }
+
+    if (rowData['$$PREV_ROW']) {
+      return new RecordSet<R>({
+        ...this._params,
+        data: data.set(adjustedIdx, rowData['$$PREV_ROW'] as R)
+      });
+    }
+
+    return this;
   }
 
   public getFieldDef(fieldName: string): IFieldDef {
@@ -547,7 +617,22 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public getNumber(fieldName: string, rowIdx?: number, defaultValue?: number): number {
+  public getInteger(fieldName: string, rowIdx?: number, defaultValue?: number): number {
+    const {calcFields} = this._params;
+    const res = getAsNumber(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
+    const fd = this.getFieldDef(fieldName);
+    if (fd.dataType === TFieldType.Float || fd.dataType === TFieldType.Currency) {
+      throw new Error(`Invalid type cast for field ${fieldName}`);
+    }
+    return res;
+  }
+
+  public getFloat(fieldName: string, rowIdx?: number, defaultValue?: number): number {
+    const {calcFields} = this._params;
+    return getAsNumber(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
+  }
+
+  public getCurrency(fieldName: string, rowIdx?: number, defaultValue?: number): number {
     const {calcFields} = this._params;
     return getAsNumber(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
@@ -575,143 +660,178 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const { data } = this.params;
     const adjustedIdx = this._adjustIdx(this.currentRow);
     const row = data.get(adjustedIdx);
+    row[fieldName] = value;
 
     return new RecordSet<R>({
       ...this.params,
-      data: data.set(adjustedIdx, { ...row, [fieldName]: value })
+      data: data.set(adjustedIdx, row)
     })
   }
 
   public setValue(fieldName: string, value: TDataType): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
-
-    if (fd.required && value === null) {
-      throw new Error('Required field value.');
-    }
-
-    let v: TDataType;
-
     if (value === null) {
-      v = null;
-    } else {
-      switch (fd.dataType) {
-        case TFieldType.String: {
-          v = value.toString();
-          break;
-        }
-
-        case TFieldType.Integer: {
-          switch (typeof value) {
-            case 'string':
-              v = parseInt(value);
-              break;
-
-            case 'boolean':
-              v = value ? 1 : 0;
-              break;
-
-            default:
-              if (value instanceof Date) {
-                v = value.valueOf();
-              } else {
-                v = Math.trunc(value);
-              }
-          }
-          break;
-        }
-
-        case TFieldType.Currency:
-        case TFieldType.Float: {
-          switch (typeof value) {
-            case 'string':
-              v = parseFloat(value);
-              break;
-
-            case 'boolean':
-              v = value ? 1 : 0;
-              break;
-
-            default:
-              if (value instanceof Date) {
-                v = value.valueOf();
-              } else {
-                v = value;
-              }
-          }
-          break;
-        }
-
-        case TFieldType.Boolean: {
-          v = !!value;
-          break;
-        }
-
-        default:
-          throw new Error('Unknown data type.');
-      }
+      return this.setNull(fieldName);
     }
 
-    return this._setFieldValue(fieldName, v);
+    switch (typeof value) {
+      case 'number':
+        if (value === Math.trunc(value)) {
+          return this.setInteger(fieldName, value);
+        } else {
+          return this.setFloat(fieldName, value);
+        }
+
+      case 'string':
+        return this.setString(fieldName, value);
+
+      case 'boolean':
+        return this.setBoolean(fieldName, value);
+
+      default:
+        if (value instanceof Date) {
+          return this.setDate(fieldName, value);
+        } else {
+          throw new Error('Unknown data type.');
+        }
+    }
   }
 
   public setDate(fieldName: string, value: Date): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
+    this.edit();
 
-    if (fd.dataType !== TFieldType.Date) {
-      throw new Error(`Invalid data type for field ${fieldName}`);
+    switch (this.getFieldDef(fieldName).dataType) {
+      case TFieldType.Integer:
+      case TFieldType.Float:
+      case TFieldType.Currency:
+        return this._setFieldValue(fieldName, value.getTime());
+
+      case TFieldType.String:
+        return this._setFieldValue(fieldName, value.toString());
+
+      case TFieldType.Boolean:
+        return this._setFieldValue(fieldName, true);
+
+      case TFieldType.Date:
+        return this._setFieldValue(fieldName, value);
     }
-
-    return this._setFieldValue(fieldName, value);
   }
 
   public setBoolean(fieldName: string, value: boolean): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
+    this.edit();
 
-    if (fd.dataType !== TFieldType.Boolean) {
-      throw new Error(`Invalid data type for field ${fieldName}`);
+    switch (this.getFieldDef(fieldName).dataType) {
+      case TFieldType.Integer:
+      case TFieldType.Float:
+      case TFieldType.Currency:
+        return this._setFieldValue(fieldName, value ? 1 : 0);
+
+      case TFieldType.String:
+        return this._setFieldValue(fieldName, value ? 'TRUE' : 'FALSE');
+
+      case TFieldType.Boolean:
+        return this._setFieldValue(fieldName, value);
+
+      case TFieldType.Date:
+        throw new Error(`Invalid type cast.`);
     }
-
-    return this._setFieldValue(fieldName, value);
   }
 
   public setInteger(fieldName: string, value: number): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
-
-    if (fd.dataType !== TFieldType.Integer) {
-      throw new Error(`Invalid data type for field ${fieldName}`);
+    if (value !== Math.trunc(value)) {
+      throw new Error(`Not an integer value.`);
     }
 
-    return this._setFieldValue(fieldName, Math.trunc(value));
+    this.edit();
+
+    switch (this.getFieldDef(fieldName).dataType) {
+      case TFieldType.Integer:
+      case TFieldType.Float:
+      case TFieldType.Currency:
+        return this._setFieldValue(fieldName, value);
+
+      case TFieldType.String:
+        return this._setFieldValue(fieldName, value.toString());
+
+      case TFieldType.Boolean:
+        return this._setFieldValue(fieldName, !!value);
+
+      case TFieldType.Date:
+        return this._setFieldValue(fieldName, new Date(value));
+    }
   }
 
   public setFloat(fieldName: string, value: number): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
+    this.edit();
 
-    if (fd.dataType !== TFieldType.Float) {
-      throw new Error(`Invalid data type for field ${fieldName}`);
+    switch (this.getFieldDef(fieldName).dataType) {
+      case TFieldType.Integer:
+        throw new Error(`Invalid type cast for field ${fieldName}`);
+
+      case TFieldType.Float:
+      case TFieldType.Currency:
+        return this._setFieldValue(fieldName, value);
+
+      case TFieldType.String:
+        return this._setFieldValue(fieldName, value.toString());
+
+      case TFieldType.Boolean:
+        return this._setFieldValue(fieldName, !!value);
+
+      case TFieldType.Date:
+        return this._setFieldValue(fieldName, new Date(value));
     }
+  }
 
-    return this._setFieldValue(fieldName, value);
+  public setCurrency(fieldName: string, value: number): RecordSet<R> {
+    return this.setFloat(fieldName, value);
   }
 
   public setString(fieldName: string, value: string): RecordSet<R> {
-    this._checkInEditMode();
-    const fd = this.getFieldDef(fieldName);
+    this.edit();
 
-    if (fd.dataType !== TFieldType.String) {
-      throw new Error(`Invalid data type for field ${fieldName}`);
+    switch (this.getFieldDef(fieldName).dataType) {
+      case TFieldType.Integer: {
+        const v = parseFloat(value);
+
+        if (isNaN(v) || v !== Math.trunc(v)) {
+          throw new Error(`Invalid type cast`);
+        }
+
+        return this._setFieldValue(fieldName, v);
+      }
+
+      case TFieldType.Float:
+      case TFieldType.Currency: {
+        const v = parseFloat(value);
+
+        if (isNaN(v)) {
+          throw new Error(`Invalid type cast`);
+        }
+
+        return this._setFieldValue(fieldName, v);
+      }
+
+      case TFieldType.String:
+        return this._setFieldValue(fieldName, value);
+
+      case TFieldType.Boolean:
+        if (value === 'TRUE') {
+          return this._setFieldValue(fieldName, true);
+        }
+        else if (value === 'FALSE') {
+          return this._setFieldValue(fieldName, false);
+        }
+        else {
+          throw new Error(`Invalid type cast.`)
+        }
+
+      case TFieldType.Date:
+        return this._setFieldValue(fieldName, new Date(value));
     }
-
-    return this._setFieldValue(fieldName, value);
   }
 
   public setNull(fieldName: string): RecordSet<R> {
-    this._checkInEditMode();
+    this.edit();
     const fd = this.getFieldDef(fieldName);
 
     if (fd.required) {
@@ -889,7 +1009,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         while (left > 0) {
           let cnt = 0;
           const row = this._getData(sorted, rowIdx + cnt, calcFields);
-          const value = row[fieldName];
+          const value = row[fieldName] as TDataType;
           const valueFieldDef = this._params.fieldDefs.find(fd => fd.fieldName === fieldName)!;
           while (
             cnt < left &&
@@ -1282,71 +1402,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  public removeRows(rIdxs?: number[]): RecordSet<R> {
-    const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs.sort( (a, b) => b - a );
-
-    let { data, currentRow, savedData } = this.params;
-    let selectedRows = [...this.params.selectedRows];
-    const { groups } = this.params;
-
-    rowIdxs.forEach( r => {
-      if (r < 0 || r >= this.size) {
-        throw new Error(`Invalid row index ${r}`);
-      }
-
-      if (this._get(r).type === TRowType.Data) {
-
-        if (currentRow > r || currentRow === (this.size - 1)) {
-          currentRow--;
-        }
-
-        selectedRows.splice(r, 1);
-
-        let adjustedIdx: number;
-
-        if (groups && groups.length) {
-          const group = this._findGroup(groups, r).group;
-          adjustedIdx = group.bufferIdx + r - group.rowIdx - 1;
-
-          if (group.bufferCount) {
-            group.bufferCount--;
-          }
-
-          groups.forEach( g => {
-            if (g.rowIdx >= r) {
-              g.rowIdx--;
-            }
-
-            if (g.bufferIdx > adjustedIdx) {
-              g.bufferIdx--;
-            }
-          });
-        } else {
-          adjustedIdx = r;
-        }
-
-        if (savedData) {
-          for (let i = savedData.size - 1; i >= 0; i--) {
-            if (savedData.get(i) === data.get(adjustedIdx)) {
-              savedData = savedData.delete(i);
-              break;
-            }
-          }
-        }
-
-        data = data.delete(adjustedIdx);
-      }
-    });
-
-    const res = new RecordSet<R>({ ...this._params, data, currentRow, selectedRows, savedData });
-
-    if (this.params.foundRows) {
-      return res.search(this.params.searchStr);
-    }
-
-    return res;
-  }
-
   public getRowState(rowIdx?: number): TRowState {
     const rs = this._get(rowIdx).data['$$ROW_STATE'];
     if (rs === undefined) {
@@ -1367,27 +1422,25 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setRowsState(state: TRowState, rIdxs?: number[]): RecordSet<R> {
+  private _setRowsState(state: TRowState, rIdxs?: number[]): RecordSet<R> {
     const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs;
 
     let data = this.params.data;
 
     rowIdxs.forEach( r => {
-      if (r < 0 || r >= this.size) {
-        throw new Error(`Invalid row index ${r}`);
+      if (this._get(r).type !== TRowType.Data) {
+        throw new Error(`Not a data row. Row index: ${r}`);
       }
 
-      if (this._get(r).type === TRowType.Data) {
-        const adjustedIdx = this._adjustIdx(r);
-        const row = data.get(adjustedIdx);
+      const adjustedIdx = this._adjustIdx(r);
+      const row = data.get(adjustedIdx);
 
-        if (state === TRowState.Normal) {
-          delete row['$$ROW_STATE'];
-        } else {
-          row['$$ROW_STATE'] = state;
-        }
-        data = data.set(adjustedIdx, row);
+      if (state === TRowState.Normal) {
+        delete row['$$ROW_STATE'];
+      } else {
+        row['$$ROW_STATE'] = state;
       }
+      data = data.set(adjustedIdx, row);
     });
 
     return new RecordSet<R>({ ...this._params, data });

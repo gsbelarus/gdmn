@@ -4,7 +4,7 @@ import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {RecordSetAction, setRowsState, TRowState} from "gdmn-recordset";
+import {RecordSetAction, TRowState, deleteRows} from "gdmn-recordset";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
@@ -72,7 +72,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
 
         const pkValues = rs.pkValue;
 
-        dispatch(setRowsState({ name: rs.name, state: TRowState.Deleting }));
+        dispatch(deleteRows({ name: rs.name }));
 
         const result = await apiService.delete({
           delete: {

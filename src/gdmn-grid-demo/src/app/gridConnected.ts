@@ -37,9 +37,9 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, removeRows, TRowState, setCurrentRow, doVerb, setFieldValue } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TRowState, setCurrentRow, doVerb, setFieldValue, deleteRows } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
-import { sortRecordSet, selectRow, setAllRowsSelected, setRowsState } from "gdmn-recordset";
+import { sortRecordSet, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
 
 export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined) {
@@ -107,7 +107,6 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
         ),
       onEdit: () => thunkDispatch(doVerb({ name: rs.name, verb: 'EDIT' })),
       onInsert: () => thunkDispatch(doVerb({ name: rs.name, verb: 'INSERT' })),
-      onPost: () => thunkDispatch(doVerb({ name: rs.name, verb: 'POST' })),
       onCancel: () => thunkDispatch(doVerb({ name: rs.name, verb: 'CANCEL' })),
       onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
     }),
@@ -209,17 +208,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
           const recordSet = getState().recordSet[rs.name];
           if (recordSet.size) {
             const rowsIdxs = [recordSet.currentRow];
-            dispatch(setRowsState({ name: rs.name, state: TRowState.Deleting, rowsIdxs }));
-            setTimeout( () => {
-              const recordSet = getState().recordSet[rs.name];
-              const rowsIdxs: number[] = [];
-              for (let i = 0; i < recordSet.size; i++) {
-                if (recordSet.getRowState(i) === TRowState.Deleting) {
-                  rowsIdxs.push(i);
-                }
-              }
-              dispatch(setRowsState({ name: rs.name, state: TRowState.Deleted, rowsIdxs }));
-            }, 2000);
+            dispatch(deleteRows({ name: rs.name, remove: false, rowsIdxs }));
           }
         });
       },
@@ -233,7 +222,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
             }
           }
           if (rowsIdxs.length) {
-            dispatch(removeRows({ name: rs.name, rowsIdxs }));
+            dispatch(deleteRows({ name: rs.name, remove: true, rowsIdxs }));
           }
         });
       }

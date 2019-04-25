@@ -107,14 +107,9 @@ export const recordSetReducer = (
       return newState(rs.addData(records, full));
     }
 
-    case getType(actions.setRowsState): {
-      const { state, rowsIdxs } = action.payload;
-      return newState(rs.setRowsState(state, rowsIdxs));
-    }
-
-    case getType(actions.removeRows): {
-      const { rowsIdxs } = action.payload;
-      return newState(rs.removeRows(rowsIdxs));
+    case getType(actions.deleteRows): {
+      const { remove, rowsIdxs } = action.payload;
+      return newState(rs.delete(remove, rowsIdxs));
     }
 
     case getType(actions.doVerb): {
@@ -122,7 +117,6 @@ export const recordSetReducer = (
       switch (verb) {
         case 'EDIT': return newState(rs.edit());
         case 'INSERT': return newState(rs.insert());
-        case 'POST': return newState(rs.post());
         case 'CANCEL':
         default:
           return newState(rs.cancel());

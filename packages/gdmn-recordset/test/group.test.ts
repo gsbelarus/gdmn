@@ -150,8 +150,8 @@ describe('group', () => {
     expect(rs.getString('company', 6)).toEqual('Company B');
     expect(rs.getString('company', 7)).toEqual('Company B');
     expect(rs.getString('company', 8, '')).toEqual('');
-    expect(rs.getNumber('cost', 5)).toEqual(174.5);
-    expect(rs.getNumber('cost', 8)).toEqual(20);
+    expect(rs.getFloat('cost', 5)).toEqual(174.5);
+    expect(rs.getFloat('cost', 8)).toEqual(20);
   });
 
   it('group 2 levels without aggregates', () => {
@@ -223,8 +223,8 @@ describe('group', () => {
     expect(rs.getString('company', 10, '')).toEqual('');
     expect(rs.getString('company', 11)).toEqual('Company B');
     expect(rs.getString('company', 12, '')).toEqual('');
-    expect(rs.getNumber('cost', 4)).toEqual(15);
-    expect(rs.getNumber('cost', 8)).toEqual(159.5);
-    expect(rs.getNumber('cost', 12)).toEqual(20);
+    expect(rs.getFloat('cost', 4)).toEqual(15);
+    expect(rs.getFloat('cost', 8)).toEqual(159.5);
+    expect(rs.getFloat('cost', 12)).toEqual(20);
   });
 });
