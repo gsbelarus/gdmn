@@ -53,6 +53,8 @@ export function TextCellEditor(props: ITextCellEditorProps): JSX.Element {
         defaultValue={value}
         ref={inputEl}
         onBlur={ e => onSave(e.target.value) }
+        onFocus={ () => { if (inputEl.current) inputEl.current.select(); } }
+        onMouseUp= { e => e.preventDefault }
       />
     </div>
   )

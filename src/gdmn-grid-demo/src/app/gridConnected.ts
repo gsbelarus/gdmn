@@ -105,8 +105,8 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       onToggleGroup: (event: TToggleGroupEvent) => thunkDispatch(
           toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
         ),
-      onEdit: () => thunkDispatch(doVerb({ name: rs.name, verb: 'EDIT' })),
       onInsert: () => thunkDispatch(doVerb({ name: rs.name, verb: 'INSERT' })),
+      onDelete: () => thunkDispatch(deleteRows({ name: rs.name })),
       onCancel: () => thunkDispatch(doVerb({ name: rs.name, verb: 'CANCEL' })),
       onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
     }),
@@ -207,8 +207,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         thunkDispatch( (dispatch, getState) => {
           const recordSet = getState().recordSet[rs.name];
           if (recordSet.size) {
-            const rowsIdxs = [recordSet.currentRow];
-            dispatch(deleteRows({ name: rs.name, remove: false, rowsIdxs }));
+            dispatch(deleteRows({ name: rs.name }));
           }
         });
       },

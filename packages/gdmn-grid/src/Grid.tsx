@@ -65,6 +65,7 @@ export interface IGridProps {
   hideFooter?: boolean;
   sortDialog: boolean;
   savedState?: IGridState;
+  readOnly?: boolean;
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
   onColumnResize: TEventCallback<TColumnResizeEvent>;
@@ -74,8 +75,8 @@ export interface IGridProps {
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
-  onEdit: TEventCallback<TRecordsetEditEvent>;
   onInsert: TEventCallback<TRecordsetInsertEvent>;
+  onDelete: TEventCallback<TRecordsetInsertEvent>;
   onCancel: TEventCallback<TRecordsetCancelEvent>;
   onSetFieldValue: TEventCallback<TRecordsetSetFieldValue>;
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
@@ -144,9 +145,8 @@ export const styles = {
   FixedBorder: 'FixedBorder',
   BlackText: 'BlackText',
   GrayText: 'GrayText',
-  Deleting: 'RowBeingDeleted',
   Deleted: 'RowDeleted',
-  Editing: 'RowBeingEdited'
+  Edited: 'RowEdited'
 };
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -491,6 +491,14 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             if (!rs.size || rs.get(currentRow).type === TRowType.Data) {
               const { onInsert } = this.props;
               onInsert({ ref: this, rs });
+            }
+            break;
+          }
+
+          case 'Delete': {
+            if (e.ctrlKey && rs.size && rs.get(currentRow).type === TRowType.Data) {
+              const { onDelete } = this.props;
+              onDelete({ ref: this, rs });
             }
             break;
           }
@@ -1195,7 +1203,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       onSelectRow,
       onToggleGroup,
       rightSideColumns,
-      onEdit,
       onSetFieldValue
     } = this.props;
     const currentRow = rs.currentRow;
@@ -1232,15 +1239,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       : currentRow === rowIndex
       ? adjustedColumnIndex === currentCol
         ? styles.CurrentCellBackground
-        : rowState !== TRowState.Normal
-          ? rowState === TRowState.Edited || rowState === TRowState.Inserted
-            ? styles.Editing
-            : styles.Deleted
-          : styles.CurrentRowBackground
+        : styles.CurrentRowBackground
       : selectRows && (rs.allRowsSelected || rs.selectedRows[rowIndex])
       ? styles.SelectedBackground
       : groupHeader
       ? styles.GroupHeaderBackground
+      : rowState !== TRowState.Normal
+        ? rowState === TRowState.Edited || rowState === TRowState.Inserted
+          ? styles.Edited
+          : styles.Deleted
       : rowIndex % 2 === 0
       ? styles.EvenRowBackground
       : styles.OddRowBackground;

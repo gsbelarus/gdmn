@@ -412,40 +412,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     };
   }
 
-  public edit(): RecordSet<R> {
-    if (!this.size) {
-      throw new Error('Empty recordset.')
-    }
-
-    const row = this._get();
-
-    if (row.type !== TRowType.Data) {
-      throw new Error('Not a data row.');
-    }
-
-    const { data } = this.params;
-    const adjustedIdx = this._adjustIdx(this.currentRow);
-    const rowData = data.get(adjustedIdx);
-    const rs = rowData['$$ROW_STATE'];
-
-    if (rs === TRowState.Deleted) {
-      throw new Error(`Can't edit deleted row.`)
-    }
-
-    if (!rowData['$$PREV_ROW']) {
-      rowData['$$PREV_ROW'] = {...rowData};
-    }
-
-    if (rs !== TRowState.Inserted) {
-      rowData['$$ROW_STATE'] = TRowState.Edited;
-    }
-
-    return new RecordSet<R>({
-      ...this._params,
-      data: data.set(adjustedIdx, rowData)
-    });
-  }
-
   public insert(): RecordSet<R> {
     if (this.size) {
       const row = this._get();
@@ -657,14 +623,36 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _setFieldValue(fieldName: string, value: TDataType): RecordSet<R> {
+
+    if (!this.size) {
+      throw new Error('Empty recordset.')
+    }
+
+    if (this._get().type !== TRowType.Data) {
+      throw new Error('Not a data row.');
+    }
+
     const { data } = this.params;
     const adjustedIdx = this._adjustIdx(this.currentRow);
-    const row = data.get(adjustedIdx);
-    row[fieldName] = value;
+    const rowData = data.get(adjustedIdx);
+    const rs = rowData['$$ROW_STATE'];
+
+    if (rs === TRowState.Deleted) {
+      throw new Error(`Can't edit deleted row.`)
+    }
+
+    if (rs !== TRowState.Inserted) {
+      rowData['$$ROW_STATE'] = TRowState.Edited;
+      if (!rowData['$$PREV_ROW']) {
+        rowData['$$PREV_ROW'] = {...rowData};
+      }
+    }
+
+    rowData[fieldName] = value;
 
     return new RecordSet<R>({
       ...this.params,
-      data: data.set(adjustedIdx, row)
+      data: data.set(adjustedIdx, rowData)
     })
   }
 
@@ -697,8 +685,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setDate(fieldName: string, value: Date): RecordSet<R> {
-    this.edit();
-
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
       case TFieldType.Float:
@@ -717,8 +703,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setBoolean(fieldName: string, value: boolean): RecordSet<R> {
-    this.edit();
-
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
       case TFieldType.Float:
@@ -741,8 +725,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Not an integer value.`);
     }
 
-    this.edit();
-
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
       case TFieldType.Float:
@@ -761,8 +743,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setFloat(fieldName: string, value: number): RecordSet<R> {
-    this.edit();
-
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
         throw new Error(`Invalid type cast for field ${fieldName}`);
@@ -787,13 +767,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setString(fieldName: string, value: string): RecordSet<R> {
-    this.edit();
-
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer: {
-        const v = parseFloat(value);
+        const v = Number(value);
 
-        if (isNaN(v) || v !== Math.trunc(v)) {
+        if (isNaN(v) || !v || v !== Math.trunc(v)) {
           throw new Error(`Invalid type cast`);
         }
 
@@ -802,9 +780,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
       case TFieldType.Float:
       case TFieldType.Currency: {
-        const v = parseFloat(value);
+        const v = Number(value);
 
-        if (isNaN(v)) {
+        if (isNaN(v) || !v) {
           throw new Error(`Invalid type cast`);
         }
 
@@ -826,12 +804,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         }
 
       case TFieldType.Date:
+        if (isNaN(Date.parse(value))) {
+          throw new Error(`Invalid type cast.`);
+        }
         return this._setFieldValue(fieldName, new Date(value));
     }
   }
 
   public setNull(fieldName: string): RecordSet<R> {
-    this.edit();
     const fd = this.getFieldDef(fieldName);
 
     if (fd.required) {

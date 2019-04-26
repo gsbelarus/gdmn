@@ -115,7 +115,6 @@ export const recordSetReducer = (
     case getType(actions.doVerb): {
       const { verb } = action.payload;
       switch (verb) {
-        case 'EDIT': return newState(rs.edit());
         case 'INSERT': return newState(rs.insert());
         case 'CANCEL':
         default:

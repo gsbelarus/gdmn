@@ -11,7 +11,7 @@ export enum TStatus {
 
 export type TSortOrder = 'ASC' | 'DESC' | 'UNDEFINED';
 
-export type TRecordsetVerb = 'EDIT' | 'INSERT' | 'CANCEL';
+export type TRecordsetVerb = 'INSERT' | 'CANCEL';
 
 export enum TFieldType {
   String = 0,
