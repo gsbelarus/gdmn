@@ -37,7 +37,7 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TRowState, setCurrentRow, doVerb, setFieldValue, deleteRows } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TRowState, setCurrentRow, doVerb, setFieldValue, deleteRows, setRecordSet, TCommitResult, IDataRow } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -224,7 +224,21 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
             dispatch(deleteRows({ name: rs.name, remove: true, rowsIdxs }));
           }
         });
-      }
+      },
+      onPostAll: () => {
+        thunkDispatch( (dispatch, getState) => {
+          let recordSet = getState().recordSet[rs.name];
+          recordSet = recordSet.post( (row: IDataRow) => TCommitResult.Success );
+          dispatch(setRecordSet({ name: rs.name, rs: recordSet }));
+        });
+      },
+      onCancelAll: () => {
+        thunkDispatch( (dispatch, getState) => {
+          let recordSet = getState().recordSet[rs.name];
+          recordSet = recordSet.post( (row: IDataRow) => TCommitResult.Cancel );
+          dispatch(setRecordSet({ name: rs.name, rs: recordSet }));
+        });
+      },
     })
   )(GDMNGridPanel);
 };

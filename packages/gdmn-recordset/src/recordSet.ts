@@ -22,8 +22,9 @@ import {
   TRowCalcFunc,
   TRowType,
   TStatus,
-  TRowState
-} from "./types";
+  TRowState,
+  TCommitResult,
+  TCommitFunc} from "./types";
 import {checkField, getAsBoolean, getAsDate, getAsNumber, getAsString, isNull} from "./utils";
 
 export interface IRSSQLParams {
@@ -413,26 +414,55 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public insert(): RecordSet<R> {
-    if (this.size) {
+    const { data, groups, savedData } = this.params;
+
+    let adjustedIdx: number;
+
+    if (groups && groups.length) {
       const row = this._get();
 
-      if (row.type !== TRowType.Data) {
-        throw new Error('Not a data row.');
+      let group: IDataGroup<R>;
+
+      if (row.type === TRowType.HeaderExpanded || row.type === TRowType.HeaderCollapsed) {
+        if (this.currentRow > 0) {
+          group = this._findGroup(groups, this.currentRow - 1).group;
+        } else {
+          return this;
+        }
+      } else {
+        group = this._findGroup(groups, this.currentRow).group;
       }
+
+      if (group.bufferCount) {
+        group.bufferCount++;
+      }
+
+      groups.forEach( g => {
+        if (g.rowIdx >= this.currentRow) {
+          g.rowIdx++;
+        }
+
+        if (g.bufferIdx > group.bufferIdx) {
+          g.bufferIdx++;
+        }
+      });
+
+      adjustedIdx = this._adjustIdx(this.currentRow);
+    } else {
+      adjustedIdx = this._adjustIdx(this.currentRow);
     }
 
-    const { data } = this.params;
-    const adjustedIdx = this._adjustIdx(this.currentRow);
-    const r = this.fieldDefs.reduce(
+    const newRow = this.fieldDefs.reduce(
       (r, fd) => ({...r, [fd.fieldName]: null}),
       {} as R
     );
 
-    r['$$ROW_STATE'] = TRowState.Inserted;
+    newRow['$$ROW_STATE'] = TRowState.Inserted;
 
     return new RecordSet<R>({
       ...this._params,
-      data: data.insert(adjustedIdx, r)
+      data: data.insert(adjustedIdx, newRow),
+      savedData: savedData ? savedData.push(newRow) : undefined
     });
   }
 
@@ -457,11 +487,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
           selectedRows.splice(r, 1);
 
-          let adjustedIdx: number;
+          const adjustedIdx = this._adjustIdx(r);
 
           if (groups && groups.length) {
             const group = this._findGroup(groups, r).group;
-            adjustedIdx = group.bufferIdx + r - group.rowIdx - 1;
 
             if (group.bufferCount) {
               group.bufferCount--;
@@ -476,8 +505,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                 g.bufferIdx--;
               }
             });
-          } else {
-            adjustedIdx = r;
           }
 
           if (savedData) {
@@ -505,19 +532,92 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public cancel(): RecordSet<R> {
+  public post(commitFunc: TCommitFunc): RecordSet<R> {
+    let res: RecordSet<R> = this;
+
+    for (let i = res.size - 1; i >= 0; i--) {
+      const row = res._get(i);
+
+      if (row.type !== TRowType.Data) {
+        continue;
+      }
+
+      const rs = row.data['$$ROW_STATE'];
+
+      if (rs) {
+        switch (commitFunc(row.data)) {
+          case TCommitResult.Success: {
+            if (rs === TRowState.Deleted) {
+              res = res.delete(true, [i]);
+            } else {
+              delete row.data['$$ROW_STATE'];
+              delete row.data['$$PREV_ROW'];
+              res = new RecordSet<R>({
+                ...res._params
+              });
+            }
+          }
+
+          case TCommitResult.Cancel: {
+            res = res.cancel(i);
+            break;
+          }
+
+          case TCommitResult.Skip: {
+            break;
+          }
+
+          case TCommitResult.Abort: {
+            i = -1;
+            break;
+          }
+
+          case TCommitResult.AbortCancelAll: {
+            res = res.cancelAll();
+            i = -1;
+            break;
+          }
+        }
+      }
+    }
+
+    return res;
+  }
+
+  public cancelAll(): RecordSet<R> {
+    let res: RecordSet<R> = this;
+
+    for (let i = res.size - 1; i >= 0; i--) {
+      const row = res._get(i);
+
+      if (row.type !== TRowType.Data) {
+        continue;
+      }
+
+      const rs = row.data['$$ROW_STATE'];
+
+      if (rs) {
+        res = res.cancel(i);
+      }
+    }
+
+    return res;
+  }
+
+  public cancel(rowIdx?: number): RecordSet<R> {
     if (!this.size) {
       throw new Error('Empty recordset.')
     }
 
-    const row = this._get();
+    const r = rowIdx === undefined ? this.currentRow : rowIdx;
+    const row = this._get(r);
 
     if (row.type !== TRowType.Data) {
       throw new Error('Not a data row.');
     }
 
     const { data } = this.params;
-    const adjustedIdx = this._adjustIdx(this.currentRow);
+    const adjustedIdx = this._adjustIdx(r);
     const rowData = data.get(adjustedIdx);
     const rs = rowData['$$ROW_STATE'];
 
@@ -529,10 +629,26 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       });
     }
 
+    if (rs === TRowState.Inserted) {
+      return this.delete(true, [r]);
+    }
+
     if (rowData['$$PREV_ROW']) {
+      let { savedData } = this.params;
+
+      if (savedData) {
+        for (let i = savedData.size - 1; i >= 0; i--) {
+          if (savedData.get(i) === rowData) {
+            savedData = savedData.set(i, rowData['$$PREV_ROW'] as R)
+            break;
+          }
+        }
+      }
+
       return new RecordSet<R>({
         ...this._params,
-        data: data.set(adjustedIdx, rowData['$$PREV_ROW'] as R)
+        data: data.set(adjustedIdx, rowData['$$PREV_ROW'] as R),
+        savedData
       });
     }
 
@@ -642,10 +758,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (rs !== TRowState.Inserted) {
-      rowData['$$ROW_STATE'] = TRowState.Edited;
       if (!rowData['$$PREV_ROW']) {
         rowData['$$PREV_ROW'] = {...rowData};
       }
+      rowData['$$ROW_STATE'] = TRowState.Edited;
     }
 
     rowData[fieldName] = value;
@@ -771,7 +887,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       case TFieldType.Integer: {
         const v = Number(value);
 
-        if (isNaN(v) || !v || v !== Math.trunc(v)) {
+        if (isNaN(v) || !value || v !== Math.trunc(v)) {
           throw new Error(`Invalid type cast`);
         }
 
@@ -782,7 +898,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       case TFieldType.Currency: {
         const v = Number(value);
 
-        if (isNaN(v) || !v) {
+        if (isNaN(v) || !value) {
           throw new Error(`Invalid type cast`);
         }
 

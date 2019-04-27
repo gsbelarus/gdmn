@@ -488,10 +488,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           }
 
           case 'Insert': {
-            if (!rs.size || rs.get(currentRow).type === TRowType.Data) {
-              const { onInsert } = this.props;
-              onInsert({ ref: this, rs });
-            }
+            const { onInsert } = this.props;
+            onInsert({ ref: this, rs });
             break;
           }
 
