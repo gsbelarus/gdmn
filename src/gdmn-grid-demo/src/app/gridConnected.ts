@@ -37,7 +37,7 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TRowState, setCurrentRow, doVerb, setFieldValue, deleteRows, setRecordSet, TCommitResult, IDataRow } from "gdmn-recordset";
+import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TRowState, setCurrentRow, setFieldValue, deleteRows, setRecordSet, TCommitResult, IDataRow, insert, cancel } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 import { sortRecordSet, selectRow, setAllRowsSelected } from "gdmn-recordset";
 import { RecordSetAction } from "gdmn-recordset";
@@ -105,9 +105,9 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       onToggleGroup: (event: TToggleGroupEvent) => thunkDispatch(
           toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
         ),
-      onInsert: () => thunkDispatch(doVerb({ name: rs.name, verb: 'INSERT' })),
+      onInsert: () => thunkDispatch(insert({ name: rs.name })),
       onDelete: () => thunkDispatch(deleteRows({ name: rs.name })),
-      onCancel: () => thunkDispatch(doVerb({ name: rs.name, verb: 'CANCEL' })),
+      onCancel: () => thunkDispatch(cancel({ name: rs.name })),
       onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
     }),
     undefined,
