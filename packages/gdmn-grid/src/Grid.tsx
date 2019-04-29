@@ -410,7 +410,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         });
       };
 
-      const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const onKeyDown = this.state.fieldEditor ? undefined : (e: React.KeyboardEvent<HTMLDivElement>) => {
         let newCol = currentCol;
         let newRow = currentRow;
 
@@ -478,24 +478,23 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             break;
 
           case 'F2': {
-            if (rs.get(currentRow).type === TRowType.Data) {
-              const { fieldEditor } = this.state;
-              if (!fieldEditor) {
-                this.setState({ fieldEditor: true });
-              }
+            if (!this.props.readOnly && rs.get(currentRow).type === TRowType.Data) {
+              this.setState({ fieldEditor: true });
             }
             break;
           }
 
           case 'Insert': {
-            const { onInsert } = this.props;
-            onInsert({ ref: this, rs });
+            const { onInsert, readOnly } = this.props;
+            if (!readOnly) {
+              onInsert({ ref: this, rs });
+            }
             break;
           }
 
           case 'Delete': {
-            if (e.ctrlKey && rs.size && rs.get(currentRow).type === TRowType.Data) {
-              const { onDelete } = this.props;
+            const { onDelete, readOnly } = this.props;
+            if (!readOnly && e.ctrlKey && rs.size && rs.get(currentRow).type === TRowType.Data) {
               onDelete({ ref: this, rs });
             }
             break;
@@ -744,7 +743,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             onWheel={
               !rightSideColumns
                 ? undefined
-                : e => onScrollWheel(e)
+                : onScrollWheel
             }
           >
             <InfiniteLoader
@@ -1048,6 +1047,16 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       let innerCell: JSX.Element;
 
+      const onSortColumnClick = () => {
+        if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
+          onSort({
+            ref: this,
+            rs,
+            sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
+          });
+        }
+      };
+
       if (selectRows && !adjustedColumnIndex) {
         const classNames = cn(
           styles.CellRow,
@@ -1058,29 +1067,23 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
         const selectedRowsCount = rs.selectedRows.reduce((p, sr) => (sr ? p + 1 : p), 0);
 
+        const onSelectAllRowsClick = (e: React.MouseEvent<HTMLDivElement>) => {
+          e.stopPropagation();
+          onSelectAllRows({ref: this, rs, value: !rs.allRowsSelected});
+        };
+
         innerCell = (
           <div key={key} className={classNames} style={style}>
             <div
               className={styles.CellMarkArea}
-              onClick={(e: React.MouseEvent<HTMLDivElement>) => {
-                e.stopPropagation();
-                onSelectAllRows({ref: this, rs, value: !rs.allRowsSelected});
-              }}
+              onClick={onSelectAllRowsClick}
             >
               {rs.allRowsSelected || selectedRowsCount === rs.size ? '☑' : selectedRowsCount ? '☒' : '☐'}
             </div>
             <div className={styles.CellColumn}>
               <div
                 className={styles.CellCaption}
-                onClick={() => {
-                  if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
-                    onSort({
-                      ref: this,
-                      rs,
-                      sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
-                    });
-                  }
-                }}
+                onClick={onSortColumnClick}
               >
                 {this._getColumnLabel(adjustedColumnIndex).map((l, idx) => (
                   <span key={idx}>{l}</span>
@@ -1102,15 +1105,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           <div key={key} className={classNames} style={style}>
             <div
               className="CellCaption"
-              onClick={() => {
-                if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
-                  onSort({
-                    ref: this,
-                    rs,
-                    sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
-                  });
-                }
-              }}
+              onClick={onSortColumnClick}
             >
               {this._getColumnLabel(adjustedColumnIndex).map((l, idx) => (
                 <span key={idx}>{l}</span>
@@ -1131,6 +1126,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           axis="x"
           handle=".CellCaption"
           position={{ x: 0, y: 0 }}
+          disabled={this.state.fieldEditor}
           defaultClassNameDragging={styles.GridColumnDragging}
           onStart={this._onDragColumnStart}
           onDrag={this._onDragColumn}
@@ -1271,13 +1267,17 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             (value: string) => {
               onSetFieldValue({ ref: this, rs, fieldName, value });
               this._captureFocus = true;
-              this.setState({ fieldEditor: false });
+              if (this.state.fieldEditor) {
+                this.setState({ fieldEditor: false });
+              }
             }
           }
           onCancel={
             () => {
               this._captureFocus = true;
-              this.setState({ fieldEditor: false });
+              if (this.state.fieldEditor) {
+                this.setState({ fieldEditor: false });
+              }
             }
           }
         />
@@ -1285,14 +1285,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     }
 
     if (groupHeader && rowData.group && adjustedColumnIndex > rowData.group.level) {
+      const onClick = () => onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
       return (
         <div
           className={cn(backgroundClass, borderClass)}
           key={key}
           style={style}
-          onClick={() => {
-            onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
-          }}
+          onClick={onClick}
         />
       );
     }
@@ -1341,19 +1340,21 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         <span className={cn(styles.CellColumn, textClass)} />
       );
 
+    const onCheckMarkClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      onSelectRow({
+        ref: this,
+        rs,
+        idx: rowIndex,
+        selected: rs.allRowsSelected ? false : !rs.selectedRows[rowIndex]
+      });
+    };
+
     const checkMark =
-      (rowState === TRowState.Normal) && selectRows && !adjustedColumnIndex ? (
+      (rowState !== TRowState.Deleted) && selectRows && !adjustedColumnIndex ? (
         <div
           className={styles.CellMarkArea}
-          onClick={e => {
-            e.stopPropagation();
-            onSelectRow({
-              ref: this,
-              rs,
-              idx: rowIndex,
-              selected: rs.allRowsSelected ? false : !rs.selectedRows[rowIndex]
-            });
-          }}
+          onClick={onCheckMarkClick}
         >
           {rs.allRowsSelected || rs.selectedRows[rowIndex] ? '☑' : '☐'}
         </div>
@@ -1361,14 +1362,16 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         undefined
       );
 
+    const onGroupTriangleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      onToggleGroup({ref: this, rs, rowIdx: rowIndex});
+    };
+
     const groupTriangle =
       groupHeader && rowData.group && adjustedColumnIndex === rowData.group.level ? (
         <div
           className={styles.CellMarkArea}
-          onClick={e => {
-            e.stopPropagation();
-            onToggleGroup({ref: this, rs, rowIdx: rowIndex});
-          }}
+          onClick={onGroupTriangleClick}
         >
           {rowData.type === TRowType.HeaderCollapsed ? '▷' : '▽'}
         </div>
@@ -1378,15 +1381,15 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
     const cellClassDiv = cn(fixed ? styles.FixedCell : '', styles.DataCellLeft);
 
+    const onSetCursorPosClick = () => onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
+
     if (checkMark || groupTriangle) {
       return (
         <div
           className={cn(backgroundClass, borderClass, styles.CellRow)}
           key={key}
           style={style}
-          onClick={() => {
-            onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex});
-          }}
+          onClick={onSetCursorPosClick}
         >
           {checkMark}
           {groupTriangle}
@@ -1403,7 +1406,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           }
           key={key}
           style={style}
-          onClick={ () => onSetCursorPos({ref: this, rs, cursorCol: adjustedColumnIndex, cursorRow: rowIndex}) }
+          onClick={onSetCursorPosClick}
         >
           {cellText}
         </div>
