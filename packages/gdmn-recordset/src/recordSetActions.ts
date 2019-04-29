@@ -1,7 +1,7 @@
 import { createAction } from "typesafe-actions";
 
 import { IRecordSetDataOptions, RecordSet } from "./recordSet";
-import { SortFields, IDataRow, TRowState, TRecordsetVerb, TDataType } from "./types";
+import { SortFields, IDataRow, TDataType } from "./types";
 import { IFilter } from "./filter";
 
 export type WithComponentName<T extends {} = {}> = { name: string } & T;
@@ -96,11 +96,17 @@ export const deleteRows = createAction('RECORDSET/DELETE_ROWS', resolve => {
 
 export type DeleteRows = typeof deleteRows;
 
-export const doVerb = createAction('RECORDSET/DO_VERB', resolve => {
-  return (params: WithComponentName<{ verb: TRecordsetVerb }>) => resolve(params);
+export const cancel = createAction('RECORDSET/CANCEL', resolve => {
+  return (params: WithComponentName) => resolve(params);
 });
 
-export type DoVerb = typeof doVerb;
+export type Cancel = typeof cancel;
+
+export const insert = createAction('RECORDSET/INSERT', resolve => {
+  return (params: WithComponentName) => resolve(params);
+});
+
+export type Insert = typeof insert;
 
 export const setFieldValue = createAction('RECORDSET/SET_FIELD_VALUE', resolve => {
   return (params: WithComponentName<{ fieldName: string, value: TDataType }>) => resolve(params);

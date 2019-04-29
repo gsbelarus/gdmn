@@ -46,10 +46,7 @@ export type TSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
 export type TSelectAllRowsEvent = IGridEvent & {value: boolean};
 export type TToggleGroupEvent = IGridEvent & {rowIdx: number};
 export type TLoadMoreRsDataEvent = IGridEvent & IndexRange;
-export type TRecordsetEditEvent = IGridEvent;
-export type TRecordsetInsertEvent = IGridEvent;
-export type TRecordsetPostEvent = IGridEvent;
-export type TRecordsetCancelEvent = IGridEvent;
+export type TRecordsetEvent = IGridEvent;
 export type TRecordsetSetFieldValue = IGridEvent & {fieldName: string, value: TDataType};
 
 export type TEventCallback<T, R = void> = (event: T) => R;
@@ -75,9 +72,9 @@ export interface IGridProps {
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
-  onInsert: TEventCallback<TRecordsetInsertEvent>;
-  onDelete: TEventCallback<TRecordsetInsertEvent>;
-  onCancel: TEventCallback<TRecordsetCancelEvent>;
+  onInsert: TEventCallback<TRecordsetEvent>;
+  onDelete: TEventCallback<TRecordsetEvent>;
+  onCancel: TEventCallback<TRecordsetEvent>;
   onSetFieldValue: TEventCallback<TRecordsetSetFieldValue>;
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
   loadMoreThresholdPages?: number;

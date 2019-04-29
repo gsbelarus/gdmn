@@ -1,6 +1,7 @@
-import { RecordSet, TFieldType, IDataRow } from '../src';
+import { RecordSet, TFieldType, IDataRow, TCommitResult } from '../src';
 import { List } from 'immutable';
 import { nbrbCurrencies, INBRBCurrency } from './nbrbcurrencies';
+import { TRowState } from '../src';
 
 describe('recordset', () => {
 
@@ -199,6 +200,8 @@ describe('recordset', () => {
 
     expect(rs.size).toEqual(1);
 
+    expect(rs.changed).toEqual(0);
+
     /**
      * Test read type conversions
      */
@@ -351,5 +354,66 @@ describe('recordset', () => {
     rs = rs.setDate('d', tempDate);
     expect(rs.getDate('d')).toEqual(tempDate);
 
+    /**
+     *
+     */
+
+    expect(rs.changed).toEqual(1);
+    expect(rs.size).toEqual(1);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState()).toEqual(TRowState.Edited);
+
+    expect( () => rs = rs.delete(false) ).toThrowError();
+    expect(rs.changed).toEqual(1);
+    expect(rs.size).toEqual(1);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState()).toEqual(TRowState.Edited);
+    rs = rs.delete(true);
+    expect(rs.changed).toEqual(0);
+    expect(rs.size).toEqual(0);
+    expect(rs.currentRow).toEqual(0);
+
+    rs = rs.insert();
+    expect(rs.getRowState()).toEqual(TRowState.Inserted);
+    expect(rs.changed).toEqual(1);
+    expect(rs.size).toEqual(1);
+    rs = rs.cancelAll();
+    expect(rs.changed).toEqual(0);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.size).toEqual(0);
+
+    rs = rs.insert();
+    expect(rs.getRowState()).toEqual(TRowState.Inserted);
+    expect(rs.changed).toEqual(1);
+    rs = rs.post( () => TCommitResult.Success );
+    expect(rs.changed).toEqual(0);
+    expect(rs.size).toEqual(1);
+
+    rs = rs.insert();
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState()).toEqual(TRowState.Inserted);
+    expect(rs.changed).toEqual(1);
+    expect(rs.size).toEqual(2);
+    rs = rs.setBoolean('b', true);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState()).toEqual(TRowState.Inserted);
+    expect(rs.changed).toEqual(1);
+    expect(rs.size).toEqual(2);
+
+    rs = rs.insert();
+    rs = rs.insert();
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.size).toEqual(4);
+    expect(rs.changed).toEqual(3);
+
+    expect( () => rs = rs.delete(false, [0, 1, 2]) ).toThrowError();
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.changed).toEqual(3);
+    expect(rs.size).toEqual(4);
+
+    rs = rs.delete(true, [0, 1, 2]);
+    expect(rs.changed).toEqual(0);
+    expect(rs.size).toEqual(1);
+    expect(rs.currentRow).toEqual(0);
   });
 });

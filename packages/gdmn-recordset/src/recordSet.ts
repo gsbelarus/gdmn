@@ -70,6 +70,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   groups?: IDataGroup<R>[];
   aggregates?: R;
   masterLink?: IMasterLink;
+  changed: number;
 }
 
 export class RecordSet<R extends IDataRow = IDataRow> {
@@ -107,6 +108,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         sortFields: [],
         allRowsSelected: false,
         selectedRows: [],
+        changed: 0
       });
     } else {
       return new RecordSet<R>({
@@ -117,6 +119,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         sortFields: [],
         allRowsSelected: false,
         selectedRows: [],
+        changed: 0
       });
     }
   }
@@ -275,6 +278,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this.pkValue.map( v => v === null ? 'NULL' : v.toString() );
   }
 
+  get changed(): number {
+    return this.params.changed;
+  }
+
   private _checkFields(fields: INamedField[]) {
     const {fieldDefs} = this._params;
     fields.forEach(f => {
@@ -414,7 +421,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public insert(): RecordSet<R> {
-    const { data, groups, savedData } = this.params;
+    const { data, groups, savedData, changed } = this.params;
 
     let adjustedIdx: number;
 
@@ -462,7 +469,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return new RecordSet<R>({
       ...this._params,
       data: data.insert(adjustedIdx, newRow),
-      savedData: savedData ? savedData.push(newRow) : undefined
+      savedData: savedData ? savedData.push(newRow) : undefined,
+      changed: changed + 1
     });
   }
 
@@ -470,7 +478,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     if (remove) {
       const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs.sort( (a, b) => b - a );
 
-      let { data, currentRow, savedData } = this.params;
+      let { data, currentRow, savedData, changed } = this.params;
       let selectedRows = [...this.params.selectedRows];
       const { groups } = this.params;
 
@@ -516,11 +524,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             }
           }
 
+          if (data.get(adjustedIdx)['$$ROW_STATE'] !== undefined) {
+            changed--;
+          }
+
           data = data.delete(adjustedIdx);
         }
       });
 
-      const res = new RecordSet<R>({ ...this._params, data, currentRow, selectedRows, savedData });
+      const res = new RecordSet<R>({ ...this._params, data, currentRow, selectedRows, savedData, changed });
 
       if (this.params.foundRows) {
         return res.search(this.params.searchStr);
@@ -553,7 +565,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
               delete row.data['$$ROW_STATE'];
               delete row.data['$$PREV_ROW'];
               res = new RecordSet<R>({
-                ...res._params
+                ...res._params,
+                changed: res.changed - 1
               });
             }
           }
@@ -594,9 +607,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         continue;
       }
 
-      const rs = row.data['$$ROW_STATE'];
-
-      if (rs) {
+      if (row.data['$$ROW_STATE'] !== undefined) {
         res = res.cancel(i);
       }
     }
@@ -616,7 +627,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error('Not a data row.');
     }
 
-    const { data } = this.params;
+    const { data, changed } = this.params;
     const adjustedIdx = this._adjustIdx(r);
     const rowData = data.get(adjustedIdx);
     const rs = rowData['$$ROW_STATE'];
@@ -625,7 +636,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       delete rowData['$$ROW_STATE'];
       return new RecordSet<R>({
         ...this._params,
-        data: data.set(adjustedIdx, rowData)
+        data: data.set(adjustedIdx, rowData),
+        changed: changed - 1
       });
     }
 
@@ -648,7 +660,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       return new RecordSet<R>({
         ...this._params,
         data: data.set(adjustedIdx, rowData['$$PREV_ROW'] as R),
-        savedData
+        savedData,
+        changed: changed - 1
       });
     }
 
@@ -749,6 +762,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     const { data } = this.params;
+    let { changed } = this.params;
     const adjustedIdx = this._adjustIdx(this.currentRow);
     const rowData = data.get(adjustedIdx);
     const rs = rowData['$$ROW_STATE'];
@@ -760,6 +774,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     if (rs !== TRowState.Inserted) {
       if (!rowData['$$PREV_ROW']) {
         rowData['$$PREV_ROW'] = {...rowData};
+        changed++;
       }
       rowData['$$ROW_STATE'] = TRowState.Edited;
     }
@@ -768,7 +783,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     return new RecordSet<R>({
       ...this.params,
-      data: data.set(adjustedIdx, rowData)
+      data: data.set(adjustedIdx, rowData),
+      changed
     })
   }
 
@@ -1521,7 +1537,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   private _setRowsState(state: TRowState, rIdxs?: number[]): RecordSet<R> {
     const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs;
 
-    let data = this.params.data;
+    let { data, changed } = this.params;
 
     rowIdxs.forEach( r => {
       if (this._get(r).type !== TRowType.Data) {
@@ -1532,14 +1548,25 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       const row = data.get(adjustedIdx);
 
       if (state === TRowState.Normal) {
-        delete row['$$ROW_STATE'];
+        if (row['$$ROW_STATE'] !== undefined) {
+          if (row['$$RPW_STATE'] !== TRowState.Normal) {
+            changed--;
+          }
+          delete row['$$ROW_STATE'];
+        }
       } else {
-        row['$$ROW_STATE'] = state;
+        if (row['$$ROW_STATE'] === undefined) {
+          changed++;
+          row['$$ROW_STATE'] = state;
+        }
+        else if (row['$$ROW_STATE'] !== state) {
+          throw new Error(`Can't change state of row with index ${r}.`);
+        }
       }
       data = data.set(adjustedIdx, row);
     });
 
-    return new RecordSet<R>({ ...this._params, data });
+    return new RecordSet<R>({ ...this._params, data, changed });
   }
 
   public setFilter(filter: IFilter | undefined): RecordSet<R> {
