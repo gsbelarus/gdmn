@@ -30,7 +30,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | loadRSActions.LoadRSActions>, ownProps) => ({
-      onChagne: (text: string) => thunkDispatch((dispatch, getState) => {
+      onChange: (text: string) => thunkDispatch((dispatch, getState) => {
         ownProps.match ? dispatch(gdmnActions.updatePhraseForQuery({entityName: ownProps.match.params.entityName, text})) : undefined;
       }),
       onDeletePhrase: () => thunkDispatch((dispatch, getState) => {

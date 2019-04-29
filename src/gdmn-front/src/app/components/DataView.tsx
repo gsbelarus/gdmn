@@ -16,7 +16,9 @@ import {
   TSetCursorPosEvent,
   TSortEvent,
   TToggleGroupEvent,
-  TOnFilter
+  TOnFilter,
+  TRecordsetSetFieldValue,
+  TRecordsetEvent
 } from "gdmn-grid";
 import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
@@ -46,6 +48,10 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   onSort: TEventCallback<TSortEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
   onSetFilter: TOnFilter;
+  onInsert: TEventCallback<TRecordsetEvent>;
+  onDelete: TEventCallback<TRecordsetEvent>;
+  onCancel: TEventCallback<TRecordsetEvent>;
+  onSetFieldValue: TEventCallback<TRecordsetSetFieldValue>;
 }
 
 export interface IGridRef {
@@ -236,6 +242,10 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       onSelectAllRows,
       onSetCursorPos,
       onSort,
+      onInsert,
+      onDelete,
+      onCancel,
+      onSetFieldValue,
       onToggleGroup,
       loadMoreRsData
     } = this.props;
@@ -256,6 +266,10 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
             onSetCursorPos={onSetCursorPos}
             onSort={onSort}
             onToggleGroup={onToggleGroup}
+            onDelete={onDelete}
+            onInsert={onInsert}
+            onCancel={onCancel}
+            onSetFieldValue={onSetFieldValue}
             ref={(grid: GDMNGrid) => grid && (this._gridRef[gridName] = grid)}
             savedState={this.getSavedState(rs)}
           />

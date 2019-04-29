@@ -14,7 +14,7 @@ export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams>
   phrasesForQuery: IPhraseForQuery[];
   onEdit: (url: string) => void;
   onDelete: () => void;
-  onChagne: (text: string) => void;
+  onChange: (text: string) => void;
   onDeletePhrase: () => void;
   onAddPhrase: () => void;
   attachRs: (mutex?: Semaphore) => void;
@@ -118,7 +118,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
   }
 
   public renderSettings() {
-    const { data, onChagne, attachRs } = this.props;
+    const { data, onChange, attachRs } = this.props;
     return(
       <>
         <div className="GridPhraseForQuery">
@@ -129,7 +129,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
               this.setState({phrase: newValue ? newValue : ''})
             }}
           />
-          <DefaultButton text="Получить" onClick={() => {onChagne(this.state.phrase); attachRs(getMutex(this.getDataViewKey()))}} />
+          <DefaultButton text="Получить" onClick={() => {onChange(this.state.phrase); attachRs(getMutex(this.getDataViewKey()))}} />
         </div>
         {super.renderSettings(data!.rs!)}
       </>

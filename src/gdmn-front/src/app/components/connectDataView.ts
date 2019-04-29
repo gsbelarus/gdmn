@@ -17,7 +17,9 @@ import {
   TSetCursorPosEvent,
   TSortEvent,
   TToggleGroupEvent,
-  TOnFilterEvent
+  TOnFilterEvent,
+  TRecordsetSetFieldValue,
+  TRecordsetEvent
 } from "gdmn-grid";
 import {
   RecordSetAction,
@@ -27,7 +29,11 @@ import {
   sortRecordSet,
   toggleGroup,
   setFilter,
-  RecordSet
+  RecordSet,
+  insert,
+  deleteRows,
+  cancel,
+  setFieldValue
 } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
@@ -143,7 +149,12 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           } else {
             dispatch(setFilter({name: event.rs.name, filter: undefined }))
           }
-        }
+        },
+
+      onInsert: (event: TRecordsetEvent) => { dispatch(insert({ name: event.rs.name })); },
+      onDelete: (event: TRecordsetEvent) => { dispatch(deleteRows({ name: event.rs.name })); },
+      onCancel: (event: TRecordsetEvent) => { dispatch(cancel({ name: event.rs.name })); },
+      onSetFieldValue: (event: TRecordsetSetFieldValue) => { dispatch(setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value })); }
     })
   ),
   connectView

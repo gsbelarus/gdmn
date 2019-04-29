@@ -423,8 +423,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   public insert(): RecordSet<R> {
     const { data, groups, savedData, changed } = this.params;
 
-    let adjustedIdx: number;
-
     if (groups && groups.length) {
       const row = this._get();
 
@@ -453,10 +451,6 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           g.bufferIdx++;
         }
       });
-
-      adjustedIdx = this._adjustIdx(this.currentRow);
-    } else {
-      adjustedIdx = this._adjustIdx(this.currentRow);
     }
 
     const newRow = this.fieldDefs.reduce(
@@ -468,7 +462,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     return new RecordSet<R>({
       ...this._params,
-      data: data.insert(adjustedIdx, newRow),
+      data: data.insert(this._adjustIdx(this.currentRow), newRow),
       savedData: savedData ? savedData.push(newRow) : undefined,
       changed: changed + 1
     });
