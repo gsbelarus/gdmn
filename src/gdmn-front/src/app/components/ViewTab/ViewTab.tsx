@@ -10,7 +10,7 @@ export interface IViewTabProps {
   error: boolean;
   loading: boolean;
   onClose: () => void;
-}
+};
 
 export const ViewTab = CSSModules(
   (props: IViewTabProps) => {

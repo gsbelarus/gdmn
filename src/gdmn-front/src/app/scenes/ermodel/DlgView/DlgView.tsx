@@ -1,21 +1,24 @@
 import {disposeMutex, getMutex} from "@src/app/components/dataViewMutexes";
 import {IViewProps, View} from "@src/app/components/View";
 import {Semaphore} from "gdmn-internals";
-import {ERModel} from "gdmn-orm";
+import {ERModel, EntityQuery, EntityQueryOptions, EntityLink, EntityLinkField} from "gdmn-orm";
 import {RecordSet} from "gdmn-recordset";
-import {ICommandBarItemProps, TextField} from "office-ui-fabric-react";
+import {ICommandBarItemProps, TextField, IComboBoxOption} from "office-ui-fabric-react";
 import React, {Fragment} from "react";
+import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { prepareDefaultEntityQuery } from "../entityData/utils";
+import { apiService } from "@src/app/services/apiService";
 
 export enum DlgState {
   dsBrowse,
   dsInsert,
   dsEdit
-}
+};
 
 export interface IDlgViewMatchParams {
   entityName: string;
   pkSet: string;
-}
+};
 
 export interface IDlgViewProps extends IViewProps<IDlgViewMatchParams> {
   src?: RecordSet;
@@ -23,10 +26,10 @@ export interface IDlgViewProps extends IViewProps<IDlgViewMatchParams> {
   erModel: ERModel;
   dlgState: DlgState;
   attachRs: (mutex?: Semaphore) => void;
-}
+};
 
 export interface IDlgViewState {
-}
+};
 
 export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchParams> {
 
@@ -106,7 +109,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
   }
 
   public render() {
-    const {rs} = this.props;
+    const { rs, erModel } = this.props;
 
     if (!rs) {
       return this.renderLoading();
@@ -114,13 +117,58 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
 
     return this.renderWide(undefined,
       <div className="dlgView">
-        {rs.fieldDefs.map((f, idx) => (
-          <Fragment key={idx}>
-            <span>{f.caption}</span>
-            <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(f.fieldName, 0, "") : ""}/>
-          </Fragment>
-        ))}
+        <div>
+          <LookupComboBox
+            preSelectedOption={{ key: 1, text: 'abc '}}
+            onLookup={
+              (filter?: string) => {
+                const entity = erModel.entities['TgdcFunction'];
+
+                const eq = new EntityQuery(
+                  new EntityLink(entity, 'z', [
+                    new EntityLinkField(entity.attributes['ID']),
+                    new EntityLinkField(entity.attributes['NAME'])
+                  ]),
+                  new EntityQueryOptions(
+                    40,
+                    undefined,
+                    filter ?
+                      [{
+                        contains: [
+                          {
+                            alias: 'z',
+                            attribute: entity.attributes['NAME'],
+                            value: filter!
+                          }
+                        ]
+                      }]
+                    : undefined
+                  )
+                );
+
+                return apiService.query({ query: eq.inspect() })
+                  .then( response => {
+                    const result = response.payload.result!;
+                    const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                    const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'NAME' )![0];
+                    return result.data.map( (r): IComboBoxOption => ({
+                      key: r[idAlias],
+                      text: r[nameAlias]
+                    }));
+                  });
+              }
+            }
+          />
+        </div>
+        <div>
+          {rs.fieldDefs.map((f, idx) => (
+            <Fragment key={idx}>
+              <span>{f.caption}</span>
+              <TextField value={this.props.dlgState === DlgState.dsEdit ? rs.getString(f.fieldName, 0, "") : ""}/>
+            </Fragment>
+          ))}
+        </div>
       </div>
     );
   }
-}
+};

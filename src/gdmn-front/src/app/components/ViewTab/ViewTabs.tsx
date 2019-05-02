@@ -12,7 +12,7 @@ export interface IViewTabsProps {
   recordSet: RecordSetReducerState;
   rsMeta: IRsMetaState;
   onClose: (vt: IViewTab) => void;
-}
+};
 
 export const ViewTabs = CSSModules(
   (props: IViewTabsProps & RouteComponentProps<any>) => {
