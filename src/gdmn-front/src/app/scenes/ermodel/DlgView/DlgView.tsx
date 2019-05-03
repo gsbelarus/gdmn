@@ -130,7 +130,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
                     new EntityLinkField(entity.attributes['NAME'])
                   ]),
                   new EntityQueryOptions(
-                    40,
+                    80,
                     undefined,
                     filter ?
                       [{
