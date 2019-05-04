@@ -16,7 +16,7 @@ export const loadERModel = createAction('ERMODEL/LOAD', resolve => {
 export type LoadERModel = typeof loadERModel;
 
 export const processPhrase = createAction('ERMODEL/PROCESS_PHRASE', resolve => {
-    return (param: {name: string, phrase: RusPhrase }) => resolve(param);
+    return (param: {name: string, phrases: RusPhrase[] }) => resolve(param);
   });
 
 export type ProcessPhrase = typeof processPhrase;

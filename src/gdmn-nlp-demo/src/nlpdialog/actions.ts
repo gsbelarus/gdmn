@@ -7,7 +7,7 @@ export const clearNLPDialog = createAction('NLPDIALOG/CLEAR', resolve => () => r
 export type ClearNLPDialog = typeof clearNLPDialog;
 
 export const addNLPItem = createAction('NLPDIALOG/ADD',
-  resolve => (param: { item: INLPDialogItem, parsedText?: ParsedText, recordSetName?: string }) => resolve(param)
+  resolve => (param: { item: INLPDialogItem, parsedText?: ParsedText[], recordSetName?: string }) => resolve(param)
 );
 
 export type AddNLPItem = typeof addNLPItem;

@@ -11,8 +11,8 @@ export interface ISyntaxState {
   readonly coombinations: IToken[][];
   readonly loading: boolean;
   readonly errorMsg?: string;
-  readonly parsedText?: ParsedText;
-  readonly parserDebug?: ParsedText[];
+  readonly parsedText?: ParsedText[];
+  readonly parserDebug?: ParsedText[][];
 };
 
 const initialText = predefinedPhrases[0];
@@ -36,7 +36,7 @@ export function reducer(state: ISyntaxState = initialState, action: SyntaxAction
     case getType(actions.setSyntaxText): {
       const text = action.payload;
       let coombinations = combinatorialMorph(text);
-      let parsedText: ParsedText;
+      let parsedText: ParsedText[] = [];
 
       try {
         parsedText = parsePhrase(text);
@@ -51,7 +51,7 @@ export function reducer(state: ISyntaxState = initialState, action: SyntaxAction
         };
       }
 
-      if (!parsedText.phrase) {
+      if (!parsedText || parsedText.some(item => !item.phrase) ) {
         return {
           ...state,
           coombinations,

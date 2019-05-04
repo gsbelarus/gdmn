@@ -24,8 +24,8 @@ export const SyntaxBoxContainer = connect(
       (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
         dispatch(syntaxActions.setSyntaxText(text));
         const parsedText = getState().syntax.parsedText;
-        if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
-          dispatch(erModelActions.processPhrase({name: erModelName, phrase: parsedText.phrase as RusPhrase}));
+        if (parsedText && parsedText.some(item => !!item.phrase && item.phrase instanceof RusPhrase)) {
+          dispatch(erModelActions.processPhrase({name: erModelName, phrases: parsedText.map(item => item.phrase as RusPhrase)}));
         } else {
           dispatch(erModelActions.clearCommand({name: erModelName, clear: true}));
         }
@@ -45,4 +45,3 @@ export const SyntaxBoxContainer = connect(
     },
   })
 )(SyntaxBox);
-

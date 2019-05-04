@@ -10,6 +10,7 @@ import { TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, TColum
 import { sortRecordSet, RecordSetAction, selectRow, setAllRowsSelected, setRecordSet, toggleGroup } from 'gdmn-recordset';
 import { ICommand } from 'gdmn-nlp-agent';
 import { ExecuteCommand } from '../engine/types';
+import { isTSEnumMember } from '@babel/types';
 
 export const ChatBoxContainer = connect(
   (state: State) => ({
@@ -62,7 +63,7 @@ export const ChatBoxContainer = connect(
       (dispatch: Dispatch<any>, getState: () => State) => {
         dispatch(addNLPItem({ item: { who: 'me', text } }));
 
-        let parsedText: ParsedText | undefined = undefined;
+        let parsedText: ParsedText[] = [];
 
         try {
           parsedText = parsePhrase(text.trim());
@@ -76,11 +77,11 @@ export const ChatBoxContainer = connect(
         let executeCommand: ExecuteCommand | undefined = undefined;
         let errors: string[] = [];
 
-        if (parsedText && parsedText.phrase instanceof RusPhrase) {
+        if (parsedText && parsedText.some(item => !!item.phrase && item.phrase instanceof RusPhrase)) {
           Object.entries(getState().ermodel).some( ([n, m]) => {
             if (m && !m.loading && m.erModel && m.erTranslatorRU) {
               try {
-                command = m.erTranslatorRU.process(parsedText!.phrase as RusPhrase);
+                command = m.erTranslatorRU.process(parsedText.map(item => item.phrase).reduce((phrases, item) => item ? [...phrases, item as RusPhrase] : phrases, [] as RusPhrase[]));
                 erModelName = n;
                 executeCommand = m.executeCommand;
                 return true;

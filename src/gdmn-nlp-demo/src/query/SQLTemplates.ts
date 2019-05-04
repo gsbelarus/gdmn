@@ -75,8 +75,16 @@ export abstract class SQLTemplates {
     return SQLTemplates.condition(alias, fieldName, "=", value);
   }
 
+  public static contains(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "CONTAINING", value);
+  }
+
   public static equalsWithUpper(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "=", value, (text) => `UPPER(${text})`);
+  }
+
+  public static containsWithUpper(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "CONTAINING", value, (text) => `UPPER(${text})`);
   }
 
   public static greater(alias: string, fieldName: string, value: string): string {

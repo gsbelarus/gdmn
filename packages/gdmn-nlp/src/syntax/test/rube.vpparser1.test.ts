@@ -10,7 +10,9 @@ describe("vpparser1", () => {
 
   test("покажи все организации из минска", () => {
     const result = parsePhrase('покажи все организации из минска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -26,7 +28,9 @@ describe("vpparser1", () => {
 
   test("покажи все организации из минска и пинска", () => {
     const result = parsePhrase('покажи все организации из минска и пинска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -44,7 +48,9 @@ describe("vpparser1", () => {
 
   test("покажи все организации из минска, пинска", () => {
     const result = parsePhrase('покажи все организации из минска, пинска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -61,7 +67,9 @@ describe("vpparser1", () => {
 
   test("покажи минские организации", () => {
     const result = parsePhrase('покажи минские организации');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -76,7 +84,9 @@ describe("vpparser1", () => {
 
   test("покажи все организации", () => {
     const result = parsePhrase('покажи все организации');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -91,7 +101,9 @@ describe("vpparser1", () => {
 
   test("покажи лучшие организации", () => {
     const result = parsePhrase('покажи лучшие организации');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusWord;
     expect(verb).toBeDefined();
@@ -106,7 +118,9 @@ describe("vpparser1", () => {
 
   test("покажи курсы на 10.10.2018", () => {
     const result = parsePhrase('покажи курсы на 10.10.2018');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusWord;
     expect(verb).toBeDefined();
@@ -121,7 +135,9 @@ describe("vpparser1", () => {
 
   test("покажи 100 организаций из минска", () => {
     const result = parsePhrase('покажи 100 организаций из минска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -137,7 +153,9 @@ describe("vpparser1", () => {
 
   test("покажи 915 организаций из минска", () => {
     const result = parsePhrase('покажи 915 организаций из минска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -153,7 +171,9 @@ describe("vpparser1", () => {
 
   test("покажи двести восемьдесят шесть организаций из минска, пинска", () => {
     const result = parsePhrase('покажи двести восемьдесят шесть организаций из минска, пинска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -170,7 +190,9 @@ describe("vpparser1", () => {
 
   test("покажи 915 последних организаций из минска", () => {
     const result = parsePhrase('покажи 915 последних организаций из минска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -187,7 +209,9 @@ describe("vpparser1", () => {
 
   test("покажи двести восемьдесят шесть первых организаций из минска, пинска", () => {
     const result = parsePhrase('покажи двести восемьдесят шесть первых организаций из минска, пинска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -205,7 +229,9 @@ describe("vpparser1", () => {
 
   test("покажи первых 915 организаций из минска", () => {
     const result = parsePhrase('покажи первых 915 организаций из минска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -222,7 +248,9 @@ describe("vpparser1", () => {
 
   test("покажи последних двести восемьдесят шесть организаций из минска, пинска", () => {
     const result = parsePhrase('покажи последних двести восемьдесят шесть организаций из минска, пинска');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -240,7 +268,9 @@ describe("vpparser1", () => {
 
   test("покажи все TgdcCompany", () => {
     const result = parsePhrase('покажи все TgdcCompany');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();
@@ -255,7 +285,9 @@ describe("vpparser1", () => {
 
   test("покажи Tgdc", () => {
     const result = parsePhrase('покажи все Tgdc');
-    const vp = result.phrase;
+    expect(result).toBeDefined();
+    expect(result[0]).toBeDefined();
+    const vp = result[0].phrase;
     expect(vp).toBeDefined();
     const verb = vp!.items[0] as RusVerb;
     expect(verb).toBeDefined();

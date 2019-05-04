@@ -1,5 +1,7 @@
 import {
   DefinitionValue,
+  SearchValue,
+  idEntityValue,
   hasMeaning,
   morphAnalyzer,
   Noun,
@@ -18,7 +20,16 @@ import {
   RusPTimeP,
   RusVerb,
   SemCategory,
-  SemContext
+  SemContext,
+  RusTMS,
+  RusPSP,
+  RusNounLexeme,
+  RusPSPRW,
+  RusImperativeNP,
+  RusVDO,
+  RusPV,
+  RusAdverb,
+  RusPreposition
 } from "gdmn-nlp";
 import {DateValue} from "gdmn-nlp/dist/definitions/syntax/value";
 import {
@@ -31,7 +42,11 @@ import {
   ERModel,
   IEntityQueryWhere,
   IEntityQueryWhereValue,
-  ScalarAttribute
+  ScalarAttribute,
+  IEntityQueryAlias,
+  IEntityQuery,
+  Attribute,
+  IEntityQueryWhereValueNumber
 } from "gdmn-orm";
 import {Action, ICommand} from "./command";
 
@@ -48,6 +63,7 @@ export class ERTranslatorRU {
       e.lName.ru && e.lName.ru.name.split(",").forEach(n =>
         morphAnalyzer(n.trim()).forEach(w => {
           if (w instanceof Noun) {
+            console.log(e.lName.ru)
             const entities = this.neMap.get(w.lexeme);
             if (!entities) {
               this.neMap.set(w.lexeme, [e]);
@@ -62,15 +78,16 @@ export class ERTranslatorRU {
     );
   }
 
-  public process(phrase: RusPhrase): ICommand[] {
-    if (phrase instanceof RusImperativeVP) {
-      return this.processImperativeVP(phrase as RusImperativeVP);
+  public process(phrases: RusPhrase[]): ICommand[] {
+    if (phrases[0] instanceof RusImperativeVP) {
+      return this.processImperativeVP(phrases);
     } else {
       throw new Error(`Unsupported phrase type`);
     }
   }
 
-  public processImperativeVP(imperativeVP: RusImperativeVP): ICommand[] {
+  public processImperativeVP(phrases: RusPhrase[]): ICommand[] {
+    const imperativeVP = phrases[0] as RusImperativeVP;
     const action = ((v: RusVerb): Action => {
       if (hasMeaning(SemContext.QueryDB, "показать", v)) {
         return "QUERY";
@@ -117,7 +134,15 @@ export class ERTranslatorRU {
       let options;
       let first: number | undefined;
       const or: IEntityQueryWhere[] = [];
+      const and: IEntityQueryWhere[] = [];
+      let not: IEntityQueryWhere[] | undefined = undefined;
       const equals: IEntityQueryWhereValue[] = [];
+      let greater: IEntityQueryWhereValue[] | undefined = undefined;
+      let less: IEntityQueryWhereValue[] | undefined = undefined;
+      let contains: IEntityQueryWhereValue[] | undefined = undefined;
+      let isNull: IEntityQueryAlias<ScalarAttribute>[] | undefined= undefined;
+      const exists: IEntityQuery[] = [];
+
       if (np.noun instanceof RusANP) {
         const adjective = (np.noun as RusANP).adjf;
         if (adjective instanceof DefinitionValue) {
@@ -262,13 +287,224 @@ export class ERTranslatorRU {
           }
         }
       }
+
+      let numberAlias = 3;
+      phrases.map((phrase) => {
+        if(phrase instanceof RusTMS) {
+          const subject: RusNoun | idEntityValue = (() => {
+            if (phrase instanceof RusPSP) {
+              return (phrase as RusPSP).subject;
+            } else if (phrase instanceof RusPSPRW) {
+              return (phrase as RusPSPRW).subject;
+            } else {
+              return (phrase as RusImperativeNP).imperativeNoun;
+            }
+          })();
+
+          let isNot = false;
+
+          const predicate: RusVerb | RusAdverb | RusPreposition = (() => {
+            if (phrase instanceof RusPSP) {
+              if( (((phrase as RusPSP).predicate as RusVDO).predicate instanceof RusPV)) {
+                const pv = (((phrase as RusPSP).predicate as RusVDO).predicate as RusPV);
+                isNot = pv.particle && pv.particle.word === 'не' ? true : false;
+                return pv.verb;
+              } else {
+                return ((phrase as RusPSP).predicate as RusVDO).predicate instanceof RusAdverb ? ((phrase as RusPSP).predicate as RusVDO).predicate as RusAdverb : ((phrase as RusPSP).predicate as RusVDO).predicate as RusVerb;
+              }
+            } else if (phrase instanceof RusPSPRW) {
+              return ((phrase as RusPSPRW).predicate as RusPV).verb;
+            } else {
+              return ((phrase as RusImperativeNP).pp as RusPTimeP).prep;
+            }
+          })();
+
+          const directObject: SearchValue | DateValue | undefined = (() => {
+            if (phrase instanceof RusPSP) {
+              return ((phrase as RusPSP).predicate as RusVDO).directObject;
+            } else if(phrase instanceof RusImperativeNP) {
+              return ((phrase as RusImperativeNP).pp as RusPTimeP).items[1] as DateValue;
+            }
+          })();
+
+          let attr: Attribute | undefined = undefined;
+          let linkEntity: Entity;
+          let linkAlias: string = '';
+          if(subject instanceof idEntityValue) {
+            attr = entity.attribute(subject.getText().toLocaleUpperCase());
+            if (attr instanceof EntityAttribute) {
+              linkEntity = attr.entities[0];
+              linkAlias = `alias${numberAlias}`;
+              numberAlias++;
+              if (
+                !fields
+                  .filter((field) => field.links)
+                  .some((field) =>
+                    field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+              ) {
+                fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+              }
+            }
+          } else if(subject instanceof RusNoun) {
+            console.log(subject);
+/*
+            const nounLexeme = subject.lexeme;
+            if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
+              const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
+              const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
+              if (attr instanceof EntityAttribute) {
+                const linkEntity = attr.entities[0];
+                const linkAlias = "alias2";
+                if (
+                  !fields
+                    .filter((field) => field.links)
+                    .some((field) =>
+                      field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+                ) {
+                  fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+                }
+
+                equals.push({
+                  alias: "alias2",
+                  attribute: linkEntity.attribute("NAME"),
+                  value: words
+                });
+
+              } else {
+                equals.push({
+                  alias: "alias1",
+                  attribute: attr,
+                  value: words
+                });
+              }
+            } else {
+              throw new Error(`Can't find semantic category place for noun ${(objectANP as RusNoun).word}`);
+            }
+            */
+          }
+
+          if(attr !== undefined) {
+            if(predicate instanceof RusVerb) {
+              if(directObject) {
+                if(predicate.lexeme.stem === 'включа' || predicate.lexeme.stem === 'содерж') {
+                  const value: IEntityQueryWhereValue[] = [{
+                      alias: linkAlias ? linkAlias : 'alias1',
+                      attribute: attr,
+                      value: directObject.image
+                    }];
+                  if(isNot) {
+                    if(not === undefined) {
+                      not = [];
+                    }
+                    not.push({contains: value})
+                  } else {
+                    if(contains === undefined) {
+                      contains = [];
+                    }
+                    contains.push(...value);
+                  }
+                }
+              }
+              if(predicate.lexeme.stem === 'отсутствова') {
+                if(isNull === undefined) {
+                  isNull = [];
+                }
+                isNull.push({
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr
+                })
+              }
+              if(predicate.lexeme.stem === 'присутствова') {
+                //exists
+                console.log('exists')
+              }
+            } else if(predicate instanceof RusAdverb && directObject) {
+              if(predicate.word === 'больше') {
+                const value: IEntityQueryWhereValueNumber[] = [{
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr,
+                  value: Number(directObject.image)
+                }];
+                if(isNot) {
+                  if(not === undefined) {
+                    not = [];
+                  }
+                  not.push({greater: value})
+                } else {
+                  if(greater === undefined) {
+                    greater = [];
+                  }
+                  greater.push(...value);
+                }
+              }
+              if(predicate.word === 'меньше') {
+                const value: IEntityQueryWhereValueNumber[] = [{
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr,
+                  value: Number(directObject.image)
+                }];
+                if(isNot) {
+                  if(not === undefined) {
+                    not = [];
+                  }
+                  not.push({less: value})
+                } else {
+                  if(less === undefined) {
+                    less = [];
+                  }
+                  less.push(...value);
+                }
+              }
+              if(predicate.word === 'равно') {
+                const value: IEntityQueryWhereValue[] = [{
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr,
+                  value: directObject.image
+                }];
+                if(isNot) {
+                  if(not === undefined) {
+                    not = [];
+                  }
+                  not.push({equals: value})
+                } else {
+                  equals.push(...value);
+                }
+              }
+            } else if(predicate instanceof RusPreposition && directObject) {
+              //оператор больше/меньше дл данных типа дата
+              if(predicate.word === 'до') {
+                if(less === undefined) {
+                  less = [];
+                }
+                less.push({
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr,
+                  value: Number(directObject.image)
+                });
+              }
+              if(predicate.word === 'после') {
+                if(greater === undefined) {
+                  greater = [];
+                }
+                greater.push({
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr,
+                  value: Number(directObject.image)
+                });
+              }
+            }
+          }
+        }
+      })
+
       if (or.length !== 0) {
         options = new EntityQueryOptions(first, undefined, [{or: or}]);
       } else if (equals.length !== 0) {
-        options = new EntityQueryOptions(first, undefined, [{equals}]);
+        options = new EntityQueryOptions(first, undefined, [{not}, {isNull}, {equals}, {contains}, {greater}, {less}]);
       } else {
-        options = new EntityQueryOptions(first, undefined, undefined);
+        options = new EntityQueryOptions(first, undefined, [{not}, {isNull}, {contains}, {greater}, {less}]);
       }
+      console.log(options.where)
       const entityLink = new EntityLink(entity, "alias1", fields);
       return {
         action,

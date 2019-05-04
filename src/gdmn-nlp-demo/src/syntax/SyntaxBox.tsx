@@ -1,8 +1,8 @@
 import React, { Component } from "react";
-import { TextField, DefaultButton, ComboBox } from "office-ui-fabric-react";
+import { TextField, DefaultButton, ComboBox, HighContrastSelectorWhite } from "office-ui-fabric-react";
 import "./SyntaxBox.css";
 import { IToken } from "chevrotain";
-import { ParsedText, tokenize, CyrillicWord, morphAnalyzer } from "gdmn-nlp";
+import { ParsedText, tokenize, CyrillicWord, morphAnalyzer, PunctuationMark } from "gdmn-nlp";
 import { predefinedPhrases } from "./phrases";
 import { ICommand } from 'gdmn-nlp-agent';
 import { isMorphToken, IMorphToken } from "gdmn-nlp";
@@ -15,8 +15,8 @@ export interface ISyntaxBoxProps {
   text: string,
   coombinations: IToken[][],
   errorMsg?: string,
-  parsedText?: ParsedText,
-  parserDebug?: ParsedText[],
+  parsedText?: ParsedText[],
+  parserDebug?: ParsedText[][],
   erModels: IERModels,
   host: string,
   port: string,
@@ -54,7 +54,11 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
     const { coombinations, parsedText } = this.props;
 
     const getClassName = (i: number, signature: string): string => {
-      return parsedText && parsedText.wordsSignatures[i] && signature === parsedText.wordsSignatures[i] ? 'ACTIVEColor' : '';
+      if(parsedText) {
+        const pt = parsedText.map(item => item.wordsSignatures).reduce((prev, curr) => [...prev, ...curr]);
+        return parsedText && pt[i] && signature === pt[i] ? 'ACTIVEColor' : '';
+      }
+      return '';
     }
 
     for (let i = 0; i < coombinations.length; i++) {
@@ -67,6 +71,8 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         }
       }
     }
+
+    let countPunktuationMark = 0;
 
     return (
       <>
@@ -92,11 +98,13 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                   }
                 </div>
                 {
-                  s.map((w, wi) => (
-                    w.tokenType && <div key={wi} className={getClassName(idx, w.tokenType.name)}>
+                  s.map((w, wi) => {
+                    if(w.tokenType === PunctuationMark) countPunktuationMark++;
+                    if(w.tokenType) 
+                    return <div key={wi} className={getClassName(idx - countPunktuationMark, w.tokenType.name)}>
                       {w.tokenType.name}
                     </div>
-                  ))
+                  })
                 }
               </div>
             ))
@@ -150,6 +158,9 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {where.not && this.displayNOT(where.not)}
         {where.isNull && this.displayISNULL(where.isNull)}
         {where.equals && this.displayEQUALS(where.equals)}
+        {where.contains && this.displayCONTAINS(where.contains)}
+        {where.greater && this.displayGREATER(where.greater)}
+        {where.less && this.displayLESS(where.less)}
       </div>
     )
   }
@@ -216,7 +227,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           </div>
         </div>
       )}</div>
-      : <div key={`isNull`}>
+      : <div key={`isNull`} className="allisNulls">
         {<div>IsNULL</div>}
         <div className="isNull">
           <div className="alias">{isNulls[0].alias}</div>
@@ -237,17 +248,94 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
           <div className="not" key={idx1}>
             {not.equals && this.displayEQUALS(not.equals)}
           </div>
+          <div className="not" key={idx1}>
+            {not.contains && this.displayCONTAINS(not.contains)}
+          </div>
+          <div className="not" key={idx1}>
+            {not.greater && this.displayGREATER(not.greater)}
+          </div>
+          <div className="not" key={idx1}>
+            {not.less && this.displayLESS(not.less)}
+          </div>
         </div>
       )}</div>
-      : <div key={`not`}>
-        {<div>NOT</div>}
-        {nots[0].and ? this.displayAND(nots[0].and) : undefined}
-        {nots[0].or ? this.displayOR(nots[0].or) : undefined}
-        {nots[0].not ? this.displayNOT(nots[0].not) : undefined}
-        {nots[0].isNull ? this.displayISNULL(nots[0].isNull) : undefined}
-        <div className="not">
-          {nots[0].equals && this.displayEQUALS(nots[0].equals)}
+      : <div className="allNots">
+        <div key={`not`}>
+          {<div>NOT</div>}
+          {nots[0].and ? this.displayAND(nots[0].and) : undefined}
+          {nots[0].or ? this.displayOR(nots[0].or) : undefined}
+          {nots[0].not ? this.displayNOT(nots[0].not) : undefined}
+          {nots[0].isNull ? this.displayISNULL(nots[0].isNull) : undefined}
+          <div className="not">
+            {nots[0].equals && this.displayEQUALS(nots[0].equals)}
+          </div>
+          <div className="not">
+            {nots[0].contains && this.displayCONTAINS(nots[0].contains)}
+          </div>
+          <div className="not">
+            {nots[0].greater && this.displayGREATER(nots[0].greater)}
+          </div>
+          <div className="not">
+            {nots[0].less && this.displayLESS(nots[0].less)}
+          </div>
         </div>
+      </div>)
+  }
+
+  private displayGREATER(greaters: IEntityQueryWhereValue[]) {
+    return greaters && (greaters.length !== 1 ? <div className="greaters">
+      {greaters.map((greater, idx1) =>
+        <div className="greater" key={idx1}>
+          <div className="alias">{greater.alias}</div>
+          <div className="attr">{greater.attribute.name}</div>
+          <div className="opGR" />
+          <div className="value">{greater.value}</div>
+        </div>
+      )}
+    </div>
+      : <div className="greater">
+        <div className="alias">{greaters[0].alias}</div>
+        <div className="attr">{greaters[0].attribute.name}</div>
+        <div className="opGR" />
+        <div className="value">{greaters[0].value}</div>
+      </div>)
+  }
+
+  private displayLESS(less: IEntityQueryWhereValue[]) {
+    return less && (less.length !== 1 ? <div className="arrayLess">
+      {less.map((item, idx1) =>
+        <div className="less" key={idx1}>
+          <div className="alias">{item.alias}</div>
+          <div className="attr">{item.attribute.name}</div>
+          <div className="opL" />
+          <div className="value">{item.value}</div>
+        </div>
+      )}
+    </div>
+      : <div className="less">
+        <div className="alias">{less[0].alias}</div>
+        <div className="attr">{less[0].attribute.name}</div>
+        <div className="opL" />
+        <div className="value">{less[0].value}</div>
+      </div>)
+  }
+
+  private displayCONTAINS(contains: IEntityQueryWhereValue[]) {
+    return contains && (contains.length !== 1 ? <div className="contains">
+      {contains.map((contain, idx1) =>
+        <div className="contain" key={idx1}>
+          <div className="alias">{contain.alias}</div>
+          <div className="attr">{contain.attribute.name}</div>
+          <div className="opEQ" />
+          <div className="value">...{contain.value}...</div>
+        </div>
+      )}
+    </div>
+      : <div className="contain">
+        <div className="alias">{contains[0].alias}</div>
+        <div className="attr">{contains[0].attribute.name}</div>
+        <div className="opEQ" />
+        <div className="value">...{contains[0].value}...</div>
       </div>)
   }
 
@@ -277,7 +365,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                   <div key={idx}>
                     {field.links && field.links.length ?
                       field.links.map((payload, idxp) => {
-                        return <div className="field">
+                        return <div className="field" key={idxp}>
                           <div>{field.attribute.name}</div>
                           <div className="payload">
                             <div className="alias">{payload.alias}</div>
@@ -452,50 +540,52 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         : undefined}
       <div className={text === editedText || parserDebug ? '' : 'SemiTransparent'}>
         {this._getCoombinations()}
-        <PhraseSyntaxTree parsedText={parsedText} />
+        {parsedText && <div className="PhraseSyntaxTrees"> {parsedText.map( (phrase, id) => <div key={id}><PhraseSyntaxTree parsedText={phrase} /></div> )}</div> }
         {commandError && <div className="SyntaxError">{commandError}</div>}
         {command && <div>Command:{this._renderCommand(command[0])}</div>}
         {command && command[0].payload.link.entity.adapter && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
         {parserDebug ?
-          <div className="ParserDebug">
-            {parserDebug.map((pd, idx) =>
-              pd.parser && <div key={idx}>
-                <div>
-                  Parser: {pd.parser.getName().label}
-                </div>
-                <div className="DebugWordSignatures">
-                  {pd.wordsSignatures.map((ws, wi) => <div key={wi}>{ws}</div>)}
-                </div>
-                {
-                  pd.errors[0] ?
-                    <div>
+          parserDebug.map((item, key) => {
+            <div className="ParserDebug" key={key}>
+              {item.map((pd, idx) =>
+                pd.parser && <div key={idx}>
+                  <div>
+                    Parser: {pd.parser.getName().label}
+                  </div>
+                  <div className="DebugWordSignatures">
+                    {pd.wordsSignatures.map((ws, wi) => <div key={wi}>{ws}</div>)}
+                  </div>
+                  {
+                    pd.errors[0] ?
                       <div>
-                        {pd.errors[0].message}
-                      </div>
-                      {
-                        verboseErrors === pd.errors ?
-                          <div>
-                            <pre className="ParserError">
-                              {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
-                            </pre>
+                        <div>
+                          {pd.errors[0].message}
+                        </div>
+                        {
+                          verboseErrors === pd.errors ?
+                            <div>
+                              <pre className="ParserError">
+                                {JSON.stringify(pd.errors, (key, value) => (key === 'token' || key === 'previousToken') ? `${value['image']} - ${value['tokenType']['tokenName']}` : value, 2)}
+                              </pre>
+                              <DefaultButton
+                                text="Hide"
+                                onClick={() => this.setState({ verboseErrors: undefined })}
+                              />
+                            </div>
+                            :
                             <DefaultButton
-                              text="Hide"
-                              onClick={() => this.setState({ verboseErrors: undefined })}
+                              text="Verbose..."
+                              onClick={() => this.setState({ verboseErrors: pd.errors })}
                             />
-                          </div>
-                          :
-                          <DefaultButton
-                            text="Verbose..."
-                            onClick={() => this.setState({ verboseErrors: pd.errors })}
-                          />
-                      }
-                    </div>
-                    :
-                    undefined
-                }
-              </div>
-            )}
-          </div>
+                        }
+                      </div>
+                      :
+                      undefined
+                  }
+                </div>
+              )}
+            </div>
+          })
           : undefined}
       </div>
     </div>);

@@ -51,45 +51,58 @@ function internalParsePhrase(
 
 export function parsePhrase<W extends AnyWord = AnyWord>(
   text: string
-): ParsedText<W> {
-  for (let i = 0; i < parsers.length; i++) {
-    const res = internalParsePhrase(
-      text,
-      parsers[i].parser,
-      parsers[i].visitor
-    );
-    if (res.phrase) {
-      return <ParsedText<W>>{ ...res, parser: parsers[i].parser };
+): ParsedText<W>[] {
+  let somePhrases: string[] = text.split('. ');
+  let ph: ParsedText<W>[] = [];
+  somePhrases.forEach((phrase1, idx) => {
+    for (let i = 0; i < parsers.length; i++) {
+      phrase1 = phrase1.slice(-1) === '.' ? phrase1.slice(0, -1) : phrase1;
+      const res = internalParsePhrase(
+        phrase1,
+        parsers[i].parser,
+        parsers[i].visitor
+      );
+      if (res.phrase) {
+        ph.push(<ParsedText<W>>{ ...res, parser: parsers[i].parser });
+        continue;
+      }
     }
-  }
-  throw new Error(`Unknown grammar of phrase "${text}"`);
+    if(ph.length !== idx + 1) {
+      throw new Error(`Unknown grammar of phrase "${phrase1}"`);
+    }
+  });
+  return ph;
+  
 }
 
-export function debugPhrase(text: string): ParsedText[] {
-  const res: ParsedText[] = [];
-
-  for (let i = 0; i < parsers.length; i++) {
-    const parser = parsers[i].parser;
-    const visitor = parsers[i].visitor;
-    combinatorialMorph(text).forEach(t => {
-      parser.input = t;
-      const value = parser.sentence();
-      const wordsSignatures = t.map(y => y.tokenType!.name);
-      if (value && !parser.errors.length) {
-        res.push({
-          wordsSignatures,
-          phrase: visitor.visit(value),
-          parser
-        });
-      } else {
-        res.push({
-          wordsSignatures,
-          parser,
-          errors: parser.errors
-        });
-      }
-    });
-  }
+export function debugPhrase(text: string): ParsedText[][] {
+  let somePhrases: string[] = text.split('. ');
+  const res: ParsedText[][] = new Array(somePhrases.length);
+  somePhrases.forEach((phrase1, idx) => {
+    for (let i = 0; i < parsers.length; i++) {
+      const parser = parsers[i].parser;
+      const visitor = parsers[i].visitor;
+      res[idx] = [];
+      combinatorialMorph(phrase1).forEach(t => {
+        parser.input = t;
+        const value = parser.sentence();
+        const wordsSignatures = t.map(y => y.tokenType!.name);
+        if (value && !parser.errors.length) {
+          res[idx].push({
+            wordsSignatures,
+            phrase: visitor.visit(value),
+            parser
+          });
+        } else {
+          res[idx].push({
+            wordsSignatures,
+            parser,
+            errors: parser.errors
+          });
+        }
+      });
+    }
+  })
 
   return res;
 }

@@ -7,7 +7,7 @@ export type NLPDialogAction = ActionType<typeof actions>;
 
 export interface INLPDialogState {
   items: NLPDialog;
-  parsedText?: ParsedText;
+  parsedText?: ParsedText[];
   recordSetName?: string;
 };
 

@@ -1,5 +1,5 @@
 import { AnyWord } from '../morphology/morphology';
-import { CyrillicWord, tokenize, Comma, Numeric, DateToken, idEntityToken } from '../syntax/tokenizer';
+import { CyrillicWord, tokenize, Comma, Numeric, DateToken, idEntityToken, PunctuationMark } from '../syntax/tokenizer';
 import { morphAnalyzer } from '../morphology/morphAnalyzer';
 import { morphTokens } from './rusMorphTokens';
 import { IMorphToken, isMorphToken, IDefinition } from './types';
@@ -8,6 +8,9 @@ import { RusNoun } from '../morphology/rusNoun';
 import { RusConjunction } from '../morphology/rusConjunction';
 import { RusNumeral } from '../morphology/rusNumeral';
 import { RusAdjective } from '../morphology/rusAdjective';
+import { RusVerb } from '../morphology/rusVerb';
+import { RusParticle } from '../morphology/rusParticle';
+import { RusAdverb } from '../morphology/rusAdverb';
 
 /**
  * Функция определяет возможные словоформы для каждого
@@ -42,15 +45,42 @@ export function combinatorialMorph(text: string): IToken[][] {
   const parts = tokenize(text).reduce(
     (p, t) => {
       if (t.tokenType === CyrillicWord) {
-        p.push(morphAnalyzer(t.image).map( w => createTokenInstance(w) ));
+        const morph = morphAnalyzer(t.image);
+        morph.length > 0 ? p.push(morph.map( w => createTokenInstance(w) ))
+          : p.push([t]);
       }
-      else if (t.tokenType === Comma || t.tokenType === Numeric || t.tokenType === DateToken || t.tokenType === idEntityToken) {
+      else if (t.tokenType === Comma || t.tokenType === PunctuationMark || t.tokenType === Numeric || t.tokenType === DateToken || t.tokenType === idEntityToken) {
         p.push([t]);
       } 
       return p;
     },
     [] as IToken[][]
   );
+
+
+  /**
+   * Замена в простом двусоставном предложении любого токена на токен с типом SearchValue
+   */
+  let currIdx = 1;
+  let find = false;
+  while (currIdx < parts.length) {
+    if (!find) {
+      const currWord = (parts[currIdx][0] as IMorphToken).word;
+      const prevWord = (parts[currIdx - 1][0] as IMorphToken).word;
+      if ((parts[currIdx - 1][0].tokenType === idEntityToken || isMorphToken(parts[currIdx - 1][0])
+          && ( prevWord instanceof RusNoun || (prevWord instanceof RusParticle) && currIdx - 1 !== 0))
+          && parts[currIdx - 1][0].tokenType !== PunctuationMark
+          && isMorphToken(parts[currIdx][0])
+          && (currWord instanceof RusVerb || currWord instanceof RusAdverb)) {
+        find = true;
+      }
+    } else {
+      const image = parts[currIdx][0].image;
+      parts.splice(currIdx, 1, [{image: image, tokenType: morphTokens.SearchValueToken, tokenTypeIdx: morphTokens.SearchValueToken.tokenTypeIdx} as IToken]);
+      find = false;
+    }
+    currIdx++;
+  }
 
   /**
    * Найдем составные числительные
@@ -226,7 +256,7 @@ export function combinatorialMorph(text: string): IToken[][] {
   /**
    * Замена числительного на новый токен
    */
-  let currIdx = 0;
+  currIdx = 0;
   while (currIdx < parts.length) {
     let firstParts = [...parts[currIdx]];
     let firstToken = firstParts[0];

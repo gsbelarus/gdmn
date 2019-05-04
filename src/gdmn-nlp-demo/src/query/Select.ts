@@ -381,6 +381,46 @@ export class Select {
         }
       }
 
+      if (item.contains) {
+        const filterItems = item.contains.map((contains) => {
+          const findLink = this._getLink(contains.alias, link);
+          const alias = this._getTableAlias(findLink, contains.attribute.adapter!.relation);
+          if (contains.attribute.type === "String") {
+            return SQLTemplates.containsWithUpper(alias, contains.attribute.adapter!.field, this._addToParams(contains.value));
+          } else {
+            return SQLTemplates.contains(alias, contains.attribute.adapter!.field, this._addToParams(contains.value));
+          }
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+
+      if (item.greater) {
+        const filterItems = item.greater.map((elem) => {
+          const findLink = this._getLink(elem.alias, link);
+          const alias = this._getTableAlias(findLink, elem.attribute.adapter!.relation);
+          return SQLTemplates.greater(alias, elem.attribute.adapter!.field, this._addToParams(elem.value));
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+
+      if (item.less) {
+        const filterItems = item.less.map((elem) => {
+          const findLink = this._getLink(elem.alias, link);
+          const alias = this._getTableAlias(findLink, elem.attribute.adapter!.relation);
+          return SQLTemplates.less(alias, elem.attribute.adapter!.field, this._addToParams(elem.value));
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+
       if (item.and) {
         const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.and), " AND ");
         if (filter) {
@@ -396,7 +436,7 @@ export class Select {
       if (item.not) {
         const filter = Select._arrayJoinWithBracket(this._makeWhereConditions(link, item.not), " AND ");
         if (filter) {
-          filters.push(filter);
+          filters.push(` NOT ${filter}`);
         }
       }
 
@@ -489,6 +529,18 @@ export class Select {
     }
     if (where.equals &&
       where.equals.some((equals) => equals.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.contains &&
+      where.contains.some((contains) => contains.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.greater &&
+      where.greater.some((greater) => greater.attribute.adapter!.relation === relationName)) {
+      return true;
+    }
+    if (where.less &&
+      where.less.some((less) => less.attribute.adapter!.relation === relationName)) {
       return true;
     }
 
