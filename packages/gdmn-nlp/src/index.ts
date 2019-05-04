@@ -8,6 +8,7 @@ export * from './morphology/rusNoun';
 export * from './morphology/rusNounEndings';
 export * from './morphology/rusNounsData';
 export * from './morphology/rusPreposition';
+export * from './morphology/rusParticle';
 export * from './morphology/rusPronoun';
 export * from './morphology/rusPronounsData';
 export * from './morphology/rusVerb';

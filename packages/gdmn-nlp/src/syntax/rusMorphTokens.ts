@@ -1,9 +1,10 @@
 import { Lexer, createToken, TokenType } from "chevrotain";
-import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType } from "../morphology/types";
+import { RusGender, RusCase, RusAdjectiveCategory, PrepositionType, ParticleType } from "../morphology/types";
 import { RusNoun } from "../morphology/rusNoun";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
 import { RusNumeral } from "../morphology/rusNumeral";
+import { RusParticle } from '../morphology/rusParticle';
 
 export interface ITokenTypes {
   [name: string]: TokenType
@@ -14,10 +15,16 @@ export const morphTokens = (() => {
   const signatures = [
     'VERBTranPerfSingImpr',
     'VERBTranImpfSingImpr',
+    'VERBTranImpfPresSing3perIndc',
+    'VERBIntrImpfPresSing3perIndc',
+    'VERBIntrImpfPresPlur3perIndc',
+    'VERBTranImpfPresPlur3perIndc',
     'ADVBGoal',
+    'ADVBMeas',
     'Comma',
     'CONJ',
-    'DefinitionToken'
+    'DefinitionToken',
+    'SearchValueToken'
   ];
 
   [true, false].forEach( an =>
@@ -62,6 +69,25 @@ export const morphTokens = (() => {
     PrepositionType.Comparative
   ].forEach( prepositionType =>
     signatures.push(RusPreposition.getSignature(prepositionType))
+  );
+
+  /**
+   * Частицы
+   */
+  [
+    ParticleType.Pointing,
+    ParticleType.Specifying,
+    ParticleType.Amplifying,
+    ParticleType.ExcretoryRestrictive,
+    ParticleType.ModalWilled,
+    ParticleType.Affirmative,
+    ParticleType.Negative,
+    ParticleType.Interrogative,
+    ParticleType.Comparative,
+    ParticleType.Emotive,
+    ParticleType.Shaping
+  ].forEach( particleType =>
+    signatures.push(RusParticle.getSignature(particleType))
   );
 
 /**

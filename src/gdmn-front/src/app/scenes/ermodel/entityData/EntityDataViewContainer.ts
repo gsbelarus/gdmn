@@ -100,11 +100,11 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
           const phrases = getState().gdmnState.phrasesForQuery.find(phrase => phrase.entityName === name);
           const text = phrases ? phrases.phrase : '';
 
-          let parsedText: ParsedText = parsePhrase(text);
+          let parsedText: ParsedText[] = parsePhrase(text);
           let command: ICommand[];
-          if (parsedText && parsedText.phrase && parsedText.phrase instanceof RusPhrase) {
+          if (parsedText && parsedText.some(item => !!item.phrase && item.phrase instanceof RusPhrase)) {
             const erTranslatorRU = new ERTranslatorRU(erModel)
-            command = erTranslatorRU.process(parsedText.phrase);
+            command = erTranslatorRU.process(parsedText.map(item => item.phrase).reduce((phrases, item) => item ? [...phrases, item as RusPhrase] : phrases, [] as RusPhrase[]));
 
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {

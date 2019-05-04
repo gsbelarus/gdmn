@@ -37,6 +37,8 @@ export abstract class PrepositionLexeme extends Lexeme { }
 
 export abstract class PronounLexeme extends Lexeme { }
 
+export abstract class ParticleLexeme extends Lexeme { }
+
 export abstract class AdverbLexeme extends Lexeme { }
 
 export abstract class NumeralLexeme extends Lexeme { 
@@ -72,6 +74,8 @@ export abstract class Adjective<L extends AdjectiveLexeme> extends Word<L> { }
 export abstract class Preposition<L extends PrepositionLexeme> extends Word<L> { }
 
 export abstract class Pronoun<L extends PrepositionLexeme> extends Word<L> { }
+
+export abstract class Particle<L extends ParticleLexeme> extends Word<L> { }
 
 export abstract class Adverb<L extends AdverbLexeme> extends Word<L> { }
 

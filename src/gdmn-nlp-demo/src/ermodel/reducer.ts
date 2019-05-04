@@ -63,7 +63,7 @@ export function reducer(state: IERModels = {}, action: ERModelAction): IERModels
     }
 
     case getType(actions.processPhrase): {
-      const { name, phrase } = action.payload;
+      const { name, phrases } = action.payload;
 
       if (!state[name]) {
         return state;
@@ -87,7 +87,7 @@ export function reducer(state: IERModels = {}, action: ERModelAction): IERModels
           ...state,
           [name]: {
             ...state[name],
-            command: erTranslatorRU.process(phrase),
+            command: erTranslatorRU.process(phrases),
             commandError: undefined
           }
         }

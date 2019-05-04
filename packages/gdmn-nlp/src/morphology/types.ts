@@ -149,6 +149,11 @@ export interface RusAdjectiveMorphSigns {
   animate?: boolean;
   short?: boolean;
 }
+export enum ParticleType {Pointing = 0, Specifying, Amplifying, ExcretoryRestrictive, ModalWilled, Affirmative, Negative,
+  Interrogative, Comparative, Emotive, Shaping}
+export const RusParticleTypeNames = ['указательная', 'уточняющая', 'усилительная', 'выделительно-ограничительная',
+  'модально-волевоая', 'утвердительная', 'отрицательная', 'вопросительная', 'сравнительная', 'эмоциональная', 'формообразующая'];
+export const ShortParticleTypeNames = ['Poin', 'Spec', 'Ampl', 'ExRe', 'ModW', 'Affr', 'Negt', 'Intr', 'Comp', 'Emot', 'Shap'];
 export enum PrepositionType {Place = 0, Object, Time, Reason, Goal, Comparative}
 export const RusPrepositionTypeNames = ['пространственный', 'объектный', 'временной', 'причинный', 'целевой', 'сравнительный'];
 export const ShortPrepositionTypeNames = ['Plce', 'Objt', 'Time', 'Rson', 'Goal', 'Comp'];

@@ -3,7 +3,7 @@ import { EntityLink, EntityLinkField, EntityQuery, ERModel, ScalarAttribute } fr
 import { Checkbox, ICheckbox, IToggle, Toggle } from 'office-ui-fabric-react';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { ITextField, TextField } from 'office-ui-fabric-react/lib/components/TextField';
-import { parsePhrase, RusWord } from 'gdmn-nlp';
+import { parsePhrase, RusWord, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU, ICommand } from 'gdmn-nlp-agent';
 
 import { TPingTaskCmd, TTaskStatus } from '@gdmn/server-api';
@@ -266,7 +266,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
   private handleSendNlpQuery = async () => {
     const phrase = 'покажи всех организации из минска и пинска';
-    const parsedPhrase = parsePhrase<RusWord>(phrase).phrase;
+    const parsedPhrase = parsePhrase<RusWord>(phrase);
 
     if (!parsedPhrase || !this.props.erModel) {
       return;
@@ -274,7 +274,7 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
 
     let cmds: ICommand[] = [];
     try {
-      cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase);
+      cmds = new ERTranslatorRU(this.props.erModel).process(parsedPhrase.map(item => item.phrase).reduce((phrases, item) => item ? [...phrases, item as RusPhrase] : phrases, [] as RusPhrase[]));
     } catch (e) {
       this.props.onError(e);
     }

@@ -16,6 +16,7 @@ import {
   RusNounLexeme,
   RusNounMorphSigns,
   RusPreposition,
+  RusParticle,
   RusPronoun,
   RusPronounLexeme,
   RusTense,
@@ -30,6 +31,7 @@ import {
   RusPronounLexemes,
   RusAdverbLexemes,
   RusPrepositionLexemes,
+  RusParticleLexemes,
   RusNumeralLexemes,
   RusAdverb,
   getSynonyms,
@@ -68,6 +70,7 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
       ['Verbs', () => RusVerbLexemes.reduce((p, l) => {p.push(l.getWordForm({ infn: true })); return p;}, [] as AnyWord[])],
       ['Adjs', () => RusAdjectiveLexemes.reduce((p, l) => {p.push(l.getWordForm({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })); return p;}, [] as AnyWord[])],
       ['Preps', () => RusPrepositionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
+      ['Part', () => RusParticleLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Pron', () => RusPronounLexemes.reduce((p, l) => {p.push(l.getWordForm(RusCase.Nomn)); return p;}, [] as AnyWord[])],
       ['Conj', () => RusConjunctionLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
       ['Advb', () => RusAdverbLexemes.reduce((p, l) => {p.push(l.getWordForm()); return p;}, [] as AnyWord[])],
@@ -321,6 +324,8 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
     if (w instanceof RusConjunction) return <div />;
 
     if (w instanceof RusPreposition) return <div />;
+
+    if (w instanceof RusParticle) return <div />;
 
     if (w instanceof RusAdverb) return <div />;
 
