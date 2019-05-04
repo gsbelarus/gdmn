@@ -18,6 +18,15 @@ export const rusVerbs: RusVerbInterface[] = [
     transitivity: Transitivity.Tran,
     conjZ: '1a'
   },
+  // включать
+  {
+    stem: 'включа',
+    stem1: '',
+    stem2: '',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Tran,
+    conjZ: '1a'
+  },
   // стачать
   {
     stem: 'стача',
@@ -79,6 +88,24 @@ export const rusVerbs: RusVerbInterface[] = [
     stem2: '',
     aspect: RusAspect.Perf,
     transitivity: Transitivity.Tran,
+    conjZ: '2a'
+  },
+  // отсутствовать
+  {
+    stem: 'отсутствова',
+    stem1: 'отсутству',
+    stem2: '',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Intr,
+    conjZ: '2a'
+  },
+  // присутствовать
+  {
+    stem: 'присутствова',
+    stem1: 'присутству',
+    stem2: '',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Intr,
     conjZ: '2a'
   },
   // жевать
@@ -624,6 +651,15 @@ export const rusVerbs: RusVerbInterface[] = [
   // держать
   {
     stem: 'держ',
+    stem1: '',
+    stem2: '',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Tran,
+    conjZ: '5c'
+  },
+  // содержать
+  {
+    stem: 'содерж',
     stem1: '',
     stem2: '',
     aspect: RusAspect.Impf,
