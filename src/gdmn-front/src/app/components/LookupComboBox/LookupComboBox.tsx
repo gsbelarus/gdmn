@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, DefaultButton, ActionButton } from 'office-ui-fabric-react';
 
-export type TOnLookup = (filter?: string) => Promise<IComboBoxOption[]>;
+export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
 
 export interface ILookupComboBoxProps {
   preSelectedOption?: IComboBoxOption;
@@ -16,11 +16,13 @@ interface ILookupComboboxState {
   queryState: TQueryState;
   text: string;
   lookupText: string;
+  limit: number;
 };
 
 type Action = { type: 'SET_SELECTED_OPTION', option: IComboBoxOption }
   | { type: 'SET_TEXT', text: string }
   | { type: 'QUERY_START' }
+  | { type: 'QUERY_LOADMORE' }
   | { type: 'QUERY_INPROGRESS', lookupText: string }
   | { type: 'QUERY_DONE', options: IComboBoxOption[] };
 
@@ -41,7 +43,8 @@ function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxSt
         ...state,
         selectedOption: undefined,
         options: [],
-        text
+        text,
+        limit: defLimit
       };
     }
 
@@ -49,6 +52,15 @@ function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxSt
       return {
         ...state,
         queryState: 'START'
+      };
+    }
+
+    case 'QUERY_LOADMORE': {
+      return {
+        ...state,
+        queryState: 'START',
+        text: state.lookupText,
+        limit: state.limit * 2
       };
     }
 
@@ -86,13 +98,16 @@ function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxSt
   }
 };
 
+const defLimit = 16;
+
 function init(preSelectedOption: IComboBoxOption | undefined): ILookupComboboxState {
   return {
     selectedOption: preSelectedOption,
     options: preSelectedOption ? [preSelectedOption] : [],
     queryState: 'IDLE',
     text: preSelectedOption && preSelectedOption.text ? preSelectedOption.text : '',
-    lookupText: ''
+    lookupText: '',
+    limit: defLimit
   };
 };
 
@@ -100,7 +115,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
   const { preSelectedOption, onLookup } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
-  const { options, selectedOption, queryState, text, lookupText } = state;
+  const { options, selectedOption, queryState, text, lookupText, limit } = state;
   const ref = useRef<IComboBox | null>(null);
   const hasFocus = useRef(false);
   const isMounted = useRef(false);
@@ -116,7 +131,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
         ref.current.dismissMenu();
       }
       dispatch({ type: 'QUERY_INPROGRESS', lookupText: text });
-      onLookup(text)
+      onLookup(text, limit)
         .then( res => {
           if (isMounted.current) {
             dispatch({ type: 'QUERY_DONE', options: res });
@@ -137,6 +152,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
   let onChange;
   let onPendingValueChanged;
   let onKeyDown;
+  let onRenderLowerContent;
 
   if (queryState === 'IDLE') {
     onChange = (_event: FormEvent<IComboBox>, option?: IComboBoxOption, _index?: number, _value?: string) => {
@@ -158,10 +174,36 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
         dispatch({ type: 'QUERY_START' })
       }
     };
+
+    if (!options.length) {
+      onRenderLowerContent = () =>
+        <ActionButton
+          style={{
+            width: '100%'
+          }}
+          iconProps={{ iconName: 'Search' }}
+          text={ text ? 'Искать... (F3)' : 'Показать все...' }
+          onClick={ () => dispatch({ type: 'QUERY_START' }) }
+        />;
+    }
+    else if (options.length > limit) {
+      onRenderLowerContent = () =>
+        <ActionButton
+          style={{
+            width: '100%'
+          }}
+          iconProps={{ iconName: 'Download' }}
+          text="Загрузить еще..."
+          onClick={ () => dispatch({ type: 'QUERY_LOADMORE' }) }
+        />;
+    } else {
+      onRenderLowerContent = undefined;
+    }
   } else {
     onChange = undefined;
     onPendingValueChanged = undefined;
     onKeyDown = undefined;
+    onRenderLowerContent = undefined;
   }
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
@@ -211,6 +253,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       onKeyDown={onKeyDown}
       onFocus={ () => hasFocus.current = true }
       onBlur={ () => hasFocus.current = false }
+      onRenderLowerContent={onRenderLowerContent}
     />
   );
 };

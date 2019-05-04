@@ -121,7 +121,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
           <LookupComboBox
             preSelectedOption={{ key: 1, text: 'abc '}}
             onLookup={
-              (filter?: string) => {
+              (filter: string, limit: number) => {
                 const entity = erModel.entities['TgdcFunction'];
 
                 const eq = new EntityQuery(
@@ -130,7 +130,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
                     new EntityLinkField(entity.attributes['NAME'])
                   ]),
                   new EntityQueryOptions(
-                    80,
+                    limit + 1,
                     undefined,
                     filter ?
                       [{
