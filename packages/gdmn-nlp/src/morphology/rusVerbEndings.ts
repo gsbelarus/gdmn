@@ -656,6 +656,108 @@ export const RusConjugationZEndings: RusConjugationZEnding[] =
       },
     ]
   },
+  // отсутствовать
+  {
+    conjZ: '2a',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Intr,
+    suffix: 'ть',
+    endings: [
+      // прису́тствую
+      {
+        ending: 'ю',
+        tense: RusTense.Pres,
+        singular: true,
+        person: 1,
+        mood: RusMood.Indc
+      },
+      // прису́тствуем
+      {
+        ending: 'ем',
+        tense: RusTense.Pres,
+        singular: false,
+        person: 1,
+        mood: RusMood.Indc
+      },
+      // прису́тствуешь
+      {
+        ending: 'ешь',
+        tense: RusTense.Pres,
+        singular: true,
+        person: 2,
+        mood: RusMood.Indc
+      },
+      // прису́тствуете
+      {
+        ending: 'ете',
+        tense: RusTense.Pres,
+        singular: false,
+        person: 2,
+        mood: RusMood.Indc
+      },
+      // прису́тствует
+      {
+        ending: 'ет',
+        tense: RusTense.Pres,
+        singular: true,
+        person: 3,
+        mood: RusMood.Indc
+      },
+      // прису́тствуют
+      {
+        ending: 'ют',
+        tense: RusTense.Pres,
+        singular: false,
+        person: 3,
+        mood: RusMood.Indc
+      },
+      // прису́тствовал
+      {
+        ending: 'л',
+        tense: RusTense.Past,
+        singular: true,
+        gender: RusGender.Masc,
+        mood: RusMood.Indc
+      },
+      // прису́тствовала
+      {
+        ending: 'ла',
+        tense: RusTense.Past,
+        singular: true,
+        gender: RusGender.Femn,
+        mood: RusMood.Indc
+      },
+      // прису́тствовало
+      {
+        ending: 'ло',
+        tense: RusTense.Past,
+        singular: true,
+        gender: RusGender.Neut,
+        mood: RusMood.Indc
+      },
+      // прису́тствовали
+      {
+        ending: 'ли',
+        tense: RusTense.Past,
+        singular: false,
+        mood: RusMood.Indc
+      },
+      // прису́тствуй
+      {
+        ending: 'й',
+        singular: true,
+        mood: RusMood.Impr,
+        involvement: Involvement.Excl
+      },
+      // прису́тствуйте
+      {
+        ending: 'йте',
+        singular: false,
+        mood: RusMood.Impr,
+        involvement: Involvement.Excl
+      },
+    ]
+  },
   // жевать (жев,жу)
   {
     conjZ: '2b',

@@ -8,7 +8,7 @@ export const rusAdverbs = [
   },
   {
     adverbType: AdverbType.Measure,
-    words: [ 'мало', 'много', 'очень', 'чуть-чуть' ]
+    words: [ 'мало', 'много', 'очень', 'чуть-чуть', 'больше', 'меньше', 'равно' ]
   },
   {
     adverbType: AdverbType.Place,

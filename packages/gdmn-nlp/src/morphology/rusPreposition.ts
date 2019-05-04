@@ -12,7 +12,7 @@ export const rusPrepositions = [
   },
   {
     prepositionType: PrepositionType.Time,
-    words: ['с', 'от', 'до', 'в', 'на']  // в течение, в продолжение
+    words: ['с', 'от', 'до', 'в', 'на', 'после']  // в течение, в продолжение
   },
   {
     prepositionType: PrepositionType.Reason,
