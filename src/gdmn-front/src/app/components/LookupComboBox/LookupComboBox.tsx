@@ -4,6 +4,7 @@ import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunctio
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
 
 export interface ILookupComboBoxProps {
+  name?: string;
   preSelectedOption?: IComboBoxOption;
   onLookup: TOnLookup;
 };
@@ -21,6 +22,7 @@ interface ILookupComboboxState {
 
 type Action = { type: 'SET_SELECTED_OPTION', option: IComboBoxOption }
   | { type: 'SET_TEXT', text: string }
+  | { type: 'RESTORE_STATE', state: ILookupComboboxState }
   | { type: 'QUERY_START' }
   | { type: 'QUERY_LOADMORE' }
   | { type: 'QUERY_INPROGRESS', lookupText: string }
@@ -46,6 +48,10 @@ function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxSt
         text,
         limit: defLimit
       };
+    }
+
+    case 'RESTORE_STATE': {
+      return action.state;
     }
 
     case 'QUERY_START': {
@@ -113,33 +119,54 @@ function init(preSelectedOption: IComboBoxOption | undefined): ILookupComboboxSt
 
 export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup } = props;
+  const { preSelectedOption, onLookup, name } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOption, queryState, text, lookupText, limit } = state;
   const ref = useRef<IComboBox | null>(null);
   const hasFocus = useRef(false);
   const isMounted = useRef(false);
+  const refState = useRef(state);
 
   useEffect( () => {
     isMounted.current = true;
-    return () => { isMounted.current = false; }
+
+    if (name) {
+      const savedState = sessionStorage.getItem(name);
+      if (savedState) {
+        dispatch({ type: 'RESTORE_STATE', state: JSON.parse(savedState) });
+      }
+    }
+
+    return () => {
+      if (name) {
+        sessionStorage.setItem(name, JSON.stringify(refState.current));
+      }
+      isMounted.current = false;
+    }
   }, []);
+
+  useEffect( () => {
+    refState.current = state;
+  }, [state]);
 
   useEffect( () => {
     if (queryState === 'START') {
       if (hasFocus.current && options.length && ref.current) {
         ref.current.dismissMenu();
       }
-      dispatch({ type: 'QUERY_INPROGRESS', lookupText: text });
-      onLookup(text, limit)
-        .then( res => {
-          if (isMounted.current) {
-            dispatch({ type: 'QUERY_DONE', options: res });
-            if (res.length > 1 && ref.current && hasFocus.current) {
-              ref.current.focus(true, true);
-            }
+
+      const doLookup = async () => {
+        dispatch({ type: 'QUERY_INPROGRESS', lookupText: text });
+        const res = await onLookup(text, limit);
+        if (isMounted.current) {
+          dispatch({ type: 'QUERY_DONE', options: res });
+          if (res.length > 1 && ref.current && hasFocus.current) {
+            ref.current.focus(true, true);
           }
-        });
+        }
+      };
+
+      doLookup();
     }
   }, [queryState]);
 

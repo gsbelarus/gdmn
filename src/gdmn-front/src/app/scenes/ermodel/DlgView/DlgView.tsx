@@ -119,6 +119,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
       <div className="dlgView">
         <div>
           <LookupComboBox
+            name="12345"
             preSelectedOption={{ key: 1, text: 'abc '}}
             onLookup={
               (filter: string, limit: number) => {
