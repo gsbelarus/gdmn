@@ -1,6 +1,5 @@
-import React, { useEffect, useReducer, useRef, useLayoutEffect, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, VirtualizedComboBox } from 'office-ui-fabric-react';
-import { getDefaultSettings } from 'http2';
+import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction } from 'office-ui-fabric-react';
 
 export type TOnLookup = (filter?: string) => Promise<IComboBoxOption[]>;
 
@@ -9,27 +8,21 @@ export interface ILookupComboBoxProps {
   onLookup: TOnLookup;
 };
 
-type TMenuState = 'OPENED' | 'CLOSED' | 'OPEN' | 'CLOSE';
+type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
 
 interface ILookupComboboxState {
   selectedOption?: IComboBoxOption;
   options: IComboBoxOption[];
-  query: boolean;
+  queryState: TQueryState;
   text: string;
-  prevText: string;
   lookupText: string;
-  hasFocus: boolean;
-  menuState: TMenuState;
-  forceQuery: boolean;
 };
 
 type Action = { type: 'SET_SELECTED_OPTION', option: IComboBoxOption }
   | { type: 'SET_TEXT', text: string }
-  | { type: 'SET_FOCUS', hasFocus: boolean }
-  | { type: 'SET_MENU_STATE', menuState: TMenuState }
-  | { type: 'START_QUERY', text: string }
-  | { type: 'FORCE_QUERY' }
-  | { type: 'QUERY_RESULT', options: IComboBoxOption[] };
+  | { type: 'QUERY_START' }
+  | { type: 'QUERY_INPROGRESS', lookupText: string }
+  | { type: 'QUERY_DONE', options: IComboBoxOption[] };
 
 function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxState {
   switch (action.type) {
@@ -38,8 +31,7 @@ function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxSt
       return {
         ...state,
         selectedOption: option,
-        text: option.text,
-        prevText: option.text,
+        text: option.text
       };
     }
 
@@ -48,76 +40,43 @@ function reducer(state: ILookupComboboxState, action: Action): ILookupComboboxSt
       return {
         ...state,
         selectedOption: undefined,
-        text,
         options: [],
-        menuState: state.menuState === 'OPENED' && text !== state.text ? 'CLOSE' : state.menuState
+        text
       };
     }
 
-    case 'SET_FOCUS': {
-      const { hasFocus } = action;
+    case 'QUERY_START': {
       return {
         ...state,
-        hasFocus
+        queryState: 'START'
       };
     }
 
-    case 'SET_MENU_STATE': {
-      const { menuState } = action;
-      if (menuState === 'OPENED' && !state.options.length) {
-        return {
-          ...state,
-          menuState: 'CLOSED'
-        };
-      } else {
-        return {
-          ...state,
-          menuState
-        };
-      }
-    }
-
-    case 'START_QUERY': {
-      const { text } = action;
+    case 'QUERY_INPROGRESS': {
+      const { lookupText } = action;
       return {
         ...state,
-        query: true,
-        forceQuery: false,
-        text,
-        prevText: text,
-        lookupText: text
+        queryState: 'INPROGRESS',
+        lookupText
       };
     }
 
-    case 'FORCE_QUERY': {
-      if (state.query) {
-        return state;
-      } else {
-        return {
-          ...state,
-          forceQuery: true,
-        }
-      }
-    }
-
-    case 'QUERY_RESULT': {
+    case 'QUERY_DONE': {
       const { options } = action;
       if (options.length === 1) {
         return {
           ...state,
-          query: false,
-          options,
-          text: options[0].text,
-          prevText: options[0].text,
           selectedOption: options[0],
-          menuState: state.menuState === 'OPENED' ? 'CLOSE' : state.menuState
+          options,
+          queryState: 'IDLE',
+          text: options[0].text
         };
       } else {
         return {
           ...state,
-          query: false,
+          selectedOption: undefined,
           options,
-          menuState: state.hasFocus && state.menuState !== 'OPENED' ? 'OPEN' : state.menuState
+          queryState: 'IDLE',
         };
       }
     }
@@ -131,13 +90,9 @@ function init(preSelectedOption: IComboBoxOption | undefined): ILookupComboboxSt
   return {
     selectedOption: preSelectedOption,
     options: preSelectedOption ? [preSelectedOption] : [],
+    queryState: 'IDLE',
     text: preSelectedOption && preSelectedOption.text ? preSelectedOption.text : '',
-    prevText: preSelectedOption && preSelectedOption.text ? preSelectedOption.text : '',
-    lookupText: '',
-    hasFocus: true,
-    menuState: 'CLOSED',
-    query: false,
-    forceQuery: false
+    lookupText: ''
   };
 };
 
@@ -145,78 +100,69 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
   const { preSelectedOption, onLookup } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
-  const { options, query, selectedOption, text, prevText, lookupText, hasFocus, menuState, forceQuery } = state;
+  const { options, selectedOption, queryState, text, lookupText } = state;
   const ref = useRef<IComboBox | null>(null);
+  const hasFocus = useRef(false);
+  const isMounted = useRef(false);
 
   useEffect( () => {
-    if (!ref.current) return;
+    isMounted.current = true;
+    return () => { isMounted.current = false; }
+  }, []);
 
-    if (menuState === 'OPEN') {
-      ref.current.focus(true);
+  useEffect( () => {
+    if (queryState === 'START') {
+      if (hasFocus.current && options.length && ref.current) {
+        ref.current.dismissMenu();
+      }
+      dispatch({ type: 'QUERY_INPROGRESS', lookupText: text });
+      onLookup(text)
+        .then( res => {
+          if (isMounted.current) {
+            dispatch({ type: 'QUERY_DONE', options: res });
+            if (res.length > 1 && ref.current && hasFocus.current) {
+              ref.current.focus(true, true);
+            }
+          }
+        });
     }
-    else if (menuState === 'CLOSE') {
+  }, [queryState]);
+
+  useEffect( () => {
+    if (isMounted.current && hasFocus.current && !options.length && ref.current) {
       ref.current.dismissMenu();
     }
-  }, [menuState]);
+  }, [options]);
 
-  useEffect( () => {
-    if (forceQuery) {
-      dispatch({ type: 'START_QUERY', text });
-      onLookup(text).then( opt => dispatch({ type: 'QUERY_RESULT', options: opt }) );
-    }
-  }, [forceQuery, text]);
+  let onChange;
+  let onPendingValueChanged;
+  let onKeyDown;
 
-  useEffect( () => {
-    if (text === prevText || !hasFocus || query) {
-      return;
-    }
+  if (queryState === 'IDLE') {
+    onChange = (_event: FormEvent<IComboBox>, option?: IComboBoxOption, _index?: number, _value?: string) => {
+      if (option) {
+        dispatch({ type: 'SET_SELECTED_OPTION', option });
+      }
+    };
 
-    if (text.length < 3) {
-      return;
-    }
+    onPendingValueChanged = (_option?: IComboBoxOption, _index?: number, value?: string | undefined) => {
+      if (value !== undefined) {
+        dispatch({ type: 'SET_TEXT', text: value });
+      }
+    };
 
-    const timerID = setTimeout(
-      () => {
-        dispatch({ type: 'START_QUERY', text });
-        onLookup(text).then( opt => dispatch({ type: 'QUERY_RESULT', options: opt }) );
-      }, 2000
-    );
-
-    return () => clearTimeout(timerID);
-  }, [text, prevText, hasFocus, query]);
-
-  const onChange = (_event: FormEvent<IComboBox>, option?: IComboBoxOption, _index?: number, _value?: string) => {
-    if (option) {
-      dispatch({ type: 'SET_SELECTED_OPTION', option });
-    }
-  };
-
-  const onInputChange = (value: string) => {
-    if (value !== undefined) {
-      dispatch({ type: 'SET_TEXT', text: value });
-    }
-    return value;
-  };
-
-  const onBlur = () => {
-    dispatch({ type: 'SET_FOCUS', hasFocus: false });
-  };
-
-  const onFocus = () => {
-    dispatch({ type: 'SET_FOCUS', hasFocus: true });
-  };
-
-  const onMenuOpen = () => {
-    if (options.length) {
-      dispatch({ type: 'SET_MENU_STATE', menuState: 'OPENED' });
-    } else {
-      dispatch({ type: 'FORCE_QUERY' });
-    }
-  };
-
-  const onMenuDismissed = () => {
-    dispatch({ type: 'SET_MENU_STATE', menuState: 'CLOSED' });
-  };
+    onKeyDown = (e: React.KeyboardEvent<IComboBox>) => {
+      if (e.key === 'F3') {
+        e.preventDefault();
+        e.stopPropagation();
+        dispatch({ type: 'QUERY_START' })
+      }
+    };
+  } else {
+    onChange = undefined;
+    onPendingValueChanged = undefined;
+    onKeyDown = undefined;
+  }
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
     if (props && lookupText) {
@@ -241,39 +187,30 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
   };
 
   return (
-    <div>
-      <div>{text}</div>
-      <div>{prevText}</div>
-      <div>{menuState}</div>
-      <ComboBox
-        options={options}
-        allowFreeform
-        autoComplete="off"
-        text={text}
-        componentRef={ r => ref.current = r }
-        autofill={{
-          onInputChange,
-          preventValueSelection: true
-        }}
-        onRenderOption={onRenderOption}
-        styles={
-          selectedOption
-          ? {
-            root: {
-              backgroundColor: '#44ff44'
-            },
-            input: {
-              backgroundColor: '#44ff44'
-            }
+    <ComboBox
+      options={options}
+      allowFreeform
+      autoComplete="off"
+      text={ queryState === 'INPROGRESS' ? 'Идёт поиск...' : text }
+      componentRef={ r => ref.current = r }
+      onRenderOption={onRenderOption}
+      styles={
+        selectedOption
+        ? {
+          root: {
+            backgroundColor: '#77ff77'
+          },
+          input: {
+            backgroundColor: '#77ff77'
           }
-          : undefined
         }
-        onBlur={onBlur}
-        onFocus={onFocus}
-        onChange={onChange}
-        onMenuOpen={onMenuOpen}
-        onMenuDismissed={onMenuDismissed}
-      />
-    </div>
+        : undefined
+      }
+      onChange={onChange}
+      onPendingValueChanged={onPendingValueChanged}
+      onKeyDown={onKeyDown}
+      onFocus={ () => hasFocus.current = true }
+      onBlur={ () => hasFocus.current = false }
+    />
   );
 };
