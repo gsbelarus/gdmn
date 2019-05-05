@@ -6,7 +6,6 @@ import {RecordSet} from "gdmn-recordset";
 import {ICommandBarItemProps, TextField, IComboBoxOption} from "office-ui-fabric-react";
 import React, {Fragment} from "react";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
-import { prepareDefaultEntityQuery } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 
 export enum DlgState {

@@ -4,23 +4,23 @@ import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {RecordSetAction, TRowState, deleteRows} from "gdmn-recordset";
+import {RecordSetAction, deleteRows} from "gdmn-recordset";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
-import {EntityDataView, IEntityDataViewProps} from "./EntityDataView";
+import {EntityDataView} from "./EntityDataView";
 import { TRsMetaActions } from "@src/app/store/rsmeta";
 import * as loadRSActions from "@src/app/store/loadRSActions";
 import { ParsedText, parsePhrase, RusPhrase } from 'gdmn-nlp';
 import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
+import { IEntityDataViewProps, IEntityMatchParams } from "./EntityDataView.types";
 
-export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<any>>(
+export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<IEntityMatchParams>>(
   connect(
     (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
       const entityName = ownProps.match ? ownProps.match.params.entityName : "";
       return {
-        rsMeta: state.rsMeta[entityName],
         erModel: state.gdmnState.erModel,
         phraseForQuery: state.gdmnState.phrasesForQuery,
         data: {
@@ -30,13 +30,13 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | loadRSActions.LoadRSActions>, ownProps) => ({
-      onChange: (text: string) => thunkDispatch((dispatch, getState) => {
+      onChange: (text: string) => thunkDispatch((dispatch) => {
         ownProps.match ? dispatch(gdmnActions.updatePhraseForQuery({entityName: ownProps.match.params.entityName, text})) : undefined;
       }),
-      onDeletePhrase: () => thunkDispatch((dispatch, getState) => {
+      onDeletePhrase: () => thunkDispatch((dispatch) => {
         ownProps.match ? dispatch(gdmnActions.deletePhraseForQuery(ownProps.match.params.entityName)) : undefined;
       }),
-      onAddPhrase: () => thunkDispatch((dispatch, getState) => {
+      onAddPhrase: () => thunkDispatch((dispatch) => {
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
         entityName ? dispatch(gdmnActions.addPhraseForQuery({entityName, text: `покажи все ${entityName}`})) : undefined;
       }),
@@ -93,7 +93,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       }),
 
       attachRs: () => thunkDispatch((dispatch, getState) => {
-      const erModel = getState().gdmnState.erModel;
+        const erModel = getState().gdmnState.erModel;
 
         if (erModel && Object.keys(erModel.entities).length) {
           const name = ownProps.match ? ownProps.match.params.entityName : "";

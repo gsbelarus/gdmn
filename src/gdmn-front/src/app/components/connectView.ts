@@ -12,7 +12,7 @@ import { Dispatch } from 'redux';
 export const connectView = compose<any, IViewProps>(
   withRouter,
   connect(
-    (state: IState, ownProps: RouteComponentProps<any>) => ({
+    (state: IState, ownProps: RouteComponentProps) => ({
       viewTab: state.gdmnState.viewTabs.find(vt => vt.url === ownProps.match.url)
     }),
     (dispatch: ThunkDispatch<IState, never, TGdmnActions>) => ({

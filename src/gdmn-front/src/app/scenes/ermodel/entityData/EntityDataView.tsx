@@ -1,26 +1,11 @@
 import React from 'react';
-import { DataView, IDataViewProps } from '@src/app/components/DataView';
+import { DataView } from '@src/app/components/DataView';
 import { ICommandBarItemProps, TextField, DefaultButton } from 'office-ui-fabric-react';
 import { SQLForm } from '@src/app/components/SQLForm';
-import { IPhraseForQuery } from '../../gdmn/reducer';
-import { Semaphore } from 'gdmn-internals';
 import { getMutex } from '../../../components/dataViewMutexes';
+import { IEntityDataViewProps, IEntityMatchParams } from './EntityDataView.types';
 
-export interface IEntityMatchParams {
-  entityName: string
-}
-
-export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  phrasesForQuery: IPhraseForQuery[];
-  onEdit: (url: string) => void;
-  onDelete: () => void;
-  onChange: (text: string) => void;
-  onDeletePhrase: () => void;
-  onAddPhrase: () => void;
-  attachRs: (mutex?: Semaphore) => void;
-}
-
-export interface IEntityDataViewState {
+interface IEntityDataViewState {
   showSQL: boolean
   phrase: string;
 }
