@@ -416,7 +416,8 @@ export class ERTranslatorRU {
               if(predicate.lexeme.stem === 'присутствова') {
                 //exists
                 console.log('exists')
-              // s    // } else if(predicate instanceof RusAdverb && directObject) {
+              }
+            } else if(predicate instanceof RusAdverb && directObject) {
               if(predicate.word === 'больше') {
                 const value: IEntityQueryWhereValueNumber[] = [{
                   alias: linkAlias ? linkAlias : 'alias1',
