@@ -1,6 +1,6 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
-import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
+import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
@@ -11,9 +11,9 @@ import {compose} from "recompose";
 import {ThunkDispatch} from "redux-thunk";
 import {EntityDataView} from "./EntityDataView";
 import { TRsMetaActions } from "@src/app/store/rsmeta";
-import * as loadRSActions from "@src/app/store/loadRSActions";
+import { loadRSActions, LoadRSActions } from "@src/app/store/loadRSActions";
 import { ParsedText, parsePhrase, RusPhrase } from 'gdmn-nlp';
-import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
+import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { IEntityDataViewProps, IEntityMatchParams } from "./EntityDataView.types";
 import { Semaphore } from "gdmn-internals";
 import { prepareDefaultEntityQuery } from "./utils";
@@ -30,7 +30,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | loadRSActions.LoadRSActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | LoadRSActions>, ownProps) => ({
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
@@ -83,24 +83,24 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       }),
 
-      attachRs: (mutex?: Semaphore, phrase?: string) => thunkDispatch((dispatch, getState) => {
+      attachRs: (mutex?: Semaphore, queryPhrase?: string) => thunkDispatch((dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 
         if (erModel && Object.keys(erModel.entities).length) {
           const name = EntityDataView.getEntityNameFromProps(ownProps);
 
-          if (!phrase) {
+          if (!queryPhrase) {
             const entity = erModel.entity(name);
             const eq = prepareDefaultEntityQuery(entity);
             dispatch(loadRSActions.attachRS({ name, eq }));
           } else {
-            const parsedText: ParsedText[] = parsePhrase(phrase);
+            const parsedText: ParsedText[] = parsePhrase(queryPhrase);
             if (parsedText && parsedText.some(item => !!item.phrase && item.phrase instanceof RusPhrase)) {
               const erTranslatorRU = new ERTranslatorRU(erModel)
               const command = erTranslatorRU.process(parsedText.map(item => item.phrase).reduce((phrases, item) => item ? [...phrases, item as RusPhrase] : phrases, [] as RusPhrase[]));
               const eq = command[0] ? command[0].payload : undefined;
               if (eq) {
-                dispatch(loadRSActions.attachRS({ name, eq, override: true }));
+                dispatch(loadRSActions.attachRS({ name, eq, queryPhrase, override: true }));
               }
             }
           }

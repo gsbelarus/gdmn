@@ -6,7 +6,7 @@ export interface IEntityMatchParams {
 };
 
 export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  attachRs: (mutex?: Semaphore, phrase?: string) => void;
+  attachRs: (mutex?: Semaphore, queryPhrase?: string) => void;
   onEdit: (url: string) => void;
   onDelete: () => void;
 };

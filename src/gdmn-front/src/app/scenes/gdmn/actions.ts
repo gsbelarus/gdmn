@@ -219,10 +219,6 @@ const gdmnActions = {
     return (viewTab: IViewTab) => resolve(viewTab);
   }),
 
-  updateViewTab: createAction('gdmn/UPDATE_VIEW_TAB', resolve => {
-    return (viewTab: IViewTab) => resolve(viewTab);
-  }),
-
   deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => {
     return (viewTab: IViewTab) => resolve(viewTab);
   }),

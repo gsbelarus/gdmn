@@ -43,7 +43,7 @@ export class Internals extends View<IInternalsProps, {}> {
             {
               Object.entries(recordSet).map(([name, rs]) => (
                 <li key={name}>
-                  {name} -- {rs.size} records, {rs.fieldDefs.length} fields, status: {TStatus[rs.status]}
+                  {name} -- {rs.size} records, {rs.fieldDefs.length} fields, status: {TStatus[rs.status]}, queryPhrase: {rs.queryPhrase}
                 </li>
               ))
             }

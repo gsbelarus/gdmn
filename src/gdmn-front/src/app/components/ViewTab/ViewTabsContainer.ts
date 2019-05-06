@@ -4,7 +4,7 @@ import { IViewTab } from '@src/app/scenes/gdmn/types';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { IViewTabsProps, ViewTabs } from './ViewTabs';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
-import { deleteRS } from '@src/app/store/loadRSActions';
+import { loadRSActions } from '@src/app/store/loadRSActions';
 
 export const ViewTabsContainer = connect(
   (state: IState) => ({
@@ -45,7 +45,7 @@ export const ViewTabsContainer = connect(
       if (vt.rs) {
         vt.rs
           .filter( name => !viewTabs.find( t => t !== vt && !!t.rs && !!t.rs.find( n => n === name ) ) )
-          .forEach( name => dispatch(deleteRS({ name })) );
+          .forEach( name => dispatch(loadRSActions.deleteRS({ name })) );
       }
     }
   })

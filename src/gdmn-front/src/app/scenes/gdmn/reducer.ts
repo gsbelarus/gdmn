@@ -111,16 +111,6 @@ export function reducer(state: TGdmnState = initialState, action: TGdmnActions) 
           viewTabs: [...state.viewTabs, action.payload]
         };
       } else {
-        throw new Error(`ViewTab with url ${action.payload.url} already exists`);
-      }
-    }
-
-    case getType(gdmnActions.updateViewTab): {
-      const idx = state.viewTabs.findIndex(vt => vt.url === action.payload.url);
-
-      if (idx === -1) {
-        throw new Error(`Can't find a tab with url ${action.payload.url}`);
-      } else {
         return {
           ...state,
           viewTabs: [...state.viewTabs.slice(0, idx), action.payload, ...state.viewTabs.slice(idx + 1)]

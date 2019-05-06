@@ -25,6 +25,8 @@ import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
 import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
 import { ApplicationsViewContainer } from './components/ApplicationsViewContainer';
 import { IApplicationInfo } from '@gdmn/server-api';
+import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
+import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -257,12 +259,22 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               />
               {
               <Route
+                path={`${match.path}/entity/:entityName/edit/:id`}
+                render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                  <EntityDataDlgContainer
+                    entityName={props.match.params.entityName}
+                    id={props.match.params.id}
+                    url={props.match.url}
+                  />
+                )}
+              />
+                /*
+              <Route
                 path={`${match.path}/entity/:entityName/edit/:pkSet`}
                 render={props => (
                   <DlgViewContainer {...props} />
                 )}
               />
-                /*
               <Route
                 path={`${match.path}/entity/:entityName/add`}
                 render={props => (

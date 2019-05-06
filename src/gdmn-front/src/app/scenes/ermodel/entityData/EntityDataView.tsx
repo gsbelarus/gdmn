@@ -25,7 +25,11 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
 
     this.state = {
       showSQL: false,
-      phrase: this.entityName ? `покажи все ${this.entityName}` : ''
+      phrase: this.props.data && this.props.data.rs && this.props.data.rs.queryPhrase
+        ? this.props.data.rs.queryPhrase
+        : this.entityName
+        ? `покажи все ${this.entityName}`
+        : ''
     }
   }
 

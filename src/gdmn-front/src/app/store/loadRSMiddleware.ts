@@ -1,7 +1,7 @@
 import { GdmnPubSubApi } from "../services/GdmnPubSubApi";
 import { TThunkMiddleware } from "./middlewares";
-import { getType, ActionType } from "typesafe-actions";
-import * as actions from "./loadRSActions";
+import { getType } from "typesafe-actions";
+import { loadRSActions as actions, LoadRSActions } from "./loadRSActions";
 import { TTaskStatus } from "@gdmn/server-api";
 import { attr2fd } from "../scenes/ermodel/entityData/utils";
 import { RecordSet, IDataRow, createRecordSet, TFieldType, loadingData, TStatus, addData, deleteRecordSet } from "gdmn-recordset";
@@ -9,11 +9,11 @@ import { List } from "immutable";
 import { createGrid } from "gdmn-grid";
 import { rsMetaActions, IRsMeta } from "./rsmeta";
 
-export type RSAction = ActionType<typeof actions>;
-
-export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => ({ dispatch, getState }) => next => async (action: RSAction) => {
+export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => ({ dispatch, getState }) => next => async (action: LoadRSActions) => {
 
   if (
+    action.type !== getType(actions.loadRS)
+    &&
     action.type !== getType(actions.attachRS)
     &&
     action.type !== getType(actions.loadMoreRsData)
@@ -28,8 +28,27 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
   const setRsMeta = (rsMeta: IRsMeta) => dispatch(rsMetaActions.setRsMeta(name, rsMeta));
 
   switch (action.type) {
+    case getType(actions.loadRS): {
+      const { name, eq } = action.payload;
+      apiService.query({ query: eq.inspect() })
+        .then( response => {
+          const result = response.payload.result!;
+          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
+          const rs = RecordSet.create({
+            name,
+            fieldDefs,
+            data: List(result.data as IDataRow[]),
+            eq,
+            sql: result.info
+          });
+          dispatch(createRecordSet({ name, rs }));
+        });
+
+      break;
+    }
+
     case getType(actions.attachRS): {
-      const { eq, override } = action.payload;
+      const { eq, queryPhrase, override } = action.payload;
 
       const prevRsm = getRsMeta();
 
@@ -84,8 +103,9 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     fieldDefs,
                     data: List(result.data as IDataRow[]),
                     eq,
-                    sequentially: !!rsm.taskKey,
-                    sql: result.info
+                    queryPhrase,
+                    sql: result.info,
+                    sequentially: !!rsm.taskKey
                   });
 
                   dispatch(createRecordSet({ name, rs, override }));
