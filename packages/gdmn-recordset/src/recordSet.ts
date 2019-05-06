@@ -43,6 +43,7 @@ export interface IRecordSetOptions<R extends IDataRow = IDataRow> {
   sequentially?: boolean;
   masterLink?: IMasterLink;
   eq?: EntityQuery;
+  queryPhrase?: string;
   sql?: IRSSQLSelect;
 };
 
@@ -54,6 +55,7 @@ export interface IRecordSetDataOptions<R extends IDataRow = IDataRow> {
 export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   name: string;
   eq?: EntityQuery;
+  queryPhrase?: string;
   sql?: IRSSQLSelect;
   fieldDefs: FieldDefs;
   calcFields: TRowCalcFunc<R> | undefined;
@@ -138,6 +140,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   get eq() {
     return this._params.eq;
+  }
+
+  get queryPhrase() {
+    return this._params.queryPhrase;
   }
 
   get sql() {

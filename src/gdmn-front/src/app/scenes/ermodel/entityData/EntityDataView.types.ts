@@ -1,15 +1,12 @@
 import { IDataViewProps } from "@src/app/components/DataView";
-import { IPhraseForQuery } from "../../gdmn/reducer";
+import { Semaphore } from "gdmn-internals";
 
 export interface IEntityMatchParams {
   entityName: string
 };
 
 export interface IEntityDataViewProps extends IDataViewProps<IEntityMatchParams> {
-  phrasesForQuery: IPhraseForQuery[];
+  attachRs: (mutex?: Semaphore, phrase?: string) => void;
   onEdit: (url: string) => void;
   onDelete: () => void;
-  onChange: (text: string) => void;
-  onDeletePhrase: () => void;
-  onAddPhrase: () => void;
 };

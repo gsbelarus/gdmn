@@ -63,7 +63,6 @@ export class ERTranslatorRU {
       e.lName.ru && e.lName.ru.name.split(",").forEach(n =>
         morphAnalyzer(n.trim()).forEach(w => {
           if (w instanceof Noun) {
-            console.log(e.lName.ru)
             const entities = this.neMap.get(w.lexeme);
             if (!entities) {
               this.neMap.set(w.lexeme, [e]);
@@ -417,8 +416,7 @@ export class ERTranslatorRU {
               if(predicate.lexeme.stem === 'присутствова') {
                 //exists
                 console.log('exists')
-              }
-            } else if(predicate instanceof RusAdverb && directObject) {
+              // s    // } else if(predicate instanceof RusAdverb && directObject) {
               if(predicate.word === 'больше') {
                 const value: IEntityQueryWhereValueNumber[] = [{
                   alias: linkAlias ? linkAlias : 'alias1',

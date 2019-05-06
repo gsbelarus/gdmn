@@ -15,14 +15,15 @@ import * as loadRSActions from "@src/app/store/loadRSActions";
 import { ParsedText, parsePhrase, RusPhrase } from 'gdmn-nlp';
 import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
 import { IEntityDataViewProps, IEntityMatchParams } from "./EntityDataView.types";
+import { Semaphore } from "gdmn-internals";
+import { prepareDefaultEntityQuery } from "./utils";
 
 export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<IEntityMatchParams>>(
   connect(
-    (state: IState, ownProps: Partial<IEntityDataViewProps>) => {
-      const entityName = ownProps.match ? ownProps.match.params.entityName : "";
+    (state: IState, ownProps: RouteComponentProps<IEntityMatchParams>) => {
+      const entityName = EntityDataView.getEntityNameFromProps(ownProps);
       return {
         erModel: state.gdmnState.erModel,
-        phraseForQuery: state.gdmnState.phrasesForQuery,
         data: {
           rs: state.recordSet[entityName],
           gcs: state.grid[entityName]
@@ -30,16 +31,6 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | loadRSActions.LoadRSActions>, ownProps) => ({
-      onChange: (text: string) => thunkDispatch((dispatch) => {
-        ownProps.match ? dispatch(gdmnActions.updatePhraseForQuery({entityName: ownProps.match.params.entityName, text})) : undefined;
-      }),
-      onDeletePhrase: () => thunkDispatch((dispatch) => {
-        ownProps.match ? dispatch(gdmnActions.deletePhraseForQuery(ownProps.match.params.entityName)) : undefined;
-      }),
-      onAddPhrase: () => thunkDispatch((dispatch) => {
-        const entityName = ownProps.match ? ownProps.match.params.entityName : "";
-        entityName ? dispatch(gdmnActions.addPhraseForQuery({entityName, text: `покажи все ${entityName}`})) : undefined;
-      }),
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
@@ -92,23 +83,25 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       }),
 
-      attachRs: () => thunkDispatch((dispatch, getState) => {
+      attachRs: (mutex?: Semaphore, phrase?: string) => thunkDispatch((dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 
         if (erModel && Object.keys(erModel.entities).length) {
-          const name = ownProps.match ? ownProps.match.params.entityName : "";
-          const phrases = getState().gdmnState.phrasesForQuery.find(phrase => phrase.entityName === name);
-          const text = phrases ? phrases.phrase : '';
+          const name = EntityDataView.getEntityNameFromProps(ownProps);
 
-          let parsedText: ParsedText[] = parsePhrase(text);
-          let command: ICommand[];
-          if (parsedText && parsedText.some(item => !!item.phrase && item.phrase instanceof RusPhrase)) {
-            const erTranslatorRU = new ERTranslatorRU(erModel)
-            command = erTranslatorRU.process(parsedText.map(item => item.phrase).reduce((phrases, item) => item ? [...phrases, item as RusPhrase] : phrases, [] as RusPhrase[]));
-
-            const eq = command[0] ? command[0].payload : undefined;
-            if (eq) {
-              dispatch(loadRSActions.attachRS({ name, eq }));
+          if (!phrase) {
+            const entity = erModel.entity(name);
+            const eq = prepareDefaultEntityQuery(entity);
+            dispatch(loadRSActions.attachRS({ name, eq }));
+          } else {
+            const parsedText: ParsedText[] = parsePhrase(phrase);
+            if (parsedText && parsedText.some(item => !!item.phrase && item.phrase instanceof RusPhrase)) {
+              const erTranslatorRU = new ERTranslatorRU(erModel)
+              const command = erTranslatorRU.process(parsedText.map(item => item.phrase).reduce((phrases, item) => item ? [...phrases, item as RusPhrase] : phrases, [] as RusPhrase[]));
+              const eq = command[0] ? command[0].payload : undefined;
+              if (eq) {
+                dispatch(loadRSActions.attachRS({ name, eq, override: true }));
+              }
             }
           }
         }

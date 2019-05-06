@@ -4,26 +4,33 @@ import { ICommandBarItemProps, TextField, DefaultButton } from 'office-ui-fabric
 import { SQLForm } from '@src/app/components/SQLForm';
 import { getMutex } from '../../../components/dataViewMutexes';
 import { IEntityDataViewProps, IEntityMatchParams } from './EntityDataView.types';
+import { RouteComponentProps } from 'react-router';
 
 interface IEntityDataViewState {
   showSQL: boolean
   phrase: string;
-}
+};
 
 export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataViewState, IEntityMatchParams> {
-  public state: IEntityDataViewState = {
-    showSQL: false,
-    phrase: ''
+  public state: IEntityDataViewState;
+  public entityName: string;
+
+  constructor (props: IEntityDataViewProps) {
+    super(props);
+    this.entityName = EntityDataView.getEntityNameFromProps(props);
+
+    if (!this.entityName) {
+      throw new Error('Invalid entity name');
+    }
+
+    this.state = {
+      showSQL: false,
+      phrase: this.entityName ? `покажи все ${this.entityName}` : ''
+    }
   }
 
-  public componentWillMount() {
-    this.props.onAddPhrase();
-    const entityName = this.props.match ? this.props.match.params.entityName : '';
-    entityName ? this.setState({phrase: `покажи все ${entityName}`}) : undefined
-  }
-
-  public componentWillUnmount() {
-    this.props.onDeletePhrase();
+  static getEntityNameFromProps(props: RouteComponentProps<IEntityMatchParams>) {
+    return props.match ? props.match.params.entityName : '';
   }
 
   private onCloseSQL = () => {
@@ -31,17 +38,11 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
   }
 
   public getDataViewKey() {
-    return this.getRecordSetList()[0];
+    return this.entityName;
   }
 
   public getRecordSetList() {
-    const entityName = this.props.match ? this.props.match.params.entityName : '';
-
-    if (!entityName) {
-      throw new Error('Invalid entity name');
-    }
-
-    return [entityName];
+    return [this.entityName];
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -103,18 +104,22 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
   }
 
   public renderSettings() {
-    const { data, onChange, attachRs } = this.props;
+    const { data, attachRs } = this.props;
+    const { phrase } = this.state;
     return(
       <>
         <div className="GridPhraseForQuery">
           <TextField
             label="Phrase for query:"
-            value={this.state.phrase}
+            value={phrase}
             onChange={ (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-              this.setState({phrase: newValue ? newValue : ''})
+              this.setState({ phrase: newValue ? newValue : '' })
             }}
           />
-          <DefaultButton text="Получить" onClick={() => {onChange(this.state.phrase); attachRs(getMutex(this.getDataViewKey()))}} />
+          <DefaultButton
+            text="Получить"
+            onClick={ () => { attachRs(getMutex(this.getDataViewKey()), phrase); } }
+          />
         </div>
         {super.renderSettings(data!.rs!)}
       </>

@@ -227,18 +227,6 @@ const gdmnActions = {
     return (viewTab: IViewTab) => resolve(viewTab);
   }),
 
-  addPhraseForQuery: createAction('gdmn/ADD_PHRASE_FOR_QUERY', resolve => {
-    return (param: {entityName: string, text: string}) => resolve(param);
-  }),
-
-  updatePhraseForQuery: createAction('gdmn/UPDATE_PHRASE_FOR_QUERY', resolve => {
-    return (param: {entityName: string, text: string}) => resolve(param);
-  }),
-
-  deletePhraseForQuery: createAction('gdmn/DELETE_PHRASE_FOR_QUERY', resolve => {
-    return (entityName: string) => resolve(entityName);
-  }),
-
   getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
     return (sessionInfo: any[]) => resolve(sessionInfo)
   })
