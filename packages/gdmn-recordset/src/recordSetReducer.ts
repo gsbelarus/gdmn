@@ -1,9 +1,6 @@
-import { ActionType, getType } from "typesafe-actions";
-
-import * as actions from "./recordSetActions";
+import { getType } from "typesafe-actions";
+import { rsActions as actions, RSAction } from "./recordSetActions";
 import { RecordSet } from "./recordSet";
-
-export type RecordSetAction = ActionType<typeof actions>;
 
 export interface RecordSetReducerState {
   [name: string]: RecordSet;
@@ -11,7 +8,7 @@ export interface RecordSetReducerState {
 
 export const recordSetReducer = (
   state: RecordSetReducerState = {},
-  action: RecordSetAction
+  action: RSAction
 ): RecordSetReducerState => {
   if (
     typeof action.type !== "string" ||
