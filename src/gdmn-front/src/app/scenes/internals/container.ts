@@ -6,7 +6,7 @@ import { Internals } from './component';
 import { StompLogPanel } from './components/StompLogPanel';
 import { rootActions } from '../root/actions';
 import { DefaultButton } from 'office-ui-fabric-react';
-import {gdmnActionsAsync, TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {gdmnActionsAsync, GdmnAction} from "@src/app/scenes/gdmn/actions";
 import { ThunkDispatch } from 'redux-thunk';
 
 export const StompLogPanelContainer = connect((state: IState) => ({
@@ -35,7 +35,7 @@ export const InternalsContainer = compose<any, any>(
         sessionInfo: state.gdmnState.sessionInfo
       }
     },
-    function (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions>)
+    function (thunkDispatch: ThunkDispatch<IState, never, GdmnAction>)
     { return ({
         getSessionInfo: () => thunkDispatch(gdmnActionsAsync.getSessionInfo())
       })}

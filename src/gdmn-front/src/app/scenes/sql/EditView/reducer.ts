@@ -1,4 +1,4 @@
-import {gdmnActions, TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {gdmnActions, GdmnAction} from "@src/app/scenes/gdmn/actions";
 import * as actions from "@src/app/scenes/sql/EditView/actions";
 import {ActionType, getType} from "typesafe-actions";
 
@@ -16,7 +16,7 @@ const initialState: ISqlState = {
 
 export type SqlActions = ActionType<typeof actions>;
 
-export function reducer(state: ISqlState = initialState, action: SqlActions | TGdmnActions) {
+export function reducer(state: ISqlState = initialState, action: SqlActions | GdmnAction) {
   switch (action.type) {
     case getType(actions.init): {
       return {

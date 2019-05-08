@@ -9,7 +9,7 @@ import { rootActions } from '@src/app/scenes/root/actions';
 import { IViewTab } from './types';
 import { ISignInBoxData } from '../auth/components/SignInBox';
 
-const gdmnActionsAsync = {
+export const gdmnActionsAsync = {
   apiActivate: (): TThunkAction => async (dispatch, getState, { apiService }) => {
     apiService.pubSubClient.activateConnection();
   },
@@ -172,7 +172,7 @@ const gdmnActionsAsync = {
   },
 };
 
-const gdmnActions = {
+export const gdmnActions = {
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
     return (reconnect: boolean = false) => resolve(reconnect);
   }),
@@ -228,6 +228,5 @@ const gdmnActions = {
   })
 };
 
-type TGdmnActions = ActionType<typeof gdmnActions>;
+export type GdmnAction = ActionType<typeof gdmnActions>;
 
-export { gdmnActions, TGdmnActions, gdmnActionsAsync };

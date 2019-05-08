@@ -120,7 +120,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         onClick: () => {}
       },
     ];
-  }, [rs, refCurrentEdit.current]);
+  }, [rs, refCurrentEdit]);
 
   if (!entity) {
     return <div>ERModel isn't loaded or unknown entity {entityName}</div>;

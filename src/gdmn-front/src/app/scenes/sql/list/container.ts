@@ -1,5 +1,5 @@
 import {connectView} from "@src/app/components/connectView";
-import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {GdmnAction} from "@src/app/scenes/gdmn/actions";
 import {IState} from "@src/app/store/reducer";
 import {RSAction, rsActions, IDataRow, RecordSet, TFieldType, IFieldDef} from "gdmn-recordset";
 import {createGrid, GridAction, setCursorCol, TSetCursorPosEvent} from "gdmn-grid";
@@ -24,7 +24,7 @@ export const SqlListContainer = compose<ISqlListProps, RouteComponentProps<any>>
         }
       }
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | SqlQueryActions | GridAction>, ownProps: RouteComponentProps<any>) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, GdmnAction | RSAction | SqlQueryActions | GridAction>, ownProps: RouteComponentProps<any>) => ({
       add: () => thunkDispatch((dispatch) => {
         const id = uuid();
         dispatch(createQuery('select * from gd_contact', id))

@@ -6,7 +6,7 @@ import { Auth, TPubSubConnectStatus } from '@gdmn/client-core';
 import { TGdmnErrorCodes, TTaskStatus } from '@gdmn/server-api';
 
 import { authActionsAsync } from '@src/app/scenes/auth/actions';
-import { gdmnActions, gdmnActionsAsync, TGdmnActions } from '@src/app/scenes/gdmn/actions';
+import { gdmnActions, gdmnActionsAsync, GdmnAction } from '@src/app/scenes/gdmn/actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
@@ -15,7 +15,7 @@ import { TThunkMiddleware } from '@src/app/store/middlewares';
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
 const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
-  return ({ dispatch, getState }) => next => async (action: TGdmnActions) => {
+  return ({ dispatch, getState }) => next => async (action: GdmnAction) => {
     let errorSubscription: Subscription | undefined;
     let taskProgressResultSub: Subscription | undefined;
     let taskStatusResultSub: Subscription | undefined;

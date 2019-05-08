@@ -1,6 +1,6 @@
 import { getType } from 'typesafe-actions';
 import { ERModel } from 'gdmn-orm';
-import { gdmnActions, TGdmnActions } from '@src/app/scenes/gdmn/actions';
+import { gdmnActions, GdmnAction } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 import { IApplicationInfo, ITemplateApplication } from '@gdmn/server-api';
 
@@ -24,7 +24,7 @@ const initialState: TGdmnState = {
   sessionInfo: []
 };
 
-export function reducer(state: TGdmnState = initialState, action: TGdmnActions) {
+export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
   switch (action.type) {
     case getType(gdmnActions.setSchema): {
       return {

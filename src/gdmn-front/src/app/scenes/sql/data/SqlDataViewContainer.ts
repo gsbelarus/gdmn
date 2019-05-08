@@ -1,6 +1,6 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
-import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {GdmnAction} from "@src/app/scenes/gdmn/actions";
 import {ISqlDataViewProps, SqlDataView} from "@src/app/scenes/sql/data/SqlDataView";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
@@ -30,7 +30,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
         }
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | GridAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, GdmnAction | RSAction | GridAction | TRsMetaActions>, ownProps) => ({
       onView: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const requestID = ownProps.match ? ownProps.match.params.id : "";
         const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);

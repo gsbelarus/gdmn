@@ -1,7 +1,6 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectView} from "@src/app/components/connectView";
 import {attr2fd, prepareDefaultEntityQuery} from "@src/app/scenes/ermodel/entityData/utils";
-import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {Semaphore} from "gdmn-internals";
@@ -26,7 +25,7 @@ export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>
         dlgState: DlgState.dsEdit
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, RSAction | TRsMetaActions>, ownProps) => ({
       attachRs: (mutex: Semaphore) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 

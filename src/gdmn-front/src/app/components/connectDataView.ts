@@ -24,7 +24,7 @@ import {
 import { RSAction, rsActions, RecordSet } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
-import { TGdmnActions } from '../scenes/gdmn/actions';
+import { GdmnAction } from '../scenes/gdmn/actions';
 import { IDataViewProps } from './DataView';
 import { loadRSActions, LoadRSActions } from '../store/loadRSActions';
 
@@ -36,7 +36,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           ? state.gdmnState.erModel
           : undefined, // todo перенести
     }),
-    (dispatch: ThunkDispatch<IState, never, GridAction | RSAction | TGdmnActions | LoadRSActions>) => ({
+    (dispatch: ThunkDispatch<IState, never, GridAction | RSAction | GdmnAction | LoadRSActions>) => ({
 
       refreshRs: (rs: RecordSet) => {
         if (rs.eq) {

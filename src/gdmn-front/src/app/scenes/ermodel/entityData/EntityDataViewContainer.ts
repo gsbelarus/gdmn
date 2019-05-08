@@ -1,6 +1,6 @@
 import {TTaskStatus} from "@gdmn/server-api";
 import {connectDataView} from "@src/app/components/connectDataView";
-import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
+import {GdmnAction} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
@@ -30,7 +30,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | GridAction | TRsMetaActions | LoadRSActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, GdmnAction | RSAction | GridAction | TRsMetaActions | LoadRSActions>, ownProps) => ({
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";

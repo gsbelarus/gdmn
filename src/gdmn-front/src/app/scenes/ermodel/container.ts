@@ -4,7 +4,7 @@ import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
 import { IState } from '@src/app/store/reducer';
-import { gdmnActionsAsync, TGdmnActions } from '../gdmn/actions';
+import { gdmnActionsAsync, GdmnAction } from '../gdmn/actions';
 import { ERModelView, IERModelViewProps } from './component';
 import { Semaphore } from 'gdmn-internals';
 import { compose } from 'recompose';
@@ -26,7 +26,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
       }
     }),
 
-    (thunkDispatch: ThunkDispatch<IState, never, GridAction | RSAction | TGdmnActions>) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, GridAction | RSAction | GdmnAction>) => ({
       loadMoreRsData: undefined,
       attachRs: (_mutex: Semaphore) =>
         thunkDispatch((dispatch, getState) => {

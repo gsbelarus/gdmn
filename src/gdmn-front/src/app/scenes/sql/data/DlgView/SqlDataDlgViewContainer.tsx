@@ -1,5 +1,5 @@
 import {connectView} from "@src/app/components/connectView";
-import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
+import {GdmnAction, gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {IState} from "@src/app/store/reducer";
 import {rsActions, RSAction} from "gdmn-recordset";
 import {TTaskStatus} from "@gdmn/server-api";
@@ -23,7 +23,7 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
         dlgState: DlgState.dsBrowse
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, GdmnAction | RSAction | TRsMetaActions>, ownProps) => ({
       setRow: (rowIndex: number) => thunkDispatch(async (dispatch, getState) => {
         const requestID = ownProps.match ? ownProps.match.params.id : "";
         const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);
