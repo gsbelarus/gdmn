@@ -5,26 +5,42 @@ import { IEntityDataDlgStateProps, IEntityDataDlgContainerProps, IEntityDataDlgP
 import { ThunkDispatch } from "redux-thunk";
 import { TGdmnActions, gdmnActions } from "../../gdmn/actions";
 import { IViewTab } from "../../gdmn/types";
-import { Entity } from "gdmn-orm";
 import { prepareDefaultEntityQuery } from "../entityData/utils";
 import { loadRSActions, LoadRSActions } from "@src/app/store/loadRSActions";
+import { rsActions, RSAction } from "gdmn-recordset";
 
 export const EntityDataDlgContainer = connect(
   (state: IState, ownProps: IEntityDataDlgContainerProps): IEntityDataDlgStateProps => ({
-    erModel: state.gdmnState.erModel,
     rs: state.recordSet[ownProps.url],
     entity: state.gdmnState.erModel.entities[ownProps.entityName]
   }),
-  (dispatch: ThunkDispatch<IState, never, TGdmnActions | LoadRSActions>) => ({
-    addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab)),
-    loadRS: (name: string, entity: Entity, id: string) => {
-      const eq = prepareDefaultEntityQuery(entity, [id]);
-      dispatch(loadRSActions.loadRS({ name, eq }));
-    }
+  (dispatch: ThunkDispatch<IState, never, TGdmnActions | LoadRSActions | RSAction>) => ({
+    dispatch,
+    addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab))
   }),
-  (stateProps, dispatchProps, ownProps): IEntityDataDlgProps => ({
-    ...stateProps,
-    ...dispatchProps,
-    ...ownProps
-  })
+  (stateProps, dispatchProps, ownProps): IEntityDataDlgProps => {
+    const { rs, entity } = stateProps;
+    const { dispatch, ...restDispatchProps } = dispatchProps;
+
+    if (!rs && entity) {
+      const { url, id } = ownProps;
+      const eq = prepareDefaultEntityQuery(entity, [id]);
+      dispatch(loadRSActions.loadRS({ name: url, eq }));
+    }
+
+    const setFieldValue = (fieldName: string, value: string)=> {
+      if (rs) {
+        dispatch(rsActions.setFieldValue({ name: rs.name, fieldName, value }));
+      }
+    };
+
+    return (
+      {
+        ...stateProps,
+        ...restDispatchProps,
+        ...ownProps,
+        setFieldValue
+      }
+    );
+  }
 )(EntityDataDlg);

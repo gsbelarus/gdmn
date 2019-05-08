@@ -5,16 +5,7 @@ import {ISqlDataViewProps, SqlDataView} from "@src/app/scenes/sql/data/SqlDataVi
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {createGrid, GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {
-  addData,
-  createRecordSet,
-  IDataRow,
-  loadingData,
-  RecordSet,
-  RecordSetAction,
-  TFieldType,
-  TStatus
-} from "gdmn-recordset";
+import {rsActions, IDataRow, RecordSet, RSAction, TFieldType, TStatus} from "gdmn-recordset";
 import {List} from "immutable";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
@@ -39,7 +30,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
         }
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | GridAction | TRsMetaActions>, ownProps) => ({
       onView: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const requestID = ownProps.match ? ownProps.match.params.id : "";
         const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);
@@ -99,7 +90,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
                       sequentially: !!rsm.taskKey,
                       sql: {select: requestRecord.expression, params: []}
                     });
-                    dispatch(createRecordSet({name: rs.name, rs}));
+                    dispatch(rsActions.createRecordSet({name: rs.name, rs}));
 
                     if (!getState().grid[rs.name]) {
                       dispatch(
@@ -160,7 +151,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
             apiService.interruptTask({taskKey}).catch(console.error);
             return;
           }
-          dispatch(loadingData({name}));
+          dispatch(rsActions.loadingData({name}));
         }
       ),
       addData: (name: string, records: IDataRow[], taskKey: string) => thunkDispatch(
@@ -173,7 +164,7 @@ export const SqlDataViewContainer = compose<ISqlDataViewProps, RouteComponentPro
           }
           const rs = getState().recordSet[name];
           if (rs && rs.status === TStatus.LOADING) {
-            dispatch(addData({name, records, full: !(rsm && rsm.taskKey)}));
+            dispatch(rsActions.addData({name, records, full: !(rsm && rsm.taskKey)}));
           }
         }),
       /*

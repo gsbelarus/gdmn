@@ -1,11 +1,10 @@
 import {connectView} from "@src/app/components/connectView";
 import {IViewProps} from "@src/app/components/View";
 import {IViewTab} from "@src/app/scenes/gdmn/types";
-import {createRecordSet, IDataRow, RecordSet, RecordSetAction, setCurrentRow} from "gdmn-recordset";
 import {SqlActions} from "@src/app/scenes/sql/EditView/reducer";
 import {init, clear, setExpression} from "@src/app/scenes/sql/EditView/actions";
 import {SqlQueryActions} from '@src/app/scenes/sql/data/reducer';
-import {createQuery, updateQuery  } from '@src/app/scenes/sql/data/actions';
+import {updateQuery} from '@src/app/scenes/sql/data/actions';
 import {SqlView} from "@src/app/scenes/sql/EditView/component";
 import {IState} from "@src/app/store/reducer";
 import {connect} from "react-redux";
@@ -21,7 +20,7 @@ export const SqlViewContainer = compose<any, RouteComponentProps<any>>(
       expression: state.sqlState.expression,
       id: state.sqlState.id
     }),
-    (thunkDispatch: ThunkDispatch<IState, never, RecordSetAction | SqlActions | SqlQueryActions>, ownProps: IViewProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, SqlActions | SqlQueryActions>, ownProps: IViewProps) => ({
       addViewTab: (viewTab: IViewTab) => thunkDispatch((dispatch, getState) => { // overriding
         const requestID = ownProps.match ? ownProps.match.params.id : "";
         const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);

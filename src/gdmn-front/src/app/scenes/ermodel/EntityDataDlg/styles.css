@@ -1,0 +1,9 @@
+.ScrollableDlg {
+  overflow: scroll;
+  height: 100%;
+}
+
+.FieldsColumn {
+  width: 380px;
+  padding: 16px;
+}

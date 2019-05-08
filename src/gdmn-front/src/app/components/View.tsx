@@ -67,7 +67,8 @@ export abstract class View<P extends IViewProps<R>, S = {}, R = any> extends Com
 
     addViewTab({
       caption: this.getViewCaption(),
-      url: match.url
+      url: match.url,
+      canClose: true
     });
   }
 

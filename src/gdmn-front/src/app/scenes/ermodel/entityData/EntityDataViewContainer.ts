@@ -4,7 +4,7 @@ import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {GridAction, TLoadMoreRsDataEvent} from "gdmn-grid";
-import {RecordSetAction, deleteRows} from "gdmn-recordset";
+import {RSAction, rsActions} from "gdmn-recordset";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
@@ -30,7 +30,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         }
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | GridAction | TRsMetaActions | LoadRSActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | GridAction | TRsMetaActions | LoadRSActions>, ownProps) => ({
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
@@ -63,7 +63,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
 
         const pkValues = rs.pkValue;
 
-        dispatch(deleteRows({ name: rs.name }));
+        dispatch(rsActions.deleteRows({ name: rs.name }));
 
         const result = await apiService.delete({
           delete: {

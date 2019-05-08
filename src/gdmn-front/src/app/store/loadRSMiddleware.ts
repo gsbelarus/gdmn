@@ -4,7 +4,7 @@ import { getType } from "typesafe-actions";
 import { loadRSActions as actions, LoadRSActions } from "./loadRSActions";
 import { TTaskStatus } from "@gdmn/server-api";
 import { attr2fd } from "../scenes/ermodel/entityData/utils";
-import { RecordSet, IDataRow, createRecordSet, TFieldType, loadingData, TStatus, addData, deleteRecordSet } from "gdmn-recordset";
+import { RecordSet, IDataRow, TFieldType, TStatus, rsActions } from "gdmn-recordset";
 import { List } from "immutable";
 import { createGrid } from "gdmn-grid";
 import { rsMetaActions, IRsMeta } from "./rsmeta";
@@ -41,7 +41,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
             eq,
             sql: result.info
           });
-          dispatch(createRecordSet({ name, rs }));
+          dispatch(rsActions.createRecordSet({ name, rs }));
         });
 
       break;
@@ -108,7 +108,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     sequentially: !!rsm.taskKey
                   });
 
-                  dispatch(createRecordSet({ name, rs, override }));
+                  dispatch(rsActions.createRecordSet({ name, rs, override }));
 
                   if (!getState().grid[name]) {
                     dispatch(
@@ -187,7 +187,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
           throw new Error(`No task key for recordset ${name}`);
         }
 
-        dispatch(loadingData({ name }));
+        dispatch(rsActions.loadingData({ name }));
 
         const { rowsCount } = action.payload;
 
@@ -209,7 +209,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
           case TTaskStatus.SUCCESS: {
             if (rs && rs.status === TStatus.LOADING) {
-              dispatch(addData({ name, records: response.payload.result!.data, full: !(rsMeta && rsMeta.taskKey) }));
+              dispatch(rsActions.addData({ name, records: response.payload.result!.data, full: !(rsMeta && rsMeta.taskKey) }));
             }
             break;
           }
@@ -240,7 +240,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
         dispatch(rsMetaActions.deleteRsMeta(name));
       }
 
-      dispatch(deleteRecordSet({ name }));
+      dispatch(rsActions.deleteRecordSet({ name }));
 
       break;
     }

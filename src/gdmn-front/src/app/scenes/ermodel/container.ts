@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { createRecordSet, IDataRow, RecordSet, RecordSetAction, setRecordSet, TFieldType } from 'gdmn-recordset';
+import { IDataRow, RecordSet, TFieldType, RSAction, rsActions } from 'gdmn-recordset';
 import { createGrid, GridAction } from 'gdmn-grid';
 import { List } from 'immutable';
 import { ThunkDispatch } from 'redux-thunk';
@@ -26,7 +26,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
       }
     }),
 
-    (thunkDispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions>) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, GridAction | RSAction | TGdmnActions>) => ({
       loadMoreRsData: undefined,
       attachRs: (_mutex: Semaphore) =>
         thunkDispatch((dispatch, getState) => {
@@ -66,7 +66,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
               )
             });
 
-            dispatch(createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
+            dispatch(rsActions.createRecordSet({ name: entitiesRS.name, rs: entitiesRS }));
           }
 
           const currEntity = entitiesRS.size ? entitiesRS.getString('name') : undefined;
@@ -94,7 +94,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                 List<IDataRow>();
 
               dispatch(
-                setRecordSet({
+                rsActions.setRecordSet({
                   name: attributesRS.name,
                   rs: attributesRS.setData({
                     data,
@@ -151,7 +151,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                 ]
               }
             });
-            dispatch(createRecordSet({ name: attributesRS.name, rs: attributesRS }));
+            dispatch(rsActions.createRecordSet({ name: attributesRS.name, rs: attributesRS }));
           }
 
           const gcs = getState().grid.entities;

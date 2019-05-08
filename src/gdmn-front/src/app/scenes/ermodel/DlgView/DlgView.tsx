@@ -83,6 +83,7 @@ export class DlgView extends View<IDlgViewProps, IDlgViewState, IDlgViewMatchPar
     addViewTab({
       caption: this.getViewCaption(),
       url: match.url,
+      canClose: true,
       rs: this.getRecordSetList()
     });
   }

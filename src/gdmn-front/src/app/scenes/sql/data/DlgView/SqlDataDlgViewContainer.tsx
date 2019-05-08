@@ -1,7 +1,7 @@
 import {connectView} from "@src/app/components/connectView";
 import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {IState} from "@src/app/store/reducer";
-import {createRecordSet, IDataRow, RecordSet, RecordSetAction, setCurrentRow} from "gdmn-recordset";
+import {rsActions, RSAction} from "gdmn-recordset";
 import {TTaskStatus} from "@gdmn/server-api";
 import {apiService} from "@src/app/services/apiService";
 import {connect} from "react-redux";
@@ -23,7 +23,7 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
         dlgState: DlgState.dsBrowse
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | TRsMetaActions>, ownProps) => ({
       setRow: (rowIndex: number) => thunkDispatch(async (dispatch, getState) => {
         const requestID = ownProps.match ? ownProps.match.params.id : "";
         const requestRecord = getState().sqlDataViewState.requests.find(itm => itm.id === requestID);
@@ -33,7 +33,7 @@ export const SqlDataDlgViewContainer = compose<ISqlDataDlgViewProps, RouteCompon
         const rs = getState().recordSet[requestID];
         if (!rs) return;
 
-        dispatch(setCurrentRow({ name: rs.name, currentRow: rowIndex }));
+        dispatch(rsActions.setCurrentRow({ name: rs.name, currentRow: rowIndex }));
       }),
       onView: (entityName: string, pk: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;

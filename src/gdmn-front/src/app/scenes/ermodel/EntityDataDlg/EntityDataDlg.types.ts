@@ -1,5 +1,5 @@
 import { RecordSet } from "gdmn-recordset";
-import { Entity, ERModel } from "gdmn-orm";
+import { Entity } from "gdmn-orm";
 import { IViewTab } from "../../gdmn/types";
 
 export type TAddViewTab = (viewTab: IViewTab) => void;
@@ -18,16 +18,14 @@ export interface IEntityDataDlgContainerProps {
 export interface IEntityDataDlgStateProps {
   rs?: RecordSet;
   entity?: Entity;
-  erModel: ERModel;
 };
 
 export interface IEntityDataDlgProps {
   rs?: RecordSet;
   entity?: Entity;
-  erModel: ERModel;
   url: string;
   entityName: string;
   id: string;
   addViewTab: TAddViewTab;
-  loadRS: (name: string, entity: Entity, id: string) => void;
+  setFieldValue: (fieldName: string, value: string) => void;
 };

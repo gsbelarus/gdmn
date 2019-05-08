@@ -9,38 +9,37 @@ export interface IViewTabProps {
   url: string;
   error: boolean;
   loading: boolean;
-  onClose: () => void;
+  changed: boolean;
+  onClose?: () => void;
 };
 
 export const ViewTab = CSSModules(
   (props: IViewTabProps) => {
-    const { caption, url, loading, error, onClose } = props;
+    const { caption, url, loading, changed, error, onClose } = props;
     const viewTabStyle = error ? 'ViewTab ViewTabError': 'ViewTab ViewTabNormal';
+
+    const InnerTab = CSSModules( (props: {active?: boolean}) => (
+      <div styleName={`ViewTabText ${props.active ? "ViewActiveTab" : "ViewInactiveTab"}`}>
+        {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
+        <Link to={url}>
+          {caption}{changed ? ' *' : ''}
+        </Link>
+        {onClose && <span styleName="ViewTabCross" onClick={onClose}>x</span>}
+      </div>
+    ), styles, {allowMultiple: true });
 
     return url === location.pathname ? (
       <Fragment key={url}>
-        <div styleName={viewTabStyle} onMouseDown={event => event.button === 1 ? onClose() : undefined}>
+        <div styleName={viewTabStyle} onMouseDown={event => event.button === 1 && onClose ? onClose() : undefined}>
           <div styleName={error ? "ViewActiveColorError" : "ViewActiveColorNormal"} />
-            <div styleName="ViewTabText ViewActiveTab">
-              {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
-              <Link to={url}>
-                {caption}
-              </Link>
-              <span styleName="ViewTabCross" onClick={onClose}>x</span>
-            </div>
+          <InnerTab active />
         </div>
         <div styleName="ViewTabSpace" />
       </Fragment>
     ) : (
       <Fragment key={url}>
-        <div styleName={viewTabStyle} onMouseDown={event => event.button === 1 ? onClose() : undefined}>
-          <div styleName="ViewTabText ViewInactiveTab">
-            {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
-            <Link to={url}>
-              {caption}
-            </Link>
-            <span styleName="ViewTabCross" onClick={onClose}>x</span>
-          </div>
+        <div styleName={viewTabStyle} onMouseDown={event => event.button === 1 && onClose ? onClose() : undefined}>
+          <InnerTab  />
           <div styleName="ViewInactiveShadow" />
         </div>
         <div styleName="ViewTabSpace" />

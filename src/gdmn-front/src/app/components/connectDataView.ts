@@ -21,20 +21,7 @@ import {
   TRecordsetSetFieldValue,
   TRecordsetEvent
 } from "gdmn-grid";
-import {
-  RecordSetAction,
-  selectRow,
-  setAllRowsSelected,
-  setRecordSet,
-  sortRecordSet,
-  toggleGroup,
-  setFilter,
-  RecordSet,
-  insert,
-  deleteRows,
-  cancel,
-  setFieldValue
-} from 'gdmn-recordset';
+import { RSAction, rsActions, RecordSet } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
 import { TGdmnActions } from '../scenes/gdmn/actions';
@@ -49,7 +36,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           ? state.gdmnState.erModel
           : undefined, // todo перенести
     }),
-    (dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction | TGdmnActions | LoadRSActions>) => ({
+    (dispatch: ThunkDispatch<IState, never, GridAction | RSAction | TGdmnActions | LoadRSActions>) => ({
 
       refreshRs: (rs: RecordSet) => {
         if (rs.eq) {
@@ -63,9 +50,9 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
         ),
 
       onApplySortDialog: (event: TApplySortDialogEvent) =>
-        dispatch((dispatch: ThunkDispatch<IState, never, GridAction | RecordSetAction>, getState: () => IState) => {
+        dispatch((dispatch: ThunkDispatch<IState, never, GridAction | RSAction>, getState: () => IState) => {
           dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
-          dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
+          dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
 
           event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
         }),
@@ -90,7 +77,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
       onSelectRow: (event: TSelectRowEvent) =>
         dispatch(
-          selectRow({
+          rsActions.selectRow({
             name: event.rs.name,
             idx: event.idx,
             selected: event.selected
@@ -99,7 +86,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
       onSelectAllRows: (event: TSelectAllRowsEvent) =>
         dispatch(
-          setAllRowsSelected({
+          rsActions.setAllRowsSelected({
             name: event.rs.name,
             value: event.value
           })
@@ -107,7 +94,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
       onSetCursorPos: (event: TSetCursorPosEvent) => {
         dispatch(
-          setRecordSet({
+          rsActions.setRecordSet({
             name: event.rs.name,
             rs: event.rs.setCurrentRow(event.cursorRow)
           })
@@ -122,9 +109,9 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
       },
 
       onSort: (event: TSortEvent) =>
-        dispatch((dispatch: ThunkDispatch<IState, never, RecordSetAction>, getState: () => IState) => {
+        dispatch((dispatch: ThunkDispatch<IState, never, RSAction>, getState: () => IState) => {
           dispatch(
-            sortRecordSet({
+            rsActions.sortRecordSet({
               name: event.rs.name,
               sortFields: event.sortFields
             })
@@ -135,7 +122,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
       onToggleGroup: (event: TToggleGroupEvent) =>
         dispatch(
-          toggleGroup({
+          rsActions.toggleGroup({
             name: event.rs.name,
             rowIdx: event.rowIdx
           })
@@ -144,16 +131,16 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
       onSetFilter:
         (event: TOnFilterEvent) => {
           if (event.filter) {
-            dispatch(setFilter({name: event.rs.name, filter: { conditions: [ { value: event.filter } ] } }))
+            dispatch(rsActions.setFilter({name: event.rs.name, filter: { conditions: [ { value: event.filter } ] } }))
           } else {
-            dispatch(setFilter({name: event.rs.name, filter: undefined }))
+            dispatch(rsActions.setFilter({name: event.rs.name, filter: undefined }))
           }
         },
 
-      onInsert: (event: TRecordsetEvent) => { dispatch(insert({ name: event.rs.name })); },
-      onDelete: (event: TRecordsetEvent) => { dispatch(deleteRows({ name: event.rs.name })); },
-      onCancel: (event: TRecordsetEvent) => { dispatch(cancel({ name: event.rs.name })); },
-      onSetFieldValue: (event: TRecordsetSetFieldValue) => { dispatch(setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value })); }
+      onInsert: (event: TRecordsetEvent) => { dispatch(rsActions.insert({ name: event.rs.name })); },
+      onDelete: (event: TRecordsetEvent) => { dispatch(rsActions.deleteRows({ name: event.rs.name })); },
+      onCancel: (event: TRecordsetEvent) => { dispatch(rsActions.cancel({ name: event.rs.name })); },
+      onSetFieldValue: (event: TRecordsetSetFieldValue) => { dispatch(rsActions.setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value })); }
     })
   ),
   connectView

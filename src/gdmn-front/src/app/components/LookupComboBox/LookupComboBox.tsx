@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, DefaultButton, ActionButton } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton } from 'office-ui-fabric-react';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
 

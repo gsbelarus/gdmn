@@ -5,7 +5,7 @@ import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {apiService} from "@src/app/services/apiService";
 import {IState} from "@src/app/store/reducer";
 import {Semaphore} from "gdmn-internals";
-import {createRecordSet, IDataRow, RecordSet, RecordSetAction} from "gdmn-recordset";
+import {IDataRow, RecordSet, RSAction, rsActions} from "gdmn-recordset";
 import {List} from "immutable";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
@@ -26,7 +26,7 @@ export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>
         dlgState: DlgState.dsEdit
       };
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | TRsMetaActions>, ownProps) => ({
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | TRsMetaActions>, ownProps) => ({
       attachRs: (mutex: Semaphore) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
 
@@ -60,7 +60,7 @@ export const DlgViewContainer = compose<IDlgViewProps, RouteComponentProps<any>>
                 data: List(response.payload.result!.data as IDataRow[]),
                 eq: query
               });
-              dispatch(createRecordSet({name: rs.name, rs}));
+              dispatch(rsActions.createRecordSet({name: rs.name, rs}));
             }
           }
         } finally {

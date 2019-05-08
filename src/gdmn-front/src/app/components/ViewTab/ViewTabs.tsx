@@ -31,9 +31,26 @@ export const ViewTabs = CSSModules(
                 return p;
               }, false
             );
+            const changed = !!vt.rs && vt.rs.reduce(
+              (p, name) => {
+                if (recordSet[name] && recordSet[name].changed) {
+                  return true;
+                }
+                return p;
+              }, false
+            );
             const error = !!rsMeta[name] && !!rsMeta[name].error;
 
-            return (<ViewTab key={vt.url} {...vt} loading={loading} error={error} onClose={ () => onClose(vt) } /> );
+            return (
+              <ViewTab
+                key={vt.url}
+                {...vt}
+                loading={loading}
+                changed={changed}
+                error={error}
+                onClose={ vt.canClose ? () => onClose(vt) : undefined }
+              />
+            );
           })
         }
         <div styleName="ViewRestSpace" />

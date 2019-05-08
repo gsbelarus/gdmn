@@ -1,10 +1,8 @@
 import {connectView} from "@src/app/components/connectView";
-import {TGdmnActions, gdmnActions} from "@src/app/scenes/gdmn/actions";
+import {TGdmnActions} from "@src/app/scenes/gdmn/actions";
 import {IState} from "@src/app/store/reducer";
-import {createRecordSet, IDataRow, RecordSet, RecordSetAction, TFieldType, IFieldDef, setCurrentRow} from "gdmn-recordset";
-import {TTaskStatus} from "@gdmn/server-api";
-import {apiService} from "@src/app/services/apiService";
-import {createGrid, GridAction, TLoadMoreRsDataEvent, setCursorCol, TSetCursorPosEvent} from "gdmn-grid";
+import {RSAction, rsActions, IDataRow, RecordSet, TFieldType, IFieldDef} from "gdmn-recordset";
+import {createGrid, GridAction, setCursorCol, TSetCursorPosEvent} from "gdmn-grid";
 import {connect} from "react-redux";
 import {RouteComponentProps} from "react-router";
 import {compose} from "recompose";
@@ -18,7 +16,7 @@ import { SqlQueryActions } from "../data/reducer";
 export const SqlListContainer = compose<ISqlListProps, RouteComponentProps<any>>(
   connectView,
   connect(
-    (state: IState, ownProps: Partial<ISqlListProps>) => {
+    (state: IState) => {
       return {
         data: {
           rs: state.recordSet['sql'],
@@ -26,8 +24,8 @@ export const SqlListContainer = compose<ISqlListProps, RouteComponentProps<any>>
         }
       }
     },
-    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RecordSetAction | SqlQueryActions | GridAction>, ownProps) => ({
-      add: () => thunkDispatch((dispatch, getState) => {
+    (thunkDispatch: ThunkDispatch<IState, never, TGdmnActions | RSAction | SqlQueryActions | GridAction>, ownProps: RouteComponentProps<any>) => ({
+      add: () => thunkDispatch((dispatch) => {
         const id = uuid();
         dispatch(createQuery('select * from gd_contact', id))
         ownProps.history!.push(`sql/${id}/edit`)
@@ -40,8 +38,8 @@ export const SqlListContainer = compose<ISqlListProps, RouteComponentProps<any>>
         const id = getState().recordSet['sql'].getString('id');
         ownProps.history!.push(`sql/${id}`)
       }),
-      onSetCursorPos: (event: TSetCursorPosEvent) => thunkDispatch((dispatch, getState) => {
-        dispatch(setCurrentRow({ name: 'sql', currentRow: event.cursorRow }));
+      onSetCursorPos: (event: TSetCursorPosEvent) => thunkDispatch((dispatch) => {
+        dispatch(rsActions.setCurrentRow({ name: 'sql', currentRow: event.cursorRow }));
         dispatch(setCursorCol({ name: 'sql', cursorCol: event.cursorCol }));
       }),
       attachRs: () => thunkDispatch((dispatch, getState) => {
@@ -62,7 +60,7 @@ export const SqlListContainer = compose<ISqlListProps, RouteComponentProps<any>>
             fieldDefs,
             data: List(sqlListData)
           });
-          dispatch(createRecordSet({name: rs.name, rs}));
+          dispatch(rsActions.createRecordSet({name: rs.name, rs}));
         }
 
         if (!getState().grid['sql']) {

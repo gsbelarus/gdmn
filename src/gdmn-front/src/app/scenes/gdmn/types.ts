@@ -3,6 +3,7 @@ import {AppAction, ICmd} from "@gdmn/server-api";
 export interface IViewTab {
   caption: string;
   url: string;
+  canClose: boolean;
   rs?: string[];
 }
 

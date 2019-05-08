@@ -17,7 +17,7 @@ export const ViewTabsContainer = connect(
   }),
   (stateProps, dispatchProps, ownProps: RouteComponentProps<any>): IViewTabsProps => ({
     ...stateProps,
-    onClose: async (vt: IViewTab) => {
+    onClose: (vt: IViewTab) => {
       const {history, location} = ownProps;
       const {viewTabs} = stateProps;
       const {dispatch} = dispatchProps;

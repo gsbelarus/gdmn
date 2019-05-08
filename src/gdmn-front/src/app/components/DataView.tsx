@@ -76,6 +76,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     addViewTab({
       caption: this.getViewCaption(),
       url: match.url,
+      canClose: true,
       rs: this.getRecordSetList()
     });
   }
