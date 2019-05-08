@@ -1,18 +1,18 @@
 import { State } from "../store";
-import { RecordSetAction, deleteRecordSet, RecordSet, IDataRow, createRecordSet, TFieldType, IFieldDef } from "gdmn-recordset";
+import { RSAction, rsActions, RecordSet, IDataRow, TFieldType, IFieldDef } from "gdmn-recordset";
 import { GridAction, deleteGrid, createGrid } from "gdmn-grid";
 import { EntityQuery } from "gdmn-orm";
 import { List } from "immutable";
 import { ExecuteCommand } from "./types";
 import { Dispatch } from "redux";
 
-export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RecordSetAction | GridAction>, getState: () => State, name: string, eq: EntityQuery) => {
+export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RSAction | GridAction>, getState: () => State, name: string, eq: EntityQuery) => {
   if (getState().grid[name]) {
     dispatch(deleteGrid({ name }));
   }
 
   if (getState().recordSet[name]) {
-    dispatch(deleteRecordSet({ name }));
+    dispatch(rsActions.deleteRecordSet({ name }));
   }
 
   let year = new Date().getFullYear();
@@ -40,7 +40,7 @@ export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RecordSe
         data: List(responseJson as IDataRow[]),
         eq: eq
       });
-      dispatch(createRecordSet({name, rs}));
+      dispatch(rsActions.createRecordSet({name, rs}));
 
       const getMaxLength = (fn: string) => {
         let len = 0;

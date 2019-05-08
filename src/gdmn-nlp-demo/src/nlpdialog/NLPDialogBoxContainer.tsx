@@ -7,10 +7,9 @@ import { ThunkDispatch } from 'redux-thunk';
 import { Dispatch } from 'redux';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, TColumnResizeEvent, resizeColumn, GridAction, applySortDialog, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent, TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent } from 'gdmn-grid';
-import { sortRecordSet, RecordSetAction, selectRow, setAllRowsSelected, setRecordSet, toggleGroup } from 'gdmn-recordset';
+import { RSAction, rsActions } from 'gdmn-recordset';
 import { ICommand } from 'gdmn-nlp-agent';
 import { ExecuteCommand } from '../engine/types';
-import { isTSEnumMember } from '@babel/types';
 
 export const ChatBoxContainer = connect(
   (state: State) => ({
@@ -18,14 +17,14 @@ export const ChatBoxContainer = connect(
     rs: state.nlpDialog.recordSetName ? state.recordSet[state.nlpDialog.recordSetName] : undefined,
     grid: state.nlpDialog.recordSetName ? state.grid[state.nlpDialog.recordSetName] : undefined,
   }),
-  (dispatch: ThunkDispatch<State, never, NLPDialogAction | GridAction | RecordSetAction>) => ({
+  (dispatch: ThunkDispatch<State, never, NLPDialogAction | GridAction | RSAction>) => ({
     onCancelSortDialog: (event: TCancelSortDialogEvent) => dispatch(
       cancelSortDialog({name: event.rs.name})
     ),
     onApplySortDialog: (event: TApplySortDialogEvent) => dispatch(
       (dispatch, getState) => {
         dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
-        dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
+        dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
         event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
       }
     ),
@@ -36,28 +35,28 @@ export const ChatBoxContainer = connect(
       columnMove({name: event.rs.name, oldIndex: event.oldIndex, newIndex: event.newIndex})
     ),
     onSelectRow: (event: TSelectRowEvent) => dispatch(
-      selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})
+      rsActions.selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})
     ),
     onSelectAllRows: (event: TSelectAllRowsEvent) => dispatch(
-      setAllRowsSelected({name: event.rs.name, value: event.value})
+      rsActions.setAllRowsSelected({name: event.rs.name, value: event.value})
     ),
     onSetCursorPos: (event: TSetCursorPosEvent) => dispatch(
       (dispatch, getState) => {
         const recordSet = getState().recordSet[event.rs.name];
         if (recordSet) {
-          dispatch(setRecordSet({ name: event.rs.name, rs: recordSet.setCurrentRow(event.cursorRow) }));
+          dispatch(rsActions.setRecordSet({ name: event.rs.name, rs: recordSet.setCurrentRow(event.cursorRow) }));
           dispatch(setCursorCol({ name: event.rs.name, cursorCol: event.cursorCol }));
         }
       }
     ),
     onSort: (event: TSortEvent) => dispatch(
-      (dispatch: ThunkDispatch<State, never, RecordSetAction>, getState: () => State) => {
-        dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
+      (dispatch: ThunkDispatch<State, never, RSAction>, getState: () => State) => {
+        dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
         event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
       }
     ),
     onToggleGroup: (event: TToggleGroupEvent) => dispatch(
-      toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
+      rsActions.toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
     ),
     addNLPMessage: (text: string) => dispatch(
       (dispatch: Dispatch<any>, getState: () => State) => {

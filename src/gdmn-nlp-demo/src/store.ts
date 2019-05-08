@@ -6,11 +6,10 @@ import { reducer as syntaxReducer, ISyntaxState, SyntaxAction } from "./syntax/r
 import { reducer as ermodelReducer, ERModelAction, IERModels } from "./ermodel/reducer";
 import { gridReducer, GridReducerState, GridAction } from 'gdmn-grid';
 import { reducer as nlpDialogReducer, NLPDialogAction, INLPDialogState } from './nlpdialog/reducer';
-import { RecordSetReducerState, recordSetReducer, RecordSetAction } from 'gdmn-recordset';
-import { NLPDialog } from "gdmn-nlp-agent";
+import { RecordSetReducerState, recordSetReducer, RSAction } from 'gdmn-recordset';
 import { reducer as setParamReducer, ISetParameterState, ParameterLoadAction } from './parameterLoad/reducer';
 
-export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RecordSetAction | GridAction | NLPDialogAction | ParameterLoadAction;
+export type Actions = ERModelAction | MorphologyAction | SyntaxAction | RSAction | GridAction | NLPDialogAction | ParameterLoadAction;
 
 export interface State {
   morphology: IMorphologyState;

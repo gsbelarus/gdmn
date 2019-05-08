@@ -5,10 +5,9 @@ import store, { State } from './store';
 import { Demo } from './components/Demo';
 import './_reset.css';
 import { ThunkDispatch } from 'redux-thunk';
-import { ActionType } from 'typesafe-actions';
-import { createRecordSet, CreateRecordSet, deleteRecordSet, DeleteRecordSet } from 'gdmn-recordset';
+import { rsActions, RSAction } from 'gdmn-recordset';
 import { RecordSet } from 'gdmn-recordset';
-import { deleteGrid, DeleteGrid } from 'gdmn-grid';
+import { deleteGrid, GridAction } from 'gdmn-grid';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 
 declare let module: any;
@@ -21,12 +20,11 @@ const DemoConnected = connect(
     getRecordSet: (name: string) => state.recordSet[name],
     gridNames: Object.keys(state.grid)
   }),
-  (dispatch: ThunkDispatch<State, never,
-      ActionType<CreateRecordSet | DeleteRecordSet | DeleteGrid >>) => ({
+  (dispatch: ThunkDispatch<State, never, RSAction | GridAction>) => ({
     createRecordSet:
-      (rs: RecordSet) => dispatch(createRecordSet({ name: rs.name, rs })),
+      (rs: RecordSet) => dispatch(rsActions.createRecordSet({ name: rs.name, rs })),
     deleteRecordSet:
-      (name: string) => dispatch(deleteRecordSet({ name })),
+      (name: string) => dispatch(rsActions.deleteRecordSet({ name })),
     deleteGrid:
       (name: string) => dispatch(deleteGrid({ name })),
   })

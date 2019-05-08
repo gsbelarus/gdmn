@@ -7,7 +7,7 @@ import * as erModelActions from '../ermodel/actions';
 import { ThunkDispatch } from 'redux-thunk';
 import { ERModelAction } from '../ermodel/reducer';
 import { RusPhrase } from 'gdmn-nlp';
-import { RecordSetAction } from 'gdmn-recordset';
+import { RSAction } from 'gdmn-recordset';
 import {GridAction} from 'gdmn-grid';
 
 export const SyntaxBoxContainer = connect(
@@ -19,7 +19,7 @@ export const SyntaxBoxContainer = connect(
       port: state.param.port,
     }
   ),
-  (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction | RecordSetAction>) => ({
+  (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction | RSAction>) => ({
     onAnalyze: (erModelName: string, text: string) => dispatch(
       (dispatch: ThunkDispatch<State, never, SyntaxAction | ERModelAction>, getState: () => State) => {
         dispatch(syntaxActions.setSyntaxText(text));
@@ -32,7 +32,7 @@ export const SyntaxBoxContainer = connect(
       }
     ),
     onQuery: (erModelName: string) => dispatch(
-      async (dispatch: ThunkDispatch<State, never, RecordSetAction | GridAction | SyntaxAction>, getState: () => State) => {
+      async (dispatch: ThunkDispatch<State, never, RSAction | GridAction | SyntaxAction>, getState: () => State) => {
         const ermodel = getState().ermodel[erModelName];
         if (ermodel && ermodel.command && ermodel.command![0] && ermodel.executeCommand) {
           ermodel.executeCommand(dispatch, getState, erModelName, ermodel.command![0].payload);

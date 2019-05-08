@@ -37,10 +37,8 @@ import {
   applySortDialog,
   cancelParamsDialog
 } from "gdmn-grid";
-import { RecordSet, setFilter, doSearch, toggleGroup, collapseExpandGroups, TRowState, setCurrentRow, setFieldValue, deleteRows, setRecordSet, TCommitResult, IDataRow, insert, cancel } from "gdmn-recordset";
+import { RecordSet, TRowState, TCommitResult, IDataRow, rsActions, RSAction } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
-import { sortRecordSet, selectRow, setAllRowsSelected } from "gdmn-recordset";
-import { RecordSetAction } from "gdmn-recordset";
 
 export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined) {
   store.dispatch(createGrid({name,
@@ -64,14 +62,14 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
         columns: gridComponentState.columns.filter( c => !c.hidden )
       }
     },
-    (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
+    (thunkDispatch: ThunkDispatch<State, never, GridAction | RSAction>) => ({
       onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
           cancelSortDialog({name: event.rs.name})
         ),
       onApplySortDialog: (event: TApplySortDialogEvent) => thunkDispatch(
           (dispatch, getState) => {
             dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
-            dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
+            dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
             event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
           }
         ),
@@ -82,33 +80,33 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
           columnMove({name: event.rs.name, oldIndex: event.oldIndex, newIndex: event.newIndex})
         ),
       onSelectRow: (event: TSelectRowEvent) => thunkDispatch(
-          selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})
+          rsActions.selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})
         ),
       onSelectAllRows: (event: TSelectAllRowsEvent) => thunkDispatch(
-          setAllRowsSelected({name: event.rs.name, value: event.value})
+          rsActions.setAllRowsSelected({name: event.rs.name, value: event.value})
         ),
       onSetCursorPos: (event: TSetCursorPosEvent) => thunkDispatch(
           (dispatch, getState) => {
             const recordSet = getState().recordSet[event.rs.name];
             if (recordSet) {
-              dispatch(setCurrentRow({ name: event.rs.name, currentRow: event.cursorRow }));
+              dispatch(rsActions.setCurrentRow({ name: event.rs.name, currentRow: event.cursorRow }));
               dispatch(setCursorCol({ name: event.rs.name, cursorCol: event.cursorCol }));
             }
           }
         ),
       onSort: (event: TSortEvent) => thunkDispatch(
-          (dispatch: ThunkDispatch<State, never, RecordSetAction>, getState: () => State) => {
-            dispatch(sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
+          (dispatch: ThunkDispatch<State, never, RSAction>, getState: () => State) => {
+            dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
             event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
           }
         ),
       onToggleGroup: (event: TToggleGroupEvent) => thunkDispatch(
-          toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
+          rsActions.toggleGroup({ name: event.rs.name, rowIdx: event.rowIdx })
         ),
-      onInsert: () => thunkDispatch(insert({ name: rs.name })),
-      onDelete: () => thunkDispatch(deleteRows({ name: rs.name })),
-      onCancel: () => thunkDispatch(cancel({ name: rs.name })),
-      onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
+      onInsert: () => thunkDispatch(rsActions.insert({ name: rs.name })),
+      onDelete: () => thunkDispatch(rsActions.deleteRows({ name: rs.name })),
+      onCancel: () => thunkDispatch(rsActions.cancel({ name: rs.name })),
+      onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(rsActions.setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
     }),
     undefined,
     {forwardRef: true}
@@ -131,7 +129,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         visibleColumns: gridComponentState.columns.filter( c => !c.hidden )
       }
     },
-    (thunkDispatch: ThunkDispatch<State, never, GridAction | RecordSetAction>) => ({
+    (thunkDispatch: ThunkDispatch<State, never, GridAction | RSAction>) => ({
       onSortDialog:
         () => thunkDispatch(showSortDialog({name})),
       onScrollIntoView:
@@ -144,7 +142,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         (rowNumber: number) => thunkDispatch( (dispatch, getState) => {
           const recordSet = getState().recordSet[rs.name];
           if (recordSet) {
-            dispatch(setCurrentRow({ name: rs.name, currentRow: rowNumber }));
+            dispatch(rsActions.setCurrentRow({ name: rs.name, currentRow: rowNumber }));
             getGridRef().scrollIntoView(rowNumber);
           }
         }),
@@ -161,20 +159,20 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
       onToggleHideHeader:
         () => thunkDispatch(toggleHideHeader({name})),
       onCollapseAll:
-        () => thunkDispatch(collapseExpandGroups({ name: rs.name, collapse: true })),
+        () => thunkDispatch(rsActions.collapseExpandGroups({ name: rs.name, collapse: true })),
       onExpandAll:
-        () => thunkDispatch(collapseExpandGroups({ name: rs.name, collapse: false })),
+        () => thunkDispatch(rsActions.collapseExpandGroups({ name: rs.name, collapse: false })),
       onSetFilter:
         (filter: string) => {
           if (filter) {
-            thunkDispatch(setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } }))
+            thunkDispatch(rsActions.setFilter({name: rs.name, filter: { conditions: [ { value: filter } ] } }))
           } else {
-            thunkDispatch(setFilter({name: rs.name, filter: undefined }))
+            thunkDispatch(rsActions.setFilter({name: rs.name, filter: undefined }))
           }
         },
       onSearch:
         (searchText: string) => {
-          thunkDispatch(doSearch({ name: rs.name, searchStr: searchText ? searchText : undefined }))
+          thunkDispatch(rsActions.doSearch({ name: rs.name, searchStr: searchText ? searchText : undefined }))
           thunkDispatch(setSearchIdx({ name, searchIdx: 0 }));
         },
       onJumpToSearch: (searchIdx: number, moveBy: number, rs: RecordSet, columns: Columns) => {
@@ -198,7 +196,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         thunkDispatch( (dispatch, getState) => {
           const recordSet = getState().recordSet[rs.name];
           if (recordSet) {
-            dispatch(setCurrentRow({ name: rs.name, currentRow: foundNode.rowIdx }));
+            dispatch(rsActions.setCurrentRow({ name: rs.name, currentRow: foundNode.rowIdx }));
           }
         });
         getGridRef().scrollIntoView(foundNode.rowIdx, cursorCol);
@@ -207,7 +205,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         thunkDispatch( (dispatch, getState) => {
           const recordSet = getState().recordSet[rs.name];
           if (recordSet.size) {
-            dispatch(deleteRows({ name: rs.name }));
+            dispatch(rsActions.deleteRows({ name: rs.name }));
           }
         });
       },
@@ -221,7 +219,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
             }
           }
           if (rowsIdxs.length) {
-            dispatch(deleteRows({ name: rs.name, remove: true, rowsIdxs }));
+            dispatch(rsActions.deleteRows({ name: rs.name, remove: true, rowsIdxs }));
           }
         });
       },
@@ -229,14 +227,14 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         thunkDispatch( (dispatch, getState) => {
           let recordSet = getState().recordSet[rs.name];
           recordSet = recordSet.post( (row: IDataRow) => TCommitResult.Success );
-          dispatch(setRecordSet({ name: rs.name, rs: recordSet }));
+          dispatch(rsActions.setRecordSet({ name: rs.name, rs: recordSet }));
         });
       },
       onCancelAll: () => {
         thunkDispatch( (dispatch, getState) => {
           let recordSet = getState().recordSet[rs.name];
           recordSet = recordSet.post( (row: IDataRow) => TCommitResult.Cancel );
-          dispatch(setRecordSet({ name: rs.name, rs: recordSet }));
+          dispatch(rsActions.setRecordSet({ name: rs.name, rs: recordSet }));
         });
       },
     })

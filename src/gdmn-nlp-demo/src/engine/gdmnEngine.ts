@@ -1,6 +1,6 @@
 import { ThunkDispatch } from "redux-thunk";
 import { State } from "../store";
-import { RecordSetAction, deleteRecordSet, RecordSet, IDataRow, createRecordSet, TFieldType, IFieldDef } from "gdmn-recordset";
+import { RSAction, rsActions, RecordSet, IDataRow, TFieldType, IFieldDef } from "gdmn-recordset";
 import { GridAction, deleteGrid, createGrid } from "gdmn-grid";
 import { EntityQuery, IEntityQueryResponse } from "gdmn-orm";
 import { List } from "immutable";
@@ -9,13 +9,13 @@ import { loadingQuery, LoadingQuery } from "../syntax/actions";
 import { ActionType } from "typesafe-actions";
 import { Dispatch } from "redux";
 
-export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RecordSetAction | GridAction | ActionType<LoadingQuery>>, getState: () => State, name: string, eq: EntityQuery) => {
+export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RSAction | GridAction | ActionType<LoadingQuery>>, getState: () => State, name: string, eq: EntityQuery) => {
   if (getState().grid[name]) {
     dispatch(deleteGrid({ name }));
   }
 
   if (getState().recordSet[name]) {
-    dispatch(deleteRecordSet({ name }));
+    dispatch(rsActions.deleteRecordSet({ name }));
   }
 
   const { host, port } = getState().param;
@@ -36,7 +36,7 @@ export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RecordSe
         data: List(responseJson.data as IDataRow[]),
         eq
       });
-      dispatch(createRecordSet({ name, rs }));
+      dispatch(rsActions.createRecordSet({ name, rs }));
 
       dispatch(createGrid({
         name,
