@@ -1,6 +1,7 @@
 import { RecordSet } from "gdmn-recordset";
 import { Entity } from "gdmn-orm";
 import { IViewTab } from "../../gdmn/types";
+import { RouteComponentProps } from "react-router";
 
 export type TAddViewTab = (viewTab: IViewTab) => void;
 
@@ -9,7 +10,7 @@ export interface IEntityDataDlgRouteProps {
   id: string;
 };
 
-export interface IEntityDataDlgContainerProps {
+export interface IEntityDataDlgContainerProps extends RouteComponentProps<any> {
   url: string;
   entityName: string;
   id: string;
@@ -28,4 +29,6 @@ export interface IEntityDataDlgProps {
   id: string;
   addViewTab: TAddViewTab;
   setFieldValue: (fieldName: string, value: string) => void;
+  closeTab: () => void;
+  loadRs: () => void;
 };

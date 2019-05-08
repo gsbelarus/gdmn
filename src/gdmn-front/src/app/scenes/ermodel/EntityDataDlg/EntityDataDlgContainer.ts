@@ -14,23 +14,32 @@ export const EntityDataDlgContainer = connect(
     rs: state.recordSet[ownProps.url],
     entity: state.gdmnState.erModel.entities[ownProps.entityName]
   }),
-  (dispatch: ThunkDispatch<IState, never, GdmnAction | LoadRSActions | RSAction>) => ({
+  (dispatch: ThunkDispatch<IState, never, GdmnAction | LoadRSActions | RSAction>, ownProps) => ({
     dispatch,
-    addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab))
+    addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab)),
+    closeTab: () => dispatch( (dispatch, _getState) => {
+      dispatch(gdmnActions.deleteViewTab({
+        viewTabURL: ownProps.url,
+        locationPath: location.pathname,
+        historyPush: ownProps.history.push
+      }));
+    })
   }),
   (stateProps, dispatchProps, ownProps): IEntityDataDlgProps => {
     const { rs, entity } = stateProps;
     const { dispatch, ...restDispatchProps } = dispatchProps;
 
-    if (!rs && entity) {
-      const { url, id } = ownProps;
-      const eq = prepareDefaultEntityQuery(entity, [id]);
-      dispatch(loadRSActions.loadRS({ name: url, eq }));
-    }
-
     const setFieldValue = (fieldName: string, value: string)=> {
       if (rs) {
         dispatch(rsActions.setFieldValue({ name: rs.name, fieldName, value }));
+      }
+    };
+
+    const loadRs = () => {
+      const { url, id } = ownProps;
+      if (entity) {
+        const eq = prepareDefaultEntityQuery(entity, [id]);
+        dispatch(loadRSActions.loadRS({ name: url, eq }));
       }
     };
 
@@ -39,7 +48,8 @@ export const EntityDataDlgContainer = connect(
         ...stateProps,
         ...restDispatchProps,
         ...ownProps,
-        setFieldValue
+        setFieldValue,
+        loadRs
       }
     );
   }

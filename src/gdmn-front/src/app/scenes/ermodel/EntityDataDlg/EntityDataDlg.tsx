@@ -1,8 +1,8 @@
 import { IEntityDataDlgProps } from "./EntityDataDlg.types";
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { TextField, CommandBar, ICommandBarItemProps, safeRequestAnimationFrame } from "office-ui-fabric-react";
+import { TextField, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 
 interface ICurrentEdit {
   fieldName: string;
@@ -11,9 +11,10 @@ interface ICurrentEdit {
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { addViewTab, url, entityName, id, rs, entity, setFieldValue } = props;
-  const rsName = rs ? rs.name : '';
-  const refCurrentEdit = useRef<ICurrentEdit | null>(null);
+  const { addViewTab, url, entityName, id, rs, entity, setFieldValue, closeTab, loadRs } = props;
+  const [currentEdit, setCurrentEdit] = useState<ICurrentEdit | null>(null);
+
+  useEffect( () => { if (!rs) loadRs(); }, []);
 
   useEffect(
     () => {
@@ -21,10 +22,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         url,
         caption: `${entityName}-${id}`,
         canClose: false,
-        rs: rsName ? [rsName] : undefined
+        rs: rs ? [rs.name] : undefined
       });
     },
-    [url, entityName, id, rsName]
+    [rs]
   );
 
   const commandBarItems = useMemo( (): ICommandBarItemProps[] => {
@@ -32,7 +33,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       return [];
     }
 
-    const changed = !!rs.changed || !!refCurrentEdit.current;
+    const changed = !!rs.changed || !!currentEdit;
     const cbItemsSaveClose: ICommandBarItemProps[] = changed
       ? [
         {
@@ -60,7 +61,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
           iconProps: {
             iconName: 'Cancel'
           },
-          onClick: () => {}
+          onClick: closeTab
         }
       ];
 
@@ -120,7 +121,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         onClick: () => {}
       },
     ];
-  }, [rs, refCurrentEdit]);
+  }, [rs, currentEdit]);
 
   if (!entity) {
     return <div>ERModel isn't loaded or unknown entity {entityName}</div>;
@@ -131,9 +132,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   }
 
   const applyFieldChange = () => {
-    if (refCurrentEdit.current) {
-      const { fieldName, value } = refCurrentEdit.current;
+    if (currentEdit) {
+      const { fieldName, value } = currentEdit;
       setFieldValue(fieldName, value);
+      setCurrentEdit(null);
     }
   };
 
@@ -147,7 +149,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
               key={fd.fieldName}
               label={fd.caption}
               defaultValue={rs.getString(fd.fieldName)}
-              onChange={ (_, value) => { if (value) refCurrentEdit.current = { fieldName: fd.fieldName, value }; } }
+              onChange={ (_, value) => { if (value) setCurrentEdit({ fieldName: fd.fieldName, value }); } }
               onBlur={applyFieldChange}
             />
           )

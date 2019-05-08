@@ -220,7 +220,7 @@ export const gdmnActions = {
   }),
 
   deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => {
-    return (viewTab: IViewTab) => resolve(viewTab);
+    return (params: { viewTabURL: string, locationPath: string, historyPush: (url: string) => void }) => resolve(params);
   }),
 
   getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {

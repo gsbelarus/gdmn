@@ -32,7 +32,7 @@ export function reducer(state: ISqlState = initialState, action: SqlActions | Gd
       };
     }
     case getType(gdmnActions.deleteViewTab): {
-      if (action.payload.url === state.url) {
+      if (action.payload.viewTabURL === state.url) {
         return {...initialState};
       }
       return state;

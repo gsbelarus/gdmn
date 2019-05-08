@@ -119,10 +119,11 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
     }
 
     case getType(gdmnActions.deleteViewTab): {
-      const idx = state.viewTabs.findIndex(vt => vt.url === action.payload.url);
+      const { viewTabURL } = action.payload;
+      const idx = state.viewTabs.findIndex(vt => vt.url === viewTabURL);
 
       if (idx === -1) {
-        throw new Error(`Can't find a tab with url ${action.payload.url}`);
+        throw new Error(`Can't find a tab with url ${viewTabURL}`);
       } else {
         return {
           ...state,

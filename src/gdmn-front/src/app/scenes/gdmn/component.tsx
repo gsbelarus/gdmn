@@ -262,6 +262,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 path={`${match.path}/entity/:entityName/edit/:id`}
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                   <EntityDataDlgContainer
+                    {...props}
                     entityName={props.match.params.entityName}
                     id={props.match.params.id}
                     url={props.match.url}

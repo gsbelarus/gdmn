@@ -1,7 +1,7 @@
 import { Middleware } from 'redux';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { getType } from 'typesafe-actions';
+import { getType, ActionType } from 'typesafe-actions';
 import { Auth, TPubSubConnectStatus } from '@gdmn/client-core';
 import { TGdmnErrorCodes, TTaskStatus } from '@gdmn/server-api';
 
@@ -11,6 +11,7 @@ import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
 import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi';
 import { selectAuthState } from '@src/app/store/selectors';
 import { TThunkMiddleware } from '@src/app/store/middlewares';
+import { loadRSActions } from '@src/app/store/loadRSActions';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
@@ -242,10 +243,46 @@ const abortNetReconnectMiddleware: TThunkMiddleware = ({ dispatch, getState }) =
   return next(action);
 };
 
+const viewTabMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => (action: ActionType<typeof gdmnActions.deleteViewTab>) => {
+  if (action.type === getType(gdmnActions.deleteViewTab)) {
+    const { viewTabURL, locationPath, historyPush } = action.payload;
+    const viewTabs = getState().gdmnState.viewTabs;
+
+    const foundIdx = viewTabs.findIndex(t => t.url === viewTabURL);
+
+    if (foundIdx > -1) {
+      let nextPath = "";
+
+      if (locationPath === viewTabURL) {
+        if (viewTabs.length === 1) {
+          nextPath = "/spa/gdmn";
+        } else {
+          nextPath = foundIdx > 0 ? viewTabs[foundIdx - 1].url : viewTabs[foundIdx + 1].url;
+        }
+      }
+
+      if (nextPath) {
+        historyPush(nextPath);
+      }
+
+      const viewTab = viewTabs[foundIdx];
+
+      if (viewTab.rs) {
+        viewTab.rs
+          .filter( name => !viewTabs.find( t => t !== viewTab && !!t.rs && !!t.rs.find( n => n === name ) ) )
+          .forEach( name => dispatch(loadRSActions.deleteRS({ name })) );
+      }
+    }
+  }
+
+  return next(action);
+};
+
 const getGdmnMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
   abortNetReconnectMiddleware,
   getApiMiddleware(apiService),
-  loadingMiddleware
+  loadingMiddleware,
+  viewTabMiddleware
 ];
 
 export { getGdmnMiddlewares };
