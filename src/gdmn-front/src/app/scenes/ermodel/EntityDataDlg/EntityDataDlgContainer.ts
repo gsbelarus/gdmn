@@ -17,13 +17,13 @@ export const EntityDataDlgContainer = connect(
   (dispatch: ThunkDispatch<IState, never, GdmnAction | LoadRSActions | RSAction>, ownProps) => ({
     dispatch,
     addViewTab: (viewTab: IViewTab) => dispatch(gdmnActions.addViewTab(viewTab)),
-    closeTab: () => dispatch( (dispatch, _getState) => {
-      dispatch(gdmnActions.deleteViewTab({
+    closeTab: () => dispatch(gdmnActions.deleteViewTab({
         viewTabURL: ownProps.url,
         locationPath: location.pathname,
         historyPush: ownProps.history.push
-      }));
-    })
+      })
+    ),
+    cancel: () => dispatch(rsActions.cancel({ name: ownProps.url }))
   }),
   (stateProps, dispatchProps, ownProps): IEntityDataDlgProps => {
     const { rs, entity } = stateProps;

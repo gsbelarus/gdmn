@@ -31,4 +31,5 @@ export interface IEntityDataDlgProps {
   setFieldValue: (fieldName: string, value: string) => void;
   closeTab: () => void;
   loadRs: () => void;
+  cancel: () => void;
 };

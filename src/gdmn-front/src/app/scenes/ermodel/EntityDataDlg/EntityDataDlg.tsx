@@ -1,20 +1,22 @@
 import { IEntityDataDlgProps } from "./EntityDataDlg.types";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { TextField, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
-
-interface ICurrentEdit {
-  fieldName: string;
-  value: string;
-};
+import { CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
+import { WrappedTextField } from "./WrappedTextField";
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { addViewTab, url, entityName, id, rs, entity, setFieldValue, closeTab, loadRs } = props;
-  const [currentEdit, setCurrentEdit] = useState<ICurrentEdit | null>(null);
+  const { addViewTab, url, entityName, id, rs, entity, setFieldValue, closeTab, loadRs, cancel } = props;
+  const rsName = rs ? rs.name : '';
+  const [changed, setChanged] = useState(false);
 
-  useEffect( () => { if (!rs) loadRs(); }, []);
+  useEffect(
+    () => {
+      if (!rs) loadRs();
+    },
+    [entity]
+  );
 
   useEffect(
     () => {
@@ -22,106 +24,93 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         url,
         caption: `${entityName}-${id}`,
         canClose: false,
-        rs: rs ? [rs.name] : undefined
+        rs: rsName ? [rsName] : undefined
       });
     },
-    [rs]
+    [rsName]
   );
 
-  const commandBarItems = useMemo( (): ICommandBarItemProps[] => {
-    if (!rs) {
-      return [];
-    }
-
-    const changed = !!rs.changed || !!currentEdit;
-    const cbItemsSaveClose: ICommandBarItemProps[] = changed
-      ? [
-        {
-          key: 'saveAndClose',
-          disabled: !changed,
-          text: 'Сохранить и закрыть',
-          iconProps: {
-            iconName: 'Save'
-          },
-          onClick: () => {}
-        },
-        {
-          key: 'cancelAndClose',
-          text: 'Отменить и закрыть',
-          iconProps: {
-            iconName: 'Cancel'
-          },
-          onClick: () => {}
+  const commandBarItems: ICommandBarItemProps[] = !rs ? [] : [
+    {
+      key: 'saveAndClose',
+      disabled: !changed,
+      text: 'Сохранить и закрыть',
+      iconProps: {
+        iconName: 'Save'
+      },
+      onClick: () => {}
+    },
+    {
+      key: 'cancelAndClose',
+      text: 'Отменить и закрыть',
+      iconProps: {
+        iconName: 'Cancel'
+      },
+      onClick: () => {
+        if (changed) {
+          cancel();
+          setChanged(false);
         }
-      ]
-      : [
-        {
-          key: 'cancelAndClose',
-          text: 'Закрыть',
-          iconProps: {
-            iconName: 'Cancel'
-          },
-          onClick: closeTab
-        }
-      ];
-
-    return [
-      ...cbItemsSaveClose,
-      {
-        key: 'apply',
-        disabled: !changed,
-        text: 'Сохранить',
-        iconProps: {
-          iconName: 'Save'
-        },
-        onClick: () => {}
+        closeTab();
+      }
+    },
+    {
+      key: 'apply',
+      disabled: !changed,
+      text: 'Сохранить',
+      iconProps: {
+        iconName: 'Save'
       },
-      {
-        key: 'revert',
-        disabled: !changed,
-        text: 'Отменить',
-        iconProps: {
-          iconName: 'Undo'
-        },
-        onClick: () => {}
+      onClick: () => {}
+    },
+    {
+      key: 'revert',
+      disabled: !changed,
+      text: 'Отменить',
+      iconProps: {
+        iconName: 'Undo'
       },
-      {
-        key: 'create',
-        disabled: changed,
-        text: 'Создать',
-        iconProps: {
-          iconName: 'PageAdd'
-        },
-        onClick: () => {}
+      onClick: () => {
+        cancel();
+        setChanged(false);
+      }
+    },
+    {
+      key: 'create',
+      disabled: changed,
+      text: 'Создать',
+      iconProps: {
+        iconName: 'PageAdd'
       },
-      {
-        key: 'delete',
-        text: 'Удалить',
-        iconProps: {
-          iconName: 'Delete'
-        },
-        onClick: () => {}
+      onClick: () => {}
+    },
+    {
+      key: 'delete',
+      text: 'Удалить',
+      iconProps: {
+        iconName: 'Delete'
       },
-      {
-        key: 'prev',
-        disabled: changed,
-        text: 'Предыдущая',
-        iconProps: {
-          iconName: 'Previous'
-        },
-        onClick: () => {}
+      onClick: () => {}
+    },
+    {
+      key: 'prev',
+      disabled: changed,
+      text: 'Предыдущая',
+      iconProps: {
+        iconName: 'Previous'
       },
-      {
-        key: 'next',
-        disabled: changed,
-        text: 'Следующая',
-        iconProps: {
-          iconName: 'Next'
-        },
-        onClick: () => {}
+      onClick: () => {}
+    },
+    {
+      key: 'next',
+      disabled: changed,
+      text: 'Следующая',
+      iconProps: {
+        iconName: 'Next'
       },
-    ];
-  }, [rs, currentEdit]);
+      onClick: () => {}
+    },
+  ];
 
   if (!entity) {
     return <div>ERModel isn't loaded or unknown entity {entityName}</div>;
@@ -131,26 +120,18 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     return <div>Loading...</div>;
   }
 
-  const applyFieldChange = () => {
-    if (currentEdit) {
-      const { fieldName, value } = currentEdit;
-      setFieldValue(fieldName, value);
-      setCurrentEdit(null);
-    }
-  };
-
   return (
     <div styleName="ScrollableDlg">
       <CommandBar items={commandBarItems} />
       <div styleName="FieldsColumn">
         {
           rs.fieldDefs.map( fd =>
-            <TextField
+            <WrappedTextField
               key={fd.fieldName}
               label={fd.caption}
-              defaultValue={rs.getString(fd.fieldName)}
-              onChange={ (_, value) => { if (value) setCurrentEdit({ fieldName: fd.fieldName, value }); } }
-              onBlur={applyFieldChange}
+              value={rs.getString(fd.fieldName)}
+              onChanged={ () => { setChanged(true); } }
+              onApplyChanges={ (value: string) => { setFieldValue(fd.fieldName, value); } }
             />
           )
         }
