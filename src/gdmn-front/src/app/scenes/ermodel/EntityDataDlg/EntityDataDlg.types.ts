@@ -28,6 +28,5 @@ export interface IEntityDataDlgProps extends RouteComponentProps<any> {
   url: string;
   entityName: string;
   id: string;
-  setFieldValue: (fieldName: string, value: string) => void;
   dispatch: Dispatch;
 };
