@@ -25,7 +25,8 @@ export const ViewTabs = CSSModules(
           viewTabs.map( vt => {
             const loading = !!vt.rs && vt.rs.reduce(
               (p, name) => {
-                if (!recordSet[name] || recordSet[name].status === TStatus.LOADING) {
+                const rs = recordSet[name];
+                if (!rs || rs.status === TStatus.LOADING || rs.locked) {
                   return true;
                 }
                 return p;

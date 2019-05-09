@@ -224,16 +224,16 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         });
       },
       onPostAll: () => {
-        thunkDispatch( (dispatch, getState) => {
+        thunkDispatch( async (dispatch, getState) => {
           let recordSet = getState().recordSet[rs.name];
-          recordSet = recordSet.post( (row: IDataRow) => TCommitResult.Success );
+          recordSet = await recordSet.post( (row: IDataRow) => Promise.resolve(TCommitResult.Success) );
           dispatch(rsActions.setRecordSet({ name: rs.name, rs: recordSet }));
         });
       },
       onCancelAll: () => {
-        thunkDispatch( (dispatch, getState) => {
+        thunkDispatch( async (dispatch, getState) => {
           let recordSet = getState().recordSet[rs.name];
-          recordSet = recordSet.post( (row: IDataRow) => TCommitResult.Cancel );
+          recordSet = await recordSet.post( (row: IDataRow) => Promise.resolve(TCommitResult.Cancel) );
           dispatch(rsActions.setRecordSet({ name: rs.name, rs: recordSet }));
         });
       },

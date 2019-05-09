@@ -190,5 +190,5 @@ export enum TCommitResult {
   AbortCancelAll
 };
 
-export type TCommitFunc = (row: IDataRow) => TCommitResult;
+export type TCommitFunc = (row: IDataRow) => Promise<TCommitResult>;
 

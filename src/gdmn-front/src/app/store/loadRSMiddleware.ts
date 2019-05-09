@@ -4,7 +4,7 @@ import { getType } from "typesafe-actions";
 import { loadRSActions as actions, LoadRSActions } from "./loadRSActions";
 import { TTaskStatus } from "@gdmn/server-api";
 import { attr2fd } from "../scenes/ermodel/entityData/utils";
-import { RecordSet, IDataRow, TFieldType, TStatus, rsActions } from "gdmn-recordset";
+import { RecordSet, IDataRow, TFieldType, TStatus, rsActions, TCommitResult } from "gdmn-recordset";
 import { List } from "immutable";
 import { createGrid } from "gdmn-grid";
 import { rsMetaActions, IRsMeta } from "./rsmeta";
@@ -13,6 +13,8 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
   if (
     action.type !== getType(actions.loadRS)
+    &&
+    action.type !== getType(actions.postRS)
     &&
     action.type !== getType(actions.attachRS)
     &&
@@ -44,6 +46,24 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
           dispatch(rsActions.createRecordSet({ name, rs }));
         });
 
+      break;
+    }
+
+    case getType(actions.postRS): {
+      const { name } = action.payload;
+      let rs = getState().recordSet[name];
+      if (rs.changed) {
+        rs = rs.setLocked(true);
+        dispatch(rsActions.setRecordSet({ name, rs }));
+
+        const commitFunc = (row: IDataRow) => {
+          return new Promise( resolve => setTimeout( () => resolve(), 2000 ))
+            .then( () => TCommitResult.Success );
+        }
+
+        rs = await rs.post(commitFunc, true);
+        dispatch(rsActions.setRecordSet({ name, rs }));
+      }
       break;
     }
 

@@ -73,6 +73,7 @@ export interface IRecordSetParams<R extends IDataRow = IDataRow> {
   aggregates?: R;
   masterLink?: IMasterLink;
   changed: number;
+  locked?: boolean;
 }
 
 export class RecordSet<R extends IDataRow = IDataRow> {
@@ -288,6 +289,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this.params.changed;
   }
 
+  get locked(): boolean {
+    return !!this.params.locked;
+  }
+
   private _checkFields(fields: INamedField[]) {
     const {fieldDefs} = this._params;
     fields.forEach(f => {
@@ -426,7 +431,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     };
   }
 
+  private _checkLocked() {
+    if (this.locked) {
+      throw new Error(`Recordset is locked.`);
+    }
+  }
+
   public insert(): RecordSet<R> {
+    this._checkLocked();
+
     const { data, groups, savedData, changed } = this.params;
 
     if (groups && groups.length) {
@@ -474,7 +487,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  public delete(remove?: boolean, rIdxs?: number[]): RecordSet<R> {
+  public delete(remove?: boolean, rIdxs?: number[], dontCheckLocked?: boolean): RecordSet<R> {
+    if (!dontCheckLocked) this._checkLocked();
+
     if (remove) {
       const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs.sort( (a, b) => b - a );
 
@@ -544,7 +559,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public post(commitFunc: TCommitFunc): RecordSet<R> {
+  public async post(commitFunc: TCommitFunc, unlock: boolean = true): Promise<RecordSet<R>> {
     let res: RecordSet<R> = this;
 
     for (let i = res.size - 1; i >= 0; i--) {
@@ -557,10 +572,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       const rs = row.data['$$ROW_STATE'];
 
       if (rs) {
-        switch (commitFunc(row.data)) {
+        switch (await commitFunc(row.data)) {
           case TCommitResult.Success: {
             if (rs === TRowState.Deleted) {
-              res = res.delete(true, [i]);
+              res = res.delete(true, [i], true);
             } else {
               delete row.data['$$ROW_STATE'];
               delete row.data['$$PREV_ROW'];
@@ -572,7 +587,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
 
           case TCommitResult.Cancel: {
-            res = res.cancel(i);
+            res = res.cancel(i, true);
             break;
           }
 
@@ -586,7 +601,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           }
 
           case TCommitResult.AbortCancelAll: {
-            res = res.cancelAll();
+            res = res.cancelAll(true);
             i = -1;
             break;
           }
@@ -594,10 +609,19 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       }
     }
 
-    return res;
+    if (unlock && res.locked) {
+      return new RecordSet<R>({
+        ...res._params,
+        locked: undefined
+      });
+    } else {
+      return res;
+    }
   }
 
-  public cancelAll(): RecordSet<R> {
+  public cancelAll(dontCheckLocked?: boolean): RecordSet<R> {
+    if (!dontCheckLocked) this._checkLocked();
+
     let res: RecordSet<R> = this;
 
     for (let i = res.size - 1; i >= 0; i--) {
@@ -615,7 +639,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return res;
   }
 
-  public cancel(rowIdx?: number): RecordSet<R> {
+  public cancel(rowIdx?: number, dontCheckLocked?: boolean): RecordSet<R> {
+    if (!dontCheckLocked) this._checkLocked();
+
     if (!this.size) {
       throw new Error('Empty recordset.')
     }
@@ -752,6 +778,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _setFieldValue(fieldName: string, value: TDataType): RecordSet<R> {
+    this._checkLocked();
 
     if (!this.size) {
       throw new Error('Empty recordset.')
@@ -993,6 +1020,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public toggleGroup(rowIdx: number): RecordSet<R> {
+    this._checkLocked();
+
     const {groups} = this._params;
 
     if (!groups || !groups.length) {
@@ -1023,6 +1052,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures<R>): RecordSet<R> {
+    this._checkLocked();
+
     if (this.status !== TStatus.FULL) {
       throw new Error(`Can't sort partially loaded recordset`);
     }
@@ -1415,6 +1446,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public collapseExpandGroups(collapse: boolean): RecordSet<R> {
+    this._checkLocked();
+
     if (!this._params.groups) {
       throw new Error(`Not in grouping mode`);
     }
@@ -1442,6 +1475,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public moveBy(delta: number): RecordSet<R> {
+    this._checkLocked();
+
     if (!this.size) {
       return this;
     }
@@ -1454,6 +1489,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setCurrentRow(currentRow: number): RecordSet<R> {
+    this._checkLocked();
+
     if (!this.size || this._params.currentRow === currentRow) {
       return this;
     }
@@ -1469,6 +1506,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setAllRowsSelected(value: boolean): RecordSet<R> {
+    this._checkLocked();
+
     if (value === this.allRowsSelected) {
       return this;
     }
@@ -1481,6 +1520,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public selectRow(idx: number, selected: boolean): RecordSet<R> {
+    this._checkLocked();
+
     if (idx < 0 || idx >= this.size) {
       throw new Error(`Invalid row index`);
     }
@@ -1570,6 +1611,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setFilter(filter: IFilter | undefined): RecordSet<R> {
+    this._checkLocked();
+
     if (this.status !== TStatus.FULL) {
       throw new Error(`Can't filter partially loaded recordset`);
     }
@@ -1768,6 +1811,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public setData(options: IRecordSetDataOptions<R>): RecordSet<R> {
+    this._checkLocked();
+
     switch (this._params.status) {
       case TStatus.LOADING:
         throw new Error("RecordSet is being loaded");
@@ -1794,6 +1839,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public loadingData(): RecordSet<R> {
+    this._checkLocked();
+
     switch (this._params.status) {
       case TStatus.FULL:
         throw new Error("RecordSet is a completely loaded");
@@ -1809,6 +1856,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   public addData(records: R[], full?: boolean): RecordSet<R> {
+    this._checkLocked();
+
     switch (this._params.status) {
       case TStatus.FULL:
         throw new Error("RecordSet is a completely loaded");
@@ -1822,5 +1871,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           status: full ? TStatus.FULL : TStatus.PARTIAL
         });
     }
+  }
+
+  public setLocked(locked: boolean): RecordSet<R> {
+    return new RecordSet<R>({
+      ...this._params,
+      locked
+    });
   }
 }

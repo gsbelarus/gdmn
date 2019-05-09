@@ -90,6 +90,10 @@ export const rsActions = {
     return (params: WithComponentName) => resolve(params);
   }),
 
+  setLocked: createAction('RECORDSET/SET_LOCKED', resolve => {
+    return (params: WithComponentName<{ locked: boolean }>) => resolve(params);
+  }),
+
 
   setFieldValue: createAction('RECORDSET/SET_FIELD_VALUE', resolve => {
     return (params: WithComponentName<{ fieldName: string, value: TDataType }>) => resolve(params);

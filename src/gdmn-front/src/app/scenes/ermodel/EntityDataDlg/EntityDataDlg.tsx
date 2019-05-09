@@ -4,28 +4,38 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { WrappedTextField } from "./WrappedTextField";
+import { gdmnActions } from "../../gdmn/actions";
+import { rsActions } from "gdmn-recordset";
+import { prepareDefaultEntityQuery } from "../entityData/utils";
+import { loadRSActions } from "@src/app/store/loadRSActions";
+
+type TDlgState = 'NORMAL' | 'SAVING';
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { addViewTab, url, entityName, id, rs, entity, setFieldValue, closeTab, loadRs, cancel } = props;
+  const { url, entityName, id, rs, entity, dispatch, history } = props;
   const rsName = rs ? rs.name : '';
+  const locked = rs ? rs.locked : false;
   const [changed, setChanged] = useState(false);
 
   useEffect(
     () => {
-      if (!rs) loadRs();
+      if (!rs && entity) {
+        const eq = prepareDefaultEntityQuery(entity, [id]);
+        dispatch(loadRSActions.loadRS({ name: url, eq }));
+      }
     },
     [entity]
   );
 
   useEffect(
     () => {
-      addViewTab({
+      dispatch(gdmnActions.addViewTab({
         url,
         caption: `${entityName}-${id}`,
         canClose: false,
         rs: rsName ? [rsName] : undefined
-      });
+      }));
     },
     [rsName]
   );
@@ -33,51 +43,59 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const commandBarItems: ICommandBarItemProps[] = !rs ? [] : [
     {
       key: 'saveAndClose',
-      disabled: !changed,
-      text: 'Сохранить и закрыть',
+      disabled: locked || !changed,
+      text: 'Сохранить',
       iconProps: {
-        iconName: 'Save'
+        iconName: 'CheckMark'
       },
       onClick: () => {}
     },
     {
       key: 'cancelAndClose',
-      text: 'Отменить и закрыть',
+      disabled: locked,
+      text: changed ? 'Отменить' : 'Закрыть',
       iconProps: {
         iconName: 'Cancel'
       },
       onClick: () => {
         if (changed) {
-          cancel();
+          dispatch(rsActions.cancel({ name: url }));
           setChanged(false);
         }
-        closeTab();
+        dispatch(gdmnActions.deleteViewTab({
+          viewTabURL: url,
+          locationPath: location.pathname,
+          historyPush: history.push
+        }));
       }
     },
     {
       key: 'apply',
-      disabled: !changed,
-      text: 'Сохранить',
+      disabled: locked || !changed,
+      text: 'Применить',
       iconProps: {
         iconName: 'Save'
       },
-      onClick: () => {}
+      onClick: () => {
+        setChanged(false);
+        dispatch(loadRSActions.postRS({ name: url }));
+      }
     },
     {
       key: 'revert',
-      disabled: !changed,
-      text: 'Отменить',
+      disabled: locked || !changed,
+      text: 'Вернуть',
       iconProps: {
         iconName: 'Undo'
       },
       onClick: () => {
-        cancel();
+        dispatch(rsActions.cancel({ name: url }));
         setChanged(false);
       }
     },
     {
       key: 'create',
-      disabled: changed,
+      disabled: locked || changed,
       text: 'Создать',
       iconProps: {
         iconName: 'PageAdd'
@@ -86,6 +104,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'delete',
+      disabled: locked,
       text: 'Удалить',
       iconProps: {
         iconName: 'Delete'
@@ -94,7 +113,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'prev',
-      disabled: changed,
+      disabled: locked || changed,
       text: 'Предыдущая',
       iconProps: {
         iconName: 'Previous'
@@ -103,7 +122,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'next',
-      disabled: changed,
+      disabled: locked || changed,
       text: 'Следующая',
       iconProps: {
         iconName: 'Next'
@@ -128,10 +147,15 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
           rs.fieldDefs.map( fd =>
             <WrappedTextField
               key={fd.fieldName}
+              disabled={locked}
               label={fd.caption}
               value={rs.getString(fd.fieldName)}
               onChanged={ () => { setChanged(true); } }
-              onApplyChanges={ (value: string) => { setFieldValue(fd.fieldName, value); } }
+              onApplyChanges={
+                (value: string) => {
+                  dispatch(rsActions.setFieldValue({ name: rs.name, fieldName: fd.fieldName, value }));
+                }
+              }
             />
           )
         }

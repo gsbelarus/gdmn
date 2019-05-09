@@ -147,7 +147,7 @@ describe('recordset', () => {
     expect(rs.size).toEqual(221);
   });
 
-  it('crud', () => {
+  it('crud', async () => {
     const fieldDefs = [
       {
         fieldName: 'i',
@@ -385,7 +385,7 @@ describe('recordset', () => {
     rs = rs.insert();
     expect(rs.getRowState()).toEqual(TRowState.Inserted);
     expect(rs.changed).toEqual(1);
-    rs = rs.post( () => TCommitResult.Success );
+    rs = await rs.post( () => Promise.resolve(TCommitResult.Success) );
     expect(rs.changed).toEqual(0);
     expect(rs.size).toEqual(1);
 

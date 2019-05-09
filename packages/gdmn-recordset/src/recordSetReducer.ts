@@ -109,6 +109,11 @@ export const recordSetReducer = (
       return newState(rs.delete(remove, rowsIdxs));
     }
 
+    case getType(actions.setLocked): {
+      const { locked } = action.payload;
+      return newState(rs.setLocked(locked));
+    }
+
     case getType(actions.insert): {
       return newState(rs.insert());
     }
