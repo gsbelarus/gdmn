@@ -50,19 +50,22 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
     }
 
     case getType(actions.postRS): {
-      const { name } = action.payload;
+      const { name, callback } = action.payload;
       let rs = getState().recordSet[name];
       if (rs.changed) {
         rs = rs.setLocked(true);
         dispatch(rsActions.setRecordSet({ name, rs }));
 
-        const commitFunc = (row: IDataRow) => {
+        const commitFunc = (_row: IDataRow) => {
           return new Promise( resolve => setTimeout( () => resolve(), 2000 ))
             .then( () => TCommitResult.Success );
         }
 
         rs = await rs.post(commitFunc, true);
         dispatch(rsActions.setRecordSet({ name, rs }));
+        if (callback) {
+          callback();
+        }
       }
       break;
     }

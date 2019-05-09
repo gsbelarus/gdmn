@@ -17,7 +17,6 @@ import { SqlViewContainer } from '../sql/EditView/container';
 import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
 import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
-import { DlgViewContainer } from '../ermodel/DlgView/DlgViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';

@@ -19,7 +19,7 @@ export interface IRootProps {
   readonly store: Store;
   readonly persistor: Persistor;
   readonly routes: ReactNode;
-}
+};
 
 export const Root: FC<IRootProps> = ({ store, persistor, routes, }) => (
   <ErrBoundary>

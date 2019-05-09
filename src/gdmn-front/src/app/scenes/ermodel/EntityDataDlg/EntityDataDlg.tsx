@@ -48,7 +48,21 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'CheckMark'
       },
-      onClick: () => {}
+      onClick: () => {
+        if (changed) {
+          setChanged(false);
+          dispatch(loadRSActions.postRS({
+            name: url,
+            callback: () => {
+              dispatch(gdmnActions.deleteViewTab({
+                viewTabURL: url,
+                locationPath: location.pathname,
+                historyPush: history.push
+              }));
+            }
+          }));
+        }
+      }
     },
     {
       key: 'cancelAndClose',
@@ -77,8 +91,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         iconName: 'Save'
       },
       onClick: () => {
-        setChanged(false);
-        dispatch(loadRSActions.postRS({ name: url }));
+        if (changed) {
+          setChanged(false);
+          dispatch(loadRSActions.postRS({ name: url }));
+        }
       }
     },
     {
