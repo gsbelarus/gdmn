@@ -3,6 +3,9 @@ import { morphTokens } from "../../rusMorphTokens";
 import { IDescribedParser, ParserName } from "../../types";
 import { idEntityToken, DateToken, Numeric } from '../../tokenizer';
 
+/**
+ * Грамматика для фразы типа "Editiondate после 01.01.2019"
+ */
 export class Parser5 extends Parser implements IDescribedParser {
   constructor() {
     super({...morphTokens, idEntityToken, DateToken, Numeric});

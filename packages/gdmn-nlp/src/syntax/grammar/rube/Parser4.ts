@@ -3,6 +3,9 @@ import { morphTokens } from "../../rusMorphTokens";
 import { IDescribedParser, ParserName } from "../../types";
 import { idEntityToken } from '../../tokenizer';
 
+/**
+ * Грамматика для фразы типа "Отсутствует phone"
+ */
 export class Parser4 extends Parser implements IDescribedParser {
   constructor() {
     super({...morphTokens, idEntityToken});

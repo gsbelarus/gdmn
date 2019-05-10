@@ -289,7 +289,15 @@ export class ERTranslatorRU {
 
       let numberAlias = 3;
       phrases.map((phrase) => {
+        /**
+         * Составление запроса из фразы с несколькими предложениями.
+         * Поример: Покажи все организации из Минска. Name содержит ООО. Отсутствует phone.
+         */
         if(phrase instanceof RusTMS) {
+
+          /**
+           * Выделение поля
+           */
           const subject: RusNoun | idEntityValue = (() => {
             if (phrase instanceof RusPSP) {
               return (phrase as RusPSP).subject;
@@ -302,6 +310,9 @@ export class ERTranslatorRU {
 
           let isNot = false;
 
+          /**
+           * Выделение сказуемого
+          */
           const predicate: RusVerb | RusAdverb | RusPreposition = (() => {
             if (phrase instanceof RusPSP) {
               if( (((phrase as RusPSP).predicate as RusVDO).predicate instanceof RusPV)) {
@@ -318,6 +329,9 @@ export class ERTranslatorRU {
             }
           })();
 
+          /**
+          * Выделение значения поля
+          */
           const directObject: SearchValue | DateValue | undefined = (() => {
             if (phrase instanceof RusPSP) {
               return ((phrase as RusPSP).predicate as RusVDO).directObject;
@@ -329,6 +343,7 @@ export class ERTranslatorRU {
           let attr: Attribute | undefined = undefined;
           let linkEntity: Entity;
           let linkAlias: string = '';
+          //поиск поля на английском языке
           if(subject instanceof idEntityValue) {
             attr = entity.attribute(subject.getText().toLocaleUpperCase());
             if (attr instanceof EntityAttribute) {
@@ -345,6 +360,7 @@ export class ERTranslatorRU {
               }
             }
           } else if(subject instanceof RusNoun) {
+            //поиск руссифицированного поля
             console.log(subject);
 /*
             const nounLexeme = subject.lexeme;
@@ -382,6 +398,7 @@ export class ERTranslatorRU {
             */
           }
 
+          //Проверка выполняемого условия
           if(attr !== undefined) {
             if(predicate instanceof RusVerb) {
               if(directObject) {
@@ -414,8 +431,8 @@ export class ERTranslatorRU {
                 })
               }
               if(predicate.lexeme.stem === 'присутствова') {
-                //exists
-                console.log('exists')
+                //not null
+                console.log('not null')
               }
             } else if(predicate instanceof RusAdverb && directObject) {
               if(predicate.word === 'больше') {
@@ -470,7 +487,7 @@ export class ERTranslatorRU {
                 }
               }
             } else if(predicate instanceof RusPreposition && directObject) {
-              //оператор больше/меньше дл данных типа дата
+              //оператор больше/меньше для данных типа дата
               if(predicate.word === 'до') {
                 if(less === undefined) {
                   less = [];

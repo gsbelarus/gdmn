@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { TextField, DefaultButton, ComboBox, HighContrastSelectorWhite } from "office-ui-fabric-react";
+import { TextField, DefaultButton, ComboBox } from "office-ui-fabric-react";
 import "./SyntaxBox.css";
 import { IToken } from "chevrotain";
 import { ParsedText, tokenize, CyrillicWord, morphAnalyzer, PunctuationMark } from "gdmn-nlp";

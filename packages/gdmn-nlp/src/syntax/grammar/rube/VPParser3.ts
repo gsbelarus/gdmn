@@ -3,6 +3,9 @@ import { morphTokens } from "../../rusMorphTokens";
 import { IDescribedParser, ParserName } from "../../types";
 import { idEntityToken, Numeric, CyrillicWord } from '../../tokenizer';
 
+/**
+ * Грамматика для фразы типа "Name содержит ООО"
+ */
 export class VPParser3 extends Parser implements IDescribedParser {
   constructor() {
     super({...morphTokens, Numeric, idEntityToken, CyrillicWord});

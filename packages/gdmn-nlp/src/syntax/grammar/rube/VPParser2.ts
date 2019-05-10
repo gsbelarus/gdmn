@@ -2,6 +2,9 @@ import { Parser } from "chevrotain";
 import { morphTokens } from "../../rusMorphTokens";
 import { IDescribedParser, ParserName } from "../../types";
 
+/**
+ * Грамматика для фразы типа "Сортируй по названию"
+ */
 export class VPParser2 extends Parser implements IDescribedParser {
   constructor() {
     super(morphTokens);
