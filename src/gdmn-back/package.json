@@ -57,7 +57,7 @@
     "@types/koa-static": "^4",
     "@types/koa2-cors": "^2",
     "@types/ms": "^0",
-    "@types/node": "^11",
+    "@types/node": "^12",
     "@types/uuid": "^3",
     "@types/ws": "^6",
     "nodemon": "^1",
