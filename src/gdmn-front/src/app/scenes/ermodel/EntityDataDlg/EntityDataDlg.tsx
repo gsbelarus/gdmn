@@ -1,44 +1,133 @@
 import { IEntityDataDlgProps } from "./EntityDataDlg.types";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
-import { WrappedTextField } from "./WrappedTextField";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions } from "gdmn-recordset";
-import { prepareDefaultEntityQuery } from "../entityData/utils";
-import { loadRSActions } from "@src/app/store/loadRSActions";
+import { rsActions, RecordSet, IDataRow, TCommitResult } from "gdmn-recordset";
+import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
+import { apiService } from "@src/app/services/apiService";
+import { List } from "immutable";
+import { sessionData } from "@src/app/services/sessionData";
 
-type TDlgState = 'NORMAL' | 'SAVING';
+interface ILastEdited {
+  fieldName: string;
+  value: string;
+};
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
   const { url, entityName, id, rs, entity, dispatch, history } = props;
-  const rsName = rs ? rs.name : '';
   const locked = rs ? rs.locked : false;
-  const [changed, setChanged] = useState(false);
+  const rsName = url;
 
-  useEffect(
-    () => {
-      if (!rs && entity) {
-        const eq = prepareDefaultEntityQuery(entity, [id]);
-        dispatch(loadRSActions.loadRS({ name: url, eq }));
-      }
-    },
-    [entity]
-  );
+  const getSavedLastEdit = (): ILastEdited | undefined => {
+    const savedData = sessionData.getItem(url);
 
-  useEffect(
-    () => {
-      dispatch(gdmnActions.addViewTab({
-        url,
-        caption: `${entityName}-${id}`,
-        canClose: false,
-        rs: rsName ? [rsName] : undefined
+    if (savedData && savedData.lastEdited) {
+      return savedData.lastEdited as ILastEdited;
+    }
+
+    return undefined;
+  }
+
+  const lastEdited = useRef<ILastEdited | undefined>(getSavedLastEdit());
+  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
+  const needFocus = useRef<ITextField | undefined>();
+
+  const addViewTab = () => {
+    dispatch(gdmnActions.addViewTab({
+      url,
+      caption: `${entityName}-${id}`,
+      canClose: false,
+      rs: rs ? [rsName] : undefined
+    }));
+  };
+
+  const deleteViewTab = () => dispatch(gdmnActions.deleteViewTab({
+    viewTabURL: url,
+    locationPath: location.pathname,
+    historyPush: history.push
+  }));
+
+  const applyLastEdited = () => {
+    if (rs && lastEdited.current) {
+      const { fieldName, value } = lastEdited.current;
+      const changedRS = rs.setString(fieldName, value);
+      dispatch(rsActions.setRecordSet({
+        name: rsName,
+        rs: changedRS
       }));
-    },
-    [rsName]
-  );
+      lastEdited.current = undefined;
+    }
+  };
+
+  const postChanges = useCallback( async () => {
+    if (rs && changed) {
+      let tempRS = rs;
+
+      if (lastEdited.current) {
+        const { fieldName, value } = lastEdited.current;
+        tempRS = rs.setString(fieldName, value);
+        lastEdited.current = undefined;
+      }
+
+      const commitFunc = (_row: IDataRow) => {
+        return new Promise( resolve => setTimeout( () => resolve(), 8000 ))
+          .then( () => TCommitResult.Success );
+      }
+
+      tempRS = tempRS.setLocked(true);
+      dispatch(rsActions.setRecordSet({ name: rsName, rs: tempRS }));
+      tempRS = await tempRS.post(commitFunc, true);
+      dispatch(rsActions.setRecordSet({ name: rsName, rs: tempRS }));
+      setChanged(false);
+    }
+  }, [rs, changed]);
+
+  useEffect( () => {
+    addViewTab();
+
+    if (needFocus.current) {
+      needFocus.current.focus();
+    }
+
+    return () => {
+      if (lastEdited.current) {
+        sessionData.setItem(url, { lastEdited: lastEdited.current });
+      } else {
+        sessionData.removeItem(url);
+      }
+    };
+  }, []);
+
+  useEffect( () => {
+    if (!rs && entity) {
+      const eq = prepareDefaultEntityQuery(entity, [id]);
+      apiService.query({ query: eq.inspect() })
+        .then( response => {
+          const result = response.payload.result!;
+          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
+          const rs = RecordSet.create({
+            name: rsName,
+            fieldDefs,
+            data: List(result.data as IDataRow[]),
+            eq,
+            sql: result.info
+          });
+          dispatch(rsActions.createRecordSet({ name: rsName, rs }));
+          addViewTab();
+        });
+    }
+  }, [entity]);
+
+  if (!entity) {
+    return <div>ERModel isn't loaded or unknown entity {entityName}</div>;
+  }
+
+  if (!rs) {
+    return <div>Loading...</div>;
+  }
 
   const commandBarItems: ICommandBarItemProps[] = !rs ? [] : [
     {
@@ -49,19 +138,8 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         iconName: 'CheckMark'
       },
       onClick: () => {
-        if (changed) {
-          setChanged(false);
-          dispatch(loadRSActions.postRS({
-            name: url,
-            callback: () => {
-              dispatch(gdmnActions.deleteViewTab({
-                viewTabURL: url,
-                locationPath: location.pathname,
-                historyPush: history.push
-              }));
-            }
-          }));
-        }
+        postChanges();
+        deleteViewTab();
       }
     },
     {
@@ -73,14 +151,11 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       },
       onClick: () => {
         if (changed) {
-          dispatch(rsActions.cancel({ name: url }));
+          lastEdited.current = undefined;
+          dispatch(rsActions.cancel({ name: rsName }));
           setChanged(false);
         }
-        dispatch(gdmnActions.deleteViewTab({
-          viewTabURL: url,
-          locationPath: location.pathname,
-          historyPush: history.push
-        }));
+        deleteViewTab();
       }
     },
     {
@@ -90,12 +165,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Save'
       },
-      onClick: () => {
-        if (changed) {
-          setChanged(false);
-          dispatch(loadRSActions.postRS({ name: url }));
-        }
-      }
+      onClick: postChanges
     },
     {
       key: 'revert',
@@ -105,7 +175,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         iconName: 'Undo'
       },
       onClick: () => {
-        dispatch(rsActions.cancel({ name: url }));
+        lastEdited.current = undefined;
+        if (rs.changed) {
+          dispatch(rsActions.cancel({ name: rsName }));
+        }
         setChanged(false);
       }
     },
@@ -147,31 +220,30 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
   ];
 
-  if (!entity) {
-    return <div>ERModel isn't loaded or unknown entity {entityName}</div>;
-  }
-
-  if (!rs) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div styleName="ScrollableDlg">
       <CommandBar items={commandBarItems} />
       <div styleName="FieldsColumn">
         {
           rs.fieldDefs.map( fd =>
-            <WrappedTextField
+            <TextField
               key={fd.fieldName}
               disabled={locked}
               label={fd.caption}
-              value={rs.getString(fd.fieldName)}
-              onChanged={ () => { setChanged(true); } }
-              onApplyChanges={
-                (value: string) => {
-                  dispatch(rsActions.setFieldValue({ name: rs.name, fieldName: fd.fieldName, value }));
+              value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+              onChange={
+                (_e, newValue?: string) => {
+                  if (newValue !== undefined) {
+                    lastEdited.current = {
+                      fieldName: fd.fieldName,
+                      value: newValue
+                    };
+                    setChanged(true);
+                  }
                 }
               }
+              onFocus={ () => { if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) { applyLastEdited(); } } }
+              componentRef={ ref => { if (ref && lastEdited.current && lastEdited.current.fieldName === fd.fieldName) { needFocus.current = ref; } } }
             />
           )
         }

@@ -19,13 +19,13 @@ export const ViewTab = CSSModules(
     const viewTabStyle = error ? 'ViewTab ViewTabError': 'ViewTab ViewTabNormal';
 
     const InnerTab = CSSModules( (props: {active?: boolean}) => (
-      <div styleName={`ViewTabText ${props.active ? "ViewActiveTab" : "ViewInactiveTab"}`}>
-        {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
-        <Link to={url}>
-          {caption}{changed ? ' *' : ''}
-        </Link>
-        {onClose && <span styleName="ViewTabCross" onClick={onClose}>x</span>}
-      </div>
+      <Link to={url}>
+        <div styleName={`ViewTabText ${props.active ? "ViewActiveTab" : "ViewInactiveTab"}`} onClick={ () => console.log('abc') }>
+          {loading ? <span styleName="ViewTabSpinner"><Spinner size={SpinnerSize.xSmall} /></span> : undefined}
+            {caption}{changed ? ' *' : ''}
+          {onClose && <span styleName="ViewTabCross" onClick={ e => { e.preventDefault(); onClose(); } }>x</span>}
+        </div>
+      </Link>
     ), styles, {allowMultiple: true });
 
     return url === location.pathname ? (

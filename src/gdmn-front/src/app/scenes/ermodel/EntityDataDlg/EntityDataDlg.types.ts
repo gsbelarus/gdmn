@@ -22,7 +22,7 @@ export interface IEntityDataDlgStateProps {
   entity?: Entity;
 };
 
-export interface IEntityDataDlgProps extends RouteComponentProps<any> {
+export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
   rs?: RecordSet;
   entity?: Entity;
   url: string;
