@@ -39,7 +39,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
 
         const result = await apiService.defineEntity({
           entity: erModel.entity(entityName).name,
-          pkValues: rs.pkValue
+          pkValues: rs.pkValue()
         });
         switch (result.payload.status) {
           case TTaskStatus.SUCCESS: {
@@ -61,7 +61,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
         const rs = getState().recordSet[entityName];
         if (!rs) return;
 
-        const pkValues = rs.pkValue;
+        const pkValues = rs.pkValue();
 
         dispatch(rsActions.deleteRows({ name: rs.name }));
 

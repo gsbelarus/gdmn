@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, TRowType } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
@@ -17,7 +17,7 @@ interface ILastEdited {
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { url, entityName, id, rs, entity, dispatch, history } = props;
+  const { url, entityName, id, rs, entity, dispatch, history, srcRs } = props;
   const locked = rs ? rs.locked : false;
   const rsName = url;
 
@@ -31,7 +31,13 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     return undefined;
   }
 
-  const lastEdited = useRef<ILastEdited | undefined>(getSavedLastEdit());
+  const getSavedLastFocused = (): string | undefined =>  {
+    const savedData = sessionData.getItem(url);
+    return savedData && typeof savedData.lastFocused === 'string' ? savedData.lastFocused : undefined;
+  }
+
+  const lastEdited = useRef(getSavedLastEdit());
+  const lastFocused = useRef(getSavedLastFocused());
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
   const needFocus = useRef<ITextField | undefined>();
 
@@ -73,7 +79,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       }
 
       const commitFunc = (_row: IDataRow) => {
-        return new Promise( resolve => setTimeout( () => resolve(), 8000 ))
+        return new Promise( resolve => setTimeout( () => resolve(), 2000 ))
           .then( () => TCommitResult.Success );
       }
 
@@ -82,6 +88,14 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       tempRS = await tempRS.post(commitFunc, true);
       dispatch(rsActions.setRecordSet({ name: rsName, rs: tempRS }));
       setChanged(false);
+
+      if (srcRs && !srcRs.locked) {
+        const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
+        if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
+          const updatedRs = srcRs.set(tempRS.getObject(), foundRows[0]);
+          dispatch(rsActions.setRecordSet({ name: updatedRs.name, rs: updatedRs }));
+        }
+      }
     }
   }, [rs, changed]);
 
@@ -93,8 +107,11 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     }
 
     return () => {
-      if (lastEdited.current) {
-        sessionData.setItem(url, { lastEdited: lastEdited.current });
+      if (lastEdited.current || lastFocused.current) {
+        sessionData.setItem(url, {
+          lastEdited: lastEdited.current,
+          lastFocused: lastFocused.current
+        });
       } else {
         sessionData.removeItem(url);
       }
@@ -242,8 +259,21 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                   }
                 }
               }
-              onFocus={ () => { if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) { applyLastEdited(); } } }
-              componentRef={ ref => { if (ref && lastEdited.current && lastEdited.current.fieldName === fd.fieldName) { needFocus.current = ref; } } }
+              onFocus={
+                () => {
+                  lastFocused.current = fd.fieldName;
+                  if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                    applyLastEdited();
+                  }
+                }
+              }
+              componentRef={
+                ref => {
+                  if (ref && lastFocused.current === fd.fieldName) {
+                    needFocus.current = ref;
+                  }
+                }
+              }
             />
           )
         }

@@ -66,7 +66,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
     if (edit) {
       edit.commandBarButtonAs = undefined;
       edit.onClick = () => {
-        this.props.onEdit(`${this.props.match.url}/edit/${data.rs.pk2s.join('-')}`)
+        this.props.onEdit(`${this.props.match.url}/edit/${data.rs.pk2s().join('-')}`)
       }
     }
     const deleteItem = items.find((item) => item.key === 'delete');

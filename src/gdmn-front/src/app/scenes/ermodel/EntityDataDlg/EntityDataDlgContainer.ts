@@ -6,6 +6,7 @@ import { IEntityDataDlgStateProps, IEntityDataDlgContainerProps } from "./Entity
 export const EntityDataDlgContainer = connect(
   (state: IState, ownProps: IEntityDataDlgContainerProps): IEntityDataDlgStateProps => ({
     rs: state.recordSet[ownProps.url],
-    entity: state.gdmnState.erModel.entities[ownProps.entityName]
+    entity: state.gdmnState.erModel.entities[ownProps.entityName],
+    srcRs: state.recordSet[ownProps.entityName]
   })
 )(EntityDataDlg);

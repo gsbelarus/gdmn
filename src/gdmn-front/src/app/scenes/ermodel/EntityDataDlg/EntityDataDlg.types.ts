@@ -11,7 +11,7 @@ export interface IEntityDataDlgRouteProps {
   id: string;
 };
 
-export interface IEntityDataDlgContainerProps extends RouteComponentProps<any> {
+export interface IEntityDataDlgContainerProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
   url: string;
   entityName: string;
   id: string;
@@ -20,6 +20,7 @@ export interface IEntityDataDlgContainerProps extends RouteComponentProps<any> {
 export interface IEntityDataDlgStateProps {
   rs?: RecordSet;
   entity?: Entity;
+  srcRs?: RecordSet;
 };
 
 export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
@@ -29,4 +30,5 @@ export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgR
   entityName: string;
   id: string;
   dispatch: Dispatch;
+  srcRs?: RecordSet;
 };
