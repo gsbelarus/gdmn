@@ -31,6 +31,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
       };
     },
     (thunkDispatch: ThunkDispatch<IState, never, GdmnAction | RSAction | GridAction | TRsMetaActions | LoadRSActions>, ownProps) => ({
+      /*
       onEdit: (url: string) => thunkDispatch(async (dispatch, getState) => {
         const erModel = getState().gdmnState.erModel;
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";
@@ -55,6 +56,7 @@ export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteCompon
             return;
         }
       }),
+      */
 
       onDelete: () => thunkDispatch(async (dispatch, getState) => {
         const entityName = ownProps.match ? ownProps.match.params.entityName : "";

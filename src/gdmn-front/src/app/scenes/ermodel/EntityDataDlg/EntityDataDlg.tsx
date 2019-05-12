@@ -219,7 +219,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'prev',
-      disabled: locked || changed,
+      disabled: locked || changed || !srcRs || !srcRs.currentRow,
       text: 'Предыдущая',
       iconProps: {
         iconName: 'Previous'
@@ -228,12 +228,16 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'next',
-      disabled: locked || changed,
+      disabled: locked || changed || !srcRs || srcRs.currentRow === (srcRs.size - 1),
       text: 'Следующая',
       iconProps: {
         iconName: 'Next'
       },
-      onClick: () => {}
+      onClick: () => {
+        const nextRow = srcRs!.setCurrentRow(srcRs!.currentRow + 1);
+        dispatch(rsActions.setRecordSet({ name: nextRow.name, rs: nextRow }))
+        history.push(`/spa/gdmn/entity/${entityName}/edit/${nextRow.pk2s().join('-')}`);
+      }
     },
   ];
 
