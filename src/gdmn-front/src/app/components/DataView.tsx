@@ -25,6 +25,7 @@ import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
 import { LinkCommandBarButton } from './LinkCommandBarButton';
+import { sessionData } from '../services/sessionData';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -56,6 +57,10 @@ export interface IDataViewProps<R> extends IViewProps<R> {
 
 export interface IGridRef {
   [name: string]: GDMNGrid | undefined;
+}
+
+interface ISavedGridState {
+  [name: string]: IGridState;
 }
 
 export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends View<P, S, R> {
@@ -127,9 +132,14 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       } else {
         return p;
       }
-    }, {});
+    }, {} as ISavedGridState);
 
-    sessionStorage.setItem(this.getDataViewKey(), JSON.stringify(savedState));
+    /**
+     * TODO: Мы сохраняем в корне хранилища по имени дата вью
+     * и никогда не удаляем. Надо сохранять внутри объекта формы,
+     * который будет удаляться, когда будет удаляться форма.
+     */
+    sessionData.setItem(this.getDataViewKey(), savedState);
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -158,7 +168,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: data!.rs.size ? btn(`${match.url}/edit/${data!.rs.pk2s.join('-')}`) : undefined
+        commandBarButtonAs: data!.rs.size ? btn(`${match.url}/edit/${data!.rs.pk2s().join('-')}`) : undefined
       },
       {
         key: `delete`,
@@ -195,12 +205,12 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   }
 
   public getSavedState(rs: RecordSet) {
-    const savedItem = sessionStorage.getItem(this.getDataViewKey());
+    const savedItem = sessionData.getItem(this.getDataViewKey());
 
-    if (savedItem) {
-      const savedState = JSON.parse(savedItem);
+    if (savedItem instanceof Object) {
+      const savedState = savedItem as ISavedGridState;
 
-      if (savedState && savedState[rs.name]) {
+      if (savedState[rs.name]) {
         return savedState[rs.name] as IGridState;
       }
     }

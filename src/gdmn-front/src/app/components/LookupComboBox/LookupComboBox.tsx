@@ -1,5 +1,6 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
 import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton } from 'office-ui-fabric-react';
+import { sessionData } from '@src/app/services/sessionData';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
 
@@ -131,15 +132,15 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
     isMounted.current = true;
 
     if (name) {
-      const savedState = sessionStorage.getItem(name);
+      const savedState = sessionData.getItem(name);
       if (savedState) {
-        dispatch({ type: 'RESTORE_STATE', state: JSON.parse(savedState) });
+        dispatch({ type: 'RESTORE_STATE', state: savedState });
       }
     }
 
     return () => {
       if (name) {
-        sessionStorage.setItem(name, JSON.stringify(refState.current));
+        sessionData.setItem(name, refState.current);
       }
       isMounted.current = false;
     }
