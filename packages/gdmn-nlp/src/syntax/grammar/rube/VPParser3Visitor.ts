@@ -64,29 +64,6 @@ export class VPVisitor3 extends BaseVPVisitor3 {
     }  
   }
 
-  /*
-public predicate = (ctx: any) => {
-    if(ctx.directObject) {
-      if(ctx.pv) {
-        return new RusVDO(this.visit(ctx.pv), this.visit(ctx.directObject));
-      } else {
-        return new RusVDO(this.visit(ctx.verb), this.visit(ctx.directObject));
-      }
-    } else {
-      if(ctx.pv) {
-        return new RusVDO(this.visit(ctx.pv));
-      } else {
-        return new RusVDO(this.visit(ctx.verb));
-      }
-    }    
-  }
-  
-  public pv = (ctx: any) => {
-    return new RusPV(this.visit(ctx.negativeParticle), this.visit(ctx.verb));
-  }
-*/
-
-
   public verb = (ctx: any) => {
     return ctx.VERBTranImpfPresSing3perIndc ? ctx.VERBTranImpfPresSing3perIndc[0].word
     : ctx.VERBIntrImpfPresSing3perIndc ? ctx.VERBIntrImpfPresSing3perIndc[0].word

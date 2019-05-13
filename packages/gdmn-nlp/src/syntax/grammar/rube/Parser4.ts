@@ -4,7 +4,7 @@ import { IDescribedParser, ParserName } from "../../types";
 import { idEntityToken } from '../../tokenizer';
 
 /**
- * Грамматика для фразы типа "Отсутствует phone"
+ * Грамматика для фразы типа "Отсутствует phone/телефон"
  */
 export class Parser4 extends Parser implements IDescribedParser {
   constructor() {

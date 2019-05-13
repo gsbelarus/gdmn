@@ -56,8 +56,6 @@ export class Visitor4 extends BaseVisitor4 {
     }
   }
 
-//в качестве сказемого может быть частица
-//Может новый тип предложения для фраз типа "Есть/нет/нету телефона"
   public verb = (ctx: any) => {
     return ctx.VERBTranImpfPresSing3perIndc ? ctx.VERBTranImpfPresSing3perIndc[0].word
     : ctx.VERBIntrImpfPresSing3perIndc ? ctx.VERBIntrImpfPresSing3perIndc[0].word
