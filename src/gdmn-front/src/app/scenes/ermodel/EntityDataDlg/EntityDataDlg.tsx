@@ -9,6 +9,7 @@ import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { sessionData } from "@src/app/services/sessionData";
+import { linkCommandBarButton } from "@src/app/components/LinkCommandBarButton";
 
 interface ILastEdited {
   fieldName: string;
@@ -100,8 +101,6 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   }, [rs, changed]);
 
   useEffect( () => {
-    addViewTab(rs);
-
     if (needFocus.current) {
       needFocus.current.focus();
     }
@@ -120,6 +119,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
 
   useEffect( () => {
     if (!rs && entity) {
+      addViewTab(undefined);
       const eq = prepareDefaultEntityQuery(entity, [id]);
       apiService.query({ query: eq.inspect() })
         .then( response => {
@@ -233,6 +233,14 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Next'
       },
+      commandBarButtonAs: srcRs && linkCommandBarButton(
+        `/spa/gdmn/entity/${entityName}/edit/${srcRs!.pk2s(srcRs!.currentRow + 1).join('-')}`,
+        undefined,
+        () => {
+          deleteViewTab(false);
+          dispatch(rsActions.setRecordSet({ name: srcRs!.name, rs: srcRs!.moveBy(1) }));
+        }
+      )
       /*
       onClick: () => {
         const nextRow = srcRs!.moveBy(1);

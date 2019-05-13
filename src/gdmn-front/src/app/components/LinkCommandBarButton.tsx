@@ -11,11 +11,12 @@ import { Link } from 'react-router-dom';
 export interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
   supText?: string;
+  onClick?: () => void;
 };
 
 export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
   public render(): JSX.Element {
-    const { defaultRender, link, supText, ...buttonProps } = this.props;
+    const { defaultRender, link, supText, onClick, ...buttonProps } = this.props;
 
     const onRenderText = supText ? (props: IButtonProps) => <>{props.text}<sup>{supText}</sup></> : undefined;
     const DefaultRender = defaultRender ? defaultRender as any : CommandBarButton;
@@ -27,7 +28,7 @@ export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonPro
       return render;
     } else {
       return (
-        <Link to={link}>
+        <Link to={link} onClick={onClick}>
           {render}
         </Link>
       );
@@ -35,6 +36,6 @@ export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonPro
   }
 };
 
-export const linkCommandBarButton = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
-  return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+export const linkCommandBarButton = (link: string, supText?: string, onClick?: () => void) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+  return <LinkCommandBarButton {...props} link={link} supText={supText} onClick={onClick} />;
 };
