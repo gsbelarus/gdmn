@@ -23,7 +23,6 @@ import {
   SemContext,
   RusTMS,
   RusPSP,
-  RusNounLexeme,
   RusPSPRW,
   RusImperativeNP,
   RusVDO,
@@ -140,7 +139,6 @@ export class ERTranslatorRU {
       let less: IEntityQueryWhereValue[] | undefined = undefined;
       let contains: IEntityQueryWhereValue[] | undefined = undefined;
       let isNull: IEntityQueryAlias<ScalarAttribute>[] | undefined= undefined;
-      const exists: IEntityQuery[] = [];
 
       if (np.noun instanceof RusANP) {
         const adjective = (np.noun as RusANP).adjf;
@@ -361,41 +359,24 @@ export class ERTranslatorRU {
             }
           } else if(subject instanceof RusNoun) {
             //поиск руссифицированного поля
-            console.log(subject);
-/*
-            const nounLexeme = subject.lexeme;
-            if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
-              const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
-              const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
-              if (attr instanceof EntityAttribute) {
-                const linkEntity = attr.entities[0];
-                const linkAlias = "alias2";
-                if (
-                  !fields
-                    .filter((field) => field.links)
-                    .some((field) =>
-                      field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
-                ) {
-                  fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
-                }
-
-                equals.push({
-                  alias: "alias2",
-                  attribute: linkEntity.attribute("NAME"),
-                  value: words
-                });
-
-              } else {
-                equals.push({
-                  alias: "alias1",
-                  attribute: attr,
-                  value: words
-                });
+            const [, fieldAttr] =
+            Object.entries(entity.attributes).find(
+              ([, i]) => i!.lName!.ru!.name.toLowerCase() === (subject.word === 'название' ? 'наименование' : subject.word).toLowerCase()
+            )!;
+            attr = fieldAttr;
+            if (attr instanceof EntityAttribute) {
+              linkEntity = attr.entities[0];
+              linkAlias = `alias${numberAlias}`;
+              numberAlias++;
+              if (
+                !fields
+                  .filter((field) => field.links)
+                  .some((field) =>
+                    field.links!.some((fLink) => fLink.alias === linkAlias && field.attribute === attr))
+              ) {
+                fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
               }
-            } else {
-              throw new Error(`Can't find semantic category place for noun ${(objectANP as RusNoun).word}`);
             }
-            */
           }
 
           //Проверка выполняемого условия
@@ -431,8 +412,14 @@ export class ERTranslatorRU {
                 })
               }
               if(predicate.lexeme.stem === 'присутствова') {
-                //not null
-                console.log('not null')
+                const value: IEntityQueryAlias<ScalarAttribute> = {
+                  alias: linkAlias ? linkAlias : 'alias1',
+                  attribute: attr
+                }
+                if(not === undefined) {
+                  not = [];
+                }
+                not.push({isNull: [value]})
               }
             } else if(predicate instanceof RusAdverb && directObject) {
               if(predicate.word === 'больше') {
@@ -520,7 +507,6 @@ export class ERTranslatorRU {
       } else {
         options = new EntityQueryOptions(first, undefined, [{not}, {isNull}, {contains}, {greater}, {less}]);
       }
-      console.log(options.where)
       const entityLink = new EntityLink(entity, "alias1", fields);
       return {
         action,

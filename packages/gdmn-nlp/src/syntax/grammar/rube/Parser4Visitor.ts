@@ -56,29 +56,8 @@ export class Visitor4 extends BaseVisitor4 {
     }
   }
 
-  /*
-public predicate = (ctx: any) => {
-    if(ctx.directObject) {
-      if(ctx.pv) {
-        return new RusVDO(this.visit(ctx.pv), this.visit(ctx.directObject));
-      } else {
-        return new RusVDO(this.visit(ctx.verb), this.visit(ctx.directObject));
-      }
-    } else {
-      if(ctx.pv) {
-        return new RusVDO(this.visit(ctx.pv));
-      } else {
-        return new RusVDO(this.visit(ctx.verb));
-      }
-    }    
-  }
-  
-  public pv = (ctx: any) => {
-    return new RusPV(this.visit(ctx.negativeParticle), this.visit(ctx.verb));
-  }
-*/
-
-
+//в качестве сказемого может быть частица
+//Может новый тип предложения для фраз типа "Есть/нет/нету телефона"
   public verb = (ctx: any) => {
     return ctx.VERBTranImpfPresSing3perIndc ? ctx.VERBTranImpfPresSing3perIndc[0].word
     : ctx.VERBIntrImpfPresSing3perIndc ? ctx.VERBIntrImpfPresSing3perIndc[0].word

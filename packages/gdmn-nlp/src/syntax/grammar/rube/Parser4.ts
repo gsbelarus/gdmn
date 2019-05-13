@@ -59,21 +59,6 @@ export class Parser4 extends Parser implements IDescribedParser {
     this.OPTION( () => this.SUBRULE(this.negativeParticle) );
     this.SUBRULE(this.verb);
   });
-
-  /*
-  public predicate = this.RULE('predicate', () => {
-    this.OR([
-      { ALT: () => this.SUBRULE(this.pv) },
-      { ALT: () => this.SUBRULE(this.verb) },
-    ]);
-    this.OPTION( () => this.SUBRULE(this.directObject) );
-  });
-
-  public pv = this.RULE('pv', () => {
-    this.SUBRULE(this.negativeParticle);
-    this.SUBRULE(this.verb);
-  });
-*/
   
   public negativeParticle = this.RULE('negativeParticle', () => {
     return this.CONSUME(morphTokens.PARTNegt);
