@@ -99,6 +99,16 @@ export class RusVerbLexeme extends VerbLexeme {
           }
         }
 
+        if(this.conjZ === 'Δa/c') {
+          if (this.stem1 && morphSigns.tense === RusTense.Pres) {
+            return new RusVerb(this.stem1 + ending.ending, this, morphSigns);
+          }
+          if(morphSigns.mood === RusMood.Impr) {
+            return new RusVerb(this.stem + ending.ending, this, morphSigns);
+          }
+        }
+
+
         if (this.stem1
           && ending.ending
           &&

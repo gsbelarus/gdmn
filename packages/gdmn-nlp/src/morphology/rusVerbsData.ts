@@ -1170,4 +1170,13 @@ export const rusVerbs: RusVerbInterface[] = [
     transitivity: Transitivity.Tran,
     conjZ: '^b/cСВ'
   },
+  // быть
+  {
+    stem: 'б',
+    stem1: 'есть',
+    stem2: '',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Intr,
+    conjZ: 'Δa/c'
+  },
 ];

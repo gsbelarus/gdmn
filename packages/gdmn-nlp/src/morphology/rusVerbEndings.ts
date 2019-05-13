@@ -13339,4 +13339,154 @@ export const RusConjugationZEndings: RusConjugationZEnding[] =
       },
     ]
   },
+  // быть (б)
+  {
+    conjZ: 'Δa/c',
+    aspect: RusAspect.Impf,
+    transitivity: Transitivity.Intr,
+    suffix: 'ыть',
+    endings: [
+      // есть
+      {
+        ending: '',
+        tense: RusTense.Pres,
+        singular: true,
+        person: 1,
+        mood: RusMood.Indc
+      },
+      // есть
+      {
+        ending: '',
+        tense: RusTense.Pres,
+        singular: false,
+        person: 1,
+        mood: RusMood.Indc
+      },
+      // есть
+      {
+        ending: '',
+        tense: RusTense.Pres,
+        singular: true,
+        person: 2,
+        mood: RusMood.Indc
+      },
+      // есть
+      {
+        ending: '',
+        tense: RusTense.Pres,
+        singular: false,
+        person: 2,
+        mood: RusMood.Indc
+      },
+      // есть
+      {
+        ending: '',
+        tense: RusTense.Pres,
+        singular: true,
+        person: 3,
+        mood: RusMood.Indc
+      },
+      // есть
+      {
+        ending: '',
+        tense: RusTense.Pres,
+        singular: false,
+        person: 3,
+        mood: RusMood.Indc
+      },
+      // был
+      {
+        ending: 'ыл',
+        tense: RusTense.Past,
+        singular: true,
+        gender: RusGender.Masc,
+        mood: RusMood.Indc
+      },
+      // была
+      {
+        ending: 'ыла',
+        tense: RusTense.Past,
+        singular: true,
+        gender: RusGender.Femn,
+        mood: RusMood.Indc
+      },
+      // было
+      {
+        ending: 'ыло',
+        tense: RusTense.Past,
+        singular: true,
+        gender: RusGender.Neut,
+        mood: RusMood.Indc
+      },
+      // были
+      {
+        ending: 'ыли',
+        tense: RusTense.Past,
+        singular: false,
+        mood: RusMood.Indc
+      },
+      // буду
+      {
+        ending: 'уду',
+        tense: RusTense.Futr,
+        singular: true,
+        person: 1,
+        mood: RusMood.Indc
+      },
+      // будем
+      {
+        ending: 'удем',
+        tense: RusTense.Futr,
+        singular: false,
+        person: 1,
+        mood: RusMood.Indc
+      },
+      // будешь
+      {
+        ending: 'удешь',
+        tense: RusTense.Futr,
+        singular: true,
+        person: 2,
+        mood: RusMood.Indc
+      },
+      // будете
+      {
+        ending: 'удете',
+        tense: RusTense.Futr,
+        singular: false,
+        person: 2,
+        mood: RusMood.Indc
+      },
+      // будет
+      {
+        ending: 'удет',
+        tense: RusTense.Futr,
+        singular: true,
+        person: 3,
+        mood: RusMood.Indc
+      },
+      // будут
+      {
+        ending: 'удут',
+        tense: RusTense.Futr,
+        singular: false,
+        person: 3,
+        mood: RusMood.Indc
+      },
+      // будь
+      {
+        ending: 'удь',
+        singular: true,
+        mood: RusMood.Impr,
+        involvement: Involvement.Excl
+      },
+      // будьте
+      {
+        ending: 'удьте',
+        singular: false,
+        mood: RusMood.Impr,
+        involvement: Involvement.Excl
+      },
+    ]
+  },
 ];

@@ -81,7 +81,7 @@ export type RusConjugationZ =
   '14b'           |'14b-ся'        |'14bСВ'         |'14b-сяСВ'      |'14*bСВ'        |'14*b-сяСВ'     |
   '14b/cСВ'       |'14cСВ'         |'14c(1)СВ'      |'14c/c"-сяСВ'   |'15aСВ'         |'15a-сяСВ'      |
   '16b/c'         |'^a-бытьСВ'     |'^a-ех'         |'^a-ехСВ'       |'^b'            |'^b/b(9)'       |
-  '^b/b(9)СВ'     |'^b/cСВ';
+  '^b/b(9)СВ'     |'^b/cСВ'        |'Δa/c';
 export interface RusVerbInterface {
   readonly stem: string;
   readonly stem1: string;
