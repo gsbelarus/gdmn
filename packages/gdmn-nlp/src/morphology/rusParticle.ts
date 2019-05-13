@@ -28,7 +28,7 @@ export const rusParticles  = [
   },
   {
     particleType: ParticleType.Negative,
-    words: ['нет', 'не', 'ни']//, 'вовсе не', 'далеко не', 'отнюдь не'
+    words: ['нет', 'не', 'ни', 'нету']//, 'вовсе не', 'далеко не', 'отнюдь не'
   },
   {
     particleType: ParticleType.Interrogative,

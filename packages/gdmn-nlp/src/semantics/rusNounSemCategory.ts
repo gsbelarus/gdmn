@@ -1,4 +1,4 @@
-import { SemCategory, semCategories2Str } from "./categories";
+import { SemCategory } from "./categories";
 
 export interface IRusNounSemCategory {
   [stem: string]: SemCategory[];
