@@ -130,7 +130,7 @@ export class RusVDO extends RusTMS {
  * Impersonal sentences
  */
 export class RusIS extends RusOMS {
-  constructor (predicate: RusParticle, directObject: SearchValue | RusNoun | idEntityValue) {
+  constructor (predicate: RusParticle, directObject: RusNoun | idEntityValue) {
     super([predicate, directObject]);
   }
 
@@ -138,10 +138,8 @@ export class RusIS extends RusOMS {
     return this.items[0] as RusParticle;
   }
 
-  get directObject(): SearchValue | RusNoun | idEntityValue {
-    if (this.items[1] instanceof SearchValue) {
-      return this.items[1] as SearchValue;
-    } else if (this.items[1] instanceof RusNoun) {
+  get directObject(): RusNoun | idEntityValue {
+    if (this.items[1] instanceof RusNoun) {
       return this.items[1] as RusNoun;
     } else {
       return this.items[1] as idEntityValue;

@@ -27,8 +27,11 @@ import {
   RusImperativeNP,
   RusVDO,
   RusPV,
+  RusIS,
   RusAdverb,
-  RusPreposition
+  RusPreposition,
+  RusParticle,
+  RusOMS
 } from "gdmn-nlp";
 import {DateValue} from "gdmn-nlp/dist/definitions/syntax/value";
 import {
@@ -291,7 +294,7 @@ export class ERTranslatorRU {
          * Составление запроса из фразы с несколькими предложениями.
          * Поример: Покажи все организации из Минска. Name содержит ООО. Отсутствует phone.
          */
-        if(phrase instanceof RusTMS) {
+        if(phrase instanceof RusTMS || phrase instanceof RusOMS) {
 
           /**
            * Выделение поля
@@ -301,6 +304,9 @@ export class ERTranslatorRU {
               return (phrase as RusPSP).subject;
             } else if (phrase instanceof RusPSPRW) {
               return (phrase as RusPSPRW).subject;
+            } else if (phrase instanceof RusIS) {
+              const noun = (phrase as RusIS).directObject;
+              return noun instanceof idEntityValue ? noun : noun.lexeme.getWordForm({c: RusCase.Nomn, singular: true});
             } else {
               return (phrase as RusImperativeNP).imperativeNoun;
             }
@@ -311,7 +317,7 @@ export class ERTranslatorRU {
           /**
            * Выделение сказуемого
           */
-          const predicate: RusVerb | RusAdverb | RusPreposition = (() => {
+          const predicate: RusVerb | RusAdverb | RusParticle | RusPreposition = (() => {
             if (phrase instanceof RusPSP) {
               if( (((phrase as RusPSP).predicate as RusVDO).predicate instanceof RusPV)) {
                 const pv = (((phrase as RusPSP).predicate as RusVDO).predicate as RusPV);
@@ -322,6 +328,8 @@ export class ERTranslatorRU {
               }
             } else if (phrase instanceof RusPSPRW) {
               return ((phrase as RusPSPRW).predicate as RusPV).verb;
+            } else if (phrase instanceof RusIS) {
+              return (phrase as RusIS).predicate as RusParticle;
             } else {
               return ((phrase as RusImperativeNP).pp as RusPTimeP).prep;
             }
@@ -381,7 +389,7 @@ export class ERTranslatorRU {
 
           //Проверка выполняемого условия
           if(attr !== undefined) {
-            if(predicate instanceof RusVerb) {
+            if(predicate instanceof RusVerb || predicate instanceof RusParticle) {
               if(directObject) {
                 if(predicate.lexeme.stem === 'включа' || predicate.lexeme.stem === 'содерж') {
                   const value: IEntityQueryWhereValue[] = [{
@@ -402,7 +410,9 @@ export class ERTranslatorRU {
                   }
                 }
               }
-              if(predicate.lexeme.stem === 'отсутствова') {
+              if(predicate.lexeme.stem === 'отсутствова'
+                || (predicate instanceof RusParticle && ( (predicate as RusParticle).word === 'нет' || (predicate as RusParticle).word === 'нету') )
+              ) {
                 if(isNull === undefined) {
                   isNull = [];
                 }
@@ -411,7 +421,7 @@ export class ERTranslatorRU {
                   attribute: attr
                 })
               }
-              if(predicate.lexeme.stem === 'присутствова') {
+              if(predicate.lexeme.stem === 'присутствова' || predicate.lexeme.stem1 === 'есть') {
                 const value: IEntityQueryAlias<ScalarAttribute> = {
                   alias: linkAlias ? linkAlias : 'alias1',
                   attribute: attr
