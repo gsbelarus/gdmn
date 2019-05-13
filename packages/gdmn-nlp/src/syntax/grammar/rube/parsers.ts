@@ -3,6 +3,7 @@ import { vpParser2, vpVisitor2 } from "./VPParser2Visitor";
 import { vpParser3, vpVisitor3 } from "./VPParser3Visitor";
 import { parser4, visitor4 } from "./Parser4Visitor";
 import { parser5, visitor5 } from "./Parser5Visitor";
+import { parser6, visitor6 } from './Parser6Visitor';
 
 export const parsers = [
   {
@@ -24,5 +25,9 @@ export const parsers = [
   {
     parser: parser5,
     visitor: visitor5
+  },
+  {
+    parser: parser6,
+    visitor: visitor6
   },
 ];

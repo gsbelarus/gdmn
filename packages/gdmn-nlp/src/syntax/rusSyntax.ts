@@ -24,6 +24,18 @@ export class RusPhrase extends Phrase<RusWord> {};
 }
 
 /**
+ * One-member Sentences
+ */
+export class RusOMS extends RusPhrase {
+  getName(): PhraseName {
+    return {
+      label: 'RusOMS',
+      description: 'Односоставное предложение'
+    }
+  }
+}
+
+/**
  * Principal Sentence Parts
  */
   export class RusPSP extends RusTMS {
@@ -110,6 +122,36 @@ export class RusVDO extends RusTMS {
     return {
       label: 'RusVDO',
       description: 'Сказуемое с второстепенными членами предложения'
+    }
+  }
+}
+
+/**
+ * Impersonal sentences
+ */
+export class RusIS extends RusOMS {
+  constructor (predicate: RusParticle, directObject: SearchValue | RusNoun | idEntityValue) {
+    super([predicate, directObject]);
+  }
+
+  get predicate(): RusParticle {
+    return this.items[0] as RusParticle;
+  }
+
+  get directObject(): SearchValue | RusNoun | idEntityValue {
+    if (this.items[1] instanceof SearchValue) {
+      return this.items[1] as SearchValue;
+    } else if (this.items[1] instanceof RusNoun) {
+      return this.items[1] as RusNoun;
+    } else {
+      return this.items[1] as idEntityValue;
+    }
+  }
+
+  getName(): PhraseName {
+    return {
+      label: 'RusIS',
+      description: 'Сказуемое выраженное частицей, с второстепенными членами предложения'
     }
   }
 }
