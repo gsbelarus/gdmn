@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, TRowType } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
@@ -41,19 +41,19 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
   const needFocus = useRef<ITextField | undefined>();
 
-  const addViewTab = () => {
+  const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
       url,
       caption: `${entityName}-${id}`,
       canClose: false,
-      rs: rs ? [rsName] : undefined
+      rs: recordSet ? [recordSet.name] : undefined
     }));
   };
 
-  const deleteViewTab = () => dispatch(gdmnActions.deleteViewTab({
+  const deleteViewTab = (changePath: boolean) => dispatch(gdmnActions.deleteViewTab({
     viewTabURL: url,
-    locationPath: location.pathname,
-    historyPush: history.push
+    locationPath: changePath ? location.pathname : undefined,
+    historyPush: changePath ? history.push : undefined
   }));
 
   const applyLastEdited = () => {
@@ -100,7 +100,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   }, [rs, changed]);
 
   useEffect( () => {
-    addViewTab();
+    addViewTab(rs);
 
     if (needFocus.current) {
       needFocus.current.focus();
@@ -133,10 +133,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
             sql: result.info
           });
           dispatch(rsActions.createRecordSet({ name: rsName, rs }));
-          addViewTab();
+          addViewTab(rs);
         });
     }
-  }, [entity]);
+  }, [rs, entity]);
 
   if (!entity) {
     return <div>ERModel isn't loaded or unknown entity {entityName}</div>;
@@ -156,7 +156,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       },
       onClick: () => {
         postChanges();
-        deleteViewTab();
+        deleteViewTab(true);
       }
     },
     {
@@ -172,7 +172,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
           dispatch(rsActions.cancel({ name: rsName }));
           setChanged(false);
         }
-        deleteViewTab();
+        deleteViewTab(true);
       }
     },
     {
@@ -233,11 +233,14 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Next'
       },
+      /*
       onClick: () => {
-        const nextRow = srcRs!.setCurrentRow(srcRs!.currentRow + 1);
-        dispatch(rsActions.setRecordSet({ name: nextRow.name, rs: nextRow }))
+        const nextRow = srcRs!.moveBy(1);
+        dispatch(rsActions.setRecordSet({ name: nextRow.name, rs: nextRow }));
         history.push(`/spa/gdmn/entity/${entityName}/edit/${nextRow.pk2s().join('-')}`);
+        deleteViewTab(false);
       }
+      */
     },
   ];
 

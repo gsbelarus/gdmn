@@ -1,5 +1,5 @@
 import React from 'react';
-import { ICommandBarItemProps, IComponentAsProps, TextField } from 'office-ui-fabric-react';
+import { ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
 import {RecordSet, TStatus} from "gdmn-recordset";
 import {
   GDMNGrid,
@@ -24,7 +24,7 @@ import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
-import { LinkCommandBarButton } from './LinkCommandBarButton';
+import { linkCommandBarButton } from './LinkCommandBarButton';
 import { sessionData } from '../services/sessionData';
 
 export interface IRSAndGCS {
@@ -149,10 +149,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
 
     const { data, match, refreshRs } = this.props;
 
-    const btn = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
-      return <LinkCommandBarButton {...props} link={link} supText={supText} />;
-    };
-
     const items: ICommandBarItemProps[] = [
       {
         key: `add`,
@@ -160,7 +156,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Add'
         },
-        commandBarButtonAs: btn(`${match.url}/add`)
+        commandBarButtonAs: linkCommandBarButton(`${match.url}/add`)
       },
       {
         key: `edit`,
@@ -168,7 +164,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: data!.rs.size ? btn(`${match.url}/edit/${data!.rs.pk2s().join('-')}`) : undefined
+        commandBarButtonAs: data!.rs.size ? linkCommandBarButton(`${match.url}/edit/${data!.rs.pk2s().join('-')}`) : undefined
       },
       {
         key: `delete`,

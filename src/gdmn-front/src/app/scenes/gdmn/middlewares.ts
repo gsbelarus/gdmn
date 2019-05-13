@@ -251,6 +251,7 @@ const viewTabMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => 
     const foundIdx = viewTabs.findIndex(t => t.url === viewTabURL);
 
     if (foundIdx > -1) {
+      if (locationPath && historyPush) {
       let nextPath = "";
 
       if (locationPath === viewTabURL) {
@@ -263,6 +264,7 @@ const viewTabMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => 
 
       if (nextPath) {
         historyPush(nextPath);
+      }
       }
 
       const viewTab = viewTabs[foundIdx];

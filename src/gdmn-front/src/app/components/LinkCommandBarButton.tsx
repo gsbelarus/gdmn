@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 export interface ILinkCommandBarButtonProps extends IComponentAsProps<ICommandBarItemProps> {
   link: string;
   supText?: string;
-}
+};
 
 export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonProps> {
   public render(): JSX.Element {
@@ -33,4 +33,8 @@ export class LinkCommandBarButton extends BaseComponent<ILinkCommandBarButtonPro
       );
     }
   }
-}
+};
+
+export const linkCommandBarButton = (link: string, supText?: string) => (props: IComponentAsProps<ICommandBarItemProps>) => {
+  return <LinkCommandBarButton {...props} link={link} supText={supText} />;
+};
