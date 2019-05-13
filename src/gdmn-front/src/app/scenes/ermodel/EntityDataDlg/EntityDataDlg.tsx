@@ -9,7 +9,6 @@ import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { sessionData } from "@src/app/services/sessionData";
-import { linkCommandBarButton } from "@src/app/components/LinkCommandBarButton";
 
 interface ILastEdited {
   fieldName: string;
@@ -32,13 +31,14 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     return undefined;
   }
 
-  const getSavedLastFocused = (): string | undefined =>  {
+  const getSavedLastFocused = useCallback( (): string | undefined =>  {
     const savedData = sessionData.getItem(url);
     return savedData && typeof savedData.lastFocused === 'string' ? savedData.lastFocused : undefined;
-  }
+  }, [url]);
 
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
+  const nextUrl = useRef(url);
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
   const needFocus = useRef<ITextField | undefined>();
 
@@ -101,21 +101,28 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   }, [rs, changed]);
 
   useEffect( () => {
-    if (needFocus.current) {
-      needFocus.current.focus();
-    }
-
     return () => {
       if (lastEdited.current || lastFocused.current) {
-        sessionData.setItem(url, {
+        sessionData.setItem(nextUrl.current, {
           lastEdited: lastEdited.current,
           lastFocused: lastFocused.current
         });
+
+        if (nextUrl.current !== url) {
+          sessionData.removeItem(url);
+        }
       } else {
         sessionData.removeItem(url);
       }
     };
   }, []);
+
+  useEffect( () => {
+    if (needFocus.current) {
+      needFocus.current.focus();
+      needFocus.current = undefined;
+    }
+  }, [rs]);
 
   useEffect( () => {
     if (!rs && entity) {
@@ -233,22 +240,13 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Next'
       },
-      commandBarButtonAs: srcRs && linkCommandBarButton(
-        `/spa/gdmn/entity/${entityName}/edit/${srcRs!.pk2s(srcRs!.currentRow + 1).join('-')}`,
-        undefined,
-        () => {
-          deleteViewTab(false);
-          dispatch(rsActions.setRecordSet({ name: srcRs!.name, rs: srcRs!.moveBy(1) }));
-        }
-      )
-      /*
-      onClick: () => {
-        const nextRow = srcRs!.moveBy(1);
-        dispatch(rsActions.setRecordSet({ name: nextRow.name, rs: nextRow }));
-        history.push(`/spa/gdmn/entity/${entityName}/edit/${nextRow.pk2s().join('-')}`);
+      onClick: srcRs && (() => {
         deleteViewTab(false);
-      }
-      */
+        const nextRow = srcRs.moveBy(1);
+        dispatch(rsActions.setRecordSet({ name: nextRow.name, rs: nextRow }));
+        nextUrl.current = `/spa/gdmn/entity/${entityName}/edit/${nextRow.pk2s().join('-')}`;
+        history.push(nextUrl.current);
+      })
     },
   ];
 
