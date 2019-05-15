@@ -132,12 +132,11 @@ export class ERTranslatorRU {
         .filter(attr => attr instanceof ScalarAttribute)
         .map(attr => new EntityLinkField(attr));
 
-      let options;
       let first: number | undefined;
-      const or: IEntityQueryWhere[] = [];
+      let or: IEntityQueryWhere[] | undefined = undefined;
       const and: IEntityQueryWhere[] = [];
       let not: IEntityQueryWhere[] | undefined = undefined;
-      const equals: IEntityQueryWhereValue[] = [];
+      let equals: IEntityQueryWhereValue[] | undefined = undefined;
       let greater: IEntityQueryWhereValue[] | undefined = undefined;
       let less: IEntityQueryWhereValue[] | undefined = undefined;
       let contains: IEntityQueryWhereValue[] | undefined = undefined;
@@ -164,6 +163,10 @@ export class ERTranslatorRU {
                 fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
               }
 
+              if(equals === undefined) {
+                equals = [];
+              }
+
               equals.push({
                 alias: "alias2",
                 attribute: linkEntity.attribute("NAME"),
@@ -171,11 +174,17 @@ export class ERTranslatorRU {
               });
 
             } else {
+
+              if(equals === undefined) {
+                equals = [];
+              }
+
               equals.push({
                 alias: "alias1",
                 attribute: attr,
                 value: words
               });
+
             }
           } else {
             throw new Error(`Can't find semantic category place for noun ${(objectANP as RusNoun).word}`);
@@ -204,9 +213,16 @@ export class ERTranslatorRU {
             attribute: linkEntity.attribute("Date"),
             value: (pTimeP.items[1] as DateValue).image
           });
+          if(or === undefined) {
+            or = [];
+          }
           or.push({equals: orEquals});
 
         } else {
+          if(equals === undefined) {
+            equals = [];
+          }
+
           equals.push({
             alias: "alias1",
             attribute: attr,
@@ -245,9 +261,16 @@ export class ERTranslatorRU {
                       attribute: linkEntity.attribute("NAME"),
                       value: words
                     });
+                    if(or === undefined) {
+                      or = [];
+                    }
                     or.push({equals: orEquals});
 
                   } else {
+                    if(equals === undefined) {
+                      equals = [];
+                    }
+                    
                     equals.push({
                       alias: "alias1",
                       attribute: attr,
@@ -258,6 +281,9 @@ export class ERTranslatorRU {
               });
             } else {
               const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
+              if(equals === undefined) {
+                equals = [];
+              }
               if (attr instanceof EntityAttribute) {
                 const linkEntity = attr.entities[0];
                 const linkAlias = "alias2";
@@ -480,6 +506,9 @@ export class ERTranslatorRU {
                   }
                   not.push({equals: value})
                 } else {
+                  if(equals === undefined) {
+                    equals = [];
+                  }
                   equals.push(...value);
                 }
               }
@@ -509,14 +538,10 @@ export class ERTranslatorRU {
           }
         }
       })
+      
+      const options = new EntityQueryOptions(first, undefined, [{or, not, isNull, equals, contains, greater, less}]);
+      console.log(options)
 
-      if (or.length !== 0) {
-        options = new EntityQueryOptions(first, undefined, [{or: or}]);
-      } else if (equals.length !== 0) {
-        options = new EntityQueryOptions(first, undefined, [{not}, {isNull}, {equals}, {contains}, {greater}, {less}]);
-      } else {
-        options = new EntityQueryOptions(first, undefined, [{not}, {isNull}, {contains}, {greater}, {less}]);
-      }
       const entityLink = new EntityLink(entity, "alias1", fields);
       return {
         action,
