@@ -47,8 +47,7 @@ export const recordSetReducer = (
 
   switch (action.type) {
     case getType(actions.setRecordSet): {
-      const { rs } = action.payload;
-      return newState(rs);
+      return newState(action.payload);
     }
 
     case getType(actions.setCurrentRow): {

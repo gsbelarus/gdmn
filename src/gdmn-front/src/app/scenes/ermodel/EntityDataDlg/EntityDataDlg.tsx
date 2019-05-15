@@ -71,11 +71,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const applyLastEdited = () => {
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
-      const changedRS = rs.setString(fieldName, value);
-      dispatch(rsActions.setRecordSet({
-        name: rsName,
-        rs: changedRS
-      }));
+      dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
       lastEdited.current = undefined;
     }
   };
@@ -96,16 +92,15 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       }
 
       tempRS = tempRS.setLocked(true);
-      dispatch(rsActions.setRecordSet({ name: rsName, rs: tempRS }));
+      dispatch(rsActions.setRecordSet(tempRS));
       tempRS = await tempRS.post(commitFunc, true);
-      dispatch(rsActions.setRecordSet({ name: rsName, rs: tempRS }));
+      dispatch(rsActions.setRecordSet(tempRS));
       setChanged(false);
 
       if (srcRs && !srcRs.locked) {
         const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
         if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
-          const updatedRs = srcRs.set(tempRS.getObject(), foundRows[0]);
-          dispatch(rsActions.setRecordSet({ name: updatedRs.name, rs: updatedRs }));
+          dispatch(rsActions.setRecordSet(srcRs.set(tempRS.getObject(), foundRows[0])));
         }
       }
     }
@@ -166,7 +161,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     srcRs && (() => {
       deleteViewTab(false);
       const newRow = srcRs.moveBy(delta);
-      dispatch(rsActions.setRecordSet({ name: newRow.name, rs: newRow }));
+      dispatch(rsActions.setRecordSet(newRow));
       nextUrl.current = `/spa/gdmn/entity/${entityName}/edit/${newRow.pk2s().join('-')}`;
       history.push(nextUrl.current);
     })
@@ -314,7 +309,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                             changedRs = changedRs.setNull(refNameFieldAlias);
                           }
                         }
-                        dispatch(rsActions.setRecordSet({ name: changedRs.name, rs: changedRs }));
+                        dispatch(rsActions.setRecordSet(changedRs));
                         setChanged(true);
                       }
                     }

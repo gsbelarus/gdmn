@@ -12,7 +12,7 @@ export const rsActions = {
 
 
   setRecordSet: createAction('RECORDSET/SET', resolve => {
-    return (params: WithComponentName<{ rs: RecordSet }>) => resolve(params);
+    return (rs: RecordSet) => resolve(rs);
   }),
 
 

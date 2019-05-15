@@ -94,9 +94,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                 List<IDataRow>();
 
               dispatch(
-                rsActions.setRecordSet({
-                  name: attributesRS.name,
-                  rs: attributesRS.setData({
+                rsActions.setRecordSet(attributesRS.setData({
                     data,
                     masterLink: {
                       masterName: entitiesRS.name,
@@ -108,7 +106,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
                       ]
                     }
                   })
-                })
+                )
               );
             }
           } else {

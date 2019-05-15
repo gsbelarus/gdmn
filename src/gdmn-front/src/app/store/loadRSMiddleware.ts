@@ -54,7 +54,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
       let rs = getState().recordSet[name];
       if (rs.changed) {
         rs = rs.setLocked(true);
-        dispatch(rsActions.setRecordSet({ name, rs }));
+        dispatch(rsActions.setRecordSet(rs));
 
         const commitFunc = (_row: IDataRow) => {
           return new Promise( resolve => setTimeout( () => resolve(), 2000 ))
@@ -62,7 +62,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
         }
 
         rs = await rs.post(commitFunc, true);
-        dispatch(rsActions.setRecordSet({ name, rs }));
+        dispatch(rsActions.setRecordSet(rs));
         if (callback) {
           callback();
         }

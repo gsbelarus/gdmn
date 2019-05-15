@@ -96,10 +96,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
       onSetCursorPos: (event: TSetCursorPosEvent) => {
         dispatch(
-          rsActions.setRecordSet({
-            name: event.rs.name,
-            rs: event.rs.setCurrentRow(event.cursorRow)
-          })
+          rsActions.setRecordSet(event.rs.setCurrentRow(event.cursorRow))
         );
 
         dispatch(

@@ -58,7 +58,7 @@ export const RecordSetViewContainer = connect(
       (dispatch, getState) => {
         const recordSet = getState().recordSet[event.rs.name];
         if (recordSet) {
-          dispatch(rsActions.setRecordSet({ name: event.rs.name, rs: recordSet.setCurrentRow(event.cursorRow) }));
+          dispatch(rsActions.setRecordSet(recordSet.setCurrentRow(event.cursorRow)));
           dispatch(setCursorCol({ name: event.rs.name, cursorCol: event.cursorCol }));
         }
       }
