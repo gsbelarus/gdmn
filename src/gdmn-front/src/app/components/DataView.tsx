@@ -25,7 +25,7 @@ import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
 import { linkCommandBarButton } from './LinkCommandBarButton';
-import { sessionData } from '../services/sessionData';
+import { ISessionData } from '../scenes/gdmn/types';
 
 export interface IRSAndGCS {
   rs: RecordSet;
@@ -53,6 +53,7 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   onDelete: TEventCallback<TRecordsetEvent>;
   onCancel: TEventCallback<TRecordsetEvent>;
   onSetFieldValue: TEventCallback<TRecordsetSetFieldValue>;
+  saveSessionData: (sessionData?: ISessionData) => void;
 }
 
 export interface IGridRef {
@@ -139,7 +140,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
      * и никогда не удаляем. Надо сохранять внутри объекта формы,
      * который будет удаляться, когда будет удаляться форма.
      */
-    sessionData.setItem(this.getDataViewKey(), savedState);
+    //sessionData.setItem(this.getDataViewKey(), savedState);
+    this.props.saveSessionData(savedState);
   }
 
   public getCommandBarItems(): ICommandBarItemProps[] {
@@ -201,7 +203,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
   }
 
   public getSavedState(rs: RecordSet) {
-    const savedItem = sessionData.getItem(this.getDataViewKey());
+    //const savedItem = sessionData.getItem(this.getDataViewKey());
+    const savedItem = this.props.viewTab ? this.props.viewTab.sessionData : undefined;
 
     if (savedItem instanceof Object) {
       const savedState = savedItem as ISavedGridState;

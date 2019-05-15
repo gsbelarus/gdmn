@@ -2,13 +2,15 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
-import { sessionData } from "@src/app/services/sessionData";
+import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { EntityQuery, EntityLink, EntityLinkField, EntityQueryOptions, EntityAttribute } from "gdmn-orm";
+import { ISessionData } from "../../gdmn/types";
 
 interface ILastEdited {
   fieldName: string;
@@ -17,30 +19,39 @@ interface ILastEdited {
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { url, entityName, id, rs, entity, dispatch, history, srcRs } = props;
+  const { url, entityName, id, rs, entity, dispatch, history, srcRs, erModel, viewTab } = props;
   const locked = rs ? rs.locked : false;
   const rsName = url;
 
-  const getSavedLastEdit = (): ILastEdited | undefined => {
-    const savedData = sessionData.getItem(url);
+  const getSavedControlsData = (): ISessionData | undefined => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.controls instanceof Object) {
+      return viewTab.sessionData.controls as ISessionData;
+    }
 
-    if (savedData && savedData.lastEdited) {
-      return savedData.lastEdited as ILastEdited;
+    return undefined;
+  }
+
+  const getSavedLastEdit = (): ILastEdited | undefined => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.lastEdited) {
+      return viewTab.sessionData.lastEdited as ILastEdited;
     }
 
     return undefined;
   }
 
   const getSavedLastFocused = useCallback( (): string | undefined =>  {
-    const savedData = sessionData.getItem(url);
-    return savedData && typeof savedData.lastFocused === 'string' ? savedData.lastFocused : undefined;
-  }, [url]);
+    if (viewTab && viewTab.sessionData && typeof viewTab.sessionData.lastFocused === 'string') {
+      return viewTab.sessionData.lastFocused;
+    }
+    return undefined;
+  }, [url, viewTab]);
 
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
+  const controlsData = useRef(getSavedControlsData());
   const nextUrl = useRef(url);
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
-  const needFocus = useRef<ITextField | undefined>();
+  const needFocus = useRef<ITextField | IComboBox | undefined>();
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -102,17 +113,15 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
 
   useEffect( () => {
     return () => {
-      if (lastEdited.current || lastFocused.current) {
-        sessionData.setItem(nextUrl.current, {
-          lastEdited: lastEdited.current,
-          lastFocused: lastFocused.current
-        });
-
-        if (nextUrl.current !== url) {
-          sessionData.removeItem(url);
-        }
-      } else {
-        sessionData.removeItem(url);
+      if (lastEdited.current || lastFocused.current || controlsData.current) {
+        dispatch(gdmnActions.saveSessionData({
+          viewTabURL: url,
+          sessionData: {
+            lastEdited: lastEdited.current,
+            lastFocused: lastFocused.current,
+            controls: controlsData.current
+          }
+        }));
       }
     };
   }, []);
@@ -152,6 +161,16 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   if (!rs) {
     return <div>Loading...</div>;
   }
+
+  const getNavigationAction = (delta: number) => (
+    srcRs && (() => {
+      deleteViewTab(false);
+      const newRow = srcRs.moveBy(delta);
+      dispatch(rsActions.setRecordSet({ name: newRow.name, rs: newRow }));
+      nextUrl.current = `/spa/gdmn/entity/${entityName}/edit/${newRow.pk2s().join('-')}`;
+      history.push(nextUrl.current);
+    })
+  );
 
   const commandBarItems: ICommandBarItemProps[] = !rs ? [] : [
     {
@@ -231,7 +250,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Previous'
       },
-      onClick: () => {}
+      onClick: getNavigationAction(-1)
     },
     {
       key: 'next',
@@ -240,81 +259,186 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Next'
       },
-      onClick: srcRs && (() => {
-        deleteViewTab(false);
-        const nextRow = srcRs.moveBy(1);
-        dispatch(rsActions.setRecordSet({ name: nextRow.name, rs: nextRow }));
-        nextUrl.current = `/spa/gdmn/entity/${entityName}/edit/${nextRow.pk2s().join('-')}`;
-        history.push(nextUrl.current);
-      })
+      onClick: getNavigationAction(+1)
     },
   ];
 
   return (
-    <div styleName="ScrollableDlg">
+    <>
       <CommandBar items={commandBarItems} />
-      <div styleName="FieldsColumn">
+      <div styleName="ScrollableDlg">
+        <div styleName="FieldsColumn">
+          {
+            rs.fieldDefs.map( fd => {
+              if (!fd.eqfa) {
+                return null;
+              }
+
+              if (fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID') {
+                const fkFieldName = fd.eqfa.linkAlias;
+                const refIdFieldAlias = fd.fieldName;
+                const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
+                const refNameFieldAlias = refNameFieldDef ? refNameFieldDef.fieldName : '';
+                const linkEntity = (entity.attributes[fkFieldName] as EntityAttribute).entities[0];
+                return (
+                  <LookupComboBox
+                    key={fkFieldName}
+                    name={fkFieldName}
+                    label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                    preSelectedOption={ rs.isNull(refIdFieldAlias)
+                      ? undefined
+                      : {
+                        key: rs.getString(refIdFieldAlias),
+                        text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
+                      }
+                    }
+                    getSessionData={
+                      () => {
+                        if (!controlsData.current) {
+                          controlsData.current = {};
+                        }
+                        return controlsData.current;
+                      }
+                    }
+                    onChanged={
+                      (option: IComboBoxOption | undefined) => {
+                        let changedRs = rs;
+                        if (option) {
+                          changedRs = changedRs.setValue(refIdFieldAlias, option.key);
+                          if (refNameFieldAlias) {
+                            changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+                          }
+                        } else {
+                          changedRs = changedRs.setNull(refIdFieldAlias);
+                          if (refNameFieldAlias) {
+                            changedRs = changedRs.setNull(refNameFieldAlias);
+                          }
+                        }
+                        dispatch(rsActions.setRecordSet({ name: changedRs.name, rs: changedRs }));
+                        setChanged(true);
+                      }
+                    }
+                    onFocus={
+                      () => {
+                        lastFocused.current = fd.fieldName;
+                        if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                          applyLastEdited();
+                        }
+                      }
+                    }
+                    onLookup={
+                      (filter: string, limit: number) => {
+                        const linkEq = new EntityQuery(
+                          new EntityLink(linkEntity, 'z', [
+                            new EntityLinkField(linkEntity.attributes['ID']),
+                            new EntityLinkField(linkEntity.attributes['NAME'])
+                          ]),
+                          new EntityQueryOptions(
+                            limit + 1,
+                            undefined,
+                            filter ?
+                              [{
+                                contains: [
+                                  {
+                                    alias: 'z',
+                                    attribute: linkEntity.attributes['NAME'],
+                                    value: filter!
+                                  }
+                                ]
+                              }]
+                            : undefined
+                          )
+                        );
+
+                        return apiService.query({ query: linkEq.inspect() })
+                          .then( response => {
+                            const result = response.payload.result!;
+                            const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                            const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'NAME' )![0];
+                            return result.data.map( (r): IComboBoxOption => ({
+                              key: r[idAlias],
+                              text: r[nameAlias]
+                            }));
+                          });
+                      }
+                    }
+                    componentRef={
+                      ref => {
+                        if (ref && lastFocused.current === fd.fieldName) {
+                          needFocus.current = ref;
+                        }
+                      }
+                    }
+                  />
+                );
+              }
+
+              if (fd.eqfa.linkAlias !== rs.eq!.link.alias) {
+                return null;
+              }
+
+              return (
+                <TextField
+                  key={fd.fieldName}
+                  disabled={locked}
+                  label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                  value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+                  onChange={
+                    (_e, newValue?: string) => {
+                      if (newValue !== undefined) {
+                        lastEdited.current = {
+                          fieldName: fd.fieldName,
+                          value: newValue
+                        };
+                        setChanged(true);
+                      }
+                    }
+                  }
+                  onFocus={
+                    () => {
+                      lastFocused.current = fd.fieldName;
+                      if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                        applyLastEdited();
+                      }
+                    }
+                  }
+                  componentRef={
+                    ref => {
+                      if (ref && lastFocused.current === fd.fieldName) {
+                        needFocus.current = ref;
+                      }
+                    }
+                  }
+                />
+              )
+            })
+          }
+        </div>
+
+        {rs.eq &&
+          <pre>
+            {JSON.stringify(rs.eq.inspect(), undefined, 2)}
+          </pre>
+        }
+        {rs.sql &&
+          <pre>
+            {rs.sql.select}
+          </pre>
+        }
         {
           rs.fieldDefs.map( fd =>
-            <TextField
-              key={fd.fieldName}
-              disabled={locked}
-              label={fd.caption}
-              value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
-              onChange={
-                (_e, newValue?: string) => {
-                  if (newValue !== undefined) {
-                    lastEdited.current = {
-                      fieldName: fd.fieldName,
-                      value: newValue
-                    };
-                    setChanged(true);
-                  }
-                }
-              }
-              onFocus={
-                () => {
-                  lastFocused.current = fd.fieldName;
-                  if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
-                    applyLastEdited();
-                  }
-                }
-              }
-              componentRef={
-                ref => {
-                  if (ref && lastFocused.current === fd.fieldName) {
-                    needFocus.current = ref;
-                  }
-                }
-              }
-            />
+            <div key={fd.fieldName}>
+              {fd.fieldName}
+              <pre>
+                {JSON.stringify(fd.eqfa, undefined, 2)}
+              </pre>
+              <pre>
+                {JSON.stringify(fd.sqlfa, undefined, 2)}
+              </pre>
+            </div>
           )
         }
       </div>
-
-      {rs.eq &&
-        <pre>
-          {rs.eq.serialize()}
-        </pre>
-      }
-      {rs.sql &&
-        <pre>
-          {rs.sql.select}
-        </pre>
-      }
-      {
-        rs.fieldDefs.map( fd =>
-          <div key={fd.fieldName}>
-            {fd.fieldName}
-            <pre>
-              {JSON.stringify(fd.eqfa, undefined, 2)}
-            </pre>
-            <pre>
-              {JSON.stringify(fd.sqlfa, undefined, 2)}
-            </pre>
-          </div>
-        )
-      }
-    </div>
+    </>
   );
 }, styles, { allowMultiple: true });

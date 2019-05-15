@@ -24,9 +24,11 @@ import {
 import { RSAction, rsActions, RecordSet } from 'gdmn-recordset';
 import { IState } from '@src/app/store/reducer';
 import { connectView } from './connectView';
-import { GdmnAction } from '../scenes/gdmn/actions';
+import { GdmnAction, gdmnActions } from '../scenes/gdmn/actions';
 import { IDataViewProps } from './DataView';
 import { loadRSActions, LoadRSActions } from '../store/loadRSActions';
+import { RouteComponentProps } from 'react-router';
+import { ISessionData } from '../scenes/gdmn/types';
 
 export const connectDataView = compose<any, IDataViewProps<any>>(
   connect(
@@ -36,7 +38,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
           ? state.gdmnState.erModel
           : undefined, // todo перенести
     }),
-    (dispatch: ThunkDispatch<IState, never, GridAction | RSAction | GdmnAction | LoadRSActions>) => ({
+    (dispatch: ThunkDispatch<IState, never, GridAction | RSAction | GdmnAction | LoadRSActions>, ownProps: RouteComponentProps<any>) => ({
 
       refreshRs: (rs: RecordSet) => {
         if (rs.eq) {
@@ -140,7 +142,8 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
       onInsert: (event: TRecordsetEvent) => { dispatch(rsActions.insert({ name: event.rs.name })); },
       onDelete: (event: TRecordsetEvent) => { dispatch(rsActions.deleteRows({ name: event.rs.name })); },
       onCancel: (event: TRecordsetEvent) => { dispatch(rsActions.cancel({ name: event.rs.name })); },
-      onSetFieldValue: (event: TRecordsetSetFieldValue) => { dispatch(rsActions.setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value })); }
+      onSetFieldValue: (event: TRecordsetSetFieldValue) => { dispatch(rsActions.setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value })); },
+      saveSessionData: (sessionData?: ISessionData) => { dispatch(gdmnActions.saveSessionData({ viewTabURL: ownProps.match.url, sessionData })) }
     })
   ),
   connectView

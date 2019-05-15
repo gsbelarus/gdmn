@@ -1,5 +1,5 @@
 import { RecordSet } from "gdmn-recordset";
-import { Entity } from "gdmn-orm";
+import { Entity, ERModel } from "gdmn-orm";
 import { IViewTab } from "../../gdmn/types";
 import { RouteComponentProps } from "react-router";
 import { Dispatch } from "redux";
@@ -21,6 +21,8 @@ export interface IEntityDataDlgStateProps {
   rs?: RecordSet;
   entity?: Entity;
   srcRs?: RecordSet;
+  viewTab?: IViewTab;
+  erModel: ERModel;
 };
 
 export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
@@ -31,4 +33,6 @@ export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgR
   id: string;
   dispatch: Dispatch;
   srcRs?: RecordSet;
+  viewTab?: IViewTab;
+  erModel: ERModel;
 };

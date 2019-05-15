@@ -6,7 +6,7 @@ import { TThunkAction } from '@src/app/store/TActions';
 import { selectAuthState } from '@src/app/store/selectors';
 import { authActionsAsync, authActions } from '@src/app/scenes/auth/actions';
 import { rootActions } from '@src/app/scenes/root/actions';
-import { IViewTab } from './types';
+import { IViewTab, ISessionData } from './types';
 import { ISignInBoxData } from '../auth/components/SignInBox';
 
 export const gdmnActionsAsync = {
@@ -215,13 +215,11 @@ export const gdmnActions = {
 
   buildCommandList: createAction('gdmn/BUILD_COMMAND_LIST'),
 
-  addViewTab: createAction('gdmn/ADD_VIEW_TAB', resolve => {
-    return (viewTab: IViewTab) => resolve(viewTab);
-  }),
+  addViewTab: createAction('gdmn/ADD_VIEW_TAB', resolve => (viewTab: IViewTab) => resolve(viewTab) ),
 
-  deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => {
-    return (params: { viewTabURL: string, locationPath?: string, historyPush?: (url: string) => void }) => resolve(params);
-  }),
+  deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => (params: { viewTabURL: string, locationPath?: string, historyPush?: (url: string) => void }) => resolve(params) ),
+
+  saveSessionData: createAction('gdmn/SAVE_SESSION_DATA', resolve => (params: { viewTabURL: string, sessionData?: ISessionData }) => resolve(params) ),
 
   getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
     return (sessionInfo: any[]) => resolve(sessionInfo)

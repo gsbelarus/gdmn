@@ -132,6 +132,27 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
       }
     }
 
+    case getType(gdmnActions.saveSessionData): {
+      const { viewTabURL, sessionData } = action.payload;
+      const { viewTabs } = state;
+      const idx = state.viewTabs.findIndex(vt => vt.url === viewTabURL);
+
+      if (idx !== -1) {
+        const newViewTabs = [...viewTabs];
+
+        newViewTabs[idx] = {
+          ...newViewTabs[idx],
+          sessionData
+        };
+
+        return {
+          ...state,
+          viewTabs: newViewTabs
+        };
+      }
+      return state;
+    }
+
     case getType(gdmnActions.getSessionInfo): {
       return {
         ...state,

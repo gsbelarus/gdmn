@@ -10,7 +10,7 @@ import {
 } from "gdmn-orm";
 import {IFieldDef, TFieldType} from "gdmn-recordset";
 
-export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[]): EntityQuery {
+export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alias: string = 'root'): EntityQuery {
   const scalarFields = Object.values(entity.attributes)
     .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
     .map((attr) => new EntityLinkField(attr));
@@ -22,7 +22,7 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[]): Ent
       const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
         .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
 
-      let fields: EntityLinkField[] = [];
+      const fields: EntityLinkField[] = linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr));
 
       const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
         || scalarAttrs.find((attr) => attr.name === "USR$NAME")
@@ -31,21 +31,21 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[]): Ent
       if (presentField) {
         fields.push(new EntityLinkField(presentField));
       }
-      if (!fields.length) {
-        fields = fields.concat(linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr)));
-      }
+      //if (!fields.length) {
+      //  fields = fields.concat(linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr)));
+      //}
       const link = new EntityLink(linkAttr.entities[0], attr.name, fields);
       return new EntityLinkField(attr, [link]);
     });
 
   return new EntityQuery(
-    new EntityLink(entity, "root", scalarFields.concat(linkFields)),
+    new EntityLink(entity, alias, scalarFields.concat(linkFields)),
     pkValues && new EntityQueryOptions(
     undefined,
     undefined,
     [{
       equals: pkValues.map((value, index) => ({
-        alias: "root",
+        alias,
         attribute: entity.pk[index],
         value
       }))
