@@ -236,7 +236,10 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
     onMenuOpen = () => {
       if (options.length === 1 && preSelectedOption && options[0].key === preSelectedOption.key) {
-        dispatch({ type: 'DROP_DOWN' })
+        dispatch({ type: 'DROP_DOWN' });
+      }
+      else if (!options.length) {
+        dispatch({ type: 'QUERY_START' });
       }
     };
 

@@ -6,7 +6,8 @@ import {
   EntityQuery,
   EntityQueryOptions,
   IEntityQueryResponseFieldAlias,
-  ScalarAttribute
+  ScalarAttribute,
+  ParentAttribute
 } from "gdmn-orm";
 import {IFieldDef, TFieldType} from "gdmn-recordset";
 
@@ -37,6 +38,23 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
       const link = new EntityLink(linkAttr.entities[0], attr.name, fields);
       return new EntityLinkField(attr, [link]);
     });
+
+  const parentAttr = Object.values(entity.attributes).find( attr => attr instanceof ParentAttribute );
+
+  if (parentAttr) {
+    const scalarAttrs = Object.values((parentAttr as ParentAttribute).entities[0].attributes)
+      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+    const fields: EntityLinkField[] = (parentAttr as ParentAttribute).entities[0].pk.map((attr) => new EntityLinkField(attr));
+    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+      || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+      || scalarAttrs.find((attr) => attr.name === "ALIAS")
+      || scalarAttrs.find((attr) => attr.type === "String");
+    if (presentField) {
+      fields.push(new EntityLinkField(presentField));
+    }
+    const link = new EntityLink((parentAttr as ParentAttribute).entities[0], parentAttr.name, fields);
+    linkFields.push(new EntityLinkField(parentAttr, [link]));
+  }
 
   return new EntityQuery(
     new EntityLink(entity, alias, scalarFields.concat(linkFields)),
