@@ -198,3 +198,9 @@ export type TSequenceQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.SEQUEN
 export type TGetSessionsInfoTaskCmd = TTaskCmd<TTaskActionNames.GET_SESSIONS_INFO>;
 
 export type TGetSessionsInfoCmdResult = TTaskCmdResult<TTaskActionNames.GET_SESSIONS_INFO>;
+
+// main sessions info
+
+export type TGetMainSessionsInfoTaskCmd = TTaskCmd<TTaskActionNames.GET_MAIN_SESSIONS_INFO>;
+
+export type TGetMainSessionsInfoCmdResult = TTaskCmdResult<TTaskActionNames.GET_MAIN_SESSIONS_INFO>;

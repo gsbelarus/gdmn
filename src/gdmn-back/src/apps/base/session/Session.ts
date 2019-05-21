@@ -7,6 +7,7 @@ import {Constants} from "../../../Constants";
 import {ICmd, Task, TaskStatus} from "../task/Task";
 import {TaskManager} from "../task/TaskManager";
 import {AppAction} from "../Application";
+import {v1String} from "uuid/interfaces";
 
 export interface IOptions {
   readonly id: string;
@@ -26,17 +27,20 @@ export enum SessionStatus {
   FORCE_CLOSED
 }
 
-export const enum TTaskStatus {
-  RUNNING = 1,
-  PAUSED = 2,
-  INTERRUPTED = 3,
-  FAILED = 4,
-  SUCCESS = 5
-}
+// export const enum TTaskStatus {
+//   RUNNING = 1,
+//   PAUSED = 2,
+//   INTERRUPTED = 3,
+//   FAILED = 4,
+//   SUCCESS = 5
+// }
 
 export interface ISessionInfo {
+  database: string;
   id: string;
   user: number;
+  transactions?: number;
+  sql?: string;
   usesConnections?: number[];
   tasks?: ITask[];
 }

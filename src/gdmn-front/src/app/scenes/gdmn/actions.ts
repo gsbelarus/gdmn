@@ -165,7 +165,7 @@ export const gdmnActionsAsync = {
     dispatch(authActions.onSignOut()); // todo test
   },
  getSessionInfo: (): TThunkAction => async (dispatch, getState, { apiService }) => {
-    const response = await apiService.getSessionsInfo({withError: true});
+    const response = await apiService.getMainSessionsInfo({});
     if (response.payload.status === TTaskStatus.SUCCESS) {
       dispatch(gdmnActions.getSessionInfo(response.payload.result!));
     }

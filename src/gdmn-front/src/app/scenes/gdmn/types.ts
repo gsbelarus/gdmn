@@ -13,8 +13,11 @@ export interface IViewTab {
 };
 
 export interface ISessionInfo {
+  database: string;
   id: string;
   user: number;
+  transactions?: number;
+  sql?: string;
   usesConnections?: number[];
   tasks?: ITask[];
 };

@@ -26,7 +26,7 @@ import {v1 as uuidV1} from "uuid";
 import {Constants} from "../Constants";
 import {DBStatus, IDBDetail} from "./base/ADatabase";
 import {Application} from "./base/Application";
-import {Session, SessionStatus} from "./base/session/Session";
+import {ISessionInfo, ITask, Session, SessionStatus} from "./base/session/Session";
 import {ICmd, Level, Task} from "./base/task/Task";
 import {GDMNApplication} from "./GDMNApplication";
 
@@ -80,7 +80,7 @@ export interface IUserApplicationInfo extends IApplicationInfo {
   alias: string;
 }
 
-export type MainAction = "DELETE_APP" | "CREATE_APP" | "GET_APPS" | "GET_APP_TEMPLATES";
+export type MainAction = "DELETE_APP" | "CREATE_APP" | "GET_APPS" | "GET_APP_TEMPLATES" | "GET_MAIN_SESSIONS_INFO";
 
 export type MainCmd<A extends MainAction, P = undefined> = ICmd<A, P>;
 
@@ -93,6 +93,7 @@ export type CreateAppCmd = MainCmd<"CREATE_APP", {
 export type DeleteAppCmd = MainCmd<"DELETE_APP", { uid: string; }>;
 export type GetAppsCmd = MainCmd<"GET_APPS">;
 export type GetAppTemplatesCmd = MainCmd<"GET_APP_TEMPLATES">;
+export type GetMainSessionsInfoCmd = MainCmd<"GET_MAIN_SESSIONS_INFO">;
 
 export class MainApplication extends Application {
 
@@ -269,6 +270,68 @@ export class MainApplication extends Application {
             }
           })
         );
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushMainSessionsInfoCmd(session: Session,
+                                 command: GetMainSessionsInfoCmd): Task<GetMainSessionsInfoCmd, ISessionInfo[]> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.USER,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const sessionsInfo: ISessionInfo[] = [];
+        const sql =
+          "SELECT\n" +
+          "T$2.MON$TRANSACTION_ID AS F$1,\n" +
+          "T$1.MON$SQL_TEXT AS F$2\n" +
+          "FROM MON$TRANSACTIONS T$2\n" +
+          "LEFT JOIN MON$STATEMENTS T$1 ON T$1.MON$TRANSACTION_ID = T$2.MON$TRANSACTION_ID\n" +
+          "WHERE T$2.MON$STATE=1";
+        const params = {};
+        const applications = this._applications;
+
+        for (const [key, value] of applications) {
+          await value.executeConnection((connection) =>
+            AConnection.executeQueryResultSet({
+              connection, transaction: connection.readTransaction, sql, params, callback: async (resultSet) => {
+                while (await resultSet.next()) {
+                  const transactions = await resultSet.getNumber("F$1");
+
+                  value.sessionManager.sessions.map(async (ses) => {
+                    sessionsInfo.push({
+                      database: key,
+                      id: ses.options && ses.options.id,
+                      transactions,
+                      sql: (resultSet.getBlob("F$2")) ? await connection.openBlobAsString(connection.readTransaction,
+                        resultSet.getBlob("F$2")!) : "",
+                      user: ses.options && ses.options.userKey,
+                      usesConnections: ses.usesConnections.map((conn) => conn.uses),
+                      tasks: Array.from(ses.taskManager.getAll()).map((item) => {
+                        return {
+                          id: item.id,
+                          status: item.status,
+                          command: item.options.command
+                        };
+                      })
+                    });
+                  });
+                }
+                return sessionsInfo;
+              }
+            })
+          );
+        }
+        return sessionsInfo;
       }
     });
     session.taskManager.add(task);

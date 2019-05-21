@@ -86,10 +86,13 @@ export class Internals extends View<IInternalsProps, {}> {
             {
               sessionInfo.map((si, index) => (
                 <li key={index}>
+                  <div>{index + 1} Database ID: {si.database},</div>
                   <div>{index + 1}.1 Session ID: {si.id},</div>
-                  {index + 1}.2 ID user: {si.user},
+                  <div>{index + 1}.2 ID user: {si.user},</div>
+                  <div>{index + 1}.3 List  transactions: {si.transactions ? si.transactions : " not transactions"},</div>
+                  <div>{index + 1}.4 List  sql query: {si.sql ? si.sql : " not sql query"},</div>
                   <ol>
-                    {index + 1}.3 uses connections: {
+                    {index + 1}.5 uses connections: {
                     si.usesConnections && si.usesConnections.length ? si.usesConnections.map(
                       (usesConnection, index) => (
                       <li key={index}>
@@ -99,14 +102,14 @@ export class Internals extends View<IInternalsProps, {}> {
                   }
                   </ol>
                   <ol>
-                    {index + 1}.4 tasks: {
+                    {index + 1}.6 tasks: {
                     si.tasks ? si.tasks.map((task) => (
                       <li key={task.id}>
-                        <div>{index + 1}.4.1 id: {task.id},</div>
-                        <div>{index + 1}.4.2 status: {task.status},</div>
-                        <div>{index + 1}.4.3.1 command: ID: {task.command && task.command.id},</div>
-                        <div>{index + 1}.4.3.2 action: {task.command && task.command.action},</div>
-                        <div>{index + 1}.4.3.3 replyMode: {task.command && task.command.replyMode}</div>
+                        <div>{index + 1}.6.1 id: {task.id},</div>
+                        <div>{index + 1}.6.2 status: {task.status},</div>
+                        <div>{index + 1}.6.3.1 command: ID: {task.command && task.command.id},</div>
+                        <div>{index + 1}.6.3.2 action: {task.command && task.command.action},</div>
+                        <div>{index + 1}.6.3.3 replyMode: {task.command && task.command.replyMode}</div>
                       </li>
                     )) : ' not task'
                   }
