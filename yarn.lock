@@ -2622,12 +2622,12 @@
     "@uifabric/utilities" "^6.38.3"
     tslib "^1.7.1"
 
-"@uifabric/utilities@^6.38.3":
-  version "6.38.3"
-  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-6.38.3.tgz#ea0b34a685ddc90341cff11239d5c0cd7e6dbd9e"
-  integrity sha512-pc1QQLJKTohkaQDvrzI5ax45/cneb2jeHeWKLj6HHJXf/GvjbdsVC/NH4G5LCmkiWmLtvPqjUfHN7sE0HBU01g==
+"@uifabric/utilities@^6.38.3", "@uifabric/utilities@^6.39.0":
+  version "6.39.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-6.39.0.tgz#55ce385d5506b8db2723dfcc5df13c91a237e9f7"
+  integrity sha512-Um/PpFVjPmtTyIWGkt/mndE3/XIxR35/wjxm7CmM05tsuVBGS0wIlrqFpYL7JxUbjmsoXy5u/vtKyMM7naiJxw==
   dependencies:
-    "@uifabric/merge-styles" "^6.17.3"
+    "@uifabric/merge-styles" "^6.17.4"
     "@uifabric/set-version" "^1.1.3"
     prop-types "^15.5.10"
     tslib "^1.7.1"
@@ -10994,7 +10994,22 @@ octokit-pagination-methods@^1.1.0:
   resolved "https://registry.yarnpkg.com/octokit-pagination-methods/-/octokit-pagination-methods-1.1.0.tgz#cf472edc9d551055f9ef73f6e42b4dbb4c80bea4"
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
-office-ui-fabric-react@^6, office-ui-fabric-react@^6.181.1, office-ui-fabric-react@^6.184.0:
+office-ui-fabric-react@^6:
+  version "6.185.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.185.0.tgz#3775ca4717a608f63996ff4036a1238e2fda22c2"
+  integrity sha512-k9yuRG30GEapkjJAQjEvFOTTQQsPdLeQca6jsxK4mAecVl+Ia4Xnd1lUtrP8CMbmSO9H2vU2c+xaEcIcHU09zA==
+  dependencies:
+    "@microsoft/load-themed-styles" "^1.7.13"
+    "@uifabric/foundation" "^0.7.6"
+    "@uifabric/icons" "^6.5.2"
+    "@uifabric/merge-styles" "^6.17.4"
+    "@uifabric/set-version" "^1.1.3"
+    "@uifabric/styling" "^6.47.6"
+    "@uifabric/utilities" "^6.39.0"
+    prop-types "^15.5.10"
+    tslib "^1.7.1"
+
+office-ui-fabric-react@^6.181.1, office-ui-fabric-react@^6.184.0:
   version "6.184.0"
   resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.184.0.tgz#444fa5fae15b38402054fbc9952e3cc33437f636"
   integrity sha512-OgaiaavhCt5wAl/OTqq2a1LLNmp1By44sq7ox+qUZMX0gpRBdW4GkPD/QzsLNv+1daLj5tut/lCrQs5uBp5yPA==
@@ -12709,9 +12724,9 @@ react-error-overlay@^5.1.4:
   integrity sha512-fp+U98OMZcnduQ+NSEiQa4s/XMsbp+5KlydmkbESOw4P69iWZ68ZMFM5a2BuE0FgqPBKApJyRuYHR95jM8lAmg==
 
 react-hot-loader@^4:
-  version "4.8.4"
-  resolved "https://registry.yarnpkg.com/react-hot-loader/-/react-hot-loader-4.8.4.tgz#357ba342e367fd42d6a870a9c0601c23fa0730c6"
-  integrity sha512-O98btZXcm24ZgP+aPBD0W9N+GEnkOg6vlLEy/IMZ53u3K/dGqO0I/RU4qrmQzE+wMDLpwNo5TwxaAjVw9Y+IBA==
+  version "4.8.7"
+  resolved "https://registry.yarnpkg.com/react-hot-loader/-/react-hot-loader-4.8.7.tgz#8bcec3105d4e0e3cba52aa59800568fc9fb3322d"
+  integrity sha512-ctWAu8iwp37qd4w1qhjN6neDA1e5bSmAUY46L2l5SeK+i8AfzX+7lrpaLW4TJVaiBv5MlqIzA1ClNnvlvsy5Lg==
   dependencies:
     fast-levenshtein "^2.0.6"
     global "^4.3.0"
@@ -13637,7 +13652,7 @@ send@0.17.1:
     range-parser "~1.2.1"
     statuses "~1.5.0"
 
-serialize-javascript@^1.4.0:
+serialize-javascript@^1.4.0, serialize-javascript@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-1.7.0.tgz#d6e0dfb2a3832a8c94468e6eb1db97e55a192a65"
   integrity sha512-ke8UG8ulpFOxO8f8gRYabHQe/ZntKlcig2Mp+8+URDP1D8vJZ0KUt7LYo07q25Z/+JVSgpr/cui9PIp5H6/+nA==
@@ -14454,7 +14469,22 @@ terser-webpack-plugin@1.2.2:
     webpack-sources "^1.1.0"
     worker-farm "^1.5.2"
 
-terser-webpack-plugin@^1, terser-webpack-plugin@^1.1.0:
+terser-webpack-plugin@^1:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-1.2.4.tgz#56f87540c28dd5265753431009388f473b5abba3"
+  integrity sha512-64IiILNQlACWZLzFlpzNaG0bpQ4ytaB7fwOsbpsdIV70AfLUmIGGeuKL0YV2WmtcrURjE2aOvHD4/lrFV3Rg+Q==
+  dependencies:
+    cacache "^11.3.2"
+    find-cache-dir "^2.0.0"
+    is-wsl "^1.1.0"
+    schema-utils "^1.0.0"
+    serialize-javascript "^1.7.0"
+    source-map "^0.6.1"
+    terser "^3.17.0"
+    webpack-sources "^1.3.0"
+    worker-farm "^1.7.0"
+
+terser-webpack-plugin@^1.1.0:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-1.2.3.tgz#3f98bc902fac3e5d0de730869f50668561262ec8"
   integrity sha512-GOK7q85oAb/5kE12fMuLdn2btOS9OBZn4VsecpHDywoUC/jLhSAKOiYo0ezx7ss2EXPMzyEWFoE0s1WLE+4+oA==
@@ -14468,7 +14498,7 @@ terser-webpack-plugin@^1, terser-webpack-plugin@^1.1.0:
     webpack-sources "^1.1.0"
     worker-farm "^1.5.2"
 
-terser@^3.16.1:
+terser@^3.16.1, terser@^3.17.0:
   version "3.17.0"
   resolved "https://registry.yarnpkg.com/terser/-/terser-3.17.0.tgz#f88ffbeda0deb5637f9d24b0da66f4e15ab10cb2"
   integrity sha512-/FQzzPJmCpjAH9Xvk2paiWrFq+5M6aVOf+2KRbwhByISDX/EujxsK+BAvrhb6H+2rtrLCHK9N01wO014vrIwVQ==
@@ -15738,7 +15768,7 @@ workbox-webpack-plugin@3.6.3:
     json-stable-stringify "^1.0.1"
     workbox-build "^3.6.3"
 
-worker-farm@^1.5.2:
+worker-farm@^1.5.2, worker-farm@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/worker-farm/-/worker-farm-1.7.0.tgz#26a94c5391bbca926152002f69b84a4bf772e5a8"
   integrity sha512-rvw3QTZc8lAxyVrqcSGVm5yP/IJ2UcB3U0graE3LCFoZ0Yn2x4EoVSqJKdB/T5M+FLcRPjz4TDacRf3OCfNUzw==
