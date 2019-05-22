@@ -1,8 +1,10 @@
-import { RecordSet } from "gdmn-recordset";
+import { RecordSet, RSAction } from "gdmn-recordset";
 import { Entity, ERModel } from "gdmn-orm";
 import { IViewTab } from "../../gdmn/types";
 import { RouteComponentProps } from "react-router";
-import { Dispatch } from "redux";
+import { ThunkDispatch } from "redux-thunk";
+import { IState } from "@src/app/store/reducer";
+import { GdmnAction } from "../../gdmn/actions";
 
 export type TAddViewTab = (viewTab: IViewTab) => void;
 
@@ -31,7 +33,7 @@ export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgR
   url: string;
   entityName: string;
   id: string;
-  dispatch: Dispatch;
+  dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction>;
   srcRs?: RecordSet;
   viewTab?: IViewTab;
   erModel: ERModel;

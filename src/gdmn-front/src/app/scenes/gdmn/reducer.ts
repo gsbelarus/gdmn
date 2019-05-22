@@ -118,6 +118,19 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
       }
     }
 
+    case getType(gdmnActions.updateViewTab): {
+      const idx = state.viewTabs.findIndex(vt => vt.url === action.payload.url);
+
+      if (idx > -1) {
+        return {
+          ...state,
+          viewTabs: [...state.viewTabs.slice(0, idx), {...state.viewTabs[idx], ...action.payload.viewTab}, ...state.viewTabs.slice(idx + 1)]
+        };
+      } else {
+        return state;
+      }
+    }
+
     case getType(gdmnActions.deleteViewTab): {
       const { viewTabURL } = action.payload;
       const idx = state.viewTabs.findIndex(vt => vt.url === viewTabURL);

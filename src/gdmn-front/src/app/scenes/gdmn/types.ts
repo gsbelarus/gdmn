@@ -9,6 +9,7 @@ export interface IViewTab {
   url: string;
   canClose: boolean;
   rs?: string[];
+  error?: string;
   sessionData?: ISessionData;
 };
 

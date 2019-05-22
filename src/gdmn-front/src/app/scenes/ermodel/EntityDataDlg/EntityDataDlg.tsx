@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
@@ -19,39 +19,38 @@ interface ILastEdited {
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { url, entityName, id, rs, entity, dispatch, history, srcRs, erModel, viewTab } = props;
+  const { url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab } = props;
   const locked = rs ? rs.locked : false;
   const rsName = url;
+  const error = viewTab ? viewTab.error : undefined;
 
   const getSavedControlsData = (): ISessionData | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.controls instanceof Object) {
       return viewTab.sessionData.controls as ISessionData;
     }
-
     return undefined;
-  }
+  };
 
   const getSavedLastEdit = (): ILastEdited | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.lastEdited) {
       return viewTab.sessionData.lastEdited as ILastEdited;
     }
-
     return undefined;
-  }
+  };
 
-  const getSavedLastFocused = useCallback( (): string | undefined =>  {
+  const getSavedLastFocused = (): string | undefined =>  {
     if (viewTab && viewTab.sessionData && typeof viewTab.sessionData.lastFocused === 'string') {
       return viewTab.sessionData.lastFocused;
     }
     return undefined;
-  }, [url, viewTab]);
+  };
 
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
   const controlsData = useRef(getSavedControlsData());
   const nextUrl = useRef(url);
-  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
   const needFocus = useRef<ITextField | IComboBox | undefined>();
+  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -105,6 +104,63 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       }
     }
   }, [rs, changed]);
+
+  const deleteRecord = useCallback( () => {
+    const srcRsName = srcRs ? srcRs.name : undefined;
+
+    dispatch( async (dispatch, getState) => {
+      const rs = getState().recordSet[rsName];
+
+      if (!rs) {
+        return;
+      }
+
+      dispatch(rsActions.setRecordSet(rs.setLocked(true)));
+
+      if (srcRsName) {
+        const srcRs = getState().recordSet[srcRsName];
+        if (srcRs) {
+          dispatch(rsActions.setRecordSet(srcRs.setLocked(true)));
+        }
+      }
+
+      const result = await apiService.delete({
+        delete: {
+          entity: entityName,
+          pkValues: [id]
+        }
+      });
+
+      if (result.error) {
+        if (srcRsName) {
+          const srcRs = getState().recordSet[srcRsName];
+          if (srcRs) {
+            dispatch(rsActions.setRecordSet(srcRs.setLocked(false)));
+          }
+        }
+
+        const rs = getState().recordSet[rsName];
+
+        if (rs) {
+          dispatch(rsActions.setRecordSet(rs.setLocked(false)));
+        }
+
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+      } else {
+        if (srcRsName) {
+          const srcRs = getState().recordSet[srcRsName];
+          if (srcRs) {
+            dispatch(rsActions.setRecordSet(
+              srcRs
+                .setLocked(false)
+                .delete(true, srcRs.locate(rs.pkValue()))
+            ));
+          }
+        }
+        deleteViewTab(true);
+      }
+    });
+  }, [rsName, viewTab]);
 
   useEffect( () => {
     return () => {
@@ -170,7 +226,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const commandBarItems: ICommandBarItemProps[] = !rs ? [] : [
     {
       key: 'saveAndClose',
-      disabled: locked || !changed,
+      disabled: !changed,
       text: 'Сохранить',
       iconProps: {
         iconName: 'CheckMark'
@@ -182,7 +238,6 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'cancelAndClose',
-      disabled: locked,
       text: changed ? 'Отменить' : 'Закрыть',
       iconProps: {
         iconName: 'Cancel'
@@ -198,7 +253,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'apply',
-      disabled: locked || !changed,
+      disabled: !changed,
       text: 'Применить',
       iconProps: {
         iconName: 'Save'
@@ -207,7 +262,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'revert',
-      disabled: locked || !changed,
+      disabled: !changed,
       text: 'Вернуть',
       iconProps: {
         iconName: 'Undo'
@@ -222,7 +277,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'create',
-      disabled: locked || changed,
+      disabled: changed,
       text: 'Создать',
       iconProps: {
         iconName: 'PageAdd'
@@ -231,16 +286,15 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'delete',
-      disabled: locked,
       text: 'Удалить',
       iconProps: {
         iconName: 'Delete'
       },
-      onClick: () => {}
+      onClick: deleteRecord
     },
     {
       key: 'prev',
-      disabled: locked || changed || !srcRs || !srcRs.currentRow,
+      disabled: changed || !srcRs || !srcRs.currentRow,
       text: 'Предыдущая',
       iconProps: {
         iconName: 'Previous'
@@ -249,18 +303,30 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     },
     {
       key: 'next',
-      disabled: locked || changed || !srcRs || srcRs.currentRow === (srcRs.size - 1),
+      disabled: changed || !srcRs || srcRs.currentRow === (srcRs.size - 1),
       text: 'Следующая',
       iconProps: {
         iconName: 'Next'
       },
       onClick: getNavigationAction(+1)
     },
-  ];
+  ].map( i => (locked || error) ? {...i, disabled: true} : i );
 
   return (
     <>
       <CommandBar items={commandBarItems} />
+      {
+        error
+        &&
+        <MessageBar
+          messageBarType={MessageBarType.error}
+          isMultiline={false}
+          onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
+          dismissButtonAriaLabel="Close"
+        >
+          {error}
+        </MessageBar>
+      }
       <div styleName="ScrollableDlg">
         <div styleName="FieldsColumn">
           {

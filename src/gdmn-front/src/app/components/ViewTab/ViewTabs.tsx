@@ -40,7 +40,7 @@ export const ViewTabs = CSSModules(
                 return p;
               }, false
             );
-            const error = !!rsMeta[name] && !!rsMeta[name].error;
+            const error = !!vt.error || (!!rsMeta[name] && !!rsMeta[name].error);
 
             return (
               <ViewTab

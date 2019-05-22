@@ -253,6 +253,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 render={props => (
                   <EntityDataViewContainer
                     {...props}
+                    key={props.match.url}
                   />
                 )}
               />
@@ -262,6 +263,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                   <EntityDataDlgContainer
                     {...props}
+                    key={props.match.url}
                     entityName={props.match.params.entityName}
                     id={props.match.params.id}
                     url={props.match.url}
