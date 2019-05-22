@@ -490,6 +490,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   public delete(remove?: boolean, rIdxs?: number[], dontCheckLocked?: boolean): RecordSet<R> {
     if (!dontCheckLocked) this._checkLocked();
 
+    if (Array.isArray(rIdxs) && !rIdxs.length) {
+      return this;
+    }
+
     if (remove) {
       const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs.sort( (a, b) => b - a );
 
@@ -704,11 +708,18 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return fd;
   }
 
-  public locate(searchFor: R, stopAtFirst?: boolean, startFrom?: number, continueFromBegining: boolean = true): number[] {
+  /**
+   * Ищет записи по одному или нескольким заданным значениям полей. Возвращает массив индексов найденных записей или пустой массив, если ничего не найдено.
+   * @param searchFor Или массив значений первичного ключа записи или объект со значениями полей типа { имя_поля: значение[, имя_поля2: значение ...] }
+   * @param stopAtFirst Вернуть только первый найденный индекс.
+   * @param startFrom Если задано, то начинает поиск с указанного индекса. Если не задано -- с текущей записи.
+   * @param continueFromBegining Если startFrom > 0, то указывает надо ли просматривать RecordSet с начала, после достижения последней записи.
+   */
+  public locate(searchFor: R | TDataType[], stopAtFirst?: boolean, startFrom?: number, continueFromBegining: boolean = true): number[] {
     let res: number[] = [];
 
-    const searchFields = Object.keys(searchFor);
-    const searchValues = Object.values(searchFor);
+    const searchFields = Array.isArray(searchFor) ? this.pk.map( fd => fd.fieldName ) : Object.keys(searchFor);
+    const searchValues = Array.isArray(searchFor) ? searchFor : Object.values(searchFor);
 
     let startIdx = startFrom === undefined ? this.currentRow : startFrom;
     let stopIdx = this.size;
@@ -1085,7 +1096,13 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           return this._setFieldValue(fieldName, false, rIdx);
         }
         else {
-          throw new Error(`Invalid type cast.`)
+          const v = Number(value);
+
+          if (value && !isNaN(v)) {
+            return this._setFieldValue(fieldName, !!v, rIdx);
+          } else {
+            throw new Error(`Invalid type cast.`)
+          }
         }
 
       case TFieldType.Date:
