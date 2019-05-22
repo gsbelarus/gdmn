@@ -48,7 +48,8 @@ export const enum TTaskActionNames {
   GET_APPS = 'GET_APPS',
   GET_APP_TEMPLATES = 'GET_APP_TEMPLATES',
   SEQUENCE_QUERY = 'SEQUENCE_QUERY',
-  GET_SESSIONS_INFO = 'GET_SESSIONS_INFO'
+  GET_SESSIONS_INFO = 'GET_SESSIONS_INFO',
+  GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
 }
 
 // MESSAGES DATA
@@ -139,6 +140,8 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.GET_SESSIONS_INFO]: {
     withError: boolean;
   };
+  [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: {
+  };
 }
 
 // -- TASK-RESULT
@@ -173,6 +176,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_APP_TEMPLATES]: ITemplateApplication[];
   [TTaskActionNames.SEQUENCE_QUERY]: ISequenceQueryResponse;
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
+  [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -224,8 +228,11 @@ export interface ISqlQueryResponseAliases {
 */
 
 export interface ISessionInfo {
+  database: string;
   id: string;
   user: number;
+  transactions?: number;
+  sql?: string;
   usesConnections?: number[];
   tasks?: ITask[];
 }

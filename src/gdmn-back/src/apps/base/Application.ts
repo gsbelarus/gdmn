@@ -44,7 +44,8 @@ export type AppAction =
   | "UPDATE"
   | "DELETE"
   | "SEQUENCE_QUERY"
-  | "GET_SESSIONS_INFO";
+  | "GET_SESSIONS_INFO"
+  | "GET_MAIN_SESSIONS_INFO";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -257,6 +258,7 @@ export class Application extends ADatabase {
           }
           if (taskInfo.length) {
             sessionsInfo.push({
+              database: "",
               id: ses.options.id,
               user: ses.options.userKey,
               usesConnections: ses.usesConnections.map((conn) => conn.uses),
@@ -264,6 +266,7 @@ export class Application extends ADatabase {
             });
           }
           sessionsInfo.push({
+            database: "",
             id: ses.options.id,
             user: ses.options.userKey,
             usesConnections: ses.usesConnections.map((conn) => conn.uses),

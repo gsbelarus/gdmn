@@ -7,6 +7,7 @@ import {
   DeleteAppCmd,
   GetAppsCmd,
   GetAppTemplatesCmd,
+  GetMainSessionsInfoCmd,
   MainAction,
   MainApplication
 } from "./MainApplication";
@@ -28,6 +29,12 @@ export class MainCommandProvider extends AppCommandProvider {
       && typeof command.payload.alias === "string"
       && "external" in command.payload
       && typeof command.payload.external === "boolean";
+    // TODO
+  }
+
+  private static _verifyMainSessionsInfoCmd(command: ICmd<Actions, any>): command is GetMainSessionsInfoCmd {
+    return typeof command.payload === "object"
+      && !!command.payload;
     // TODO
   }
 
@@ -62,6 +69,15 @@ export class MainCommandProvider extends AppCommandProvider {
           throw new Error("Unsupported command");
         }
         return this._application.pushGetAppsCmd(session, command as GetAppsCmd);
+      }
+      case "GET_MAIN_SESSIONS_INFO": {
+        if (!(this._application instanceof MainApplication)) {
+          throw new Error("Unsupported command");
+        }
+        if (!MainCommandProvider._verifyMainSessionsInfoCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushMainSessionsInfoCmd(session, command);
       }
       default: {
         return super.receive(session, command as ICmd<AppAction, unknown>);
