@@ -13,7 +13,7 @@ export class GetSequence {
   private _getSequence(query: SequenceQuery): string {
     let sql = `SELECT`;
     if (query.increment !== undefined) {
-      sql += ' GEN_ID (' + query.inspect.name + ', ' + query.increment + ') \nFROM RDB$DATABASE';
+      sql += ' GEN_ID (' + query.sequence.name + ', ' + query.increment + ') \nFROM RDB$DATABASE';
     } else {
       sql += ' NEXT VALUE FOR ' + query.inspect.name + '\nFROM RDB$DATABASE';
     }
