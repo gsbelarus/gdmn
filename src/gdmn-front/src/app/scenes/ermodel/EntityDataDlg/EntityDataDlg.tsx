@@ -51,6 +51,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
+  const [listChange, setListChange] = useState(new Map());
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -78,7 +79,6 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const postChanges = useCallback( async () => {
     if (rs && changed) {
       let tempRS = rs;
-
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
         tempRS = rs.setString(fieldName, value);
@@ -92,6 +92,28 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
 
       tempRS = tempRS.setLocked(true);
       dispatch(rsActions.setRecordSet(tempRS));
+
+      const listLastEdited: ILastEdited[] = [];
+
+      listChange.forEach(function (value, key: string) {
+        listLastEdited.push({
+          fieldName: key,
+          value: value
+        })
+      });
+      await apiService.update({
+        update: {
+          entity: entityName,
+          fields: listLastEdited.map((change: ILastEdited) => {
+            return {
+              attribute: change.fieldName,
+              value: change.value
+            }
+          }),
+          pkValues: [+id]
+        }
+      });
+      setListChange(new Map());
       tempRS = await tempRS.post(commitFunc, true);
       dispatch(rsActions.setRecordSet(tempRS));
       setChanged(false);
@@ -451,6 +473,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           fieldName: fd.fieldName,
                           value: newValue
                         };
+                        const PKField = rs.fieldDefs.find(field => field.fieldName === fd.fieldName);
+                        if (PKField) {
+                          setListChange(listChange.set(PKField.caption!, newValue))
+                        }
                         setChanged(true);
                       }
                     }
