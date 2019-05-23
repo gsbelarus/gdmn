@@ -15,7 +15,7 @@ export class GetSequence {
     if (query.increment !== undefined) {
       sql += ' GEN_ID (' + query.sequence.name + ', ' + query.increment + ') \nFROM RDB$DATABASE';
     } else {
-      sql += ' NEXT VALUE FOR ' + query.inspect.name + '\nFROM RDB$DATABASE';
+      sql += ' NEXT VALUE FOR ' + query.sequence.name + '\nFROM RDB$DATABASE';
     }
     return sql;
   }
