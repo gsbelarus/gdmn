@@ -21,4 +21,4 @@ export function morphAnalyzer(word: string): AnyWords {
     RusPronounLexemes, RusConjunctionLexemes, RusPrepositionLexemes, RusParticleLexemes, RusAdverbLexemes];
   pos.forEach( lexemes => lexemes.forEach( l => l.analyze(lw, resFunc)) );
   return res;
-}
+};
