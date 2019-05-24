@@ -55,7 +55,7 @@ export class Internals extends View<IInternalsProps, {}> {
             {
               viewTabs.map(vt => (
                 <li key={vt.url}>
-                  {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join() : 'no recordsets'}
+                  {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join() : 'no recordsets'}, {JSON.stringify(vt.sessionData, undefined, 2)}
                 </li>
               ))
             }

@@ -26,6 +26,7 @@ import { ApplicationsViewContainer } from './components/ApplicationsViewContaine
 import { IApplicationInfo } from '@gdmn/server-api';
 import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
+import { EntityDataView2Container } from '../ermodel/entityData/EntityDataView2Container';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -251,9 +252,11 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 exact={true}
                 path={`${match.path}/entity/:entityName`}
                 render={props => (
-                  <EntityDataViewContainer
+                  <EntityDataView2Container
                     {...props}
                     key={props.match.url}
+                    entityName={props.match.params.entityName}
+                    url={props.match.url}
                   />
                 )}
               />

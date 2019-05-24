@@ -6,8 +6,6 @@ import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "../../gdmn/actions";
 
-export type TAddViewTab = (viewTab: IViewTab) => void;
-
 export interface IEntityDataDlgRouteProps {
   entityName: string;
   id: string;

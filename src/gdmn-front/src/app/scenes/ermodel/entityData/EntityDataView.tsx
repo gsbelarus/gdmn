@@ -3,7 +3,7 @@ import { DataView } from '@src/app/components/DataView';
 import { ICommandBarItemProps, TextField, DefaultButton } from 'office-ui-fabric-react';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { getMutex } from '../../../components/dataViewMutexes';
-import { IEntityDataViewProps, IEntityMatchParams } from './EntityDataView.types';
+import { IEntityDataViewProps, IEntityDataViewRouteProps } from './EntityDataView.types';
 import { RouteComponentProps } from 'react-router';
 
 interface IEntityDataViewState {
@@ -11,7 +11,7 @@ interface IEntityDataViewState {
   phrase: string;
 };
 
-export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataViewState, IEntityMatchParams> {
+export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataViewState, IEntityDataViewRouteProps> {
   public state: IEntityDataViewState;
   public entityName: string;
 
@@ -33,7 +33,7 @@ export class EntityDataView extends DataView<IEntityDataViewProps, IEntityDataVi
     }
   }
 
-  static getEntityNameFromProps(props: RouteComponentProps<IEntityMatchParams>) {
+  static getEntityNameFromProps(props: RouteComponentProps<IEntityDataViewRouteProps>) {
     return props.match ? props.match.params.entityName : '';
   }
 

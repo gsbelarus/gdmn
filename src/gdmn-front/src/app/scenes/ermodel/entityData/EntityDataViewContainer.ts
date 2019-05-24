@@ -14,13 +14,13 @@ import { TRsMetaActions } from "@src/app/store/rsmeta";
 import { loadRSActions, LoadRSActions } from "@src/app/store/loadRSActions";
 import { ParsedText, parsePhrase, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { IEntityDataViewProps, IEntityMatchParams } from "./EntityDataView.types";
+import { IEntityDataViewProps, IEntityDataViewRouteProps } from "./EntityDataView.types";
 import { Semaphore } from "gdmn-internals";
 import { prepareDefaultEntityQuery } from "./utils";
 
-export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<IEntityMatchParams>>(
+export const EntityDataViewContainer = compose<IEntityDataViewProps, RouteComponentProps<IEntityDataViewRouteProps>>(
   connect(
-    (state: IState, ownProps: RouteComponentProps<IEntityMatchParams>) => {
+    (state: IState, ownProps: RouteComponentProps<IEntityDataViewRouteProps>) => {
       const entityName = EntityDataView.getEntityNameFromProps(ownProps);
       return {
         erModel: state.gdmnState.erModel,
