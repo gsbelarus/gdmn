@@ -24,6 +24,10 @@ interface ILastEdited {
   value: string;
 };
 
+interface IChangedFields {
+  [fieldName: string]: boolean;
+};
+
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
   const { url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab } = props;
@@ -58,7 +62,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
-  const changedFields = useRef<string[]>([]);
+  const changedFields = useRef<IChangedFields>({});
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -86,9 +90,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const postChanges = useCallback( async () => {
     if (rs && changed) {
       let tempRS = rs;
+
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        tempRS = rs.setString(fieldName, value);
+        tempRS = tempRS.setString(fieldName, value);
         lastEdited.current = undefined;
       }
 
@@ -96,15 +101,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
 
       dispatch(rsActions.setRecordSet(tempRS));
 
-      const fields: IEntityUpdateFieldInspector[] = [];
-
-      changedFields.current.forEach((fieldName) => {
-        const arr = Object.entries(rs.getFieldDef(fieldName).eqfa!)
-          .find(([key, value]) => key === 'attribute');
-        if (arr && arr.length) {
-          fields.push({attribute: arr[1], value: tempRS.getValue(fieldName)})
-        }
-      });
+      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => ({
+        attribute: tempRS.getFieldDef(fieldName).eqfa!.attribute,
+        value: tempRS.getValue(fieldName)
+      }));
 
       if (fields.length) {
         await apiService.update({
@@ -115,8 +115,13 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
           }
         });
       }
-      changedFields.current = [];
+
+      changedFields.current = {};
       setChanged(false);
+
+      tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true);
+
+      dispatch(rsActions.setRecordSet(tempRS));
 
       if (srcRs && !srcRs.locked) {
         const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
@@ -293,7 +298,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         lastEdited.current = undefined;
         if (rs.changed) {
           dispatch(rsActions.cancel({ name: rsName }));
-          changedFields.current = [];
+          changedFields.current = {};
         }
         setChanged(false);
       }
@@ -400,7 +405,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                         }
                         dispatch(rsActions.setRecordSet(changedRs));
                         setChanged(true);
-                        changedFields.current.push(refIdFieldAlias);
+                        changedFields.current[refIdFieldAlias] = true;
                       }
                     }
                     onFocus={
@@ -475,7 +480,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           fieldName: fd.fieldName,
                           value: newValue
                         };
-                        changedFields.current.push(fd.fieldName);
+                        changedFields.current[fd.fieldName] = true;
                         setChanged(true);
                       }
                     }
