@@ -45,7 +45,8 @@ export type AppAction =
   | "DELETE"
   | "SEQUENCE_QUERY"
   | "GET_SESSIONS_INFO"
-  | "GET_MAIN_SESSIONS_INFO";
+  | "GET_MAIN_SESSIONS_INFO"
+  | "GET_NEXT_ID";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -66,6 +67,7 @@ export type UpdateCmd = AppCmd<"UPDATE", { update: IEntityUpdateInspector }>;
 export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
+export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
 
 export class Application extends ADatabase {
 
@@ -670,6 +672,53 @@ export class Application extends ADatabase {
         );
         await context.checkStatus();
         return result;
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushGetNextIdCmd(session: Session,
+                      command: GetNextIdCmd): Task<GetNextIdCmd, {id: number}> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const nextId = await context.session.executeConnection(async (connection): Promise<number> => {
+          const IdResult = await connection.executeReturning(connection.readTransaction,  `
+          EXECUTE BLOCK
+          RETURNS
+           (ID INTEGER)
+          AS
+            DECLARE VARIABLE ATPID INTEGER;
+          BEGIN
+            ID = 0;
+            SELECT ID
+            FROM AT_PROCEDURES
+            WHERE PROCEDURENAME = 'GD_P_GETNEXTID_EX'
+            INTO ATPID;
+            IF (NOT ATPID IS NULL) THEN
+            BEGIN
+              EXECUTE PROCEDURE GD_P_GETNEXTID_EX
+              RETURNING_VALUES :ID;
+            END
+            ELSE
+            BEGIN
+              SELECT GEN_ID(gd_g_unique, 1) + GEN_ID(gd_g_offset, 0)
+              FROM RDB$DATABASE INTO :ID;
+            END
+            SUSPEND;
+          END
+          `); 
+          return  IdResult.getNumber(0);
+        });
+        await context.checkStatus();
+        return {id: nextId};
       }
     });
     session.taskManager.add(task);
