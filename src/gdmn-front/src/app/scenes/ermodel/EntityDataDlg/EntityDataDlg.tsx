@@ -51,7 +51,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
-  const [listChange, setListChange] = useState(new Map());
+  const [listChange, setListChange] = useState([]);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -85,22 +85,21 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         lastEdited.current = undefined;
       }
 
-      const commitFunc = (_row: IDataRow) => {
-        return new Promise( resolve => setTimeout( () => resolve(), 2000 ))
-          .then( () => TCommitResult.Success );
-      }
-
-      tempRS = tempRS.setLocked(true);
+      dispatch(rsActions.setRecordSet(tempRS.setLocked(true)));
       dispatch(rsActions.setRecordSet(tempRS));
-
       const listLastEdited: ILastEdited[] = [];
 
-      listChange.forEach(function (value, key: string) {
-        listLastEdited.push({
-          fieldName: key,
-          value: value
-        })
+      listChange.forEach(function(item) {
+        const PKField = rs.fieldDefs.find(field => field.fieldName === item);
+        const PKFieldValue = PKField && rs.getValue(item);
+        if (PKField && PKFieldValue) {
+          listLastEdited.push({
+            fieldName: PKField.caption!,
+            value: PKFieldValue.toString()
+          })
+        }
       });
+
       await apiService.update({
         update: {
           entity: entityName,
@@ -113,9 +112,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
           pkValues: [+id]
         }
       });
-      setListChange(new Map());
-      tempRS = await tempRS.post(commitFunc, true);
-      dispatch(rsActions.setRecordSet(tempRS));
+      setListChange([]);
       setChanged(false);
 
       if (srcRs && !srcRs.locked) {
@@ -473,10 +470,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           fieldName: fd.fieldName,
                           value: newValue
                         };
-                        const PKField = rs.fieldDefs.find(field => field.fieldName === fd.fieldName);
-                        if (PKField) {
-                          setListChange(listChange.set(PKField.caption!, newValue))
-                        }
+                        setListChange([...listChange, fd.fieldName] as any)
                         setChanged(true);
                       }
                     }
