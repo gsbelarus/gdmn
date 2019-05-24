@@ -1,5 +1,5 @@
 import path from 'path';
-import { Configuration, EnvironmentPlugin } from 'webpack';
+import { EnvironmentPlugin } from 'webpack';
 import merge from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 // @ts-ignore
@@ -7,8 +7,6 @@ import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import TerserPlugin from 'terser-webpack-plugin';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 
 import { getWebpackConfigBase, cssLoader, cssModulesLoader } from './webpackConfigBase';
 import { getRootRelativePath } from './utils';
@@ -18,7 +16,14 @@ const OUTPUT_CHUNK_FILENAME = 'scripts/[name].[chunkhash].chunk.js';
 const EXTRACT_CSS_FILENAME = 'styles/[name].[chunkhash].css';
 const STYLES_PATH = getRootRelativePath('src/styles');
 
-const config: Configuration = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT_CHUNK_FILENAME), {
+/**
+ * Непонятно почему, но типы @types/webpack записываются дважды
+ * в корень проекта и в локальную папку для gdmn-front. и они разные
+ * из-за чего происходит ошибка. сейчас мы непосредственно приводим
+ * к типу any. В будущем перепроверить и убрать приведение.
+ */
+
+const config = merge(getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT_CHUNK_FILENAME) as any, {
   devtool: 'source-map',
   mode: 'production',
   module: {

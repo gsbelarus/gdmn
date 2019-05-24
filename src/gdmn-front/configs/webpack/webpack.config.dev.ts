@@ -1,5 +1,5 @@
 import path from 'path';
-import { Configuration, EnvironmentPlugin, HotModuleReplacementPlugin, NamedModulesPlugin } from 'webpack';
+import { EnvironmentPlugin, HotModuleReplacementPlugin, NamedModulesPlugin } from 'webpack';
 import merge from 'webpack-merge';
 import { CheckerPlugin } from 'awesome-typescript-loader';
 // @ts-ignore
@@ -12,7 +12,14 @@ const OUTPUT_FILENAME = 'scripts/[name].bundle.js';
 const OUTPUT_CHUNK_FILENAME = 'scripts/[name].chunk.js';
 const STYLES_PATH = getRootRelativePath('src/styles');
 
-const config: Configuration = merge(
+/**
+ * Непонятно почему, но типы @types/webpack записываются дважды
+ * в корень проекта и в локальную папку для gdmn-front. и они разные
+ * из-за чего происходит ошибка. сейчас мы непосредственно приводим
+ * к типу any. В будущем перепроверить и убрать приведение.
+ */
+
+const config = merge(
   // {
   //   entry: {
   //     app: [
@@ -23,7 +30,7 @@ const config: Configuration = merge(
   //     ]
   //   }
   // },
-  getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT_CHUNK_FILENAME),
+  getWebpackConfigBase(OUTPUT_FILENAME, OUTPUT_CHUNK_FILENAME) as any,
   {
     devtool: 'cheap-module-source-map',
     mode: 'development',

@@ -1,11 +1,16 @@
-import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader } from 'webpack';
+import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader, Plugin } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-// import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-
-// FIXME typings
 const pkg = require('../../package.json');
 const config = require('../config.json');
 import { getRootRelativePath } from './utils';
+
+/**
+ * Непонятно почему, но типы @types/webpack записываются дважды
+ * в корень проекта и в локальную папку для gdmn-front. и они разные
+ * из-за чего происходит ошибка. сейчас мы непосредственно приводим
+ * тип плагина к типу Plugin. После выхода html-webpack-lugin 4
+ * перепроверить и убрать приведение.
+ */
 
 function getWebpackConfigBase(outputFilename: string, outputChunkFilename: string): Configuration {
   return {
@@ -29,7 +34,7 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
         appMountNodeId: config.webpack.appMountNodeId,
         description: pkg.description,
         mobile: true
-      }),
+      }) as Plugin,
       new NoEmitOnErrorsPlugin() // fixme deprecated
     ],
     resolve: {
