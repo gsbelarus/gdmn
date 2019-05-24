@@ -51,6 +51,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
+  const [listChange, setListChange] = useState([]);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -78,22 +79,40 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const postChanges = useCallback( async () => {
     if (rs && changed) {
       let tempRS = rs;
-
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
         tempRS = rs.setString(fieldName, value);
         lastEdited.current = undefined;
       }
 
-      const commitFunc = (_row: IDataRow) => {
-        return new Promise( resolve => setTimeout( () => resolve(), 2000 ))
-          .then( () => TCommitResult.Success );
-      }
+      dispatch(rsActions.setRecordSet(tempRS.setLocked(true)));
+      dispatch(rsActions.setRecordSet(tempRS));
+      const listLastEdited: ILastEdited[] = [];
 
-      tempRS = tempRS.setLocked(true);
-      dispatch(rsActions.setRecordSet(tempRS));
-      tempRS = await tempRS.post(commitFunc, true);
-      dispatch(rsActions.setRecordSet(tempRS));
+      listChange.forEach((item) => {
+        const PKField = rs.fieldDefs.find(field => field.fieldName === item);
+        const PKFieldValue = PKField && rs.getValue(item);
+        if (PKField && PKFieldValue) {
+          listLastEdited.push({
+            fieldName: PKField.caption!,
+            value: PKFieldValue.toString()
+          })
+        }
+      });
+
+      await apiService.update({
+        update: {
+          entity: entityName,
+          fields: listLastEdited.map((change: ILastEdited) => {
+            return {
+              attribute: change.fieldName,
+              value: change.value
+            }
+          }),
+          pkValues: [+id]
+        }
+      });
+      setListChange([]);
       setChanged(false);
 
       if (srcRs && !srcRs.locked) {
@@ -451,6 +470,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           fieldName: fd.fieldName,
                           value: newValue
                         };
+                        setListChange([...listChange, fd.fieldName] as any)
                         setChanged(true);
                       }
                     }
