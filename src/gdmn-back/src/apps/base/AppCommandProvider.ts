@@ -17,7 +17,8 @@ import {
   SqlQueryCmd,
   UpdateCmd,
   SequenceQueryCmd,
-  GetSessionsInfoCmd
+  GetSessionsInfoCmd,
+  GetNextIdCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -153,6 +154,13 @@ export class AppCommandProvider {
       && typeof command.payload.query === "object";
   }
 
+  private static _verifyGetNextIdCmd(command: ICmd<AppAction, any>): command is GetNextIdCmd {
+    return typeof command.payload === "object"
+    && !!command.payload
+    && "withError" in command.payload
+    && typeof command.payload.withError === "boolean";
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -253,6 +261,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushSessionsInfoCmd(session, command);
+      }
+      case "GET_NEXT_ID": {
+        if (!AppCommandProvider._verifyGetNextIdCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushGetNextIdCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");

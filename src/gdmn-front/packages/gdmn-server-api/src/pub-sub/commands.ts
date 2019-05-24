@@ -204,3 +204,9 @@ export type TGetSessionsInfoCmdResult = TTaskCmdResult<TTaskActionNames.GET_SESS
 export type TGetMainSessionsInfoTaskCmd = TTaskCmd<TTaskActionNames.GET_MAIN_SESSIONS_INFO>;
 
 export type TGetMainSessionsInfoCmdResult = TTaskCmdResult<TTaskActionNames.GET_MAIN_SESSIONS_INFO>;
+
+// get next id
+
+export type TGetNextIdTaskCmd = TTaskCmd<TTaskActionNames.GET_NEXT_ID>;
+
+export type TGetNextIdTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_NEXT_ID>;

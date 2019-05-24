@@ -50,6 +50,7 @@ export const enum TTaskActionNames {
   SEQUENCE_QUERY = 'SEQUENCE_QUERY',
   GET_SESSIONS_INFO = 'GET_SESSIONS_INFO',
   GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
+  GET_NEXT_ID = 'GET_NEXT_ID'
 }
 
 // MESSAGES DATA
@@ -142,6 +143,8 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: {
   };
+  [TTaskActionNames.GET_NEXT_ID]: {
+  };
 }
 
 // -- TASK-RESULT
@@ -177,6 +180,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.SEQUENCE_QUERY]: ISequenceQueryResponse;
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
+  [TTaskActionNames.GET_NEXT_ID]: INextId;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -237,6 +241,10 @@ export interface ISessionInfo {
   tasks?: ITask[];
 }
 
+export interface INextId {
+  id: number;
+}
+
 export interface ITask {
   id: string;
   status: TTaskStatus;
@@ -267,7 +275,8 @@ export type AppAction =
   | "UPDATE"
   | "DELETE"
   | "SEQUENCE_QUERY"
-  | "GET_SESSIONS_INFO";
+  | "GET_SESSIONS_INFO"
+  | "GET_NEXT_ID";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];
