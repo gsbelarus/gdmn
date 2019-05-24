@@ -89,7 +89,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       dispatch(rsActions.setRecordSet(tempRS));
       const listLastEdited: ILastEdited[] = [];
 
-      listChange.forEach(function(item) {
+      listChange.forEach((item) => {
         const PKField = rs.fieldDefs.find(field => field.fieldName === item);
         const PKFieldValue = PKField && rs.getValue(item);
         if (PKField && PKFieldValue) {
