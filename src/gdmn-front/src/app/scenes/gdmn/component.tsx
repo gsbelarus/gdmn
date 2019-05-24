@@ -10,7 +10,6 @@ import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
-import { EntityDataViewContainer } from '../ermodel/entityData/EntityDataViewContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { SqlListContainer } from '../sql/list/container';
 import { SqlViewContainer } from '../sql/EditView/container';
@@ -26,7 +25,7 @@ import { ApplicationsViewContainer } from './components/ApplicationsViewContaine
 import { IApplicationInfo } from '@gdmn/server-api';
 import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
-import { EntityDataView2Container } from '../ermodel/entityData/EntityDataView2Container';
+import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -252,7 +251,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 exact={true}
                 path={`${match.path}/entity/:entityName`}
                 render={props => (
-                  <EntityDataView2Container
+                  <EntityDataViewContainer
                     {...props}
                     key={props.match.url}
                     entityName={props.match.params.entityName}
@@ -273,26 +272,6 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                   />
                 )}
               />
-                /*
-              <Route
-                path={`${match.path}/entity/:entityName/edit/:pkSet`}
-                render={props => (
-                  <DlgViewContainer {...props} />
-                )}
-              />
-              <Route
-                path={`${match.path}/entity/:entityName/add`}
-                render={props => (
-                  <div style={{ margin: -16 }}>
-                    <DlgViewContainer {...props}
-                      updateViewTab={updateViewTab}
-                      viewTab={viewTabs.find( vt => vt.url === props.match.url )}
-                      dlgState={IDlgState.dsInsert}
-                    />
-                  </div>
-                )}
-              />
-                */
               }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

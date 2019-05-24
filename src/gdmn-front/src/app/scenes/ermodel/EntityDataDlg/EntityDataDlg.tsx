@@ -5,7 +5,7 @@ import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
-import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
+import { prepareDefaultEntityQuery, attr2fd } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";

@@ -3,7 +3,7 @@ import { TThunkMiddleware } from "./middlewares";
 import { getType } from "typesafe-actions";
 import { loadRSActions as actions, LoadRSActions } from "./loadRSActions";
 import { TTaskStatus } from "@gdmn/server-api";
-import { attr2fd } from "../scenes/ermodel/entityData/utils";
+import { attr2fd } from "../scenes/ermodel/EntityDataView/utils";
 import { RecordSet, IDataRow, TFieldType, TStatus, rsActions, TCommitResult } from "gdmn-recordset";
 import { List } from "immutable";
 import { createGrid } from "gdmn-grid";

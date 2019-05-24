@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { IEntityDataView2Props } from './EntityDataView2.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Button, PrimaryButton, ICommandBar, IMessageBar } from 'office-ui-fabric-react';
+import { IEntityDataView2Props } from './EntityDataView.types';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, PrimaryButton } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { RecordSet, rsActions, TStatus } from 'gdmn-recordset';
+import { rsActions, TStatus } from 'gdmn-recordset';
 import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
@@ -16,11 +16,10 @@ import { GDMNGrid, TLoadMoreRsDataEvent, cancelSortDialog, TCancelSortDialogEven
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 
-export const EntityDataView2 = CSSModules( (props: IEntityDataView2Props): JSX.Element => {
+export const EntityDataView = CSSModules( (props: IEntityDataView2Props): JSX.Element => {
 
-  const { url, entityName, rs, entity, dispatch, history, viewTab, erModel, gcs } = props;
+  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs } = props;
   const locked = rs ? rs.locked : false;
-  const rsName = url;
   const error = viewTab ? viewTab.error : undefined;
   const gridRef = useRef<GDMNGrid | undefined>();
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
