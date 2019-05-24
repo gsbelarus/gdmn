@@ -9,7 +9,14 @@ import { prepareDefaultEntityQuery, attr2fd } from "../entityData/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
-import { EntityQuery, EntityLink, EntityLinkField, EntityQueryOptions, EntityAttribute } from "gdmn-orm";
+import {
+  EntityQuery,
+  EntityLink,
+  EntityLinkField,
+  EntityQueryOptions,
+  EntityAttribute,
+  IEntityUpdateFieldInspector
+} from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 
 interface ILastEdited {
@@ -51,7 +58,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
-  const [listChange, setListChange] = useState([]);
+  const changedFields = useRef<string[]>([]);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -85,34 +92,30 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         lastEdited.current = undefined;
       }
 
-      dispatch(rsActions.setRecordSet(tempRS.setLocked(true)));
+      tempRS = tempRS.setLocked(true);
+
       dispatch(rsActions.setRecordSet(tempRS));
-      const listLastEdited: ILastEdited[] = [];
 
-      listChange.forEach((item) => {
-        const PKField = rs.fieldDefs.find(field => field.fieldName === item);
-        const PKFieldValue = PKField && rs.getValue(item);
-        if (PKField && PKFieldValue) {
-          listLastEdited.push({
-            fieldName: PKField.caption!,
-            value: PKFieldValue.toString()
-          })
+      const fields: IEntityUpdateFieldInspector[] = [];
+
+      changedFields.current.forEach((fieldName) => {
+        const arr = Object.entries(rs.getFieldDef(fieldName).eqfa!)
+          .find(([key, value]) => key === 'attribute');
+        if (arr && arr.length) {
+          fields.push({attribute: arr[1], value: tempRS.getValue(fieldName)})
         }
       });
 
-      await apiService.update({
-        update: {
-          entity: entityName,
-          fields: listLastEdited.map((change: ILastEdited) => {
-            return {
-              attribute: change.fieldName,
-              value: change.value
-            }
-          }),
-          pkValues: [+id]
-        }
-      });
-      setListChange([]);
+      if (fields.length) {
+        await apiService.update({
+          update: {
+            entity: entityName,
+            fields,
+            pkValues: [parseInt(id)]
+          }
+        });
+      }
+      changedFields.current = [];
       setChanged(false);
 
       if (srcRs && !srcRs.locked) {
@@ -290,6 +293,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         lastEdited.current = undefined;
         if (rs.changed) {
           dispatch(rsActions.cancel({ name: rsName }));
+          changedFields.current = [];
         }
         setChanged(false);
       }
@@ -396,6 +400,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                         }
                         dispatch(rsActions.setRecordSet(changedRs));
                         setChanged(true);
+                        changedFields.current.push(refIdFieldAlias);
                       }
                     }
                     onFocus={
@@ -470,7 +475,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           fieldName: fd.fieldName,
                           value: newValue
                         };
-                        setListChange([...listChange, fd.fieldName] as any)
+                        changedFields.current.push(fd.fieldName);
                         setChanged(true);
                       }
                     }
