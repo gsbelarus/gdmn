@@ -102,9 +102,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       dispatch(rsActions.setRecordSet(tempRS));
 
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => ({
-        attribute: tempRS.getFieldDef(fieldName).eqfa!.attribute,
-        value: tempRS.getValue(fieldName)
-      }));
+      attribute: (tempRS.getFieldDef(fieldName).eqfa!.linkAlias === "root")
+        ? tempRS.getFieldDef(fieldName).eqfa!.attribute : tempRS.getFieldDef(fieldName).eqfa!.linkAlias,
+      value: tempRS.getValue(fieldName)
+       }));
 
       if (fields.length) {
         await apiService.update({
