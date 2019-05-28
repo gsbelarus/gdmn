@@ -420,7 +420,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                     onLookup={
                       (filter: string, limit: number) => {
                        const linkFields:EntityLinkField[] = [
-                         new EntityLinkField(linkEntity.attributes['ID'])
+                         new EntityLinkField(linkEntity.pk[0])
                        ];
                         const scalarAttrs = Object.values(linkEntity.attributes)
                           .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
