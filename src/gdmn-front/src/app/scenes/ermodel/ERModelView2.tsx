@@ -10,6 +10,7 @@ import { bindGridActions } from "./utils";
 import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
 import { InspectorForm } from "@src/app/components/InspectorForm";
+import { useSaveGridState } from "./EntityDataView/useSavedGridState";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -18,6 +19,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [showInspector, setShowInspector] = useState(false);
   const entitiesFilter = entities && entities.filter && entities.filter.conditions.length ? entities.filter.conditions[0].value : '';
   const attributesFilter = attributes && attributes.filter && attributes.filter.conditions.length ? attributes.filter.conditions[0].value : '';
+  const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, viewTab, 'entities');
+  const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, viewTab, 'attributes');
 
   useEffect( () => {
     if (!erModel || !Object.keys(erModel.entities).length) {
@@ -273,6 +276,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
                 {...gcsEntities}
                 rs={entities}
                 {...gridActions}
+                ref={ grid => grid && (gridRefEntities.current = grid) }
+                savedState={getSavedStateEntities()}
               />
             </div>
             <div style={{ width: '50%' }}>
@@ -288,6 +293,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
                 {...gcsAttributes}
                 rs={attributes}
                 {...gridActions}
+                ref={ grid => grid && (gridRefAttributes.current = grid) }
+                savedState={getSavedStateAttributes()}
               />
             </div>
           </div>

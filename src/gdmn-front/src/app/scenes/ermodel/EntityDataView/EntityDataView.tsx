@@ -13,16 +13,17 @@ import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValu
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
+import { useSaveGridState } from './useSavedGridState';
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
   const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
-  const gridRef = useRef<GDMNGrid | undefined>();
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [showSQL, setShowSQL] = useState(false);
   const topRef = useRef<HTMLDivElement | null>(null);
+  const [gridRef, getSavedState] = useSaveGridState(dispatch, viewTab);
 
   const [phrase, setPhrase] = useState(
     rs && rs.queryPhrase
@@ -31,17 +32,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     ? `покажи все ${entityName}`
     : ''
   );
-
-  useEffect( () => {
-    return () => {
-      if (gridRef.current) {
-        dispatch(gdmnActions.saveSessionData({
-          viewTabURL: url,
-          sessionData: { 'savedGridState': gridRef.current.state }
-        }));
-      }
-    }
-  }, []);
 
   const applyPhrase = () => {
     if (erModel) {
@@ -110,16 +100,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const onCancel = (event: TRecordsetEvent) => dispatch(rsActions.cancel({ name: event.rs.name }));
 
   const onSetFieldValue = (event: TRecordsetSetFieldValue) => dispatch(rsActions.setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value }));
-
-  const getSavedState = () => {
-    const savedGridState = viewTab && viewTab.sessionData ? viewTab.sessionData['savedGridState'] : undefined;
-
-    if (savedGridState instanceof Object) {
-      return savedGridState as IGridState;
-    } else {
-      return undefined;
-    }
-  };
 
   const onCloseSQL = () => setShowSQL(false);
 
@@ -238,7 +218,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             onInsert={onInsert}
             onCancel={onCancel}
             onSetFieldValue={onSetFieldValue}
-            ref={(grid: GDMNGrid) => grid && (gridRef.current = grid)}
+            ref={ grid => grid && (gridRef.current = grid) }
             savedState={getSavedState()}
           />
         </div>
