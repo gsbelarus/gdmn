@@ -177,7 +177,7 @@ export const ERModelViewContainer = compose<IERModelViewProps, RouteComponentPro
             dispatch(
               createGrid({
                 name: 'attributes',
-                columns: entitiesRS.fieldDefs.map(fd => ({
+                columns: attributesRS.fieldDefs.map(fd => ({
                   name: fd.fieldName,
                   caption: [fd.caption || fd.fieldName],
                   fields: [{ ...fd }],

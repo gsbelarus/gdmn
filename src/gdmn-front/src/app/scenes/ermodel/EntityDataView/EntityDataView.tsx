@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { IEntityDataView2Props } from './EntityDataView.types';
+import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, PrimaryButton } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
@@ -9,14 +9,12 @@ import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, cancelSortDialog, TCancelSortDialogEvent, TApplySortDialogEvent,
-  applySortDialog, resizeColumn, TColumnResizeEvent, TColumnMoveEvent, columnMove, TSelectRowEvent,
-  TSelectAllRowsEvent, TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent,
-  TRecordsetEvent, TRecordsetSetFieldValue, IGridState } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IGridState } from 'gdmn-grid';
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
+import { bindGridActions } from '../utils';
 
-export const EntityDataView = CSSModules( (props: IEntityDataView2Props): JSX.Element => {
+export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
   const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs } = props;
   const locked = rs ? rs.locked : false;
@@ -105,93 +103,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataView2Props): JSX.El
     dispatch(loadRSActions.loadMoreRsData({ name: event.rs.name, rowsCount }));
   };
 
-  const onCancelSortDialog = (event: TCancelSortDialogEvent) => dispatch(
-    cancelSortDialog({ name: event.rs.name })
-  );
-
-  const onApplySortDialog = (event: TApplySortDialogEvent) => dispatch(
-    (dispatch, getState) => {
-      dispatch(applySortDialog({ name: event.rs.name, sortFields: event.sortFields }));
-      dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
-
-      event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
-    }
-  );
-
-  const onColumnResize = (event: TColumnResizeEvent) => {
-    return dispatch(resizeColumn({
-      name: event.rs.name,
-      columnIndex: event.columnIndex,
-      newWidth: event.newWidth
-    }));
-  };
-
-  const onColumnMove = (event: TColumnMoveEvent) => dispatch(
-    columnMove({
-      name: event.rs.name,
-      oldIndex: event.oldIndex,
-      newIndex: event.newIndex
-    })
-  );
-
-  const onSelectRow = (event: TSelectRowEvent) => dispatch(
-    rsActions.selectRow({
-      name: event.rs.name,
-      idx: event.idx,
-      selected: event.selected
-    })
-  );
-
-  const onSelectAllRows = (event: TSelectAllRowsEvent) => dispatch(
-    rsActions.setAllRowsSelected({
-      name: event.rs.name,
-      value: event.value
-    })
-  );
-
-  const onSetCursorPos = (event: TSetCursorPosEvent) => dispatch(
-    (dispatch) => {
-      dispatch(
-        rsActions.setRecordSet(event.rs.setCurrentRow(event.cursorRow))
-      );
-
-      dispatch(
-        setCursorCol({
-          name: event.rs.name,
-          cursorCol: event.cursorCol
-        })
-      );
-    }
-  );
-
-  const onSort = (event: TSortEvent) => dispatch(
-    (dispatch, getState) => {
-      dispatch(
-        rsActions.sortRecordSet({
-          name: event.rs.name,
-          sortFields: event.sortFields
-        })
-      );
-
-      event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
-    }
-  );
-
-  const onToggleGroup = (event: TToggleGroupEvent) => dispatch(
-    rsActions.toggleGroup({
-      name: event.rs.name,
-      rowIdx: event.rowIdx
-    })
-  );
-
-  const onSetFilter = (event: TOnFilterEvent) => {
-    if (event.filter) {
-      dispatch(rsActions.setFilter({name: event.rs.name, filter: { conditions: [ { value: event.filter } ] } }))
-    } else {
-      dispatch(rsActions.setFilter({name: event.rs.name, filter: undefined }))
-    }
-  };
-
   const onInsert = (event: TRecordsetEvent) => dispatch(rsActions.insert({ name: event.rs.name }));
 
   const onDelete = (event: TRecordsetEvent) => dispatch(rsActions.deleteRows({ name: event.rs.name }));
@@ -269,6 +180,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataView2Props): JSX.El
   ];
 
   const topHeight = topRef.current ? topRef.current.clientHeight : 0;
+  const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
     <div className="ViewWide">
@@ -321,15 +233,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataView2Props): JSX.El
             {...gcs}
             rs={rs}
             loadMoreRsData={loadMoreRsData}
-            onCancelSortDialog={onCancelSortDialog}
-            onApplySortDialog={onApplySortDialog}
-            onColumnResize={onColumnResize}
-            onColumnMove={onColumnMove}
-            onSelectRow={onSelectRow}
-            onSelectAllRows={onSelectAllRows}
-            onSetCursorPos={onSetCursorPos}
-            onSort={onSort}
-            onToggleGroup={onToggleGroup}
+            {...gridActions}
             onDelete={onDelete}
             onInsert={onInsert}
             onCancel={onCancel}
