@@ -111,7 +111,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                 contains: [
                   {
                     alias: 'z',
-                    attribute: myEntity.attributes['ID'],
+                    attribute: myEntity.pk[0],
                     value: tempRS.getValue(fieldName)!.toString()
                   }
                 ]
