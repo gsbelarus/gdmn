@@ -15,7 +15,8 @@ import {
   EntityLinkField,
   EntityQueryOptions,
   EntityAttribute,
-  IEntityUpdateFieldInspector
+  IEntityUpdateFieldInspector,
+  ScalarAttribute
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 
@@ -418,24 +419,21 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                     }
                     onLookup={
                       (filter: string, limit: number) => {
-                        const LinkFields:EntityLinkField[] = [];
-                        if (linkEntity.attributes['ID']){
-                          LinkFields.push(new EntityLinkField(linkEntity.attributes['ID']))
-                        }
-                        if (linkEntity.attributes['NAME']){
-                          LinkFields.push(new EntityLinkField(linkEntity.attributes['NAME']))
-                        }
-                        if(linkEntity.attributes['USR$NAME']){
-                          LinkFields.push(new EntityLinkField(linkEntity.attributes['USR$NAME']))
-                        }
-                        if(linkEntity.attributes['ALIAS']){
-                          LinkFields.push(new EntityLinkField(linkEntity.attributes['ALIAS']))
-                        }
-                        if(linkEntity.attributes['String']){
-                          LinkFields.push(new EntityLinkField(linkEntity.attributes['String']))
+                       const linkFields:EntityLinkField[] = [
+                         new EntityLinkField(linkEntity.attributes['ID'])
+                       ];
+                        const scalarAttrs = Object.values(linkEntity.attributes)
+                          .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+
+                        const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                          || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                          || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                          || scalarAttrs.find((attr) => attr.type === "String");
+                        if (presentField) {
+                          linkFields.push(new EntityLinkField(presentField));
                         }
                         const linkEq = new EntityQuery(
-                          new EntityLink(linkEntity, 'z', LinkFields),
+                          new EntityLink(linkEntity, 'z', linkFields),
                           new EntityQueryOptions(
                             limit + 1,
                             undefined,
@@ -444,7 +442,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                                 contains: [
                                   {
                                     alias: 'z',
-                                    attribute: linkEntity.attributes['NAME'],
+                                    attribute: presentField!,
                                     value: filter!
                                   }
                                 ]
@@ -458,7 +456,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                             const result = response.payload.result!;
                             const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
                             const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
-                              && (data.attribute === 'NAME' || data.attribute === 'USR$NAME' || data.attribute === 'ALIAS' || data.attribute === 'String' )  )![0];
+                              && (data.attribute === presentField!.name))![0];
                             return result.data.map( (r): IComboBoxOption => ({
                               key: r[idAlias],
                               text: r[nameAlias]
