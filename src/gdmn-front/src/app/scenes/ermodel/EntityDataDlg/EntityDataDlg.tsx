@@ -418,11 +418,24 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                     }
                     onLookup={
                       (filter: string, limit: number) => {
+                        const LinkFields:EntityLinkField[] = [];
+                        if (linkEntity.attributes['ID']){
+                          LinkFields.push(new EntityLinkField(linkEntity.attributes['ID']))
+                        }
+                        if (linkEntity.attributes['NAME']){
+                          LinkFields.push(new EntityLinkField(linkEntity.attributes['NAME']))
+                        }
+                        if(linkEntity.attributes['USR$NAME']){
+                          LinkFields.push(new EntityLinkField(linkEntity.attributes['USR$NAME']))
+                        }
+                        if(linkEntity.attributes['ALIAS']){
+                          LinkFields.push(new EntityLinkField(linkEntity.attributes['ALIAS']))
+                        }
+                        if(linkEntity.attributes['String']){
+                          LinkFields.push(new EntityLinkField(linkEntity.attributes['String']))
+                        }
                         const linkEq = new EntityQuery(
-                          new EntityLink(linkEntity, 'z', [
-                            new EntityLinkField(linkEntity.attributes['ID']),
-                            new EntityLinkField(linkEntity.attributes['NAME'])
-                          ]),
+                          new EntityLink(linkEntity, 'z', LinkFields),
                           new EntityQueryOptions(
                             limit + 1,
                             undefined,
@@ -444,7 +457,8 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           .then( response => {
                             const result = response.payload.result!;
                             const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                            const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'NAME' )![0];
+                            const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                              && (data.attribute === 'NAME' || data.attribute === 'USR$NAME' || data.attribute === 'ALIAS' || data.attribute === 'String' )  )![0];
                             return result.data.map( (r): IComboBoxOption => ({
                               key: r[idAlias],
                               text: r[nameAlias]
