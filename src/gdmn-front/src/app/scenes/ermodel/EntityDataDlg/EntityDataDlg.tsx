@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, FieldDefs } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
@@ -97,15 +97,65 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         tempRS = tempRS.setString(fieldName, value);
         lastEdited.current = undefined;
       }
+      let linkEq:EntityQuery | undefined;
+      let findRows:FieldDefs = [];
+      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map(fieldName => {
+        if ((tempRS.getFieldDef(fieldName).eqfa!.linkAlias !== "root")) {
+          const linkingEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0];
+          console.log(linkingEntity)
+          findRows = tempRS.fieldDefs.filter((row) => row.eqfa!.linkAlias === tempRS.getFieldDef(fieldName).eqfa!.linkAlias);
+          linkEq = new EntityQuery(
+            new EntityLink(linkingEntity, 'z', findRows.map((row => new EntityLinkField(linkingEntity.attributes[row.eqfa!.attribute])))),
+            new EntityQueryOptions(
+              1,
+              undefined,
+              [{
+                contains: [
+                  {
+                    alias: 'z',
+                    attribute: linkingEntity.pk[0],
+                    value: tempRS.getValue(fieldName)!.toString()
+                  }
+                ]
+              }]
+            )
+          );
+          return {
+            attribute: tempRS.getFieldDef(fieldName).eqfa!.linkAlias,
+            value: tempRS.getValue(fieldName)
+          }
+        }
+        return {
+          attribute: tempRS.getFieldDef(fieldName).eqfa!.attribute,
+          value: tempRS.getValue(fieldName)
+        }
+      });
+
+      if (linkEq) {
+            dispatch( async (dispatch, getState) => {
+              const result = await apiService.query({query: linkEq!.inspect()})
+              const rs = getState().recordSet[rsName];
+              if (!rs) {
+                return;
+              }
+
+              let copyRS = rs;
+              copyRS = copyRS.setLocked(false);
+               result.payload.result!.data.map((r) => {
+                let i = 0;
+                Object.entries(r).map(([fieldAlias, data]) => {
+                  copyRS = copyRS.setString(findRows[i].fieldName, data);
+                    i++
+                  }
+                );
+                 dispatch(rsActions.setRecordSet(copyRS));
+              });
+            });
+      }
 
       tempRS = tempRS.setLocked(true);
 
       dispatch(rsActions.setRecordSet(tempRS));
-
-      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => ({
-        attribute: tempRS.getFieldDef(fieldName).eqfa!.attribute,
-        value: tempRS.getValue(fieldName)
-      }));
 
       if (fields.length) {
         await apiService.update({
