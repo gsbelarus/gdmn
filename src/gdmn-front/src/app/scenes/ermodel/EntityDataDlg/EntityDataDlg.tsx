@@ -101,10 +101,11 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       let findRows:FieldDefs = [];
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map(fieldName => {
         if ((tempRS.getFieldDef(fieldName).eqfa!.linkAlias !== "root")) {
-          const myEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0];
+          const linkingEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0];
+          console.log(linkingEntity)
           findRows = tempRS.fieldDefs.filter((row) => row.eqfa!.linkAlias === tempRS.getFieldDef(fieldName).eqfa!.linkAlias);
           linkEq = new EntityQuery(
-            new EntityLink(myEntity, 'z', findRows.map((row => new EntityLinkField(myEntity.attributes[row.eqfa!.attribute])))),
+            new EntityLink(linkingEntity, 'z', findRows.map((row => new EntityLinkField(linkingEntity.attributes[row.eqfa!.attribute])))),
             new EntityQueryOptions(
               1,
               undefined,
@@ -112,7 +113,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                 contains: [
                   {
                     alias: 'z',
-                    attribute: myEntity.pk[0],
+                    attribute: linkingEntity.pk[0],
                     value: tempRS.getValue(fieldName)!.toString()
                   }
                 ]
@@ -131,30 +132,25 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       });
 
       if (linkEq) {
-        await apiService.query({query: linkEq.inspect()})
-          .then(response => {
             dispatch( async (dispatch, getState) => {
-              const rs = getState().recordSet[rsName]; // получил RS
-
-              if (!rs) { // приверил RS
+              const result = await apiService.query({query: linkEq!.inspect()})
+              const rs = getState().recordSet[rsName];
+              if (!rs) {
                 return;
               }
-              dispatch(rsActions.setRecordSet(rs.setLocked(true))); // заблокировал RS
 
-              const result = response.payload.result!;
-              result.data.map((r) => {
+              let copyRS = rs;
+              copyRS = copyRS.setLocked(false);
+               result.payload.result!.data.map((r) => {
                 let i = 0;
                 Object.entries(r).map(([fieldAlias, data]) => {
-                  const newRs = rs.setString(findRows[i].fieldName, data); // установил новую строку и получил копию об.
-                  dispatch(rsActions.setRecordSet(newRs)); // записал копию
+                  copyRS = copyRS.setString(findRows[i].fieldName, data);
                     i++
                   }
-                )
-              })
-
+                );
+                 dispatch(rsActions.setRecordSet(copyRS));
+              });
             });
-
-          });
       }
 
       tempRS = tempRS.setLocked(true);
