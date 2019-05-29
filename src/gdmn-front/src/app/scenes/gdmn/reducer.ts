@@ -146,17 +146,24 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
     }
 
     case getType(gdmnActions.saveSessionData): {
-      const { viewTabURL, sessionData } = action.payload;
+      const { viewTabURL, sessionData, merge } = action.payload;
       const { viewTabs } = state;
       const idx = state.viewTabs.findIndex(vt => vt.url === viewTabURL);
 
       if (idx !== -1) {
         const newViewTabs = [...viewTabs];
 
-        newViewTabs[idx] = {
-          ...newViewTabs[idx],
-          sessionData
-        };
+        if (merge) {
+          newViewTabs[idx] = {
+            ...newViewTabs[idx],
+            sessionData: {...newViewTabs[idx].sessionData, ...sessionData}
+          };
+        } else {
+          newViewTabs[idx] = {
+            ...newViewTabs[idx],
+            sessionData
+          };
+        }
 
         return {
           ...state,

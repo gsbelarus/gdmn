@@ -7,16 +7,17 @@ import { IViewTab } from "../../gdmn/types";
 type TRefGrid = MutableRefObject<GDMNGrid | undefined>;
 type TGetSavedState = () => IGridState | undefined;
 
-export const useSaveGridState = (dispatch: Dispatch<GdmnAction>, viewTab?: IViewTab, name?: string): [TRefGrid, TGetSavedState] => {
+export const useSaveGridState = (dispatch: Dispatch<GdmnAction>, url: string, viewTab?: IViewTab, name?: string): [TRefGrid, TGetSavedState] => {
   const gridRef = useRef<GDMNGrid | undefined>();
   const paramName = `savedGridState${name ? '-' + name : ''}`;
 
   useEffect( () => {
     return () => {
-      if (gridRef.current && viewTab) {
+      if (gridRef.current) {
         dispatch(gdmnActions.saveSessionData({
-          viewTabURL: viewTab.url,
-          sessionData: { ...viewTab.sessionData, [paramName]: gridRef.current.state }
+          viewTabURL: url,
+          merge: true,
+          sessionData: { [paramName]: gridRef.current.state }
         }));
       }
     }

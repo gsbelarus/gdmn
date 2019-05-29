@@ -22,8 +22,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [showSQL, setShowSQL] = useState(false);
-  const topRef = useRef<HTMLDivElement | null>(null);
-  const [gridRef, getSavedState] = useSaveGridState(dispatch, viewTab);
+  const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
 
   const [phrase, setPhrase] = useState(
     rs && rs.queryPhrase
@@ -159,11 +158,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   ];
 
-  const topHeight = topRef.current ? topRef.current.clientHeight : 0;
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
-    <div className="ViewWide">
+    <div styleName="SGrid">
       {
         showSQL && rs && rs.sql &&
         <SQLForm
@@ -171,7 +169,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           onCloseSQL={onCloseSQL}
         />
       }
-      <div styleName="Top" ref={topRef}>
+      <div styleName="SGridTop">
         <CommandBar items={commandBarItems} />
         {
           error
@@ -204,11 +202,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             </span>
           </div>
       </div>
-      {
-        rs && gcs
-        ?
-        <>
-        <div style={{ height: `calc(100% - ${topHeight}px)` }}>
+      <div styleName="SGridTable">
+        { rs && gcs &&
           <GDMNGrid
             {...gcs}
             rs={rs}
@@ -221,10 +216,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             ref={ grid => grid && (gridRef.current = grid) }
             savedState={getSavedState()}
           />
-        </div>
-      </>
-      : 'Loading...'
-    }
+        }
+      </div>
     </div>
   );
 }, styles, { allowMultiple: true });

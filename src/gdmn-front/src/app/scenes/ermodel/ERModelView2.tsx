@@ -15,12 +15,11 @@ import { useSaveGridState } from "./EntityDataView/useSavedGridState";
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
   const { entities, attributes, viewTab, erModel, dispatch, gcsEntities, gcsAttributes, match } = props;
-  const topRef = useRef<HTMLDivElement | null>(null);
   const [showInspector, setShowInspector] = useState(false);
   const entitiesFilter = entities && entities.filter && entities.filter.conditions.length ? entities.filter.conditions[0].value : '';
   const attributesFilter = attributes && attributes.filter && attributes.filter.conditions.length ? attributes.filter.conditions[0].value : '';
-  const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, viewTab, 'entities');
-  const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, viewTab, 'attributes');
+  const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
+  const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
 
   useEffect( () => {
     if (!erModel || !Object.keys(erModel.entities).length) {
@@ -242,12 +241,11 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
     }
   ];
 
-  const topHeight = topRef.current ? topRef.current.clientHeight : 0;
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
-    <div className="ViewWide">
-      <div styleName="Top" ref={topRef}>
+    <div styleName="MDGrid">
+      <div styleName="MDGridTop">
         <CommandBar items={commandBarItems} />
       </div>
       {
@@ -257,51 +255,45 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           onDismiss={ () => setShowInspector(false) }
         />
       }
-      {
-        entities && gcsEntities && attributes && gcsAttributes
-        ?
-        <>
-        <div style={{ height: `calc(100% - ${topHeight}px)` }}>
-          <div className="ViewGridPlacement">
-            <div style={{ width: '50%' }}>
-              <div styleName="OptionsPanel">
-                <TextField
-                  disabled={!entities}
-                  label="Filter:"
-                  value={entitiesFilter}
-                  onChange={ (_, newValue) => onSetFilter({ rs: entities, filter: newValue ? newValue : '' }) }
-                />
-              </div>
-              <GDMNGrid
-                {...gcsEntities}
-                rs={entities}
-                {...gridActions}
-                ref={ grid => grid && (gridRefEntities.current = grid) }
-                savedState={getSavedStateEntities()}
-              />
-            </div>
-            <div style={{ width: '50%' }}>
-              <div styleName="OptionsPanel">
-                <TextField
-                  disabled={!attributes}
-                  label="Filter:"
-                  value={attributesFilter}
-                  onChange={ (_, newValue) => onSetFilter({ rs: attributes, filter: newValue ? newValue : '' }) }
-                />
-              </div>
-              <GDMNGrid
-                {...gcsAttributes}
-                rs={attributes}
-                {...gridActions}
-                ref={ grid => grid && (gridRefAttributes.current = grid) }
-                savedState={getSavedStateAttributes()}
-              />
-            </div>
-          </div>
-        </div>
-      </>
-      : 'Loading...'
-    }
+      <div styleName="MDGridMasterTop OptionsPanel">
+        <TextField
+          disabled={!entities}
+          label="Filter:"
+          value={entitiesFilter}
+          onChange={ entities ? (_, newValue) => onSetFilter({ rs: entities, filter: newValue ? newValue : '' }) : undefined }
+        />
+      </div>
+      <div styleName="MDGridMasterTable">
+        {
+          entities && gcsEntities &&
+          <GDMNGrid
+            {...gcsEntities}
+            rs={entities}
+            {...gridActions}
+            ref={ grid => grid && (gridRefEntities.current = grid) }
+            savedState={getSavedStateEntities()}
+          />
+        }
+      </div>
+      <div styleName="MDGridDetailTop OptionsPanel">
+        <TextField
+          disabled={!attributes}
+          label="Filter:"
+          value={attributesFilter}
+          onChange={ attributes ? (_, newValue) => onSetFilter({ rs: attributes, filter: newValue ? newValue : '' }) : undefined }
+        />
+      </div>
+      <div styleName="MDGridDetailTable">
+        { attributes && gcsAttributes &&
+          <GDMNGrid
+            {...gcsAttributes}
+            rs={attributes}
+            {...gridActions}
+            ref={ grid => grid && (gridRefAttributes.current = grid) }
+            savedState={getSavedStateAttributes()}
+          />
+        }
+      </div>
     </div>
   )
 }, styles, { allowMultiple: true });
