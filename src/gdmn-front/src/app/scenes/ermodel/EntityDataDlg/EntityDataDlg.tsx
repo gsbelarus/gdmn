@@ -97,13 +97,13 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         tempRS = tempRS.setString(fieldName, value);
         lastEdited.current = undefined;
       }
-      let linkEq1:EntityQuery | undefined;
+      let linkEq:EntityQuery | undefined;
       let findRows:FieldDefs = [];
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map(fieldName => {
         if ((tempRS.getFieldDef(fieldName).eqfa!.linkAlias !== "root")) {
           const myEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0];
           findRows = tempRS.fieldDefs.filter((row) => row.eqfa!.linkAlias === tempRS.getFieldDef(fieldName).eqfa!.linkAlias);
-          linkEq1 = new EntityQuery(
+          linkEq = new EntityQuery(
             new EntityLink(myEntity, 'z', findRows.map((row => new EntityLinkField(myEntity.attributes[row.eqfa!.attribute])))),
             new EntityQueryOptions(
               1,
@@ -130,18 +130,30 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         }
       });
 
-      if (linkEq1) {
-        await apiService.query({query: linkEq1.inspect()})
+      if (linkEq) {
+        await apiService.query({query: linkEq.inspect()})
           .then(response => {
-            const result = response.payload.result!;
-            result.data.map((r) => {
-              let i = 0;
-              Object.entries(r).map(([fieldAlias, data]) => {
-                  tempRS.setString(findRows[i].fieldName, data);
-                  i++
-                }
-              )
-            })
+            dispatch( async (dispatch, getState) => {
+              const rs = getState().recordSet[rsName]; // получил RS
+
+              if (!rs) { // приверил RS
+                return;
+              }
+              dispatch(rsActions.setRecordSet(rs.setLocked(true))); // заблокировал RS
+
+              const result = response.payload.result!;
+              result.data.map((r) => {
+                let i = 0;
+                Object.entries(r).map(([fieldAlias, data]) => {
+                  const newRs = rs.setString(findRows[i].fieldName, data); // установил новую строку и получил копию об.
+                  dispatch(rsActions.setRecordSet(newRs)); // записал копию
+                    i++
+                  }
+                )
+              })
+
+            });
+
           });
       }
 
