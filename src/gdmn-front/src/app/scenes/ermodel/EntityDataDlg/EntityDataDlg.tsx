@@ -97,29 +97,29 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         tempRS = tempRS.setString(fieldName, value);
         lastEdited.current = undefined;
       }
-      let linkEq:EntityQuery | undefined;
-      let findRows:FieldDefs = [];
+      const arrEntityQueries:EntityQuery[] = []; // массив EntityQueries поля которых будут в дальнейшем переотрисоваться
+      let findRows:FieldDefs = []; // массив полей  которые будут в дальнейшем переотрисоваться
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map(fieldName => {
-        if ((tempRS.getFieldDef(fieldName).eqfa!.linkAlias !== "root")) {
-          const linkingEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0];
-          console.log(linkingEntity)
-          findRows = tempRS.fieldDefs.filter((row) => row.eqfa!.linkAlias === tempRS.getFieldDef(fieldName).eqfa!.linkAlias);
-          linkEq = new EntityQuery(
+        if ((tempRS.getFieldDef(fieldName).eqfa!.linkAlias !== "root")) { // проверка является ли поле ссылочным
+          const linkingEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0]; // получили Entity ссылочного поля
+          tempRS.fieldDefs.filter((row) => row.eqfa!.linkAlias === tempRS.getFieldDef(fieldName).eqfa!.linkAlias)
+            .map((row)=> findRows.push(row)); // получили  все поля Entity ссылочного поля, которые надо будет переотрисовать
+          arrEntityQueries.push(new EntityQuery( //создали Entity с такими же полями и условием поиска по конкретному rs
             new EntityLink(linkingEntity, 'z', findRows.map((row => new EntityLinkField(linkingEntity.attributes[row.eqfa!.attribute])))),
             new EntityQueryOptions(
               1,
               undefined,
               [{
-                contains: [
+                equals: [
                   {
                     alias: 'z',
                     attribute: linkingEntity.pk[0],
-                    value: tempRS.getValue(fieldName)!.toString()
+                    value: tempRS.getValue(fieldName)
                   }
                 ]
               }]
             )
-          );
+          ));
           return {
             attribute: tempRS.getFieldDef(fieldName).eqfa!.linkAlias,
             value: tempRS.getValue(fieldName)
@@ -131,9 +131,9 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         }
       });
 
-      if (linkEq) {
+      arrEntityQueries.forEach( element => {
             dispatch( async (dispatch, getState) => {
-              const result = await apiService.query({query: linkEq!.inspect()})
+              const result = await apiService.query({query: element.inspect()});
               const rs = getState().recordSet[rsName];
               if (!rs) {
                 return;
@@ -152,6 +152,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
               });
             });
       }
+    );
 
       tempRS = tempRS.setLocked(true);
 
