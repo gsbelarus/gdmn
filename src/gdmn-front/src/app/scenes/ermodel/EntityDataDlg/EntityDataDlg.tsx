@@ -148,6 +148,12 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
           dispatch(rsActions.setRecordSet(tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true )));
         }
 
+        /**
+         * TODO: Перенос изменений в мастер рекорд сет будет работать только
+         * при идентичной структуре двух рекорд сетов. Надо думать что
+         * делать в том случае, когда в форме просмотра отображается один РС,
+         * а в диалоговом окне он имеет другую структуру (другие поля).
+         */
         if (srcRs && !srcRs.locked) {
           const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
           if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
