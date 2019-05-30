@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, FieldDefs } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
@@ -57,13 +57,20 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     return undefined;
   };
 
+  const getSavedChangedFields = (): IChangedFields => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.changedFields instanceof Object) {
+      return viewTab.sessionData.changedFields as IChangedFields;
+    }
+    return {};
+  };
+
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
   const controlsData = useRef(getSavedControlsData());
+  const changedFields = useRef(getSavedChangedFields());
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
-  const changedFields = useRef<IChangedFields>({});
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -88,34 +95,40 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     }
   };
 
-  const postChanges = useCallback( async () => {
+  const postChanges = useCallback( (close: boolean) => {
     if (rs && changed && entity) {
-      let tempRS = rs;
+      let tempRs = rs;
 
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        tempRS = tempRS.setString(fieldName, value);
+        tempRs = tempRs.setString(fieldName, value);
         lastEdited.current = undefined;
       }
 
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
-        const eqfa = tempRS.getFieldDef(fieldName).eqfa!;
+        const eqfa = tempRs.getFieldDef(fieldName).eqfa!;
 
         if (eqfa.linkAlias === "root") {
           return {
             attribute: eqfa.attribute,
-            value: tempRS.getValue(fieldName)
+            value: tempRs.getValue(fieldName)
           }
         } else {
           return {
             attribute: eqfa.linkAlias,
-            value: tempRS.getValue(fieldName)
+            value: tempRs.getValue(fieldName)
           }
         }
       });
 
-      if (fields.length) {
-        dispatch(rsActions.setRecordSet(tempRS = tempRS.setLocked(true)));
+      if (!fields.length) {
+        throw new Error('Empty list of changed fields');
+      }
+
+      const srcRsName = srcRs ? srcRs.name : undefined;
+
+      dispatch( async (dispatch, getState) => {
+        dispatch(rsActions.setRecordSet(tempRs = tempRs.setLocked(true)));
 
         const updateResponse = await apiService.update({
           update: {
@@ -126,118 +139,107 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         });
 
         if (updateResponse.error) {
-          dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
           dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: updateResponse.error.message } }));
+          dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
           return;
         }
 
-        const eq = prepareDefaultEntityQuery(entity, [id]);
-        const reReadResponse = await apiService.query({ query: eq.inspect() });
-
-        if (reReadResponse.error) {
-          dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: reReadResponse.error.message } }));
-          return;
-        }
-
-        const resultData = reReadResponse.payload.result!.data as IDataRow[];
-
-        if (resultData.length) {
-          dispatch(rsActions.setRecordSet(tempRS = tempRS.setLocked(false).set(resultData[0])));
-        } else {
-          dispatch(rsActions.setRecordSet(tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true )));
-        }
+        const srcRs = srcRsName ? getState().recordSet[srcRsName] : undefined;
 
         /**
-         * TODO: Перенос изменений в мастер рекорд сет будет работать только
-         * при идентичной структуре двух рекорд сетов. Надо думать что
-         * делать в том случае, когда в форме просмотра отображается один РС,
-         * а в диалоговом окне он имеет другую структуру (другие поля).
+         * Перечитывать изменения с сервера имеет смысл если мы остаемся в окне
+         * или есть мастер рекорд сет.
          */
-        if (srcRs && !srcRs.locked) {
-          const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
-          if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
-            dispatch(rsActions.setRecordSet(srcRs.set(tempRS.getObject(), foundRows[0])));
+        if ((srcRs && !srcRs.locked) || !close) {
+          const eq = prepareDefaultEntityQuery(entity, [id]);
+          const reReadResponse = await apiService.query({ query: eq.inspect() });
+
+          if (reReadResponse.error) {
+            dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: reReadResponse.error.message } }));
+            dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+            return;
+          }
+
+          const resultData = reReadResponse.payload.result!.data as IDataRow[];
+
+          if (resultData.length) {
+            tempRs = tempRs.setLocked(false).set(resultData[0]);
+          } else {
+            tempRs = await tempRs.post( _ => Promise.resolve(TCommitResult.Success), true );
+          }
+
+          /**
+           * TODO: Перенос изменений в мастер рекорд сет будет работать только
+           * при идентичной структуре двух рекорд сетов. Надо думать что
+           * делать в том случае, когда в форме просмотра отображается один РС,
+           * а в диалоговом окне он имеет другую структуру (другие поля).
+           */
+          const srcRs = srcRsName ? getState().recordSet[srcRsName] : undefined;
+
+          if (srcRs && !srcRs.locked) {
+            const foundRows = srcRs.locate(tempRs.getObject(tempRs.pk.map( fd => fd.fieldName )), true);
+            if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
+              dispatch(rsActions.setRecordSet(srcRs.set(tempRs.getObject(), foundRows[0])));
+            }
           }
         }
 
-        dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
-      }
+        dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
 
-      changedFields.current = {};
-      setChanged(false);
+        changedFields.current = {};
+        setChanged(false);
+
+        if (close) {
+          deleteViewTab(true);
+        }
+      });
     }
   }, [rs, changed]);
 
   const deleteRecord = useCallback( () => {
-    const srcRsName = srcRs ? srcRs.name : undefined;
+    if (rs) {
+      dispatch( async (dispatch, getState) => {
+        let tempRs = rs;
 
-    dispatch( async (dispatch, getState) => {
-      const rs = getState().recordSet[rsName];
+        dispatch(rsActions.setRecordSet(tempRs = tempRs.setLocked(true)));
 
-      if (!rs) {
-        return;
-      }
+        const result = await apiService.delete({
+          delete: {
+            entity: entityName,
+            pkValues: [id]
+          }
+        });
 
-      dispatch(rsActions.setRecordSet(rs.setLocked(true)));
-
-      if (srcRsName) {
-        const srcRs = getState().recordSet[srcRsName];
-        if (srcRs) {
-          dispatch(rsActions.setRecordSet(srcRs.setLocked(true)));
-        }
-      }
-
-      const result = await apiService.delete({
-        delete: {
-          entity: entityName,
-          pkValues: [id]
+        if (result.error) {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+          dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+        } else {
+          if (srcRs) {
+            const tempSrcRs = getState().recordSet[srcRs.name];
+            if (tempSrcRs && !tempSrcRs.locked) {
+              dispatch(rsActions.setRecordSet(
+                tempSrcRs.delete(true, tempSrcRs.locate(rs.pkValue()))
+              ));
+            }
+          }
+          dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+          deleteViewTab(true);
         }
       });
-
-      if (result.error) {
-        if (srcRsName) {
-          const srcRs = getState().recordSet[srcRsName];
-          if (srcRs) {
-            dispatch(rsActions.setRecordSet(srcRs.setLocked(false)));
-          }
-        }
-
-        const rs = getState().recordSet[rsName];
-
-        if (rs) {
-          dispatch(rsActions.setRecordSet(rs.setLocked(false)));
-        }
-
-        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-      } else {
-        if (srcRsName) {
-          const srcRs = getState().recordSet[srcRsName];
-          if (srcRs) {
-            dispatch(rsActions.setRecordSet(
-              srcRs
-                .setLocked(false)
-                .delete(true, srcRs.locate(rs.pkValue()))
-            ));
-          }
-        }
-        deleteViewTab(true);
-      }
-    });
+    }
   }, [rsName, viewTab]);
 
   useEffect( () => {
     return () => {
-      if (lastEdited.current || lastFocused.current || controlsData.current) {
-        dispatch(gdmnActions.saveSessionData({
-          viewTabURL: url,
-          sessionData: {
-            lastEdited: lastEdited.current,
-            lastFocused: lastFocused.current,
-            controls: controlsData.current
-          }
-        }));
-      }
+      dispatch(gdmnActions.saveSessionData({
+        viewTabURL: url,
+        sessionData: {
+          lastEdited: lastEdited.current,
+          lastFocused: lastFocused.current,
+          controls: controlsData.current,
+          changedFields: changedFields.current
+        }
+      }));
     };
   }, []);
 
@@ -295,10 +297,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'CheckMark'
       },
-      onClick: () => {
-        postChanges();
-        deleteViewTab(true);
-      }
+      onClick: () => postChanges(true)
     },
     {
       key: 'cancelAndClose',
@@ -322,7 +321,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'Save'
       },
-      onClick: postChanges
+      onClick: () => postChanges(false)
     },
     {
       key: 'revert',
@@ -488,8 +487,8 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                         return apiService.query({ query: linkEq.inspect() })
                           .then( response => {
                             const result = response.payload.result!;
-                            const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                            const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                            const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                            const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
                               && (data.attribute === presentField!.name))![0];
                             return result.data.map( (r): IComboBoxOption => ({
                               key: r[idAlias],
