@@ -857,7 +857,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         }, {} as R
       )
     } else {
-      return rowData;
+      return {...rowData};
     }
   }
 
@@ -878,24 +878,24 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     let { changed } = this.params;
     const adjustedIdx = this._adjustIdx(rowIdx);
     const rowData = data.get(adjustedIdx);
-    const rs = rowData['$$ROW_STATE'] === undefined ? TRowState.Normal : rowData['$$ROW_STATE'];
+    const rowState = rowData['$$ROW_STATE'] === undefined ? TRowState.Normal : rowData['$$ROW_STATE'];
 
-    if (rs === TRowState.Deleted) {
+    if (rowState === TRowState.Deleted) {
       throw new Error(`Can't edit deleted row.`)
     }
 
     if (!setRowState) {
-      if (rs !== TRowState.Normal) {
+      if (rowState !== TRowState.Normal) {
         changed--;
       }
       delete newRowData['$$PREV_ROW'];
       delete newRowData['$$ROW_STATE'];
     } else {
-      if (rs === TRowState.Inserted) {
+      if (rowState === TRowState.Inserted) {
         delete newRowData['$$PREV_ROW'];
         newRowData['$$ROW_STATE'] = TRowState.Inserted;
       } else {
-        if (rs === TRowState.Normal) {
+        if (rowState === TRowState.Normal) {
           changed++;
         }
         delete rowData['$$PREV_ROW'];

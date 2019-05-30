@@ -4,7 +4,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, FieldDefs } from "gdmn-recordset";
 import { prepareDefaultEntityQuery, attr2fd } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
@@ -15,7 +15,8 @@ import {
   EntityLinkField,
   EntityQueryOptions,
   EntityAttribute,
-  IEntityUpdateFieldInspector
+  IEntityUpdateFieldInspector,
+  ScalarAttribute
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 
@@ -88,7 +89,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   };
 
   const postChanges = useCallback( async () => {
-    if (rs && changed) {
+    if (rs && changed && entity) {
       let tempRS = rs;
 
       if (lastEdited.current) {
@@ -97,38 +98,74 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         lastEdited.current = undefined;
       }
 
-      tempRS = tempRS.setLocked(true);
+      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
+        const eqfa = tempRS.getFieldDef(fieldName).eqfa!;
 
-      dispatch(rsActions.setRecordSet(tempRS));
-
-      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => ({
-        attribute: tempRS.getFieldDef(fieldName).eqfa!.attribute,
-        value: tempRS.getValue(fieldName)
-      }));
+        if (eqfa.linkAlias === "root") {
+          return {
+            attribute: eqfa.attribute,
+            value: tempRS.getValue(fieldName)
+          }
+        } else {
+          return {
+            attribute: eqfa.linkAlias,
+            value: tempRS.getValue(fieldName)
+          }
+        }
+      });
 
       if (fields.length) {
-        await apiService.update({
+        dispatch(rsActions.setRecordSet(tempRS = tempRS.setLocked(true)));
+
+        const updateResponse = await apiService.update({
           update: {
             entity: entityName,
             fields,
             pkValues: [parseInt(id)]
           }
         });
+
+        if (updateResponse.error) {
+          dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: updateResponse.error.message } }));
+          return;
+        }
+
+        const eq = prepareDefaultEntityQuery(entity, [id]);
+        const reReadResponse = await apiService.query({ query: eq.inspect() });
+
+        if (reReadResponse.error) {
+          dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: reReadResponse.error.message } }));
+          return;
+        }
+
+        const resultData = reReadResponse.payload.result!.data as IDataRow[];
+
+        if (resultData.length) {
+          dispatch(rsActions.setRecordSet(tempRS = tempRS.setLocked(false).set(resultData[0])));
+        } else {
+          dispatch(rsActions.setRecordSet(tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true )));
+        }
+
+        /**
+         * TODO: Перенос изменений в мастер рекорд сет будет работать только
+         * при идентичной структуре двух рекорд сетов. Надо думать что
+         * делать в том случае, когда в форме просмотра отображается один РС,
+         * а в диалоговом окне он имеет другую структуру (другие поля).
+         */
+        if (srcRs && !srcRs.locked) {
+          const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
+          if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
+            dispatch(rsActions.setRecordSet(srcRs.set(tempRS.getObject(), foundRows[0])));
+          }
+        }
+
+        dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
       }
 
       changedFields.current = {};
       setChanged(false);
-
-      tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true);
-
-      dispatch(rsActions.setRecordSet(tempRS));
-
-      if (srcRs && !srcRs.locked) {
-        const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
-        if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
-          dispatch(rsActions.setRecordSet(srcRs.set(tempRS.getObject(), foundRows[0])));
-        }
-      }
     }
   }, [rs, changed]);
 
@@ -418,11 +455,19 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                     }
                     onLookup={
                       (filter: string, limit: number) => {
+                        const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                        const scalarAttrs = Object.values(linkEntity.attributes)
+                          .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+
+                        const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                          || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                          || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                          || scalarAttrs.find((attr) => attr.type === "String");
+                        if (presentField) {
+                          linkFields.push(new EntityLinkField(presentField));
+                        }
                         const linkEq = new EntityQuery(
-                          new EntityLink(linkEntity, 'z', [
-                            new EntityLinkField(linkEntity.attributes['ID']),
-                            new EntityLinkField(linkEntity.attributes['NAME'])
-                          ]),
+                          new EntityLink(linkEntity, 'z', linkFields),
                           new EntityQueryOptions(
                             limit + 1,
                             undefined,
@@ -431,7 +476,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                                 contains: [
                                   {
                                     alias: 'z',
-                                    attribute: linkEntity.attributes['NAME'],
+                                    attribute: presentField!,
                                     value: filter!
                                   }
                                 ]
@@ -444,7 +489,8 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                           .then( response => {
                             const result = response.payload.result!;
                             const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                            const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'NAME' )![0];
+                            const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                              && (data.attribute === presentField!.name))![0];
                             return result.data.map( (r): IComboBoxOption => ({
                               key: r[idAlias],
                               text: r[nameAlias]
@@ -505,30 +551,6 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
             })
           }
         </div>
-
-        {rs.eq &&
-          <pre>
-            {JSON.stringify(rs.eq.inspect(), undefined, 2)}
-          </pre>
-        }
-        {rs.sql &&
-          <pre>
-            {rs.sql.select}
-          </pre>
-        }
-        {
-          rs.fieldDefs.map( fd =>
-            <div key={fd.fieldName}>
-              {fd.fieldName}
-              <pre>
-                {JSON.stringify(fd.eqfa, undefined, 2)}
-              </pre>
-              <pre>
-                {JSON.stringify(fd.sqlfa, undefined, 2)}
-              </pre>
-            </div>
-          )
-        }
       </div>
     </>
   );
