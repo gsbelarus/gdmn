@@ -89,7 +89,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   };
 
   const postChanges = useCallback( async () => {
-    if (rs && changed) {
+    if (rs && changed && entity) {
       let tempRS = rs;
 
       if (lastEdited.current) {
@@ -97,90 +97,69 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         tempRS = tempRS.setString(fieldName, value);
         lastEdited.current = undefined;
       }
-      const arrEntityQueries:EntityQuery[] = []; // массив EntityQueries поля которых будут в дальнейшем переотрисоваться
-      let findRows:FieldDefs = []; // массив полей  которые будут в дальнейшем переотрисоваться
-      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map(fieldName => {
-        if ((tempRS.getFieldDef(fieldName).eqfa!.linkAlias !== "root")) { // проверка является ли поле ссылочным
-          const linkingEntity = (entity!.attributes[tempRS.getFieldDef(fieldName).eqfa!.linkAlias] as EntityAttribute).entities[0]; // получили Entity ссылочного поля
-          tempRS.fieldDefs.filter((row) => row.eqfa!.linkAlias === tempRS.getFieldDef(fieldName).eqfa!.linkAlias)
-            .map((row)=> findRows.push(row)); // получили  все поля Entity ссылочного поля, которые надо будет переотрисовать
-          arrEntityQueries.push(new EntityQuery( //создали Entity с такими же полями и условием поиска по конкретному rs
-            new EntityLink(linkingEntity, 'z', findRows.map((row => new EntityLinkField(linkingEntity.attributes[row.eqfa!.attribute])))),
-            new EntityQueryOptions(
-              1,
-              undefined,
-              [{
-                equals: [
-                  {
-                    alias: 'z',
-                    attribute: linkingEntity.pk[0],
-                    value: tempRS.getValue(fieldName)
-                  }
-                ]
-              }]
-            )
-          ));
+
+      const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
+        const eqfa = tempRS.getFieldDef(fieldName).eqfa!;
+
+        if (eqfa.linkAlias === "root") {
           return {
-            attribute: tempRS.getFieldDef(fieldName).eqfa!.linkAlias,
+            attribute: eqfa.attribute,
+            value: tempRS.getValue(fieldName)
+          }
+        } else {
+          return {
+            attribute: eqfa.linkAlias,
             value: tempRS.getValue(fieldName)
           }
         }
-        return {
-          attribute: tempRS.getFieldDef(fieldName).eqfa!.attribute,
-          value: tempRS.getValue(fieldName)
-        }
       });
 
-      arrEntityQueries.forEach( element => {
-            dispatch( async (dispatch, getState) => {
-              const result = await apiService.query({query: element.inspect()});
-              const rs = getState().recordSet[rsName];
-              if (!rs) {
-                return;
-              }
-
-              let copyRS = rs;
-              copyRS = copyRS.setLocked(false);
-               result.payload.result!.data.map((r) => {
-                let i = 0;
-                Object.entries(r).map(([fieldAlias, data]) => {
-                  copyRS = copyRS.setString(findRows[i].fieldName, data);
-                    i++
-                  }
-                );
-                 dispatch(rsActions.setRecordSet(copyRS));
-              });
-            });
-      }
-    );
-
-      tempRS = tempRS.setLocked(true);
-
-      dispatch(rsActions.setRecordSet(tempRS));
-
       if (fields.length) {
-        await apiService.update({
+        dispatch(rsActions.setRecordSet(tempRS = tempRS.setLocked(true)));
+
+        const updateResponse = await apiService.update({
           update: {
             entity: entityName,
             fields,
             pkValues: [parseInt(id)]
           }
         });
+
+        if (updateResponse.error) {
+          dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: updateResponse.error.message } }));
+          return;
+        }
+
+        const eq = prepareDefaultEntityQuery(entity, [id]);
+        const reReadResponse = await apiService.query({ query: eq.inspect() });
+
+        if (reReadResponse.error) {
+          dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: reReadResponse.error.message } }));
+          return;
+        }
+
+        const resultData = reReadResponse.payload.result!.data as IDataRow[];
+
+        if (resultData.length) {
+          dispatch(rsActions.setRecordSet(tempRS = tempRS.setLocked(false).set(resultData[0])));
+        } else {
+          dispatch(rsActions.setRecordSet(tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true )));
+        }
+
+        if (srcRs && !srcRs.locked) {
+          const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
+          if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
+            dispatch(rsActions.setRecordSet(srcRs.set(tempRS.getObject(), foundRows[0])));
+          }
+        }
+
+        dispatch(rsActions.setRecordSet(tempRS.setLocked(false)));
       }
 
       changedFields.current = {};
       setChanged(false);
-
-      tempRS = await tempRS.post( _ => Promise.resolve(TCommitResult.Success), true);
-
-      dispatch(rsActions.setRecordSet(tempRS));
-
-      if (srcRs && !srcRs.locked) {
-        const foundRows = srcRs.locate(tempRS.getObject(tempRS.pk.map( fd => fd.fieldName )), true);
-        if (foundRows.length && srcRs.getRowState(foundRows[0]) === TRowState.Normal) {
-          dispatch(rsActions.setRecordSet(srcRs.set(tempRS.getObject(), foundRows[0])));
-        }
-      }
     }
   }, [rs, changed]);
 
