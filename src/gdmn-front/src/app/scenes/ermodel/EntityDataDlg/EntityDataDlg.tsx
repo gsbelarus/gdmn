@@ -545,30 +545,6 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
             })
           }
         </div>
-
-        {rs.eq &&
-          <pre>
-            {JSON.stringify(rs.eq.inspect(), undefined, 2)}
-          </pre>
-        }
-        {rs.sql &&
-          <pre>
-            {rs.sql.select}
-          </pre>
-        }
-        {
-          rs.fieldDefs.map( fd =>
-            <div key={fd.fieldName}>
-              {fd.fieldName}
-              <pre>
-                {JSON.stringify(fd.eqfa, undefined, 2)}
-              </pre>
-              <pre>
-                {JSON.stringify(fd.sqlfa, undefined, 2)}
-              </pre>
-            </div>
-          )
-        }
       </div>
     </>
   );
