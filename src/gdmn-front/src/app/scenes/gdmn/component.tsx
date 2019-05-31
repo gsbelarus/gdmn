@@ -26,6 +26,7 @@ import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgCo
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
 import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
+import { DesignerContainer } from '../designer/DesignerContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -78,6 +79,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('designer', match.url)}</div>
             <div className="RightSideHeaderPart">
             <div>
             <span className="BigLogo">
@@ -247,6 +249,16 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     <SqlDataDlgViewContainer {...props} />
                   );
                 }}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/designer`}
+                render={props => (
+                  <DesignerContainer
+                    {...props}
+                    url={props.match.url}
+                  />
+                )}
               />
               <Route
                 exact={true}
