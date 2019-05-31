@@ -16,9 +16,11 @@ import {
   EntityQueryOptions,
   EntityAttribute,
   IEntityUpdateFieldInspector,
-  ScalarAttribute
+  ScalarAttribute,
+  SetAttribute
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
+import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 
 interface ILastEdited {
   fieldName: string;
@@ -398,114 +400,200 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
               if (!fd.eqfa) {
                 return null;
               }
-
               if (fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID') {
                 const fkFieldName = fd.eqfa.linkAlias;
                 const refIdFieldAlias = fd.fieldName;
                 const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
                 const refNameFieldAlias = refNameFieldDef ? refNameFieldDef.fieldName : '';
-                const linkEntity = (entity.attributes[fkFieldName] as EntityAttribute).entities[0];
-                return (
-                  <LookupComboBox
-                    key={fkFieldName}
-                    name={fkFieldName}
-                    label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                    preSelectedOption={ rs.isNull(refIdFieldAlias)
-                      ? undefined
-                      : {
-                        key: rs.getString(refIdFieldAlias),
-                        text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
+                const attr = entity.attributes[fkFieldName] as EntityAttribute;
+                const linkEntity = attr.entities[0];
+                if (attr instanceof SetAttribute) {
+                  return (
+                    <SetLookupComboBox
+                      key={fkFieldName}
+                      name={fkFieldName}
+                      label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                      preSelectedOption={ rs.isNull(refIdFieldAlias)
+                        ? undefined
+                        : [{
+                          key: rs.getString(refIdFieldAlias),
+                          text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
+                        }]
                       }
-                    }
-                    getSessionData={
-                      () => {
-                        if (!controlsData.current) {
-                          controlsData.current = {};
-                        }
-                        return controlsData.current;
-                      }
-                    }
-                    onChanged={
-                      (option: IComboBoxOption | undefined) => {
-                        let changedRs = rs;
-                        if (option) {
-                          changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                          if (refNameFieldAlias) {
-                            changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+                      getSessionData={
+                        () => {
+                          if (!controlsData.current) {
+                            controlsData.current = {};
                           }
-                        } else {
-                          changedRs = changedRs.setNull(refIdFieldAlias);
-                          if (refNameFieldAlias) {
-                            changedRs = changedRs.setNull(refNameFieldAlias);
+                          return controlsData.current;
+                        }
+                      }
+                      onFocus={
+                        () => {
+                          lastFocused.current = fd.fieldName;
+                          if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                            applyLastEdited();
                           }
                         }
-                        dispatch(rsActions.setRecordSet(changedRs));
-                        setChanged(true);
-                        changedFields.current[refIdFieldAlias] = true;
                       }
-                    }
-                    onFocus={
-                      () => {
-                        lastFocused.current = fd.fieldName;
-                        if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
-                          applyLastEdited();
-                        }
-                      }
-                    }
-                    onLookup={
-                      (filter: string, limit: number) => {
-                        const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                        const scalarAttrs = Object.values(linkEntity.attributes)
-                          .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+                      onLookup={
+                        (filter: string, limit: number) => {
+                          const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                          const scalarAttrs = Object.values(linkEntity.attributes)
+                            .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
 
-                        const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                          || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                          || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                          || scalarAttrs.find((attr) => attr.type === "String");
-                        if (presentField) {
-                          linkFields.push(new EntityLinkField(presentField));
-                        }
-                        const linkEq = new EntityQuery(
-                          new EntityLink(linkEntity, 'z', linkFields),
-                          new EntityQueryOptions(
-                            limit + 1,
-                            undefined,
-                            filter ?
-                              [{
-                                contains: [
-                                  {
-                                    alias: 'z',
-                                    attribute: presentField!,
-                                    value: filter!
-                                  }
-                                ]
-                              }]
-                            : undefined
-                          )
-                        );
+                          const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                            || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                            || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                            || scalarAttrs.find((attr) => attr.type === "String");
+                          if (presentField) {
+                            linkFields.push(new EntityLinkField(presentField));
+                          }
+                          const linkEq = new EntityQuery(
+                            new EntityLink(linkEntity, 'z', linkFields),
+                            new EntityQueryOptions(
+                              limit + 1,
+                              undefined,
+                              filter ?
+                                [{
+                                  contains: [
+                                    {
+                                      alias: 'z',
+                                      attribute: presentField!,
+                                      value: filter!
+                                    }
+                                  ]
+                                }]
+                              : undefined
+                            )
+                          );
 
-                        return apiService.query({ query: linkEq.inspect() })
-                          .then( response => {
-                            const result = response.payload.result!;
-                            const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                            const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
-                              && (data.attribute === presentField!.name))![0];
-                            return result.data.map( (r): IComboBoxOption => ({
-                              key: r[idAlias],
-                              text: r[nameAlias]
-                            }));
-                          });
-                      }
-                    }
-                    componentRef={
-                      ref => {
-                        if (ref && lastFocused.current === fd.fieldName) {
-                          needFocus.current = ref;
+                          return apiService.query({ query: linkEq.inspect() })
+                            .then( response => {
+                              const result = response.payload.result!;
+                              const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                              const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                                && (data.attribute === presentField!.name))![0];
+                              return result.data.map( (r): IComboBoxOption => ({
+                                key: r[idAlias],
+                                text: r[nameAlias]
+                              }));
+                            });
                         }
                       }
-                    }
-                  />
-                );
+                      componentRef={
+                        ref => {
+                          if (ref && lastFocused.current === fd.fieldName) {
+                            needFocus.current = ref;
+                          }
+                        }
+                      }
+                    />
+                  );
+
+                } else {
+                  return (
+                    <LookupComboBox
+                      key={fkFieldName}
+                      name={fkFieldName}
+                      label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                      preSelectedOption={ rs.isNull(refIdFieldAlias)
+                        ? undefined
+                        : {
+                          key: rs.getString(refIdFieldAlias),
+                          text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
+                        }
+                      }
+                      getSessionData={
+                        () => {
+                          if (!controlsData.current) {
+                            controlsData.current = {};
+                          }
+                          return controlsData.current;
+                        }
+                      }
+                      onChanged={
+                        (option: IComboBoxOption | undefined) => {
+                          let changedRs = rs;
+                          if (option) {
+                            changedRs = changedRs.setValue(refIdFieldAlias, option.key);
+                            if (refNameFieldAlias) {
+                              changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+                            }
+                          } else {
+                            changedRs = changedRs.setNull(refIdFieldAlias);
+                            if (refNameFieldAlias) {
+                              changedRs = changedRs.setNull(refNameFieldAlias);
+                            }
+                          }
+                          dispatch(rsActions.setRecordSet(changedRs));
+                          setChanged(true);
+                          changedFields.current[refIdFieldAlias] = true;
+                        }
+                      }
+                      onFocus={
+                        () => {
+                          lastFocused.current = fd.fieldName;
+                          if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                            applyLastEdited();
+                          }
+                        }
+                      }
+                      onLookup={
+                        (filter: string, limit: number) => {
+                          const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                          const scalarAttrs = Object.values(linkEntity.attributes)
+                            .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+
+                          const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                            || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                            || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                            || scalarAttrs.find((attr) => attr.type === "String");
+                          if (presentField) {
+                            linkFields.push(new EntityLinkField(presentField));
+                          }
+                          const linkEq = new EntityQuery(
+                            new EntityLink(linkEntity, 'z', linkFields),
+                            new EntityQueryOptions(
+                              limit + 1,
+                              undefined,
+                              filter ?
+                                [{
+                                  contains: [
+                                    {
+                                      alias: 'z',
+                                      attribute: presentField!,
+                                      value: filter!
+                                    }
+                                  ]
+                                }]
+                              : undefined
+                            )
+                          );
+
+                          return apiService.query({ query: linkEq.inspect() })
+                            .then( response => {
+                              const result = response.payload.result!;
+                              const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                              const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
+                                && (data.attribute === presentField!.name))![0];
+                              return result.data.map( (r): IComboBoxOption => ({
+                                key: r[idAlias],
+                                text: r[nameAlias]
+                              }));
+                            });
+                        }
+                      }
+                      componentRef={
+                        ref => {
+                          if (ref && lastFocused.current === fd.fieldName) {
+                            needFocus.current = ref;
+                          }
+                        }
+                      }
+                    />
+                  );
+                }
               }
 
               if (fd.eqfa.linkAlias !== rs.eq!.link.alias) {

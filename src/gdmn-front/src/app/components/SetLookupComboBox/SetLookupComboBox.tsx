@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
@@ -10,7 +10,7 @@ export interface ISetLookupComboBoxProps {
   label?: string;
   onLookup: TOnLookup;
   getSessionData?: () => ISessionData;
-  onChanged: (option: IComboBoxOption[] | undefined) => void;
+  //onChanged: (option: IComboBoxOption[] | undefined) => void;
   onFocus?: () => void;
   componentRef?: (ref: IComboBox | null) => void;
 };
@@ -138,7 +138,7 @@ function init(preSelectedOption: IComboBoxOption[] | undefined): ISetLookupCombo
 
 export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, onFocus, componentRef } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOptions, queryState, text, lookupText, limit, dropDown } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -209,18 +209,11 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
   let onMenuOpen;
 
   if (queryState === 'IDLE') {
-    // onChange = (_event: FormEvent<IComboBox>, option?: IComboBoxOption, _index?: number, _value?: string) => {
-    //   if (option) {
-    //     dispatch({ type: 'SET_SELECTED_OPTION', option });
-    //     onChanged(option);
-    //   }
-    // };
-
     onChangeMulti = (event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
       const currentSelectedOptions = selectedOptions || [];
       if (option) {
         const updateSelectedOptionS = (selectedOptions: IComboBoxOption[], option: IComboBoxOption): IComboBoxOption[] => {
-          selectedOptions = [...selectedOptions]; // modify a copy
+          selectedOptions = [...selectedOptions];
           const index = selectedOptions.findIndex(s => String(s.key) === String(option.key));
           if (option.selected && index < 0) {
             selectedOptions.push({key: String(option.key), text: option.text});
@@ -231,15 +224,9 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
         };
         const selectedOptions = updateSelectedOptionS(currentSelectedOptions, option);
         dispatch({ type: 'SET_SELECTED_OPTIONS', selectedOptions: selectedOptions});
-        onChanged(selectedOptions);
-      // } else if (value !== undefined) {
-      //   const newOption: IComboBoxOption = { key: value, text: value };
-      //   const updatedSelectedOptions: IComboBoxOption[] = [...currentSelectedOptions, {key: newOption.key as string, text: newOption.text}];
-      //   dispatch({ type: 'SET_SELECTED_OPTIONS', selectedOptions: updatedSelectedOptions});
-      //   console.log(selectedOptions);
+        //onChanged(selectedOptions);
       }
     };
-
 
     onPendingValueChanged = (_option?: IComboBoxOption, _index?: number, value?: string | undefined) => {
       if (value !== undefined) {
@@ -253,13 +240,6 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
         e.stopPropagation();
         dispatch({ type: 'QUERY_START' })
       }
-
-      // if (e.key === 'Escape' && preSelectedOption && preSelectedOption.text !== text) {
-      //   e.preventDefault();
-      //   e.stopPropagation();
-      //   dispatch({ type: 'SET_SELECTED_OPTION', option: preSelectedOption });
-      //   onChanged(preSelectedOption);
-      // }
     };
 
     onMenuOpen = () => {
@@ -328,7 +308,6 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
   return (
     <ComboBox
       multiSelect
-      selectedKey={['650002']}
       label={label}
       options={options}
       allowFreeform
@@ -369,9 +348,9 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
       onBlur={
         () => {
           hasFocus.current = false;
-          if (!text) {
-            onChanged(undefined);
-          }
+          // if (!text) {
+          //   onChanged(undefined);
+          // }
         }
       }
       onRenderLowerContent={onRenderLowerContent}

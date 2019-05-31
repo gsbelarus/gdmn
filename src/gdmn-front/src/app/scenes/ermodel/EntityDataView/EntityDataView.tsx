@@ -33,28 +33,28 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   );
 
   const applyPhrase = () => {
-    if (erModel) {
-      const parsedText: ParsedText[] = parsePhrase(phrase);
-      const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-      if (phrases.length) {
-        const erTranslatorRU = new ERTranslatorRU(erModel)
-        const command = erTranslatorRU.process(phrases);
-        const eq = command[0] ? command[0].payload : undefined;
-        if (eq) {
-          dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+    if (erModel && entity) {
+      if (phrase) {
+        const parsedText: ParsedText[] = parsePhrase(phrase);
+        const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
+        if (phrases.length) {
+          const erTranslatorRU = new ERTranslatorRU(erModel)
+          const command = erTranslatorRU.process(phrases);
+          const eq = command[0] ? command[0].payload : undefined;
+          if (eq) {
+            dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+          }
         }
+      } else {
+        const eq = prepareDefaultEntityQuery(entity);
+        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
       }
     }
   };
 
   useEffect( () => {
     if (!rs && entity) {
-      if (!phrase) {
-        const eq = prepareDefaultEntityQuery(entity);
-        dispatch(loadRSActions.attachRS({ name: entityName, eq }));
-      } else {
-        applyPhrase();
-      }
+      applyPhrase();
     }
   }, [rs, entity]);
 
