@@ -29,7 +29,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
   const componentName = action.payload.name;
 
   if (action.type === getType(actions.createGrid)) {
-    if (state[componentName]) {
+    if (state[componentName] && !action.payload.override) {
       throw new Error(`Duplicate grid component name ${componentName}`);
     }
 

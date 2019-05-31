@@ -133,7 +133,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
                   dispatch(rsActions.createRecordSet({ name, rs, override }));
 
-                  if (!getState().grid[name]) {
+                  if (override || !getState().grid[name]) {
                     dispatch(
                       createGrid({
                         name,
@@ -145,7 +145,8 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                         })),
                         leftSideColumns: 0,
                         rightSideColumns: 0,
-                        hideFooter: true
+                        hideFooter: true,
+                        override
                       })
                     );
                   }
