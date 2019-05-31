@@ -10,11 +10,11 @@ import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import {
-  EntityQuery,
+  EntityAttribute,
   EntityLink,
   EntityLinkField,
+  EntityQuery,
   EntityQueryOptions,
-  EntityAttribute,
   IEntityUpdateFieldInspector,
   ScalarAttribute,
   SetAttribute
@@ -123,13 +123,27 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         }
       });
 
-      if (!fields.length) {
+      if (!fields.length && !isNewRS) {
         throw new Error('Empty list of changed fields');
       }
 
       const srcRsName = srcRs ? srcRs.name : undefined;
 
       dispatch( async (dispatch, getState) => {
+
+        if (isNewRS) {
+          await apiService.insert({
+            insert: {
+              entity: entityName,
+              fields: [
+                {attribute: entity.pk[0].name, value: id}
+              ]
+            }
+          });
+          dispatch(gdmnActions.setIsNewRS(false));
+
+        }
+
         dispatch(rsActions.setRecordSet(tempRs = tempRs.setLocked(true)));
 
         const updateResponse = await apiService.update({
@@ -291,11 +305,10 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
            * Получить поля без запроса в нужной последовательности не смог.
            * Сразу делается проверка на ID если такого Entity нет то создается RecordSet с полем F$1 = ID
            */
-          console.log(isNewRS)
+
           if (isNewRS) {
             rs = rs.insert();
             rs = rs.setInteger('F$1', parseInt(id));
-            dispatch(gdmnActions.setIsNewRS(false));
           }
 
           dispatch(rsActions.createRecordSet({ name: rsName, rs }));
