@@ -274,6 +274,20 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 )}
               />
               }
+              {
+                <Route
+                  path={`${match.path}/entity/:entityName/add/:id`}
+                  render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                    <EntityDataDlgContainer
+                      {...props}
+                      key={props.match.url}
+                      entityName={props.match.params.entityName}
+                      id={props.match.params.id}
+                      url={props.match.url}
+                    />
+                  )}
+                />
+              }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>

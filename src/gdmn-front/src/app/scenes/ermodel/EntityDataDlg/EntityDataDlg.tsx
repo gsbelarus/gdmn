@@ -33,7 +33,7 @@ interface IChangedFields {
 
 export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
 
-  const { url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab } = props;
+  const { url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab, isNewRS } = props;
   const locked = rs ? rs.locked : false;
   const rsName = url;
   const error = viewTab ? viewTab.error : undefined;
@@ -231,6 +231,25 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     }
   }, [rsName, viewTab]);
 
+  const addRecord = useCallback( () => {
+
+    if(entity) {
+      dispatch(async (dispatch, getState) => {
+        const result = await apiService.getNextID({withError: false});
+        const newID = result.payload.result!.id;
+
+        if (!newID) {
+          return;
+        }
+        dispatch(gdmnActions.setIsNewRS(true));
+
+        nextUrl.current = `/spa/gdmn/entity/${entityName}/add/${newID}`;
+        history.push(nextUrl.current);
+
+      });
+    }
+  }, [rs, viewTab]);
+
   useEffect( () => {
     return () => {
       dispatch(gdmnActions.saveSessionData({
@@ -260,13 +279,25 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
         .then( response => {
           const result = response.payload.result!;
           const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
-          const rs = RecordSet.create({
+          let rs = RecordSet.create({
             name: rsName,
             fieldDefs,
             data: List(result.data as IDataRow[]),
             eq,
             sql: result.info
           });
+
+          /**
+           * Получить поля без запроса в нужной последовательности не смог.
+           * Сразу делается проверка на ID если такого Entity нет то создается RecordSet с полем F$1 = ID
+           */
+          console.log(isNewRS)
+          if (isNewRS) {
+            rs = rs.insert();
+            rs = rs.setInteger('F$1', parseInt(id));
+            dispatch(gdmnActions.setIsNewRS(false));
+          }
+
           dispatch(rsActions.createRecordSet({ name: rsName, rs }));
           addViewTab(rs);
         });
@@ -348,7 +379,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'PageAdd'
       },
-      onClick: () => {}
+      onClick: addRecord
     },
     {
       key: 'delete',

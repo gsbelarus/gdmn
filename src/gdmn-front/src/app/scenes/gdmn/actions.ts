@@ -225,6 +225,10 @@ export const gdmnActions = {
 
   getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
     return (sessionInfo: any[]) => resolve(sessionInfo)
+  }),
+
+  setIsNewRS: createAction('gdmn/SET_IS_NEW_RS', resolve => {
+    return (isNewRS: any) => resolve(!!isNewRS)
   })
 };
 

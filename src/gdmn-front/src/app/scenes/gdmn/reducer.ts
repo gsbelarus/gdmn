@@ -13,6 +13,7 @@ export type TGdmnState = {
   apps: Array<IApplicationInfo & {loading: boolean}>;
   templates?: ITemplateApplication[];
   sessionInfo: any[];
+  isNewRS: boolean;
 };
 
 const initialState: TGdmnState = {
@@ -21,7 +22,8 @@ const initialState: TGdmnState = {
   loadingCounter: 0,
   viewTabs: [],
   apps: [],
-  sessionInfo: []
+  sessionInfo: [],
+  isNewRS: false
 };
 
 export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
@@ -177,6 +179,13 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
       return {
         ...state,
         sessionInfo: action.payload
+      };
+    }
+
+    case getType(gdmnActions.setIsNewRS): {
+      return {
+        ...state,
+        isNewRS: action.payload
       };
     }
 

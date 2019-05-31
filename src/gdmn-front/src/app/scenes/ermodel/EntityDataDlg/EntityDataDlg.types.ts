@@ -9,6 +9,7 @@ import { GdmnAction } from "../../gdmn/actions";
 export interface IEntityDataDlgRouteProps {
   entityName: string;
   id: string;
+  isNewRS: any;
 };
 
 export interface IEntityDataDlgContainerProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
@@ -23,6 +24,7 @@ export interface IEntityDataDlgStateProps {
   srcRs?: RecordSet;
   viewTab?: IViewTab;
   erModel: ERModel;
+  isNewRS: boolean;
 };
 
 export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
@@ -35,4 +37,5 @@ export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgR
   srcRs?: RecordSet;
   viewTab?: IViewTab;
   erModel: ERModel;
+  isNewRS: boolean;
 };

@@ -9,6 +9,7 @@ export const EntityDataDlgContainer = connect(
     entity: state.gdmnState.erModel.entities[ownProps.entityName],
     srcRs: state.recordSet[ownProps.entityName],
     erModel: state.gdmnState.erModel,
-    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url )
+    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
+    isNewRS: state.gdmnState.isNewRS
   })
 )(EntityDataDlg);
