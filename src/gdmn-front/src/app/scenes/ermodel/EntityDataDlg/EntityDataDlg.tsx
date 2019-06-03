@@ -130,7 +130,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       const srcRsName = srcRs ? srcRs.name : undefined;
 
       dispatch( async (dispatch, getState) => {
-        if (props.match.params.addOrEdit = 'add') {
+        if (props.match.params.addOrEdit === 'add') {
           await apiService.insert({
             insert: {
               entity: entityName,
@@ -295,7 +295,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
             sql: result.info
           });
 
-          if (props.match.params.addOrEdit = 'add') {
+          if (props.match.params.addOrEdit === 'add') {
             rs = rs.insert();
             rs = rs.setInteger('F$1', parseInt(id));
           }
