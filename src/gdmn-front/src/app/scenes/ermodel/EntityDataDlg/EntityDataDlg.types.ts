@@ -9,12 +9,14 @@ import { GdmnAction } from "../../gdmn/actions";
 export interface IEntityDataDlgRouteProps {
   entityName: string;
   id: string;
+  addOrEdit: string;
 };
 
 export interface IEntityDataDlgContainerProps extends RouteComponentProps<IEntityDataDlgRouteProps> {
   url: string;
   entityName: string;
   id: string;
+  addOrEdit: string;
 };
 
 export interface IEntityDataDlgStateProps {
