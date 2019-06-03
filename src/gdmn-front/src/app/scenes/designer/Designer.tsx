@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
 import { gdmnActions } from '../gdmn/actions';
-import { CommandBar, ICommandBarItemProps, SpinButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -22,6 +22,8 @@ interface ICoord {
   y: number;
 };
 
+type TSelection = ICoord[];
+
 interface IDesignerState {
   grid: IGridSize;
   activeCell: ICoord;
@@ -29,7 +31,9 @@ interface IDesignerState {
 
 type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord }
   | { type: 'ADD_COLUMN' }
-  | { type: 'ADD_ROW' };
+  | { type: 'ADD_ROW' }
+  | { type: 'DELETE_COLUMN' }
+  | { type: 'DELETE_ROW' };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
   switch (action.type) {
@@ -42,23 +46,63 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'ADD_COLUMN': {
-      const { grid, activeCell } = state;
+      const { grid, activeCell: { x } } = state;
       return {
         ...state,
         grid: {
           ...grid,
-          columns: [...grid.columns.slice(0, activeCell.x + 1), { unit: 'FR', value: 1}, ...grid.columns.slice(activeCell.x + 1)]
+          columns: [...grid.columns.slice(0, x + 1), { unit: 'FR', value: 1}, ...grid.columns.slice(x + 1)]
         }
       }
     }
 
     case 'ADD_ROW': {
-      const { grid, activeCell } = state;
+      const { grid, activeCell: { y } } = state;
       return {
         ...state,
         grid: {
           ...grid,
-          rows: [...grid.rows.slice(0, activeCell.y + 1), { unit: 'FR', value: 1}, ...grid.rows.slice(activeCell.y + 1)]
+          rows: [...grid.rows.slice(0, y + 1), { unit: 'FR', value: 1}, ...grid.rows.slice(y + 1)]
+        }
+      }
+    }
+
+    case 'DELETE_COLUMN': {
+      const { grid, activeCell: { x, y } } = state;
+
+      if (grid.columns.length === 1) {
+        return state;
+      }
+
+      return {
+        ...state,
+        grid: {
+          ...grid,
+          columns: [...grid.columns.slice(0, x), ...grid.columns.slice(x + 1)]
+        },
+        activeCell: {
+          x: x > 0 && x >= (grid.columns.length - 1) ? x - 1 : x,
+          y
+        }
+      }
+    }
+
+    case 'DELETE_ROW': {
+      const { grid, activeCell: { x, y } } = state;
+
+      if (grid.rows.length === 1) {
+        return state;
+      }
+
+      return {
+        ...state,
+        grid: {
+          ...grid,
+          rows: [...grid.rows.slice(0, y), ...grid.rows.slice(y + 1)]
+        },
+        activeCell: {
+          x,
+          y: y > 0 && y >= (grid.rows.length - 1) ? y - 1 : y
         }
       }
     }
@@ -74,8 +118,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       rows: [{ unit: 'FR', value: 1 }],
     },
     activeCell: {
-      x: 1,
-      y: 1
+      x: 0,
+      y: 0
     }
   });
 
@@ -91,12 +135,13 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
   const getGridStyle = (): React.CSSProperties => ({
     display: 'grid',
+    width: '100%',
     gridTemplateColumns: grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
     gridTemplateRows: grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
   });
 
   const getCellStyle = (x: number, y: number): React.CSSProperties => ({
-    gridArea: `${y} / ${x} / ${y + 1} / ${x + 1}`
+    gridArea: `${y + 1} / ${x + 1} / ${y + 2} / ${x + 2}`
   });
 
   const commandBarItems: ICommandBarItemProps[] = [
@@ -110,11 +155,12 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'deleteColumn',
+      disabled: grid.columns.length <= 1,
       text: 'Удалить колонку',
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => {}
+      onClick: () => designerDispatch({ type: 'DELETE_COLUMN' })
     },
     {
       key: 'addRow',
@@ -126,11 +172,12 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'deleteRow',
+      disabled: grid.rows.length <= 1,
       text: 'Удалить строку',
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => {}
+      onClick: () => designerDispatch({ type: 'DELETE_ROW' })
     }
   ];
 
@@ -140,16 +187,26 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       <div style={getGridStyle()}>
         {
           grid.columns.map( (c, x) => grid.rows.map( (r, y) => {
-            if ((x + 1) === activeCell.x && (y + 1) === activeCell.y) {
+            if (x === activeCell.x && y === activeCell.y) {
               return (
-                <div styleName="activeCell" style={getCellStyle(x, y)}>
-                  active
+                <div
+                  key={x * 1000 + y}
+                  styleName="activeCell"
+                  style={getCellStyle(x, y)}
+                  onClick={ () => designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }}) }
+                >
+                  {x}, {y}
                 </div>
               )
             } else {
               return (
-                <div styleName="cell" style={getCellStyle(x, y)}>
-                  active
+                <div
+                  key={x * 1000 + y}
+                  styleName="cell"
+                  style={getCellStyle(x, y)}
+                  onClick={ () => designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }}) }
+                >
+                  {x}, {y}
                 </div>
               )
             }
