@@ -35,3 +35,41 @@
   padding: 4px;
   min-height: 64px;
 }
+
+.selection {
+  background-image: linear-gradient(
+    135deg,
+    #9999ff 4.55%,
+    white 4.55%,
+    white 50%,
+    #9999ff 50%,
+    #9999ff 54.55%,
+    white 54.55%,
+    white 100%
+  );
+  background-size: 16px 16px;
+  margin: 4px;
+  border: 1px solid #9999ff;
+  border-radius: 4px;
+  padding: 4px;
+  min-height: 64px;
+}
+
+.area {
+  background-image: linear-gradient(
+    45deg,
+    #ff99ff 4.55%,
+    white 4.55%,
+    white 50%,
+    #ff99ff 50%,
+    #ff99ff 54.55%,
+    white 54.55%,
+    white 100%
+  );
+  background-size: 16px 16px;
+  margin: 4px;
+  border: 1px solid #ff99ff;
+  border-radius: 4px;
+  padding: 4px;
+  min-height: 64px;
+}

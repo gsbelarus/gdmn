@@ -3,7 +3,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
 import { gdmnActions } from '../gdmn/actions';
-import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, textAreaProperties } from 'office-ui-fabric-react';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -22,27 +22,116 @@ interface ICoord {
   y: number;
 };
 
-type TSelection = ICoord[];
+interface IRectangle {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+};
 
 interface IDesignerState {
   grid: IGridSize;
   activeCell: ICoord;
+  selection?: IRectangle;
+  areas: IRectangle[];
+  activeArea?: number;
+  setGridSize?: boolean;
 };
 
-type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord }
+type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
+  | { type: 'SET_COLUMN_SIZE_VALUE', column: number, value: number }
+  | { type: 'SET_COLUMN_SIZE_UNIT', column: number, unit: TUnit }
+  | { type: 'TOGGLE_SET_GRID_SIZE' }
   | { type: 'ADD_COLUMN' }
   | { type: 'ADD_ROW' }
   | { type: 'DELETE_COLUMN' }
-  | { type: 'DELETE_ROW' };
+  | { type: 'DELETE_ROW' }
+  | { type: 'CREATE_AREA' };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
   switch (action.type) {
     case 'SET_ACTIVE_CELL': {
-      const { activeCell } = action;
+      const { activeCell, shiftKey } = action;
+      const { selection, activeCell: prevActiveCell } = state;
+
+      if (!shiftKey) {
+        return {
+          ...state,
+          activeCell,
+          selection: undefined
+        };
+      }
+
+      if (!selection) {
+        return {
+          ...state,
+          activeCell,
+          selection: {
+            left: Math.min(prevActiveCell.x, activeCell.x),
+            top: Math.min(prevActiveCell.y, activeCell.y),
+            right: Math.max(prevActiveCell.x, activeCell.x),
+            bottom: Math.max(prevActiveCell.y, activeCell.y),
+          }
+        };
+      }
+
+      return state;
+    }
+
+    case 'CREATE_AREA': {
+      const { selection, areas, activeCell: {x, y} } = state;
+      if (selection) {
+        return {
+          ...state,
+          areas: [...areas, selection],
+          selection: undefined
+        };
+      } else {
+        return {
+          ...state,
+          areas: [...areas, {
+            left: x,
+            top: y,
+            right: x,
+            bottom: y
+          }]
+        };
+      }
+    }
+
+    case 'SET_COLUMN_SIZE_VALUE': {
+      const { grid } = state;
+      const newColumns = [...grid.columns];
+      const { column, value } = action;
+      newColumns[column] = {...newColumns[column], value};
       return {
         ...state,
-        activeCell
-      };
+        grid: {
+          ...grid,
+          columns: newColumns
+        }
+      }
+    }
+
+    case 'SET_COLUMN_SIZE_UNIT': {
+      const { grid } = state;
+      const newColumns = [...grid.columns];
+      const { column, unit } = action;
+      newColumns[column] = {...newColumns[column], unit};
+      return {
+        ...state,
+        grid: {
+          ...grid,
+          columns: newColumns
+        }
+      }
+    }
+
+    case 'TOGGLE_SET_GRID_SIZE': {
+      return {
+        ...state,
+        setGridSize: !state.setGridSize
+      }
     }
 
     case 'ADD_COLUMN': {
@@ -112,15 +201,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
   const { url, viewTab, dispatch } = props;
-  const [{ grid, activeCell }, designerDispatch] = useReducer(reducer, {
+  const [{ grid, activeCell, selection, setGridSize, areas }, designerDispatch] = useReducer(reducer, {
     grid: {
-      columns: [{ unit: 'FR', value: 1 }],
-      rows: [{ unit: 'FR', value: 1 }],
+      columns: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
+      rows: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
     },
     activeCell: {
       x: 0,
       y: 0
-    }
+    },
+    areas: []
   });
 
   useEffect( () => {
@@ -143,6 +233,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
   const getCellStyle = (x: number, y: number): React.CSSProperties => ({
     gridArea: `${y + 1} / ${x + 1} / ${y + 2} / ${x + 2}`
   });
+
+  const inSelection = (x: number, y: number): boolean => !!selection && x >= selection.left && x <= selection.right && y >= selection.top && y <= selection.bottom;
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
@@ -178,41 +270,176 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
         iconName: 'DoubleColumn'
       },
       onClick: () => designerDispatch({ type: 'DELETE_ROW' })
+    },
+    {
+      key: 'createArea',
+      text: 'Создать область',
+      iconProps: {
+        iconName: 'DoubleColumn'
+      },
+      onClick: () => designerDispatch({ type: 'CREATE_AREA' })
+    },
+    {
+      key: 'toggleSetGridSize',
+      checked: !!setGridSize,
+      text: 'Установить размер',
+      iconProps: {
+        iconName: 'DoubleColumn'
+      },
+      onClick: () => designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' })
     }
   ];
+
+  const getOnClick = (x: number, y: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
+  };
+
+  const WithGridSize = (props: { children: JSX.Element }): JSX.Element => {
+    if (!setGridSize) {
+      return props.children;
+    } else {
+      const getOnChangeColumnSpin = (column: number, delta: number = 0) => (value: string) => {
+        if (isNaN(Number(value))) {
+          return '1';
+        }
+
+        let newValue = Number(value) + delta;
+
+        if (newValue < 1) {
+          newValue = 1;
+        }
+
+        if (newValue > 8000) {
+          newValue = 8000;
+        }
+
+        designerDispatch({ type: 'SET_COLUMN_SIZE_VALUE', column, value: newValue });
+
+        return newValue.toString();
+      };
+
+      return (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 240px',
+          gridTemplateRows: 'auto'
+        }}>
+          <div style={{
+            gridArea: '1 / 1 / 2 / 2'
+          }}>
+            {props.children}
+          </div>
+          <div style={{
+            gridArea: '1 / 2 / 2 / 3',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {
+              grid.columns.map( (c, idx) =>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'flex-end'
+                  }}
+                >
+                  <ComboBox
+                    style={{
+                      width: '86px'
+                    }}
+                    options={[
+                      { key: 'AUTO', text: 'Auto' },
+                      { key: 'FR', text: 'Fr' },
+                      { key: 'PX', text: 'Px' }
+                    ]}
+                    selectedKey={c.unit}
+                    label={`Column ${idx + 1}`}
+                    onChanged={ option => option && designerDispatch({ type: 'SET_COLUMN_SIZE_UNIT', column: idx, unit: option.key as TUnit }) }
+                  />
+                  {
+                    !c.value || c.unit === 'AUTO'
+                    ? null
+                    : <SpinButton
+                      styles={{
+                        root: {
+                          width: '98px'
+                        }
+                      }}
+                      value={c.value.toString()}
+                      onIncrement={ getOnChangeColumnSpin(idx, 1) }
+                      onDecrement={ getOnChangeColumnSpin(idx, -1) }
+                      onValidate={ getOnChangeColumnSpin(idx) }
+                    />
+                  }
+                </div>
+              )
+            }
+          </div>
+        </div>
+      );
+    }
+  };
 
   return (
     <>
       <CommandBar items={commandBarItems} />
-      <div style={getGridStyle()}>
-        {
-          grid.columns.map( (c, x) => grid.rows.map( (r, y) => {
-            if (x === activeCell.x && y === activeCell.y) {
-              return (
+      <WithGridSize>
+        <div style={getGridStyle()}>
+          {
+            grid.columns.map( (c, x) => grid.rows.map( (r, y) => {
+              if ((x === activeCell.x && y === activeCell.y) || inSelection(x, y)) {
+                return null;
+              } else {
+                return (
+                  <div
+                    key={x * 1000 + y}
+                    styleName="cell"
+                    style={getCellStyle(x, y)}
+                    onClick={getOnClick(x, y)}
+                  >
+                    {x}, {y}
+                  </div>
+                )
+              }
+            }))
+          }
+          {
+            selection &&
+            <div
+              styleName="selection"
+              style={{
+                gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`
+              }}
+            >
+              selection
+            </div>
+          }
+          {
+            areas.length
+            ? areas.map( (area, idx) => (
                 <div
-                  key={x * 1000 + y}
-                  styleName="activeCell"
-                  style={getCellStyle(x, y)}
-                  onClick={ () => designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }}) }
+                  key={`${area.top}-${area.left}-${area.bottom}-${area.right}`}
+                  styleName="area"
+                  style={{
+                    gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`
+                  }}
                 >
-                  {x}, {y}
+                  {`Area ${idx + 1}`}
                 </div>
-              )
-            } else {
-              return (
-                <div
-                  key={x * 1000 + y}
-                  styleName="cell"
-                  style={getCellStyle(x, y)}
-                  onClick={ () => designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }}) }
-                >
-                  {x}, {y}
-                </div>
-              )
-            }
-          }))
-        }
-      </div>
+              ))
+            : null
+          }
+          <div
+            styleName="activeCell"
+            style={getCellStyle(activeCell.x, activeCell.y)}
+            onClick={getOnClick(activeCell.x, activeCell.y)}
+          >
+            {activeCell.x}, {activeCell.y}
+          </div>
+        </div>
+      </WithGridSize>
     </>
   );
 }, styles, { allowMultiple: true });
