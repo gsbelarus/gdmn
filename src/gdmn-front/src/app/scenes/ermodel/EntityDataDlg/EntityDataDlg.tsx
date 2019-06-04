@@ -5,7 +5,7 @@ import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
-import { prepareDefaultEntityQuery, attr2fd } from "../EntityDataView/utils";
+import {prepareDefaultEntityQuery, attr2fd, getFieldsAlias, getData2RSData} from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
@@ -14,10 +14,10 @@ import {
   EntityLink,
   EntityLinkField,
   EntityQueryOptions,
-  EntityAttribute,
   IEntityUpdateFieldInspector,
   ScalarAttribute,
-  SetAttribute
+  SetAttribute,
+  EntityAttribute
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
@@ -31,9 +31,8 @@ interface IChangedFields {
   [fieldName: string]: boolean;
 };
 
-export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
-
-  const { url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab } = props;
+export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Element => {
+  const {url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab, newRecord} = props;
   const locked = rs ? rs.locked : false;
   const rsName = url;
   const error = viewTab ? viewTab.error : undefined;
@@ -129,33 +128,36 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
 
       const srcRsName = srcRs ? srcRs.name : undefined;
 
-      dispatch( async (dispatch, getState) => {
-        if (props.match.params.addOrEdit === 'add') {
-          await apiService.insert({
-            insert: {
-              entity: entityName,
-              fields: [
-                {attribute: entity.pk[0].name, value: id}
-              ]
-            }
-          });
-        }
+      dispatch(async (dispatch, getState) => {
         dispatch(rsActions.setRecordSet(tempRs = tempRs.setLocked(true)));
 
-        const updateResponse = await apiService.update({
-          update: {
-            entity: entityName,
-            fields,
-            pkValues: [parseInt(id)]
+        if (newRecord) {
+          const insertResponse = await apiService.insert({
+            insert: {
+              entity: entityName,
+              fields
+            }
+          });
+          if (insertResponse.error) {
+            dispatch(gdmnActions.updateViewTab({url, viewTab: {error: insertResponse.error.message}}));
+            dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+            return;
           }
-        });
+        } else {
+          const updateResponse = await apiService.update({
+            update: {
+              entity: entityName,
+              fields,
+              pkValues: [parseInt(id)]
+            }
+          });
 
-        if (updateResponse.error) {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: updateResponse.error.message } }));
-          dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
-          return;
+          if (updateResponse.error) {
+            dispatch(gdmnActions.updateViewTab({url, viewTab: {error: updateResponse.error.message}}));
+            dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+            return;
+          }
         }
-
         const srcRs = srcRsName ? getState().recordSet[srcRsName] : undefined;
 
         /**
@@ -280,7 +282,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   }, [rs]);
 
   useEffect( () => {
-    if (!rs && entity) {
+    if (!rs && entity && !newRecord) {
       addViewTab(undefined);
       const eq = prepareDefaultEntityQuery(entity, [id]);
       apiService.query({ query: eq.inspect() })
@@ -294,16 +296,34 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
             eq,
             sql: result.info
           });
-
-          if (props.match.params.addOrEdit === 'add') {
-            rs = rs.insert();
-            rs = rs.setInteger('F$1', parseInt(id));
-          }
-
           dispatch(rsActions.createRecordSet({ name: rsName, rs }));
           addViewTab(rs);
         });
     }
+    if (!rs && entity && newRecord) {
+      addViewTab(undefined);
+      /**
+       *  не могу понять почему prepareDefaultEntityQuery не могу использывать если она делает, то что надо
+       */
+      const eq = prepareDefaultEntityQuery(entity);
+
+
+      const fieldsAlias = getFieldsAlias(entity);
+      const fieldDefs = Object.entries(fieldsAlias).map(([fieldAlias, data]) => attr2fd(eq, fieldAlias, data));
+      const data2RS = getData2RSData(fieldDefs, id);
+
+      let rs = RecordSet.create({
+        name: rsName,
+        fieldDefs,
+        data: List([data2RS] as IDataRow[]),
+        eq,
+      });
+
+      dispatch(rsActions.createRecordSet({name: rsName, rs}));
+      changedFields.current['F$1'] = true; // назначаю что бы при insert записалось и это поле
+      addViewTab(rs);
+    }
+
   }, [rs, entity]);
 
   if (!entity) {

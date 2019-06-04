@@ -274,7 +274,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               />
               {
               <Route
-                path={`${match.path}/entity/:entityName/:addOrEdit/:id`}
+                path={`${match.path}/entity/:entityName/add/:id`}
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                   <EntityDataDlgContainer
                     {...props}
@@ -282,14 +282,14 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     entityName={props.match.params.entityName}
                     id={props.match.params.id}
                     url={props.match.url}
-                    addOrEdit={props.match.params.addOrEdit}
+                    newRecord={true}
                   />
                 )}
               />
               }
               {
                 <Route
-                  path={`${match.path}/entity/:entityName/:addOrEdit/:id`}
+                  path={`${match.path}/entity/:entityName/edit/:id`}
                   render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                     <EntityDataDlgContainer
                       {...props}
@@ -297,7 +297,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                       entityName={props.match.params.entityName}
                       id={props.match.params.id}
                       url={props.match.url}
-                      addOrEdit={props.match.params.addOrEdit}
+                      newRecord={false}
                     />
                   )}
                 />
