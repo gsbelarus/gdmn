@@ -3,7 +3,19 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
 import { gdmnActions } from '../gdmn/actions';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField } from 'office-ui-fabric-react';
+
+const dumbFields = [
+  'Field 1',
+  'Field 2',
+  'Field 3',
+  'Field 4',
+  'Field 5',
+  'Field 6',
+  'Field 7',
+  'Field 8',
+  'Field 9',
+];
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -29,6 +41,11 @@ interface IRectangle {
   bottom: number;
 };
 
+interface IArea {
+  rect: IRectangle;
+  fields: string[];
+}
+
 const inRectangle = (cell: ICoord, rect: IRectangle) => cell.x >= rect.left && cell.x <= rect.right && cell.y >= rect.top && cell.y <= rect.bottom;
 
 const intersect = (r1: IRectangle, r2: IRectangle) => inRectangle({ x: r1.left, y: r1.top }, r2)
@@ -40,16 +57,21 @@ interface IDesignerState {
   grid: IGridSize;
   activeCell: ICoord;
   selection?: IRectangle;
-  areas: IRectangle[];
+  areas: IArea[];
   activeArea?: number;
   setGridSize?: boolean;
+  showAreaExplorer?: boolean;
+  previewMode?: boolean;
 };
 
 type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'SET_ACTIVE_AREA', activeArea: number }
   | { type: 'SET_COLUMN_SIZE_VALUE', column: number, value: number }
   | { type: 'SET_COLUMN_SIZE_UNIT', column: number, unit: TUnit }
+  | { type: 'AREA_FIELD', fieldName: string, include: boolean }
+  | { type: 'PREVIEW_MODE' }
   | { type: 'TOGGLE_SET_GRID_SIZE' }
+  | { type: 'TOGGLE_SHOW_AREA_EXPLORER' }
   | { type: 'ADD_COLUMN' }
   | { type: 'ADD_ROW' }
   | { type: 'DELETE_COLUMN' }
@@ -103,7 +125,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       if (activeArea >= 0 && activeArea <= (areas.length - 1)) {
         return {
           ...state,
-          activeArea
+          activeArea,
+          activeCell: { x: areas[activeArea].rect.left, y: areas[activeArea].rect.top }
         }
       } else {
         return {
@@ -120,15 +143,63 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       };
     }
 
+    case 'PREVIEW_MODE': {
+      const { previewMode } = state;
+
+      if (previewMode) {
+        return {
+          ...state,
+          previewMode: false
+        }
+      } else {
+        return {
+          ...state,
+          previewMode: true,
+          setGridSize: false,
+          showAreaExplorer: false
+        };
+      }
+    }
+
+    case 'AREA_FIELD': {
+      const { activeArea, areas } = state;
+      const { fieldName, include } = action;
+
+      if (activeArea === undefined) {
+        return state;
+      }
+
+      const newAreas = [...areas];
+
+      if (include && !areas[activeArea].fields.find( f => f === fieldName )) {
+        newAreas[activeArea] = {
+          ...newAreas[activeArea],
+          fields: [...newAreas[activeArea].fields, fieldName]
+        };
+      }
+
+      if (!include && !!areas[activeArea].fields.find( f => f === fieldName )) {
+        newAreas[activeArea] = {
+          ...newAreas[activeArea],
+          fields: newAreas[activeArea].fields.filter( f => f !== fieldName )
+        };
+      }
+
+      return {
+        ...state,
+        areas: newAreas
+      };
+    }
+
     case 'CREATE_AREA': {
       const { selection, areas, activeCell: {x, y} } = state;
       if (selection) {
-        if (areas.some( area => intersect(area, selection) )) {
+        if (areas.some( area => intersect(area.rect, selection) )) {
           return state;
         } else {
           return {
             ...state,
-            areas: [...areas, selection],
+            areas: [...areas, { rect: selection, fields: [] }],
             activeArea: state.areas.length,
             selection: undefined
           };
@@ -138,10 +209,13 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         return {
           ...state,
           areas: [...areas, {
-            left: x,
-            top: y,
-            right: x,
-            bottom: y
+            rect: {
+              left: x,
+              top: y,
+              right: x,
+              bottom: y
+            },
+            fields: []
           }],
           activeArea: state.areas.length
         };
@@ -179,7 +253,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'TOGGLE_SET_GRID_SIZE': {
       return {
         ...state,
-        setGridSize: !state.setGridSize
+        setGridSize: !state.setGridSize,
+        showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer
+      }
+    }
+
+    case 'TOGGLE_SHOW_AREA_EXPLORER': {
+      return {
+        ...state,
+        setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
+        showAreaExplorer: !state.showAreaExplorer
       }
     }
 
@@ -213,9 +296,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
 
       const newAreas = areas
-        .filter( area => area.left < x || area.right > x )
-        .map( area => area.right >= x ? {...area, right: area.right - 1} : area )
-        .map( area => area.left >= x ? {...area, left: area.left - 1} : area );
+        .filter( area => area.rect.left < x || area.rect.right > x )
+        .map( area => area.rect.right > x ? {...area, rect: {...area.rect, right: area.rect.right - 1}} : area )
+        .map( area => area.rect.left > x ? {...area, rect: {...area.rect, left: area.rect.left - 1}} : area );
 
       return {
         ...state,
@@ -244,9 +327,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
 
       const newAreas = areas
-        .filter( area => area.top < y || area.bottom > y )
-        .map( area => area.bottom >= y ? {...area, bottom: area.bottom - 1} : area )
-        .map( area => area.top >= y ? {...area, top: area.top - 1} : area );
+        .filter( area => area.rect.top < y || area.rect.bottom > y )
+        .map( area => area.rect.bottom > y ? {...area, rect: {...area.rect, bottom: area.rect.bottom - 1}} : area )
+        .map( area => area.rect.top > y ? {...area, rect: {...area.rect, top: area.rect.top - 1}} : area );
 
       return {
         ...state,
@@ -272,7 +355,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
   const { url, viewTab, dispatch } = props;
-  const [{ grid, activeCell, selection, setGridSize, areas, activeArea }, designerDispatch] = useReducer(reducer, {
+  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }, designerDispatch] = useReducer(reducer, {
     grid: {
       columns: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
       rows: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
@@ -310,6 +393,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
   const commandBarItems: ICommandBarItemProps[] = [
     {
       key: 'addColumn',
+      disabled: previewMode,
       text: 'Добавить колонку',
       iconProps: {
         iconName: 'DoubleColumn'
@@ -318,7 +402,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'deleteColumn',
-      disabled: grid.columns.length <= 1 || !!selection || areas.some( area => inRectangle(activeCell, area) ),
+      disabled: previewMode || grid.columns.length <= 1 || !!selection || areas.some( area => inRectangle(activeCell, area.rect) ),
       text: 'Удалить колонку',
       iconProps: {
         iconName: 'DoubleColumn'
@@ -327,6 +411,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'addRow',
+      disabled: previewMode,
       text: 'Добавить строку',
       iconProps: {
         iconName: 'DoubleColumn'
@@ -335,7 +420,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'deleteRow',
-      disabled: grid.rows.length <= 1 || !!selection || areas.some( area => inRectangle(activeCell, area) ),
+      disabled: previewMode || grid.rows.length <= 1 || !!selection || areas.some( area => inRectangle(activeCell, area.rect) ),
       text: 'Удалить строку',
       iconProps: {
         iconName: 'DoubleColumn'
@@ -344,7 +429,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'createArea',
-      disabled: areas.some( area => inRectangle(activeCell, area) ),
+      disabled: previewMode || areas.some( area => inRectangle(activeCell, area.rect) ),
       text: 'Создать область',
       iconProps: {
         iconName: 'DoubleColumn'
@@ -353,12 +438,33 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'toggleSetGridSize',
+      disabled: previewMode,
       checked: !!setGridSize,
       text: 'Установить размер',
       iconProps: {
         iconName: 'DoubleColumn'
       },
       onClick: () => designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' })
+    },
+    {
+      key: 'toggleShowAreaExplorer',
+      disabled: previewMode || activeArea === undefined,
+      checked: !!showAreaExplorer,
+      text: 'Настройка',
+      iconProps: {
+        iconName: 'DoubleColumn'
+      },
+      onClick: () => designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' })
+    },
+    {
+      key: 'previewMode',
+      disabled: !areas.length,
+      checked: !!previewMode,
+      text: 'Просмотр',
+      iconProps: {
+        iconName: 'DoubleColumn'
+      },
+      onClick: () => designerDispatch({ type: 'PREVIEW_MODE' })
     }
   ];
 
@@ -367,6 +473,46 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
   };
+
+  const WithAreaExplorer = (props: { children: JSX.Element }): JSX.Element => {
+    if (!showAreaExplorer || activeArea === undefined) {
+      return props.children;
+    } else {
+      return (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 240px',
+          gridTemplateRows: 'auto'
+        }}>
+          <div style={{
+            gridArea: '1 / 1 / 2 / 2'
+          }}>
+            {props.children}
+          </div>
+          <div style={{
+            gridArea: '1 / 2 / 2 / 3',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <div>
+              Selected area: {activeArea}
+            </div>
+
+            {
+              dumbFields.map( fieldName =>
+                <Checkbox
+                  key={fieldName}
+                  label={fieldName}
+                  checked={!!areas[activeArea].fields.find( areaF => areaF === fieldName )}
+                  onChange={ (_, isChecked) => designerDispatch({ type: 'AREA_FIELD', fieldName, include: !!isChecked }) }
+                />
+              )
+            }
+          </div>
+        </div>
+      );
+    }
+  }
 
   const WithGridSize = (props: { children: JSX.Element }): JSX.Element => {
     if (!setGridSize) {
@@ -411,6 +557,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
             {
               grid.columns.map( (c, idx) =>
                 <div
+                  key={idx}
                   style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -457,74 +604,98 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
   return (
     <>
       <CommandBar items={commandBarItems} />
-      <WithGridSize>
-        <div
-          style={getGridStyle()}
-          tabIndex={0}
-        >
-          {
-            grid.columns.map( (c, x) => grid.rows.map( (r, y) => {
-              if ((x === activeCell.x && y === activeCell.y) || inSelection(x, y)) {
-                return null;
-              } else {
-                return (
-                  <div
-                    key={x * 1000 + y}
-                    styleName="commonStyle cell"
-                    style={getCellStyle(x, y)}
-                    onMouseDown={getOnMouseDown(x, y)}
-                  >
-                    {x}, {y}
-                  </div>
-                )
-              }
-            }))
-          }
-          {
-            selection &&
-            <div
-              styleName="commonStyle selection"
-              style={{
-                gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`
-              }}
-              onClick={ () => designerDispatch({ type: 'CLEAR_SELECTION' }) }
-            >
-              selection
-            </div>
-          }
-          {
-            areas.length
-            ? areas.map( (area, idx) => (
+      <WithAreaExplorer>
+        <WithGridSize>
+          <div
+            style={getGridStyle()}
+            tabIndex={0}
+          >
+            {
+              previewMode
+              ?
+                null
+              :
+                grid.columns.map( (c, x) => grid.rows.map( (r, y) => {
+                  if ((x === activeCell.x && y === activeCell.y) || inSelection(x, y)) {
+                    return null;
+                  } else {
+                    return (
+                      <div
+                        key={x * 1000 + y}
+                        styleName="commonStyle cell"
+                        style={getCellStyle(x, y)}
+                        onMouseDown={getOnMouseDown(x, y)}
+                      >
+                        {x}, {y}
+                      </div>
+                    )
+                  }
+                }))
+            }
+            {
+              previewMode || !selection
+              ?
+                null
+              :
                 <div
-                  key={`${area.top}-${area.left}-${area.bottom}-${area.right}`}
-                  styleName={ activeArea === idx ? "commonStyle activeArea" : "commonStyle area"}
+                  styleName="commonStyle selection"
                   style={{
-                    gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`
+                    gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`
                   }}
-                  onClick={ () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx }) }
+                  onClick={ () => designerDispatch({ type: 'CLEAR_SELECTION' }) }
                 >
-                  {`Area ${idx + 1}`}
+                  selection
                 </div>
-              ))
-            : null
-          }
-          {
-            (selection && inRectangle(activeCell, selection))
-            ||
-            (areas.length && areas.some( area => inRectangle(activeCell, area) ))
-            ?
-              null
-            :
-              <div
-                styleName="commonStyle activeCell"
-                style={getCellStyle(activeCell.x, activeCell.y)}
-                onMouseDown={getOnMouseDown(activeCell.x, activeCell.y)}
-              >
-                {activeCell.x}, {activeCell.y}
-              </div>
-          }
-        </div>
-      </WithGridSize>
+            }
+            {
+              areas.length
+              ? areas.map( (area, idx) => (
+                  <div
+                    key={`${area.rect.top}-${area.rect.left}`}
+                    styleName={
+                      previewMode
+                      ? "commonStyle"
+                      : activeArea === idx
+                      ? "commonStyle activeArea"
+                      : "commonStyle area"
+                    }
+                    style={{
+                      gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`
+                    }}
+                    onClick={ () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx }) }
+                  >
+                    {
+                      areas[idx].fields.map( f =>
+                        <TextField
+                          key={f}
+                          label={f}
+                        />
+                      )
+                    }
+                  </div>
+                ))
+              : null
+            }
+            {
+              previewMode
+              ||
+              (selection && inRectangle(activeCell, selection))
+              ||
+              (areas.length && areas.some( area => inRectangle(activeCell, area.rect) ))
+              ?
+                null
+              :
+                <div
+                  styleName="commonStyle activeCell"
+                  style={getCellStyle(activeCell.x, activeCell.y)}
+                  onMouseDown={getOnMouseDown(activeCell.x, activeCell.y)}
+                >
+                  {activeCell.x}, {activeCell.y}
+                </div>
+            }
+          </div>
+        </WithGridSize>
+      </WithAreaExplorer>
     </>
   );
 }, styles, { allowMultiple: true });
