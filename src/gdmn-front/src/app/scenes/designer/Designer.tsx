@@ -66,8 +66,8 @@ interface IDesignerState {
 
 type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'SET_ACTIVE_AREA', activeArea: number }
-  | { type: 'SET_COLUMN_SIZE_VALUE', column: number, value: number }
-  | { type: 'SET_COLUMN_SIZE_UNIT', column: number, unit: TUnit }
+  | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
+  | { type: 'SET_ROW_SIZE', row: number, size: ISize }
   | { type: 'AREA_FIELD', fieldName: string, include: boolean }
   | { type: 'PREVIEW_MODE' }
   | { type: 'TOGGLE_SET_GRID_SIZE' }
@@ -222,11 +222,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
     }
 
-    case 'SET_COLUMN_SIZE_VALUE': {
+    case 'SET_COLUMN_SIZE': {
       const { grid } = state;
+      const { column, size } = action;
+
+      if (column >= grid.columns.length) {
+        return state;
+      }
+
       const newColumns = [...grid.columns];
-      const { column, value } = action;
-      newColumns[column] = {...newColumns[column], value};
+      newColumns[column] = size;
       return {
         ...state,
         grid: {
@@ -236,16 +241,21 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
     }
 
-    case 'SET_COLUMN_SIZE_UNIT': {
+    case 'SET_ROW_SIZE': {
       const { grid } = state;
-      const newColumns = [...grid.columns];
-      const { column, unit } = action;
-      newColumns[column] = {...newColumns[column], unit};
+      const { row, size } = action;
+
+      if (row >= grid.rows.length) {
+        return state;
+      }
+
+      const newRows = [...grid.rows];
+      newRows[row] = size;
       return {
         ...state,
         grid: {
           ...grid,
-          columns: newColumns
+          rows: newRows
         }
       }
     }
@@ -474,26 +484,43 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
   };
 
-  const WithAreaExplorer = (props: { children: JSX.Element }): JSX.Element => {
-    if (!showAreaExplorer || activeArea === undefined) {
-      return props.children;
-    } else {
-      return (
+  const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
+    return (
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'auto 240px',
+        gridTemplateRows: 'auto'
+      }}>
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 240px',
-          gridTemplateRows: 'auto'
+          gridArea: '1 / 1 / 2 / 2',
+          padding: '4px'
+        }}>
+          {props.children}
+        </div>
+        <div style={{
+          gridArea: '1 / 2 / 2 / 3',
+          padding: '4px',
         }}>
           <div style={{
-            gridArea: '1 / 1 / 2 / 2'
-          }}>
-            {props.children}
-          </div>
-          <div style={{
-            gridArea: '1 / 2 / 2 / 3',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            border: '1px solid violet',
+            borderRadius: '4px',
+            padding: '8px'
           }}>
+            {props.toolPanel}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const WithAreaExplorer = (props: { children: JSX.Element }): JSX.Element => {
+    return !showAreaExplorer || activeArea === undefined ? props.children :
+      <WithToolPanel
+        {...props}
+        toolPanel={
+          <>
             <div>
               Selected area: {activeArea}
             </div>
@@ -508,97 +535,94 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                 />
               )
             }
-          </div>
-        </div>
-      );
-    }
-  }
+          </>
+        }
+      />
+  };
+
+  const OneSize = ({ label, size, onChange }: { label: string, size: ISize, onChange: (newSize: ISize) => void }) => {
+
+    const getOnChangeColumnSpin = (delta: number = 0) => (value: string) => {
+      if (isNaN(Number(value))) {
+        return '1';
+      }
+
+      let newValue = Number(value) + delta;
+
+      if (newValue < 1) {
+        newValue = 1;
+      }
+
+      if (newValue > 8000) {
+        newValue = 8000;
+      }
+
+      onChange({ unit: size.unit, value: newValue });
+
+      return newValue.toString();
+    };
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-end',
+          marginBottom: '4px'
+        }}
+      >
+        <ComboBox
+          style={{
+            width: '86px',
+            marginRight: '8px'
+          }}
+          options={[
+            { key: 'AUTO', text: 'Auto' },
+            { key: 'FR', text: 'Fr' },
+            { key: 'PX', text: 'Px' }
+          ]}
+          selectedKey={size.unit}
+          label={label}
+          onChanged={ option => option && onChange({ unit: option.key as TUnit, value: size.value }) }
+        />
+        {
+          !size.value || size.unit === 'AUTO'
+          ? null
+          : <SpinButton
+            styles={{
+              root: {
+                width: '98px'
+              }
+            }}
+            value={size.value.toString()}
+            onIncrement={ getOnChangeColumnSpin(1) }
+            onDecrement={ getOnChangeColumnSpin(-1) }
+            onValidate={ getOnChangeColumnSpin() }
+          />
+        }
+      </div>
+    );
+  };
 
   const WithGridSize = (props: { children: JSX.Element }): JSX.Element => {
-    if (!setGridSize) {
-      return props.children;
-    } else {
-      const getOnChangeColumnSpin = (column: number, delta: number = 0) => (value: string) => {
-        if (isNaN(Number(value))) {
-          return '1';
-        }
-
-        let newValue = Number(value) + delta;
-
-        if (newValue < 1) {
-          newValue = 1;
-        }
-
-        if (newValue > 8000) {
-          newValue = 8000;
-        }
-
-        designerDispatch({ type: 'SET_COLUMN_SIZE_VALUE', column, value: newValue });
-
-        return newValue.toString();
-      };
-
-      return (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 240px',
-          gridTemplateRows: 'auto'
-        }}>
-          <div style={{
-            gridArea: '1 / 1 / 2 / 2'
-          }}>
-            {props.children}
-          </div>
-          <div style={{
-            gridArea: '1 / 2 / 2 / 3',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
+    return !setGridSize ? props.children :
+      <WithToolPanel
+        {...props}
+        toolPanel={
+          <>
             {
               grid.columns.map( (c, idx) =>
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'flex-end'
-                  }}
-                >
-                  <ComboBox
-                    style={{
-                      width: '86px'
-                    }}
-                    options={[
-                      { key: 'AUTO', text: 'Auto' },
-                      { key: 'FR', text: 'Fr' },
-                      { key: 'PX', text: 'Px' }
-                    ]}
-                    selectedKey={c.unit}
-                    label={`Column ${idx + 1}`}
-                    onChanged={ option => option && designerDispatch({ type: 'SET_COLUMN_SIZE_UNIT', column: idx, unit: option.key as TUnit }) }
-                  />
-                  {
-                    !c.value || c.unit === 'AUTO'
-                    ? null
-                    : <SpinButton
-                      styles={{
-                        root: {
-                          width: '98px'
-                        }
-                      }}
-                      value={c.value.toString()}
-                      onIncrement={ getOnChangeColumnSpin(idx, 1) }
-                      onDecrement={ getOnChangeColumnSpin(idx, -1) }
-                      onValidate={ getOnChangeColumnSpin(idx) }
-                    />
-                  }
-                </div>
+                <OneSize label={`Column ${idx + 1}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size }) } />
               )
             }
-          </div>
-        </div>
-      );
-    }
+            {
+              grid.rows.map( (r, idx) =>
+                <OneSize label={`Row ${idx + 1}`} size={r} onChange={ (size: ISize) => designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size }) } />
+              )
+            }
+          </>
+        }
+      />
   };
 
   return (
