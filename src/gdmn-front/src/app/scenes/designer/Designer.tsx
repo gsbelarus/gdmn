@@ -1,9 +1,9 @@
-import React, { useEffect, useReducer, useRef } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
 import { gdmnActions } from '../gdmn/actions';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label } from 'office-ui-fabric-react';
 
 const dumbFields = [
   'Field 1',
@@ -41,9 +41,12 @@ interface IRectangle {
   bottom: number;
 };
 
+type TDirection = 'row' | 'column';
+
 interface IArea {
   rect: IRectangle;
   fields: string[];
+  direction: TDirection;
 }
 
 const inRectangle = (cell: ICoord, rect: IRectangle) => cell.x >= rect.left && cell.x <= rect.right && cell.y >= rect.top && cell.y <= rect.bottom;
@@ -69,6 +72,7 @@ type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
   | { type: 'SET_ROW_SIZE', row: number, size: ISize }
   | { type: 'AREA_FIELD', fieldName: string, include: boolean }
+  | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection }
   | { type: 'PREVIEW_MODE' }
   | { type: 'TOGGLE_SET_GRID_SIZE' }
   | { type: 'TOGGLE_SHOW_AREA_EXPLORER' }
@@ -125,14 +129,46 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       if (activeArea >= 0 && activeArea <= (areas.length - 1)) {
         return {
           ...state,
-          activeArea,
-          activeCell: { x: areas[activeArea].rect.left, y: areas[activeArea].rect.top }
+          activeArea
         }
       } else {
         return {
           ...state,
           activeArea: undefined
         }
+      }
+    }
+
+    case 'CONFIGURE_AREA': {
+      const { direction, rect } = action;
+      const { areas, activeArea, grid } = state;
+
+      if (activeArea !== undefined && activeArea >= 0 && activeArea <= (areas.length - 1)) {
+        const newAreas = [...areas];
+
+        newAreas[activeArea] = {...newAreas[activeArea]};
+
+        if (rect
+          && rect.left <= rect.right
+          && rect.top <= rect.bottom
+          && rect.left >= 0
+          && rect.right < grid.columns.length
+          && rect.top >= 0
+          && rect.bottom < grid.rows.length)
+        {
+          newAreas[activeArea].rect = rect;
+        }
+
+        if (direction) {
+          newAreas[activeArea].direction = direction;
+        }
+
+        return {
+          ...state,
+          areas: newAreas
+        }
+      } else {
+        return state;
       }
     }
 
@@ -199,9 +235,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         } else {
           return {
             ...state,
-            areas: [...areas, { rect: selection, fields: [] }],
+            areas: [...areas, { rect: selection, fields: [], direction: 'row' }],
             activeArea: state.areas.length,
-            selection: undefined
+            selection: undefined,
+            showAreaExplorer: true,
+            setGridSize: false
           };
         }
       }
@@ -215,9 +253,12 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               right: x,
               bottom: y
             },
-            fields: []
+            fields: [],
+            direction: 'row'
           }],
-          activeArea: state.areas.length
+          activeArea: state.areas.length,
+          showAreaExplorer: true,
+          setGridSize: false
         };
       }
     }
@@ -515,19 +556,115 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     );
   };
 
-  const WithAreaExplorer = (props: { children: JSX.Element }): JSX.Element => {
+  const WithAreaExplorer =  CSSModules( (props: { children: JSX.Element }): JSX.Element => {
+    if (!showAreaExplorer || activeArea === undefined) {
+      return props.children;
+    }
+
+    const area = areas[activeArea];
+
     return !showAreaExplorer || activeArea === undefined ? props.children :
       <WithToolPanel
         {...props}
         toolPanel={
           <>
-            <div>
-              Selected area: {activeArea}
-            </div>
+            <Label>
+              Selected area #{activeArea}
+            </Label>
+
+            <TextField
+              label='Left'
+              value={area.rect.left.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.left) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, left: parseInt(newValue) } });
+                  }
+                }
+              }
+            />
+
+            <TextField
+              label='Top'
+              value={area.rect.top.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.top) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, top: parseInt(newValue) } });
+                  }
+                }
+              }
+            />
+
+            <TextField
+              label='Right'
+              value={area.rect.right.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.right) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, right: parseInt(newValue) } });
+                  }
+                }
+              }
+            />
+
+            <TextField
+              label='Bottom'
+              value={area.rect.bottom.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.bottom) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, bottom: parseInt(newValue) } });
+                  }
+                }
+              }
+            />
+
+            <ChoiceGroup
+              styles={{
+                root: {
+                  paddingBottom: '8px'
+                },
+                flexContainer: {
+                  display: 'flex'
+                }
+              }}
+              options={[
+                {
+                  key: 'column',
+                  text: 'column',
+                  styles: {
+                    root: {
+                      paddingRight: '8px'
+                    }
+                  }
+                },
+                {
+                  key: 'row',
+                  text: 'row'
+                }
+              ]}
+              selectedKey={area.direction}
+              label='Direction'
+              onChange={ (_, option) => option && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection }) }
+            />
+
+            <Label>
+              Show fields:
+            </Label>
 
             {
               dumbFields.map( fieldName =>
                 <Checkbox
+                  styles={{
+                    root: {
+                      paddingBottom: '4px'
+                    }
+                  }}
                   key={fieldName}
                   label={fieldName}
                   checked={!!areas[activeArea].fields.find( areaF => areaF === fieldName )}
@@ -538,7 +675,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
           </>
         }
       />
-  };
+  }, styles, { allowMultiple: true });
 
   const OneSize = ({ label, size, onChange }: { label: string, size: ISize, onChange: (newSize: ISize) => void }) => {
 
@@ -612,12 +749,12 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
           <>
             {
               grid.columns.map( (c, idx) =>
-                <OneSize label={`Column ${idx + 1}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size }) } />
+                <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size }) } />
               )
             }
             {
               grid.rows.map( (r, idx) =>
-                <OneSize label={`Row ${idx + 1}`} size={r} onChange={ (size: ISize) => designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size }) } />
+                <OneSize key={`r${idx}`} label={`Row ${idx}`} size={r} onChange={ (size: ISize) => designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size }) } />
               )
             }
           </>
@@ -684,13 +821,28 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                       : "commonStyle area"
                     }
                     style={{
-                      gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`
+                      gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
+                      display: 'flex',
+                      flexDirection: area.direction,
+                      justifyContent: 'flex-start'
                     }}
-                    onClick={ () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx }) }
+                    onClick={ previewMode || activeArea === idx ? undefined : () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx }) }
                   >
                     {
-                      areas[idx].fields.map( f =>
+                      area.fields.map( f =>
                         <TextField
+                          styles={ area.direction === 'row'
+                            ? {
+                              root: {
+                                flexGrow: 1
+                              }
+                            }
+                            : {
+                              root: {
+                                flexGrow: 0
+                              }
+                            }
+                          }
                           key={f}
                           label={f}
                         />
