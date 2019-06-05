@@ -282,48 +282,49 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   }, [rs]);
 
   useEffect( () => {
-    if (!rs && entity && !newRecord) {
+    if (!rs && entity) {
       addViewTab(undefined);
+      dispatch( async (dispatch, getState) => {
       const eq = prepareDefaultEntityQuery(entity, [id]);
-      apiService.query({ query: eq.inspect() })
-        .then( response => {
-          const result = response.payload.result!;
-          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
-          let rs = RecordSet.create({
-            name: rsName,
-            fieldDefs,
-            data: List(result.data as IDataRow[]),
-            eq,
-            sql: result.info
-          });
-          dispatch(rsActions.createRecordSet({ name: rsName, rs }));
-          addViewTab(rs);
-        });
-    }
-    if (!rs && entity && newRecord) {
-      addViewTab(undefined);
-      /**
-       *  не могу понять почему prepareDefaultEntityQuery не могу использывать если она делает, то что надо
-       */
-      const eq = prepareDefaultEntityQuery(entity);
-
 
       const fieldsAlias = getFieldsAlias(entity);
       const fieldDefs = Object.entries(fieldsAlias).map(([fieldAlias, data]) => attr2fd(eq, fieldAlias, data));
       const data2RS = getData2RSData(fieldDefs, id);
 
-      let rs = RecordSet.create({
-        name: rsName,
-        fieldDefs,
-        data: List([data2RS] as IDataRow[]),
-        eq,
+        let rs = RecordSet.create({
+          name: rsName,
+          fieldDefs,
+          data: List([data2RS] as IDataRow[]),
+          eq,
+        });
+
+      if (newRecord) {
+        changedFields.current['F$1'] = true;
+      }
+
+      if(!newRecord){
+         await apiService.query({query: eq.inspect()})
+            .then(response => {
+              const result = response.payload.result!;
+
+              const newData: any = {};
+
+              Object.entries(fieldsAlias).forEach(([fieldAlias, data]) => {
+                Object.entries(result.aliases).forEach(([fieldAlias1, data1]) => {
+                  if(data1.linkAlias === data.linkAlias && data1.attribute === data.attribute ){
+                    newData[fieldAlias] = result.data[0][fieldAlias1];
+                  }
+                  })
+              });
+             rs = rs.set((newData)as IDataRow);
+            });
+
+      }
+        dispatch(rsActions.createRecordSet({name: rsName, rs}));
       });
 
-      dispatch(rsActions.createRecordSet({name: rsName, rs}));
-      changedFields.current['F$1'] = true; // назначаю что бы при insert записалось и это поле
       addViewTab(rs);
     }
-
   }, [rs, entity]);
 
   if (!entity) {
