@@ -6,7 +6,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import TerserPlugin from 'terser-webpack-plugin';
-import CleanWebpackPlugin from 'clean-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
 import { getWebpackConfigBase, cssLoader, cssModulesLoader } from './webpackConfigBase';
 import { getRootRelativePath } from './utils';

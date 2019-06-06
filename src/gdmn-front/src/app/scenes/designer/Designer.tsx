@@ -81,6 +81,7 @@ type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'DELETE_COLUMN' }
   | { type: 'DELETE_ROW' }
   | { type: 'CREATE_AREA' }
+  | { type: 'DELETE_AREA' }
   | { type: 'CLEAR_SELECTION' };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
@@ -261,6 +262,21 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           setGridSize: false
         };
       }
+    }
+
+    case 'DELETE_AREA': {
+      const { areas, activeArea } = state;
+
+      if (!areas.length || activeArea === undefined) {
+        return state;
+      }
+
+      return {
+        ...state,
+        areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
+        activeArea: undefined,
+        showAreaExplorer: false
+      };
     }
 
     case 'SET_COLUMN_SIZE': {
@@ -486,6 +502,15 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
         iconName: 'DoubleColumn'
       },
       onClick: () => designerDispatch({ type: 'CREATE_AREA' })
+    },
+    {
+      key: 'deleteArea',
+      disabled: previewMode || activeArea === undefined,
+      text: 'Удалить область',
+      iconProps: {
+        iconName: 'DoubleColumn'
+      },
+      onClick: () => designerDispatch({ type: 'DELETE_AREA' })
     },
     {
       key: 'toggleSetGridSize',
