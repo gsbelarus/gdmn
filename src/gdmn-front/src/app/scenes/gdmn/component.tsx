@@ -274,7 +274,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               />
               {
               <Route
-                path={`${match.path}/entity/:entityName/edit/:id`}
+                path={`${match.path}/entity/:entityName/add/:id`}
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                   <EntityDataDlgContainer
                     {...props}
@@ -282,9 +282,25 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     entityName={props.match.params.entityName}
                     id={props.match.params.id}
                     url={props.match.url}
+                    newRecord={true}
                   />
                 )}
               />
+              }
+              {
+                <Route
+                  path={`${match.path}/entity/:entityName/edit/:id`}
+                  render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                    <EntityDataDlgContainer
+                      {...props}
+                      key={props.match.url}
+                      entityName={props.match.params.entityName}
+                      id={props.match.params.id}
+                      url={props.match.url}
+                      newRecord={false}
+                    />
+                  )}
+                />
               }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

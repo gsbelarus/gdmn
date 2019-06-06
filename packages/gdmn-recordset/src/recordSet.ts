@@ -864,21 +864,21 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   public set(newRowData: R, rIdx?: number, setRowState?: boolean): RecordSet<R> {
     this._checkLocked();
 
-    if (!this.size) {
-      throw new Error('Empty recordset.')
-    }
-
     const rowIdx = rIdx !== undefined ? rIdx : this.currentRow;
 
-    if (this._get(rowIdx).type !== TRowType.Data) {
+    if (this.size && this._get(rowIdx).type !== TRowType.Data) {
       throw new Error('Not a data row.');
     }
 
     const { data } = this.params;
     let { changed } = this.params;
     const adjustedIdx = this._adjustIdx(rowIdx);
-    const rowData = data.get(adjustedIdx);
-    const rowState = rowData['$$ROW_STATE'] === undefined ? TRowState.Normal : rowData['$$ROW_STATE'];
+    const rowData = this.size ? data.get(adjustedIdx) : undefined;
+    const rowState = rowData
+      ? rowData['$$ROW_STATE'] === undefined
+        ? TRowState.Normal
+        : rowData['$$ROW_STATE']
+      : TRowState.Normal;
 
     if (rowState === TRowState.Deleted) {
       throw new Error(`Can't edit deleted row.`)
@@ -898,10 +898,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         if (rowState === TRowState.Normal) {
           changed++;
         }
-        delete rowData['$$PREV_ROW'];
-        delete rowData['$$ROW_STATE'];
-        newRowData['$$PREV_ROW'] = rowData;
-        newRowData['$$ROW_STATE'] = TRowState.Edited;
+        if (rowData) {
+          delete rowData['$$PREV_ROW'];
+          delete rowData['$$ROW_STATE'];
+          newRowData['$$PREV_ROW'] = rowData;
+        }
+        newRowData['$$ROW_STATE'] = rowData ? TRowState.Edited : TRowState.Inserted;
       }
     }
 

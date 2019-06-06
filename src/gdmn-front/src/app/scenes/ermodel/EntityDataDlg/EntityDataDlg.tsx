@@ -4,20 +4,21 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
-import { prepareDefaultEntityQuery, attr2fd } from "../EntityDataView/utils";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef } from "gdmn-recordset";
+import {prepareDefaultEntityQuery, attr2fd} from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import {
   EntityQuery,
   EntityLink,
-  EntityLinkField,
   EntityQueryOptions,
-  EntityAttribute,
   IEntityUpdateFieldInspector,
   ScalarAttribute,
-  SetAttribute
+  SetAttribute,
+  EntityAttribute,
+  EntityLinkField,
+  IEntityQueryResponse
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
@@ -31,9 +32,8 @@ interface IChangedFields {
   [fieldName: string]: boolean;
 };
 
-export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Element => {
-
-  const { url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab } = props;
+export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Element => {
+  const {url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab, newRecord} = props;
   const locked = rs ? rs.locked : false;
   const rsName = url;
   const error = viewTab ? viewTab.error : undefined;
@@ -72,7 +72,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
   const changedFields = useRef(getSavedChangedFields());
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
-  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
+  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -110,7 +110,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
         const eqfa = tempRs.getFieldDef(fieldName).eqfa!;
 
-        if (eqfa.linkAlias === "root") {
+        if (eqfa.linkAlias === rs.eq!.link.alias) {
           return {
             attribute: eqfa.attribute,
             value: tempRs.getValue(fieldName)
@@ -129,23 +129,36 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
 
       const srcRsName = srcRs ? srcRs.name : undefined;
 
-      dispatch( async (dispatch, getState) => {
+      dispatch(async (dispatch, getState) => {
         dispatch(rsActions.setRecordSet(tempRs = tempRs.setLocked(true)));
 
-        const updateResponse = await apiService.update({
-          update: {
-            entity: entityName,
-            fields,
-            pkValues: [parseInt(id)]
+        if (newRecord) {
+          const insertResponse = await apiService.insert({
+            insert: {
+              entity: entityName,
+              fields
+            }
+          });
+          if (insertResponse.error) {
+            dispatch(gdmnActions.updateViewTab({url, viewTab: {error: insertResponse.error.message}}));
+            dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+            return;
           }
-        });
+        } else {
+          const updateResponse = await apiService.update({
+            update: {
+              entity: entityName,
+              fields,
+              pkValues: [parseInt(id)]
+            }
+          });
 
-        if (updateResponse.error) {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: updateResponse.error.message } }));
-          dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
-          return;
+          if (updateResponse.error) {
+            dispatch(gdmnActions.updateViewTab({url, viewTab: {error: updateResponse.error.message}}));
+            dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+            return;
+          }
         }
-
         const srcRs = srcRsName ? getState().recordSet[srcRsName] : undefined;
 
         /**
@@ -153,7 +166,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
          * или есть мастер рекорд сет.
          */
         if ((srcRs && !srcRs.locked) || !close) {
-          const eq = prepareDefaultEntityQuery(entity, [id]);
+          const eq = rs.eq!;
           const reReadResponse = await apiService.query({ query: eq.inspect() });
 
           if (reReadResponse.error) {
@@ -162,10 +175,11 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
             return;
           }
 
-          const resultData = reReadResponse.payload.result!.data as IDataRow[];
+          const result = reReadResponse.payload.result!;
+          const resultData = result.data as IDataRow[];
 
           if (resultData.length) {
-            tempRs = tempRs.setLocked(false).set(resultData[0]);
+            tempRs = tempRs.setLocked(false).set(mapData(result, rs.fieldDefs));
           } else {
             tempRs = await tempRs.post( _ => Promise.resolve(TCommitResult.Success), true );
           }
@@ -231,6 +245,23 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     }
   }, [rsName, viewTab]);
 
+  const addRecord = () => {
+    if (entityName) {
+
+      const f = async () => {
+        const result = await apiService.getNextID({withError: false});
+        const newID = result.payload.result!.id;
+
+        if (newID) {
+          nextUrl.current = `/spa/gdmn/entity/${entityName}/add/${newID}`;
+          history.push(nextUrl.current);
+        }
+      };
+
+      f();
+    }
+  };
+
   useEffect( () => {
     return () => {
       dispatch(gdmnActions.saveSessionData({
@@ -252,24 +283,79 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
     }
   }, [rs]);
 
+  const mapData = (result: IEntityQueryResponse, fieldDefs: IFieldDef[]): IDataRow => Object.entries(result.aliases).reduce(
+    (p, [resultAlias, eqrfa]) => {
+      const fieldDef = fieldDefs.find( fd => fd.eqfa!.linkAlias === eqrfa.linkAlias && fd.eqfa!.attribute === eqrfa.attribute );
+      if (fieldDef) {
+        p[fieldDef.fieldName] = result.data[0][resultAlias];
+      } else {
+        console.log(`Can't find a field def for a result field ${resultAlias}-${eqrfa.linkAlias}-${eqrfa.attribute}`);
+      }
+      return p;
+    }, {} as IDataRow
+  );
+
   useEffect( () => {
     if (!rs && entity) {
-      addViewTab(undefined);
-      const eq = prepareDefaultEntityQuery(entity, [id]);
-      apiService.query({ query: eq.inspect() })
-        .then( response => {
-          const result = response.payload.result!;
-          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
-          const rs = RecordSet.create({
-            name: rsName,
-            fieldDefs,
-            data: List(result.data as IDataRow[]),
-            eq,
-            sql: result.info
-          });
-          dispatch(rsActions.createRecordSet({ name: rsName, rs }));
-          addViewTab(rs);
+      const f = async () => {
+        addViewTab(undefined);
+        const eq = prepareDefaultEntityQuery(entity, [id]);
+
+        let fieldIdx = 1;
+
+        const recScan = (fields: EntityLinkField[], linkAlias: string): IFieldDef[] =>
+          fields.flatMap(
+            f => f.links && f.links.length
+              ? f.links.flatMap( fl => recScan(fl.fields, fl.alias) )
+              : attr2fd(eq, `F\$${fieldIdx++}`, linkAlias, f.attribute.name)
+          );
+
+        const fieldDefs = recScan(eq.link.fields, eq.link.alias);
+
+        let rs = RecordSet.create({
+          name: rsName,
+          fieldDefs,
+          data: List([] as IDataRow[]),
+          eq
         });
+
+        if (newRecord) {
+          rs = rs.set(fieldDefs.reduce(
+            (p, fd) => {
+              if (fd.eqfa!.linkAlias === eq.link.alias && fd.eqfa!.attribute === entity.pk[0].name) {
+                changedFields.current[fd.fieldName] = true;
+                return {...p, [fd.fieldName]: id};
+              } else {
+                return {...p, [fd.fieldName]: null};
+              }
+            }, {} as IDataRow
+          ), undefined, true);
+        } else {
+          /**
+           * Мы создаем рекордсет еще до обращения к серверу.
+           * Поэтому нам приходится самостоятельно конструировать объекты
+           * алиасы для полей, которые мы именуем 'F$1', 'F$2'....
+           * После того, как мы выполним запрос на сервере для получения
+           * данных записи (когда форма находится в режиме редактирования),
+           * присланные нам данные могут содержать другие алиасы.
+           * Нам приходится устанавливать соответствие сопоставляя
+           * по linkAlias и имени атрибута.
+           *
+           * В будущем, хотелось бы чтобы имена алиасов присваивались
+           * одинаково и в клиентской части и в серверной. Модель же данных
+           * у нас идентична.
+           *
+           */
+          const response = await apiService.query({query: eq.inspect()});
+          const result = response.payload.result!;
+          rs = rs.set(mapData(result, fieldDefs));
+        }
+
+        dispatch(rsActions.createRecordSet({name: rsName, rs}));
+        addViewTab(rs);
+      };
+
+      f();
     }
   }, [rs, entity]);
 
@@ -348,7 +434,7 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
       iconProps: {
         iconName: 'PageAdd'
       },
-      onClick: () => {}
+      onClick: addRecord
     },
     {
       key: 'delete',
