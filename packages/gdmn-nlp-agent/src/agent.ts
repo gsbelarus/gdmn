@@ -540,7 +540,6 @@ export class ERTranslatorRU {
       })
       
       const options = new EntityQueryOptions(first, undefined, [{or, not, isNull, equals, contains, greater, less}]);
-      console.log(options)
 
       const entityLink = new EntityLink(entity, "alias1", fields);
       return {
