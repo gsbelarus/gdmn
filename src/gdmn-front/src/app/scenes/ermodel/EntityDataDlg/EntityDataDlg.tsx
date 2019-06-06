@@ -4,20 +4,20 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState } from "gdmn-recordset";
-import {prepareDefaultEntityQuery, attr2fd, getFieldsAlias, getData2RSData} from "../EntityDataView/utils";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef } from "gdmn-recordset";
+import {prepareDefaultEntityQuery, attr2fd} from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import {
   EntityQuery,
   EntityLink,
-  EntityLinkField,
   EntityQueryOptions,
   IEntityUpdateFieldInspector,
   ScalarAttribute,
   SetAttribute,
-  EntityAttribute
+  EntityAttribute,
+  EntityLinkField
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
@@ -71,7 +71,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const changedFields = useRef(getSavedChangedFields());
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
-  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current));
+  const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -284,42 +284,72 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   useEffect( () => {
     if (!rs && entity) {
       addViewTab(undefined);
-      dispatch( async (dispatch, getState) => {
-      const eq = prepareDefaultEntityQuery(entity, [id]);
 
-      const fieldsAlias = getFieldsAlias(entity);
-      const fieldDefs = Object.entries(fieldsAlias).map(([fieldAlias, data]) => attr2fd(eq, fieldAlias, data));
-      const data2RS = getData2RSData(fieldDefs, id);
+      dispatch( async (dispatch, getState) => {
+        const eq = prepareDefaultEntityQuery(entity, [id]);
+
+        let fieldIdx = 1;
+
+        const recScan = (fields: EntityLinkField[], linkAlias: string): IFieldDef[] =>
+          fields.flatMap(
+            f => f.links && f.links.length
+              ? f.links.flatMap( fl => recScan(fl.fields, fl.alias) )
+              : attr2fd(eq, `F\$${fieldIdx++}`, linkAlias, f.attribute.name)
+          );
+
+        const fieldDefs = recScan(eq.link.fields, eq.link.alias);
 
         let rs = RecordSet.create({
           name: rsName,
           fieldDefs,
-          data: List([data2RS] as IDataRow[]),
+          data: List([] as IDataRow[]),
           eq,
         });
 
-      if (newRecord) {
-        changedFields.current['F$1'] = true;
-      }
+        if (newRecord) {
+          rs = rs.set(fieldDefs.reduce(
+            (p, fd) => {
+              if (fd.eqfa!.linkAlias === eq.link.alias && fd.eqfa!.attribute === entity.pk[0].name) {
+                changedFields.current[fd.fieldName] = true;
+                return {...p, [fd.fieldName]: id};
+              } else {
+                return {...p, [fd.fieldName]: null};
+              }
+            }, {} as IDataRow
+          ), undefined, true);
+        } else {
+          /**
+           * Мы создаем рекордсет еще до обращения к серверу.
+           * Поэтому нам приходится самостоятельно конструировать объекты
+           * алиасы для полей, которые мы именуем 'F$1', 'F$2'....
+           * После того, как мы выполним запрос на сервередля получения
+           * данных записи (когда форма находится в режиме редактирования),
+           * присланные нам данные могут содержать другие алиасы.
+           * Нам приходится устанавливать соответствие сопоставляя
+           * по linkAlias и имени атрибута.
+           *
+           * В будущем, хотелось бы чтобы имена алиасов присваивались
+           * одинаково и в клиентской части и в серверной. Модель же данных
+           * у нас идентична.
+           *
+           */
+          const response = await apiService.query({query: eq.inspect()});
+          const result = response.payload.result!;
+          const newData = Object.entries(result.aliases).reduce(
+            (p, [resultAlias, eqrfa]) => {
+              const fieldDef = fieldDefs.find( fd => fd.eqfa!.linkAlias === eqrfa.linkAlias && fd.eqfa!.attribute === eqrfa.attribute );
+              if (fieldDef) {
+                p[fieldDef.fieldName] = result.data[0][resultAlias];
+              } else {
+                console.log(`Cann't find a field def for a result field ${resultAlias}-${eqrfa.linkAlias}-${eqrfa.attribute}`);
+              }
+              return p;
+            }, {} as IDataRow
+          );
 
-      if(!newRecord){
-         await apiService.query({query: eq.inspect()})
-            .then(response => {
-              const result = response.payload.result!;
+          rs = rs.set(newData, 0, true);
+        }
 
-              const newData: any = {};
-
-              Object.entries(fieldsAlias).forEach(([fieldAlias, data]) => {
-                Object.entries(result.aliases).forEach(([fieldAlias1, data1]) => {
-                  if(data1.linkAlias === data.linkAlias && data1.attribute === data.attribute ){
-                    newData[fieldAlias] = result.data[0][fieldAlias1];
-                  }
-                  })
-              });
-             rs = rs.set((newData)as IDataRow);
-            });
-
-      }
         dispatch(rsActions.createRecordSet({name: rsName, rs}));
       });
 
