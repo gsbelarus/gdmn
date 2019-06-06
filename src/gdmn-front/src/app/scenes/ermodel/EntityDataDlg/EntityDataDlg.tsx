@@ -17,7 +17,8 @@ import {
   ScalarAttribute,
   SetAttribute,
   EntityAttribute,
-  EntityLinkField
+  EntityLinkField,
+  IEntityQueryResponse
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
@@ -109,7 +110,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
         const eqfa = tempRs.getFieldDef(fieldName).eqfa!;
 
-        if (eqfa.linkAlias === "root") {
+        if (eqfa.linkAlias === rs.eq!.link.alias) {
           return {
             attribute: eqfa.attribute,
             value: tempRs.getValue(fieldName)
@@ -165,7 +166,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
          * или есть мастер рекорд сет.
          */
         if ((srcRs && !srcRs.locked) || !close) {
-          const eq = prepareDefaultEntityQuery(entity, [id]);
+          const eq = rs.eq!;
           const reReadResponse = await apiService.query({ query: eq.inspect() });
 
           if (reReadResponse.error) {
@@ -174,10 +175,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             return;
           }
 
-          const resultData = reReadResponse.payload.result!.data as IDataRow[];
+          const result = reReadResponse.payload.result!;
+          const resultData = result.data as IDataRow[];
 
           if (resultData.length) {
-            tempRs = tempRs.setLocked(false).set(resultData[0]);
+            tempRs = tempRs.setLocked(false).set(mapData(result, rs.fieldDefs));
           } else {
             tempRs = await tempRs.post( _ => Promise.resolve(TCommitResult.Success), true );
           }
@@ -243,22 +245,22 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   }, [rsName, viewTab]);
 
-  const addRecord = useCallback( () => {
+  const addRecord = () => {
+    if (entityName) {
 
-    if(entity) {
-      dispatch(async (dispatch, getState) => {
+      const f = async () => {
         const result = await apiService.getNextID({withError: false});
         const newID = result.payload.result!.id;
 
-        if (!newID) {
-          return;
+        if (newID) {
+          nextUrl.current = `/spa/gdmn/entity/${entityName}/add/${newID}`;
+          history.push(nextUrl.current);
         }
-        nextUrl.current = `/spa/gdmn/entity/${entityName}/add/${newID}`;
-        history.push(nextUrl.current);
+      };
 
-      });
+      f();
     }
-  }, [rs, viewTab]);
+  };
 
   useEffect( () => {
     return () => {
@@ -281,11 +283,22 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   }, [rs]);
 
+  const mapData = (result: IEntityQueryResponse, fieldDefs: IFieldDef[]): IDataRow => Object.entries(result.aliases).reduce(
+    (p, [resultAlias, eqrfa]) => {
+      const fieldDef = fieldDefs.find( fd => fd.eqfa!.linkAlias === eqrfa.linkAlias && fd.eqfa!.attribute === eqrfa.attribute );
+      if (fieldDef) {
+        p[fieldDef.fieldName] = result.data[0][resultAlias];
+      } else {
+        console.log(`Can't find a field def for a result field ${resultAlias}-${eqrfa.linkAlias}-${eqrfa.attribute}`);
+      }
+      return p;
+    }, {} as IDataRow
+  );
+
   useEffect( () => {
     if (!rs && entity) {
-      addViewTab(undefined);
-
-      dispatch( async (dispatch, getState) => {
+      const f = async () => {
+        addViewTab(undefined);
         const eq = prepareDefaultEntityQuery(entity, [id]);
 
         let fieldIdx = 1;
@@ -303,7 +316,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           name: rsName,
           fieldDefs,
           data: List([] as IDataRow[]),
-          eq,
+          eq
         });
 
         if (newRecord) {
@@ -322,7 +335,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
            * Мы создаем рекордсет еще до обращения к серверу.
            * Поэтому нам приходится самостоятельно конструировать объекты
            * алиасы для полей, которые мы именуем 'F$1', 'F$2'....
-           * После того, как мы выполним запрос на сервередля получения
+           * После того, как мы выполним запрос на сервере для получения
            * данных записи (когда форма находится в режиме редактирования),
            * присланные нам данные могут содержать другие алиасы.
            * Нам приходится устанавливать соответствие сопоставляя
@@ -335,25 +348,14 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
            */
           const response = await apiService.query({query: eq.inspect()});
           const result = response.payload.result!;
-          const newData = Object.entries(result.aliases).reduce(
-            (p, [resultAlias, eqrfa]) => {
-              const fieldDef = fieldDefs.find( fd => fd.eqfa!.linkAlias === eqrfa.linkAlias && fd.eqfa!.attribute === eqrfa.attribute );
-              if (fieldDef) {
-                p[fieldDef.fieldName] = result.data[0][resultAlias];
-              } else {
-                console.log(`Cann't find a field def for a result field ${resultAlias}-${eqrfa.linkAlias}-${eqrfa.attribute}`);
-              }
-              return p;
-            }, {} as IDataRow
-          );
-
-          rs = rs.set(newData, 0, true);
+          rs = rs.set(mapData(result, fieldDefs));
         }
 
         dispatch(rsActions.createRecordSet({name: rsName, rs}));
-      });
+        addViewTab(rs);
+      };
 
-      addViewTab(rs);
+      f();
     }
   }, [rs, entity]);
 
