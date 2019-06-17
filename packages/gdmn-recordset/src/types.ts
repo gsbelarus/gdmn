@@ -82,13 +82,13 @@ export interface IDataRow {
   [fieldName: string]: TDataType | TRowState | IDataRow;
 };
 
-export type Data<R extends IDataRow = IDataRow> = List<R>;
+export type Data = List<IDataRow>;
 
-export type GetRowDataFunc<R extends IDataRow = IDataRow> = (idx: number) => R;
+export type GetRowDataFunc = (idx: number) => IDataRow;
 
-export type FilterFunc<R extends IDataRow = IDataRow> = (row: R, idx: number) => boolean;
+export type FilterFunc = (row: IDataRow, idx: number) => boolean;
 
-export type TRowCalcFunc<R extends IDataRow> = (row: R) => R;
+export type TRowCalcFunc = (row: IDataRow) => IDataRow;
 
 export enum TRowType {
   Data = 0,
@@ -97,18 +97,18 @@ export enum TRowType {
   Footer
 };
 
-export interface IRow<R extends IDataRow = IDataRow> {
-  data: R,
+export interface IRow {
+  data: IDataRow,
   type: TRowType,
-  group?: IDataGroup<R>
+  group?: IDataGroup
 };
 
-export interface IDataGroup<R extends IDataRow = IDataRow> {
-  header: R;
+export interface IDataGroup {
+  header: IDataRow;
   level: number;
   collapsed: boolean;
-  subGroups: IDataGroup<R>[];
-  footer?: R;
+  subGroups: IDataGroup[];
+  footer?: IDataRow;
   rowIdx: number;
   bufferIdx: number;
   bufferCount: number;
@@ -132,22 +132,22 @@ export type FoundNodes = IFoundNode[];
 
 export type FoundRows = FoundNodes[];
 
-export type CloneGroup<R extends IDataRow = IDataRow> = (
-  parent: IDataGroup<R> | undefined,
-  prev: IDataGroup<R> | undefined,
-  g: IDataGroup<R>) => IDataGroup<R>;
+export type CloneGroup = (
+  parent: IDataGroup | undefined,
+  prev: IDataGroup | undefined,
+  g: IDataGroup) => IDataGroup;
 
-export type MeasureCalcFunc<R extends IDataRow> = (getRowDataFunc: GetRowDataFunc<R>, rowStart: number, count: number) => TDataType;
+export type MeasureCalcFunc = (getRowDataFunc: GetRowDataFunc, rowStart: number, count: number) => TDataType;
 
-export interface IMeasure<R extends IDataRow> {
+export interface IMeasure {
   fieldName: string;
-  measureCalcFunc: MeasureCalcFunc<R>;
+  measureCalcFunc: MeasureCalcFunc;
   caption?: string;
   shortCaption?: string;
   description?: string;
 };
 
-export type Measures<R extends IDataRow> = IMeasure<R>[];
+export type Measures = IMeasure[];
 
 export interface IMasterLink {
   masterName: string;
