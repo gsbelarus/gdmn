@@ -745,7 +745,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
           ]}
           selectedKey={size.unit}
           label={label}
-          onChanged={ option => option && onChange({ unit: option.key as TUnit, value: size.value }) }
+          onChange={ (_, option) => option && onChange({ unit: option.key as TUnit, value: size.value }) }
         />
         {
           !size.value || size.unit === 'AUTO'

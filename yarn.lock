@@ -2640,80 +2640,80 @@
   resolved "https://registry.yarnpkg.com/@types/yargs/-/yargs-12.0.12.tgz#45dd1d0638e8c8f153e87d296907659296873916"
   integrity sha512-SOhuU4wNBxhhTHxYaiG5NY4HBhDIDnJF60GU+2LqHAdKKer86//e4yg69aENCtQ04n0ovz+tq2YPME5t5yp4pw==
 
-"@uifabric/fluent-theme@^0":
-  version "0.16.12"
-  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-0.16.12.tgz#146d5301029181f873612b22b218b1a339685ecf"
-  integrity sha512-6nycOvpad5UXZ1E+245gNwkTOlAg9gwOrVSPirabt8+n09clTsx4Qvp6eD8/JvCnskP2ue5O8iHkN/PvetzUpA==
+"@uifabric/fluent-theme@^7":
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-7.0.2.tgz#7152133b933771f9a90ed4c7ab108cf00ad2f6ca"
+  integrity sha512-BFpy7qi/AtygWP/xCzSQ1enSA6yJHPLx+C2vNHyjV1HTX1dUUUqyCQRowHFinQiR6A3uWi4k4/um36aMgrXrMA==
   dependencies:
-    "@uifabric/merge-styles" "^6.19.1"
-    "@uifabric/set-version" "^1.1.3"
-    "@uifabric/styling" "^6.49.1"
-    "@uifabric/variants" "^6.14.4"
-    office-ui-fabric-react "^6.189.5"
+    "@uifabric/merge-styles" "^7.0.2"
+    "@uifabric/set-version" "^7.0.0"
+    "@uifabric/styling" "^7.0.2"
+    "@uifabric/variants" "^7.0.2"
+    office-ui-fabric-react "^7.1.1"
     tslib "^1.7.1"
 
-"@uifabric/foundation@^0.8.1":
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/@uifabric/foundation/-/foundation-0.8.1.tgz#fd56afb1bd9cd37696d6daf13f533b83ab7687d8"
-  integrity sha512-KRy14XzKiJWVePiaRxNuDYnhV3MmUNZ+1WafOQ0ZLrZ7GnGzuny56MN8pDVaSBPigjB+ml+0RumOcw1+gTA1mw==
+"@uifabric/foundation@^7.0.1":
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/@uifabric/foundation/-/foundation-7.0.1.tgz#4abf82c58f762d048f1612eb1039efc0405127fa"
+  integrity sha512-Cd9voIy8g1U8ohgBuAtUyM6QdpLxdAUcSMrTQhM+UW+Ousi9cFv9vybOzprXuIBx4eU0bj+YQI9qym4wxQc5Pg==
   dependencies:
-    "@uifabric/set-version" "^1.1.3"
-    "@uifabric/styling" "^6.49.1"
-    "@uifabric/utilities" "^6.41.1"
+    "@uifabric/set-version" "^7.0.0"
+    "@uifabric/styling" "^7.0.2"
+    "@uifabric/utilities" "^7.0.3"
     tslib "^1.7.1"
 
-"@uifabric/icons@^6.5.3":
-  version "6.5.3"
-  resolved "https://registry.yarnpkg.com/@uifabric/icons/-/icons-6.5.3.tgz#e9c8d9bffa4f9ba99d91b878932fe90104d61efa"
-  integrity sha512-baqA8QGP68RD2IsKfsd40hVK1/GyweOvAKYcxkCIFXGz0mGtBVhSy8hs1jHdU9cdZeo4ebDkkn11TizCm/b00A==
+"@uifabric/icons@^7.0.2":
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/icons/-/icons-7.0.2.tgz#c614edbe884d153e7641889cec14621e4b3d6729"
+  integrity sha512-nOb5GI2uAG5nisWemACUDJc9oCaRohNJz8CKIjGRnUvgIHP3702CC6GHIqaSOnb93pwHUcHrdu0HgO9EQUK9Zw==
   dependencies:
-    "@uifabric/set-version" "^1.1.3"
-    "@uifabric/styling" "^6.49.1"
+    "@uifabric/set-version" "^7.0.0"
+    "@uifabric/styling" "^7.0.2"
     tslib "^1.7.1"
 
-"@uifabric/merge-styles@^6.19.1", "@uifabric/merge-styles@^6.19.2":
-  version "6.19.2"
-  resolved "https://registry.yarnpkg.com/@uifabric/merge-styles/-/merge-styles-6.19.2.tgz#f6ee64341c253692b804f593977d87c33377079c"
-  integrity sha512-YlacOpdTGlQdw+XhrnZfzgHCtqp+Ueb4FOaqkyr7yHQrGFYDvE2J0St9uug/OUlPqyTNz6LXfjFoaaKeoZ0ktw==
+"@uifabric/merge-styles@^7.0.2":
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/merge-styles/-/merge-styles-7.0.2.tgz#a5ff23ab2544fda155f39d950a3e9ff2b931e997"
+  integrity sha512-Eu8l28J7utJmoU4z7D0nsUgapakz2p4MEH7E0hqdudjAip8earlY7Yz7UxG4A+nv/H6xevLQFv+TA1SaGPiGmA==
   dependencies:
-    "@uifabric/set-version" "^1.1.3"
+    "@uifabric/set-version" "^7.0.0"
     tslib "^1.7.1"
 
-"@uifabric/set-version@^1.1.3":
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/@uifabric/set-version/-/set-version-1.1.3.tgz#8d1137df1406f38828e597e81122077a16c8da8b"
-  integrity sha512-IYpwVIuN7MJOeiWzZzr9AmFSvA5zc6gJn4fNHtEFIQnNB8WVWIcYrvx8Tbf7wWj9MvhdHYp70F054zZlHbL/Ag==
+"@uifabric/set-version@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/set-version/-/set-version-7.0.0.tgz#2c9be5fb368354dc924868627c4a2ed3ee7a0635"
+  integrity sha512-0cdpZJ5AHmrzb1RMrA420+sRxJiMRwgiOfLoRCSpOqkSwn2TILACGGfTJ9vRWuKEugBiz/+qVltBUYMcdPlATQ==
   dependencies:
     tslib "^1.7.1"
 
-"@uifabric/styling@^6.49.1":
-  version "6.49.1"
-  resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-6.49.1.tgz#56e526df6a8eb370b5c312c62427f09e1901e3e8"
-  integrity sha512-rKhPob9QNlwdF8d5ShYIj4aW2oF10pXnLg8tyNviBYvgDji5Qb4gJlkh9hCjJi2rSwPiHDjSwC2cH2Bqe7+KfA==
+"@uifabric/styling@^7.0.2":
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-7.0.2.tgz#bfa60750962bdff2408a642aab373e5cac73ee19"
+  integrity sha512-05hYiFWTTal85/H5AYwShveA0nyJ0DpEpjArXbGVd98o2L1oZk9L0YQygTHU86YWtgwOAjnUjef0oYSdUm6rYw==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
-    "@uifabric/merge-styles" "^6.19.1"
-    "@uifabric/set-version" "^1.1.3"
-    "@uifabric/utilities" "^6.41.1"
+    "@uifabric/merge-styles" "^7.0.2"
+    "@uifabric/set-version" "^7.0.0"
+    "@uifabric/utilities" "^7.0.3"
     tslib "^1.7.1"
 
-"@uifabric/utilities@^6.41.1", "@uifabric/utilities@^6.41.2":
-  version "6.41.2"
-  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-6.41.2.tgz#8fe94270e0ad54cddd2931c0c5e84bda4089fa8a"
-  integrity sha512-iIsbWDD+YZrf4Qev03ez6n42zm6sq02WWK/H5rwIvX95Bm4PCRJduOg004xM31P7LUcpQ5i3GgIrvVmbdQMrPQ==
+"@uifabric/utilities@^7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-7.0.3.tgz#ee5578659c10e4d7db8bafe72ece23c581cfbf80"
+  integrity sha512-iChv9LYYSrWpyImgadX1vdbkdMXZVQ6zcbrde6JfTmfXsEmeLBHYHbFuOoU8kwl5CpEA6I3SMI9kwwtGrivH/A==
   dependencies:
-    "@uifabric/merge-styles" "^6.19.2"
-    "@uifabric/set-version" "^1.1.3"
+    "@uifabric/merge-styles" "^7.0.2"
+    "@uifabric/set-version" "^7.0.0"
     prop-types "^15.5.10"
     tslib "^1.7.1"
 
-"@uifabric/variants@^6.14.4":
-  version "6.14.4"
-  resolved "https://registry.yarnpkg.com/@uifabric/variants/-/variants-6.14.4.tgz#aa2f93bcb35b1d52518a0507129165ae8fe9da23"
-  integrity sha512-cKzYpOQzWuN4uZA4sfeb3/I7GNTis3FNHaT49SdtsSgJYXAoylY2epK+uWOYVpfL7BIIIk/bDknHpYvbZOSsDw==
+"@uifabric/variants@^7.0.2":
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/variants/-/variants-7.0.2.tgz#6db64b7177bb5d290c9a64a90eda32714d76cd31"
+  integrity sha512-3PtVIyDS88Zu6rO02hdm5cUS0HWPcd3mNoHOkVFPU184VancJXWKMRvjuU7W8Gu9Gd7NKc+7UelUBPr1qPCpEg==
   dependencies:
-    "@uifabric/set-version" "^1.1.3"
-    office-ui-fabric-react "^6.189.5"
+    "@uifabric/set-version" "^7.0.0"
+    office-ui-fabric-react "^7.1.1"
     tslib "^1.7.1"
 
 "@webassemblyjs/ast@1.7.11":
@@ -4268,7 +4268,7 @@ camelcase@^4.0.0, camelcase@^4.1.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-4.1.0.tgz#d545635be1e33c542649c69173e5de6acfae34dd"
   integrity sha1-1UVjW+HjPFQmScaRc+Xeas+uNN0=
 
-camelcase@^5.0.0, camelcase@^5.2.0, camelcase@^5.3.1:
+camelcase@^5.0.0, camelcase@^5.3.1:
   version "5.3.1"
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-5.3.1.tgz#e3c9b31569e106811df242f715725a1f4c494320"
   integrity sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==
@@ -4289,9 +4289,9 @@ caniuse-lite@^1.0.0, caniuse-lite@^1.0.30000918, caniuse-lite@^1.0.30000955, can
   integrity sha512-8wxNrjAzyiHcLXN/iunskqQnJquQQ6VX8JHfW5kLgAPRSiSuKZiNfmIkP5j7jgyXqAQBSoXyJxfnbCFS0ThSiQ==
 
 caniuse-lite@^1.0.30000929:
-  version "1.0.30000971"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000971.tgz#d1000e4546486a6977756547352bc96a4cfd2b13"
-  integrity sha512-TQFYFhRS0O5rdsmSbF1Wn+16latXYsQJat66f7S7lizXW1PVpWJeZw9wqqVLIjuxDRz7s7xRUj13QCfd8hKn6g==
+  version "1.0.30000974"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000974.tgz#b7afe14ee004e97ce6dc73e3f878290a12928ad8"
+  integrity sha512-xc3rkNS/Zc3CmpMKuczWEdY2sZgx09BkAxfvkxlAEBTqcMHeL8QnPqhKse+5sRTi3nrw2pJwToD2WvKn1Uhvww==
 
 capture-exit@^1.2.0:
   version "1.2.0"
@@ -5156,21 +5156,22 @@ css-loader@1.0.0:
     postcss-value-parser "^3.3.0"
     source-list-map "^2.0.0"
 
-css-loader@^2:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/css-loader/-/css-loader-2.1.1.tgz#d8254f72e412bb2238bb44dd674ffbef497333ea"
-  integrity sha512-OcKJU/lt232vl1P9EEDamhoO9iKY3tIjY5GU+XDLblAykTdgs6Ux9P1hTHve8nFKy5KPpOXOsVI/hIwi3841+w==
+css-loader@^3:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/css-loader/-/css-loader-3.0.0.tgz#bdd48a4921eefedf1f0a55266585944d4e5efc63"
+  integrity sha512-WR6KZuCkFbnMhRrGPlkwAA7SSCtwqPwpyXJAPhotYkYsc0mKU9n/fu5wufy4jl2WhBw9Ia8gUQMIp/1w98DuPw==
   dependencies:
-    camelcase "^5.2.0"
-    icss-utils "^4.1.0"
+    camelcase "^5.3.1"
+    cssesc "^3.0.0"
+    icss-utils "^4.1.1"
     loader-utils "^1.2.3"
     normalize-path "^3.0.0"
-    postcss "^7.0.14"
+    postcss "^7.0.17"
     postcss-modules-extract-imports "^2.0.0"
-    postcss-modules-local-by-default "^2.0.6"
+    postcss-modules-local-by-default "^3.0.2"
     postcss-modules-scope "^2.1.0"
-    postcss-modules-values "^2.0.0"
-    postcss-value-parser "^3.3.0"
+    postcss-modules-values "^3.0.0"
+    postcss-value-parser "^4.0.0"
     schema-utils "^1.0.0"
 
 css-prefers-color-scheme@^3.1.1:
@@ -5884,9 +5885,9 @@ ejs@^2.6.1:
   integrity sha512-0xy4A/twfrRCnkhfk8ErDi5DqdAsAqeGxht4xkCUrsvhhbQNs7E+4jV0CN7+NKIY0aHE72+XvqtBIXzD31ZbXQ==
 
 electron-to-chromium@^1.3.103:
-  version "1.3.137"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.137.tgz#ba7c88024984c038a5c5c434529aabcea7b42944"
-  integrity sha512-kGi32g42a8vS/WnYE7ELJyejRT7hbr3UeOOu0WeuYuQ29gCpg9Lrf6RdcTQVXSt/v0bjCfnlb/EWOOsiKpTmkw==
+  version "1.3.164"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.164.tgz#8680b875577882c1572c42218d53fa9ba5f71d5d"
+  integrity sha512-VLlalqUeduN4+fayVtRZvGP2Hl1WrRxlwzh2XVVMJym3IFrQUS29BFQ1GP/BxOJXJI1OFCrJ5BnFEsAe8NHtOg==
 
 electron-to-chromium@^1.3.122:
   version "1.3.124"
@@ -5979,9 +5980,9 @@ error-inject@^1.0.0:
   integrity sha1-4rPZG1Su1nLzCdlQ0VSFD6EdTzc=
 
 error-overlay-webpack-plugin@^0:
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/error-overlay-webpack-plugin/-/error-overlay-webpack-plugin-0.3.0.tgz#fe7f53bb445fdbb5458409ef07db3161d794bb79"
-  integrity sha512-dRkCBgPQr7KoaT/m/XgJzL0x/7KOqmWM5RvnNTgvh+qDNUy1yRyleBDm/w8P4d7wambEiquf3Q2S+Se7ePEvNg==
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/error-overlay-webpack-plugin/-/error-overlay-webpack-plugin-0.4.0.tgz#5684f55f630fd44796951bcfe2c0f01e596d87dd"
+  integrity sha512-mItuJ3WVDslK9W7d2NBqDfWrXTGrCIGzpSYXUBsR3ddm/AS6zVPKijRAuw0/Ogq3w2nZnWS8r0Hlx5CfzItUew==
   dependencies:
     react-dev-utils "^8.0.0"
     react-error-overlay "^5.1.4"
@@ -7759,10 +7760,10 @@ icss-utils@^2.1.0:
   dependencies:
     postcss "^6.0.1"
 
-icss-utils@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/icss-utils/-/icss-utils-4.1.0.tgz#339dbbffb9f8729a243b701e1c29d4cc58c52f0e"
-  integrity sha512-3DEun4VOeMvSczifM3F2cKQrDQ5Pj6WKhkOq6HD4QTnDUAq8MQRxy5TX6Sy1iY6WPBe4gQ3p5vTECjbIkglkkQ==
+icss-utils@^4.0.0, icss-utils@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/icss-utils/-/icss-utils-4.1.1.tgz#21170b53789ee27447c2f47dd683081403f9a467"
+  integrity sha512-4aFq7wvWyMHKgxsH8QQtGpvbASCf+eM3wPRLI6R+MgAnTCZ6STYsRvttLvRWK0Nfif5piF394St3HeJDaljGPA==
   dependencies:
     postcss "^7.0.14"
 
@@ -10826,9 +10827,9 @@ node-releases@^1.1.13:
     semver "^5.3.0"
 
 node-releases@^1.1.3:
-  version "1.1.21"
-  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-1.1.21.tgz#46c86f9adaceae4d63c75d3c2f2e6eee618e55f3"
-  integrity sha512-TwnURTCjc8a+ElJUjmDqU6+12jhli1Q61xOQmdZ7ECZVBZuQpN/1UnembiIHDM1wCcfLvh5wrWXUF5H6ufX64Q==
+  version "1.1.23"
+  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-1.1.23.tgz#de7409f72de044a2fa59c097f436ba89c39997f0"
+  integrity sha512-uq1iL79YjfYC0WXoHbC/z28q/9pOl8kSHaXdWmAAc8No+bDwqkZbzIJz55g/MUsPgSGm9LZ7QSUbzTcH5tz47w==
   dependencies:
     semver "^5.3.0"
 
@@ -11101,18 +11102,18 @@ octokit-pagination-methods@^1.1.0:
   resolved "https://registry.yarnpkg.com/octokit-pagination-methods/-/octokit-pagination-methods-1.1.0.tgz#cf472edc9d551055f9ef73f6e42b4dbb4c80bea4"
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
-office-ui-fabric-react@^6, office-ui-fabric-react@^6.189.5:
-  version "6.190.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-6.190.0.tgz#85fed2a914a42f0cf9eb53555f735ec801ced14b"
-  integrity sha512-Qoa+OmrDAWhr0ZaStBLR921HnZET2E+bgklQU4vIHMzHA+WvpYw/YZyygF49FiQDaxAznaiO4RowLUm8u6nIpQ==
+office-ui-fabric-react@^7, office-ui-fabric-react@^7.1.1:
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.3.0.tgz#5102b22b58d3e91018fa23fc3f0b953d4cf1b94c"
+  integrity sha512-Fi/irsvaIoQfJDx4y5AuOULbRRId1lKMIuo6c2CL/x2tPgKLUXMD7fLlKQcV4GXExc+k268cUM+2qgQp4ytq1A==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
-    "@uifabric/foundation" "^0.8.1"
-    "@uifabric/icons" "^6.5.3"
-    "@uifabric/merge-styles" "^6.19.2"
-    "@uifabric/set-version" "^1.1.3"
-    "@uifabric/styling" "^6.49.1"
-    "@uifabric/utilities" "^6.41.2"
+    "@uifabric/foundation" "^7.0.1"
+    "@uifabric/icons" "^7.0.2"
+    "@uifabric/merge-styles" "^7.0.2"
+    "@uifabric/set-version" "^7.0.0"
+    "@uifabric/styling" "^7.0.2"
+    "@uifabric/utilities" "^7.0.3"
     prop-types "^15.5.10"
     tslib "^1.7.1"
 
@@ -12026,14 +12027,15 @@ postcss-modules-local-by-default@^1.2.0:
     css-selector-tokenizer "^0.7.0"
     postcss "^6.0.1"
 
-postcss-modules-local-by-default@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/postcss-modules-local-by-default/-/postcss-modules-local-by-default-2.0.6.tgz#dd9953f6dd476b5fd1ef2d8830c8929760b56e63"
-  integrity sha512-oLUV5YNkeIBa0yQl7EYnxMgy4N6noxmiwZStaEJUSe2xPMcdNc8WmBQuQCx18H5psYbVxz8zoHk0RAAYZXP9gA==
+postcss-modules-local-by-default@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/postcss-modules-local-by-default/-/postcss-modules-local-by-default-3.0.2.tgz#e8a6561be914aaf3c052876377524ca90dbb7915"
+  integrity sha512-jM/V8eqM4oJ/22j0gx4jrp63GSvDH6v86OqyTHHUvk4/k1vceipZsaymiZ5PvocqZOl5SFHiFJqjs3la0wnfIQ==
   dependencies:
-    postcss "^7.0.6"
-    postcss-selector-parser "^6.0.0"
-    postcss-value-parser "^3.3.1"
+    icss-utils "^4.1.1"
+    postcss "^7.0.16"
+    postcss-selector-parser "^6.0.2"
+    postcss-value-parser "^4.0.0"
 
 postcss-modules-scope@^1.1.0:
   version "1.1.0"
@@ -12059,12 +12061,12 @@ postcss-modules-values@^1.3.0:
     icss-replace-symbols "^1.1.0"
     postcss "^6.0.1"
 
-postcss-modules-values@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/postcss-modules-values/-/postcss-modules-values-2.0.0.tgz#479b46dc0c5ca3dc7fa5270851836b9ec7152f64"
-  integrity sha512-Ki7JZa7ff1N3EIMlPnGTZfUMe69FFwiQPnVSXC9mnn3jozCRBYIxiZd44yJOV2AmabOo4qFf8s0dC/+lweG7+w==
+postcss-modules-values@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/postcss-modules-values/-/postcss-modules-values-3.0.0.tgz#5b5000d6ebae29b4255301b4a3a54574423e7f10"
+  integrity sha512-1//E5jCBrZ9DmRX+zCtmQtRSV6PV42Ix7Bzj9GbwJceduuf7IqP8MgeTXuRDHOWj2m0VzZD5+roFWDuU8RQjcg==
   dependencies:
-    icss-replace-symbols "^1.1.0"
+    icss-utils "^4.0.0"
     postcss "^7.0.6"
 
 postcss-nesting@^7.0.0:
@@ -12305,7 +12307,7 @@ postcss-selector-parser@^5.0.0, postcss-selector-parser@^5.0.0-rc.3, postcss-sel
     indexes-of "^1.0.1"
     uniq "^1.0.1"
 
-postcss-selector-parser@^6.0.0:
+postcss-selector-parser@^6.0.0, postcss-selector-parser@^6.0.2:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/postcss-selector-parser/-/postcss-selector-parser-6.0.2.tgz#934cf799d016c83411859e09dcecade01286ec5c"
   integrity sha512-36P2QR59jDTOAiIkqEprfJDsoNrvwFei3eCqKd1Y0tUsBimsq39BLp7RD+JWny3WgB1zGhJX8XVePwm9k4wdBg==
@@ -12338,6 +12340,11 @@ postcss-value-parser@^3.0.0, postcss-value-parser@^3.3.0, postcss-value-parser@^
   resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-3.3.1.tgz#9ff822547e2893213cf1c30efa51ac5fd1ba8281"
   integrity sha512-pISE66AbVkp4fDQ7VHBwRNXzAAKJjw4Vw7nWI/+Q3vuly7SNfgYXvm6i5IgFylHGK5sP/xHAbB7N49OS4gWNyQ==
 
+postcss-value-parser@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/postcss-value-parser/-/postcss-value-parser-4.0.0.tgz#99a983d365f7b2ad8d0f9b8c3094926eab4b936d"
+  integrity sha512-ESPktioptiSUchCKgggAkzdmkgzKfmp0EU8jXH+5kbIUB+unr0Y4CY9SRMvibuvYUBjNh1ACLbxqYNpdTQOteQ==
+
 postcss-values-parser@^2.0.0, postcss-values-parser@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/postcss-values-parser/-/postcss-values-parser-2.0.1.tgz#da8b472d901da1e205b47bdc98637b9e9e550e5f"
@@ -12360,6 +12367,15 @@ postcss@^7.0.0, postcss@^7.0.1, postcss@^7.0.14, postcss@^7.0.2, postcss@^7.0.5,
   version "7.0.14"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-7.0.14.tgz#4527ed6b1ca0d82c53ce5ec1a2041c2346bbd6e5"
   integrity sha512-NsbD6XUUMZvBxtQAJuWDJeeC4QFsmWsfozWxCJPWf3M55K9iu2iMDaKqyoOdTJ1R4usBXuxlVFAIo8rZPQD4Bg==
+  dependencies:
+    chalk "^2.4.2"
+    source-map "^0.6.1"
+    supports-color "^6.1.0"
+
+postcss@^7.0.16, postcss@^7.0.17:
+  version "7.0.17"
+  resolved "https://registry.yarnpkg.com/postcss/-/postcss-7.0.17.tgz#4da1bdff5322d4a0acaab4d87f3e782436bad31f"
+  integrity sha512-546ZowA+KZ3OasvQZHsbuEpysvwTZNGJv9EfyCQdsIDltPSWHAeTQ5fQy/Npi2ZDtLI3zs7Ps/p6wThErhm9fQ==
   dependencies:
     chalk "^2.4.2"
     source-map "^0.6.1"
