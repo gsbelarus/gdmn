@@ -1,5 +1,6 @@
 import React from 'react';
 import DaysInMonthJSX from './DaysInMonth';
+import { IconButton } from 'office-ui-fabric-react';
 
 const namesMonthes = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const valuesYears: number[][] = Array.from(
@@ -13,27 +14,28 @@ const valuesYears: number[][] = Array.from(
   return p;
 }, [[]] as number[][]);
 
-export interface ICalenderProps {
+export interface ICalendarProps {
   onChangeSelectDay: (day: number) => void,
   selectDay: number,
-  onChangeSelectMonth: (month: number) => void,
+  onChangeSelectMonth: (month: number, year?: number) => void,
   selectMonth: number,
   onChangeSelectYear: (year: number) => void,
   selectYear: number,
+  onSetToday:() => void,
 }
 
-export interface ICalenderState {
-  showCalender: boolean,
+export interface ICalendarState {
+  showCalendar: boolean,
   showSelectMonth: boolean,
   showSelectYear: boolean,
   showGroupYears: number
 }
 
-export default class CalenderJSX extends React.Component<ICalenderProps, ICalenderState> {
-  constructor(props: ICalenderProps) {
+export default class CalendarJSX extends React.Component<ICalendarProps, ICalendarState> {
+  constructor(props: ICalendarProps) {
     super(props);
     this.state = {
-      showCalender: false,
+      showCalendar: false,
       showSelectMonth: false,
       showSelectYear: false,
       showGroupYears: valuesYears.findIndex((item) => item.includes(Number(this.props.selectYear)))
@@ -42,7 +44,7 @@ export default class CalenderJSX extends React.Component<ICalenderProps, ICalend
 
   render() {
     return (
-      <div className="calender">
+      <div className="calendar" >
         <div className="month-and-year">
           <div
             className="month"
@@ -85,12 +87,13 @@ export default class CalenderJSX extends React.Component<ICalenderProps, ICalend
             : this.state.showSelectYear ?
               <div className="showYears">
                 <div
-                  className="showPrev"
                   hidden={this.state.showGroupYears - 1 === 0}
                   onClick={() => {
                     this.setState({ showGroupYears: this.state.showGroupYears - 1 })
                   }}
-                ></div>
+                >
+                  <IconButton iconProps={{ iconName: 'ChevronLeftSmall' }} ariaLabel="ChevronLeftSmall" />
+                </div>
                 <div className="years">
                   {valuesYears[this.state.showGroupYears].map((item, idx) => {
                     return <div
@@ -113,12 +116,13 @@ export default class CalenderJSX extends React.Component<ICalenderProps, ICalend
                   })}
                 </div>
                 <div
-                  className="showNext"
                   hidden={this.state.showGroupYears + 1 > valuesYears.length - 1}
                   onClick={() => {
                     this.setState({ showGroupYears: this.state.showGroupYears + 1 })
                   }}
-                ></div>
+                >
+                  <IconButton iconProps={{ iconName: 'ChevronRightSmall' }} ariaLabel="ChevronRightSmall" />
+                </div>
               </div>
               :
               <div>
@@ -129,14 +133,13 @@ export default class CalenderJSX extends React.Component<ICalenderProps, ICalend
                   selectYear={this.props.selectYear}
                   onChangeSelectMonth={this.props.onChangeSelectMonth}
                   onChangeSelectYear={this.props.onChangeSelectYear}
-                />
+                  onSetToday={this.props.onSetToday}
+                  />
                 <div
                   className="today"
                   onClick={() => {
-                    this.props.onChangeSelectDay(new Date().getDate());
-                    this.props.onChangeSelectMonth(new Date().getMonth());
+                    this.props.onSetToday();
                     const currYear = new Date().getFullYear();
-                    this.props.onChangeSelectYear(currYear);
                     this.setState({ showGroupYears: valuesYears.findIndex((item) => item.includes(currYear)) });
                   }}
                 >Сегодня</div>

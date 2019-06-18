@@ -18,6 +18,7 @@ import {
   IEntityUpdateFieldInspector
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
+import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 
 interface ILastEdited {
   fieldName: string;
@@ -467,41 +468,50 @@ export const EntityDataDlg = CSSModules( (props: IEntityDataDlgProps): JSX.Eleme
                 return null;
               }
 
-              return (
-                <TextField
-                  key={fd.fieldName}
-                  disabled={locked}
-                  label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                  value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
-                  onChange={
-                    (_e, newValue?: string) => {
-                      if (newValue !== undefined) {
-                        lastEdited.current = {
-                          fieldName: fd.fieldName,
-                          value: newValue
-                        };
-                        changedFields.current[fd.fieldName] = true;
-                        setChanged(true);
+              if (fd.dataType === 5) {
+                return (
+                  <DatepickerJSX
+                    key={`${fd.fieldName}`}
+                    label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+                />);
+              } else {
+                return (
+                  <TextField
+                    key={fd.fieldName}
+                    disabled={locked}
+                    label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+                    onChange={
+                      (_e, newValue?: string) => {
+                        if (newValue !== undefined) {
+                          lastEdited.current = {
+                            fieldName: fd.fieldName,
+                            value: newValue
+                          };
+                          changedFields.current[fd.fieldName] = true;
+                          setChanged(true);
+                        }
                       }
                     }
-                  }
-                  onFocus={
-                    () => {
-                      lastFocused.current = fd.fieldName;
-                      if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
-                        applyLastEdited();
+                    onFocus={
+                      () => {
+                        lastFocused.current = fd.fieldName;
+                        if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                          applyLastEdited();
+                        }
                       }
                     }
-                  }
-                  componentRef={
-                    ref => {
-                      if (ref && lastFocused.current === fd.fieldName) {
-                        needFocus.current = ref;
+                    componentRef={
+                      ref => {
+                        if (ref && lastFocused.current === fd.fieldName) {
+                          needFocus.current = ref;
+                        }
                       }
                     }
-                  }
-                />
-              )
+                  />
+                )
+              }
             })
           }
         </div>

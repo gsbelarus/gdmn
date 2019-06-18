@@ -1,9 +1,11 @@
 import React from 'react';
+import { IconButton } from 'office-ui-fabric-react';
 
 export interface IDaysInMonthProps {
   onChangeSelectDay: (day: number) => void,
-  onChangeSelectMonth: (month: number) => void,
+  onChangeSelectMonth: (month: number, year?: number) => void,
   onChangeSelectYear: (year: number) => void,
+  onSetToday:() => void,
   selectDay: number,
   selectMonth: number,
   selectYear: number
@@ -65,16 +67,16 @@ export default class DaysInMonthJSX extends React.Component<IDaysInMonthProps, I
         </div>
         <div className="showMonth">
           <div
-            className="showPrev"
             onClick={() => {
               if (this.props.selectMonth - 1 < 0) {
-                this.props.onChangeSelectMonth(11)
-                this.props.onChangeSelectYear(this.props.selectYear - 1);
+                this.props.onChangeSelectMonth(11, this.props.selectYear - 1)
               } else {
                 this.props.onChangeSelectMonth(this.props.selectMonth - 1);
               }
             }}
-          ></div>
+          >
+          <IconButton iconProps={{ iconName: 'ChevronLeftSmall' }} ariaLabel="ChevronLeftSmall" />
+        </div>
           <div className="weeks">
             {
               this.tableDays().reduce((p, c) => {
@@ -87,16 +89,16 @@ export default class DaysInMonthJSX extends React.Component<IDaysInMonthProps, I
             }
           </div>
           <div
-            className="showNext"
             onClick={() => {
               if (this.props.selectMonth + 1 > 11) {
-                this.props.onChangeSelectMonth(0)
-                this.props.onChangeSelectYear(this.props.selectYear + 1);
+                this.props.onChangeSelectMonth(0, this.props.selectYear + 1)
               } else {
                 this.props.onChangeSelectMonth(this.props.selectMonth + 1);
               }
             }}
-          ></div>
+          >
+          <IconButton iconProps={{ iconName: 'ChevronRightSmall' }} ariaLabel="ChevronRightSmall" />
+        </div>
         </div>
       </div>
     );

@@ -1,46 +1,49 @@
-body {
-	cursor: default;
-}
 
-.showCalender {
-	width: 40px;
-	height: 40px;
-	cursor: default;
-}
-
-.value {
-	width: 240px;
-	height: 40px;
+.inputDate {
+	position: relative;
 }
 
 .field {
 	display: flex;
-	flex-direction: row;
-	border: 1px solid #040615;
-	align-items: center;
+	align-items: flex-end;
 }
 
-.field > input {
-	border: none;
-	font-size: 14pt;
-	padding: 10px;
+.field > * {
+	width: 100%;
 }
 
-.calender {
+.field > * > * > .ms-TextField-fieldGroup {
+	border-radius: 2px 0px 0px 2px;
+	border-right: none;
+}
+
+.calendar {
+	position: absolute;
 	border: 1px solid #040615;
-	border-radius: 0px 0px 10px 10px;
+	border-radius: 10px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	color: #040615;
 	min-height: 240px;
+	left: 348px;
+	top: 28px;
+	z-index: 9999;
+	transition: all .3s ease;
+	background-color: #FFFFFF;
+	-webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.app {
-	display: flex;
-	-moz-user-select: none;
-	-khtml-user-select: none;
-	-webkit-user-select: none;
+.icon-calendar {
+	width: 35px;
+	border: 1px solid #8A8886;
+	border-radius: 0px 2px 2px 0px;
+	border-left: none;
 }
 
 .month-and-year {
@@ -52,7 +55,7 @@ body {
 	margin: 5px;
 }
 
-.month {
+.month, .year {
 	cursor: pointer;
 }
 
@@ -123,6 +126,7 @@ body {
 .namesOfDayInWeek {
 	display: flex;
 	justify-content: center;
+	cursor: default;
 }
 
 .namesOfDayInWeek > * {
@@ -135,22 +139,6 @@ body {
 .showMonth {
 	display: flex;
 	align-items: center;
-}
-
-.showPrev {
-	background: url(/src/assets/images/prev.png);
-	width: 25px;
-	height: 25px;
-	background-size: cover;
-	cursor: pointer;
-}
-
-.showNext {
-	background: url(/src/assets/images/next.png);
-	background-size: cover;
-	width: 25px;
-	height: 25px;
-	cursor: pointer;
 }
 
 .week {
@@ -190,15 +178,6 @@ body {
 
 .otherDay:hover, .prevMonth:hover, .nextMonth:hover, .selectDay:hover {
 	border: 2px solid #abb49b ;
-}
-
-.imgCalender {
-	margin-right: 5px;
-	background: url(/src/assets/images/calender.png);
-	width: 30px;
-	height: 30px;
-	background-size: cover;
-	cursor: pointer;
 }
 
 .today {
