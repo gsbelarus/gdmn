@@ -8,16 +8,16 @@ import { GdmnAction } from "../../gdmn/actions";
 import { LoadRSActions } from "@src/app/store/loadRSActions";
 import { GridComponentState, GridAction } from "gdmn-grid";
 
-export interface IEntityDataView2RouteProps {
+export interface IEntityDataViewRouteProps {
   entityName: string
 };
 
-export interface IEntityDataView2ContainerProps extends RouteComponentProps<IEntityDataView2RouteProps> {
+export interface IEntityDataViewContainerProps extends RouteComponentProps<IEntityDataViewRouteProps> {
   url: string;
   entityName: string;
 };
 
-export interface IEntityDataView2StateProps {
+export interface IEntityDataViewStateProps {
   rs?: RecordSet;
   entity?: Entity;
   viewTab?: IViewTab;
@@ -25,13 +25,6 @@ export interface IEntityDataView2StateProps {
   gcs: GridComponentState;
 };
 
-export interface IEntityDataView2Props extends RouteComponentProps<IEntityDataView2RouteProps> {
-  rs?: RecordSet;
-  entity?: Entity;
-  url: string;
-  entityName: string;
+export interface IEntityDataViewProps extends IEntityDataViewContainerProps, IEntityDataViewStateProps {
   dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction | LoadRSActions | GridAction>;
-  viewTab?: IViewTab;
-  erModel?: ERModel;
-  gcs: GridComponentState;
 };

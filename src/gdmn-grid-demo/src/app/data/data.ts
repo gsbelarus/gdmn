@@ -4,10 +4,8 @@ import { loadNBRBRates } from "./nbrbRates";
 import { loadNBRBOLAP } from "./nbrbOLAP";
 import { loadDemoData } from "./demoData";
 import { loadDemoOLAP } from "./demoOLAP";
-import { IDataRow } from "gdmn-recordset";
-import { INBRBRate, INBRBCurrency } from "../types";
 
-export const demoRecordSets: (IDemoRecordSet<IDataRow> | IDemoRecordSet<INBRBCurrency> | IDemoRecordSet<INBRBRate>)[] = [
+export const demoRecordSets: IDemoRecordSet[] = [
   {
     name: 'currency',
     createFunc: loadNBRBCurrencies

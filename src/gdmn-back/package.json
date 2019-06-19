@@ -45,7 +45,7 @@
     "stomp-protocol": "^0",
     "strict-event-emitter-types": "^2",
     "uuid": "^3",
-    "ws": "^6"
+    "ws": "^7"
   },
   "devDependencies": {
     "@types/config": "^0",

@@ -1,8 +1,8 @@
-import { RecordSet, IDataRow } from "gdmn-recordset";
+import { RecordSet } from "gdmn-recordset";
 
-export type RSCreateFunc<R extends IDataRow = IDataRow> = (rs: RecordSet<R>) => void;
+export type RSCreateFunc = (rs: RecordSet) => void;
 
-export interface IDemoRecordSet<R extends IDataRow = IDataRow> {
+export interface IDemoRecordSet {
   name: string,
-  createFunc: (name: string, rscf: RSCreateFunc<R>) => void
+  createFunc: (name: string, rscf: RSCreateFunc) => void
 };

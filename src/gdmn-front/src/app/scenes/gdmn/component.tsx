@@ -8,7 +8,6 @@ import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator'
 import { Dispatch } from 'redux';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
-import { ERModelViewContainer } from '@src/app/scenes/ermodel/container';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { SqlListContainer } from '../sql/list/container';
@@ -26,6 +25,8 @@ import { IApplicationInfo } from '@gdmn/server-api';
 import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
 import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
+import { ERModelView2Container } from '../ermodel/ERModelView2Container';
+import { DesignerContainer } from '../designer/DesignerContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -78,6 +79,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('designer', match.url)}</div>
             <div className="RightSideHeaderPart">
             <div>
             <span className="BigLogo">
@@ -152,7 +154,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
           }
           <ViewTabsContainer history={history} match={match} location={location} />
         </div>
-        <main className="WorkArea" style={{ paddingTop: topAreaHeight, marginTop: -topAreaHeight }}>
+        <main className="WorkArea" style={{ height: `calc(100vh - ${topAreaHeight}px)` }}>
           <ErrBoundary>
             <Switch>
               {
@@ -200,7 +202,8 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 path={`${match.path}/er-model`}
                 render={props => {
                   return (
-                    <ERModelViewContainer {...props} />
+                    //<ERModelViewContainer {...props} />
+                    <ERModelView2Container {...props} />
                   );
                 }}
               />
@@ -249,6 +252,16 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               />
               <Route
                 exact={true}
+                path={`${match.path}/designer`}
+                render={props => (
+                  <DesignerContainer
+                    {...props}
+                    url={props.match.url}
+                  />
+                )}
+              />
+              <Route
+                exact={true}
                 path={`${match.path}/entity/:entityName`}
                 render={props => (
                   <EntityDataViewContainer
@@ -261,7 +274,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
               />
               {
               <Route
-                path={`${match.path}/entity/:entityName/edit/:id`}
+                path={`${match.path}/entity/:entityName/add/:id`}
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                   <EntityDataDlgContainer
                     {...props}
@@ -269,9 +282,25 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     entityName={props.match.params.entityName}
                     id={props.match.params.id}
                     url={props.match.url}
+                    newRecord={true}
                   />
                 )}
               />
+              }
+              {
+                <Route
+                  path={`${match.path}/entity/:entityName/edit/:id`}
+                  render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                    <EntityDataDlgContainer
+                      {...props}
+                      key={props.match.url}
+                      entityName={props.match.params.entityName}
+                      id={props.match.params.id}
+                      url={props.match.url}
+                      newRecord={false}
+                    />
+                  )}
+                />
               }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>

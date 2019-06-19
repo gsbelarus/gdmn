@@ -35,7 +35,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
       apiService.query({ query: eq.inspect() })
         .then( response => {
           const result = response.payload.result!;
-          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
+          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data.linkAlias, data.attribute) );
           const rs = RecordSet.create({
             name,
             fieldDefs,
@@ -120,7 +120,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
                 case TTaskStatus.SUCCESS: {
                   const result = response.payload.result!;
-                  const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
+                  const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data.linkAlias, data.attribute) );
                   const rs = RecordSet.create({
                     name,
                     fieldDefs,
@@ -133,7 +133,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
                   dispatch(rsActions.createRecordSet({ name, rs, override }));
 
-                  if (!getState().grid[name]) {
+                  if (override || !getState().grid[name]) {
                     dispatch(
                       createGrid({
                         name,
@@ -145,7 +145,8 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                         })),
                         leftSideColumns: 0,
                         rightSideColumns: 0,
-                        hideFooter: true
+                        hideFooter: true,
+                        override
                       })
                     );
                   }

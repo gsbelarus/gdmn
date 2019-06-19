@@ -221,7 +221,7 @@ export const gdmnActions = {
 
   deleteViewTab: createAction('gdmn/DELETE_VIEW_TAB', resolve => (params: { viewTabURL: string, locationPath?: string, historyPush?: (url: string) => void }) => resolve(params) ),
 
-  saveSessionData: createAction('gdmn/SAVE_SESSION_DATA', resolve => (params: { viewTabURL: string, sessionData?: ISessionData }) => resolve(params) ),
+  saveSessionData: createAction('gdmn/SAVE_SESSION_DATA', resolve => (params: { viewTabURL: string, merge?: boolean, sessionData?: ISessionData }) => resolve(params) ),
 
   getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
     return (sessionInfo: any[]) => resolve(sessionInfo)
