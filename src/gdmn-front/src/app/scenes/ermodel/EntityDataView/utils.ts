@@ -6,8 +6,10 @@ import {
   EntityQuery,
   EntityQueryOptions,
   IEntityQueryResponseFieldAlias,
+  ParentAttribute,
   ScalarAttribute,
-  ParentAttribute
+  SetAttribute,
+  IEntityQueryResponseFieldAliases
 } from "gdmn-orm";
 import {IFieldDef, TFieldType} from "gdmn-recordset";
 
@@ -32,9 +34,7 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
       if (presentField) {
         fields.push(new EntityLinkField(presentField));
       }
-      //if (!fields.length) {
-      //  fields = fields.concat(linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr)));
-      //}
+
       const link = new EntityLink(linkAttr.entities[0], attr.name, fields);
       return new EntityLinkField(attr, [link]);
     });
@@ -91,9 +91,9 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
   );
 }
 
-export function attr2fd(query: EntityQuery, fieldAlias: string, eqfa: IEntityQueryResponseFieldAlias): IFieldDef {
-  const link = query.link.deepFindLink(eqfa.linkAlias)!;
-  const findField = link.fields.find((field) => field.attribute.name === eqfa.attribute);
+export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: string, attribute: string): IFieldDef {
+  const link = query.link.deepFindLink(linkAlias)!;
+  const findField = link.fields.find((field) => field.attribute.name === attribute);
 
   if (!findField) {
     throw new Error("Invalid query data!");
@@ -137,6 +137,6 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, eqfa: IEntityQue
     dataType,
     size,
     caption,
-    eqfa
+    eqfa: { linkAlias, attribute }
   };
 }

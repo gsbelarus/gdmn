@@ -35,7 +35,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
       apiService.query({ query: eq.inspect() })
         .then( response => {
           const result = response.payload.result!;
-          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
+          const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data.linkAlias, data.attribute) );
           const rs = RecordSet.create({
             name,
             fieldDefs,
@@ -120,7 +120,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
                 case TTaskStatus.SUCCESS: {
                   const result = response.payload.result!;
-                  const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data) );
+                  const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data.linkAlias, data.attribute) );
                   const rs = RecordSet.create({
                     name,
                     fieldDefs,

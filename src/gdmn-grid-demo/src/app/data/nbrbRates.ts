@@ -4,7 +4,7 @@ import { List } from "immutable";
 import { INBRBRate } from "../types";
 import nbrbRates from '../../util/nbrbrates.json';
 
-export function loadNBRBRates(name: string, rscf: RSCreateFunc<INBRBRate>) {
+export function loadNBRBRates(name: string, rscf: RSCreateFunc) {
 
     const fieldDefs: FieldDefs = [
       {

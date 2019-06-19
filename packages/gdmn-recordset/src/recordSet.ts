@@ -36,10 +36,10 @@ export interface IRSSQLSelect {
   params?: IRSSQLParams;
 };
 
-export interface IRecordSetOptions<R extends IDataRow = IDataRow> {
+export interface IRecordSetOptions {
   name: string;
   fieldDefs: FieldDefs;
-  data: Data<R>;
+  data: Data;
   sequentially?: boolean;
   masterLink?: IMasterLink;
   eq?: EntityQuery;
@@ -47,40 +47,40 @@ export interface IRecordSetOptions<R extends IDataRow = IDataRow> {
   sql?: IRSSQLSelect;
 };
 
-export interface IRecordSetDataOptions<R extends IDataRow = IDataRow> {
-  data: Data<R>;
+export interface IRecordSetDataOptions {
+  data: Data;
   masterLink?: IMasterLink;
 };
 
-export interface IRecordSetParams<R extends IDataRow = IDataRow> {
+export interface IRecordSetParams {
   name: string;
   eq?: EntityQuery;
   queryPhrase?: string;
   sql?: IRSSQLSelect;
   fieldDefs: FieldDefs;
-  calcFields: TRowCalcFunc<R> | undefined;
-  data: Data<R>;
+  calcFields: TRowCalcFunc | undefined;
+  data: Data;
   status: TStatus;
   currentRow: number;
   sortFields: SortFields;
   allRowsSelected: boolean;
   selectedRows: boolean[];
   filter?: IFilter;
-  savedData?: Data<R>;
+  savedData?: Data;
   searchStr?: string;
   foundRows?: FoundRows;
-  groups?: IDataGroup<R>[];
-  aggregates?: R;
+  groups?: IDataGroup[];
+  aggregates?: IDataRow;
   masterLink?: IMasterLink;
   changed: number;
   locked?: boolean;
 }
 
-export class RecordSet<R extends IDataRow = IDataRow> {
+export class RecordSet {
 
-  private readonly _params: IRecordSetParams<R>;
+  private readonly _params: IRecordSetParams;
 
-  private constructor(params: IRecordSetParams<R>) {
+  private constructor(params: IRecordSetParams) {
     if (!params.data.size && params.currentRow > 0) {
       throw new Error(`For an empty record set currentRow must be 0`);
     }
@@ -93,14 +93,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public static create<R extends IDataRow = IDataRow>(options: IRecordSetOptions<R>): RecordSet<R> {
+  public static create(options: IRecordSetOptions): RecordSet{
     const withCalcFunc = options.fieldDefs.filter(fd => fd.calcFunc);
 
     if (withCalcFunc.length) {
-      return new RecordSet<R>({
+      return new RecordSet({
         ...options,
-        calcFields: (row: R): R => {
-          const res = Object.assign({} as R, row);
+        calcFields: (row: IDataRow): IDataRow => {
+          const res = Object.assign({} as IDataRow, row);
 
           withCalcFunc.forEach(fd => (res[fd.fieldName] = fd.calcFunc!(res)));
 
@@ -114,7 +114,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         changed: 0
       });
     } else {
-      return new RecordSet<R>({
+      return new RecordSet({
         ...options,
         status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
         calcFields: undefined,
@@ -127,7 +127,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  get params(): Readonly<IRecordSetParams<R>> {
+  get params(): Readonly<IRecordSetParams> {
     return this._params;
   }
 
@@ -238,7 +238,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
           prev[acc.fieldName] = acc.getTotal(acc.value);
           return prev;
         },
-        {} as R
+        {} as IDataRow
       );
     }
 
@@ -284,7 +284,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  private _getGroupRowCount(group: IDataGroup<R>): number {
+  private _getGroupRowCount(group: IDataGroup): number {
     const t = group.collapsed
       ? 0
       : group.subGroups.length
@@ -294,9 +294,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _findGroup(
-    groups: IDataGroup<R>[],
+    groups: IDataGroup[],
     rIdx?: number
-  ): { groupIdx: number; group: IDataGroup<R> } {
+  ): { groupIdx: number; group: IDataGroup } {
     const rowIdx = rIdx === undefined ? this.currentRow : rIdx;
 
     const groupsCount = groups.length;
@@ -352,10 +352,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _getData(
-    data: Data<R>,
+    data: Data,
     dataRowIdx: number,
-    calcFields?: TRowCalcFunc<R>
-  ): R {
+    calcFields?: TRowCalcFunc
+  ): IDataRow {
     if (dataRowIdx < 0 || dataRowIdx >= data.size) {
       throw new Error(`Invalid row idx ${dataRowIdx}`);
     }
@@ -369,8 +369,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
   private _get(
     rIdx?: number,
-    calcFields?: TRowCalcFunc<R>
-  ): IRow<R> {
+    calcFields?: TRowCalcFunc
+  ): IRow {
     const rowIdx = rIdx === undefined ? this.currentRow : rIdx;
 
     const {groups, data} = this._params;
@@ -437,7 +437,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this.pkValue(rIdx).map( v => v === null ? 'NULL' : v.toString() );
   }
 
-  public insert(): RecordSet<R> {
+  public insert(): RecordSet{
     this._checkLocked();
 
     const { data, groups, savedData, changed } = this.params;
@@ -445,7 +445,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     if (groups && groups.length) {
       const row = this._get();
 
-      let group: IDataGroup<R>;
+      let group: IDataGroup;
 
       if (row.type === TRowType.HeaderExpanded || row.type === TRowType.HeaderCollapsed) {
         if (this.currentRow > 0) {
@@ -474,12 +474,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const newRow = this.fieldDefs.reduce(
       (r, fd) => ({...r, [fd.fieldName]: null}),
-      {} as R
+      {} as IDataRow
     );
 
     newRow['$$ROW_STATE'] = TRowState.Inserted;
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       data: data.insert(this._adjustIdx(this.currentRow), newRow),
       savedData: savedData ? savedData.push(newRow) : undefined,
@@ -487,7 +487,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  public delete(remove?: boolean, rIdxs?: number[], dontCheckLocked?: boolean): RecordSet<R> {
+  public delete(remove?: boolean, rIdxs?: number[], dontCheckLocked?: boolean): RecordSet{
     if (!dontCheckLocked) this._checkLocked();
 
     if (Array.isArray(rIdxs) && !rIdxs.length) {
@@ -551,7 +551,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         }
       });
 
-      const res = new RecordSet<R>({ ...this._params, data, currentRow, selectedRows, savedData, changed });
+      const res = new RecordSet({ ...this._params, data, currentRow, selectedRows, savedData, changed });
 
       if (this.params.foundRows) {
         return res.search(this.params.searchStr);
@@ -563,8 +563,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public async post(commitFunc: TCommitFunc, unlock: boolean = true): Promise<RecordSet<R>> {
-    let res: RecordSet<R> = this;
+  public async post(commitFunc: TCommitFunc, unlock: boolean = true): Promise<RecordSet> {
+    let res: RecordSet= this;
 
     for (let i = res.size - 1; i >= 0; i--) {
       const row = res._get(i);
@@ -583,7 +583,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             } else {
               delete row.data['$$ROW_STATE'];
               delete row.data['$$PREV_ROW'];
-              res = new RecordSet<R>({
+              res = new RecordSet({
                 ...res._params,
                 changed: res.changed - 1
               });
@@ -614,7 +614,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (unlock && res.locked) {
-      return new RecordSet<R>({
+      return new RecordSet({
         ...res._params,
         locked: undefined
       });
@@ -623,10 +623,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public cancelAll(dontCheckLocked?: boolean): RecordSet<R> {
+  public cancelAll(dontCheckLocked?: boolean): RecordSet{
     if (!dontCheckLocked) this._checkLocked();
 
-    let res: RecordSet<R> = this;
+    let res: RecordSet= this;
 
     for (let i = res.size - 1; i >= 0; i--) {
       const row = res._get(i);
@@ -643,7 +643,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return res;
   }
 
-  public cancel(rowIdx?: number, dontCheckLocked?: boolean): RecordSet<R> {
+  public cancel(rowIdx?: number, dontCheckLocked?: boolean): RecordSet{
     if (!dontCheckLocked) this._checkLocked();
 
     if (!this.size) {
@@ -664,7 +664,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     if (rs === TRowState.Deleted) {
       delete rowData['$$ROW_STATE'];
-      return new RecordSet<R>({
+      return new RecordSet({
         ...this._params,
         data: data.set(adjustedIdx, rowData),
         changed: changed - 1
@@ -681,15 +681,15 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       if (savedData) {
         for (let i = savedData.size - 1; i >= 0; i--) {
           if (savedData.get(i) === rowData) {
-            savedData = savedData.set(i, rowData['$$PREV_ROW'] as R)
+            savedData = savedData.set(i, rowData['$$PREV_ROW'] as IDataRow)
             break;
           }
         }
       }
 
-      return new RecordSet<R>({
+      return new RecordSet({
         ...this._params,
-        data: data.set(adjustedIdx, rowData['$$PREV_ROW'] as R),
+        data: data.set(adjustedIdx, rowData['$$PREV_ROW'] as IDataRow),
         savedData,
         changed: changed - 1
       });
@@ -715,7 +715,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
    * @param startFrom Если задано, то начинает поиск с указанного индекса. Если не задано -- с текущей записи.
    * @param continueFromBegining Если startFrom > 0, то указывает надо ли просматривать RecordSet с начала, после достижения последней записи.
    */
-  public locate(searchFor: R | TDataType[], stopAtFirst?: boolean, startFrom?: number, continueFromBegining: boolean = true): number[] {
+  public locate(searchFor: IDataRow | TDataType[], stopAtFirst?: boolean, startFrom?: number, continueFromBegining: boolean = true): number[] {
     let res: number[] = [];
 
     const searchFields = Array.isArray(searchFor) ? this.pk.map( fd => fd.fieldName ) : Object.keys(searchFor);
@@ -761,7 +761,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return res;
   }
 
-  public get(rowIdx?: number): IRow<R> {
+  public get(rowIdx?: number): IRow {
     const {calcFields} = this._params;
     return this._get(rowIdx, calcFields);
   }
@@ -834,7 +834,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return isNull(this._get(rowIdx, calcFields).data, fieldName);
   }
 
-  public getObject(fields?: string[], rIdx?: number): R {
+  public getObject(fields?: string[], rIdx?: number): IDataRow {
     if (!this.size) {
       throw new Error('Empty recordset.')
     }
@@ -854,31 +854,31 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         (p, f) => {
           p[f] = rowData[f];
           return p;
-        }, {} as R
+        }, {} as IDataRow
       )
     } else {
       return {...rowData};
     }
   }
 
-  public set(newRowData: R, rIdx?: number, setRowState?: boolean): RecordSet<R> {
+  public set(newRowData: IDataRow, rIdx?: number, setRowState?: boolean): RecordSet{
     this._checkLocked();
-
-    if (!this.size) {
-      throw new Error('Empty recordset.')
-    }
 
     const rowIdx = rIdx !== undefined ? rIdx : this.currentRow;
 
-    if (this._get(rowIdx).type !== TRowType.Data) {
+    if (this.size && this._get(rowIdx).type !== TRowType.Data) {
       throw new Error('Not a data row.');
     }
 
     const { data } = this.params;
     let { changed } = this.params;
     const adjustedIdx = this._adjustIdx(rowIdx);
-    const rowData = data.get(adjustedIdx);
-    const rowState = rowData['$$ROW_STATE'] === undefined ? TRowState.Normal : rowData['$$ROW_STATE'];
+    const rowData = this.size ? data.get(adjustedIdx) : undefined;
+    const rowState = rowData
+      ? rowData['$$ROW_STATE'] === undefined
+        ? TRowState.Normal
+        : rowData['$$ROW_STATE']
+      : TRowState.Normal;
 
     if (rowState === TRowState.Deleted) {
       throw new Error(`Can't edit deleted row.`)
@@ -898,21 +898,23 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         if (rowState === TRowState.Normal) {
           changed++;
         }
-        delete rowData['$$PREV_ROW'];
-        delete rowData['$$ROW_STATE'];
-        newRowData['$$PREV_ROW'] = rowData;
-        newRowData['$$ROW_STATE'] = TRowState.Edited;
+        if (rowData) {
+          delete rowData['$$PREV_ROW'];
+          delete rowData['$$ROW_STATE'];
+          newRowData['$$PREV_ROW'] = rowData;
+        }
+        newRowData['$$ROW_STATE'] = rowData ? TRowState.Edited : TRowState.Inserted;
       }
     }
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this.params,
       data: data.set(adjustedIdx, newRowData),
       changed
     })
   }
 
-  private _setFieldValue(fieldName: string, value: TDataType, rIdx?: number): RecordSet<R> {
+  private _setFieldValue(fieldName: string, value: TDataType, rIdx?: number): RecordSet{
     this._checkLocked();
 
     if (!this.size) {
@@ -945,14 +947,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     rowData[fieldName] = value;
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this.params,
       data: data.set(adjustedIdx, rowData),
       changed
     })
   }
 
-  public setValue(fieldName: string, value: TDataType, rIdx?: number): RecordSet<R> {
+  public setValue(fieldName: string, value: TDataType, rIdx?: number): RecordSet{
     if (value === null) {
       return this.setNull(fieldName, rIdx);
     }
@@ -980,7 +982,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setDate(fieldName: string, value: Date, rIdx?: number): RecordSet<R> {
+  public setDate(fieldName: string, value: Date, rIdx?: number): RecordSet{
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
       case TFieldType.Float:
@@ -998,7 +1000,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setBoolean(fieldName: string, value: boolean, rIdx?: number): RecordSet<R> {
+  public setBoolean(fieldName: string, value: boolean, rIdx?: number): RecordSet{
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
       case TFieldType.Float:
@@ -1016,7 +1018,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setInteger(fieldName: string, value: number, rIdx?: number): RecordSet<R> {
+  public setInteger(fieldName: string, value: number, rIdx?: number): RecordSet{
     if (value !== Math.trunc(value)) {
       throw new Error(`Not an integer value.`);
     }
@@ -1038,7 +1040,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setFloat(fieldName: string, value: number, rIdx?: number): RecordSet<R> {
+  public setFloat(fieldName: string, value: number, rIdx?: number): RecordSet{
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer:
         throw new Error(`Invalid type cast for field ${fieldName}`);
@@ -1058,11 +1060,11 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setCurrency(fieldName: string, value: number, rIdx?: number): RecordSet<R> {
+  public setCurrency(fieldName: string, value: number, rIdx?: number): RecordSet{
     return this.setFloat(fieldName, value, rIdx);
   }
 
-  public setString(fieldName: string, value: string, rIdx?: number): RecordSet<R> {
+  public setString(fieldName: string, value: string, rIdx?: number): RecordSet{
     switch (this.getFieldDef(fieldName).dataType) {
       case TFieldType.Integer: {
         const v = Number(value);
@@ -1113,7 +1115,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setNull(fieldName: string, rIdx?: number): RecordSet<R> {
+  public setNull(fieldName: string, rIdx?: number): RecordSet{
     const fd = this.getFieldDef(fieldName);
 
     if (fd.required) {
@@ -1123,8 +1125,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this._setFieldValue(fieldName, null, rIdx);
   }
 
-  public toArray(): IRow<R>[] {
-    const res: IRow<R>[] = [];
+  public toArray(): IRow[] {
+    const res: IRow[] = [];
     const size = this.size;
 
     for (let i = 0; i < size; i++) {
@@ -1134,7 +1136,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return res;
   }
 
-  public indexOf(row: IRow<R>): number {
+  public indexOf(row: IRow): number {
     const size = this.size;
     for (let i = 0; i < size; i++) {
       if (this.get(i) === row) {
@@ -1145,12 +1147,12 @@ export class RecordSet<R extends IDataRow = IDataRow> {
   }
 
   private _cloneGroups(
-    parent: IDataGroup<R> | undefined,
-    groups: IDataGroup<R>[],
-    cloneGroup: CloneGroup<R>
-  ): IDataGroup<R>[] {
-    const res: IDataGroup<R>[] = [];
-    let prev: IDataGroup<R> | undefined = undefined;
+    parent: IDataGroup | undefined,
+    groups: IDataGroup[],
+    cloneGroup: CloneGroup
+  ): IDataGroup[] {
+    const res: IDataGroup[] = [];
+    let prev: IDataGroup | undefined = undefined;
     groups.forEach(g => {
       const cloned = cloneGroup(parent, prev, g);
       if (cloned.subGroups.length) {
@@ -1162,7 +1164,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return res;
   }
 
-  public toggleGroup(rowIdx: number): RecordSet<R> {
+  public toggleGroup(rowIdx: number): RecordSet{
     this._checkLocked();
 
     const {groups} = this._params;
@@ -1173,7 +1175,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     const fg = this._findGroup(groups, rowIdx);
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       currentRow: fg.group.rowIdx,
       selectedRows: [],
@@ -1194,7 +1196,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures<R>): RecordSet<R> {
+  public sort(sortFields: SortFields, dimension?: SortFields, measures?: Measures): RecordSet{
     this._checkLocked();
 
     if (this.status !== TStatus.FULL) {
@@ -1208,7 +1210,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
 
     if (!sortFields.length) {
-      return new RecordSet<R>({
+      return new RecordSet({
         ...this._params,
         sortFields: [],
         searchStr: undefined,
@@ -1225,7 +1227,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         }
         return p;
       },
-      [] as IRow<R>[]
+      [] as IRow[]
     );
 
     const combinedSort = dimension ? sortFields.concat(dimension) : sortFields;
@@ -1278,16 +1280,16 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
     if (dimension && measures) {
       const newFieldDefs: IFieldDef[] = [];
-      const newData: R[] = [];
+      const newData: IDataRow[] = [];
 
       const calcSlice = (
         level: number,
         initialRowIdx: number,
         size: number,
-        newRow: R,
+        newRow: IDataRow,
         olapValue: TDataType[],
         upSuffix: string
-      ): R => {
+      ): IDataRow => {
         const fieldName = dimension[level].fieldName;
         let rowIdx = initialRowIdx;
         let left = size;
@@ -1368,7 +1370,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                     r[sf.fieldName] = row[sf.fieldName];
                     return r;
                   },
-                  {} as R
+                  {} as IDataRow
                 ),
                 [],
                 ""
@@ -1386,7 +1388,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
       groupSlice(0, 0);
 
-      sorted = List<R>(newData);
+      sorted = List<IDataRow>(newData);
       newFieldDefs.sort((a, b) => {
         if (a.olapValue && b.olapValue) {
           for (
@@ -1424,8 +1426,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         const withCalcFunc = fieldDefs.filter(fd => fd.calcFunc);
 
         if (withCalcFunc.length) {
-          calcFields = (row: R): R => {
-            const res = Object.assign({} as R, row);
+          calcFields = (row: IDataRow): IDataRow => {
+            const res = Object.assign({} as IDataRow, row);
 
             withCalcFunc.forEach(fd => (res[fd.fieldName] = fd.calcFunc!(res)));
 
@@ -1444,7 +1446,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         bufferIdx: number,
         bufferSize: number
       ) => {
-        const res: IDataGroup<R>[] = [];
+        const res: IDataGroup[] = [];
         const fieldName = sortFields[level].fieldName;
         let rowIdx = initialRowIdx;
         let bufferBeginIdx = bufferIdx;
@@ -1470,7 +1472,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
               bufferBeginIdx,
               calcFields
             );
-            const header: R = { [fieldName]: headerData[fieldName] } as R;
+            const header: IDataRow = { [fieldName]: headerData[fieldName] } as IDataRow;
             let footer;
 
             if (sortFields[level].calcAggregates) {
@@ -1504,7 +1506,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
                     prev[acc.fieldName] = acc.getTotal(acc.value);
                     return prev;
                   },
-                  {} as R
+                  {} as IDataRow
                 );
               }
             }
@@ -1539,7 +1541,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
 
       const groups = groupData(0, 0, 0, sorted.size);
 
-      return new RecordSet<R>({
+      return new RecordSet({
         ...this._params,
         fieldDefs,
         calcFields,
@@ -1554,7 +1556,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       });
     }
 
-    const res = new RecordSet<R>({
+    const res = new RecordSet({
       ...this._params,
       fieldDefs,
       calcFields,
@@ -1588,14 +1590,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return res;
   }
 
-  public collapseExpandGroups(collapse: boolean): RecordSet<R> {
+  public collapseExpandGroups(collapse: boolean): RecordSet{
     this._checkLocked();
 
     if (!this._params.groups) {
       throw new Error(`Not in grouping mode`);
     }
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       currentRow: 0,
       selectedRows: [],
@@ -1617,7 +1619,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     });
   }
 
-  public moveBy(delta: number): RecordSet<R> {
+  public moveBy(delta: number): RecordSet{
     this._checkLocked();
 
     if (!this.size) {
@@ -1631,7 +1633,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return this.setCurrentRow(newCurrentRow);
   }
 
-  public setCurrentRow(currentRow: number): RecordSet<R> {
+  public setCurrentRow(currentRow: number): RecordSet{
     this._checkLocked();
 
     if (!this.size || this._params.currentRow === currentRow) {
@@ -1642,27 +1644,27 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       throw new Error(`Invalid row index`);
     }
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       currentRow
     });
   }
 
-  public setAllRowsSelected(value: boolean): RecordSet<R> {
+  public setAllRowsSelected(value: boolean): RecordSet{
     this._checkLocked();
 
     if (value === this.allRowsSelected) {
       return this;
     }
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       allRowsSelected: value,
       selectedRows: value ? [] : this._params.selectedRows
     });
   }
 
-  public selectRow(idx: number, selected: boolean): RecordSet<R> {
+  public selectRow(idx: number, selected: boolean): RecordSet{
     this._checkLocked();
 
     if (idx < 0 || idx >= this.size) {
@@ -1691,7 +1693,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     const allRowsSelected =
       this.size === selectedRows.reduce((p, sr) => (sr ? p + 1 : p), 0);
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       allRowsSelected,
       selectedRows: allRowsSelected ? [] : selectedRows
@@ -1718,7 +1720,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  private _setRowsState(state: TRowState, rIdxs?: number[]): RecordSet<R> {
+  private _setRowsState(state: TRowState, rIdxs?: number[]): RecordSet{
     const rowIdxs = rIdxs === undefined ? [this.currentRow] : rIdxs;
 
     let { data, changed } = this.params;
@@ -1750,10 +1752,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       data = data.set(adjustedIdx, row);
     });
 
-    return new RecordSet<R>({ ...this._params, data, changed });
+    return new RecordSet({ ...this._params, data, changed });
   }
 
-  public setFilter(filter: IFilter | undefined): RecordSet<R> {
+  public setFilter(filter: IFilter | undefined): RecordSet{
     this._checkLocked();
 
     if (this.status !== TStatus.FULL) {
@@ -1775,10 +1777,10 @@ export class RecordSet<R extends IDataRow = IDataRow> {
             }
             return p;
           },
-          [] as IRow<R>[]
+          [] as IRow[]
         );
 
-    let newData: Data<R>;
+    let newData: Data;
 
     if (isFilter) {
       const re = new RegExp(filter!.conditions[0].value, "i");
@@ -1798,7 +1800,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       newData = this._params.savedData;
     }
 
-    const res = new RecordSet<R>({
+    const res = new RecordSet({
       ...this._params,
       data: newData,
       currentRow: 0,
@@ -1839,9 +1841,9 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     !!this._params.filter.conditions.length &&
     !!this._params.filter.conditions[0].value;
 
-  public search(searchStr: string | undefined): RecordSet<R> {
+  public search(searchStr: string | undefined): RecordSet{
     if (!searchStr) {
-      return new RecordSet<R>({
+      return new RecordSet({
         ...this._params,
         searchStr: undefined,
         foundRows: undefined
@@ -1879,7 +1881,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       }
     }
 
-    return new RecordSet<R>({
+    return new RecordSet({
       ...this._params,
       searchStr,
       foundRows: foundRows.length ? foundRows : undefined
@@ -1953,7 +1955,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     return [{ str: s }];
   }
 
-  public setData(options: IRecordSetDataOptions<R>): RecordSet<R> {
+  public setData(options: IRecordSetDataOptions): RecordSet{
     this._checkLocked();
 
     switch (this._params.status) {
@@ -1962,7 +1964,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
       case TStatus.PARTIAL:
       case TStatus.FULL:
       default:
-        return new RecordSet<R>({
+        return new RecordSet({
           ...this._params,
           data: options.data,
           status: TStatus.FULL,
@@ -1981,7 +1983,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public loadingData(): RecordSet<R> {
+  public loadingData(): RecordSet{
     this._checkLocked();
 
     switch (this._params.status) {
@@ -1991,14 +1993,14 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         throw new Error("RecordSet is being loaded");
       case TStatus.PARTIAL:
       default:
-        return new RecordSet<R>({
+        return new RecordSet({
           ...this._params,
           status: TStatus.LOADING
         });
     }
   }
 
-  public addData(records: R[], full?: boolean): RecordSet<R> {
+  public addData(records: IDataRow[], full?: boolean): RecordSet{
     this._checkLocked();
 
     switch (this._params.status) {
@@ -2008,7 +2010,7 @@ export class RecordSet<R extends IDataRow = IDataRow> {
         throw new Error("RecordSet is being loaded");
       case TStatus.LOADING:
       default:
-        return new RecordSet<R>({
+        return new RecordSet({
           ...this._params,
           data: this._params.data.push(...records),
           status: full ? TStatus.FULL : TStatus.PARTIAL
@@ -2016,8 +2018,8 @@ export class RecordSet<R extends IDataRow = IDataRow> {
     }
   }
 
-  public setLocked(locked: boolean): RecordSet<R> {
-    return new RecordSet<R>({
+  public setLocked(locked: boolean): RecordSet{
+    return new RecordSet({
       ...this._params,
       locked
     });

@@ -16,7 +16,7 @@ export class Constants {
   public static readonly SERVER = {
     CLUSTER: {
       ENABLED: config.get("server.cluster.enabled") as boolean,
-      WORKERS_COUNT: (config.get("server.cluster.workersCount") > 0
+      WORKERS_COUNT: (config.get("server.cluster.workersCount") as number > 0
         ? config.get("server.cluster.workersCount")
         : os.cpus().length) as number
     },
