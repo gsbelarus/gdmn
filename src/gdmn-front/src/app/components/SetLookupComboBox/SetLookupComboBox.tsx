@@ -31,9 +31,8 @@ type Action = { type: 'SET_SELECTED_OPTIONS', selectedOptions: IComboBoxOption[]
   | { type: 'SET_TEXT', text: string }
   | { type: 'RESTORE_STATE', state: ISetLookupComboBoxState }
   | { type: 'QUERY_START' }
-  | { type: 'DROP_DOWN' }
   | { type: 'QUERY_LOADMORE' }
-  | { type: 'QUERY_INPROGRESS', lookupText: string }
+  | { type: 'QUERY_INPROGRESS' }
   | { type: 'QUERY_DONE', options: IComboBoxOption[] };
 
 function reducer(state: ISetLookupComboBoxState, action: Action): ISetLookupComboBoxState {
@@ -70,51 +69,29 @@ function reducer(state: ISetLookupComboBoxState, action: Action): ISetLookupComb
       };
     }
 
-    case 'DROP_DOWN': {
-      return {
-        ...state,
-        queryState: 'START',
-        dropDown: true
-      };
-    }
-
     case 'QUERY_LOADMORE': {
       return {
         ...state,
         queryState: 'START',
-        text: state.lookupText,
         limit: state.limit * 2,
         dropDown: false
       };
     }
 
     case 'QUERY_INPROGRESS': {
-      const { lookupText } = action;
       return {
         ...state,
-        queryState: 'INPROGRESS',
-        lookupText
+        queryState: 'INPROGRESS'
       };
     }
 
     case 'QUERY_DONE': {
       const { options } = action;
-      if (options.length === 1) {
-        return {
-          ...state,
-          selectedOptions: [options[0]],
-          options,
-          queryState: 'IDLE',
-          text: options[0].text
-        };
-      } else {
-        return {
-          ...state,
-          //selectedOption: undefined,
-          options,
-          queryState: 'IDLE',
-        };
-      }
+      return {
+        ...state,
+        options,
+        queryState: 'IDLE',
+      };
     }
 
     default:
@@ -127,7 +104,7 @@ const defLimit = 16;
 function init(preSelectedOption: IComboBoxOption[] | undefined): ISetLookupComboBoxState {
   return {
     selectedOptions: preSelectedOption,
-    options: preSelectedOption ? preSelectedOption : [],
+    options: [],
     queryState: 'IDLE',
     text: preSelectedOption ? preSelectedOption.map(m => m.text).join(', ') : '',
     lookupText: '',
@@ -175,15 +152,14 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
       }
 
       const doLookup = async () => {
-        const lookupText = dropDown && options.length === 1 && preSelectedOption && preSelectedOption.findIndex(p => String(p.key) === String(options[0].key)) > -1
-          ? ''
-          : text;
-
-        dispatch({ type: 'QUERY_INPROGRESS', lookupText });
+        dispatch({ type: 'QUERY_INPROGRESS' });
         const res = await onLookup(lookupText, limit);
-        const resNew = selectedOptions
-          ? res.map(r => selectedOptions.findIndex(s => String(s.key) === String(r.key)) > -1 ? {key: r.key, text: r.text, selected: true} : r)
-          : res;
+        console.log(selectedOptions);
+        const resNew = (
+          selectedOptions
+          ? [...res, ...selectedOptions]
+          : res
+          ).sort((a, b) => a.selected && a.selected !== b.selected ? -1 : 1);
         if (isMounted.current) {
           dispatch({ type: 'QUERY_DONE', options: resNew });
           if (res.length > 1 && ref.current && hasFocus.current) {
@@ -224,6 +200,7 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
         };
         const selectedOptions = updateSelectedOptionS(currentSelectedOptions, option);
         dispatch({ type: 'SET_SELECTED_OPTIONS', selectedOptions: selectedOptions});
+        console.log(selectedOptions);
         //onChanged(selectedOptions);
       }
     };
@@ -243,10 +220,7 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
     };
 
     onMenuOpen = () => {
-      if (options.length === 1 && preSelectedOption && preSelectedOption.findIndex(p => String(p.key) === String(options[0].key)) > -1) {
-        dispatch({ type: 'DROP_DOWN' });
-      }
-      else if (!options.length) {
+      if (!options.length) {
         dispatch({ type: 'QUERY_START' });
       }
     };
@@ -284,25 +258,25 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
   }
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
-    if (props && lookupText) {
-      const parts = props.text.toUpperCase().split(lookupText.toUpperCase());
-      let start = 0;
-      const res = parts.reduce(
-        (p, i, idx) => {
-          p.push(<span>{props.text.substring(start, start + i.length)}</span>);
-          start += i.length;
-          if (idx < (parts.length - 1)) {
-            p.push(<span style={{ color: 'red' }}>{lookupText}</span>);
-            start += lookupText.length;
-          }
-          return p;
-        },
-        [] as JSX.Element[]
-      );
-      return <>{res}</>;
-    } else {
+    // if (props && lookupText) {
+    //   const parts = props.text.toUpperCase().split(lookupText.toUpperCase());
+    //   let start = 0;
+    //   const res = parts.reduce(
+    //     (p, i, idx) => {
+    //       p.push(<span>{props.text.substring(start, start + i.length)}</span>);
+    //       start += i.length;
+    //       if (idx < (parts.length - 1)) {
+    //         p.push(<span style={{ color: 'red' }}>{lookupText}</span>);
+    //         start += lookupText.length;
+    //       }
+    //       return p;
+    //     },
+    //     [] as JSX.Element[]
+    //   );
+    //   return <>{res}</>;
+    // } else {
       return <span>{props && props.text}</span>;
-    }
+    // }
   };
 
   return (
