@@ -1,0 +1,188 @@
+
+.inputDate {
+	position: relative;
+}
+
+.field {
+	display: flex;
+	align-items: flex-end;
+}
+
+.field > * {
+	width: 100%;
+}
+
+.field > * > * > .ms-TextField-fieldGroup {
+	border-radius: 2px 0px 0px 2px;
+	border-right: none;
+}
+
+.calendar {
+	position: absolute;
+	border: 1px solid #040615;
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	color: #040615;
+	min-height: 240px;
+	left: 348px;
+	top: 28px;
+	z-index: 9999;
+	transition: all .3s ease;
+	background-color: #FFFFFF;
+	-webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.icon-calendar {
+	width: 35px;
+	border: 1px solid #8A8886;
+	border-radius: 0px 2px 2px 0px;
+	border-left: none;
+}
+
+.month-and-year {
+	display: flex;
+	justify-content: space-between;
+}
+
+.month-and-year > * {
+	margin: 5px;
+}
+
+.month, .year {
+	cursor: pointer;
+}
+
+.selectYear {
+	height: 70px;
+}
+
+.monthes {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.groupMonthes{
+	display: flex;
+}
+
+.nameMonth {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 50px;
+	height: 50px;
+	margin: 0px 2px;
+	border: 2px solid #FFFFFF;
+	border-radius: 8px;
+	margin: 5px;
+}
+
+.nameMonth:hover {
+	background-color: #4776b9;
+	border: 2px solid #abb49b ;
+}
+
+.years {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.groupYears{
+	display: flex;
+}
+
+.valueYears {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 49px;
+	height: 50px;
+	margin: 0px 2px;
+	border: 2px solid #FFFFFF;
+	border-radius: 8px;
+}
+
+.valueYears:hover {
+	background-color: #4776b9;
+	border: 2px solid #abb49b ;
+}
+
+.showYears {
+	display: flex;
+	align-items: center;
+}
+
+.namesOfDayInWeek {
+	display: flex;
+	justify-content: center;
+	cursor: default;
+}
+
+.namesOfDayInWeek > * {
+	width: 25px;
+	height: 25px;
+	margin: 1px;
+	color: #144182;
+}
+
+.showMonth {
+	display: flex;
+	align-items: center;
+}
+
+.week {
+	display: flex;
+	justify-content: center;
+}
+
+.week > * {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 25px;
+	height: 25px;
+	margin: 1px;
+	border-radius: 8px;
+	text-align: center;
+	color: #144182;
+	border: 2px solid #FFFFFF;
+}
+
+.selectDay {
+	background-color: #4776b9;
+	color: #FFFFFF;
+	border: 2px solid #FFFFFF;
+	cursor: pointer;
+}
+
+.otherDay {
+	cursor: pointer;
+}
+
+.prevMonth, .nextMonth {
+	color: #abb49b;
+	border: 2px solid #FFFFFF;
+	cursor: pointer;
+}
+
+.otherDay:hover, .prevMonth:hover, .nextMonth:hover, .selectDay:hover {
+	border: 2px solid #abb49b ;
+}
+
+.today {
+	margin: 5px;
+	text-align: center;
+	color: #040615;
+	cursor: pointer;
+}

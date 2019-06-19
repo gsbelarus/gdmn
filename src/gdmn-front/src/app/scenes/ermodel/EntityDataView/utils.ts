@@ -39,26 +39,6 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
       return new EntityLinkField(attr, [link]);
     });
 
-    const setLinkFields = Object.values(entity.attributes)
-    .filter((attr) => attr.type === "Set")
-    .map((attr) => {
-      const linkAttr = attr as EntityAttribute;
-      const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
-        .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
-      const fields: EntityLinkField[] = linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr));
-
-      const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-        || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-        || scalarAttrs.find((attr) => attr.name === "ALIAS")
-        || scalarAttrs.find((attr) => attr.type === "String");
-      if (presentField) {
-        fields.push(new EntityLinkField(presentField));
-      }
-      const link = new EntityLink(linkAttr.entities[0], attr.name, fields);
-      return new EntityLinkField(attr, [link]);
-    });
-
   const parentAttr = Object.values(entity.attributes).find( attr => attr instanceof ParentAttribute );
 
   if (parentAttr) {
@@ -77,7 +57,45 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
   }
 
   return new EntityQuery(
-    new EntityLink(entity, alias, scalarFields.concat(linkFields).concat(setLinkFields)),
+    new EntityLink(entity, alias, scalarFields.concat(linkFields)),
+    pkValues && new EntityQueryOptions(
+    undefined,
+    undefined,
+    [{
+      equals: pkValues.map((value, index) => ({
+        alias,
+        attribute: entity.pk[index],
+        value
+      }))
+    }])
+  );
+}
+
+export function prepareDefaultEntityQuerySetAttr(entity: Entity, pkValues?: any[], alias: string = 'root'): EntityQuery {
+
+  const setLinkFields = Object.values(entity.attributes)
+  .filter((attr) => attr.type === "Set")
+  .map((attr) => {
+    const linkAttr = attr as EntityAttribute;
+    const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
+      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+
+    const fields: EntityLinkField[] = linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr));
+
+    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+      || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+      || scalarAttrs.find((attr) => attr.name === "ALIAS")
+      || scalarAttrs.find((attr) => attr.type === "String");
+    if (presentField) {
+      fields.push(new EntityLinkField(presentField));
+    }
+    const link = new EntityLink(linkAttr.entities[0], attr.name, fields);
+    return new EntityLinkField(attr, [link]);
+  });
+
+
+  return new EntityQuery(
+    new EntityLink(entity, alias, setLinkFields),
     pkValues && new EntityQueryOptions(
     undefined,
     undefined,
