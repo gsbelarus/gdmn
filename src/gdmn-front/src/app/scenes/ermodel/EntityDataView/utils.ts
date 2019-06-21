@@ -71,10 +71,10 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
   );
 }
 
-export function prepareDefaultEntityQuerySetAttr(entity: Entity, pkValues?: any[], alias: string = 'root'): EntityQuery {
+export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname: string, pkValues?: any[], alias: string = 'root'): EntityQuery {
 
   const setLinkFields = Object.values(entity.attributes)
-  .filter((attr) => attr.type === "Set")
+  .filter((attr) => attr.type === "Set" && attr.name === fieldname)
   .map((attr) => {
     const linkAttr = attr as EntityAttribute;
     const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
