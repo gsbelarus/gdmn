@@ -77,12 +77,12 @@ export class Update {
 
         return "\n  DELETE\n" +
           `  FROM ${mainCrossRelationName}\n` +
-          `  WHERE ${Constants.DEFAULT_CROSS_PK_OWN_NAME} = :${Update.PARENT_ID};\n`
+          `  WHERE ${field.attribute.adapter.crossPk[0]} = :${Update.PARENT_ID};\n`
           + set.map((entry) => {
-              const values: string[] = [];
               const mainCross: string[] = [];
 
               return entry.pkValues.map((pk) => {
+                const values: string[] = [];
                 values.push(`${this._addToParams(pk)}`);
 
                 entry.setAttributes && entry.setAttributes.map((s) => {
@@ -91,10 +91,10 @@ export class Update {
                 });
 
                 return `\n  INSERT INTO` +
-                  ` ${mainCrossRelationName}(${Constants.DEFAULT_CROSS_PK_OWN_NAME}, ` +
-                  `${Constants.DEFAULT_CROSS_PK_REF_NAME}${mainCross.length ? ", " + mainCross.join(", ") : ""})` +
-                  `\n  VALUES(:${Update.PARENT_ID}, ${values.join(", ")});\n`;
-              });
+                  ` ${mainCrossRelationName}(${field.attribute.adapter.crossPk[0]}, ` +
+                  `${field.attribute.adapter.crossPk[1]}${mainCross.length ? ", " + mainCross.join(", ") : ""})` +
+                  `\n  VALUES(:${Update.PARENT_ID}, ${values.join(", ")});`;
+              }).join("\n")+"\n";
             }
           ).join("\n");
       }).join("\n");
