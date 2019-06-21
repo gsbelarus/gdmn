@@ -91,6 +91,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { selection, activeCell: prevActiveCell } = state;
 
       if (!shiftKey) {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          activeCell,
+          selection: undefined
+        }));
         return {
           ...state,
           activeCell,
@@ -99,6 +104,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
 
       if (!selection) {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          activeCell,
+          selection: {
+            left: Math.min(prevActiveCell.x, activeCell.x),
+            top: Math.min(prevActiveCell.y, activeCell.y),
+            right: Math.max(prevActiveCell.x, activeCell.x),
+            bottom: Math.max(prevActiveCell.y, activeCell.y),
+          }
+        }));
         return {
           ...state,
           activeCell,
@@ -110,6 +125,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           }
         };
       } else {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          activeCell,
+          selection: {
+            left: Math.min(selection.left, activeCell.x),
+            top: Math.min(selection.top, activeCell.y),
+            right: Math.max(selection.right, activeCell.x),
+            bottom: Math.max(selection.bottom, activeCell.y),
+          }
+        }));
         return {
           ...state,
           activeCell,
@@ -128,11 +153,19 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { areas } = state;
 
       if (activeArea >= 0 && activeArea <= (areas.length - 1)) {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          activeArea
+        }));
         return {
           ...state,
           activeArea
         }
       } else {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          activeArea: undefined
+        }));
         return {
           ...state,
           activeArea: undefined
@@ -164,16 +197,26 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           newAreas[activeArea].direction = direction;
         }
 
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          areas: newAreas
+        }));
+
         return {
           ...state,
           areas: newAreas
         }
       } else {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
     }
 
     case 'CLEAR_SELECTION': {
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        selection: undefined
+      }));
       return {
         ...state,
         selection: undefined
@@ -184,11 +227,21 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { previewMode } = state;
 
       if (previewMode) {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          previewMode: false
+        }));
         return {
           ...state,
           previewMode: false
         }
       } else {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          previewMode: true,
+          setGridSize: false,
+          showAreaExplorer: false
+        }));
         return {
           ...state,
           previewMode: true,
@@ -203,6 +256,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { fieldName, include } = action;
 
       if (activeArea === undefined) {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
 
@@ -222,6 +276,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         };
       }
 
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        areas: newAreas
+      }));
       return {
         ...state,
         areas: newAreas
@@ -232,8 +290,17 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { selection, areas, activeCell: {x, y} } = state;
       if (selection) {
         if (areas.some( area => intersect(area.rect, selection) )) {
+          localStorage.setItem('designer', JSON.stringify(state));
           return state;
         } else {
+          localStorage.setItem('designer', JSON.stringify({
+            ...state,
+            areas: [...areas, { rect: selection, fields: [], direction: 'row' }],
+            activeArea: state.areas.length,
+            selection: undefined,
+            showAreaExplorer: true,
+            setGridSize: false
+          }));
           return {
             ...state,
             areas: [...areas, { rect: selection, fields: [], direction: 'row' }],
@@ -245,6 +312,22 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         }
       }
       else {
+        localStorage.setItem('designer', JSON.stringify({
+          ...state,
+          areas: [...areas, {
+            rect: {
+              left: x,
+              top: y,
+              right: x,
+              bottom: y
+            },
+            fields: [],
+            direction: 'row'
+          }],
+          activeArea: state.areas.length,
+          showAreaExplorer: true,
+          setGridSize: false
+        }));
         return {
           ...state,
           areas: [...areas, {
@@ -268,9 +351,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { areas, activeArea } = state;
 
       if (!areas.length || activeArea === undefined) {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
 
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
+        activeArea: undefined,
+        showAreaExplorer: false
+      }));
       return {
         ...state,
         areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
@@ -284,11 +374,19 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { column, size } = action;
 
       if (column >= grid.columns.length) {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
 
       const newColumns = [...grid.columns];
       newColumns[column] = size;
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        grid: {
+          ...grid,
+          columns: newColumns
+        }
+      }));
       return {
         ...state,
         grid: {
@@ -303,11 +401,19 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { row, size } = action;
 
       if (row >= grid.rows.length) {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
 
       const newRows = [...grid.rows];
       newRows[row] = size;
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        grid: {
+          ...grid,
+          rows: newRows
+        }
+      }));
       return {
         ...state,
         grid: {
@@ -318,6 +424,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'TOGGLE_SET_GRID_SIZE': {
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        setGridSize: !state.setGridSize,
+        showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer
+      }));
       return {
         ...state,
         setGridSize: !state.setGridSize,
@@ -326,6 +437,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'TOGGLE_SHOW_AREA_EXPLORER': {
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
+        showAreaExplorer: !state.showAreaExplorer
+      }));
       return {
         ...state,
         setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
@@ -335,6 +451,13 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'ADD_COLUMN': {
       const { grid, activeCell: { x } } = state;
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        grid: {
+          ...grid,
+          columns: [...grid.columns.slice(0, x + 1), { unit: 'FR', value: 1}, ...grid.columns.slice(x + 1)]
+        }
+      }));
       return {
         ...state,
         grid: {
@@ -346,6 +469,13 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'ADD_ROW': {
       const { grid, activeCell: { y } } = state;
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        grid: {
+          ...grid,
+          rows: [...grid.rows.slice(0, y + 1), { unit: 'FR', value: 1}, ...grid.rows.slice(y + 1)]
+        }
+      }));
       return {
         ...state,
         grid: {
@@ -359,6 +489,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
 
       if (grid.columns.length === 1 || selection) {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
 
@@ -367,6 +498,23 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         .map( area => area.rect.right > x ? {...area, rect: {...area.rect, right: area.rect.right - 1}} : area )
         .map( area => area.rect.left > x ? {...area, rect: {...area.rect, left: area.rect.left - 1}} : area );
 
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        grid: {
+          ...grid,
+          columns: [...grid.columns.slice(0, x), ...grid.columns.slice(x + 1)]
+        },
+        activeCell: {
+          x: x > 0 && x >= (grid.columns.length - 1) ? x - 1 : x,
+          y
+        },
+        areas: newAreas,
+        activeArea: activeArea === undefined || !newAreas.length
+          ? undefined
+          : activeArea < newAreas.length
+          ? activeArea
+          : undefined
+      }));
       return {
         ...state,
         grid: {
@@ -390,6 +538,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
 
       if (grid.rows.length === 1 || selection) {
+        localStorage.setItem('designer', JSON.stringify(state));
         return state;
       }
 
@@ -398,6 +547,23 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         .map( area => area.rect.bottom > y ? {...area, rect: {...area.rect, bottom: area.rect.bottom - 1}} : area )
         .map( area => area.rect.top > y ? {...area, rect: {...area.rect, top: area.rect.top - 1}} : area );
 
+      localStorage.setItem('designer', JSON.stringify({
+        ...state,
+        grid: {
+          ...grid,
+          rows: [...grid.rows.slice(0, y), ...grid.rows.slice(y + 1)]
+        },
+        activeCell: {
+          x,
+          y: y > 0 && y >= (grid.rows.length - 1) ? y - 1 : y
+        },
+        areas: newAreas,
+        activeArea: activeArea === undefined || !newAreas.length
+          ? undefined
+          : activeArea < newAreas.length
+          ? activeArea
+          : undefined
+      }));
       return {
         ...state,
         grid: {
@@ -422,7 +588,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
   const { url, viewTab, dispatch } = props;
-  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }, designerDispatch] = useReducer(reducer, {
+  const localState = localStorage.getItem('designer') === null ? undefined : JSON.parse(localStorage.getItem('designer')!);
+  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }, designerDispatch] = useReducer(reducer, localState !== undefined ? localState as IDesignerState :  {
     grid: {
       columns: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
       rows: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
