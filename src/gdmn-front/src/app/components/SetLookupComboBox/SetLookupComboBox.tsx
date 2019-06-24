@@ -147,13 +147,19 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
       const doLookup = async () => {
         dispatch({ type: 'QUERY_INPROGRESS' });
         const res = await onLookup('', limit);
-        const resNew = (
-          selectedOptions
-          ? [...res, ...selectedOptions]
-          : res
-          ).sort((a, b) => a.selected && a.selected !== b.selected ? -1 : 1);
+        /**
+         * Пометим в массиве извлеченных значений, те, которые уже выбраны.
+         */
+        const newRes = res.map( r => selectedOptions && selectedOptions.find( so => so.key === r.key ) ? {...r, selected: true} : r );
+
+        /**
+         * Добавим в res отсутствующие значения. Отсортируем, чтобы выделенные отображалтсь вначале
+         */
+        const fullRes = (selectedOptions ? newRes.concat( selectedOptions.filter( so => !newRes.find( r => r.key === so.key ) ) ) : newRes)
+          .sort((a, b) => a.text < b.text ? -1 : 1)
+          .sort((a, b) => a.selected && a.selected !== b.selected ? -1 : 1);
         if (isMounted.current) {
-          dispatch({ type: 'QUERY_DONE', options: resNew });
+          dispatch({ type: 'QUERY_DONE', options: fullRes });
           if (res.length > 1 && ref.current && hasFocus.current) {
             ref.current.focus(true, true);
           }
@@ -179,9 +185,9 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
     onChangeMulti = (event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
       if (option) {
         const newSelectedOptions = selectedOptions ? [...selectedOptions] : [];
-        const index = newSelectedOptions.findIndex(s => String(s.key) === String(option.key));
+        const index = newSelectedOptions.findIndex(s => s.key === option.key);
         if (option.selected && index < 0) {
-          newSelectedOptions.push({key: String(option.key), text: option.text, selected: true});
+          newSelectedOptions.push({key: option.key, text: option.text, selected: true});
         } else {
           newSelectedOptions.splice(index, 1);
         }

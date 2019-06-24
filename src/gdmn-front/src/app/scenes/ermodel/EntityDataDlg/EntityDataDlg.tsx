@@ -18,9 +18,7 @@ import {
   SetAttribute,
   EntityAttribute,
   EntityLinkField,
-  IEntityQueryResponse,
-  IAttributeAdapter,
-  Entity
+  IEntityQueryResponse
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
@@ -121,20 +119,13 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       }
 
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
-        console.log(fieldName);
-
         const attr = entity.attributes[fieldName] as EntityAttribute;
-        console.log(attr);
         if (attr instanceof SetAttribute) {
-          console.log(setComboBoxData[fieldName].filter(s => s.selected).map(d => {return d.key})[0]);
           return {
             attribute: fieldName,
-            value: setComboBoxData[fieldName].filter(s => s.selected).map(d => {return d.key})[0] // setComboBoxData[fieldName].filter(s => s.selected === true).map(d => d.key)
-            // [
-            //   {
-            //     pkValues: setComboBoxData[fieldName].filter(s => s.selected === true).map(d => d.key)
-            //   }
-            // ]
+            value: [{
+                pkValues: setComboBoxData[fieldName].filter(s => s.selected).map( d => d.key )
+              }]
           }
         }
 
@@ -175,7 +166,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             return;
           }
         } else {
-          console.log(fields);
           const updateResponse = await apiService.update({
             update: {
               entity: entityName,
@@ -241,7 +231,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         }
       });
     }
-  }, [rs, changed]);
+  }, [rs, changed, setComboBoxData]);
 
   const deleteRecord = useCallback( () => {
     if (rs) {
@@ -378,6 +368,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
            *
            */
           const response = await apiService.query({query: eq.inspect()});
+
           const result = response.payload.result!;
           rs = rs.set(mapData(result, fieldDefs));
         }
@@ -400,14 +391,28 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           .filter( attr => attr instanceof SetAttribute )
           .map( attr => {
             const eqSet = prepareDefaultEntityQuerySetAttr(entity, attr.name, [id]);
-            const attrEnt = entity.attributes[attr.name] as EntityAttribute;
             return apiService.query({ query: eqSet.inspect() })
               .then( response => {
-                if (response.payload.result) {
+                const result = response.payload.result;
+                if (result) {
+                  const attrSet = entity.attributes[attr.name] as EntityAttribute;
+                  const linkEntity = attrSet.entities[0];
+                  const scalarAttrs = Object.values(linkEntity.attributes)
+                    .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+
+                  const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                    || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                    || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                    || scalarAttrs.find((attr) => attr.type === "String");
+
+                  const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === attr.name && data.attribute === 'ID' )![0];
+                  const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === attr.name
+                    && (data.attribute === presentField!.name))![0];
+
                   return {
-                    [attr.name]: response.payload.result.data.map( r => ({
-                      key: r.F$1,
-                      text: r.F$2,
+                    [attr.name]: result.data.map( r => ({
+                      key: r[idAlias],
+                      text: r[nameAlias],
                       selected: true
                     }))
                   } as ISetComboBoxData;
@@ -541,25 +546,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
 
-
-
-
-
-    // if (setAttr) {
-    //   console.log(setAttr);
-
-    //   const fkFieldName = eqSet.link.alias;
-    //   // const refIdFieldAlias = fd.fieldName;
-    //   // const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
-    //   // const refNameFieldAlias = refNameFieldDef ? refNameFieldDef.fieldName : '';
-    //   // const attr = entity.attributes[fkFieldName] as EntityAttribute;
-    //   // const linkEntity = attr.entities[0];
-    // }
-
-
- // };
-
- console.log(setComboBoxData);
   return (
     <>
       <CommandBar items={commandBarItems} />
@@ -585,7 +571,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 key={setAttrName}
                 name={setAttrName}
                 label={setAttrName}
-                preSelectedOption={data}
+                preSelectedOption={data ? data : undefined}
                 getSessionData={
                   () => {
                     if (!controlsData.current) {
@@ -596,21 +582,13 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
                 onChanged={
                   (option: IComboBoxOption[] | undefined) => {
-                    // let changedRs = rs;
-                    // if (option) {
-                    //   changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                    //   if (refNameFieldAlias) {
-                    //     changedRs = changedRs.setValue(refNameFieldAlias, option.text);
-                    //   }
-                    // } else {
-                    //   changedRs = changedRs.setNull(refIdFieldAlias);
-                    //   if (refNameFieldAlias) {
-                    //     changedRs = changedRs.setNull(refNameFieldAlias);
-                    //   }
-                    // }
-                    // dispatch(rsActions.setRecordSet(changedRs));
-                    setChanged(true);
-                    changedFields.current[setAttrName] = true;
+                    if (option) {
+                      setSetComboBoxData( {...setComboBoxData,
+                        [setAttrName]: option
+                      });
+                      setChanged(true);
+                      changedFields.current[setAttrName] = true;
+                    }
                   }
                 }
                 onLookup={
