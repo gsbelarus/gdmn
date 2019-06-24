@@ -1,0 +1,21 @@
+.sql-container {
+  display: flex;
+  width: 100%;
+  padding: 10px;
+}
+
+.sql-container .hor{
+  flex-direction: column;
+}
+
+.sql-container .ver{
+  flex-direction: row;
+}
+
+.sql-editor {
+  background-color: #fff;
+}
+
+.sql-data-view {
+  border: 1px solid  grey;
+}

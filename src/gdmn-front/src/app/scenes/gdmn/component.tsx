@@ -10,7 +10,7 @@ import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
-import { SqlListContainer } from '../sql/list/container';
+import { SqlContainer } from '../sql/SqlContainer';
 import { SqlViewContainer } from '../sql/EditView/container';
 import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
 import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
@@ -220,33 +220,10 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 path={`${match.path}/sql`}
                 render={props => {
                   return (
-                    <SqlListContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/sql/:id`}
-                render={props => {
-                  return (
-                    <SqlDataViewContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/sql/:id/edit`}
-                render={props => {
-                  return (
-                    <SqlViewContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/sql/:id/view`}
-                render={props => {
-                  return (
-                    <SqlDataDlgViewContainer {...props} />
+                    <SqlContainer
+                      {...props}
+                      url={props.match.url}
+                    />
                   );
                 }}
               />
