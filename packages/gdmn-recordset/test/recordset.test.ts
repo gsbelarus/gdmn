@@ -5,6 +5,44 @@ import { TRowState } from '../src';
 
 describe('recordset', () => {
 
+  it('create empty recordset', () => {
+    const fieldDefs = [
+      {
+        fieldName: 'id',
+        dataType: TFieldType.Integer,
+        caption: 'id',
+        required: true
+      }
+    ];
+
+    let rs = RecordSet.create({
+      name: 'test',
+      fieldDefs,
+      data: List([] as IDataRow[])
+    });
+
+    expect(rs.size).toEqual(0);
+    expect(rs.currentRow).toEqual(0);
+
+    rs = rs.set({ id: 1 }, undefined, true);
+    expect(rs.size).toEqual(1);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState() === TRowState.Inserted);
+    expect(rs.getInteger('id') === 1);
+
+    rs = rs.set({ id: 2 });
+    expect(rs.size).toEqual(1);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState() === TRowState.Inserted);
+    expect(rs.getInteger('id') === 2);
+
+    rs = rs.set({ id: 3 }, undefined, true);
+    expect(rs.size).toEqual(1);
+    expect(rs.currentRow).toEqual(0);
+    expect(rs.getRowState() === TRowState.Edited);
+    expect(rs.getInteger('id') === 3);
+  });
+
   it('creation', () => {
 
     const fieldDefs = [

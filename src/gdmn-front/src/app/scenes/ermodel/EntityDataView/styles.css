@@ -3,6 +3,7 @@
   flex-direction: row;
   padding-left: 8px;
   padding-bottom: 8px;
+  min-height: 92px;
 }
 
 .OptionsPanel > * {
@@ -13,7 +14,6 @@
   min-width: 640px;
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
 }
 
 .QueryBox > *:first-child {

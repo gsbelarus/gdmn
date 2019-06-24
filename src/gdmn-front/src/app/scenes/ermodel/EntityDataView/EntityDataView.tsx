@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, PrimaryButton } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
@@ -15,46 +15,94 @@ import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
 
+interface IEntityDataViewState {
+  phrase: string;
+  phraseError?: string;
+  showSQL?: boolean;
+};
+
+type Action = { type: 'SET_PHRASE', phrase: string }
+  | { type: 'SET_PHRASE_ERROR', phraseError: string }
+  | { type: 'SET_SHOW_SQL', showSQL: boolean };
+
+function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
+  switch (action.type) {
+    case 'SET_PHRASE': {
+      const { phrase } = action;
+
+      return {
+        ...state,
+        phrase,
+        phraseError: undefined
+      }
+    }
+
+    case 'SET_PHRASE_ERROR': {
+      const { phraseError } = action;
+
+      return {
+        ...state,
+        phraseError
+      }
+    }
+
+    case 'SET_SHOW_SQL': {
+      const { showSQL } = action;
+
+      return {
+        ...state,
+        showSQL
+      }
+    }
+  }
+
+  return state;
+};
+
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
   const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
-  const [showSQL, setShowSQL] = useState(false);
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
 
-  const [phrase, setPhrase] = useState(
-    rs && rs.queryPhrase
-    ? rs.queryPhrase
-    : entityName
-    ? `покажи все ${entityName}`
-    : ''
-  );
+  const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
+    phrase: rs && rs.queryPhrase
+      ? rs.queryPhrase
+      : entityName
+      ? `покажи все ${entityName}`
+      : ''
+  });
 
   const applyPhrase = () => {
-    if (erModel) {
-      const parsedText: ParsedText[] = parsePhrase(phrase);
-      const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-      if (phrases.length) {
-        const erTranslatorRU = new ERTranslatorRU(erModel)
-        const command = erTranslatorRU.process(phrases);
-        const eq = command[0] ? command[0].payload : undefined;
-        if (eq) {
-          dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+    if (erModel && entity) {
+      if (phrase) {
+        try {
+          const parsedText: ParsedText[] = parsePhrase(phrase);
+          const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
+          if (phrases.length) {
+            const erTranslatorRU = new ERTranslatorRU(erModel)
+            const command = erTranslatorRU.process(phrases);
+            const eq = command[0] ? command[0].payload : undefined;
+            if (eq) {
+              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+            }
+          }
         }
+        catch (e) {
+          viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
+        }
+      } else {
+        const eq = prepareDefaultEntityQuery(entity);
+        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
       }
     }
   };
 
   useEffect( () => {
     if (!rs && entity) {
-      if (!phrase) {
-        const eq = prepareDefaultEntityQuery(entity);
-        dispatch(loadRSActions.attachRS({ name: entityName, eq }));
-      } else {
-        applyPhrase();
-      }
+      applyPhrase();
     }
   }, [rs, entity]);
 
@@ -100,7 +148,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   const onSetFieldValue = (event: TRecordsetSetFieldValue) => dispatch(rsActions.setFieldValue({ name: event.rs.name, fieldName: event.fieldName, value: event.value }));
 
-  const onCloseSQL = () => setShowSQL(false);
+  const onCloseSQL = () => viewDispatch({ type: 'SET_SHOW_SQL', showSQL: false });
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
@@ -154,7 +202,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       iconProps: {
         iconName: 'FileCode'
       },
-      onClick: () => setShowSQL(true)
+      onClick: () => viewDispatch({ type: 'SET_SHOW_SQL', showSQL: true })
     }
   ];
 
@@ -192,13 +240,24 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             />
             <span styleName="QueryBox">
               <TextField
+                styles={{
+                  root: {
+                    width: '100%'
+                  }
+                }}
                 label="Query:"
                 value={phrase}
-                onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
+                onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
+                errorMessage={ phraseError ? phraseError : undefined }
+                onRenderSuffix={
+                  props =>
+                    <span
+                      onClick={applyPhrase}
+                    >
+                      Применить
+                    </span>
+                }
               />
-              <PrimaryButton onClick={applyPhrase} >
-                Применить
-              </PrimaryButton>
             </span>
           </div>
       </div>

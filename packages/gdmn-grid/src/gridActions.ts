@@ -11,6 +11,7 @@ export const createGrid = createAction('GRID/CREATE', resolve => {
       leftSideColumns: number;
       rightSideColumns: number;
       hideFooter: boolean;
+      override?: boolean;
     }>
   ) => resolve(params);
 });

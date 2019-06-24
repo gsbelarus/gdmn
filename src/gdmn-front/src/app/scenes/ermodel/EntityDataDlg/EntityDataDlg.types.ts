@@ -15,6 +15,7 @@ export interface IEntityDataDlgContainerProps extends RouteComponentProps<IEntit
   url: string;
   entityName: string;
   id: string;
+  newRecord: boolean;
 };
 
 export interface IEntityDataDlgStateProps {
@@ -35,4 +36,5 @@ export interface IEntityDataDlgProps extends RouteComponentProps<IEntityDataDlgR
   srcRs?: RecordSet;
   viewTab?: IViewTab;
   erModel: ERModel;
+  newRecord: boolean;
 };
