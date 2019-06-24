@@ -36,7 +36,7 @@ export const SqlViewContainer = compose<any, RouteComponentProps<any>>(
         // console.log(ownProps.match.params);
         // console.log(ownProps.location.pathname);
         const url = ownProps.location.pathname;
-        ownProps.history!.push(url.substring(0, url.search('[^/]+(?=/$|$)')-1));
+        ownProps.history!.push(url.substring(0, url.search('[^/]+(?=/$|$)')-1)); // Временно. До лучше реализации
       }),
       clear: () => thunkDispatch((dispatch) => {dispatch(clear())}),
       onChange: (ev: any, text?: string) => thunkDispatch((dispatch) => { dispatch(setExpression(text || ""))})
