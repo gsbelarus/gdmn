@@ -23,6 +23,7 @@ import {
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
+import { Designer } from '../../designer/Designer';
 
 interface ILastEdited {
   fieldName: string;
@@ -74,6 +75,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
+  const [designer, setDesigner] = useState(false);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -463,11 +465,23 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       },
       onClick: getNavigationAction(+1)
     },
+    {
+      key: 'designer',
+      text: 'Дизайнер',
+      iconProps: {
+        iconName: 'Designer'
+      },
+      onClick: () => { setDesigner(true); }
+    },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
 
   return (
     <>
+      {
+        designer ? <Designer url={url} dispatch={dispatch} fields={rs.fieldDefs} /> :
+      <>
       <CommandBar items={commandBarItems} />
+      
       {
         error
         &&
@@ -735,6 +749,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           }
         </div>
       </div>
+      </>
+      }
     </>
   );
 }, styles, { allowMultiple: true });

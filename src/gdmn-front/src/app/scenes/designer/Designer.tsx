@@ -67,31 +67,31 @@ interface IDesignerState {
   previewMode?: boolean;
 };
 
-type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
-  | { type: 'SET_ACTIVE_AREA', activeArea: number }
-  | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
-  | { type: 'SET_ROW_SIZE', row: number, size: ISize }
-  | { type: 'AREA_FIELD', fieldName: string, include: boolean }
-  | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection }
-  | { type: 'PREVIEW_MODE' }
-  | { type: 'TOGGLE_SET_GRID_SIZE' }
-  | { type: 'TOGGLE_SHOW_AREA_EXPLORER' }
-  | { type: 'ADD_COLUMN' }
-  | { type: 'ADD_ROW' }
-  | { type: 'DELETE_COLUMN' }
-  | { type: 'DELETE_ROW' }
-  | { type: 'CREATE_AREA' }
-  | { type: 'DELETE_AREA' }
-  | { type: 'CLEAR_SELECTION' };
+type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean, url: string }
+  | { type: 'SET_ACTIVE_AREA', activeArea: number, url: string }
+  | { type: 'SET_COLUMN_SIZE', column: number, size: ISize, url: string }
+  | { type: 'SET_ROW_SIZE', row: number, size: ISize, url: string }
+  | { type: 'AREA_FIELD', fieldName: string, include: boolean, url: string }
+  | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection, url: string }
+  | { type: 'PREVIEW_MODE', url: string }
+  | { type: 'TOGGLE_SET_GRID_SIZE', url: string }
+  | { type: 'TOGGLE_SHOW_AREA_EXPLORER', url: string }
+  | { type: 'ADD_COLUMN', url: string }
+  | { type: 'ADD_ROW', url: string }
+  | { type: 'DELETE_COLUMN', url: string }
+  | { type: 'DELETE_ROW', url: string }
+  | { type: 'CREATE_AREA', url: string }
+  | { type: 'DELETE_AREA', url: string }
+  | { type: 'CLEAR_SELECTION', url: string };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
   switch (action.type) {
     case 'SET_ACTIVE_CELL': {
-      const { activeCell, shiftKey } = action;
+      const { activeCell, shiftKey, url } = action;
       const { selection, activeCell: prevActiveCell } = state;
 
       if (!shiftKey) {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           activeCell,
           selection: undefined
@@ -104,7 +104,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
 
       if (!selection) {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           activeCell,
           selection: {
@@ -125,7 +125,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           }
         };
       } else {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           activeCell,
           selection: {
@@ -149,11 +149,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'SET_ACTIVE_AREA': {
-      const { activeArea } = action;
+      const { activeArea, url } = action;
       const { areas } = state;
 
       if (activeArea >= 0 && activeArea <= (areas.length - 1)) {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           activeArea
         }));
@@ -162,7 +162,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           activeArea
         }
       } else {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           activeArea: undefined
         }));
@@ -174,7 +174,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'CONFIGURE_AREA': {
-      const { direction, rect } = action;
+      const { direction, rect, url } = action;
       const { areas, activeArea, grid } = state;
 
       if (activeArea !== undefined && activeArea >= 0 && activeArea <= (areas.length - 1)) {
@@ -197,7 +197,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           newAreas[activeArea].direction = direction;
         }
 
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           areas: newAreas
         }));
@@ -207,13 +207,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           areas: newAreas
         }
       } else {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
     }
 
     case 'CLEAR_SELECTION': {
-      localStorage.setItem('designer', JSON.stringify({
+      const {url} = action;
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         selection: undefined
       }));
@@ -224,10 +225,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'PREVIEW_MODE': {
+      const {url} = action;
       const { previewMode } = state;
 
       if (previewMode) {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           previewMode: false
         }));
@@ -236,7 +238,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           previewMode: false
         }
       } else {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           previewMode: true,
           setGridSize: false,
@@ -253,10 +255,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'AREA_FIELD': {
       const { activeArea, areas } = state;
-      const { fieldName, include } = action;
+      const { fieldName, include, url } = action;
 
       if (activeArea === undefined) {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
 
@@ -276,7 +278,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         };
       }
 
-      localStorage.setItem('designer', JSON.stringify({
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         areas: newAreas
       }));
@@ -288,12 +290,13 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'CREATE_AREA': {
       const { selection, areas, activeCell: {x, y} } = state;
+      const {url} = action;
       if (selection) {
         if (areas.some( area => intersect(area.rect, selection) )) {
-          localStorage.setItem('designer', JSON.stringify(state));
+          localStorage.setItem(url, JSON.stringify(state));
           return state;
         } else {
-          localStorage.setItem('designer', JSON.stringify({
+          localStorage.setItem(url, JSON.stringify({
             ...state,
             areas: [...areas, { rect: selection, fields: [], direction: 'row' }],
             activeArea: state.areas.length,
@@ -312,7 +315,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         }
       }
       else {
-        localStorage.setItem('designer', JSON.stringify({
+        localStorage.setItem(url, JSON.stringify({
           ...state,
           areas: [...areas, {
             rect: {
@@ -349,13 +352,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'DELETE_AREA': {
       const { areas, activeArea } = state;
+      const {url} = action;
 
       if (!areas.length || activeArea === undefined) {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
 
-      localStorage.setItem('designer', JSON.stringify({
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
         activeArea: undefined,
@@ -371,16 +375,16 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'SET_COLUMN_SIZE': {
       const { grid } = state;
-      const { column, size } = action;
+      const { column, size, url } = action;
 
       if (column >= grid.columns.length) {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
 
       const newColumns = [...grid.columns];
       newColumns[column] = size;
-      localStorage.setItem('designer', JSON.stringify({
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         grid: {
           ...grid,
@@ -398,10 +402,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'SET_ROW_SIZE': {
       const { grid } = state;
-      const { row, size } = action;
+      const { row, size, url } = action;
 
       if (row >= grid.rows.length) {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
 
@@ -424,7 +428,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'TOGGLE_SET_GRID_SIZE': {
-      localStorage.setItem('designer', JSON.stringify({
+      const {url} = action;
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         setGridSize: !state.setGridSize,
         showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer
@@ -437,7 +442,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'TOGGLE_SHOW_AREA_EXPLORER': {
-      localStorage.setItem('designer', JSON.stringify({
+      const {url} = action;
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
         showAreaExplorer: !state.showAreaExplorer
@@ -451,7 +457,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'ADD_COLUMN': {
       const { grid, activeCell: { x } } = state;
-      localStorage.setItem('designer', JSON.stringify({
+      const {url} = action;
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         grid: {
           ...grid,
@@ -469,7 +476,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'ADD_ROW': {
       const { grid, activeCell: { y } } = state;
-      localStorage.setItem('designer', JSON.stringify({
+      const {url} = action;
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         grid: {
           ...grid,
@@ -487,9 +495,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'DELETE_COLUMN': {
       const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
+      const {url} = action;
 
       if (grid.columns.length === 1 || selection) {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
 
@@ -498,7 +507,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         .map( area => area.rect.right > x ? {...area, rect: {...area.rect, right: area.rect.right - 1}} : area )
         .map( area => area.rect.left > x ? {...area, rect: {...area.rect, left: area.rect.left - 1}} : area );
 
-      localStorage.setItem('designer', JSON.stringify({
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         grid: {
           ...grid,
@@ -536,9 +545,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'DELETE_ROW': {
       const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
+      const {url} = action;
 
       if (grid.rows.length === 1 || selection) {
-        localStorage.setItem('designer', JSON.stringify(state));
+        localStorage.setItem(url, JSON.stringify(state));
         return state;
       }
 
@@ -547,7 +557,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         .map( area => area.rect.bottom > y ? {...area, rect: {...area.rect, bottom: area.rect.bottom - 1}} : area )
         .map( area => area.rect.top > y ? {...area, rect: {...area.rect, top: area.rect.top - 1}} : area );
 
-      localStorage.setItem('designer', JSON.stringify({
+      localStorage.setItem(url, JSON.stringify({
         ...state,
         grid: {
           ...grid,
@@ -587,8 +597,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
-  const { url, viewTab, dispatch } = props;
-  const localState = localStorage.getItem('designer') === null ? undefined : JSON.parse(localStorage.getItem('designer')!);
+  const { url, viewTab, dispatch, fields } = props;
+  const localState = localStorage.getItem(url) === null ? undefined : JSON.parse(localStorage.getItem(url)!);
   const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }, designerDispatch] = useReducer(reducer, localState !== undefined ? localState as IDesignerState :  {
     grid: {
       columns: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
@@ -632,7 +642,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'ADD_COLUMN' })
+      onClick: () => designerDispatch({ type: 'ADD_COLUMN', url })
     },
     {
       key: 'deleteColumn',
@@ -641,7 +651,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'DELETE_COLUMN' })
+      onClick: () => designerDispatch({ type: 'DELETE_COLUMN', url })
     },
     {
       key: 'addRow',
@@ -650,7 +660,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'ADD_ROW' })
+      onClick: () => designerDispatch({ type: 'ADD_ROW', url })
     },
     {
       key: 'deleteRow',
@@ -659,7 +669,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'DELETE_ROW' })
+      onClick: () => designerDispatch({ type: 'DELETE_ROW', url })
     },
     {
       key: 'createArea',
@@ -668,7 +678,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'CREATE_AREA' })
+      onClick: () => designerDispatch({ type: 'CREATE_AREA', url })
     },
     {
       key: 'deleteArea',
@@ -677,7 +687,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'DELETE_AREA' })
+      onClick: () => designerDispatch({ type: 'DELETE_AREA', url })
     },
     {
       key: 'toggleSetGridSize',
@@ -687,7 +697,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' })
+      onClick: () => designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE', url })
     },
     {
       key: 'toggleShowAreaExplorer',
@@ -697,7 +707,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' })
+      onClick: () => designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER', url })
     },
     {
       key: 'previewMode',
@@ -707,14 +717,14 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       iconProps: {
         iconName: 'DoubleColumn'
       },
-      onClick: () => designerDispatch({ type: 'PREVIEW_MODE' })
+      onClick: () => designerDispatch({ type: 'PREVIEW_MODE', url })
     }
   ];
 
   const getOnMouseDown = (x: number, y: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.stopPropagation();
     e.preventDefault();
-    designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
+    designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey, url });
   };
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
@@ -771,7 +781,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.left) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, left: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, left: parseInt(newValue) }, url });
                   }
                 }
               }
@@ -784,7 +794,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.top) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, top: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, top: parseInt(newValue) }, url });
                   }
                 }
               }
@@ -797,7 +807,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.right) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, right: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, right: parseInt(newValue) }, url });
                   }
                 }
               }
@@ -810,7 +820,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.bottom) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, bottom: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, bottom: parseInt(newValue) }, url });
                   }
                 }
               }
@@ -842,28 +852,29 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               ]}
               selectedKey={area.direction}
               label='Direction'
-              onChange={ (_, option) => option && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection }) }
+              onChange={ (_, option) => option && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection, url }) }
             />
 
             <Label>
               Show fields:
             </Label>
-
-            {
-              dumbFields.map( fieldName =>
-                <Checkbox
-                  styles={{
-                    root: {
-                      paddingBottom: '4px'
-                    }
-                  }}
-                  key={fieldName}
-                  label={fieldName}
-                  checked={!!areas[activeArea].fields.find( areaF => areaF === fieldName )}
-                  onChange={ (_, isChecked) => designerDispatch({ type: 'AREA_FIELD', fieldName, include: !!isChecked }) }
-                />
-              )
-            }
+            <div style={{ overflow: 'auto' }}>
+              {
+                fields!.map( field =>
+                  <Checkbox
+                    styles={{
+                      root: {
+                        paddingBottom: '4px'
+                      }
+                    }}
+                    key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                    label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                    checked={!!areas[activeArea].fields.find( areaF => areaF === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` )}
+                    onChange={ (_, isChecked) => designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked, url }) }
+                  />
+                )
+              }
+            </div>
           </>
         }
       />
@@ -941,12 +952,12 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
           <>
             {
               grid.columns.map( (c, idx) =>
-                <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size }) } />
+                <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size, url }) } />
               )
             }
             {
               grid.rows.map( (r, idx) =>
-                <OneSize key={`r${idx}`} label={`Row ${idx}`} size={r} onChange={ (size: ISize) => designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size }) } />
+                <OneSize key={`r${idx}`} label={`Row ${idx}`} size={r} onChange={ (size: ISize) => designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size, url }) } />
               )
             }
           </>
@@ -995,7 +1006,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                   style={{
                     gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`
                   }}
-                  onClick={ () => designerDispatch({ type: 'CLEAR_SELECTION' }) }
+                  onClick={ () => designerDispatch({ type: 'CLEAR_SELECTION', url }) }
                 >
                   selection
                 </div>
@@ -1018,7 +1029,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                       flexDirection: area.direction,
                       justifyContent: 'flex-start'
                     }}
-                    onClick={ previewMode || activeArea === idx ? undefined : () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx }) }
+                    onClick={ previewMode || activeArea === idx ? undefined : () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx, url }) }
                   >
                     {
                       area.fields.map( f =>
