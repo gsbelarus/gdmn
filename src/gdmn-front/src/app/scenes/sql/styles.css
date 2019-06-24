@@ -1,21 +1,18 @@
 .sql-container {
-  display: flex;
+  display: grid;
   width: 100%;
-  padding: 10px;
+  height: 100%;
 }
 
-.sql-container .hor{
-  flex-direction: column;
+.sql-container > div {
+  margin: 5px;
 }
 
-.sql-container .ver{
-  flex-direction: row;
+.hor{
+  grid-template-rows: auto 1fr;
 }
 
-.sql-editor {
-  background-color: #fff;
-}
+.ver{
+  grid-template-columns: repeat(2, 1fr);
 
-.sql-data-view {
-  border: 1px solid  grey;
 }
