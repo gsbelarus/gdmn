@@ -13,6 +13,8 @@ import { gdmnActions } from '../gdmn/actions';
 import { ISqlProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
+import { v1 } from 'uuid';
+import { createQuery } from './data/actions';
 
 interface ISqlState {
   expression: string;
@@ -46,31 +48,61 @@ function reducer(state: ISqlState, action: Action): ISqlState {
 
 export const Sql = CSSModules(
   (props: ISqlProps): JSX.Element => {
-    const { url, viewTab, dispatch, rs, gcs } = props;
+    const { url, viewTab, dispatch, rs, gcs, sqlName } = props;
     const [state, sqlDispatch] = useReducer(reducer, {
       expression: 'select * from gd_good',
       params: [],
       viewMode: 'hor'
     });
 
+    // const sqlName = 'SQL';
+
+    /*     useEffect(() => {
+      const id = v1();
+      dispatch(createQuery(state.expression, id))
+    }, []) */
+
     useEffect(() => {
-      if (!viewTab) {
-        dispatch(
-          gdmnActions.addViewTab({
-            url,
-            caption: 'SQL',
-            canClose: true
-          })
-        );
+      if (rs) {
+        if (viewTab && (!viewTab.rs || !viewTab.rs.length)) {
+          dispatch(
+            gdmnActions.updateViewTab({
+              url,
+              viewTab: {
+                rs: [rs.name]
+              }
+            })
+          );
+        } else if (!viewTab) {
+          dispatch(
+            gdmnActions.addViewTab({
+              url,
+              caption: `${sqlName}`,
+              canClose: true,
+              rs: [rs.name]
+            })
+          );
+        }
+      } else {
+        if (!viewTab) {
+          dispatch(
+            gdmnActions.addViewTab({
+              url,
+              caption: `${sqlName}`,
+              canClose: true
+            })
+          );
+        }
       }
-    }, []);
+    }, [rs, viewTab]);
 
     useEffect(() => {
       // Создаём грид из RS
+      console.log('create grid', rs);
       if (!gcs && rs) {
         dispatch(
           createGrid({
-            name: 'sql',
+            name: sqlName,
             columns: rs.fieldDefs.map(fd => ({
               name: fd.fieldName,
               caption: [fd.caption || fd.fieldName],
@@ -87,15 +119,13 @@ export const Sql = CSSModules(
 
     const handleGridSelect = (event: TSetCursorPosEvent) =>
       dispatch(dispatch => {
-        dispatch(rsActions.setCurrentRow({ name: 'sql', currentRow: event.cursorRow }));
-        dispatch(setCursorCol({ name: 'sql', cursorCol: event.cursorCol }));
+        dispatch(rsActions.setCurrentRow({ name: sqlName, currentRow: event.cursorRow }));
+        dispatch(setCursorCol({ name: sqlName, cursorCol: event.cursorCol }));
       });
 
     const handleExecuteSql = useCallback(() => {
-      const requestID = 'sql';
-
       dispatch(async (dispatch, getState) => {
-        dispatch(rsMetaActions.setRsMeta(requestID, {}));
+        dispatch(rsMetaActions.setRsMeta(sqlName, {}));
 
         apiService
           .prepareSqlQuery({
@@ -107,19 +137,19 @@ export const Sql = CSSModules(
               case TTaskStatus.RUNNING: {
                 const taskKey = value.meta!.taskKey!;
 
-                if (!getState().rsMeta[requestID]) {
+                if (!getState().rsMeta[sqlName]) {
                   console.warn('ViewTab was closing, interrupt task');
                   apiService.interruptTask({ taskKey }).catch(console.error);
                   return;
                 }
-                dispatch(rsMetaActions.setRsMeta(requestID, { taskKey }));
+                dispatch(rsMetaActions.setRsMeta(sqlName, { taskKey }));
 
                 const response = await apiService.fetchSqlQuery({
                   rowsCount: 100,
                   taskKey
                 });
 
-                const rsm = getState().rsMeta[requestID];
+                const rsm = getState().rsMeta[sqlName];
                 if (!rsm) {
                   console.warn('ViewTab was closed, interrupt task');
                   apiService.interruptTask({ taskKey }).catch(console.error);
@@ -133,16 +163,18 @@ export const Sql = CSSModules(
                     );
 
                     const rs = RecordSet.create({
-                      name: requestID,
+                      name: sqlName,
                       fieldDefs,
                       data: List(response.payload.result!.data as IDataRow[]),
                       sequentially: !!rsm.taskKey,
                       sql: { select: state.expression, params: state.params }
                     });
-                    if (getState().grid['sql']) {
-                      dispatch(deleteGrid({ name: 'sql' }));
+
+                    if (getState().grid[sqlName]) {
+                      dispatch(deleteGrid({ name: sqlName }));
                     }
-                    if (getState().recordSet['sql']) {
+                    console.log(rs);
+                    if (getState().recordSet[sqlName]) {
                       dispatch(rsActions.setRecordSet(rs));
                     } else {
                       dispatch(rsActions.createRecordSet({ name: rs.name, rs }));
@@ -151,7 +183,7 @@ export const Sql = CSSModules(
                   }
                   case TTaskStatus.FAILED: {
                     if (rsm) {
-                      dispatch(rsMetaActions.setRsMeta(requestID, {}));
+                      dispatch(rsMetaActions.setRsMeta(sqlName, {}));
                     }
                     break;
                   }
@@ -164,14 +196,14 @@ export const Sql = CSSModules(
               }
               case TTaskStatus.INTERRUPTED:
               case TTaskStatus.FAILED: {
-                if (getState().rsMeta[requestID]) {
-                  dispatch(rsMetaActions.setRsMeta(requestID, {}));
+                if (getState().rsMeta[sqlName]) {
+                  dispatch(rsMetaActions.setRsMeta(sqlName, {}));
                 }
                 break;
               }
               case TTaskStatus.SUCCESS: {
-                if (getState().rsMeta[requestID]) {
-                  dispatch(rsMetaActions.setRsMeta(requestID, {}));
+                if (getState().rsMeta[sqlName]) {
+                  dispatch(rsMetaActions.setRsMeta(sqlName, {}));
                 }
                 break;
               }
@@ -224,7 +256,7 @@ export const Sql = CSSModules(
         {
           key: 'plan',
           text: 'План запроса',
-          disabled: !state.expression || !state.expression.length,
+          disabled: !rs,
           iconProps: {
             iconName: 'OpenSource'
           },
@@ -247,19 +279,19 @@ export const Sql = CSSModules(
           onClick: () => sqlDispatch({ type: 'CHANGE_VIEW' })
         }
       ],
-      [state]
+      [state, rs]
     );
 
     return (
-      <>
+      <div styleName="grid-container">
         <CommandBar items={commandBarItems} />
         <div styleName={`sql-container ${state.viewMode}`}>
           <div>
             <TextField
               value={state.expression}
+              resizable={false}
               multiline
               rows={8}
-              resizable={false}
               onChange={e => sqlDispatch({ type: 'SET_EXPRESSION', expression: e.currentTarget.value || '' })}
             />
           </div>
@@ -267,7 +299,7 @@ export const Sql = CSSModules(
             {rs && gcs && <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={() => false} />}
           </div>
         </div>
-      </>
+      </div>
     );
   },
   styles,
