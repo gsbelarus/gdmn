@@ -6,12 +6,15 @@ import {
   EntityDelete,
   EntityInsert,
   EntityQuery,
+  EntityQuerySet,
   EntityUpdate,
   ERModel,
   IEntityDeleteInspector,
   IEntityInsertInspector,
   IEntityQueryInspector,
   IEntityQueryResponse,
+  IEntityQuerySetInspector,
+  IEntityQuerySetResponse,
   IEntityUpdateInspector,
   IERModel,
   ISequenceQueryInspector,
@@ -35,6 +38,7 @@ export type AppAction =
   | "GET_SCHEMA"
   | "DEFINE_ENTITY"
   | "QUERY"
+  | "QUERY_SET"
   | "SQL_QUERY"
   | "PREPARE_QUERY"
   | "PREPARE_SQL_QUERY"
@@ -57,6 +61,7 @@ export type ReloadSchemaCmd = AppCmd<"RELOAD_SCHEMA", { withAdapter?: boolean }>
 export type GetSchemaCmd = AppCmd<"GET_SCHEMA", { withAdapter?: boolean }>;
 export type DefineEntityCmd = AppCmd<"DEFINE_ENTITY", { entity: string, pkValues: any[] }>;
 export type QueryCmd = AppCmd<"QUERY", { query: IEntityQueryInspector }>;
+export type QuerySetCmd = AppCmd<"QUERY_SET", { querySet: IEntityQuerySetInspector }>;
 export type SqlQueryCmd = AppCmd<"SQL_QUERY", { select: string, params: IParams }>;
 export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
 export type PrepareSqlQueryCmd = AppCmd<"PREPARE_SQL_QUERY", { select: string, params: IParams }>;
@@ -386,6 +391,30 @@ export class Application extends ADatabase {
     return task;
   }
 
+  public pushQuerySetCmd(session: Session, command: QuerySetCmd): Task<QuerySetCmd, IEntityQuerySetResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const {querySet} = context.command.payload;
+        const entityQuerySet = EntityQuerySet.inspectorToObject(this.erModel, querySet);
+
+        const result = await context.session.executeConnection((connection) => (
+          ERBridge.querySet(connection, connection.readTransaction, entityQuerySet))
+        );
+        await context.checkStatus();
+        return result;
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   public pushSqlQueryCmd(session: Session, command: SqlQueryCmd): Task<SqlQueryCmd, ISqlQueryResponse> {
     const task = new Task({
       session,
@@ -680,7 +709,7 @@ export class Application extends ADatabase {
   }
 
   public pushGetNextIdCmd(session: Session,
-                      command: GetNextIdCmd): Task<GetNextIdCmd, {id: number}> {
+                          command: GetNextIdCmd): Task<GetNextIdCmd, {id: number}> {
     const task = new Task({
       session,
       command,
@@ -690,7 +719,7 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const nextId = await context.session.executeConnection(async (connection): Promise<number> => {
-          const IdResult = await connection.executeReturning(connection.readTransaction,  `
+          const idResult = await connection.executeReturning(connection.readTransaction,  `
           EXECUTE BLOCK
           RETURNS
            (ID INTEGER)
@@ -714,8 +743,8 @@ export class Application extends ADatabase {
             END
             SUSPEND;
           END
-          `); 
-          return  IdResult.getNumber(0);
+          `);
+          return  idResult.getNumber(0);
         });
         await context.checkStatus();
         return {id: nextId};

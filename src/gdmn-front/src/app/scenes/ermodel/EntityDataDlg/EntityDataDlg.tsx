@@ -5,7 +5,11 @@ import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef } from "gdmn-recordset";
-import {prepareDefaultEntityQuery, attr2fd, prepareDefaultEntityQuerySetAttr} from "../EntityDataView/utils";
+import {
+  prepareDefaultEntityQuery,
+  attr2fd,
+  prepareDefaultEntityQuerySetAttr
+} from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
@@ -389,10 +393,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       Promise.all(
         Object.values(entity.attributes)
           .filter( attr => attr instanceof SetAttribute )
-          .map( attr => {
-            const eqSet = prepareDefaultEntityQuerySetAttr(entity, attr.name, [id]);
-            return apiService.query({ query: eqSet.inspect() })
-              .then( response => {
+          .map( async attr => {
+           const eqSet = prepareDefaultEntityQuerySetAttr(entity, attr.name, [id]);
+            return apiService.querySet({querySet: eqSet.inspect()})
+              .then(response => {
                 const result = response.payload.result;
                 if (result) {
                   const attrSet = entity.attributes[attr.name] as EntityAttribute;
@@ -405,12 +409,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     || scalarAttrs.find((attr) => attr.name === "ALIAS")
                     || scalarAttrs.find((attr) => attr.type === "String");
 
-                  const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === attr.name && data.attribute === 'ID' )![0];
-                  const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === attr.name
+                  const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name && data.attribute === 'ID')![0];
+                  const nameAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name
                     && (data.attribute === presentField!.name))![0];
 
                   return {
-                    [attr.name]: result.data.map( r => ({
+                    [attr.name]: result.data.map(r => ({
                       key: r[idAlias],
                       text: r[nameAlias],
                       selected: true
