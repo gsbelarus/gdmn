@@ -1,3 +1,5 @@
+import { LName } from "gdmn-internals";
+
 /**
  * Based on ideas from typesafe actions by Piotrek Witek
  * https://github.com/piotrwitek/typesafe-actions
@@ -54,3 +56,12 @@ export interface ITransition {
 
 export type Flow = ITransition[];
 
+export interface IBusinessProcess {
+  caption: LName;
+  description: LName;
+  flow: Flow;
+};
+
+export interface IBusinessProcesses {
+  [name: string]: IBusinessProcess;
+};
