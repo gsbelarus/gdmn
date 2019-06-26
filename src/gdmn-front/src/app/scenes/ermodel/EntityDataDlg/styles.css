@@ -7,3 +7,11 @@
   width: 380px;
   padding: 16px;
 }
+
+.commonStyle {
+  background-size: 16px 16px;
+  margin: 1px;
+  border-radius: 4px;
+  padding: 4px;
+  min-height: 64px;
+}

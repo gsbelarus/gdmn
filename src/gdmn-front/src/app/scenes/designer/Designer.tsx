@@ -44,7 +44,7 @@ const intersect = (r1: IRectangle, r2: IRectangle) => inRectangle({ x: r1.left, 
   || inRectangle({ x: r1.right, y: r1.top }, r2)
   || inRectangle({ x: r1.right, y: r1.bottom }, r2);
 
-interface IDesignerState {
+export interface IDesignerState {
   grid: IGridSize;
   activeCell: ICoord;
   selection?: IRectangle;
@@ -626,6 +626,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     width: '100%',
     gridTemplateColumns: grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
     gridTemplateRows: grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
+    overflow: 'auto',
   });
 
   const getCellStyle = (x: number, y: number): React.CSSProperties => ({
@@ -732,7 +733,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       <div style={{
         display: 'grid',
         width: '100%',
-        height: '100%',
+        height: '100vh',
         gridTemplateColumns: 'auto 240px',
         gridTemplateRows: 'auto',
         gridAutoFlow: 'column',
@@ -773,13 +774,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
       <WithToolPanel
         {...props}
         toolPanel={
-          <div
-            style={{
-              height: '100%',
-              width: '100%',
-              overflow: 'auto'
-            }}
-          >
+          <>
             <Label>
               Selected area #{activeArea}
             </Label>
@@ -883,7 +878,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                   />
                 )
               }
-          </div>
+          </>
         }
       />
   }, styles, { allowMultiple: true });
@@ -958,6 +953,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
         {...props}
         toolPanel={
           <>
+          {props.children}
             {
               grid.columns.map( (c, idx) =>
                 <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size, url }) } />
