@@ -1,4 +1,14 @@
-import { IEntityInsertInspector, IEntityUpdateInspector, IEntityDeleteInspector, IEntityQueryInspector, IEntityQueryResponse, IERModel, ISequenceQueryInspector, ISequenceQueryResponse } from 'gdmn-orm';
+import {
+  IEntityInsertInspector,
+  IEntityUpdateInspector,
+  IEntityDeleteInspector,
+  IEntityQueryInspector,
+  IEntityQueryResponse,
+  IERModel,
+  ISequenceQueryInspector,
+  ISequenceQueryResponse,
+  IEntityQuerySetInspector, IEntityQuerySetResponse
+} from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 import { ISqlQueryResponseAliases } from 'gdmn-internals';
@@ -30,6 +40,7 @@ export const enum TGdmnErrorCodes {
 export const enum TTaskActionNames {
   DEMO = 'DEMO',
   QUERY = 'QUERY',
+  QUERY_SET = 'QUERY_SET',
   SQL_QUERY = 'SQL_QUERY',
   PREPARE_QUERY = 'PREPARE_QUERY',
   PREPARE_SQL_QUERY = 'PREPARE_SQL_QUERY',
@@ -82,6 +93,9 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.QUERY]: {
     query: IEntityQueryInspector;
+  };
+  [TTaskActionNames.QUERY_SET]: {
+    querySet: IEntityQuerySetInspector;
   };
   [TTaskActionNames.SQL_QUERY]: {
     select: string;
@@ -160,6 +174,7 @@ export type TTaskResultMessageData<TActionName extends keyof TTaskActionResultTy
 export interface TTaskActionResultTypes {
   [TTaskActionNames.DEMO]: undefined;
   [TTaskActionNames.QUERY]: IEntityQueryResponse;
+  [TTaskActionNames.QUERY_SET]: IEntityQuerySetResponse;
   [TTaskActionNames.SQL_QUERY]: ISqlQueryResponse;
   [TTaskActionNames.PREPARE_QUERY]: undefined;
   [TTaskActionNames.PREPARE_SQL_QUERY]: undefined;
@@ -266,6 +281,7 @@ export type AppAction =
   | "GET_SCHEMA"
   | "DEFINE_ENTITY"
   | "QUERY"
+  | "QUERY_SET"
   | "SQL_QUERY"
   | "PREPARE_QUERY"
   | "PREPARE_SQL_QUERY"

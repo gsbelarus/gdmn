@@ -125,6 +125,10 @@ export type TSqlQueryTaskCmd = TTaskCmd<TTaskActionNames.SQL_QUERY>;
 
 export type TSqlQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.SQL_QUERY>;
 
+export type TQuerySetTaskCmd = TTaskCmd<TTaskActionNames.QUERY_SET>;
+
+export type TQuerySetTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY_SET>;
+
 // prepare query
 
 export type TPrepareQueryTaskCmd = TTaskCmd<TTaskActionNames.PREPARE_QUERY>;

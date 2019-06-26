@@ -1,5 +1,16 @@
 import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams} from "gdmn-db";
-import {Entity, EntityDelete, EntityInsert, EntityQuery, EntityUpdate, ERModel, IEntityQueryResponse, SequenceQuery, ISequenceQueryResponse} from "gdmn-orm";
+import {
+  Entity,
+  EntityDelete,
+  EntityInsert,
+  EntityQuery,
+  EntityUpdate,
+  ERModel,
+  IEntityQueryResponse,
+  SequenceQuery,
+  ISequenceQueryResponse,
+  EntityQuerySet, IEntityQuerySetResponse
+} from "gdmn-orm";
 import {Delete} from "./crud/delete/Delete";
 import {Insert} from "./crud/insert/Insert";
 import {Update} from "./crud/update/Update";
@@ -12,6 +23,7 @@ import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
 import {EntityDefiner} from "./EntityDefiner";
 import {GetSequence } from "./crud/query/Sequence";
+import {EQuerySetCursor} from "./cursor/EQuerySetCursor";
 
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
@@ -169,6 +181,26 @@ export class ERBridge {
       return cursor.makeEQueryResponse(data);
     } finally {
       await cursor.close();
+    }
+  }
+
+  public static async querySet(connection: AConnection,
+                            transaction: ATransaction,
+                            querySet: EntityQuerySet): Promise<IEntityQuerySetResponse> {
+    const cursorSet = await EQuerySetCursor.open(connection, transaction, querySet);
+    try {
+      let data: any[] = [];
+      while (true) {
+        const rows = await cursorSet.fetch(100);
+        data = data.concat(rows.data);
+        if (rows.finished) {
+          break;
+        }
+      }
+
+      return cursorSet.makeEQuerySetResponse(data);
+    } finally {
+      await cursorSet.close();
     }
   }
 
