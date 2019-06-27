@@ -1,6 +1,7 @@
 import {existsSync, unlinkSync} from "fs";
 import {AConnection, Factory, IConnectionOptions} from "gdmn-db";
 import {
+  DateAttribute,
   Entity,
   EntityAttribute,
   EntityQuerySet,
@@ -73,6 +74,8 @@ describe("Query", () => {
               entities: [TestEntity]
             });
             setAttr.add(new IntegerAttribute({name: "TEST_INTEGER", lName: {}}));
+            setAttr.add(new StringAttribute({name: "TEST_STRING", lName: {}}));
+            setAttr.add(new DateAttribute({name: "TEST_DATE", lName: {}}));
             await eBuilder.createAttribute(MasterEntity, setAttr);
           }
         });
@@ -127,7 +130,7 @@ describe("Query", () => {
     await ERBridge.querySet(connection, connection.readTransaction, querySet);
   });
 
-  it("entity set with field", async () => {
+  it("entity set with integer", async () => {
     const querySet = EntityQuerySet.inspectorToObject(erModel, {
       link: {
         entity: "MASTER_ENTITY",
@@ -163,6 +166,94 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_INTEGER AS F$1,\n" +
+      "  T$2.TEST_STRING AS F$2\n" +
+      "FROM TABLE_12 T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2\n" +
+      "WHERE T$1.KEY1 = :P$1");
+
+    await ERBridge.querySet(connection, connection.readTransaction, querySet);
+  });
+
+  it("entity set with string", async () => {
+    const querySet = EntityQuerySet.inspectorToObject(erModel, {
+      link: {
+        entity: "MASTER_ENTITY",
+        alias: "me",
+        fields: [
+          {
+            attribute: "SET_LINK",
+            setAttributes: ["TEST_STRING"],
+            links: [{
+              entity: "TEST_ENTITY",
+              alias: "s",
+              fields: [
+                {attribute: "TEST_STRING"}
+              ]
+            }]
+          }
+        ]
+      },
+      options: {
+        where: [
+          {
+            equals: [
+              {
+                alias: "me",
+                value: 55
+              }
+            ]
+          }
+        ]
+      }
+    });
+    const {sql} = new SelectSet(querySet);
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_STRING AS F$1,\n" +
+      "  T$2.TEST_STRING AS F$2\n" +
+      "FROM TABLE_12 T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2\n" +
+      "WHERE T$1.KEY1 = :P$1");
+
+    await ERBridge.querySet(connection, connection.readTransaction, querySet);
+  });
+
+  it("entity set with date", async () => {
+    const querySet = EntityQuerySet.inspectorToObject(erModel, {
+      link: {
+        entity: "MASTER_ENTITY",
+        alias: "me",
+        fields: [
+          {
+            attribute: "SET_LINK",
+            setAttributes: ["TEST_DATE"],
+            links: [{
+              entity: "TEST_ENTITY",
+              alias: "s",
+              fields: [
+                {attribute: "TEST_STRING"}
+              ]
+            }]
+          }
+        ]
+      },
+      options: {
+        where: [
+          {
+            equals: [
+              {
+                alias: "me",
+                value: 55
+              }
+            ]
+          }
+        ]
+      }
+    });
+    const {sql} = new SelectSet(querySet);
+
+    expect(sql).toEqual("SELECT\n" +
+      "  T$1.TEST_DATE AS F$1,\n" +
       "  T$2.TEST_STRING AS F$2\n" +
       "FROM TABLE_12 T$1\n" +
       "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2\n" +
