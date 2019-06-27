@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React from 'react';
+import CSSModules from 'react-css-modules';
+import styles from './styles.css';
 
 export interface IRectProps {
   readonly text: string;
@@ -9,20 +11,18 @@ export interface IRectProps {
   readonly className: string;
 };
 
-export class Rect extends Component<IRectProps, {}> {
-  public render() {
-    const { x, y, width, height, text, className } = this.props;
-    const cx = x + width / 2;
-    const cy = y + height / 2;
+export const Rect = CSSModules( (props: IRectProps): JSX.Element => {
+  const { x, y, width, height, text, className } = props;
+  const cx = x + width / 2;
+  const cy = y + height / 2;
 
-    return (
-      <g>
-        <rect x={x} y={y} rx={4} ry={4} width={width} height={height} className="outerRect" />
-        <rect x={x + 1} y={y + 1} rx={4} ry={4} width={width - 2} height={height - 2} className={className} />
-        <text x={cx} y={cy + 4} textAnchor="middle">
-          {text}
-        </text>
-      </g>
-    );
-  }
-};
+  return (
+    <g>
+      <rect x={x} y={y} rx={4} ry={4} width={width} height={height} styleName="outerRect" />
+      <rect x={x + 1} y={y + 1} rx={4} ry={4} width={width - 2} height={height - 2} styleName={className} />
+      <text x={cx} y={cy + 4} textAnchor="middle">
+        {text}
+      </text>
+    </g>
+  );
+}, styles, { allowMultiple: true });

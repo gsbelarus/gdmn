@@ -58,3 +58,34 @@
 .SelectedBP {
   background-color: rgb(0, 255, 179);
 }
+
+.BPFlow svg {
+  display: block;
+  margin: auto;
+  padding-top: 16px;
+}
+
+.BPFlow svg rect.outerRect {
+  stroke: none;
+  fill: gray;
+}
+
+.BPFlow svg rect.state {
+  stroke: none;
+  fill: aquamarine;
+}
+
+.BPFlow svg text {
+  fill: black;
+  font-size: 14px;
+}
+
+.BPFlow svg path {
+  fill: none;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.BPFlow svg marker#arrow path {
+  fill: gray;
+}
