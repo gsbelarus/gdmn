@@ -235,7 +235,7 @@ export class MainApplication extends Application {
               const application = await this._getApplication(connection, transaction, context.session, uid);
               try {
                 if (external) {
-                  await application.connect();
+                  await application.testConnect();
                 } else {
                   if (template) {
                     const templatesFiles = await MainApplication._getTemplatesFiles();
