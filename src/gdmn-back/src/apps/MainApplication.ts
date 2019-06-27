@@ -286,7 +286,6 @@ export class MainApplication extends Application {
       logger: this.taskLogger,
       worker: async (context) => {
         await this.waitUnlock();
-        await this.waitUnlock();
         this.checkSession(context.session);
 
         const sessionsInfo: ISessionInfo[] = [];
