@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -85,7 +85,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const controlsData = useRef(getSavedControlsData());
   const changedFields = useRef(getSavedChangedFields());
   const nextUrl = useRef(url);
-  const needFocus = useRef<ITextField | IComboBox | undefined>();
+  const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
@@ -782,7 +782,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   <DatepickerJSX
                     key={`${fd.fieldName}`}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName  ? lastEdited.current.value.toString() : rs.getString(fd.fieldName)}
+                    value={
+                      lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'string'
+                      ? lastEdited.current.value
+                      : rs.getString(fd.fieldName)
+                    }
                 />);
               } else if (fd.dataType === TFieldType.Boolean) {
                 return (
@@ -801,16 +805,21 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                         setChanged(true);
                       }
                     }}
-                    inputProps={{
-                      onFocus: () => {
-                        () => {
-                          lastFocused.current = fd.fieldName;
-                          if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
-                            applyLastEdited();
-                          }
+                    onFocus={
+                      () => {
+                        lastFocused.current = fd.fieldName;
+                        if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                          applyLastEdited();
                         }
                       }
-                    }}
+                    }
+                    componentRef={
+                      ref => {
+                        if (ref && lastFocused.current === fd.fieldName) {
+                          needFocus.current = ref;
+                        }
+                      }
+                    }
                     styles={{root: {marginTop: '10px'}}}
                   />
                 )
@@ -820,7 +829,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     key={fd.fieldName}
                     disabled={locked}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value.toString() : rs.getString(fd.fieldName)}
+                    defaultValue={
+                      lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'string'
+                      ? lastEdited.current.value
+                      : rs.getString(fd.fieldName)
+                    }
                     onChange={
                       (_e, newValue?: string) => {
                         if (newValue !== undefined) {
