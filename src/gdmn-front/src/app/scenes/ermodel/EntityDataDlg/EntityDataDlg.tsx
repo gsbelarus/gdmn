@@ -475,7 +475,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
   
-  const localState = localStorage.getItem(`des-${url}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${url}`)!);
+  const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
 
   const getGridStyle = (): React.CSSProperties => ({
     display: 'grid',
@@ -739,7 +739,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   return (
     <>
       {
-        designer ? <Designer url={url} dispatch={dispatch} fields={rs.fieldDefs} /> :
+        designer ? <Designer url={url} entityName={entityName} dispatch={dispatch} fields={rs.fieldDefs} /> :
       <>
       <CommandBar items={commandBarItems} />
       

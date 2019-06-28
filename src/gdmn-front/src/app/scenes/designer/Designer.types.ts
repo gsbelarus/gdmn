@@ -14,6 +14,7 @@ export interface IDesignerStateProps {
 
 export interface IDesignerProps {
   url: string;
+  entityName: string;
   dispatch: ThunkDispatch<IState, never, GdmnAction>;
   viewTab?: IViewTab;
   fields?: IFieldDef[];
