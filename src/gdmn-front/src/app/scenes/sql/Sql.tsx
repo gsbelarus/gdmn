@@ -14,7 +14,6 @@ import { ISqlProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
 import { v1 } from 'uuid';
-import { createQuery } from './data/actions';
 
 interface ISqlState {
   expression: string;
@@ -48,19 +47,17 @@ function reducer(state: ISqlState, action: Action): ISqlState {
 
 export const Sql = CSSModules(
   (props: ISqlProps): JSX.Element => {
-    const { url, viewTab, dispatch, rs, gcs, sqlName } = props;
+    const { url, viewTab, dispatch, rs, gcs, sqlName, history } = props;
     const [state, sqlDispatch] = useReducer(reducer, {
       expression: 'select * from gd_good',
       params: [],
       viewMode: 'hor'
     });
 
-    // const sqlName = 'SQL';
-
-    /*     useEffect(() => {
+    const addNewSql = useCallback(() => {
       const id = v1();
-      dispatch(createQuery(state.expression, id))
-    }, []) */
+      history.push(`/spa/gdmn/sql/${id}`);
+    }, [])
 
     useEffect(() => {
       if (rs) {
@@ -77,7 +74,7 @@ export const Sql = CSSModules(
           dispatch(
             gdmnActions.addViewTab({
               url,
-              caption: `${sqlName}`,
+              caption: "SQL",
               canClose: true,
               rs: [rs.name]
             })
@@ -88,7 +85,7 @@ export const Sql = CSSModules(
           dispatch(
             gdmnActions.addViewTab({
               url,
-              caption: `${sqlName}`,
+              caption: "SQL",
               canClose: true
             })
           );
@@ -98,7 +95,6 @@ export const Sql = CSSModules(
 
     useEffect(() => {
       // Создаём грид из RS
-      console.log('create grid', rs);
       if (!gcs && rs) {
         dispatch(
           createGrid({
@@ -173,7 +169,6 @@ export const Sql = CSSModules(
                     if (getState().grid[sqlName]) {
                       dispatch(deleteGrid({ name: sqlName }));
                     }
-                    console.log(rs);
                     if (getState().recordSet[sqlName]) {
                       dispatch(rsActions.setRecordSet(rs));
                     } else {
@@ -224,7 +219,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'Add'
           },
-          onClick: () => console.log('click add sql')
+          onClick: addNewSql
         },
         {
           key: 'clear',
