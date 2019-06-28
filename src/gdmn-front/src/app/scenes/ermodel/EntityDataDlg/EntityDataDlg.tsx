@@ -2,9 +2,9 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
   prepareDefaultEntityQuery,
   attr2fd,
@@ -30,7 +30,7 @@ import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLook
 
 interface ILastEdited {
   fieldName: string;
-  value: string;
+  value: string | boolean ;
 };
 
 /**
@@ -107,7 +107,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const applyLastEdited = () => {
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
-      dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+      if (typeof value === "boolean") {
+        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+      } else {
+        dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+      }
       lastEdited.current = undefined;
     }
   };
@@ -118,7 +122,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        tempRs = tempRs.setString(fieldName, value);
+        if (typeof value === "boolean") {
+          tempRs = tempRs.setBoolean(fieldName, value);
+        } else {
+          tempRs = tempRs.setString(fieldName, value);
+        }
         lastEdited.current = undefined;
       }
 
@@ -626,7 +634,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                         : undefined
                       )
                     );
-
                     return apiService.query({ query: linkEq.inspect() })
                       .then( response => {
                         const result = response.payload.result!;
@@ -649,9 +656,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               />
             )
-
           })}
-
           {
             rs.fieldDefs.map( fd => {
               if (!fd.eqfa) {
@@ -743,7 +748,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                               : undefined
                             )
                           );
-
                           return apiService.query({ query: linkEq.inspect() })
                             .then( response => {
                               const result = response.payload.result!;
@@ -773,20 +777,50 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 return null;
               }
 
-              if (fd.dataType === 5) {
+              if (fd.dataType === TFieldType.Date) {
                 return (
                   <DatepickerJSX
                     key={`${fd.fieldName}`}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName  ? lastEdited.current.value.toString() : rs.getString(fd.fieldName)}
                 />);
+              } else if (fd.dataType === TFieldType.Boolean) {
+                return (
+                  <Checkbox
+                    key={fd.fieldName}
+                    disabled={locked}
+                    label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
+                    defaultChecked={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? !!lastEdited.current.value : rs.getBoolean(fd.fieldName)}
+                    onChange={  (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
+                      if (isChecked !== undefined) {
+                        lastEdited.current = {
+                          fieldName: fd.fieldName,
+                          value: isChecked
+                        };
+                        changedFields.current[fd.fieldName] = true;
+                        setChanged(true);
+                      }
+                    }}
+                    inputProps={{
+                      onFocus: () => {
+                        () => {
+                          lastFocused.current = fd.fieldName;
+                          if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                            applyLastEdited();
+                          }
+                        }
+                      }
+                    }}
+                    styles={{root: {marginTop: '10px'}}}
+                  />
+                )
               } else {
                 return (
                   <TextField
                     key={fd.fieldName}
                     disabled={locked}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value.toString() : rs.getString(fd.fieldName)}
                     onChange={
                       (_e, newValue?: string) => {
                         if (newValue !== undefined) {
