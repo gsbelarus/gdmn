@@ -23,4 +23,8 @@ test('tokenizer', () => {
   const tokens7 = tokenize('покажи 342 организации');
   expect(tokens7.length).toEqual(5);
   expect(tokens7[2].tokenType!.name).toEqual('Numeric');
+
+  const tokens8 = tokenize('покажи все TgdcUserDocument147134915_1757699501');
+  expect(tokens8.length).toEqual(5);
+  expect(tokens8[4].tokenType!.name).toEqual('idEntityToken');
 });

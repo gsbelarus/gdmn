@@ -10,7 +10,7 @@ import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
-import { SqlListContainer } from '../sql/list/container';
+import { SqlContainer } from '../sql/SqlContainer';
 import { SqlViewContainer } from '../sql/EditView/container';
 import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
 import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
@@ -27,6 +27,7 @@ import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg
 import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { DesignerContainer } from '../designer/DesignerContainer';
+import { BPContainer } from '../bp/BPContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -75,6 +76,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
             </div>
             <div className="ImportantMenu" hidden={!!this.props.application}>{commandToLink('applications', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('bp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
@@ -191,6 +193,17 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 }}
               />
               <Route
+                path={`${match.path}/bp`}
+                render={props => {
+                  return (
+                    <BPContainer
+                      {...props}
+                      url={props.match.url}
+                    />
+                  );
+                }}
+              />
+              <Route
                 path={`${match.path}/internals`}
                 render={props => {
                   return (
@@ -220,33 +233,10 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 path={`${match.path}/sql`}
                 render={props => {
                   return (
-                    <SqlListContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/sql/:id`}
-                render={props => {
-                  return (
-                    <SqlDataViewContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/sql/:id/edit`}
-                render={props => {
-                  return (
-                    <SqlViewContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/sql/:id/view`}
-                render={props => {
-                  return (
-                    <SqlDataDlgViewContainer {...props} />
+                    <SqlContainer
+                      {...props}
+                      url={props.match.url}
+                    />
                   );
                 }}
               />

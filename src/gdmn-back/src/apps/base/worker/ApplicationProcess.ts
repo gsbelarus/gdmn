@@ -63,7 +63,8 @@ export class ApplicationProcess {
         throw new Error("Process worker need created");
       }
 
-      this._process.once("exit", () => reject());
+      this._process.once("exit",
+        (code) => reject(new Error(`child process exit with code ${code}: connection problem`)));
 
       const callback = (data: IAppWorkerResponse<R>) => {
         if (!this._process) {
