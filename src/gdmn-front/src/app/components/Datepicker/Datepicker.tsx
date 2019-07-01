@@ -4,9 +4,9 @@ import "@src/styles/Datepicker.css";
 import { TextField, IconButton, ITextField } from "office-ui-fabric-react";
 
 export interface IDatepickerProps {
+  fieldName?: string,
   label?: string,
   value?: string,
-  fieldName?: string,
   onChange: (newValue?: string) => void,
   onFocus: () => void,
   componentRef?: (ref: ITextField | null) => void

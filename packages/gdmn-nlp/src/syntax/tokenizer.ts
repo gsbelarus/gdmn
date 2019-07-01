@@ -39,7 +39,7 @@ export const DateToken: TokenType = createToken({
 
 export const idEntityToken: TokenType = createToken({
   name: 'idEntityToken',
-  pattern: /[A-Za-z$_]+/
+  pattern: /[A-Za-z$_]+[A-Za-z0-9$_]*/
 });
 
 const allTokens: TokenType[] = [

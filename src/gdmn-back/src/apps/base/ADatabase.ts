@@ -91,6 +91,20 @@ export abstract class ADatabase {
     }
   }
 
+  public async testConnect(): Promise<void> {
+    const testConnection = this.dbDetail.driver.newConnection();
+    try {
+      await testConnection.connect(this.dbDetail.connectionOptions);
+    } catch (error) {
+      // TODO tmp
+      throw error;
+    } finally {
+      if (testConnection.connected) {
+        await testConnection.disconnect();
+      }
+    }
+  }
+
   public async create(): Promise<void> {
     await this._executeWithLock(async () => {
       if (this._status === DBStatus.CONNECTED) {

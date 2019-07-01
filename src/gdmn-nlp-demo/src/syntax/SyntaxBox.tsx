@@ -100,7 +100,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
                 {
                   s.map((w, wi) => {
                     if(w.tokenType === PunctuationMark) countPunktuationMark++;
-                    if(w.tokenType) 
+                    if(w.tokenType)
                     return <div key={wi} className={getClassName(idx - countPunktuationMark, w.tokenType.name)}>
                       {w.tokenType.name}
                     </div>
@@ -543,6 +543,7 @@ export class SyntaxBox extends Component<ISyntaxBoxProps, ISyntaxBoxState> {
         {parsedText && <div className="PhraseSyntaxTrees"> {parsedText.map( (phrase, id) => <div key={id}><PhraseSyntaxTree parsedText={phrase} /></div> )}</div> }
         {commandError && <div className="SyntaxError">{commandError}</div>}
         {command && <div>Command:{this._renderCommand(command[0])}</div>}
+        {command && <pre>{JSON.stringify(command[0].payload.inspect(), undefined, 2)}</pre>}
         {command && command[0].payload.link.entity.adapter && <div>Select query:{this.createStringSelect(command[0].payload)}</div>}
         {parserDebug ?
           parserDebug.map((item, key) => {

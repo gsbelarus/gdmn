@@ -1,0 +1,91 @@
+.SGrid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+.SGridTop {
+  grid-column: 1 / 1;
+  grid-row: 1 / 1;
+}
+
+.SGridTable {
+  grid-column: 1 / 1;
+  grid-row: 2 / 2;
+}
+
+.BPList {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 1fr;
+}
+
+.BPColumn {
+  grid-column: 1 / 1;
+  grid-row: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.BPColumn > .BPCard {
+  margin-bottom: 8px;
+}
+
+.BPFlow {
+  grid-column: 2 / 2;
+  grid-row: 1 / 1;
+}
+
+.BPCard {
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: default;
+}
+
+.BPCard h2 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.SelectedBP {
+  background-color: rgb(0, 255, 179);
+}
+
+.BPFlow svg {
+  display: block;
+  margin: auto;
+  padding-top: 16px;
+}
+
+.BPFlow svg rect.outerRect {
+  stroke: none;
+  fill: gray;
+}
+
+.BPFlow svg rect.state {
+  stroke: none;
+  fill: aquamarine;
+}
+
+.BPFlow svg text {
+  fill: black;
+  font-size: 14px;
+}
+
+.BPFlow svg path {
+  fill: none;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.BPFlow svg marker#arrow path {
+  fill: gray;
+}
