@@ -27,6 +27,7 @@ import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg
 import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { DesignerContainer } from '../designer/DesignerContainer';
+import { BPContainer } from '../bp/BPContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -75,6 +76,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
             </div>
             <div className="ImportantMenu" hidden={!!this.props.application}>{commandToLink('applications', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
+            <div className="ImportantMenu">{commandToLink('bp', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
@@ -186,6 +188,17 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                   return (
                     <StompDemoViewContainer
                       {...props}
+                    />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/bp`}
+                render={props => {
+                  return (
+                    <BPContainer
+                      {...props}
+                      url={props.match.url}
                     />
                   );
                 }}

@@ -235,7 +235,7 @@ export class MainApplication extends Application {
               const application = await this._getApplication(connection, transaction, context.session, uid);
               try {
                 if (external) {
-                  await application.connect();
+                  await application.testConnect();
                 } else {
                   if (template) {
                     const templatesFiles = await MainApplication._getTemplatesFiles();
@@ -285,7 +285,6 @@ export class MainApplication extends Application {
       level: Level.USER,
       logger: this.taskLogger,
       worker: async (context) => {
-        await this.waitUnlock();
         await this.waitUnlock();
         this.checkSession(context.session);
 

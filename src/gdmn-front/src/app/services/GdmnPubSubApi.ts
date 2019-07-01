@@ -58,7 +58,8 @@ import {
   TSequenceQueryTaskCmdResult,
   TGetSessionsInfoCmdResult,
   TGetMainSessionsInfoCmdResult,
-  TGetNextIdTaskCmdResult
+  TGetNextIdTaskCmdResult,
+  TQuerySetTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -229,6 +230,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.QUERY,
+        payload
+      }
+    });
+  }
+
+  public querySet(payload: TTaskActionPayloadTypes[TTaskActionNames.QUERY_SET]): Promise<TQuerySetTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.QUERY_SET,
         payload
       }
     });

@@ -5,11 +5,10 @@ import {
   EntityLinkField,
   EntityQuery,
   EntityQueryOptions,
-  IEntityQueryResponseFieldAlias,
   ParentAttribute,
   ScalarAttribute,
-  SetAttribute,
-  IEntityQueryResponseFieldAliases
+  EntityQuerySet,
+  EntityQuerySetOptions
 } from "gdmn-orm";
 import {IFieldDef, TFieldType} from "gdmn-recordset";
 
@@ -71,7 +70,7 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
   );
 }
 
-export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname: string, pkValues?: any[], alias: string = 'root'): EntityQuery {
+export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname: string, pkValues?: any[], alias: string = 'root'): EntityQuerySet {
 
   const setLinkFields = Object.values(entity.attributes)
   .filter((attr) => attr.type === "Set" && attr.name === fieldname)
@@ -93,16 +92,12 @@ export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname: stri
     return new EntityLinkField(attr, [link]);
   });
 
-
-  return new EntityQuery(
+  return new EntityQuerySet(
     new EntityLink(entity, alias, setLinkFields),
-    pkValues && new EntityQueryOptions(
-    undefined,
-    undefined,
+    pkValues && new EntityQuerySetOptions(
     [{
       equals: pkValues.map((value, index) => ({
-        alias,
-        attribute: entity.pk[index],
+        alias:fieldname,
         value
       }))
     }])

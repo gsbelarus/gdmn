@@ -2169,7 +2169,7 @@
     "@types/keygrip" "*"
     "@types/node" "*"
 
-"@types/dagre@^0":
+"@types/dagre@^0", "@types/dagre@^0.7.42":
   version "0.7.42"
   resolved "https://registry.yarnpkg.com/@types/dagre/-/dagre-0.7.42.tgz#2b0cd7678d5fc273df7816a88b8b34016e3a5d85"
   integrity sha512-knVdi1Ul8xYgJ0wdhQ+/2YGJFKJFa/5srcPII9zvOs4KhsHfpnFrSTQXATYmjslglxRMif3Lg+wEZ0beag+94A==
@@ -5422,7 +5422,7 @@ d@1:
   dependencies:
     es5-ext "^0.10.9"
 
-dagre@^0:
+dagre@^0, dagre@^0.8.4:
   version "0.8.4"
   resolved "https://registry.yarnpkg.com/dagre/-/dagre-0.8.4.tgz#26b9fb8f7bdc60c6110a0458c375261836786061"
   integrity sha512-Dj0csFDrWYKdavwROb9FccHfTC4fJbyF/oJdL9LNZJ8WUvl968P6PAKEriGqfbdArVJEmmfA+UyumgWEwcHU6A==

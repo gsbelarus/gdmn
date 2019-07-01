@@ -18,7 +18,8 @@ import {
   UpdateCmd,
   SequenceQueryCmd,
   GetSessionsInfoCmd,
-  GetNextIdCmd
+  GetNextIdCmd,
+  QuerySetCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -68,6 +69,14 @@ export class AppCommandProvider {
       && !!command.payload
       && "query" in command.payload
       && typeof command.payload.query === "object";
+    // TODO
+  }
+
+  private static _verifyQuerySetCmd(command: ICmd<AppAction, any>): command is QuerySetCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "querySet" in command.payload
+      && typeof command.payload.querySet === "object";
     // TODO
   }
 
@@ -201,6 +210,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushQueryCmd(session, command);
+      }
+      case "QUERY_SET": {
+        if (!AppCommandProvider._verifyQuerySetCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushQuerySetCmd(session, command);
       }
       case "SQL_QUERY": {
         if (!AppCommandProvider._verifySqlQueryCmd(command)) {
