@@ -690,10 +690,39 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               if (fd.dataType === 5) {
                 return (
                   <DatepickerJSX
-                    key={`${fd.fieldName}`}
+                    key={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
+                    fieldName={`${fd.fieldName}`}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
                     value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? lastEdited.current.value : rs.getString(fd.fieldName)}
-                />);
+                    onChange={
+                      (newValue?: string) => {
+                        if (newValue !== undefined) {
+                          lastEdited.current = {
+                            fieldName: fd.fieldName,
+                            value: newValue
+                          };
+                          changedFields.current[fd.fieldName] = true;
+                          setChanged(true);
+                        }
+                      }
+                    }
+                    onFocus={
+                      () => {
+                        lastFocused.current = fd.fieldName;
+                        if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                          applyLastEdited();
+                        }
+                      }
+                    }
+                    componentRef={
+                      ref => {
+                        if (ref && lastFocused.current === fd.fieldName) {
+                          needFocus.current = ref;
+                        }
+                      }
+                    }
+                  />
+                );
               } else {
                 return (
                   <TextField
