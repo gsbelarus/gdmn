@@ -9,7 +9,7 @@ import { SqlQueryActions } from "./data/reducer";
 import { RouteComponentProps } from "react-router";
 
 export interface ISqlContainerProps extends RouteComponentProps{
-  sqlName: string;
+  id: string;
   url: string;
 };
 
