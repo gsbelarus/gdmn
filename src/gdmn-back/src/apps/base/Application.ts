@@ -2,7 +2,9 @@ import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
 import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
+  Attribute,
   deserializeERModel,
+  Entity,
   EntityDelete,
   EntityInsert,
   EntityQuery,
@@ -50,7 +52,8 @@ export type AppAction =
   | "SEQUENCE_QUERY"
   | "GET_SESSIONS_INFO"
   | "GET_MAIN_SESSIONS_INFO"
-  | "GET_NEXT_ID";
+  | "GET_NEXT_ID"
+  | "ENTITY_ADD";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -73,6 +76,7 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
+export type EntityAddCmd = AppCmd<"ENTITY_ADD", { entityName: string, attributes?: Attribute[]}>;
 
 export class Application extends ADatabase {
 
@@ -329,6 +333,46 @@ export class Application extends ADatabase {
           )
         ));
         return {entity: entity.name};
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushEntityAddCmd(session: Session,
+                          command: EntityAddCmd
+                          ): Task<EntityAddCmd, { entityName: string, attributes?: Attribute[]}> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {entityName, attributes} = context.command.payload;
+
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async ({erBuilder, eBuilder}) => {
+              const entity = await erBuilder.create(this.erModel, new Entity({
+                name: entityName,
+                lName: {}
+              }));
+              if (attributes) {
+                attributes.forEach((attribute) => {
+                  Object.values(attribute).map(async (attr) => await eBuilder.createAttribute(entity, attr));
+                });
+              }
+            }
+          })
+        }));
+        return {entityName};
       }
     });
     session.taskManager.add(task);

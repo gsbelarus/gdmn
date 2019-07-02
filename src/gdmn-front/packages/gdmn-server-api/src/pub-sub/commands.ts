@@ -214,3 +214,10 @@ export type TGetMainSessionsInfoCmdResult = TTaskCmdResult<TTaskActionNames.GET_
 export type TGetNextIdTaskCmd = TTaskCmd<TTaskActionNames.GET_NEXT_ID>;
 
 export type TGetNextIdTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_NEXT_ID>;
+
+// entity add
+
+export type TEntityAddTaskCmd = TTaskCmd<TTaskActionNames.ENTITY_ADD>;
+
+export type TEntityAddTaskCmdResult = TTaskCmdResult<TTaskActionNames.ENTITY_ADD>;
+

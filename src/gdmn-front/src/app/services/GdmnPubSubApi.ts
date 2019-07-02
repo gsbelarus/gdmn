@@ -59,7 +59,8 @@ import {
   TGetSessionsInfoCmdResult,
   TGetMainSessionsInfoCmdResult,
   TGetNextIdTaskCmdResult,
-  TQuerySetTaskCmdResult
+  TQuerySetTaskCmdResult,
+  TEntityAddTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -383,6 +384,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.GET_NEXT_ID,
+        payload
+      }
+    });
+  }
+
+  public entityAdd(payload: TTaskActionPayloadTypes[TTaskActionNames.ENTITY_ADD]): Promise<TEntityAddTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.ENTITY_ADD,
         payload
       }
     });
