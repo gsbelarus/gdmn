@@ -3,7 +3,7 @@
   margin: 1px;
   border-radius: 4px;
   padding: 4px;
-  min-height: 64px;
+  height: 100%;
 }
 
 .activeCell {
