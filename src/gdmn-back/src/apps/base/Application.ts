@@ -53,7 +53,7 @@ export type AppAction =
   | "GET_SESSIONS_INFO"
   | "GET_MAIN_SESSIONS_INFO"
   | "GET_NEXT_ID"
-  | "ENTITY_ADD";
+  | "ADD_ENTITY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -76,7 +76,7 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type EntityAddCmd = AppCmd<"ENTITY_ADD", { entityName: string, attributes?: Attribute[]}>;
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, attributes?: Attribute[]}>;
 
 export class Application extends ADatabase {
 
@@ -340,9 +340,9 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushEntityAddCmd(session: Session,
-                          command: EntityAddCmd
-                          ): Task<EntityAddCmd, { entityName: string, attributes?: Attribute[]}> {
+  public pushAddEntityCmd(session: Session,
+                          command: AddEntityCmd
+                          ): Task<AddEntityCmd, { entityName: string, attributes?: Attribute[]}> {
     const task = new Task({
       session,
       command,

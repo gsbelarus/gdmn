@@ -217,7 +217,7 @@ export type TGetNextIdTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_NEXT_I
 
 // entity add
 
-export type TEntityAddTaskCmd = TTaskCmd<TTaskActionNames.ENTITY_ADD>;
+export type TAddEntityTaskCmd = TTaskCmd<TTaskActionNames.ADD_ENTITY>;
 
-export type TEntityAddTaskCmdResult = TTaskCmdResult<TTaskActionNames.ENTITY_ADD>;
+export type TAddEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.ADD_ENTITY>;
 

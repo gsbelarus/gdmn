@@ -1,6 +1,5 @@
 import {SemCategory} from "gdmn-nlp";
 import { LName } from "gdmn-internals";
-import {Attribute} from "./model/Attribute";
 
 export type TValue = string | number | boolean | Date | Buffer | null;
 
@@ -37,8 +36,4 @@ export interface IBaseOptions<Adapter = any> {
 export interface IBaseSemOptions<Adapter = any> extends IBaseOptions<Adapter> {
   lName: LName;
   semCategories?: SemCategory[];
-}
-
-export interface IListAttribute {
-  attribute: Attribute;
 }

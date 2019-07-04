@@ -9,7 +9,7 @@ import {
   ISequenceQueryResponse,
   IEntityQuerySetInspector,
   IEntityQuerySetResponse,
-  IListAttribute
+  Attribute
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
@@ -63,7 +63,7 @@ export const enum TTaskActionNames {
   GET_SESSIONS_INFO = 'GET_SESSIONS_INFO',
   GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
   GET_NEXT_ID = 'GET_NEXT_ID',
-  ENTITY_ADD = 'ENTITY_ADD'
+  ADD_ENTITY = 'ADD_ENTITY'
 }
 
 // MESSAGES DATA
@@ -161,9 +161,9 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.GET_NEXT_ID]: {
   };
-  [TTaskActionNames.ENTITY_ADD]: {
+  [TTaskActionNames.ADD_ENTITY]: {
     entityName: string;
-    attributes?: IListAttribute[]
+    attributes?: Attribute[]
   };
 }
 
@@ -202,7 +202,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
-  [TTaskActionNames.ENTITY_ADD]: IEntityAdd;
+  [TTaskActionNames.ADD_ENTITY]: IAddEntity;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -256,16 +256,16 @@ export type AppAction =
   | "SEQUENCE_QUERY"
   | "GET_SESSIONS_INFO"
   | "GET_NEXT_ID"
-  | "ENTITY_ADD";
+  | "ADD_ENTITY";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];
   aliases: ISqlQueryResponseAliases;
 }
 
-export interface IEntityAdd {
+export interface IAddEntity {
   entityName: string;
-  attributes?: IListAttribute[]
+  attributes?: Attribute[]
 }
 
 export interface IDefinedEntity {
