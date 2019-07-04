@@ -19,9 +19,11 @@ class ParamsDialog extends PureComponent<IParamsDialogProps> {
     const { onCancel, columns, onToggle } = this.props;
     return (
       <div>
-        <Panel isOpen={true} onDismiss={onCancel} headerText="Column options" type={PanelType.medium}>
-          <ParamsPanel columns={columns} onToggle={onToggle} />
-        </Panel>
+        <Panel data-is-scrollable={false} isOpen={true} onDismiss={onCancel} headerText="Column options" type={PanelType.medium}>
+          <div>
+            <ParamsPanel columns={columns} onToggle={onToggle}  />
+          </div>          
+        </Panel> 
       </div>
     );
   }

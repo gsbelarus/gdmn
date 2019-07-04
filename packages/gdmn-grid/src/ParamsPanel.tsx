@@ -73,26 +73,28 @@ class ParamsPanel extends PureComponent<IParamsPanelProps, IPanelState> {
     const curColumn = columns.find(c => c.name === selectionFieldName);
     return (
       <div>
-        <TextField label="Filter by name:" onChange={this._onFilter} styles={{ root: { maxWidth: '300px' } }} />
-        <div className="ColumnsList">
-          <DetailsList
-            selectionMode={SelectionMode.none}
-            selectionPreservedOnEmptyClick={true}
-            enterModalSelectionOnTouch={true}
-            data-is-scrollable="true"
-            items={fieldList}
-            selection={this._selection}
-            columns={ParamsPanel.columns}
-            setKey="set"
-            layoutMode={DetailsListLayoutMode.fixedColumns}
-            compact={true}
-            isHeaderVisible={true}
-          />
+        <div className="ColumnsPanel">
+          <TextField label="Filter by name:" onChange={this._onFilter} styles={{ root: { maxWidth: '300px' } }} />
+          <div className="ColumnsList">
+            <DetailsList
+              selectionMode={SelectionMode.single}
+              selectionPreservedOnEmptyClick={true}
+              enterModalSelectionOnTouch={true}
+              data-is-scrollable="true"
+              items={fieldList}
+              selection={this._selection}
+              columns={ParamsPanel.columns}
+              setKey="set"
+              layoutMode={DetailsListLayoutMode.fixedColumns}
+              compact={true}
+              isHeaderVisible={true}  
+            />
+          </div>  
         </div>
         <div className="Options">
           <span className="OptionsTitle">OPTIONS</span>
           <Checkbox
-            checked={curColumn ? !curColumn.hidden : false}
+            checked={curColumn ? !curColumn.hidden : false} 
             label="Show column"
             onChange={() => onToggle(selectionFieldName)}
           />

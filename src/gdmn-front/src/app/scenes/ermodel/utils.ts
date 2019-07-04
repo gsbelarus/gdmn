@@ -3,7 +3,7 @@ import { IState } from "@src/app/store/reducer";
 import { RSAction, rsActions } from "gdmn-recordset";
 import { GridAction, TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, applySortDialog,
   TColumnResizeEvent, resizeColumn, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent,
-  TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent } from "gdmn-grid";
+  TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent, TToggleColumnEvent, toggleColumn } from "gdmn-grid";
 
 export function bindGridActions(dispatch: ThunkDispatch<IState, never, RSAction | GridAction>) {
   return {
@@ -85,7 +85,7 @@ export function bindGridActions(dispatch: ThunkDispatch<IState, never, RSAction 
         rowIdx: event.rowIdx
       })
     ),
-
+    onToggleColumn:(event: TToggleColumnEvent) => dispatch(toggleColumn({name: event.rs.name, columnName: event.columnName })),
     onSetFilter: (event: TOnFilterEvent) => {
       if (event.filter) {
         dispatch(rsActions.setFilter({name: event.rs.name, filter: { conditions: [ { value: event.filter } ] } }))
