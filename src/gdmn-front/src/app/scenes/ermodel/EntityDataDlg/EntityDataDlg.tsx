@@ -780,12 +780,36 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               if (fd.dataType === TFieldType.Date) {
                 return (
                   <DatepickerJSX
-                    key={`${fd.fieldName}`}
+                    key={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? String(lastEdited.current.value) : rs.getString(fd.fieldName)}
+                    fieldName={`${fd.fieldName}`}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
-                    value={
-                      lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'string'
-                      ? lastEdited.current.value
-                      : rs.getString(fd.fieldName)
+                    value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? String(lastEdited.current.value) : rs.getString(fd.fieldName)}
+                    onChange={
+                      (newValue?: string) => {
+                        if (newValue !== undefined) {
+                          lastEdited.current = {
+                            fieldName: fd.fieldName,
+                            value: newValue
+                          };
+                          changedFields.current[fd.fieldName] = true;
+                          setChanged(true);
+                        }
+                      }
+                    }
+                    onFocus={
+                      () => {
+                        lastFocused.current = fd.fieldName;
+                        if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                          applyLastEdited();
+                        }
+                      }
+                    }
+                    componentRef={
+                      ref => {
+                        if (ref && lastFocused.current === fd.fieldName) {
+                          needFocus.current = ref;
+                        }
+                      }
                     }
                 />);
               } else if (fd.dataType === TFieldType.Boolean) {
