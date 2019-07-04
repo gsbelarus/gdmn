@@ -496,6 +496,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     width: '100%',
     gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
+    height: '83.5%',
     overflow: 'auto',
   });
 
@@ -635,6 +636,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           props.outDesigner();
         }
       },
+
       {
         key: 'cancelAndClose',
         text: changed ? 'Отменить' : 'Закрыть',
@@ -692,11 +694,10 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         display: 'grid',
         width: '100%',
         height: '100vh',
-        /*height: '650px',*/
         gridTemplateColumns: 'auto 240px',
         gridTemplateRows: 'auto',
         gridAutoFlow: 'column',
-        overflow: 'auto'
+        overflow: 'scroll'
       }}>
         <div style={{
           gridArea: '1 / 1 / 2 / 2',

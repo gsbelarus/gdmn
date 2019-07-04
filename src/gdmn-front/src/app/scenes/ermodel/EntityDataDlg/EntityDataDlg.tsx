@@ -805,6 +805,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   style={{
                     gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
                     display: 'flex',
+                    margin: '1px',
+                    padding: '4px',
                     flexDirection: area.direction,
                     justifyContent: 'flex-start'
                   }}
