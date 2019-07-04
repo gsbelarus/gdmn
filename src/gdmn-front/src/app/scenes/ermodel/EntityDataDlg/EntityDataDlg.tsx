@@ -81,14 +81,22 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     return {};
   };
 
+  const getSavedIsDesigner = (): boolean => {
+    if (viewTab && viewTab.sessionData && typeof(viewTab.sessionData.isDesigner) === 'boolean') {
+      return viewTab.sessionData.isDesigner as boolean;
+    }
+    return false;
+  };
+
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
   const controlsData = useRef(getSavedControlsData());
   const changedFields = useRef(getSavedChangedFields());
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
+  const isDesigner = useRef(getSavedIsDesigner());
+  const [designer, setDesigner] = useState(isDesigner.current);
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
-  const [designer, setDesigner] = useState(false);
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
@@ -290,17 +298,21 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   useEffect( () => {
-    return () => {
-      dispatch(gdmnActions.saveSessionData({
-        viewTabURL: url,
-        sessionData: {
-          lastEdited: lastEdited.current,
-          lastFocused: lastFocused.current,
-          controls: controlsData.current,
-          changedFields: changedFields.current
-        }
-      }));
-    };
+    if(viewTab) {
+      return () => {
+        dispatch(gdmnActions.saveSessionData({
+          viewTabURL: url,
+          sessionData: {
+            lastEdited: lastEdited.current,
+            lastFocused: lastFocused.current,
+            controls: controlsData.current,
+            changedFields: changedFields.current,
+            isDesigner: isDesigner.current
+          }
+        }));
+      };
+    }
+    return undefined;
   }, []);
 
   useEffect( () => {
@@ -473,7 +485,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       iconProps: {
         iconName: 'CheckMark'
       },
-      onClick: () => postChanges(true)
+      onClick: () => {
+        postChanges(true)
+      }
     },
     {
       key: 'cancelAndClose',
@@ -552,11 +566,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
     {
       key: 'designer',
+      disabled: changed,
       text: 'Дизайнер',
       iconProps: {
         iconName: 'Design'
       },
-      onClick: () => { setDesigner(true); }
+      onClick: () => { 
+        setDesigner(true);
+        isDesigner.current = true;
+      }
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
   
@@ -740,167 +758,175 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   return (
     <>
       {
-        designer ? <Designer url={url} entityName={entityName} dispatch={dispatch} fields={rs.fieldDefs} /> :
-      <>
-      <CommandBar items={commandBarItems} />
-      
-      {
-        error
-        &&
-        <MessageBar
-          messageBarType={MessageBarType.error}
-          isMultiline={false}
-          onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
-          dismissButtonAriaLabel="Close"
-        >
-          {error}
-        </MessageBar>
-      }
-      <div styleName="ScrollableDlg">
-        {
-          localState !== undefined ?
-          <div
-            style={getGridStyle()}
-            tabIndex={0}
-          >
-            {
-          (localState as IDesignerState).areas.map( (area, idx) => (
-            <div
-              key={`${area.rect.top}-${area.rect.left}`}
-              className={
-                "commonStyle"
-              }
-              style={{
-                gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
-                display: 'flex',
-                flexDirection: area.direction,
-                justifyContent: 'flex-start'
-              }}
+        designer
+          ? <Designer
+            url={url}
+            entityName={entityName}
+            dispatch={dispatch}
+            fields={rs.fieldDefs}
+            outDesigner={() => { setDesigner(false); isDesigner.current = false; }}
+          />
+          :
+          <>
+          <CommandBar items={commandBarItems} />
+          
+          {
+            error
+            &&
+            <MessageBar
+              messageBarType={MessageBarType.error}
+              isMultiline={false}
+              onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
+              dismissButtonAriaLabel="Close"
             >
-              {
-                area.fields.map( f =>
-                  {
-                    let fd = rs.fieldDefs.find(fieldDef =>
-                      `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
-                    )
-                    let  styles;
-                    if(area.direction === 'row')
-                    styles = {
-                      root: {
-                        flexGrow: 1
-                      }
-                    }
-                    else styles = {
-                      root: {
-                        flexGrow: 0
-                      }
-                    }
-                    if (fd) {
-                      return field({fd, styles })
-                    }
-                    return undefined;
+              {error}
+            </MessageBar>
+          }
+          <div styleName="ScrollableDlg">
+            {
+              localState !== undefined ?
+              <div
+                style={getGridStyle()}
+                tabIndex={0}
+              >
+                {
+              (localState as IDesignerState).areas.map( (area, idx) => (
+                <div
+                  key={`${area.rect.top}-${area.rect.left}`}
+                  className={
+                    "commonStyle"
                   }
-                )
+                  style={{
+                    gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
+                    display: 'flex',
+                    flexDirection: area.direction,
+                    justifyContent: 'flex-start'
+                  }}
+                >
+                  {
+                    area.fields.map( f =>
+                      {
+                        let fd = rs.fieldDefs.find(fieldDef =>
+                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
+                        )
+                        let  styles;
+                        if(area.direction === 'row')
+                        styles = {
+                          root: {
+                            flexGrow: 1
+                          }
+                        }
+                        else styles = {
+                          root: {
+                            flexGrow: 0
+                          }
+                        }
+                        if (fd) {
+                          return field({fd, styles })
+                        }
+                        return undefined;
+                      }
+                    )
+                  }
+                </div>
+              ))
+                }
+              </div>
+            :
+              <div className="FieldsColumn">
+                {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
+                  const attr = entity.attributes[setAttrName] as EntityAttribute;
+                  const linkEntity = attr.entities[0];
+                  return (
+                    <SetLookupComboBox
+                      key={setAttrName}
+                      name={setAttrName}
+                      label={setAttrName}
+                      preSelectedOption={data ? data : undefined}
+                      getSessionData={
+                        () => {
+                          if (!controlsData.current) {
+                            controlsData.current = {};
+                          }
+                          return controlsData.current;
+                        }
+                      }
+                      onChanged={
+                        (option: IComboBoxOption[] | undefined) => {
+                          if (option) {
+                            setSetComboBoxData( {...setComboBoxData,
+                              [setAttrName]: option
+                            });
+                            setChanged(true);
+                            changedFields.current[setAttrName] = true;
+                          }
+                        }
+                      }
+                      onLookup={
+                        (filter: string, limit: number) => {
+                          const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                          const scalarAttrs = Object.values(linkEntity.attributes)
+                            .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+
+                          const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                            || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                            || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                            || scalarAttrs.find((attr) => attr.type === "String");
+                          if (presentField) {
+                            linkFields.push(new EntityLinkField(presentField));
+                          }
+                          const linkEq = new EntityQuery(
+                            new EntityLink(linkEntity, 'z', linkFields),
+                            new EntityQueryOptions(
+                              limit + 1,
+                              undefined,
+                              filter ?
+                                [{
+                                  contains: [
+                                    {
+                                      alias: 'z',
+                                      attribute: presentField!,
+                                      value: filter!
+                                    }
+                                  ]
+                                }]
+                              : undefined
+                            )
+                          );
+
+                          return apiService.query({ query: linkEq.inspect() })
+                            .then( response => {
+                              const result = response.payload.result!;
+                              const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                              const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                                && (data.attribute === presentField!.name))![0];
+                              return result.data.map( (r): IComboBoxOption => ({
+                                key: r[idAlias],
+                                text: r[nameAlias]
+                              }));
+                            });
+                        }
+                      }
+                      componentRef={
+                        ref => {
+                          if (ref && lastFocused.current === linkEntity.name) {
+                            needFocus.current = ref;
+                          }
+                        }
+                      }
+                    />
+                  )
+
+                })}
+                {
+                  rs.fieldDefs.map( fd => {
+                    return field({fd})
+                  })
+                }
+              </div>
               }
             </div>
-          ))
-            }
-          </div>
-        :
-        <div className="FieldsColumn">
-          {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
-            const attr = entity.attributes[setAttrName] as EntityAttribute;
-            const linkEntity = attr.entities[0];
-            return (
-              <SetLookupComboBox
-                key={setAttrName}
-                name={setAttrName}
-                label={setAttrName}
-                preSelectedOption={data ? data : undefined}
-                getSessionData={
-                  () => {
-                    if (!controlsData.current) {
-                      controlsData.current = {};
-                    }
-                    return controlsData.current;
-                  }
-                }
-                onChanged={
-                  (option: IComboBoxOption[] | undefined) => {
-                    if (option) {
-                      setSetComboBoxData( {...setComboBoxData,
-                        [setAttrName]: option
-                      });
-                      setChanged(true);
-                      changedFields.current[setAttrName] = true;
-                    }
-                  }
-                }
-                onLookup={
-                  (filter: string, limit: number) => {
-                    const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                    const scalarAttrs = Object.values(linkEntity.attributes)
-                      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
-                    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                      || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                      || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                      || scalarAttrs.find((attr) => attr.type === "String");
-                    if (presentField) {
-                      linkFields.push(new EntityLinkField(presentField));
-                    }
-                    const linkEq = new EntityQuery(
-                      new EntityLink(linkEntity, 'z', linkFields),
-                      new EntityQueryOptions(
-                        limit + 1,
-                        undefined,
-                        filter ?
-                          [{
-                            contains: [
-                              {
-                                alias: 'z',
-                                attribute: presentField!,
-                                value: filter!
-                              }
-                            ]
-                          }]
-                        : undefined
-                      )
-                    );
-
-                    return apiService.query({ query: linkEq.inspect() })
-                      .then( response => {
-                        const result = response.payload.result!;
-                        const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                        const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
-                          && (data.attribute === presentField!.name))![0];
-                        return result.data.map( (r): IComboBoxOption => ({
-                          key: r[idAlias],
-                          text: r[nameAlias]
-                        }));
-                      });
-                  }
-                }
-                componentRef={
-                  ref => {
-                    if (ref && lastFocused.current === linkEntity.name) {
-                      needFocus.current = ref;
-                    }
-                  }
-                }
-              />
-            )
-
-          })}
-          {
-            rs.fieldDefs.map( fd => {
-              return field({fd})
-            })
-          }
-        </div>
-        }
-      </div>
-      </>
+          </>
       }
     </>
   );

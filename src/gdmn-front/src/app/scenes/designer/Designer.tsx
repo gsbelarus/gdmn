@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
@@ -54,6 +54,7 @@ export interface IDesignerState {
   setGridSize?: boolean;
   showAreaExplorer?: boolean;
   previewMode?: boolean;
+  changed: boolean;
 };
 
 type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
@@ -71,7 +72,9 @@ type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'DELETE_ROW' }
   | { type: 'CREATE_AREA' }
   | { type: 'DELETE_AREA' }
-  | { type: 'CLEAR_SELECTION' };
+  | { type: 'CLEAR_SELECTION' }
+  | { type: 'CANCEL_CHANGES', entityName: string }
+  | { type: 'SAVE_CHANGES' };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
   switch (action.type) {
@@ -80,29 +83,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { selection, activeCell: prevActiveCell } = state;
 
       if (!shiftKey) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          activeCell,
-          selection: undefined
-        }));
         return {
           ...state,
           activeCell,
-          selection: undefined
+          selection: undefined,
         };
       }
 
       if (!selection) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          activeCell,
-          selection: {
-            left: Math.min(prevActiveCell.x, activeCell.x),
-            top: Math.min(prevActiveCell.y, activeCell.y),
-            right: Math.max(prevActiveCell.x, activeCell.x),
-            bottom: Math.max(prevActiveCell.y, activeCell.y),
-          }
-        }));
         return {
           ...state,
           activeCell,
@@ -111,19 +99,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             top: Math.min(prevActiveCell.y, activeCell.y),
             right: Math.max(prevActiveCell.x, activeCell.x),
             bottom: Math.max(prevActiveCell.y, activeCell.y),
-          }
+          },
         };
       } else {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          activeCell,
-          selection: {
-            left: Math.min(selection.left, activeCell.x),
-            top: Math.min(selection.top, activeCell.y),
-            right: Math.max(selection.right, activeCell.x),
-            bottom: Math.max(selection.bottom, activeCell.y),
-          }
-        }));
         return {
           ...state,
           activeCell,
@@ -132,7 +110,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             top: Math.min(selection.top, activeCell.y),
             right: Math.max(selection.right, activeCell.x),
             bottom: Math.max(selection.bottom, activeCell.y),
-          }
+          },
         };
       }
     }
@@ -142,22 +120,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { areas } = state;
 
       if (activeArea >= 0 && activeArea <= (areas.length - 1)) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          activeArea
-        }));
         return {
           ...state,
-          activeArea
+          activeArea,
         }
       } else {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          activeArea: undefined
-        }));
         return {
           ...state,
-          activeArea: undefined
+          activeArea: undefined,
         }
       }
     }
@@ -169,7 +139,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       if (activeArea !== undefined && activeArea >= 0 && activeArea <= (areas.length - 1)) {
         const newAreas = [...areas];
 
-        newAreas[activeArea] = {...newAreas[activeArea]};
+        newAreas[activeArea] = { ...newAreas[activeArea] };
 
         if (rect
           && rect.left <= rect.right
@@ -177,8 +147,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           && rect.left >= 0
           && rect.right < grid.columns.length
           && rect.top >= 0
-          && rect.bottom < grid.rows.length)
-        {
+          && rect.bottom < grid.rows.length) {
           newAreas[activeArea].rect = rect;
         }
 
@@ -186,29 +155,21 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           newAreas[activeArea].direction = direction;
         }
 
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          areas: newAreas
-        }));
-
         return {
           ...state,
-          areas: newAreas
+          areas: newAreas,
+          changed: true
         }
       } else {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
     }
 
     case 'CLEAR_SELECTION': {
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        selection: undefined
-      }));
       return {
         ...state,
-        selection: undefined
+        selection: undefined,
+        changed: true
       };
     }
 
@@ -216,26 +177,17 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { previewMode } = state;
 
       if (previewMode) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          previewMode: false
-        }));
         return {
           ...state,
-          previewMode: false
+          previewMode: false,
+          changed: true
         }
       } else {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          previewMode: true,
-          setGridSize: false,
-          showAreaExplorer: false
-        }));
         return {
           ...state,
           previewMode: true,
           setGridSize: false,
-          showAreaExplorer: false
+          showAreaExplorer: false,
         };
       }
     }
@@ -245,78 +197,50 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { fieldName, include } = action;
 
       if (activeArea === undefined) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
 
       const newAreas = [...areas];
 
-      if (include && !areas[activeArea].fields.find( f => f === fieldName )) {
+      if (include && !areas[activeArea].fields.find(f => f === fieldName)) {
         newAreas[activeArea] = {
           ...newAreas[activeArea],
           fields: [...newAreas[activeArea].fields, fieldName]
         };
       }
 
-      if (!include && !!areas[activeArea].fields.find( f => f === fieldName )) {
+      if (!include && !!areas[activeArea].fields.find(f => f === fieldName)) {
         newAreas[activeArea] = {
           ...newAreas[activeArea],
-          fields: newAreas[activeArea].fields.filter( f => f !== fieldName )
+          fields: newAreas[activeArea].fields.filter(f => f !== fieldName)
         };
       }
 
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        areas: newAreas
-      }));
       return {
         ...state,
-        areas: newAreas
+        areas: newAreas,
+        changed: true
       };
     }
 
     case 'CREATE_AREA': {
-      const { selection, areas, activeCell: {x, y} } = state;
+      const { selection, areas, activeCell: { x, y } } = state;
       if (selection) {
-        if (areas.some( area => intersect(area.rect, selection) )) {
-          localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
+        if (areas.some(area => intersect(area.rect, selection))) {
           return state;
         } else {
-          localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-            ...state,
-            areas: [...areas, { rect: selection, fields: [], direction: 'row' }],
-            activeArea: state.areas.length,
-            selection: undefined,
-            showAreaExplorer: true,
-            setGridSize: false
-          }));
           return {
             ...state,
             areas: [...areas, { rect: selection, fields: [], direction: 'row' }],
             activeArea: state.areas.length,
             selection: undefined,
             showAreaExplorer: true,
-            setGridSize: false
+            setGridSize: false,
+            changed: true
           };
         }
       }
       else {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-          ...state,
-          areas: [...areas, {
-            rect: {
-              left: x,
-              top: y,
-              right: x,
-              bottom: y
-            },
-            fields: [],
-            direction: 'row'
-          }],
-          activeArea: state.areas.length,
-          showAreaExplorer: true,
-          setGridSize: false
-        }));
         return {
           ...state,
           areas: [...areas, {
@@ -331,7 +255,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           }],
           activeArea: state.areas.length,
           showAreaExplorer: true,
-          setGridSize: false
+          setGridSize: false,
+          changed: true
         };
       }
     }
@@ -340,21 +265,15 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { areas, activeArea } = state;
 
       if (!areas.length || activeArea === undefined) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
 
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
-        activeArea: undefined,
-        showAreaExplorer: false
-      }));
       return {
         ...state,
         areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
         activeArea: undefined,
-        showAreaExplorer: false
+        showAreaExplorer: false,
+        changed: true
       };
     }
 
@@ -363,25 +282,18 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { column, size } = action;
 
       if (column >= grid.columns.length) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
 
       const newColumns = [...grid.columns];
       newColumns[column] = size;
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        grid: {
-          ...grid,
-          columns: newColumns
-        }
-      }));
       return {
         ...state,
         grid: {
           ...grid,
           columns: newColumns
-        }
+        },
+        changed: true
       }
     }
 
@@ -390,87 +302,60 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { row, size } = action;
 
       if (row >= grid.rows.length) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
 
       const newRows = [...grid.rows];
       newRows[row] = size;
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        grid: {
-          ...grid,
-          rows: newRows
-        }
-      }));
       return {
         ...state,
         grid: {
           ...grid,
           rows: newRows
-        }
+        },
+        changed: true
       }
     }
 
     case 'TOGGLE_SET_GRID_SIZE': {
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        setGridSize: !state.setGridSize,
-        showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer
-      }));
       return {
         ...state,
         setGridSize: !state.setGridSize,
-        showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer
+        showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer,
+        changed: true
       }
     }
 
     case 'TOGGLE_SHOW_AREA_EXPLORER': {
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
-        showAreaExplorer: !state.showAreaExplorer
-      }));
       return {
         ...state,
         setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
-        showAreaExplorer: !state.showAreaExplorer
+        showAreaExplorer: !state.showAreaExplorer,
+        changed: true
       }
     }
 
     case 'ADD_COLUMN': {
       const { grid, activeCell: { x } } = state;
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        grid: {
-          ...grid,
-          columns: [...grid.columns.slice(0, x + 1), { unit: 'FR', value: 1}, ...grid.columns.slice(x + 1)]
-        }
-      }));
       return {
         ...state,
         grid: {
           ...grid,
-          columns: [...grid.columns.slice(0, x + 1), { unit: 'FR', value: 1}, ...grid.columns.slice(x + 1)]
-        }
+          columns: [...grid.columns.slice(0, x + 1), { unit: 'FR', value: 1 }, ...grid.columns.slice(x + 1)]
+        },
+        changed: true
       }
     }
 
     case 'ADD_ROW': {
       const { grid, activeCell: { y } } = state;
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        grid: {
-          ...grid,
-          rows: [...grid.rows.slice(0, y + 1), { unit: 'FR', value: 1}, ...grid.rows.slice(y + 1)]
-        }
-      }));
       return {
         ...state,
         grid: {
           ...grid,
-          rows: [...grid.rows.slice(0, y + 1), { unit: 'FR', value: 1}, ...grid.rows.slice(y + 1)]
-        }
+          rows: [...grid.rows.slice(0, y + 1), { unit: 'FR', value: 1 }, ...grid.rows.slice(y + 1)]
+        },
+        changed: true
       }
     }
 
@@ -478,32 +363,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
 
       if (grid.columns.length === 1 || selection) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
 
       const newAreas = areas
-        .filter( area => area.rect.left < x || area.rect.right > x )
-        .map( area => area.rect.right > x ? {...area, rect: {...area.rect, right: area.rect.right - 1}} : area )
-        .map( area => area.rect.left > x ? {...area, rect: {...area.rect, left: area.rect.left - 1}} : area );
+        .filter(area => area.rect.left < x || area.rect.right > x)
+        .map(area => area.rect.right > x ? { ...area, rect: { ...area.rect, right: area.rect.right - 1 } } : area)
+        .map(area => area.rect.left > x ? { ...area, rect: { ...area.rect, left: area.rect.left - 1 } } : area);
 
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        grid: {
-          ...grid,
-          columns: [...grid.columns.slice(0, x), ...grid.columns.slice(x + 1)]
-        },
-        activeCell: {
-          x: x > 0 && x >= (grid.columns.length - 1) ? x - 1 : x,
-          y
-        },
-        areas: newAreas,
-        activeArea: activeArea === undefined || !newAreas.length
-          ? undefined
-          : activeArea < newAreas.length
-          ? activeArea
-          : undefined
-      }));
       return {
         ...state,
         grid: {
@@ -518,8 +385,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         activeArea: activeArea === undefined || !newAreas.length
           ? undefined
           : activeArea < newAreas.length
-          ? activeArea
-          : undefined
+            ? activeArea
+            : undefined,
+        changed: true
       }
     }
 
@@ -527,32 +395,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
 
       if (grid.rows.length === 1 || selection) {
-        localStorage.setItem(`des-${state.entityName}`, JSON.stringify(state));
         return state;
       }
 
       const newAreas = areas
-        .filter( area => area.rect.top < y || area.rect.bottom > y )
-        .map( area => area.rect.bottom > y ? {...area, rect: {...area.rect, bottom: area.rect.bottom - 1}} : area )
-        .map( area => area.rect.top > y ? {...area, rect: {...area.rect, top: area.rect.top - 1}} : area );
+        .filter(area => area.rect.top < y || area.rect.bottom > y)
+        .map(area => area.rect.bottom > y ? { ...area, rect: { ...area.rect, bottom: area.rect.bottom - 1 } } : area)
+        .map(area => area.rect.top > y ? { ...area, rect: { ...area.rect, top: area.rect.top - 1 } } : area);
 
-      localStorage.setItem(`des-${state.entityName}`, JSON.stringify({
-        ...state,
-        grid: {
-          ...grid,
-          rows: [...grid.rows.slice(0, y), ...grid.rows.slice(y + 1)]
-        },
-        activeCell: {
-          x,
-          y: y > 0 && y >= (grid.rows.length - 1) ? y - 1 : y
-        },
-        areas: newAreas,
-        activeArea: activeArea === undefined || !newAreas.length
-          ? undefined
-          : activeArea < newAreas.length
-          ? activeArea
-          : undefined
-      }));
       return {
         ...state,
         grid: {
@@ -567,18 +417,63 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         activeArea: activeArea === undefined || !newAreas.length
           ? undefined
           : activeArea < newAreas.length
-          ? activeArea
-          : undefined
+            ? activeArea
+            : undefined,
+        changed: true
+      }
+    }
+
+    case 'CANCEL_CHANGES': {
+      const { entityName } = action;
+      const localState = localStorage.getItem(entityName) === null ? undefined : JSON.parse(localStorage.getItem(entityName)!);
+      if (localState) {
+        return {
+          ...state,
+          grid: localState.grid,
+          entityName: localState.entityName,
+          areas: localState.areas,
+          setGridSize: localState.setGridSize,
+          showAreaExplorer: localState.showAreaExplorer,
+          previewMode: localState.previewMode,
+          changed: false
+        }
+      } else {
+        return state;
+      }
+    }
+
+    case 'SAVE_CHANGES': {
+      return {
+        ...state,
+        changed: false
       }
     }
   }
 };
 
-export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
+export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { url, entityName, viewTab, dispatch, fields } = props;
+  
+  const getSavedLastEdit = (): IDesignerState | undefined => {
+    console.log(viewTab);
+    if(viewTab) {
+      console.log(viewTab.sessionData);
+    }
+    if(viewTab && viewTab.sessionData) {
+      console.log(viewTab.sessionData.changes)
+    }
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.changes instanceof Object) {
+      console.log(viewTab.sessionData.changes)
+      return viewTab.sessionData.changes as IDesignerState;
+    }
+    return undefined;
+  };
+
+  const changes = useRef(getSavedLastEdit());
+
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
-  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }, designerDispatch] = useReducer(reducer, localState !== undefined ? localState as IDesignerState :  {
+  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, changed }, designerDispatch] = useReducer(reducer, changes.current !== undefined ? changes.current : localState !== undefined ? localState as IDesignerState : {
     grid: {
       columns: [{ unit: 'PX', value: 350 }, { unit: 'AUTO', value: 1 }],
       rows: [{ unit: 'FR', value: 1 }],
@@ -600,10 +495,28 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
         }),
       direction: 'column'
     }],
-    entityName: entityName
+    entityName: entityName,
+    changed: false
   });
 
-  useEffect( () => {
+  useEffect(() => {
+    if(viewTab) {
+      const sessionData = viewTab.sessionData;
+      console.log('sesssionData')
+      return () => {
+        dispatch(gdmnActions.saveSessionData({
+          viewTabURL: url,
+          sessionData: {
+            ...sessionData!,
+            changes: changes.current
+          }
+        }));
+      };
+    }
+    return undefined;
+  }, []);
+
+  useEffect(() => {
     if (!viewTab) {
       dispatch(gdmnActions.addViewTab({
         url,
@@ -616,8 +529,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
   const getGridStyle = (): React.CSSProperties => ({
     display: 'grid',
     width: '100%',
-    gridTemplateColumns: grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
-    gridTemplateRows: grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
+    gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
+    gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
     overflow: 'auto',
   });
 
@@ -627,97 +540,181 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
   const inSelection = (x: number, y: number): boolean => !!selection && x >= selection.left && x <= selection.right && y >= selection.top && y <= selection.bottom;
 
-  const commandBarItems: ICommandBarItemProps[] = [
-    {
-      key: 'addColumn',
-      disabled: previewMode,
-      text: 'Добавить колонку',
-      iconProps: {
-        iconName: 'DoubleColumn'
+  const commandBarItems: ICommandBarItemProps[][] = [
+    [
+      {
+        key: 'addColumn',
+        disabled: previewMode,
+        text: 'Добавить колонку',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'ADD_COLUMN' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'ADD_COLUMN' })
-    },
-    {
-      key: 'deleteColumn',
-      disabled: previewMode || grid.columns.length <= 1 || !!selection || areas.some( area => inRectangle(activeCell, area.rect) ),
-      text: 'Удалить колонку',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'deleteColumn',
+        disabled: previewMode || grid.columns.length <= 1 || !!selection || areas.some(area => inRectangle(activeCell, area.rect)),
+        text: 'Удалить колонку',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'DELETE_COLUMN' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'DELETE_COLUMN' })
-    },
-    {
-      key: 'addRow',
-      disabled: previewMode,
-      text: 'Добавить строку',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'addRow',
+        disabled: previewMode,
+        text: 'Добавить строку',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'ADD_ROW' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'ADD_ROW' })
-    },
-    {
-      key: 'deleteRow',
-      disabled: previewMode || grid.rows.length <= 1 || !!selection || areas.some( area => inRectangle(activeCell, area.rect) ),
-      text: 'Удалить строку',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'deleteRow',
+        disabled: previewMode || grid.rows.length <= 1 || !!selection || areas.some(area => inRectangle(activeCell, area.rect)),
+        text: 'Удалить строку',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'DELETE_ROW' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
+
       },
-      onClick: () => designerDispatch({ type: 'DELETE_ROW' })
-    },
-    {
-      key: 'createArea',
-      disabled: previewMode || areas.some( area => inRectangle(activeCell, area.rect) ),
-      text: 'Создать область',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'createArea',
+        disabled: previewMode || areas.some(area => inRectangle(activeCell, area.rect)),
+        text: 'Создать область',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'CREATE_AREA' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'CREATE_AREA' })
-    },
-    {
-      key: 'deleteArea',
-      disabled: previewMode || activeArea === undefined,
-      text: 'Удалить область',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'deleteArea',
+        disabled: previewMode || activeArea === undefined,
+        text: 'Удалить область',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'DELETE_AREA' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'DELETE_AREA' })
-    },
-    {
-      key: 'toggleSetGridSize',
-      disabled: previewMode,
-      checked: !!setGridSize,
-      text: 'Установить размер',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'toggleSetGridSize',
+        disabled: previewMode,
+        checked: !!setGridSize,
+        text: 'Установить размер',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' })
-    },
-    {
-      key: 'toggleShowAreaExplorer',
-      disabled: previewMode || activeArea === undefined,
-      checked: !!showAreaExplorer,
-      text: 'Настройка',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'toggleShowAreaExplorer',
+        disabled: previewMode || activeArea === undefined,
+        checked: !!showAreaExplorer,
+        text: 'Настройка',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
       },
-      onClick: () => designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' })
-    },
-    {
-      key: 'previewMode',
-      disabled: !areas.length,
-      checked: !!previewMode,
-      text: 'Просмотр',
-      iconProps: {
-        iconName: 'DoubleColumn'
+      {
+        key: 'previewMode',
+        disabled: !areas.length,
+        checked: !!previewMode,
+        text: 'Просмотр',
+        iconProps: {
+          iconName: 'DoubleColumn'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'PREVIEW_MODE' });
+          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+        }
+      }
+    ],
+    [
+      {
+        key: 'saveAndClose',
+        disabled: !changed,
+        text: 'Сохранить',
+        iconProps: {
+          iconName: 'CheckMark'
+        },
+        onClick: () => {
+          changes.current = undefined;
+          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }));
+          designerDispatch({ type: 'SAVE_CHANGES' });
+          props.outDesigner();
+        }
       },
-      onClick: () => designerDispatch({ type: 'PREVIEW_MODE' })
-    }
+      {
+        key: 'cancelAndClose',
+        text: changed ? 'Отменить' : 'Закрыть',
+        iconProps: {
+          iconName: 'Cancel'
+        },
+        onClick: () => {
+          changes.current = undefined;
+          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}` });
+          props.outDesigner();
+        }
+      },
+      {
+        key: 'apply',
+        disabled: !changed,
+        text: 'Применить',
+        iconProps: {
+          iconName: 'Save'
+        },
+        onClick: () => {
+          changes.current = undefined;
+          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }));
+          designerDispatch({ type: 'SAVE_CHANGES' });
+        }
+      },
+      {
+        key: 'revert',
+        disabled: !changed,
+        text: 'Вернуть',
+        iconProps: {
+          iconName: 'Undo'
+        },
+        onClick: () => {
+          changes.current = undefined;
+          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}` });
+        }
+      }
+    ]
   ];
 
   const getOnMouseDown = (x: number, y: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.stopPropagation();
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
+    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
   };
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
@@ -756,7 +753,7 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
     );
   };
 
-  const WithAreaExplorer =  CSSModules( (props: { children: JSX.Element }): JSX.Element => {
+  const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
     if (!showAreaExplorer || activeArea === undefined) {
       return props.children;
     }
@@ -779,7 +776,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.left) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, left: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, left: parseInt(newValue) } });
+                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
                   }
                 }
               }
@@ -792,7 +790,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.top) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, top: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, top: parseInt(newValue) } });
+                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
                   }
                 }
               }
@@ -805,7 +804,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.right) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, right: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, right: parseInt(newValue) } });
+                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
                   }
                 }
               }
@@ -818,7 +818,8 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               onChange={
                 (_, newValue) => {
                   if (newValue && Number(newValue) !== area.rect.bottom) {
-                    designerDispatch({ type: 'CONFIGURE_AREA', rect: {...area.rect, bottom: parseInt(newValue) } });
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, bottom: parseInt(newValue) } });
+                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
                   }
                 }
               }
@@ -850,27 +851,30 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
               ]}
               selectedKey={area.direction}
               label='Direction'
-              onChange={ (_, option) => option && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection }) }
+              onChange={(_, option) => option && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection }) && (changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState)}
             />
 
             <Label>
               Show fields:
             </Label>
-              {
-                fields!.map( field =>
-                  <Checkbox
-                    styles={{
-                      root: {
-                        paddingBottom: '4px'
-                      }
-                    }}
-                    key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
-                    label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
-                    checked={!!areas[activeArea].fields.find( areaF => areaF === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` )}
-                    onChange={ (_, isChecked) => designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked }) }
-                  />
-                )
-              }
+            {
+              fields!.map(field =>
+                <Checkbox
+                  styles={{
+                    root: {
+                      paddingBottom: '4px'
+                    }
+                  }}
+                  key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                  label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                  checked={!!areas[activeArea].fields.find(areaF => areaF === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
+                  onChange={(_, isChecked) => {
+                    designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
+                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+                  }}
+                />
+              )
+            }
           </>
         }
       />
@@ -919,22 +923,22 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
           ]}
           selectedKey={size.unit}
           label={label}
-          onChange={ (_, option) => option && onChange({ unit: option.key as TUnit, value: size.value }) }
+          onChange={(_, option) => option && onChange({ unit: option.key as TUnit, value: size.value })}
         />
         {
           !size.value || size.unit === 'AUTO'
-          ? null
-          : <SpinButton
-            styles={{
-              root: {
-                width: '98px'
-              }
-            }}
-            value={size.value.toString()}
-            onIncrement={ getOnChangeColumnSpin(1) }
-            onDecrement={ getOnChangeColumnSpin(-1) }
-            onValidate={ getOnChangeColumnSpin() }
-          />
+            ? null
+            : <SpinButton
+              styles={{
+                root: {
+                  width: '98px'
+                }
+              }}
+              value={size.value.toString()}
+              onIncrement={getOnChangeColumnSpin(1)}
+              onDecrement={getOnChangeColumnSpin(-1)}
+              onValidate={getOnChangeColumnSpin()}
+            />
         }
       </div>
     );
@@ -946,15 +950,21 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
         {...props}
         toolPanel={
           <>
-          {props.children}
+            {props.children}
             {
-              grid.columns.map( (c, idx) =>
-                <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={ (size: ISize) => designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size }) } />
+              grid.columns.map((c, idx) =>
+                <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={(size: ISize) => {
+                  designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size });
+                  changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+                }} />
               )
             }
             {
-              grid.rows.map( (r, idx) =>
-                <OneSize key={`r${idx}`} label={`Row ${idx}`} size={r} onChange={ (size: ISize) => designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size }) } />
+              grid.rows.map((r, idx) =>
+                <OneSize key={`r${idx}`} label={`Row ${idx}`} size={r} onChange={(size: ISize) => {
+                  designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size });
+                  changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+                }} />
               )
             }
           </>
@@ -964,7 +974,9 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
 
   return (
     <>
-      <CommandBar items={commandBarItems} />
+      <CommandBar items={commandBarItems[0]} />
+      <CommandBar items={commandBarItems[1]} />
+      {console.log(changes.current)}
       <WithAreaExplorer>
         <WithGridSize>
           <div
@@ -973,10 +985,10 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
           >
             {
               previewMode
-              ?
+                ?
                 null
-              :
-                grid.columns.map( (c, x) => grid.rows.map( (r, y) => {
+                :
+                grid.columns.map((c, x) => grid.rows.map((r, y) => {
                   if ((x === activeCell.x && y === activeCell.y) || inSelection(x, y)) {
                     return null;
                   } else {
@@ -995,30 +1007,33 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
             }
             {
               previewMode || !selection
-              ?
+                ?
                 null
-              :
+                :
                 <div
                   styleName="commonStyle selection"
                   style={{
                     gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`
                   }}
-                  onClick={ () => designerDispatch({ type: 'CLEAR_SELECTION' }) }
+                  onClick={() => {
+                    designerDispatch({ type: 'CLEAR_SELECTION' });
+                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+                  }}
                 >
                   selection
                 </div>
             }
             {
               areas.length
-              ? areas.map( (area, idx) => (
+                ? areas.map((area, idx) => (
                   <div
                     key={`${area.rect.top}-${area.rect.left}`}
                     styleName={
                       previewMode
-                      ? "commonStyle"
-                      : activeArea === idx
-                      ? "commonStyle activeArea"
-                      : "commonStyle area"
+                        ? "commonStyle"
+                        : activeArea === idx
+                          ? "commonStyle activeArea"
+                          : "commonStyle area"
                     }
                     style={{
                       gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
@@ -1026,12 +1041,15 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                       flexDirection: area.direction,
                       justifyContent: 'flex-start'
                     }}
-                    onClick={ previewMode || activeArea === idx ? undefined : () => designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx }) }
+                    onClick={previewMode || activeArea === idx ? undefined : () => {
+                      designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx });
+                      changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+                    }}
                   >
                     {
-                      area.fields.map( f =>
+                      area.fields.map(f =>
                         <TextField
-                          styles={ area.direction === 'row'
+                          styles={area.direction === 'row'
                             ? {
                               root: {
                                 flexGrow: 1
@@ -1050,17 +1068,17 @@ export const Designer = CSSModules( (props: IDesignerProps): JSX.Element => {
                     }
                   </div>
                 ))
-              : null
+                : null
             }
             {
               previewMode
-              ||
-              (selection && inRectangle(activeCell, selection))
-              ||
-              (areas.length && areas.some( area => inRectangle(activeCell, area.rect) ))
-              ?
+                ||
+                (selection && inRectangle(activeCell, selection))
+                ||
+                (areas.length && areas.some(area => inRectangle(activeCell, area.rect)))
+                ?
                 null
-              :
+                :
                 <div
                   styleName="commonStyle activeCell"
                   style={getCellStyle(activeCell.x, activeCell.y)}

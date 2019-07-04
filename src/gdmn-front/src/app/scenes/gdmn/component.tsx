@@ -11,9 +11,6 @@ import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { SqlContainer } from '../sql/SqlContainer';
-import { SqlViewContainer } from '../sql/EditView/container';
-import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
-import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
@@ -26,7 +23,6 @@ import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgCo
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
 import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
-import { DesignerContainer } from '../designer/DesignerContainer';
 import { BPContainer } from '../bp/BPContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
@@ -81,7 +77,6 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
             <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
             <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('designer', match.url)}</div>
             <div className="RightSideHeaderPart">
             <div>
             <span className="BigLogo">
@@ -239,16 +234,6 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     />
                   );
                 }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/designer`}
-                render={props => (
-                  <DesignerContainer
-                    {...props}
-                    url={props.match.url}
-                  />
-                )}
               />
               <Route
                 exact={true}
