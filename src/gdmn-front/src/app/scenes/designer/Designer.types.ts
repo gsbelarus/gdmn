@@ -3,20 +3,16 @@ import { GdmnAction } from "../gdmn/actions";
 import { IState } from "@src/app/store/reducer";
 import { ThunkDispatch } from "redux-thunk";
 import { IFieldDef } from 'gdmn-recordset';
-
-export interface IDesignerContainerProps {
-  url: string;
-};
+import { IDesignerState } from './Designer';
 
 export interface IDesignerStateProps {
   viewTab?: IViewTab;
 };
 
 export interface IDesignerProps {
-  url: string;
   entityName: string;
-  dispatch: ThunkDispatch<IState, never, GdmnAction>;
   outDesigner: () => void;
   viewTab?: IViewTab;
   fields?: IFieldDef[];
+  componentRef: (ref: IDesignerState | undefined) => void;
 };

@@ -453,19 +453,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
-  const { url, entityName, viewTab, dispatch, fields } = props;
+  const { entityName, viewTab, fields } = props;
   
   const getSavedLastEdit = (): IDesignerState | undefined => {
-    console.log(viewTab);
-    if(viewTab) {
-      console.log(viewTab.sessionData);
-    }
-    if(viewTab && viewTab.sessionData) {
-      console.log(viewTab.sessionData.changes)
-    }
-    if (viewTab && viewTab.sessionData && viewTab.sessionData.changes instanceof Object) {
-      console.log(viewTab.sessionData.changes)
-      return viewTab.sessionData.changes as IDesignerState;
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.changesDesigner instanceof Object) {
+      return viewTab.sessionData.changesDesigner as IDesignerState;
     }
     return undefined;
   };
@@ -498,33 +490,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     entityName: entityName,
     changed: false
   });
-
-  useEffect(() => {
-    if(viewTab) {
-      const sessionData = viewTab.sessionData;
-      console.log('sesssionData')
-      return () => {
-        dispatch(gdmnActions.saveSessionData({
-          viewTabURL: url,
-          sessionData: {
-            ...sessionData!,
-            changes: changes.current
-          }
-        }));
-      };
-    }
-    return undefined;
-  }, []);
-
-  useEffect(() => {
-    if (!viewTab) {
-      dispatch(gdmnActions.addViewTab({
-        url,
-        caption: 'Designer',
-        canClose: true
-      }));
-    }
-  }, []);
 
   const getGridStyle = (): React.CSSProperties => ({
     display: 'grid',
@@ -716,6 +681,10 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
     changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
   };
+
+  useEffect( () => {
+    props.componentRef({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState);
+  });
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
     return (
@@ -976,7 +945,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     <>
       <CommandBar items={commandBarItems[0]} />
       <CommandBar items={commandBarItems[1]} />
-      {console.log(changes.current)}
       <WithAreaExplorer>
         <WithGridSize>
           <div

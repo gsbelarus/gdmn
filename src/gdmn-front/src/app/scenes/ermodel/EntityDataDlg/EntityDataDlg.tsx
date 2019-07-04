@@ -88,6 +88,13 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     return false;
   };
 
+  const getSavedChangesDesigner = (): IDesignerState | undefined => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.isDesigner instanceof Object) {
+      return viewTab.sessionData.isDesigner as IDesignerState;
+    }
+    return undefined;
+  };
+
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
   const controlsData = useRef(getSavedControlsData());
@@ -95,6 +102,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const nextUrl = useRef(url);
   const needFocus = useRef<ITextField | IComboBox | undefined>();
   const isDesigner = useRef(getSavedIsDesigner());
+  const changesDesigner = useRef(getSavedChangesDesigner());
   const [designer, setDesigner] = useState(isDesigner.current);
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
@@ -298,21 +306,19 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   useEffect( () => {
-    if(viewTab) {
-      return () => {
-        dispatch(gdmnActions.saveSessionData({
-          viewTabURL: url,
-          sessionData: {
-            lastEdited: lastEdited.current,
-            lastFocused: lastFocused.current,
-            controls: controlsData.current,
-            changedFields: changedFields.current,
-            isDesigner: isDesigner.current
-          }
-        }));
-      };
-    }
-    return undefined;
+    return () => {
+      dispatch(gdmnActions.saveSessionData({
+        viewTabURL: url,
+        sessionData: {
+          lastEdited: lastEdited.current,
+          lastFocused: lastFocused.current,
+          controls: controlsData.current,
+          changedFields: changedFields.current,
+          isDesigner: isDesigner.current,
+          changesDesigner: changesDesigner.current
+        }
+      }));
+    };
   }, []);
 
   useEffect( () => {
@@ -760,11 +766,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       {
         designer
           ? <Designer
-            url={url}
             entityName={entityName}
-            dispatch={dispatch}
             fields={rs.fieldDefs}
             outDesigner={() => { setDesigner(false); isDesigner.current = false; }}
+            viewTab={viewTab}
+            componentRef={(ref) => { changesDesigner.current = ref; } }
           />
           :
           <>
