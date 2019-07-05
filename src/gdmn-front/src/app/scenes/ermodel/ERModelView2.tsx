@@ -162,7 +162,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             caption: [fd.caption || fd.fieldName],
             fields: [{ ...fd }],
             width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined,
-            hidden: fd.fieldName === '' ? true : false
+            hidden: false
           })),
           leftSideColumns: 0,
           rightSideColumns: 0,
@@ -182,7 +182,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             caption: [fd.caption || fd.fieldName],
             fields: [{ ...fd }],
             width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined,
-            hidden: fd.fieldName === '' ? true : false
+            hidden: false
           })),
           leftSideColumns: 0,
           rightSideColumns: 0,
