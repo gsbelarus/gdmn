@@ -161,7 +161,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             name: fd.fieldName,
             caption: [fd.caption || fd.fieldName],
             fields: [{ ...fd }],
-            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined,
+            hidden: false
           })),
           leftSideColumns: 0,
           rightSideColumns: 0,
@@ -180,7 +181,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             name: fd.fieldName,
             caption: [fd.caption || fd.fieldName],
             fields: [{ ...fd }],
-            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined,
+            hidden: false
           })),
           leftSideColumns: 0,
           rightSideColumns: 0,
@@ -269,6 +271,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           <GDMNGrid
             {...gcsEntities}
             rs={entities}
+            columns={gcsEntities.columns.filter( c => !c.hidden )}
+            allColumns={gcsEntities.columns}
             {...gridActions}
             ref={ grid => grid && (gridRefEntities.current = grid) }
             savedState={getSavedStateEntities()}
@@ -288,6 +292,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           <GDMNGrid
             {...gcsAttributes}
             rs={attributes}
+            columns={gcsAttributes.columns.filter( c => !c.hidden )}
+            allColumns={gcsAttributes.columns}
             {...gridActions}
             ref={ grid => grid && (gridRefAttributes.current = grid) }
             savedState={getSavedStateAttributes()}

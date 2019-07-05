@@ -5,8 +5,11 @@ import { ThunkDispatch } from "redux-thunk";
 import { RecordSet, RSAction } from "gdmn-recordset";
 import { GridComponentState, GridAction } from "gdmn-grid";
 import { TRsMetaActions } from "@src/app/store/rsmeta";
+import { SqlQueryActions } from "./data/reducer";
+import { RouteComponentProps } from "react-router";
 
-export interface ISqlContainerProps {
+export interface ISqlContainerProps extends RouteComponentProps{
+  id: string;
   url: string;
 };
 
@@ -17,5 +20,5 @@ export interface ISqlStateProps {
 };
 
 export interface ISqlProps extends ISqlContainerProps, ISqlStateProps {
-  dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction | GridAction | TRsMetaActions>;
+  dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction | GridAction | TRsMetaActions | SqlQueryActions>;
 };

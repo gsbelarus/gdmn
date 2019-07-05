@@ -7,12 +7,13 @@ import {
   IERModel,
   ISequenceQueryInspector,
   ISequenceQueryResponse,
-  IEntityQuerySetInspector, IEntityQuerySetResponse
+  IEntityQuerySetInspector,
+  IEntityQuerySetResponse,
+  Attribute
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 import { ISqlQueryResponseAliases } from 'gdmn-internals';
-
 
 export enum TGdmnTopic {
   TASK = '/task',
@@ -61,7 +62,8 @@ export const enum TTaskActionNames {
   SEQUENCE_QUERY = 'SEQUENCE_QUERY',
   GET_SESSIONS_INFO = 'GET_SESSIONS_INFO',
   GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
-  GET_NEXT_ID = 'GET_NEXT_ID'
+  GET_NEXT_ID = 'GET_NEXT_ID',
+  ADD_ENTITY = 'ADD_ENTITY'
 }
 
 // MESSAGES DATA
@@ -159,6 +161,10 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.GET_NEXT_ID]: {
   };
+  [TTaskActionNames.ADD_ENTITY]: {
+    entityName: string;
+    attributes?: Attribute[]
+  };
 }
 
 // -- TASK-RESULT
@@ -196,55 +202,12 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
+  [TTaskActionNames.ADD_ENTITY]: IAddEntity;
 }
 
 export interface ISqlQueryResponseDataItem {
   [alias: string]: any;
 }
-
-/*
-export enum Types {
-  BIGINT,
-  INTEGER,
-  SMALLINT,
-
-  BLOB,
-  BOOLEAN,
-
-  CHAR,
-  VARCHAR,
-
-  DATE,
-  TIME,
-  TIMESTAMP,
-
-  DOUBLE,
-  FLOAT,
-
-  NULL,
-
-  OTHER
-}
-
-export interface ISqlQueryResponseAliasesRdb {
-  type: Types;
-  label?: string;
-  field?: string;
-  relation?: string;
-}
-
-export interface ISqlQueryResponseAliasesOrm {
-  type: string;
-  entity?: string;
-}
-
-export interface ISqlQueryResponseAliases {
-  [alias: string]: {
-    rdb: ISqlQueryResponseAliasesRdb;
-    orm?: ISqlQueryResponseAliasesOrm;
-  }
-}
-*/
 
 export interface ISessionInfo {
   database: string;
@@ -292,11 +255,17 @@ export type AppAction =
   | "DELETE"
   | "SEQUENCE_QUERY"
   | "GET_SESSIONS_INFO"
-  | "GET_NEXT_ID";
+  | "GET_NEXT_ID"
+  | "ADD_ENTITY";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];
   aliases: ISqlQueryResponseAliases;
+}
+
+export interface IAddEntity {
+  entityName: string;
+  attributes?: Attribute[]
 }
 
 export interface IDefinedEntity {

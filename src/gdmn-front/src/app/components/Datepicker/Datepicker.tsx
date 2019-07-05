@@ -1,17 +1,20 @@
 import React from 'react';
 import CalendarJSX from './Calendar';
 import "@src/styles/Datepicker.css";
-import { TextField, IconButton } from "office-ui-fabric-react";
+import { TextField, IconButton, ITextField } from "office-ui-fabric-react";
 
 export interface IDatepickerProps {
-  key?: string,
+  fieldName?: string,
   label?: string,
-  value?: string
+  value?: string,
+  onChange: (newValue?: string) => void,
+  onFocus: () => void,
+  componentRef?: (ref: ITextField | null) => void
 }
 
 export interface IDatepickerState {
   showCalendar: boolean,
-  value: Date
+  value: string,
   selectDate: string,
   selectDay: number,
   selectMonth: number,
@@ -20,12 +23,13 @@ export interface IDatepickerState {
 
 export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepickerState> {
   private _node: React.RefObject<HTMLDivElement>;
+  private ref: React.MutableRefObject<ITextField | null>;
 
   constructor(props: IDatepickerProps) {
     super(props);
     const currDate = this.props.value ? new Date(this.props.value) : new Date();
     this.state = {
-      value: currDate,
+      value: currDate.toString(),
       showCalendar: false,
       selectDate: this.props.value ? `${currDate.getDate().toString().padStart(2, '0')}.${(currDate.getMonth() + 1).toString().padStart(2, '0')}.${currDate.getFullYear()}` : '',
       selectDay: currDate.getDate(),
@@ -33,6 +37,7 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
       selectYear: currDate.getFullYear()
     }
     this._node = React.createRef();
+    this.ref = React.createRef();
   }
 
   componentWillUnmount() {
@@ -49,16 +54,19 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
   }
 
   setDate() {
-    const regArray = String(this.state.selectDate).match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    const regArray = this.state.selectDate.replace( /\s/g, '').match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
     if (!/(31|30|2[0-9]|1[0-9]|0[1-9]|[1-9]){1}\.(12|11|10|0[1-9]|[1-9]){1}\.([1-2]{1}[0-9]{3}|[0-9]{2})/.test(this.state.selectDate)
         || regArray === null) {
       this.setState({ selectDate: '' });
+      this.props.onChange('');
     } else {
       if(regArray) {
         this.setState({ selectDay: Number(regArray[1]), selectMonth: Number(regArray[2]) - 1, selectYear: Number(regArray[3]) });
         const day = regArray[1].padStart(2, '0');
         const month = (Number(regArray[2])).toString().padStart(2, '0');
         this.setState({ selectDate: `${day}.${month}.${regArray[3]}` });
+        this.setState({ value: (new Date(+regArray[3], +month, +day)).toString() });
+        this.props.onChange((new Date(+regArray[3], +month - 1, +day)).toString());
       }
     }
   }
@@ -68,6 +76,8 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
     const day = newSelectDay.toString().padStart(2, '0');
     const month = (this.state.selectMonth + 1).toString().padStart(2, '0');
     this.setState({ selectDate: `${day}.${month}.${this.state.selectYear}` });
+    this.setState({ value: (new Date(this.state.selectYear, +month, +day)).toString() });
+    this.props.onChange((new Date(this.state.selectYear, +month - 1, +day)).toString());
   }
 
   changeSelectMonth = (newSelectMonth: number, newSelectYear?: number) => {
@@ -76,6 +86,8 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
     const day = this.state.selectDay.toString().padStart(2, '0');
     const month = (newSelectMonth + 1).toString().padStart(2, '0');
     this.setState({ selectDate: `${day}.${month}.${newSelectYear ? newSelectYear : this.state.selectYear}` });
+    this.setState({ value: (new Date(this.state.selectYear, +month, +day)).toString() });
+    this.props.onChange((new Date(this.state.selectYear, +month - 1, +day)).toString());
   }
 
   changeSelectYear = (newSelectYear: number) => {
@@ -83,6 +95,8 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
     const day = this.state.selectDay.toString().padStart(2, '0');
     const month = (this.state.selectMonth + 1).toString().padStart(2, '0');
     this.setState({ selectDate: `${day}.${month}.${newSelectYear}` });
+    this.setState({ value: (new Date(newSelectYear, +month, +day)).toString() });
+    this.props.onChange((new Date(newSelectYear, +month - 1, +day)).toString());
   }
 
   today = () => {
@@ -91,35 +105,69 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
     const day = currDate.getDate().toString().padStart(2, '0');
     const month = (currDate.getMonth() + 1).toString().padStart(2, '0');
     this.setState({ selectDate: `${day}.${month}.${currDate.getFullYear()}` });
+    this.setState({ value: (new Date(currDate.getFullYear(), +month, +day)).toString() });
+    this.props.onChange((new Date(currDate.getFullYear(), +month - 1, +day)).toString());
   }
 
   render() {
-    const key = this.props.key;
+    const key = this.props.fieldName;
     return (
       <div
         className={`inputDate ${key}`}
-        key={this.props.key}
+        key={this.props.fieldName}
       >
         <div className="field">
           <TextField
-            key={this.props.key}
+            key={this.props.fieldName}
             label={this.props.label}
             value={this.state.selectDate}
-            onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => { this.setState({ selectDate: newValue! }) }}
+            onChange={
+              (_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) =>
+                {
+                  this.setState({ selectDate: newValue! });
+                  newValue ? this.setState({ value:  newValue }) : this.setState({ value:  '' });
+                  this.props.onChange(newValue ? newValue : '');
+                }
+            }
             onBlur={() => {
               this.setDate();
             }}
+            onFocus={
+              () => {
+                this.props.onFocus();
+              }
+            }
+            componentRef={
+              r => {
+                this.ref.current = r;
+                if (this.props.componentRef) {
+                  this.props.componentRef(r)
+                }
+              }
+            }
             onKeyDown={
-              (event: React.KeyboardEvent<HTMLInputElement>) => { event.key === 'Enter' ? this.setDate() : undefined }
+              (event: React.KeyboardEvent<HTMLInputElement>) => {
+                if(event.altKey && event.key === 'ArrowDown') {
+                  this.setState({ showCalendar: true })
+                }
+                if(event.key === ' ') {
+                  this.today();
+                }
+                event.key === 'Enter' ? this.setDate() : undefined;
+              }
             }
           />
-          <IconButton iconProps={{ iconName: 'Calendar' }} className="icon-calendar" onClick={() => { this.setState({ showCalendar: true }); }} />
+          <IconButton
+            iconProps={{ iconName: 'Calendar' }}
+            className="icon-calendar"
+            onClick={() => { this.setState({ showCalendar: true }) }}
+          />
         </div>
         {
           this.state.showCalendar
           ?
           <div
-            className={`window-calendar-${this.props.key}`}
+            className={`window-calendar-${this.props.fieldName}`}
             ref={this._node}
           >
             <CalendarJSX

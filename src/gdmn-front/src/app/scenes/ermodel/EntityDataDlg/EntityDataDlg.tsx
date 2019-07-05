@@ -2,9 +2,9 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles, IStyle } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles, IStyle } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
-import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef } from "gdmn-recordset";
+import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
   prepareDefaultEntityQuery,
   attr2fd,
@@ -31,7 +31,7 @@ import { Designer, IDesignerState } from '../../designer/Designer';
 
 interface ILastEdited {
   fieldName: string;
-  value: string;
+  value: string | boolean ;
 };
 
 /**
@@ -100,10 +100,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const controlsData = useRef(getSavedControlsData());
   const changedFields = useRef(getSavedChangedFields());
   const nextUrl = useRef(url);
-  const needFocus = useRef<ITextField | IComboBox | undefined>();
   const isDesigner = useRef(getSavedIsDesigner());
   const changesDesigner = useRef(getSavedChangesDesigner());
   const [designer, setDesigner] = useState(isDesigner.current);
+  const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
@@ -125,7 +125,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const applyLastEdited = () => {
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
-      dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+      if (typeof value === "boolean") {
+        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+      } else {
+        dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+      }
       lastEdited.current = undefined;
     }
   };
@@ -136,7 +140,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        tempRs = tempRs.setString(fieldName, value);
+        if (typeof value === "boolean") {
+          tempRs = tempRs.setBoolean(fieldName, value);
+        } else {
+          tempRs = tempRs.setString(fieldName, value);
+        }
         lastEdited.current = undefined;
       }
 
@@ -654,51 +662,50 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
-              onLookup={
-                (filter: string, limit: number) => {
-                  const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                  const scalarAttrs = Object.values(linkEntity.attributes)
-                    .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+                onLookup={
+                  (filter: string, limit: number) => {
+                    const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                    const scalarAttrs = Object.values(linkEntity.attributes)
+                      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
 
-                  const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                    || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                    || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                    || scalarAttrs.find((attr) => attr.type === "String");
-                  if (presentField) {
-                    linkFields.push(new EntityLinkField(presentField));
+                    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                      || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                      || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                      || scalarAttrs.find((attr) => attr.type === "String");
+                    if (presentField) {
+                      linkFields.push(new EntityLinkField(presentField));
+                    }
+                    const linkEq = new EntityQuery(
+                      new EntityLink(linkEntity, 'z', linkFields),
+                      new EntityQueryOptions(
+                        limit + 1,
+                        undefined,
+                        filter ?
+                          [{
+                            contains: [
+                              {
+                                alias: 'z',
+                                attribute: presentField!,
+                                value: filter!
+                              }
+                            ]
+                          }]
+                        : undefined
+                      )
+                    );
+                    return apiService.query({ query: linkEq.inspect() })
+                      .then( response => {
+                        const result = response.payload.result!;
+                        const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                        const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                          && (data.attribute === presentField!.name))![0];
+                        return result.data.map( (r): IComboBoxOption => ({
+                          key: r[idAlias],
+                          text: r[nameAlias]
+                        }));
+                      });
                   }
-                  const linkEq = new EntityQuery(
-                    new EntityLink(linkEntity, 'z', linkFields),
-                    new EntityQueryOptions(
-                      limit + 1,
-                      undefined,
-                      filter ?
-                        [{
-                          contains: [
-                            {
-                              alias: 'z',
-                              attribute: presentField!,
-                              value: filter!
-                            }
-                          ]
-                        }]
-                      : undefined
-                    )
-                  );
-
-                  return apiService.query({ query: linkEq.inspect() })
-                    .then( response => {
-                      const result = response.payload.result!;
-                      const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                      const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
-                        && (data.attribute === presentField!.name))![0];
-                      return result.data.map( (r): IComboBoxOption => ({
-                        key: r[idAlias],
-                        text: r[nameAlias]
-                      }));
-                    });
                 }
-              }
               componentRef={
                 ref => {
                   if (ref && lastFocused.current === props.fd.fieldName) {
@@ -715,20 +722,87 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         return undefined;
       }
 
-      if (props.fd.dataType === 5) {
+      if (props.fd.dataType === TFieldType.Date) {
         return (
           <DatepickerJSX
-            key={`${props.fd.fieldName}`}
+            key={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}
+            fieldName={`${props.fd.fieldName}`}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? lastEdited.current.value : rs.getString(props.fd.fieldName)}
+            value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}
+            onChange={
+              (newValue?: string) => {
+                if (newValue !== undefined) {
+                  lastEdited.current = {
+                    fieldName: props.fd.fieldName,
+                    value: newValue
+                  };
+                  changedFields.current[props.fd.fieldName] = true;
+                  setChanged(true);
+                }
+              }
+            }
+            onFocus={
+              () => {
+                lastFocused.current = props.fd.fieldName;
+                if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
+                  applyLastEdited();
+                }
+              }
+            }
+            componentRef={
+              ref => {
+                if (ref && lastFocused.current === props.fd.fieldName) {
+                  needFocus.current = ref;
+                }
+              }
+            }
         />);
+      } else if (props.fd.dataType === TFieldType.Boolean) {
+        return (
+          <Checkbox
+            key={props.fd.fieldName}
+            disabled={locked}
+            label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+            defaultChecked={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? !!lastEdited.current.value : rs.getBoolean(props.fd.fieldName)}
+            onChange={  (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
+              if (isChecked !== undefined) {
+                lastEdited.current = {
+                  fieldName: props.fd.fieldName,
+                  value: isChecked
+                };
+                changedFields.current[props.fd.fieldName] = true;
+                setChanged(true);
+              }
+            }}
+            onFocus={
+              () => {
+                lastFocused.current = props.fd.fieldName;
+                if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
+                  applyLastEdited();
+                }
+              }
+            }
+            componentRef={
+              ref => {
+                if (ref && lastFocused.current === props.fd.fieldName) {
+                  needFocus.current = ref;
+                }
+              }
+            }
+            styles={{root: {marginTop: '10px'}}}
+          />
+        )
       } else {
         return (
           <TextField
             key={props.fd.fieldName}
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? lastEdited.current.value : rs.getString(props.fd.fieldName)}
+            defaultValue={
+              lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName && typeof lastEdited.current.value === 'string'
+              ? lastEdited.current.value
+              : rs.getString(props.fd.fieldName)
+            }
             onChange={
               (_e, newValue?: string) => {
                 if (newValue !== undefined) {
@@ -901,7 +975,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                               : undefined
                             )
                           );
-
                           return apiService.query({ query: linkEq.inspect() })
                             .then( response => {
                               const result = response.payload.result!;

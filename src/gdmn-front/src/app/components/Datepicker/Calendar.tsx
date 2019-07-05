@@ -4,10 +4,10 @@ import { IconButton } from 'office-ui-fabric-react';
 
 const namesMonthes = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const valuesYears: number[][] = Array.from(
-  Array(new Date().getFullYear() - 1949 + (12 - (new Date().getFullYear() - 1949) % 12)),
+  Array(new Date().getFullYear() - 1949 + (16 - (new Date().getFullYear() - 1949) % 16)),
   (v, k) => k + 1960
 ).reduce((p, c) => {
-  if (p[p.length - 1].length == 12) {
+  if (p[p.length - 1].length == 16) {
     p.push([]);
   }
   p[p.length - 1].push(c);
