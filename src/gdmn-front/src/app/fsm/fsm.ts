@@ -2,6 +2,9 @@ import { createStateType, IBusinessProcesses } from "./types";
 
 const logged = createStateType('LOGGED', resolve => (userName: string) => resolve({ userName }) );
 const showData = createStateType('SHOW_DATA', resolve => (queryPhrase: string) => resolve({ queryPhrase }));
+const workDone = createStateType('WORK_DONE');
+const queryAndSort = createStateType('QUERY_AND_SORT');
+const addRecord = createStateType('ADD_RECORD');
 
 export const businessProcesses: IBusinessProcesses = {
   'WorkTime': {
@@ -19,6 +22,20 @@ export const businessProcesses: IBusinessProcesses = {
       {
         fromState: logged.getType(),
         toState: showData.getType()
+      },
+      {
+        fromState: showData.getType(),
+        toState: workDone.getType()
+      },
+      {
+        fromState: showData.getType(),
+        toState: queryAndSort.getType(),
+        returning: true
+      },
+      {
+        fromState: showData.getType(),
+        toState: addRecord.getType(),
+        returning: true
       }
     ]
   },

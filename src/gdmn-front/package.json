@@ -26,6 +26,7 @@
     "@stomp/stompjs": "^5.2.0",
     "@types/dagre": "^0.7.42",
     "@uifabric/fluent-theme": "^7",
+    "cytoscape": "^3.8.0",
     "dagre": "^0.8.4",
     "es6-error": "^4",
     "gdmn-grid": "1.0.0",
