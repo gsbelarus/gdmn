@@ -4,45 +4,52 @@ import { List } from 'immutable';
 import { CommandBar, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import CSSModules from 'react-css-modules';
+import { v1 } from 'uuid';
 
 import { TTaskStatus } from '@gdmn/server-api';
 import { apiService } from '@src/app/services/apiService';
 import { rsMetaActions } from '@src/app/store/rsmeta';
 
 import { gdmnActions } from '../gdmn/actions';
+// import { ISessionData } from '../gdmn/types';
 import { ISqlProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
-import { v1 } from 'uuid';
-import { ISessionData } from '../gdmn/types';
 
 interface ISQLParam {
   name: string;
   value: any;
 }
 
-interface ISQLState {
+interface ISQLViewState {
   expression: string;
   params: ISQLParam[];
   viewMode: 'hor' | 'ver';
+  showSQL?: boolean;
+  showPlan?: boolean;
 }
 
 type Action =
-  | { type: 'INIT'; state: ISQLState }
+  | { type: 'INIT'; state: ISQLViewState }
   | { type: 'SET_EXPRESSION'; expression: string }
-  | { type: 'CLEAR' }
+  | { type: 'CLEAR_EXPRESSION' }
   | { type: 'CHANGE_VIEW' }
-  | { type: 'SHOW_PARAMS' }
-  | { type: 'SHOW_PLAN' };
+  | { type: 'SHOW_PARAMS'; showSQL: boolean }
+  | { type: 'SET_PARAMS'; params: ISQLParam[] }
+  | { type: 'SHOW_PLAN'; showPlan: boolean };
 
-function reducer(state: ISQLState, action: Action): ISQLState {
+function reducer(state: ISQLViewState, action: Action): ISQLViewState {
   switch (action.type) {
     case 'INIT':
       return action.state;
     case 'SET_EXPRESSION':
       return { ...state, expression: action.expression };
-    case 'CLEAR':
+    case 'CLEAR_EXPRESSION':
       return { ...state, expression: '' };
+    case 'SET_PARAMS':
+      return { ...state, params: action.params };
+    case 'SHOW_PLAN':
+      return { ...state, showPlan: action.showPlan };
     case 'CHANGE_VIEW':
       return { ...state, viewMode: state.viewMode === 'hor' ? 'ver' : 'hor' };
     default:
@@ -59,60 +66,22 @@ interface IChangedFields {
   [fieldName: string]: boolean;
 }
 
+const initialState: ISQLViewState = {
+  expression: 'select * from gd_good',
+  params: [],
+  viewMode: 'hor',
+  showPlan: false,
+  showSQL: false
+};
+
 export const Sql = CSSModules(
   (props: ISqlProps): JSX.Element => {
     const { url, viewTab, dispatch, rs, gcs, id, history } = props;
 
-    const getSavedControlsData = (): ISessionData | undefined => {
-      if (viewTab && viewTab.sessionData && viewTab.sessionData.controls instanceof Object) {
-        return viewTab.sessionData.controls as ISessionData;
-      }
-      return undefined;
-    };
+    const [state, setState] = useReducer(reducer, initialState);
 
-    const getSavedLastEdit = (): ILastEdited | undefined => {
-      if (viewTab && viewTab.sessionData && viewTab.sessionData.lastEdited) {
-        return viewTab.sessionData.lastEdited as ILastEdited;
-      }
-      return undefined;
-    };
-
-    const getSavedLastFocused = (): string | undefined => {
-      if (viewTab && viewTab.sessionData && typeof viewTab.sessionData.lastFocused === 'string') {
-        return viewTab.sessionData.lastFocused;
-      }
-      return undefined;
-    };
-
-    const getSavedChangedFields = (): IChangedFields => {
-      if (viewTab && viewTab.sessionData && viewTab.sessionData.changedFields instanceof Object) {
-        return viewTab.sessionData.changedFields as IChangedFields;
-      }
-      return {};
-    };
-
-    const lastEdited = useRef(getSavedLastEdit());
-    const lastFocused = useRef(getSavedLastFocused());
-    const controlsData = useRef(getSavedControlsData());
-    const changedFields = useRef(getSavedChangedFields());
-
-    const [state, setState] = useReducer(reducer, {
-      expression: 'select * from gd_good',
-      params: [],
-      viewMode: 'hor'
-    });
-
-    const applyLastEdited = () => {
-      if (rs && lastEdited.current) {
-        const { fieldName, value } = lastEdited.current;
-        if (typeof value === 'boolean') {
-          dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
-        } else {
-          dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
-        }
-        lastEdited.current = undefined;
-      }
-    };
+    const refState = useRef(state);
+    const isMounted = useRef(false);
 
     const addNewSql = useCallback(() => {
       const id = v1();
@@ -120,33 +89,31 @@ export const Sql = CSSModules(
     }, []);
 
     useEffect(() => {
+      isMounted.current = true;
+
+      if (viewTab && viewTab.sessionData) {
+        setState({
+          type: 'INIT',
+          state: viewTab.sessionData.state
+        });
+      }
+
       return () => {
         dispatch(
           gdmnActions.saveSessionData({
             viewTabURL: url,
-            sessionData: {
-              lastEdited: lastEdited.current,
-              lastFocused: lastFocused.current,
-              controls: controlsData.current,
-              changedFields: changedFields.current
-            }
+            sessionData: { state: refState.current }
           })
         );
+        isMounted.current = false;
       };
     }, []);
 
     useEffect(() => {
-      if (viewTab && viewTab.sessionData) {
-        console.log('2', viewTab.sessionData);
-        setState({
-          type: 'INIT',
-          state: {
-            expression: viewTab.sessionData ? '' || '' : '',
-            viewMode: 'hor',
-            params: []
-          }
-        });
-      }
+      refState.current = state;
+    }, [state]);
+
+    useEffect(() => {
       if (rs) {
         if (viewTab && (!viewTab.rs || !viewTab.rs.length)) {
           dispatch(
@@ -315,7 +282,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'Clear'
           },
-          onClick: () => setState({ type: 'CLEAR' })
+          onClick: () => setState({ type: 'CLEAR_EXPRESSION' })
         },
         {
           key: 'execute',
@@ -333,7 +300,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'ThumbnailView'
           },
-          onClick: () => setState({ type: 'SHOW_PARAMS' })
+          onClick: () => setState({ type: 'SHOW_PARAMS', showSQL: true })
         },
         {
           key: 'plan',
@@ -342,7 +309,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'OpenSource'
           },
-          onClick: () => setState({ type: 'SHOW_PLAN' })
+          onClick: () => setState({ type: 'SHOW_PLAN', showPlan: true })
         },
         {
           key: 'histoty',
@@ -359,11 +326,7 @@ export const Sql = CSSModules(
             iconName: 'ViewAll2'
           },
           onClick: () => {
-            lastEdited.current = {
-              fieldName: 'viewMode',
-              value: state.viewMode
-            };
-            changedFields.current['viewMode'] = true;
+            // changedFields.current['viewMode'] = true;
             setState({ type: 'CHANGE_VIEW' });
           }
         }
@@ -380,27 +343,10 @@ export const Sql = CSSModules(
               resizable={false}
               multiline
               rows={8}
-              defaultValue={
-                lastEdited.current &&
-                lastEdited.current.fieldName === 'expression' &&
-                typeof lastEdited.current.value === 'string'
-                  ? lastEdited.current.value
-                  : state.expression
-              }
+              value={state.expression}
               onChange={(_e, newValue?: string) => {
                 if (newValue !== undefined) {
-                  lastEdited.current = {
-                    fieldName: 'expression',
-                    value: newValue
-                  };
-                  changedFields.current['expression'] = true;
                   setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
-                }
-              }}
-              onFocus={() => {
-                lastFocused.current = 'expression';
-                if (lastEdited.current && lastEdited.current.fieldName !== 'expression') {
-                  applyLastEdited();
                 }
               }}
             />
