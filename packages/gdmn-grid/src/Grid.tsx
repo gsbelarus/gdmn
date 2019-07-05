@@ -172,7 +172,7 @@ type AdjustColumnIndexFunc = (gridColumnIndex: number) => number;
 export type ScrollIntoView = (recordIndex: number, columnIndex?: number) => void;
 
 export type GetGridRef = () => GDMNGrid;
- 
+
 export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _leftSideHeaderGrid: Grid | undefined;
   private _leftSideRowsGrid: Grid | undefined;
@@ -303,7 +303,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       loadMoreRsData,
       loadMoreThresholdPages,
       loadMoreMinBatchPagesRatio,
-      currentCol, 
+      currentCol,
       onToggleColumn
     } = this.props;
     const { rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
@@ -961,26 +961,26 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             );
           }}
         </AutoSizer>
-        {sortDialog ? (
+        {sortDialog ?
           <GDMNSortDialog
             fieldDefs={rs.fieldDefs}
             sortFields={rs.sortFields}
             onCancel={() => onCancelSortDialog({ref: this, rs})}
             onApply={(sortFields) => onApplySortDialog({ref: this, rs, sortFields})}
           />
-        ) : (
+        :
           undefined
-        )}  
-        {showDialogParams ? (
-          <ParamsDialog 
-            onCancel={this.onCloseDialogParams} 
-            columns={allColumns} 
-            onToggle={(columnName) => onToggleColumn({ref: this, rs, columnName})} 
+        }
+        {showDialogParams ?
+          <ParamsDialog
+            onCancel={this.onCloseDialogParams}
+            columns={allColumns}
+            onToggle={(columnName) => onToggleColumn({ref: this, rs, columnName})}
           />
-        ) : (  
+        :
           undefined
-        )}
-      </div>  
+        }
+      </div>
     );
   }
 
@@ -1046,7 +1046,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               this._columnSizingDeltaX = 0;
             }
           }}
-        >  
+        >
           <div className={styles.DragHandleIcon} />
         </DraggableCore>
       );
