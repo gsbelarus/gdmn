@@ -236,6 +236,22 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     <SqlContainer
                       {...props}
                       url={props.match.url}
+                      id="SQL"
+                      key="SQL"
+                    />
+                  );
+                }}
+              />
+              <Route
+                exact={false}
+                path={`${match.path}/sql/:id`}
+                render={props => {
+                  return (
+                    <SqlContainer
+                      {...props}
+                      key={props.match.url}
+                      url={props.match.url}
+                      id={props.match.params.id}
                     />
                   );
                 }}
