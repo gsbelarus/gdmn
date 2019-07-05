@@ -2,8 +2,8 @@ import React, { useEffect, useReducer, useRef } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { gdmnActions } from '../gdmn/actions';
 import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label } from 'office-ui-fabric-react';
+import { IFieldDef } from 'gdmn-recordset';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -73,7 +73,7 @@ type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'CREATE_AREA' }
   | { type: 'DELETE_AREA' }
   | { type: 'CLEAR_SELECTION' }
-  | { type: 'CANCEL_CHANGES', entityName: string }
+  | { type: 'CANCEL_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'SAVE_CHANGES' };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
@@ -421,7 +421,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'CANCEL_CHANGES': {
-      const { entityName } = action;
+      const { entityName, fields } = action;
       const localState = localStorage.getItem(entityName) === null ? undefined : JSON.parse(localStorage.getItem(entityName)!);
       if (localState) {
         return {
@@ -435,7 +435,31 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           changed: false
         }
       } else {
-        return state;
+        return {
+          grid: {
+            columns: [{ unit: 'PX', value: 350 }, { unit: 'AUTO', value: 1 }],
+            rows: [{ unit: 'FR', value: 1 }],
+          },
+          activeCell: {
+            x: 0,
+            y: 0
+          },
+          areas: [{
+            rect: {
+              left: 0,
+              top: 0,
+              right: 0,
+              bottom: 0
+            },
+            fields:
+              fields!.map(field => {
+                return `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`
+              }),
+            direction: 'column'
+          }],
+          entityName: entityName,
+          changed: false
+        };
       }
     }
 
@@ -649,7 +673,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           changes.current = undefined;
-          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}` });
+          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}`, fields });
           props.outDesigner();
         }
       },
@@ -675,7 +699,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           changes.current = undefined;
-          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}` });
+          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}`, fields });
         }
       }
     ]
