@@ -45,6 +45,7 @@ export type TSortEvent = IGridEvent & {sortFields: SortFields};
 export type TSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
 export type TSelectAllRowsEvent = IGridEvent & {value: boolean};
 export type TToggleGroupEvent = IGridEvent & {rowIdx: number};
+export type TToggleColumnEvent = IGridEvent & {columnName: string};
 export type TLoadMoreRsDataEvent = IGridEvent & IndexRange;
 export type TRecordsetEvent = IGridEvent;
 export type TRecordsetSetFieldValue = IGridEvent & {fieldName: string, value: TDataType};
@@ -54,6 +55,7 @@ export type TEventCallback<T, R = void> = (event: T) => R;
 export interface IGridProps {
   rs: RecordSet;
   columns: Columns;
+  allColumns: Columns;
   leftSideColumns: number;
   rightSideColumns: number;
   currentCol: number;
@@ -72,6 +74,7 @@ export interface IGridProps {
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onToggleGroup: TEventCallback<TToggleGroupEvent>;
+  onToggleColumn: TEventCallback<TToggleColumnEvent>;
   onInsert: TEventCallback<TRecordsetEvent>;
   onDelete: TEventCallback<TRecordsetEvent>;
   onCancel: TEventCallback<TRecordsetEvent>;
@@ -169,7 +172,7 @@ type AdjustColumnIndexFunc = (gridColumnIndex: number) => number;
 export type ScrollIntoView = (recordIndex: number, columnIndex?: number) => void;
 
 export type GetGridRef = () => GDMNGrid;
-
+ 
 export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _leftSideHeaderGrid: Grid | undefined;
   private _leftSideRowsGrid: Grid | undefined;
@@ -287,6 +290,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   public render() {
     const {
       columns,
+      allColumns: allColumns,
       rs,
       leftSideColumns,
       rightSideColumns,
@@ -299,7 +303,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       loadMoreRsData,
       loadMoreThresholdPages,
       loadMoreMinBatchPagesRatio,
-      currentCol
+      currentCol, 
+      onToggleColumn
     } = this.props;
     const { rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
 
@@ -965,13 +970,17 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           />
         ) : (
           undefined
-        )}
+        )}  
         {showDialogParams ? (
-          <ParamsDialog onCancel={this.onCloseDialogParams} columns={columns} onToggle={() => {}} />
-        ) : (
+          <ParamsDialog 
+            onCancel={this.onCloseDialogParams} 
+            columns={allColumns} 
+            onToggle={(columnName) => onToggleColumn({ref: this, rs, columnName})} 
+          />
+        ) : (  
           undefined
         )}
-      </div>
+      </div>  
     );
   }
 
@@ -1037,7 +1046,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               this._columnSizingDeltaX = 0;
             }
           }}
-        >
+        >  
           <div className={styles.DragHandleIcon} />
         </DraggableCore>
       );
