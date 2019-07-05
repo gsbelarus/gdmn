@@ -180,7 +180,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         return {
           ...state,
           previewMode: false,
-          changed: true
         }
       } else {
         return {
@@ -322,7 +321,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         setGridSize: !state.setGridSize,
         showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer,
-        changed: true
       }
     }
 
@@ -331,7 +329,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
         showAreaExplorer: !state.showAreaExplorer,
-        changed: true
       }
     }
 
@@ -496,8 +493,8 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     width: '100%',
     gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
-    height: '83.5%',
-    overflow: 'auto',
+    height: '86%',
+    overflow: 'auto'
   });
 
   const getCellStyle = (x: number, y: number): React.CSSProperties => ({
@@ -518,6 +515,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'ADD_COLUMN' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -530,6 +528,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'DELETE_COLUMN' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -542,6 +541,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'ADD_ROW' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -554,6 +554,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'DELETE_ROW' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
 
       },
@@ -567,6 +568,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'CREATE_AREA' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -579,6 +581,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'DELETE_AREA' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -592,6 +595,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -605,6 +609,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
+          props.componentRef(changes.current);
         }
       },
       {
@@ -617,7 +622,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'PREVIEW_MODE' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
         }
       }
     ],
@@ -693,28 +697,36 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       <div style={{
         display: 'grid',
         width: '100%',
-        height: '100vh',
-        gridTemplateColumns: 'auto 240px',
+        height: '100%',
+        gridTemplateColumns: !setGridSize ? 'auto 360px' : 'auto 240px',
         gridTemplateRows: 'auto',
         gridAutoFlow: 'column',
-        overflow: 'scroll'
       }}>
         <div style={{
+          width: '100%',
+          height: '100%',
           gridArea: '1 / 1 / 2 / 2',
-          padding: '4px'
-        }}>
+          margin: '1px',
+          padding: '4px',
+          overflow: 'auto'
+      }}>
           {props.children}
         </div>
         <div style={{
+          width: '100%',
+          height: '87%',
           gridArea: '1 / 2 / 2 / 3',
           padding: '4px',
+          overflow: 'auto'
         }}>
           <div style={{
+            width: '100%',
             display: 'flex',
             flexDirection: 'column',
             border: '1px solid violet',
             borderRadius: '4px',
-            padding: '8px'
+            justifyContent: 'center',
+            padding: '0px 8px'
           }}>
             {props.toolPanel}
           </div>
@@ -901,7 +913,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
             : <SpinButton
               styles={{
                 root: {
-                  width: '98px'
+                  width: '104px'
                 }
               }}
               value={size.value.toString()}
@@ -920,7 +932,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         {...props}
         toolPanel={
           <>
-            {props.children}
+            {!setGridSize ? props.children : undefined}
             {
               grid.columns.map((c, idx) =>
                 <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={(size: ISize) => {

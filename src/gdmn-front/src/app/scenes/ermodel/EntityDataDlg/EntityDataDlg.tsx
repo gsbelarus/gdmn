@@ -589,9 +589,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const getGridStyle = (): React.CSSProperties => ({
     display: 'grid',
     width: '100%',
-    height: '100%',
     gridTemplateColumns: (localState as IDesignerState).grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
     gridTemplateRows: (localState as IDesignerState).grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
+    height: '91.8%',
     overflow: 'auto',
   });
 
@@ -841,7 +841,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               </div>
             :
-              <div className="FieldsColumn">
+              <div styleName="FieldsColumn">
                 {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
                   const attr = entity.attributes[setAttrName] as EntityAttribute;
                   const linkEntity = attr.entities[0];
