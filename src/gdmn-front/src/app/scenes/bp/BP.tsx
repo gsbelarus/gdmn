@@ -38,7 +38,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
   ];
 
   // Create a new directed graph
-  const g = new graphlib.Graph();
+  const g = new graphlib.Graph({ multigraph: true, directed: true });
 
   if (bp) {
     // Set an object for the graph label
@@ -68,9 +68,12 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       createStateNode(t.fromState);
       createStateNode(t.toState);
       g.setEdge(t.fromState, t.toState);
+      if (t.returning) {
+        g.setEdge(t.toState, t.fromState);
+      }
     });
 
-    g.graph().ranksep = 36;
+    g.graph().ranksep = 64;
     g.graph().marginx = 2;
     g.graph().marginy = 2;
     layout(g);
@@ -125,11 +128,11 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
                     refX="9"
                     refY="5"
                     markerUnits="strokeWidth"
-                    markerWidth="8"
-                    markerHeight="6"
+                    markerWidth="10"
+                    markerHeight="8"
                     orient="auto"
                   >
-                    <path d="M 0 0 L 10 5 L 0 10 Z" style={{ strokeWidth: '1' }} />
+                    <path d="M 0 0 L 10 5 L 0 10 Z" style={{ strokeWidth: '1', fill: 'gray' }} />
                   </marker>
                 </defs>
                 <g>
