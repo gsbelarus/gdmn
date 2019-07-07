@@ -57,9 +57,14 @@ export interface ITransition {
 
 export type Flow = ITransition[];
 
+export interface INode {
+  id: string;
+};
+
 export interface IBusinessProcess {
   caption: LName;
   description: LName;
+  nodes: INode[];
   flow: Flow;
 };
 

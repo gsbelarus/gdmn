@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^5.2.0",
+    "@types/cytoscape": "^3.4.3",
     "@types/dagre": "^0.7.42",
     "@uifabric/fluent-theme": "^7",
     "cytoscape": "^3.8.0",

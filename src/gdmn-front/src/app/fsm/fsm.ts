@@ -18,6 +18,23 @@ export const businessProcesses: IBusinessProcesses = {
         name: 'Просмотр, выборка, сортировка таблицы рабочего времени. Внесение, редактирование, удаление записей рабочего времени.'
       }
     },
+    nodes: [
+      {
+        id: logged.getType()
+      },
+      {
+        id: showData.getType()
+      },
+      {
+        id: workDone.getType()
+      },
+      {
+        id: queryAndSort.getType()
+      },
+      {
+        id: addRecord.getType()
+      }
+    ],
     flow: [
       {
         fromState: logged.getType(),
@@ -50,6 +67,7 @@ export const businessProcesses: IBusinessProcesses = {
         name: 'Присутствует в списке из соображений тестирования.'
       }
     },
+    nodes: [],
     flow: []
   }
 };
