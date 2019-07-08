@@ -15,16 +15,20 @@ import { gdmnActions } from '../gdmn/actions';
 import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
+import { action } from 'typesafe-actions';
+import { ParamsDialog } from './ParamsDialog';
 
-interface ISQLParam {
-  [name: string]: any;
+export interface ISQLParam {
+  name: string;
+  type: TFieldType;
+  value: any;
 }
 
 interface ISQLViewState {
   expression: string;
   params: ISQLParam[];
   viewMode: 'hor' | 'ver';
-  showSQL?: boolean;
+  showParams?: boolean;
   showPlan?: boolean;
 }
 
@@ -33,7 +37,7 @@ type Action =
   | { type: 'SET_EXPRESSION'; expression: string }
   | { type: 'CLEAR_EXPRESSION' }
   | { type: 'CHANGE_VIEW' }
-  | { type: 'SHOW_PARAMS'; showSQL: boolean }
+  | { type: 'SHOW_PARAMS'; showParams: boolean }
   | { type: 'SET_PARAMS'; params: ISQLParam[] }
   | { type: 'SHOW_PLAN'; showPlan: boolean };
 
@@ -45,6 +49,8 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
       return { ...state, expression: action.expression };
     case 'CLEAR_EXPRESSION':
       return { ...state, expression: '' };
+    case 'SHOW_PARAMS':
+      return { ...state, showParams: action.showParams };
     case 'SET_PARAMS':
       return { ...state, params: action.params };
     case 'SHOW_PLAN':
@@ -58,10 +64,10 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
 
 const initialState: ISQLViewState = {
   expression: 'select * from gd_good where id = :id',
-  params: [{ id: 3 }],
+  params: [{ name: 'id', type: TFieldType.Integer, value: 147107053 }],
   viewMode: 'hor',
   showPlan: false,
-  showSQL: false
+  showParams: false
 };
 
 export const Sql = CSSModules(
@@ -157,6 +163,8 @@ export const Sql = CSSModules(
       }
     }, [rs]);
 
+    const handleCloseParams = () => setState({ type: 'SHOW_PARAMS', showParams: false });
+
     const handleGridSelect = (event: TSetCursorPosEvent) =>
       dispatch(dispatch => {
         dispatch(rsActions.setCurrentRow({ name: id, currentRow: event.cursorRow }));
@@ -167,10 +175,13 @@ export const Sql = CSSModules(
       dispatch(async (dispatch, getState) => {
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
+        const params = state.params.map(i => ({ [i.name]: i.value }));
+        console.log('params:', params);
+
         apiService
           .prepareSqlQuery({
             select: state.expression,
-            params: state.params
+            params /* : [] state.params.map(i => ({[i.name]: i.value})) */
           })
           .subscribe(async value => {
             console.log('QUERY result', value);
@@ -208,7 +219,7 @@ export const Sql = CSSModules(
                       fieldDefs,
                       data: List(response.payload.result!.data as IDataRow[]),
                       sequentially: !!rsm.taskKey,
-                      sql: { select: state.expression, params: state.params }
+                      sql: { select: state.expression, params: []/* state.params.map(i => ({ [i.name]: i.value }))  */}
                     });
 
                     if (getState().grid[id]) {
@@ -291,7 +302,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'ThumbnailView'
           },
-          onClick: () => setState({ type: 'SHOW_PARAMS', showSQL: true })
+          onClick: () => setState({ type: 'SHOW_PARAMS', showParams: true })
         },
         {
           key: 'plan',
@@ -326,24 +337,31 @@ export const Sql = CSSModules(
     );
 
     return (
-      <div styleName="grid-container">
-        <CommandBar items={commandBarItems} />
-        <div styleName={`sql-container ${state.viewMode}`}>
-          <div>
-            <TextField
-              resizable={false}
-              multiline
-              rows={8}
-              value={state.expression}
-              onChange={(_e, newValue?: string) => {
-                if (newValue !== undefined) {
-                  setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
-                }
-              }}
-            />
-          </div>
-          <div>
-            {rs && gcs && <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={() => false} />}
+      <div className="main-container">
+        {state.showParams && state.expression.length > 0 && (
+          <ParamsDialog params={state.params} onClose={handleCloseParams} />
+        )}
+        <div styleName="grid-container">
+          <CommandBar items={commandBarItems} />
+          <div styleName={`sql-container ${state.viewMode}`}>
+            <div>
+              <TextField
+                resizable={false}
+                multiline
+                rows={8}
+                value={state.expression}
+                onChange={(_e, newValue?: string) => {
+                  if (newValue !== undefined) {
+                    setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
+                  }
+                }}
+              />
+            </div>
+            <div>
+              {rs && gcs && (
+                <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={() => false} />
+              )}
+            </div>
           </div>
         </div>
       </div>
