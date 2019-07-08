@@ -534,7 +534,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: previewMode,
         text: 'Добавить колонку',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'InsertColumnsRight'
         },
         onClick: () => {
           designerDispatch({ type: 'ADD_COLUMN' });
@@ -547,7 +547,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: previewMode || grid.columns.length <= 1 || !!selection || areas.some(area => inRectangle(activeCell, area.rect)),
         text: 'Удалить колонку',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'DeleteColumns'
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_COLUMN' });
@@ -560,7 +560,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: previewMode,
         text: 'Добавить строку',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'InsertRowsBelow'
         },
         onClick: () => {
           designerDispatch({ type: 'ADD_ROW' });
@@ -573,7 +573,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: previewMode || grid.rows.length <= 1 || !!selection || areas.some(area => inRectangle(activeCell, area.rect)),
         text: 'Удалить строку',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'DeleteRows'
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_ROW' });
@@ -587,7 +587,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: previewMode || areas.some(area => inRectangle(activeCell, area.rect)),
         text: 'Создать область',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'GroupObject'
         },
         onClick: () => {
           designerDispatch({ type: 'CREATE_AREA' });
@@ -600,7 +600,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: previewMode || activeArea === undefined,
         text: 'Удалить область',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'UngroupObject'
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_AREA' });
@@ -614,7 +614,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         checked: !!setGridSize,
         text: 'Установить размер',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'BackToWindow'//'Equalizer' //SizeLegacy, TripleColumnEdit
         },
         onClick: () => {
           designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' });
@@ -628,7 +628,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         checked: !!showAreaExplorer,
         text: 'Настройка',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'Settings'
         },
         onClick: () => {
           designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' });
@@ -642,7 +642,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         checked: !!previewMode,
         text: 'Просмотр',
         iconProps: {
-          iconName: 'DoubleColumn'
+          iconName: 'Tiles'
         },
         onClick: () => {
           designerDispatch({ type: 'PREVIEW_MODE' });
@@ -655,7 +655,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: !changed,
         text: 'Сохранить',
         iconProps: {
-          iconName: 'CheckMark'
+          iconName: 'Save'
         },
         onClick: () => {
           changes.current = undefined;
@@ -682,7 +682,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         disabled: !changed,
         text: 'Применить',
         iconProps: {
-          iconName: 'Save'
+          iconName: 'CheckMark'
         },
         onClick: () => {
           changes.current = undefined;

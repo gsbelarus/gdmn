@@ -497,7 +497,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       disabled: !changed,
       text: 'Сохранить',
       iconProps: {
-        iconName: 'CheckMark'
+        iconName: 'Save'
       },
       onClick: () => {
         postChanges(true)
@@ -523,7 +523,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       disabled: !changed,
       text: 'Применить',
       iconProps: {
-        iconName: 'Save'
+        iconName: 'CheckMark'
       },
       onClick: () => postChanges(false)
     },
