@@ -2,7 +2,6 @@ import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
 import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
-  Attribute,
   deserializeERModel,
   Entity,
   EntityDelete,
@@ -21,7 +20,9 @@ import {
   IERModel,
   ISequenceQueryInspector,
   ISequenceQueryResponse,
-  SequenceQuery
+  SequenceQuery,
+  IAttribute,
+  EntityUtils
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -76,7 +77,7 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, attributes?: Attribute[]}>;
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, attributes?: IAttribute[] }>;
 
 export class Application extends ADatabase {
 
@@ -247,7 +248,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushSessionsInfoCmd(session: Session, command: GetSessionsInfoCmd): Task<GetSessionsInfoCmd, ISessionInfo[] > {
+  public pushSessionsInfoCmd(session: Session, command: GetSessionsInfoCmd): Task<GetSessionsInfoCmd, ISessionInfo[]> {
     const task = new Task({
       session,
       command,
@@ -342,7 +343,7 @@ export class Application extends ADatabase {
 
   public pushAddEntityCmd(session: Session,
                           command: AddEntityCmd
-                          ): Task<AddEntityCmd, { entityName: string, attributes?: Attribute[]}> {
+  ): Task<AddEntityCmd, { entityName: string }> {
     const task = new Task({
       session,
       command,
@@ -365,9 +366,11 @@ export class Application extends ADatabase {
                 lName: {}
               }));
               if (attributes) {
-                attributes.forEach((attribute) => {
-                  Object.values(attribute).map(async (attr) => await eBuilder.createAttribute(entity, attr));
-                });
+                const lengthArr = attributes.length;
+                for (let i = 0; i < lengthArr; i++) {
+                  const attr = EntityUtils.createAttribute(attributes[i], entity, this.erModel);
+                  await eBuilder.createAttribute(entity, attr);
+                }
               }
             }
           })
@@ -753,7 +756,7 @@ export class Application extends ADatabase {
   }
 
   public pushGetNextIdCmd(session: Session,
-                          command: GetNextIdCmd): Task<GetNextIdCmd, {id: number}> {
+                          command: GetNextIdCmd): Task<GetNextIdCmd, { id: number }> {
     const task = new Task({
       session,
       command,
@@ -763,7 +766,7 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const nextId = await context.session.executeConnection(async (connection): Promise<number> => {
-          const idResult = await connection.executeReturning(connection.readTransaction,  `
+          const idResult = await connection.executeReturning(connection.readTransaction, `
           EXECUTE BLOCK
           RETURNS
            (ID INTEGER)
@@ -788,7 +791,7 @@ export class Application extends ADatabase {
             SUSPEND;
           END
           `);
-          return  idResult.getNumber(0);
+          return idResult.getNumber(0);
         });
         await context.checkStatus();
         return {id: nextId};

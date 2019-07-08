@@ -41,3 +41,5 @@ export * from "./update-models/EntityUpdate";
 export * from "./update-models/EntityUpdateField";
 
 export * from "./query-models/EntityQueryUtils";
+
+export * from "./EntityUtils";
