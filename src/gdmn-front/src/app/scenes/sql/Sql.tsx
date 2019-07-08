@@ -12,13 +12,12 @@ import { rsMetaActions } from '@src/app/store/rsmeta';
 
 import { gdmnActions } from '../gdmn/actions';
 // import { ISessionData } from '../gdmn/types';
-import { ISqlProps } from './Sql.types';
+import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
 
 interface ISQLParam {
-  name: string;
-  value: any;
+  [name: string]: any;
 }
 
 interface ISQLViewState {
@@ -57,25 +56,16 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
   }
 }
 
-interface ILastEdited {
-  fieldName: string;
-  value: string | boolean;
-}
-
-interface IChangedFields {
-  [fieldName: string]: boolean;
-}
-
 const initialState: ISQLViewState = {
-  expression: 'select * from gd_good',
-  params: [],
+  expression: 'select * from gd_good where id = :id',
+  params: [{ id: 3 }],
   viewMode: 'hor',
   showPlan: false,
   showSQL: false
 };
 
 export const Sql = CSSModules(
-  (props: ISqlProps): JSX.Element => {
+  (props: ISQLProps): JSX.Element => {
     const { url, viewTab, dispatch, rs, gcs, id, history } = props;
 
     const [state, setState] = useReducer(reducer, initialState);
@@ -183,6 +173,7 @@ export const Sql = CSSModules(
             params: state.params
           })
           .subscribe(async value => {
+            console.log('QUERY result', value);
             switch (value.payload.status) {
               case TTaskStatus.RUNNING: {
                 const taskKey = value.meta!.taskKey!;

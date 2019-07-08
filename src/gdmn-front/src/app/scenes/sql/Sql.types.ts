@@ -13,12 +13,12 @@ export interface ISqlContainerProps extends RouteComponentProps{
   url: string;
 };
 
-export interface ISqlStateProps {
+export interface ISQLStateProps {
   rs?: RecordSet;
   gcs: GridComponentState;
   viewTab?: IViewTab;
 };
 
-export interface ISqlProps extends ISqlContainerProps, ISqlStateProps {
+export interface ISQLProps extends ISqlContainerProps, ISQLStateProps {
   dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction | GridAction | TRsMetaActions | SqlQueryActions>;
 };
