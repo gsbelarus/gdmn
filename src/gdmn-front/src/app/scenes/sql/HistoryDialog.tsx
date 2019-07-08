@@ -29,13 +29,12 @@ const classNames = mergeStyleSets({
   }
 });
 
-export interface ISQLFormProps {
-  params: ISQLParam[];
+export interface IHistoryFormProps {
   onClose: () => void;
 }
 
-export const ParamsDialog = (props: ISQLFormProps) => {
-  const { params, onClose } = props;
+export const HistoryDialog = (props: IHistoryFormProps) => {
+  const { onClose } = props;
 
   return (
     <Dialog
@@ -45,7 +44,7 @@ export const ParamsDialog = (props: ISQLFormProps) => {
       onDismiss={onClose}
       dialogContentProps={{
         type: DialogType.close,
-        title: 'SQL params'
+        title: 'SQL History'
       }}
       modalProps={{
         titleAriaId: 'showSQLTitleID',
@@ -54,15 +53,7 @@ export const ParamsDialog = (props: ISQLFormProps) => {
       }}
     >
       <div>
-        {params.map(i => {
-          switch (i.type) {
-            case TFieldType.Integer:
-                return( <TextField label={i.name} key={i.name} value={i.value} />)
-
-            default:
-                return(<TextField label={i.name} key={i.name} value={i.value} />);
-          }
-        })}
+        History
       </div>
       <DialogFooter>
         <PrimaryButton onClick={onClose} text="Close" />

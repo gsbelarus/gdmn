@@ -15,8 +15,8 @@ import { gdmnActions } from '../gdmn/actions';
 import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
-import { action } from 'typesafe-actions';
 import { ParamsDialog } from './ParamsDialog';
+import { HistoryDialog } from './HistoryDialog';
 
 export interface ISQLParam {
   name: string;
@@ -28,8 +28,9 @@ interface ISQLViewState {
   expression: string;
   params: ISQLParam[];
   viewMode: 'hor' | 'ver';
-  showParams?: boolean;
-  showPlan?: boolean;
+  showParams: boolean;
+  showPlan: boolean;
+  showHistory: boolean;
 }
 
 type Action =
@@ -39,7 +40,8 @@ type Action =
   | { type: 'CHANGE_VIEW' }
   | { type: 'SHOW_PARAMS'; showParams: boolean }
   | { type: 'SET_PARAMS'; params: ISQLParam[] }
-  | { type: 'SHOW_PLAN'; showPlan: boolean };
+  | { type: 'SHOW_PLAN'; showPlan: boolean }
+  | { type: 'SHOW_HISTORY'; showHistory: boolean };
 
 function reducer(state: ISQLViewState, action: Action): ISQLViewState {
   switch (action.type) {
@@ -57,6 +59,8 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
       return { ...state, showPlan: action.showPlan };
     case 'CHANGE_VIEW':
       return { ...state, viewMode: state.viewMode === 'hor' ? 'ver' : 'hor' };
+    case 'SHOW_HISTORY':
+      return { ...state, showHistory: action.showHistory};
     default:
       return state;
   }
@@ -67,7 +71,8 @@ const initialState: ISQLViewState = {
   params: [{ name: 'id', type: TFieldType.Integer, value: 147107053 }],
   viewMode: 'hor',
   showPlan: false,
-  showParams: false
+  showParams: false,
+  showHistory: false,
 };
 
 export const Sql = CSSModules(
@@ -165,6 +170,8 @@ export const Sql = CSSModules(
 
     const handleCloseParams = () => setState({ type: 'SHOW_PARAMS', showParams: false });
 
+    const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
+
     const handleGridSelect = (event: TSetCursorPosEvent) =>
       dispatch(dispatch => {
         dispatch(rsActions.setCurrentRow({ name: id, currentRow: event.cursorRow }));
@@ -181,7 +188,7 @@ export const Sql = CSSModules(
         apiService
           .prepareSqlQuery({
             select: state.expression,
-            params /* : [] state.params.map(i => ({[i.name]: i.value})) */
+            params /* : []  state.params.map(i => ({[i.name]: i.value})) */
           })
           .subscribe(async value => {
             console.log('QUERY result', value);
@@ -219,7 +226,10 @@ export const Sql = CSSModules(
                       fieldDefs,
                       data: List(response.payload.result!.data as IDataRow[]),
                       sequentially: !!rsm.taskKey,
-                      sql: { select: state.expression, params: []/* state.params.map(i => ({ [i.name]: i.value }))  */}
+                      sql: {
+                        select: state.expression,
+                        params /* : []state.params.map(i => ({ [i.name]: i.value }))  */
+                      }
                     });
 
                     if (getState().grid[id]) {
@@ -319,7 +329,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'FullHistory'
           },
-          onClick: () => console.log('click history')
+          onClick: () => setState({ type: 'SHOW_HISTORY', showHistory: true })
         },
         {
           key: 'form-view',
@@ -328,7 +338,6 @@ export const Sql = CSSModules(
             iconName: 'ViewAll2'
           },
           onClick: () => {
-            // changedFields.current['viewMode'] = true;
             setState({ type: 'CHANGE_VIEW' });
           }
         }
@@ -337,12 +346,17 @@ export const Sql = CSSModules(
     );
 
     return (
-      <div className="main-container">
-        {state.showParams && state.expression.length > 0 && (
-          <ParamsDialog params={state.params} onClose={handleCloseParams} />
-        )}
-        <div styleName="grid-container">
+      <div styleName="main-container">
+        <div styleName="top-container">
           <CommandBar items={commandBarItems} />
+          {state.showParams && state.expression.length > 0 && (
+            <ParamsDialog params={state.params} onClose={handleCloseParams} />
+          )}
+          {state.showHistory && (
+            <HistoryDialog onClose={handleCloseHistory} />
+          )}
+        </div>
+        <div styleName="grid-container">
           <div styleName={`sql-container ${state.viewMode}`}>
             <div>
               <TextField

@@ -6,12 +6,16 @@
   grid-template-rows: auto 1fr;
 }
 
+.top-container {
+  height: 100%;
+}
+
 .grid-container {
   display: grid;
   width: 100%;
   height: 100%;
   grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto;
 }
 
 .sql-container {
@@ -21,7 +25,7 @@
 }
 
 .sql-container > div {
-  margin: 5px;
+  margin: 0px;
 }
 
 .hor {
