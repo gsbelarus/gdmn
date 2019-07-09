@@ -48,9 +48,9 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
     case 'INIT':
       return action.state;
     case 'SET_EXPRESSION':
-      return { ...state, expression: action.expression };
+      return { ...state, expression: action.expression, params: [] };
     case 'CLEAR_EXPRESSION':
-      return { ...state, expression: '' };
+      return { ...state, expression: '', params: [] };
     case 'SHOW_PARAMS':
       return { ...state, showParams: action.showParams };
     case 'SET_PARAMS':
@@ -60,7 +60,7 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
     case 'CHANGE_VIEW':
       return { ...state, viewMode: state.viewMode === 'hor' ? 'ver' : 'hor' };
     case 'SHOW_HISTORY':
-      return { ...state, showHistory: action.showHistory};
+      return { ...state, showHistory: action.showHistory };
     default:
       return state;
   }
@@ -72,7 +72,7 @@ const initialState: ISQLViewState = {
   viewMode: 'hor',
   showPlan: false,
   showParams: false,
-  showHistory: false,
+  showHistory: false
 };
 
 export const Sql = CSSModules(
@@ -172,6 +172,11 @@ export const Sql = CSSModules(
 
     const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
 
+    const handleSelectExpression = (expression: string) => {
+      setState({ type: 'SHOW_HISTORY', showHistory: false });
+      setState({ type: 'SET_EXPRESSION', expression });
+    };
+
     const handleGridSelect = (event: TSetCursorPosEvent) =>
       dispatch(dispatch => {
         dispatch(rsActions.setCurrentRow({ name: id, currentRow: event.cursorRow }));
@@ -183,7 +188,6 @@ export const Sql = CSSModules(
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
         const params = state.params.map(i => ({ [i.name]: i.value }));
-        console.log('params:', params);
 
         apiService
           .prepareSqlQuery({
@@ -191,7 +195,6 @@ export const Sql = CSSModules(
             params /* : []  state.params.map(i => ({[i.name]: i.value})) */
           })
           .subscribe(async value => {
-            console.log('QUERY result', value);
             switch (value.payload.status) {
               case TTaskStatus.RUNNING: {
                 const taskKey = value.meta!.taskKey!;
@@ -352,9 +355,7 @@ export const Sql = CSSModules(
           {state.showParams && state.expression.length > 0 && (
             <ParamsDialog params={state.params} onClose={handleCloseParams} />
           )}
-          {state.showHistory && (
-            <HistoryDialog onClose={handleCloseHistory} />
-          )}
+          {state.showHistory && <HistoryDialog onClose={handleCloseHistory} onSelect={handleSelectExpression} />}
         </div>
         <div styleName="grid-container">
           <div styleName={`sql-container ${state.viewMode}`}>
