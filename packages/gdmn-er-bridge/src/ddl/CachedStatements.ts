@@ -91,6 +91,8 @@ interface IStatements {
   dropATTriggers?: AStatement;
   dropATGenerator?: AStatement;
   dropATIndices?: AStatement;
+
+  getDomainName?: AStatement;
 }
 
 export class CachedStatements {
@@ -746,6 +748,24 @@ export class CachedStatements {
     await this._statements.dropATIndices.execute({
       indexName: input.indexName
     });
+  }
+
+  public async getDomainName(input: IATIndicesInput): Promise<string>{
+    this._checkDisposed();
+
+    if (!this._statements.getDomainName) {
+      this._statements.getDomainName = await this.connection.prepare(this._transaction, `        
+        SELECT FIELDSOURCE
+        FROM AT_RELATION_FIELDS
+        WHERE RELATIONNAME = :relationName 
+             AND FIELDNAME = :fieldName 
+      `);
+    }
+    const result = await this._statements.getDomainName.executeReturning({
+      relationName: input.relationName,
+      fieldName: input.indexName,
+    });
+    return result.getString("FIELDSOURCE");
   }
 
   private _checkDisposed(): void | never {

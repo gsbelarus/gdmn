@@ -158,8 +158,16 @@ export class ERModelBuilder extends Builder {
       throw new Error("Unsupported yet");
 
     } else if (source instanceof Entity) {
-      // TODO
-      throw new Error("Unsupported yet");
+      const tableName = AdapterUtils.getOwnRelationName(source);
+      for (const pkAttr of source.pk) {
+         const fieldName = AdapterUtils.getFieldName(pkAttr);
+         await this._deleteATAttr(pkAttr, {relationName: tableName, fieldName, domainName:''});
+      }
+      await this.ddlHelper.dropTable(tableName);
+
+      await this.ddlHelper.cachedStatements.dropATRelations({ relationName: tableName });
+      erModel.remove(source);
+
     }
   }
 }
