@@ -116,6 +116,7 @@ export class ERModel {
         throw new Error(`Entity ${entity.name} not found`);
       }
       delete this._entities[entity.name];
+      delete this._relation2Entity[entity.name];
 
     } else {
       throw new Error("Unknown arg of type");
