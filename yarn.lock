@@ -5421,9 +5421,9 @@ cyclist@~0.2.2:
   integrity sha1-GzN5LhHpFKL9bW7WRHRkRE5fpkA=
 
 cytoscape@^3.8.0:
-  version "3.8.0"
-  resolved "https://registry.yarnpkg.com/cytoscape/-/cytoscape-3.8.0.tgz#5ce1b9c977c62652cfaa3d1e79a263503e2c87fa"
-  integrity sha512-EYxj5roB5BKSHAVcRevZnYUOGUSG/KOjnXPE1/TfFpZlrqyvinpevc5pYpocQh8gyLKQ1vxvyl2uk9DHNDcqXA==
+  version "3.8.1"
+  resolved "https://registry.yarnpkg.com/cytoscape/-/cytoscape-3.8.1.tgz#0b87f646054ea3e86f347e9c53a2fc64df1be31b"
+  integrity sha512-hfoGBlqj8LJPnU5WgmQKdGpZaMknk8dPyGEJlzLa1xPwhmBscPMrmPxK2ffyKJIozeHm4UoYw4gPc0rAif4kVA==
   dependencies:
     heap "^0.2.6"
     lodash.debounce "^4.0.8"
