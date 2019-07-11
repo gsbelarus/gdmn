@@ -872,7 +872,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 {
               (localState as IDesignerState).areas.map( (area, idx) => (
                 <div
-                  key={`${area.rect.top}-${area.rect.left}`}
+                  key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
                   className={
                     "commonStyle"
                   }
