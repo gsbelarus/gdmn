@@ -844,7 +844,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             fields={rs.fieldDefs}
             outDesigner={() => { setDesigner(false); isDesigner.current = false; }}
             viewTab={viewTab}
-            componentRef={(ref) => { changesDesigner.current = ref; } }
           />
           :
           <>

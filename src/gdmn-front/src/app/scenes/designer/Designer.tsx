@@ -54,8 +54,8 @@ export interface IDesignerState {
   activeArea?: number;
   setGridSize?: boolean;
   showAreaExplorer?: boolean;
+  changeArray: IDesignerState[];
   previewMode?: boolean;
-  changed: boolean;
 };
 
 type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
@@ -75,6 +75,8 @@ type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'DELETE_GROUP' }
   | { type: 'CLEAR_SELECTION' }
   | { type: 'CANCEL_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
+  | { type: 'RETURN_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
+  | { type: 'CLEAR' }
   | { type: 'SAVE_CHANGES' };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
@@ -169,7 +171,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'CONFIGURE_AREA': {
       const { direction, rect } = action;
-      const { areas, activeArea, grid } = state;
+      const { areas, activeArea, grid, changeArray } = state;
 
       if (activeArea !== undefined && activeArea >= 0 && activeArea <= (areas.length - 1)) {
         const newAreas = [...areas];
@@ -193,20 +195,21 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         return {
           ...state,
           areas: newAreas,
-          changed: true
-        }
-      } else {
+          changeArray: [...changeArray!, {...state}]
+      } 
+    } else {
         return state;
       }
-    }
+  }
 
     case 'CLEAR_SELECTION': {
+      const { changeArray } = state;
       return {
         ...state,
         selection: undefined,
-        changed: true
-      };
+        changeArray: [...changeArray!, {...state}] 
     }
+  }
 
     case 'PREVIEW_MODE': {
       const { previewMode } = state;
@@ -227,7 +230,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'AREA_FIELD': {
-      const { activeArea, areas } = state;
+      const { activeArea, areas, changeArray } = state;
       const { fieldName, include } = action;
 
       if (activeArea === undefined) {
@@ -235,6 +238,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
 
       const newAreas = [...areas];
+
 
       if (include && !areas[activeArea].fields.find(f => f === fieldName)) {
         newAreas[activeArea] = {
@@ -253,12 +257,12 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       return {
         ...state,
         areas: newAreas,
-        changed: true
-      };
+        changeArray: [...changeArray!, {...state}]
     }
+  }
 
     case 'CREATE_GROUP': {
-      const { selection, areas } = state;
+      const { selection, areas, changeArray } = state;
       if (selection) {
         const selectAreas = areas
           .filter(area =>
@@ -278,16 +282,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             selection: undefined,
             showAreaExplorer: true,
             setGridSize: false,
-            changed: true
-          };
-      }
-      else {
-        return state;
+            changeArray: [...changeArray!, {...state}]
+        }
       }
     }
 
+
     case 'DELETE_GROUP': {
-      const { areas, activeArea } = state;
+      const { areas, activeArea, changeArray } = state;
 
       if (!areas.length || activeArea === undefined) {
         return state;
@@ -297,13 +299,13 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         activeArea: areas.findIndex(area => area.rect.left === areas[activeArea].rect.left && area.rect.top === areas[activeArea].rect.top),
         areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
-        showAreaExplorer: true,
-        changed: true
-      };
+        showAreaExplorer: false,
+        changeArray: [...changeArray!, {...state}]
     }
+  }
 
     case 'SET_COLUMN_SIZE': {
-      const { grid } = state;
+      const { grid, changeArray } = state;
       const { column, size } = action;
 
       if (column >= grid.columns.length) {
@@ -318,12 +320,12 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           ...grid,
           columns: newColumns
         },
-        changed: true
+        changeArray: [...changeArray!, {...state}]
       }
     }
 
     case 'SET_ROW_SIZE': {
-      const { grid } = state;
+      const { grid, changeArray } = state;
       const { row, size } = action;
 
       if (row >= grid.rows.length) {
@@ -338,9 +340,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           ...grid,
           rows: newRows
         },
-        changed: true
-      }
+        changeArray: [...changeArray!, {...state}]
     }
+  }
 
     case 'TOGGLE_SET_GRID_SIZE': {
       return {
@@ -359,7 +361,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'ADD_COLUMN': {
-      const { grid, activeCell: { x }, areas } = state;
+      const { grid, activeCell: { x }, areas, changeArray } = state;
       const newAreas = grid.rows.map((_, row) => {
         return {
           rect: {
@@ -380,13 +382,13 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           ...grid,
           columns: [...grid.columns.slice(0, x + 1), { unit: 'AUTO', value: 1 }, ...grid.columns.slice(x + 1)]
         },
-        changed: true,
-        areas: [...areas, ...newAreas]
+        areas: [...areas, ...newAreas],
+        changeArray: [...changeArray!, {...state}]
       }
     }
 
     case 'ADD_ROW': {
-      const { grid, activeCell: { y }, areas } = state;
+      const { grid, activeCell: { y }, areas, changeArray } = state;
       const newAreas = grid.columns.map((_, column) => {
         return {
           rect: {
@@ -407,13 +409,15 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           ...grid,
           rows: [...grid.rows.slice(0, y + 1), { unit: 'AUTO', value: 1 }, ...grid.rows.slice(y + 1)]
         },
-        changed: true,
-        areas: [...areas, ...newAreas]
-      }
+      changeArray: [...changeArray!, {...state}],
+      areas: [...areas, ...newAreas]
     }
+  }
+  
+
 
     case 'DELETE_COLUMN': {
-      const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
+      const { grid, selection, areas, activeArea, activeCell: { x, y }, changeArray } = state;
 
       if (grid.columns.length === 1 || selection) {
         return state;
@@ -421,15 +425,15 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
       const active = areas.find((_, idx) => idx === activeArea);
       const newAreas = areas
-        .filter(area => activeArea && !(active!.rect.left === area.rect.left && area.rect.left === area.rect.right))
+        .filter(area => activeArea !== undefined && (area.rect.left < active!.rect.left || area.rect.right > active!.rect.left))
         .map(area => area.rect.right >= active!.rect.left ? { ...area, rect: { ...area.rect, right: area.rect.right - 1 } } : area)
-        .map(area => area.rect.left > active!.rect.left ? { ...area, rect: { ...area.rect, left: area.rect.left - 1 } } : area)
+        .map(area => area.rect.left >= active!.rect.left ? { ...area, rect: { ...area.rect, left: area.rect.left - 1 } } : area);
 
       return {
         ...state,
         grid: {
           ...grid,
-          columns: [...grid.columns.slice(0, x), ...grid.columns.slice(x + 1)]
+          columns: [...grid.columns.slice(0, active ? active.rect.left : x), ...grid.columns.slice(active ? active.rect.left + 1 : x + 1)]
         },
         activeCell: {
           x: x > 0 && x >= (grid.columns.length - 1) ? x - 1 : x,
@@ -441,12 +445,12 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           : activeArea < newAreas.length
             ? activeArea
             : undefined,
-        changed: true
+        changeArray: [...changeArray!, {...state}]
       }
     }
 
     case 'DELETE_ROW': {
-      const { grid, selection, areas, activeArea, activeCell: { x, y } } = state;
+      const { grid, selection, areas, activeArea, activeCell: { x, y }, changeArray } = state;
 
       if (grid.rows.length === 1 || selection) {
         return state;
@@ -454,9 +458,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
       const active = areas.find((_, idx) => idx === activeArea);
       const newAreas = areas
-        .filter(area => activeArea && !(active!.rect.top === area.rect.top && area.rect.top === area.rect.bottom))
+        .filter(area => activeArea !== undefined && !(active!.rect.top === area.rect.top && area.rect.top === area.rect.bottom))
         .map(area => area.rect.bottom >= active!.rect.top ? { ...area, rect: { ...area.rect, bottom: area.rect.bottom - 1 } } : area)
-        .map(area => area.rect.top > active!.rect.top ? { ...area, rect: { ...area.rect, top: area.rect.top - 1 } } : area)
+        .map(area => area.rect.top >= active!.rect.top ? { ...area, rect: { ...area.rect, top: area.rect.top - 1 } } : area);
 
       return {
         ...state,
@@ -474,11 +478,30 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           : activeArea < newAreas.length
             ? activeArea
             : undefined,
-        changed: true
+            changeArray: [...changeArray!, {...state}]
       }
     }
 
     case 'CANCEL_CHANGES': {
+      const {changeArray} = state;
+      const localState = changeArray[changeArray.length - 1];
+      if (localState) {
+        return {
+          ...state,
+          grid: localState.grid,
+          entityName: localState.entityName,
+          areas: localState.areas,
+          setGridSize: localState.setGridSize,
+          showAreaExplorer: localState.showAreaExplorer,
+          previewMode: localState.previewMode,
+          changeArray: localState.changeArray
+        }
+      } else {
+        return state;
+      }
+    }
+
+    case 'RETURN_CHANGES': {
       const { entityName, fields } = action;
       const localState = localStorage.getItem(entityName) === null ? undefined : JSON.parse(localStorage.getItem(entityName)!);
       if (localState) {
@@ -490,7 +513,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           setGridSize: localState.setGridSize,
           showAreaExplorer: localState.showAreaExplorer,
           previewMode: localState.previewMode,
-          changed: false
+          changeArray: []
         }
       } else {
         return {
@@ -527,15 +550,44 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             group: false
           }],
           entityName: entityName,
-          changed: false
+          changeArray: []
         };
       }
+    }
+
+    case 'CLEAR': {
+      const { entityName, changeArray } = state;
+      return {
+        grid: {
+          columns: [{ unit: 'AUTO', value: 1 }],
+          rows: [{ unit: 'AUTO', value: 1 }],
+        },
+        activeCell: {
+          x: 0,
+          y: 0
+        },
+        areas: [{
+          rect: {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0
+          },
+          fields:[],
+          direction: 'column',
+          group: false
+        }],
+        activeArea: 0,
+        showAreaExplorer: true,
+        entityName: entityName,
+        changeArray: [...changeArray!, {...state}]
+      };
     }
 
     case 'SAVE_CHANGES': {
       return {
         ...state,
-        changed: false
+        changeArray: []
       }
     }
   }
@@ -555,7 +607,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   const changes = useRef(getSavedLastEdit());
 
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
-  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, changed }, designerDispatch] =
+  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, changeArray }, designerDispatch] =
     useReducer(reducer, changes.current !== undefined
       ? changes.current
       : localState !== undefined
@@ -596,7 +648,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           entityName: entityName,
           showAreaExplorer: true,
           activeArea: 0,
-          changed: false
+          changeArray: []
         });
 
   const getGridStyle = (): React.CSSProperties => ({
@@ -606,7 +658,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
     height: '86%',
     overflow: 'auto'
-  });
+ });
 
   const getCellStyle = (x: number, y: number): React.CSSProperties => ({
     gridArea: `${y + 1} / ${x + 1} / ${y + 2} / ${x + 2}`
@@ -626,7 +678,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'ADD_COLUMN' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -639,7 +690,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'DELETE_COLUMN' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -652,7 +702,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'ADD_ROW' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -665,7 +714,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'DELETE_ROW' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
 
       },
@@ -679,7 +727,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'CREATE_GROUP' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -695,7 +742,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'DELETE_GROUP' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -709,7 +755,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -722,7 +767,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' });
           changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
-          props.componentRef(changes.current);
         }
       },
       {
@@ -741,14 +785,14 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     [
       {
         key: 'saveAndClose',
-        disabled: !changed,
+        disabled: changeArray && changeArray.length === 0,
         text: 'Сохранить',
         iconProps: {
           iconName: 'Save'
         },
         onClick: () => {
           changes.current = undefined;
-          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }));
+          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, changeArray: [] }));
           designerDispatch({ type: 'SAVE_CHANGES' });
           props.outDesigner();
         }
@@ -756,39 +800,48 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
       {
         key: 'cancelAndClose',
-        text: changed ? 'Отменить' : 'Закрыть',
+        text: 'Закрыть',
         iconProps: {
           iconName: 'Cancel'
         },
         onClick: () => {
           changes.current = undefined;
-          designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}`, fields });
           props.outDesigner();
         }
       },
       {
-        key: 'apply',
-        disabled: !changed,
-        text: 'Применить',
-        iconProps: {
-          iconName: 'CheckMark'
-        },
-        onClick: () => {
-          changes.current = undefined;
-          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode }));
-          designerDispatch({ type: 'SAVE_CHANGES' });
-        }
-      },
-      {
         key: 'revert',
-        disabled: !changed,
-        text: 'Вернуть',
+        disabled: changeArray && changeArray.length === 0,
+        text: 'Отменить шаг',
         iconProps: {
           iconName: 'Undo'
         },
         onClick: () => {
           changes.current = undefined;
           designerDispatch({ type: 'CANCEL_CHANGES', entityName: `des-${entityName}`, fields });
+        }
+      },
+      {
+        key: 'return',
+        disabled: changeArray && changeArray.length === 0,
+        text: 'Вернуть',
+        iconProps: {
+          iconName: 'ReturnToSession'
+        },
+        onClick: () => {
+          changes.current = undefined;
+          designerDispatch({ type: 'RETURN_CHANGES', entityName: `des-${entityName}`, fields });
+        }
+      },
+      {
+        key: 'clear',
+        text: 'Очистить',
+        iconProps: {
+          iconName: 'Broom'
+        },
+        onClick: () => {
+          changes.current = undefined;
+          designerDispatch({ type: 'CLEAR' });
         }
       }
     ]
@@ -808,10 +861,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState;
   };
 
-  useEffect( () => {
-    props.componentRef({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode } as IDesignerState);
-  });
-
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
     return (
       <div style={{
@@ -821,7 +870,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         gridTemplateColumns: !setGridSize ? 'auto 360px' : 'auto 240px',
         gridTemplateRows: 'auto',
         gridAutoFlow: 'column',
-      }}>
+     }}>
         <div style={{
           width: '100%',
           height: '100%',
