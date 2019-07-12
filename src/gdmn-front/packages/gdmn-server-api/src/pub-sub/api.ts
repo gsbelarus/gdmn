@@ -9,7 +9,7 @@ import {
   ISequenceQueryResponse,
   IEntityQuerySetInspector,
   IEntityQuerySetResponse,
-  Attribute
+  IAttribute
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
@@ -163,7 +163,7 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.ADD_ENTITY]: {
     entityName: string;
-    attributes?: Attribute[]
+    attributes?: IAttribute[]
   };
 }
 
@@ -265,7 +265,7 @@ export interface ISqlQueryResponse {
 
 export interface IAddEntity {
   entityName: string;
-  attributes?: Attribute[]
+  attributes?: IAttribute[]
 }
 
 export interface IDefinedEntity {

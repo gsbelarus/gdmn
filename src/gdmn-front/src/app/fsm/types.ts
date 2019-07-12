@@ -52,6 +52,7 @@ export function createStateType<
 export interface ITransition {
   fromState: string;
   toState: string;
+  returning?: boolean;
 };
 
 export type Flow = ITransition[];
