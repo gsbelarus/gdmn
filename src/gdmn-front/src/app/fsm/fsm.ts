@@ -5,6 +5,9 @@ const showData = createStateType('SHOW_DATA', resolve => (queryPhrase: string) =
 const workDone = createStateType('WORK_DONE');
 const queryAndSort = createStateType('QUERY_AND_SORT');
 const addRecord = createStateType('ADD_RECORD');
+const requestPermissions = createStateType('REQUEST_PERMISSIONS');
+const testCondition = createStateType('TEST_CONDITION');
+const deleteOrEdit = createStateType('DELETE_EDIT_RECORD');
 
 export const businessProcesses: IBusinessProcesses = {
   'WorkTime': {
@@ -33,6 +36,15 @@ export const businessProcesses: IBusinessProcesses = {
       },
       {
         id: addRecord.getType()
+      },
+      {
+        id: requestPermissions.getType()
+      },
+      {
+        id: testCondition.getType()
+      },
+      {
+        id: deleteOrEdit.getType()
       }
     ],
     flow: [
@@ -53,6 +65,24 @@ export const businessProcesses: IBusinessProcesses = {
         fromState: showData.getType(),
         toState: addRecord.getType(),
         returning: true
+      },
+      {
+        fromState: showData.getType(),
+        toState: requestPermissions.getType()
+      },
+      {
+        fromState: requestPermissions.getType(),
+        toState: testCondition.getType()
+      },
+      {
+        fromState: testCondition.getType(),
+        condition: 'Less than 2 hrs?',
+        thenState: deleteOrEdit.getType(),
+        elseState: showData.getType()
+      },
+      {
+        fromState: deleteOrEdit.getType(),
+        toState: showData.getType()
       }
     ]
   },

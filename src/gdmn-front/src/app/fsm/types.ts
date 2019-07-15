@@ -55,7 +55,22 @@ export interface ITransition {
   returning?: boolean;
 };
 
-export type Flow = ITransition[];
+export interface IFork {
+  fromState: string;
+  condition: string;
+  thenState: string;
+  elseState: string;
+};
+
+export function isTransition(t: ITransition | IFork): t is ITransition {
+  return (t as ITransition).toState !== undefined;
+};
+
+export function isFork(f: ITransition | IFork): f is IFork {
+  return (f as IFork).condition !== undefined;
+};
+
+export type Flow = (ITransition | IFork)[];
 
 export interface INode {
   id: string;

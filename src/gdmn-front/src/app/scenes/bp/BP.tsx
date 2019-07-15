@@ -3,10 +3,14 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps, Stylesheet } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
 import { businessProcesses } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
 import cytoscape, { Core } from 'cytoscape';
+import { isTransition } from '@src/app/fsm/types';
+import dagre from 'cytoscape-dagre';
+
+cytoscape.use( dagre );
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
@@ -35,6 +39,8 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         boxSelectionEnabled: false,
         autounselectify: false,
 
+        wheelSensitivity: 0.07,
+
         style: [
           {
             selector: 'node',
@@ -44,7 +50,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               'border-color': '#000',
               'border-width': 1,
               'content': 'data(id)',
-              'text-valign': 'center',
+              'text-valign': 'center'
             }
           },
           {
@@ -54,7 +60,19 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               'target-arrow-shape': 'triangle',
               'line-color': '#ffaaaa',
               'target-arrow-color': '#ffaaaa',
-              'curve-style': 'bezier'
+              'curve-style': 'bezier',
+              'content': 'data(label)'
+            }
+          },
+          {
+            selector: 'edge.returning',
+            css: {
+              'width': 2,
+              'line-color': '#ffaaaa',
+              'target-arrow-shape': 'triangle',
+              'target-arrow-color': '#ffaaaa',
+              'source-arrow-shape': 'triangle',
+              'source-arrow-color': '#ffaaaa',
             }
           }
         ],
@@ -62,19 +80,32 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         elements: {
           nodes: bp.nodes.map( n => ({ data: { id: n.id }, style: { 'shape': 'round-rectangle' } }) ),
           edges: bp.flow.flatMap( e => {
-            const res = [{ data: { source: e.fromState, target: e.toState } }];
-            if (e.returning) {
-              res.push({ data: { source: e.toState, target: e.fromState } });
+            if (isTransition(e)) {
+              if (e.returning) {
+                return { data: { source: e.fromState, target: e.toState }, classes: 'returning' };
+              } else {
+                return { data: { source: e.fromState, target: e.toState } };
+              }
+            } else {
+              return [
+                { data: { source: e.fromState, target: e.thenState } },
+                { data: { source: e.fromState, target: e.elseState } }
+              ];
             }
-            return res;
            } )
         },
 
         layout: {
-          name: 'breadthfirst',
-          directed: true,
-          padding: 10
-        }
+          name: 'dagre',
+          // dagre algo options, uses default value on undefined
+          nodeSep: undefined, // the separation between adjacent nodes in the same rank
+          edgeSep: undefined, // the separation between adjacent edges in the same rank
+          rankSep: undefined, // the separation between adjacent nodes in the same rank
+          rankDir: undefined, // 'TB' for top to bottom flow, 'LR' for left to right,
+          ranker: undefined, // Type of algorithm to assign a rank to each node in the input graph. Possible values: 'network-simplex', 'tight-tree' or 'longest-path'
+          minLen: function( _edge: any ){ return 1; }, // number of ranks to keep between the source and target of the edge
+          edgeWeight: function( _edge: any ){ return 1; }, // higher weight edges are generally made shorter and straighter than lower weight edges
+        } as any
       })
     );
   }, [bp]);
