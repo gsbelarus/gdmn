@@ -845,7 +845,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       }
     ]
-  ];
+];
 
   const getOnMouseDown = (x: number, y: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.stopPropagation();
@@ -879,6 +879,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           padding: '4px',
           overflow: 'auto'
       }}>
+        {console.log(changeArray)}
           {props.children}
         </div>
         <div style={{
