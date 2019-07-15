@@ -53,12 +53,4 @@ export abstract class Builder {
       crossField: options.crossField
     });
   }
-  protected async   _deleteATAttr(attr: Attribute, options: IATAttrOptions): Promise<void> {
-    const domainName = await this.ddlHelper.cachedStatements.getDomainName({
-      relationName: options.relationName,
-      indexName: options.fieldName,
-     });
-
-     await this.ddlHelper.cachedStatements.dropATRelationField(domainName);
-  }
 }

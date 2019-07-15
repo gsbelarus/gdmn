@@ -52,8 +52,6 @@ export class DDLHelper {
   private readonly _skipAT: boolean;
   private readonly _defaultIgnore: boolean;
 
-  private _logs: string[] = [];
-
   constructor(connection: AConnection,
               transaction: ATransaction,
               skipAT: boolean = false,
@@ -63,6 +61,12 @@ export class DDLHelper {
     this._cachedStatements = new CachedStatements(connection, transaction);
     this._skipAT = skipAT;
     this._defaultIgnore = defaultIgnore;
+  }
+
+  private _logs: string[] = [];
+
+  get logs(): string[] {
+    return this._logs;
   }
 
   get connection(): AConnection {
@@ -75,10 +79,6 @@ export class DDLHelper {
 
   get cachedStatements(): CachedStatements {
     return this._cachedStatements;
-  }
-
-  get logs(): string[] {
-    return this._logs;
   }
 
   get disposed(): boolean {
@@ -386,6 +386,64 @@ export class DDLHelper {
     if (!skipAT && !(ignore && !(await this._cachedStatements.isTriggerATExists(triggerName)))) {
       await this._cachedStatements.dropATTriggers({triggerName});
     }
+  }
+
+  public async dropDependencies(dependenciesName: string,
+                           skipAT: boolean = this._skipAT,
+                           ignore: boolean = this._defaultIgnore): Promise<void> {
+    if (!(ignore && !(await this._cachedStatements.isDependenceExists(dependenciesName)))) {
+      await this._loggedExecute(`DELETE FROM RDB$DEPENDENCIES WHERE RDB$DEPENDENT_NAME=${dependenciesName};`);
+      await this._transaction.commitRetaining();
+    }
+  }
+
+  public async checkAndDropTable(tableName: string,
+                                 ignore: boolean = this._defaultIgnore): Promise<void> {
+    const ListDependencies = await this._cachedStatements.getDependencies(tableName);
+    const hasDependencies = await this._cachedStatements.checkDependencies(ListDependencies, tableName);
+    console.log(hasDependencies)
+
+    if (hasDependencies && hasDependencies.length){
+      throw new Error('Entity has dependencies')
+
+    }
+    const dependencies = await this._cachedStatements.getDependenciesNames(tableName);
+    for (let i = 0; dependencies.length < i; i++) {
+      await this.dropDependencies(dependencies[i]);
+    }
+
+    const triggers = await this._cachedStatements.getTriggers(tableName);
+    for (let i = 0; triggers.length < i; i++) {
+      await this.dropTrigger(triggers[i]);
+    }
+
+    const foreignKeys = await this._cachedStatements.getConstraintNames(tableName,'FOREIGN KEY' );
+    for (let i = 0; foreignKeys.length < i; i++) {
+      await this.dropConstraint(tableName, foreignKeys[i]);
+    }
+
+    const checks = await this._cachedStatements.getConstraintNames(tableName, 'CHECK');
+    for (let i = 0; checks.length < i; i++) {
+      await this.dropConstraint(tableName, checks[i]);
+    }
+
+    const primaryKeys = await this._cachedStatements.getConstraintNames(tableName, 'PRIMARY KEY');
+    for (let i = 0; primaryKeys.length < i; i++) {
+      await this.dropConstraint(tableName, primaryKeys[i]);
+    }
+
+    const uniques = await this._cachedStatements.getConstraintNames(tableName, 'UNIQUE');
+    for (let i = 0; uniques.length < i; i++) {
+      await this.dropConstraint(tableName,uniques[i]);
+    }
+
+    const indices = await this._cachedStatements.getIndicesNames(tableName);
+    for (let i = 0; indices.length < i; i++) {
+      await this.dropIndex(indices[i]);
+    }
+
+    await this.dropTable(tableName);
+
   }
 
   private async _loggedExecute(sql: string): Promise<void> {
