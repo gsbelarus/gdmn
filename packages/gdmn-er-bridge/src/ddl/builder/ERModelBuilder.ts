@@ -159,15 +159,44 @@ export class ERModelBuilder extends Builder {
 
     } else if (source instanceof Entity) {
       const tableName = AdapterUtils.getOwnRelationName(source);
-      for (const pkAttr of source.pk) {
-         const fieldName = AdapterUtils.getFieldName(pkAttr);
-         await this._deleteATAttr(pkAttr, {relationName: tableName, fieldName, domainName:''});
+
+
+      const foundParent = Object.entries(erModel.entities).reduce(
+        (prev, [_name, entity]) => {
+          if (entity === source){
+            return prev;
+          }
+            if (entity.parent === source) {
+              prev.push(entity);
+            }
+
+          return prev;
+        },
+        [] as Entity[]
+      );
+
+      const foundEntities = Object.entries(erModel.entities).reduce(
+        (prev, [_name, entity]) => {
+          if (entity === source){
+            return prev;
+          }
+          entity.adapter!.relation.forEach((rel)=>{
+            if (rel.relationName === tableName) {
+              prev.push(entity);
+            }
+          })
+
+          return prev;
+        },
+        [] as Entity[]
+      );
+
+      if(foundParent && !foundEntities){
+        throw new Error(`Entity ${source.name} are the parent link to other entities ${foundParent.map((entity)=> entity.name).join(',')}.`);
       }
-      await this.ddlHelper.dropTable(tableName);
+      await this.ddlHelper.checkAndDropTable(tableName);
 
-      await this.ddlHelper.cachedStatements.dropATRelations({ relationName: tableName });
       erModel.remove(source);
-
     }
   }
 }

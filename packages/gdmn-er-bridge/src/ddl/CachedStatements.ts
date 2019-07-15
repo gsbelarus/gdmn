@@ -63,6 +63,13 @@ interface IStatements {
   indexExists?: AStatement;
   domainExists?: AStatement;
   triggerExists?: AStatement;
+  DependenceExists?: AStatement;
+  getDependencies?: AStatement;
+  getTriggers?: AStatement;
+  checkDependencies?: AStatement;
+  getConstraintNames?: AStatement;
+  getIndicesNames?: AStatement;
+  getDependenciesNames?: AStatement;
 
   ddlUniqueSequence?: AStatement;
 
@@ -245,6 +252,23 @@ export class CachedStatements {
     return await AStatement.executeQueryResultSet({
       statement: this._statements.triggerExists,
       params: {triggerName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }
+
+  public async isDependenceExists(dependenceName: string): Promise<boolean> {
+    this._checkDisposed();
+
+    if (!this._statements.DependenceExists) {
+      this._statements.DependenceExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM RDB$DEPENDENCIES  dep
+        WHERE dep.RDB$DEPENDENT_NAME = :dependenceName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.DependenceExists,
+      params: {dependenceName},
       callback: (resultSet) => resultSet.next()
     });
   }
@@ -750,22 +774,202 @@ export class CachedStatements {
     });
   }
 
-  public async getDomainName(input: IATIndicesInput): Promise<string>{
+  public async getDependencies(tableName: string): Promise<string[]> {
     this._checkDisposed();
 
-    if (!this._statements.getDomainName) {
-      this._statements.getDomainName = await this.connection.prepare(this._transaction, `        
-        SELECT FIELDSOURCE
-        FROM AT_RELATION_FIELDS
-        WHERE RELATIONNAME = :relationName 
-             AND FIELDNAME = :fieldName 
+    if (!this._statements.getDependencies) {
+      this._statements.getDependencies = await this._connection.prepare(this._transaction, `
+        SELECT
+        m.NAME
+        FROM
+        (SELECT
+            T.RDB$TRIGGER_NAME as NAME
+        FROM
+            RDB$TRIGGERS T
+        WHERE
+        T.RDB$RELATION_NAME = :RELATION_NAME
+         UNION
+        SELECT 
+            rc.RDB$CONSTRAINT_NAME as NAME
+        FROM
+            RDB$RELATION_CONSTRAINTS rc
+        WHERE
+            rc.RDB$RELATION_NAME = :RELATION_NAME
+         UNION
+        SELECT
+         i.RDB$INDEX_NAME as NAME
+        FROM
+         rdb$indices i
+        WHERE
+         i.RDB$RELATION_NAME = :RELATION_NAME
+         UNION
+        SELECT
+          DISTINCT dep.RDB$DEPENDENT_NAME  as NAME
+        FROM 
+          RDB$DEPENDENCIES  dep
+        WHERE
+          dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+          AND (dep.RDB$DEPENDENT_NAME like ('%_P_RESTR%')
+          OR dep.RDB$DEPENDENT_NAME like ('%_P_GCHC_%')
+          OR dep.RDB$DEPENDENT_NAME like ('%_P_CHLDCT_%')
+          OR dep.RDB$DEPENDENT_NAME like ('%_P_EXLIM_%')
+          OR dep.RDB$DEPENDENT_NAME like ('%_P_EL_%'))
+          AND dep.RDB$DEPENDENT_TYPE = 5) m
       `);
     }
-    const result = await this._statements.getDomainName.executeReturning({
-      relationName: input.relationName,
-      fieldName: input.indexName,
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.getDependencies,
+      params: {RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          result.push(await resultSet.getString('NAME'))
+        }
+        return result
+      }
     });
-    return result.getString("FIELDSOURCE");
+  }
+
+  public async getTriggers(tableName: string): Promise<string[]> {
+    this._checkDisposed();
+
+    if (!this._statements.getTriggers) {
+      this._statements.getTriggers = await this._connection.prepare(this._transaction, `
+        SELECT
+            T.RDB$TRIGGER_NAME as NAME,
+            T.RDB$TRIGGER_TYPE
+        FROM
+            RDB$TRIGGERS T
+        WHERE
+            T.RDB$RELATION_NAME = :RELATION_NAME
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.getTriggers,
+      params: {RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          result.push(await resultSet.getString('NAME'))
+        }
+        return result
+      }
+    });
+  }
+
+  public async getConstraintNames(tableName: string, type: string): Promise<string[]> {
+    this._checkDisposed();
+
+    if (!this._statements.getConstraintNames) {
+      this._statements.getConstraintNames = await this._connection.prepare(this._transaction, `
+        SELECT
+            rc.RDB$CONSTRAINT_NAME as NAME
+        FROM
+            RDB$RELATION_CONSTRAINTS rc
+        WHERE 
+            rc.RDB$RELATION_NAME = :RELATION_NAME
+        AND rc.RDB$CONSTRAINT_TYPE = :TYPE 
+        
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.getConstraintNames,
+      params: {RELATION_NAME: tableName, TYPE: type},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          result.push(await resultSet.getString('NAME'))
+        }
+        return result
+      }
+    });
+  }
+
+  public async getIndicesNames(tableName: string): Promise<string[]> {
+    this._checkDisposed();
+
+    if (!this._statements.getIndicesNames) {
+      this._statements.getIndicesNames = await this._connection.prepare(this._transaction, `
+        SELECT
+             i.RDB$INDEX_NAME as NAME
+        FROM
+            rdb$indices i
+        WHERE 
+            i.RDB$RELATION_NAME = :RELATION_NAME              
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.getIndicesNames,
+      params: {RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          result.push(await resultSet.getString('NAME'))
+        }
+        return result
+      }
+    });
+  }
+
+  public async checkDependencies(ArrDependencies: string[], tableName: string): Promise<any> {
+    this._checkDisposed();
+    const dependenciesStr = `'${ArrDependencies.join('\',\'')}'`;
+    console.log(dependenciesStr)
+    if (!this._statements.checkDependencies) {
+      this._statements.checkDependencies = await this._connection.prepare(this._transaction, `
+        SELECT
+            dep.RDB$DEPENDENT_NAME
+        FROM RDB$DEPENDENCIES   dep
+            WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+                    AND
+                  dep.RDB$DEPENDENT_NAME NOT IN (${dependenciesStr})
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.checkDependencies,
+      params: { RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          const name = await resultSet.getString('RDB$DEPENDENT_NAME');
+         if (name) {
+           result.push(name)
+         }
+        }
+        return result
+      }
+    });
+  }
+
+  public async getDependenciesNames(tableName: string): Promise<string[]> {
+    this._checkDisposed();
+
+    if (!this._statements.getDependenciesNames) {
+      this._statements.getDependenciesNames = await this._connection.prepare(this._transaction, `
+        SELECT
+            DISTINCT dep.RDB$DEPENDENT_NAME as NAME
+        FROM RDB$DEPENDENCIES  dep
+        WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+        AND (dep.RDB$DEPENDENT_NAME like ('%_P_RESTR%')
+         OR dep.RDB$DEPENDENT_NAME like ('%_P_GCHC_%')
+         OR dep.RDB$DEPENDENT_NAME like ('%_P_CHLDCT_%')
+         OR dep.RDB$DEPENDENT_NAME like ('%_P_EXLIM_%')
+         OR dep.RDB$DEPENDENT_NAME like ('%_P_EL_%'))
+        AND dep.RDB$DEPENDENT_TYPE = 5
+        
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.getDependenciesNames,
+      params: {RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          result.push(await resultSet.getString('NAME'))
+        }
+        return result
+      }
+    });
   }
 
   private _checkDisposed(): void | never {
