@@ -792,8 +792,8 @@ export class CachedStatements {
               FROM rdb$indices i
               WHERE i.RDB$RELATION_NAME = :RELATION_NAME
               UNION
-              SELECT DISTINCT dep.RDB$DEPENDENT_NAME  as NAME
-              FROM RDB$DEPENDENCIES  dep
+              SELECT DISTINCT dep.RDB$DEPENDENT_NAME as NAME
+              FROM RDB$DEPENDENCIES dep
               WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
                 AND (dep.RDB$DEPENDENT_NAME LIKE ('%_P_RESTR%')
                 OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_GCHC_%')
@@ -894,7 +894,7 @@ export class CachedStatements {
     if (!this._statements.checkDependencies) {
       this._statements.checkDependencies = await this._connection.prepare(this._transaction, `
         SELECT dep.RDB$DEPENDENT_NAME
-        FROM RDB$DEPENDENCIES   dep
+        FROM RDB$DEPENDENCIES dep
         WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
           AND dep.RDB$DEPENDENT_NAME NOT IN (${dependenciesStr})
       `);
@@ -921,7 +921,7 @@ export class CachedStatements {
     if (!this._statements.getDependenciesNames) {
       this._statements.getDependenciesNames = await this._connection.prepare(this._transaction, `
         SELECT DISTINCT dep.RDB$DEPENDENT_NAME as NAME
-        FROM RDB$DEPENDENCIES  dep
+        FROM RDB$DEPENDENCIES dep
         WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
           AND (dep.RDB$DEPENDENT_NAME LIKE ('%_P_RESTR%')
           OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_GCHC_%')
