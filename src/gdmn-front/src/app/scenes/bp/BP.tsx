@@ -56,29 +56,25 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
           {
             selector: 'edge',
             css: {
-              'width': 2,
+              'width': 1,
               'target-arrow-shape': 'triangle',
-              'line-color': '#ffaaaa',
-              'target-arrow-color': '#ffaaaa',
-              'curve-style': 'bezier',
+              'target-arrow-color': 'red',
+              'line-color': 'red',
+              'curve-style': 'unbundled-bezier',
               'content': 'data(label)'
             }
           },
           {
             selector: 'edge.returning',
             css: {
-              'width': 2,
-              'line-color': '#ffaaaa',
-              'target-arrow-shape': 'triangle',
-              'target-arrow-color': '#ffaaaa',
               'source-arrow-shape': 'triangle',
-              'source-arrow-color': '#ffaaaa',
+              'source-arrow-color': 'red',
             }
           }
         ],
 
         elements: {
-          nodes: bp.nodes.map( n => ({ data: { id: n.id }, style: { 'shape': 'round-rectangle' } }) ),
+          nodes: bp.nodes.map( n => ({ data: { id: n.id }, style: { 'shape': 'circle' } }) ),
           edges: bp.flow.flatMap( e => {
             if (isTransition(e)) {
               if (e.returning) {
