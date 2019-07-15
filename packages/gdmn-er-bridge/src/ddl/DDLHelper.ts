@@ -52,6 +52,8 @@ export class DDLHelper {
   private readonly _skipAT: boolean;
   private readonly _defaultIgnore: boolean;
 
+  private _logs: string[] = [];
+
   constructor(connection: AConnection,
               transaction: ATransaction,
               skipAT: boolean = false,
@@ -61,12 +63,6 @@ export class DDLHelper {
     this._cachedStatements = new CachedStatements(connection, transaction);
     this._skipAT = skipAT;
     this._defaultIgnore = defaultIgnore;
-  }
-
-  private _logs: string[] = [];
-
-  get logs(): string[] {
-    return this._logs;
   }
 
   get connection(): AConnection {
@@ -79,6 +75,10 @@ export class DDLHelper {
 
   get cachedStatements(): CachedStatements {
     return this._cachedStatements;
+  }
+
+  get logs(): string[] {
+    return this._logs;
   }
 
   get disposed(): boolean {
@@ -401,7 +401,6 @@ export class DDLHelper {
                                  ignore: boolean = this._defaultIgnore): Promise<void> {
     const ListDependencies = await this._cachedStatements.getDependencies(tableName);
     const hasDependencies = await this._cachedStatements.checkDependencies(ListDependencies, tableName);
-    console.log(hasDependencies)
 
     if (hasDependencies && hasDependencies.length){
       throw new Error('Entity has dependencies')

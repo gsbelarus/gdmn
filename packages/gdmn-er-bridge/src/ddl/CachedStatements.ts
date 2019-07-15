@@ -63,7 +63,7 @@ interface IStatements {
   indexExists?: AStatement;
   domainExists?: AStatement;
   triggerExists?: AStatement;
-  DependenceExists?: AStatement;
+  dependenceExists?: AStatement;
   getDependencies?: AStatement;
   getTriggers?: AStatement;
   checkDependencies?: AStatement;
@@ -259,15 +259,15 @@ export class CachedStatements {
   public async isDependenceExists(dependenceName: string): Promise<boolean> {
     this._checkDisposed();
 
-    if (!this._statements.DependenceExists) {
-      this._statements.DependenceExists = await this._connection.prepare(this._transaction, `
+    if (!this._statements.dependenceExists) {
+      this._statements.dependenceExists = await this._connection.prepare(this._transaction, `
         SELECT FIRST 1 0
         FROM RDB$DEPENDENCIES  dep
         WHERE dep.RDB$DEPENDENT_NAME = :dependenceName
       `);
     }
     return await AStatement.executeQueryResultSet({
-      statement: this._statements.DependenceExists,
+      statement: this._statements.dependenceExists,
       params: {dependenceName},
       callback: (resultSet) => resultSet.next()
     });
@@ -779,42 +779,28 @@ export class CachedStatements {
 
     if (!this._statements.getDependencies) {
       this._statements.getDependencies = await this._connection.prepare(this._transaction, `
-        SELECT
-        m.NAME
-        FROM
-        (SELECT
-            T.RDB$TRIGGER_NAME as NAME
-        FROM
-            RDB$TRIGGERS T
-        WHERE
-        T.RDB$RELATION_NAME = :RELATION_NAME
-         UNION
-        SELECT 
-            rc.RDB$CONSTRAINT_NAME as NAME
-        FROM
-            RDB$RELATION_CONSTRAINTS rc
-        WHERE
-            rc.RDB$RELATION_NAME = :RELATION_NAME
-         UNION
-        SELECT
-         i.RDB$INDEX_NAME as NAME
-        FROM
-         rdb$indices i
-        WHERE
-         i.RDB$RELATION_NAME = :RELATION_NAME
-         UNION
-        SELECT
-          DISTINCT dep.RDB$DEPENDENT_NAME  as NAME
-        FROM 
-          RDB$DEPENDENCIES  dep
-        WHERE
-          dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
-          AND (dep.RDB$DEPENDENT_NAME like ('%_P_RESTR%')
-          OR dep.RDB$DEPENDENT_NAME like ('%_P_GCHC_%')
-          OR dep.RDB$DEPENDENT_NAME like ('%_P_CHLDCT_%')
-          OR dep.RDB$DEPENDENT_NAME like ('%_P_EXLIM_%')
-          OR dep.RDB$DEPENDENT_NAME like ('%_P_EL_%'))
-          AND dep.RDB$DEPENDENT_TYPE = 5) m
+        SELECT m.NAME
+        FROM (SELECT T.RDB$TRIGGER_NAME as NAME
+              FROM RDB$TRIGGERS T
+              WHERE T.RDB$RELATION_NAME = :RELATION_NAME
+              UNION
+              SELECT rc.RDB$CONSTRAINT_NAME as NAME
+              FROM RDB$RELATION_CONSTRAINTS rc
+              WHERE rc.RDB$RELATION_NAME = :RELATION_NAME
+              UNION
+              SELECT i.RDB$INDEX_NAME as NAME
+              FROM rdb$indices i
+              WHERE i.RDB$RELATION_NAME = :RELATION_NAME
+              UNION
+              SELECT DISTINCT dep.RDB$DEPENDENT_NAME  as NAME
+              FROM RDB$DEPENDENCIES  dep
+              WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+                AND (dep.RDB$DEPENDENT_NAME LIKE ('%_P_RESTR%')
+                OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_GCHC_%')
+                OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_CHLDCT_%')
+                OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EXLIM_%')
+                OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EL_%'))
+                AND dep.RDB$DEPENDENT_TYPE = 5) m
       `);
     }
     return await AStatement.executeQueryResultSet({
@@ -835,13 +821,9 @@ export class CachedStatements {
 
     if (!this._statements.getTriggers) {
       this._statements.getTriggers = await this._connection.prepare(this._transaction, `
-        SELECT
-            T.RDB$TRIGGER_NAME as NAME,
-            T.RDB$TRIGGER_TYPE
-        FROM
-            RDB$TRIGGERS T
-        WHERE
-            T.RDB$RELATION_NAME = :RELATION_NAME
+        SELECT T.RDB$TRIGGER_NAME as NAME, T.RDB$TRIGGER_TYPE
+        FROM RDB$TRIGGERS T
+        WHERE T.RDB$RELATION_NAME = :RELATION_NAME
       `);
     }
     return await AStatement.executeQueryResultSet({
@@ -862,13 +844,10 @@ export class CachedStatements {
 
     if (!this._statements.getConstraintNames) {
       this._statements.getConstraintNames = await this._connection.prepare(this._transaction, `
-        SELECT
-            rc.RDB$CONSTRAINT_NAME as NAME
-        FROM
-            RDB$RELATION_CONSTRAINTS rc
-        WHERE 
-            rc.RDB$RELATION_NAME = :RELATION_NAME
-        AND rc.RDB$CONSTRAINT_TYPE = :TYPE 
+        SELECT rc.RDB$CONSTRAINT_NAME as NAME
+        FROM RDB$RELATION_CONSTRAINTS rc
+        WHERE rc.RDB$RELATION_NAME = :RELATION_NAME
+          AND rc.RDB$CONSTRAINT_TYPE = :TYPE 
         
       `);
     }
@@ -890,12 +869,9 @@ export class CachedStatements {
 
     if (!this._statements.getIndicesNames) {
       this._statements.getIndicesNames = await this._connection.prepare(this._transaction, `
-        SELECT
-             i.RDB$INDEX_NAME as NAME
-        FROM
-            rdb$indices i
-        WHERE 
-            i.RDB$RELATION_NAME = :RELATION_NAME              
+        SELECT i.RDB$INDEX_NAME as NAME
+        FROM rdb$indices i
+        WHERE i.RDB$RELATION_NAME = :RELATION_NAME              
       `);
     }
     return await AStatement.executeQueryResultSet({
@@ -917,12 +893,10 @@ export class CachedStatements {
     console.log(dependenciesStr)
     if (!this._statements.checkDependencies) {
       this._statements.checkDependencies = await this._connection.prepare(this._transaction, `
-        SELECT
-            dep.RDB$DEPENDENT_NAME
+        SELECT dep.RDB$DEPENDENT_NAME
         FROM RDB$DEPENDENCIES   dep
-            WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
-                    AND
-                  dep.RDB$DEPENDENT_NAME NOT IN (${dependenciesStr})
+        WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+          AND dep.RDB$DEPENDENT_NAME NOT IN (${dependenciesStr})
       `);
     }
     return await AStatement.executeQueryResultSet({
@@ -946,17 +920,15 @@ export class CachedStatements {
 
     if (!this._statements.getDependenciesNames) {
       this._statements.getDependenciesNames = await this._connection.prepare(this._transaction, `
-        SELECT
-            DISTINCT dep.RDB$DEPENDENT_NAME as NAME
+        SELECT DISTINCT dep.RDB$DEPENDENT_NAME as NAME
         FROM RDB$DEPENDENCIES  dep
         WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
-        AND (dep.RDB$DEPENDENT_NAME like ('%_P_RESTR%')
-         OR dep.RDB$DEPENDENT_NAME like ('%_P_GCHC_%')
-         OR dep.RDB$DEPENDENT_NAME like ('%_P_CHLDCT_%')
-         OR dep.RDB$DEPENDENT_NAME like ('%_P_EXLIM_%')
-         OR dep.RDB$DEPENDENT_NAME like ('%_P_EL_%'))
-        AND dep.RDB$DEPENDENT_TYPE = 5
-        
+          AND (dep.RDB$DEPENDENT_NAME LIKE ('%_P_RESTR%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_GCHC_%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_CHLDCT_%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EXLIM_%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EL_%'))
+          AND dep.RDB$DEPENDENT_TYPE = 5        
       `);
     }
     return await AStatement.executeQueryResultSet({
