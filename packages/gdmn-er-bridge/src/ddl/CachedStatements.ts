@@ -890,7 +890,6 @@ export class CachedStatements {
   public async checkDependencies(ArrDependencies: string[], tableName: string): Promise<any> {
     this._checkDisposed();
     const dependenciesStr = `'${ArrDependencies.join('\',\'')}'`;
-    console.log(dependenciesStr)
     if (!this._statements.checkDependencies) {
       this._statements.checkDependencies = await this._connection.prepare(this._transaction, `
         SELECT dep.RDB$DEPENDENT_NAME
