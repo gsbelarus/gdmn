@@ -1,9 +1,10 @@
-import React, { useEffect, useReducer, useRef, Fragment } from 'react';
+import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
 import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
+import { ChromePicker  } from 'react-color';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -85,6 +86,42 @@ export interface IDesignerState {
   format?: boolean;
   activeTab: string;
 };
+
+const ButtonExample = (): JSX.Element => {
+  const [displayColorPicker, onChange] = useState(false);
+
+  const handleClick = () => {
+    onChange(!displayColorPicker)
+  };
+
+  const handleClose = () => {
+    onChange( false )
+  };
+
+    return (
+      <div>
+        <button onClick={() => handleClick() }>Select</button>
+        { displayColorPicker ?
+          <div
+            style={{
+              position: "absolute"
+            }}
+          >
+            <div
+              style={{
+                position: 'fixed',
+                top: '0px',
+                right: '0px',
+                bottom: '0px',
+                left: '0px',
+              }}
+              onClick={() => handleClose() }
+            />
+          <ChromePicker />
+        </div> : null }
+      </div>
+    )
+  }
 
 type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
   | { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
@@ -1655,6 +1692,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
             style={getGridStyle()}
             tabIndex={0}
           >
+            <ButtonExample />
             {
               previewMode
                 ?
