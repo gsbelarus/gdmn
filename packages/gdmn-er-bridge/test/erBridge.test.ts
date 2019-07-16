@@ -10,8 +10,8 @@ import {
   EntityAttribute,
   EntityInsert,
   EntityQuery,
-  EntityUpdate,
   EntityQueryUtils,
+  EntityUpdate,
   EnumAttribute,
   ERModel,
   FloatAttribute,
@@ -1001,6 +1001,139 @@ describe("ERBridge", () => {
       }]
     );
   });
+
+  it("Delete simple entity", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+      await eBuilder.createAttribute(MainEntity, new StringAttribute({
+        name: "TEST_STRING",
+        lName: {}
+      }));
+      await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"));
+
+      expect(() => {
+          try {
+            erModel.entity("MAIN_ENTITY")
+          } catch (error) {
+            throw error;
+          }
+        }
+      ).toThrowError(new Error("Unknown entity MAIN_ENTITY"));
+    })
+  })
+
+  it("Delete Entity with parent", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+
+      const ChildEntity = await erBuilder.create(erModel, new Entity({
+        name: "CHILD_ENTITY",
+        lName: {},
+        parent: MainEntity
+      }));
+
+      expect(await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY")).then(
+        (response) => response, (error) => error
+      )).toEqual(new Error("Entity MAIN_ENTITY are the parent link to other entities CHILD_ENTITY."))
+
+
+    })
+  })
+
+  it("Delete Entity with set", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+
+      const ChildEntity = await erBuilder.create(erModel, new Entity({
+        name: "CHILD_ENTITY",
+        lName: {},
+        parent: MainEntity
+      }));
+
+      const LinkEntity = await erBuilder.create(erModel, new Entity({
+        name: "LINK_ENTITY",
+        lName: {}
+      }));
+
+      await eBuilder.createAttribute(ChildEntity, new SetAttribute({
+        name: "SET_LINK",
+        lName: {},
+        entities: [LinkEntity]
+      }));
+      expect(await erBuilder.delete(erModel, erModel.entity("CHILD_ENTITY")).then(
+        (response) => response, (error) => error
+      )).toEqual(new Error("Entity has dependencies"))
+
+    })
+  })
+
+  it("Delete Entity with link", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+
+      const ChildEntity = await erBuilder.create(erModel, new Entity({
+        name: "CHILD_ENTITY",
+        lName: {},
+        parent: MainEntity
+      }));
+
+      const LinkEntity = await erBuilder.create(erModel, new Entity({
+        name: "LINK_ENTITY",
+        lName: {}
+      }));
+
+      await eBuilder.createAttribute(ChildEntity, new EntityAttribute({
+        name: "LINK",
+        lName: {},
+        entities: [LinkEntity]
+      }));
+      expect(await erBuilder.delete(erModel, erModel.entity("CHILD_ENTITY")).then(
+        (response) => response, (error) => error
+      )).toEqual(new Error("Entity has dependencies"));
+    })
+  })
+
+  it("Delete Entity with procedure", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+
+      await erBuilder.ddlHelper.addDefaultProcedure("MAIN_ENTITY");
+      expect(await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY")).then(
+        (response) => response, (error) => error
+      )).toEqual(new Error("Entity has dependencies"));
+
+      await erBuilder.ddlHelper.deleteDefaultProcedure("MAIN_ENTITY");
+      await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"));
+      expect(() => {
+          try {
+            erModel.entity("MAIN_ENTITY")
+          } catch (error) {
+            throw error;
+          }
+        }
+      ).toThrowError(new Error("Unknown entity MAIN_ENTITY"));
+    })
+  })
 });
 
 function _getUser(connection: AConnection,
@@ -1045,11 +1178,11 @@ function _getUser(connection: AConnection,
     },
     options: {
       where: [{
-          equals: [{
-              alias: "userOwner",
-              attribute: "ID",
-              value: userKey
-            }],
+        equals: [{
+          alias: "userOwner",
+          attribute: "ID",
+          value: userKey
+        }],
         not: [{
           isNull: [{
             alias: "application",

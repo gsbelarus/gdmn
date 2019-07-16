@@ -163,39 +163,39 @@ export class ERModelBuilder extends Builder {
 
       const foundParent = Object.entries(erModel.entities).reduce(
         (prev, [_name, entity]) => {
-          if (entity === source){
+          if (entity === source) {
             return prev;
           }
-            if (entity.parent === source) {
-              prev.push(entity);
-            }
 
+          if (entity.parent === source) {
+            prev.push(entity);
+          }
           return prev;
         },
         [] as Entity[]
       );
+
+      if (foundParent.length) {
+        throw new Error(`Entity ${source.name} are the parent link to other entities ${foundParent.map((entity) => entity.name).join(',')}.`);
+      }
 
       const foundEntities = Object.entries(erModel.entities).reduce(
         (prev, [_name, entity]) => {
-          if (entity === source){
+          if (entity === source) {
             return prev;
           }
-          entity.adapter!.relation.forEach((rel)=>{
+          entity.adapter!.relation.forEach((rel) => {
             if (rel.relationName === tableName) {
               prev.push(entity);
             }
-          })
-
+          });
           return prev;
         },
         [] as Entity[]
       );
-
-      if(foundParent && !foundEntities){
-        throw new Error(`Entity ${source.name} are the parent link to other entities ${foundParent.map((entity)=> entity.name).join(',')}.`);
+      if (!foundEntities.length) {
+        await this.ddlHelper.checkAndDropTable(tableName);
       }
-      await this.ddlHelper.checkAndDropTable(tableName);
-
       erModel.remove(source);
     }
   }

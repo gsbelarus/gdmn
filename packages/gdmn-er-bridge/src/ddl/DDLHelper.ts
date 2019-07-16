@@ -444,7 +444,26 @@ export class DDLHelper {
     await this.dropTable(tableName);
 
   }
+  public async addDefaultProcedure(tableName: string,
+                                 ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`
+    CREATE PROCEDURE ${tableName+'1'}
+    AS
+      DECLARE variable i integer;
+    BEGIN      
+      SELECT count(*)
+      FROM ${tableName}
+      INTO: i;
+    END
+    `);
+    await this._transaction.commitRetaining();
+  }
 
+  public async deleteDefaultProcedure(tableName: string,
+                                   ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`DROP PROCEDURE ${tableName+'1'}`);
+    await this._transaction.commitRetaining();
+  }
   private async _loggedExecute(sql: string): Promise<void> {
     this._logs.push(sql);
     await this._connection.execute(this._transaction, sql);
