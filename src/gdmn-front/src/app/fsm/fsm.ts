@@ -1,13 +1,17 @@
-import { createStateType, IBusinessProcesses } from "./types";
+import { createStateType, IBusinessProcesses, StateTypes } from "./types";
 
-const logged = createStateType('LOGGED', resolve => (userName: string) => resolve({ userName }) );
-const showData = createStateType('SHOW_DATA', resolve => (queryPhrase: string) => resolve({ queryPhrase }));
-const workDone = createStateType('WORK_DONE');
-const queryAndSort = createStateType('QUERY_AND_SORT');
-const addRecord = createStateType('ADD_RECORD');
-const requestPermissions = createStateType('REQUEST_PERMISSIONS');
-const testCondition = createStateType('TEST_CONDITION');
-const deleteOrEdit = createStateType('DELETE_EDIT_RECORD');
+const stateTypes = {
+  logged: createStateType('LOGGED', resolve => (userName: string) => resolve({ userName }) ),
+  showData: createStateType('SHOW_DATA', resolve => (queryPhrase: string) => resolve({ queryPhrase })),
+  workDone: createStateType('WORK_DONE'),
+  queryAndSort:  createStateType('QUERY_AND_SORT'),
+  addRecord: createStateType('ADD_RECORD'),
+  requestPermissions: createStateType('REQUEST_PERMISSIONS'),
+  testCondition: createStateType('TEST_CONDITION'),
+  deleteOrEdit: createStateType('DELETE_EDIT_RECORD')
+};
+
+const s = stateTypes.showData('Покажи рабочее время текущего пользователя.');
 
 export const businessProcesses: IBusinessProcesses = {
   'WorkTime': {
@@ -23,66 +27,66 @@ export const businessProcesses: IBusinessProcesses = {
     },
     nodes: [
       {
-        id: logged.getType()
+        id: stateTypes.logged.getType()
       },
       {
-        id: showData.getType()
+        id: stateTypes.showData.getType()
       },
       {
-        id: workDone.getType()
+        id: stateTypes.workDone.getType()
       },
       {
-        id: queryAndSort.getType()
+        id: stateTypes.queryAndSort.getType()
       },
       {
-        id: addRecord.getType()
+        id: stateTypes.addRecord.getType()
       },
       {
-        id: requestPermissions.getType()
+        id: stateTypes.requestPermissions.getType()
       },
       {
-        id: testCondition.getType()
+        id: stateTypes.testCondition.getType()
       },
       {
-        id: deleteOrEdit.getType()
+        id: stateTypes.deleteOrEdit.getType()
       }
     ],
     flow: [
       {
-        fromState: logged.getType(),
-        toState: showData.getType()
+        fromState: stateTypes.logged.getType(),
+        toState: stateTypes.showData.getType()
       },
       {
-        fromState: showData.getType(),
-        toState: workDone.getType()
+        fromState: stateTypes.showData.getType(),
+        toState: stateTypes.workDone.getType()
       },
       {
-        fromState: showData.getType(),
-        toState: queryAndSort.getType(),
+        fromState: stateTypes.showData.getType(),
+        toState: stateTypes.queryAndSort.getType(),
         returning: true
       },
       {
-        fromState: showData.getType(),
-        toState: addRecord.getType(),
+        fromState: stateTypes.showData.getType(),
+        toState: stateTypes.addRecord.getType(),
         returning: true
       },
       {
-        fromState: showData.getType(),
-        toState: requestPermissions.getType()
+        fromState: stateTypes.showData.getType(),
+        toState: stateTypes.requestPermissions.getType()
       },
       {
-        fromState: requestPermissions.getType(),
-        toState: testCondition.getType()
+        fromState: stateTypes.requestPermissions.getType(),
+        toState: stateTypes.testCondition.getType()
       },
       {
-        fromState: testCondition.getType(),
+        fromState: stateTypes.testCondition.getType(),
         condition: 'Less than 2 hrs?',
-        thenState: deleteOrEdit.getType(),
-        elseState: showData.getType()
+        thenState: stateTypes.deleteOrEdit.getType(),
+        elseState: stateTypes.showData.getType()
       },
       {
-        fromState: deleteOrEdit.getType(),
-        toState: showData.getType()
+        fromState: stateTypes.deleteOrEdit.getType(),
+        toState: stateTypes.showData.getType()
       }
     ]
   },

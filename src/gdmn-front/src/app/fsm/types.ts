@@ -19,7 +19,7 @@ function stateType<
   T extends string,
   D = undefined
 >(type: T, data?: D) {
-  return { type, data } as any;
+  return { type, data } as StateWithData<T, D>;
 };
 
 export interface TypeMeta<T extends string> {
@@ -48,6 +48,18 @@ export function createStateType<
     getType: () => type
   });
 };
+
+export type StateTypes<
+  TStateTypeCreatorOrMap extends any
+> = TStateTypeCreatorOrMap extends StateTypeCreator<string>
+  ? ReturnType<TStateTypeCreatorOrMap>
+  : TStateTypeCreatorOrMap extends Record<any, any>
+  ? {
+      [K in keyof TStateTypeCreatorOrMap]: StateType<TStateTypeCreatorOrMap[K]>;
+    }[keyof TStateTypeCreatorOrMap]
+  : TStateTypeCreatorOrMap extends infer R // TODO: should be just never but compiler yell with circularly references itself error
+  ? never
+  : never;
 
 export interface ITransition {
   fromState: string;

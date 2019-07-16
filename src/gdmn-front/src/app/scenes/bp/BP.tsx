@@ -9,8 +9,9 @@ import { getLName } from 'gdmn-internals';
 import cytoscape, { Core } from 'cytoscape';
 import { isTransition } from '@src/app/fsm/types';
 import dagre from 'cytoscape-dagre';
+import nodeHtmlLabel from 'cytoscape-node-html-label';
 
-cytoscape.use( dagre );
+cytoscape.use(dagre);
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
@@ -32,7 +33,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
   useEffect( () => {
     if (!bp) return;
 
-    setCy(cytoscape(
+    const cyInstance = cytoscape(
       {
         container: document.getElementById('cy'),
 
@@ -49,36 +50,46 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               'width': 200,
               'border-color': '#000',
               'border-width': 1,
-              'content': 'data(id)',
-              'text-valign': 'center'
+              //'content': 'data(id)',
+              //'text-valign': 'center',
+              //'font-size': 10,
+              'background-color': 'gray',
+              'shape': 'rectangle'
+            }
+          },
+          {
+            selector: 'node#SHOW_DATA',
+            css: {
+              'height': 200
+            }
+          },
+          {
+            selector: 'node#TEST_CONDITION',
+            css: {
+              'shape': 'diamond'
             }
           },
           {
             selector: 'edge',
             css: {
               'width': 1,
-              'target-arrow-shape': 'triangle',
-              'target-arrow-color': 'red',
-              'line-color': 'red',
-              'curve-style': 'unbundled-bezier',
-              'content': 'data(label)'
-            }
-          },
-          {
-            selector: 'edge.returning',
-            css: {
-              'source-arrow-shape': 'triangle',
-              'source-arrow-color': 'red',
-            }
+              'mid-target-arrow-shape': 'vee',
+              'mid-target-arrow-color': 'gray',
+              'line-color': 'gray',
+              'curve-style': 'unbundled-bezier'
+            } as any
           }
         ],
 
         elements: {
-          nodes: bp.nodes.map( n => ({ data: { id: n.id }, style: { 'shape': 'circle' } }) ),
+          nodes: bp.nodes.map( n => ({ data: { id: n.id, label: n.id } }) ),
           edges: bp.flow.flatMap( e => {
             if (isTransition(e)) {
               if (e.returning) {
-                return { data: { source: e.fromState, target: e.toState }, classes: 'returning' };
+                return [
+                  { data: { source: e.fromState, target: e.toState } },
+                  { data: { source: e.toState, target: e.fromState } }
+                ];
               } else {
                 return { data: { source: e.fromState, target: e.toState } };
               }
@@ -102,8 +113,25 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
           minLen: function( _edge: any ){ return 1; }, // number of ranks to keep between the source and target of the edge
           edgeWeight: function( _edge: any ){ return 1; }, // higher weight edges are generally made shorter and straighter than lower weight edges
         } as any
-      })
+      }
     );
+
+    if (!Object.getPrototypeOf(cyInstance)['nodeHtmlLabel']) {
+      nodeHtmlLabel(cytoscape);
+    };
+
+    // set nodeHtmlLabel for your Cy instance
+    (cyInstance as any).nodeHtmlLabel([{
+        query: 'node',
+        valign: 'top',
+        halign: 'left',
+        valignBox: 'bottom',
+        halignBox: 'right',
+        tpl: (data : any) => '<div class="BPNode"><div class="BPNodeTitle">' + data.id + '</div><div>abc...</div></div>'
+      }
+    ]);
+
+    setCy(cyInstance);
   }, [bp]);
 
   const commandBarItems: ICommandBarItemProps[] = [
@@ -128,6 +156,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
             {
               Object.entries(businessProcesses).map( ([name, bp]) =>
                 <div
+                  key={name}
                   styleName={`BPCard ${ name === activeBP ? 'SelectedBP' : '' }`}
                   onClick={ () => setActiveBP(name) }
                 >
