@@ -388,60 +388,30 @@ export class DDLHelper {
     }
   }
 
-  public async dropDependencies(dependenciesName: string,
-                           skipAT: boolean = this._skipAT,
-                           ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (!(ignore && await this._cachedStatements.isDependenceExists(dependenciesName))) {
-      await this._loggedExecute(`DELETE FROM RDB$DEPENDENCIES WHERE RDB$DEPENDENT_NAME=${dependenciesName};`);
-      await this._transaction.commitRetaining();
-    }
-  }
-
   public async checkAndDropTable(tableName: string,
                                  ignore: boolean = this._defaultIgnore): Promise<void> {
-    const ListDependencies = await this._cachedStatements.getDependencies(tableName);
-    const hasDependencies = await this._cachedStatements.checkDependencies(ListDependencies, tableName);
+    // получаем список зависимостей объекта : триггера, ограничения, индексы и процедуры
+    const listDependencies = await this._cachedStatements.getDependencies(tableName);
+    // проверяем есть ли в RDB$DEPENDENCIES зависимости, которых нет в ранее полученом списке
+    const hasDependencies = await this._cachedStatements.checkDependencies(listDependencies, tableName);
 
     if (hasDependencies && hasDependencies.length){
       throw new Error('Entity has dependencies')
-
     }
-    const dependencies = await this._cachedStatements.getDependenciesNames(tableName);
-    for await (const dependence of dependencies) {
-      this.dropDependencies(dependence);
+    // удаляем зависимости
+    for await (const dependence of listDependencies) {
+      if (dependence.type === 'TRIGGER'){
+        this.dropTrigger(dependence.name);
+      } else if (dependence.type === 'CONSTRAINT'){
+        this.dropConstraint(dependence.name, tableName);
+      }else if (dependence.type === 'INDEX'){
+        this.dropIndex(dependence.name);
+      }else if (dependence.type === 'PROCEDURE'){
+        this.dropProcedure(dependence.name);
+      }
     }
-
-    const triggers = await this._cachedStatements.getTriggers(tableName);
-    for await (const trigger of triggers) {
-      this.dropTrigger(trigger);
-    }
-
-    const foreignKeys = await this._cachedStatements.getConstraintNames(tableName,'FOREIGN KEY' );
-    for await (const foreignKey of foreignKeys) {
-      this.dropConstraint(foreignKey, tableName);
-    }
-
-    const checks = await this._cachedStatements.getConstraintNames(tableName, 'CHECK');
-    for await (const check of checks) {
-      this.dropConstraint(check, tableName);
-    }
-
-    const primaryKeys = await this._cachedStatements.getConstraintNames(tableName, 'PRIMARY KEY');
-    for await (const primaryKey of primaryKeys) {
-       this.dropConstraint(primaryKey, tableName);
-    }
-
-    const uniques = await this._cachedStatements.getConstraintNames(tableName, 'UNIQUE');
-    for await (const unique of uniques){
-      this.dropConstraint(unique, tableName);
-    }
-
-    const indices = await this._cachedStatements.getIndicesNames(tableName);
-    for await (const indice of indices) {
-      this.dropIndex(indice);
-    }
-
-    await this.dropTable(tableName);
+    // удаляем физическую таблицу
+     await this.dropTable(tableName);
 
   }
   public async addDefaultProcedure(tableName: string,
@@ -459,9 +429,9 @@ export class DDLHelper {
     await this._transaction.commitRetaining();
   }
 
-  public async deleteDefaultProcedure(tableName: string,
-                                   ignore: boolean = this._defaultIgnore): Promise<void> {
-    await this._loggedExecute(`DROP PROCEDURE ${tableName+'1'}`);
+  public async dropProcedure(procedureName: string,
+                             ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`DROP PROCEDURE ${procedureName}`);
     await this._transaction.commitRetaining();
   }
   private async _loggedExecute(sql: string): Promise<void> {

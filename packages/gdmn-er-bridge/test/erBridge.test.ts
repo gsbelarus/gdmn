@@ -1122,7 +1122,7 @@ describe("ERBridge", () => {
         (response) => response, (error) => error
       )).toEqual(new Error("Entity has dependencies"));
 
-      await erBuilder.ddlHelper.deleteDefaultProcedure("MAIN_ENTITY");
+      await erBuilder.ddlHelper.dropProcedure("MAIN_ENTITY1");
       await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"));
       expect(() => {
           try {
