@@ -261,7 +261,7 @@ export class CachedStatements {
 
     if (!this._statements.dependenceExists) {
       this._statements.dependenceExists = await this._connection.prepare(this._transaction, `
-        SELECT FIRST 1 0
+        SELECT FIRST 1 1
         FROM RDB$DEPENDENCIES  dep
         WHERE dep.RDB$DEPENDENT_NAME = :dependenceName
       `);
