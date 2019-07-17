@@ -391,7 +391,7 @@ export class DDLHelper {
   public async dropDependencies(dependenciesName: string,
                            skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<void> {
-    if (!(ignore && !(await this._cachedStatements.isDependenceExists(dependenciesName)))) {
+    if (!(ignore && await this._cachedStatements.isDependenceExists(dependenciesName))) {
       await this._loggedExecute(`DELETE FROM RDB$DEPENDENCIES WHERE RDB$DEPENDENT_NAME=${dependenciesName};`);
       await this._transaction.commitRetaining();
     }
@@ -407,38 +407,38 @@ export class DDLHelper {
 
     }
     const dependencies = await this._cachedStatements.getDependenciesNames(tableName);
-    for (let i = 0; dependencies.length < i; i++) {
-      await this.dropDependencies(dependencies[i]);
+    for await (const dependence of dependencies) {
+      this.dropDependencies(dependence);
     }
 
     const triggers = await this._cachedStatements.getTriggers(tableName);
-    for (let i = 0; triggers.length < i; i++) {
-      await this.dropTrigger(triggers[i]);
+    for await (const trigger of triggers) {
+      this.dropTrigger(trigger);
     }
 
     const foreignKeys = await this._cachedStatements.getConstraintNames(tableName,'FOREIGN KEY' );
-    for (let i = 0; foreignKeys.length < i; i++) {
-      await this.dropConstraint(tableName, foreignKeys[i]);
+    for await (const foreignKey of foreignKeys) {
+      this.dropConstraint(foreignKey, tableName);
     }
 
     const checks = await this._cachedStatements.getConstraintNames(tableName, 'CHECK');
-    for (let i = 0; checks.length < i; i++) {
-      await this.dropConstraint(tableName, checks[i]);
+    for await (const check of checks) {
+      this.dropConstraint(check, tableName);
     }
 
     const primaryKeys = await this._cachedStatements.getConstraintNames(tableName, 'PRIMARY KEY');
-    for (let i = 0; primaryKeys.length < i; i++) {
-      await this.dropConstraint(tableName, primaryKeys[i]);
+    for await (const primaryKey of primaryKeys) {
+       this.dropConstraint(primaryKey, tableName);
     }
 
     const uniques = await this._cachedStatements.getConstraintNames(tableName, 'UNIQUE');
-    for (let i = 0; uniques.length < i; i++) {
-      await this.dropConstraint(tableName,uniques[i]);
+    for await (const unique of uniques){
+      this.dropConstraint(unique, tableName);
     }
 
     const indices = await this._cachedStatements.getIndicesNames(tableName);
-    for (let i = 0; indices.length < i; i++) {
-      await this.dropIndex(indices[i]);
+    for await (const indice of indices) {
+      this.dropIndex(indice);
     }
 
     await this.dropTable(tableName);
