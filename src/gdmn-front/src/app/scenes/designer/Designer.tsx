@@ -34,11 +34,12 @@ interface IArea {
   style: IStyleFieldsAndAreas;
 }
 
-type TStyleBorder = 'solid' | 'double' | 'groove' | 'ridge';
+const StyleBorder = ['none', 'solid', 'double', 'groove', 'ridge', 'dashed', 'dotted', 'inset', 'outset'];
+const FamilyFont = ["Times New Roman, serif", "Arial, sans-serif", "Courier New, monospace", "Bickley Script, cursive, serif", "Euclid Fraktur, fantasy, serif", "Lucida Calligraphy"];
 
 interface IBorder {
   width: number;
-  style: TStyleBorder;
+  style: string;
   color: string;
   radius: number;
 }
@@ -732,7 +733,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 family: 'Lucida Calligraphy',
                 color: '#ff0088'
               },
-              background: '#000000',
+              background: '#ff5885',
               border: {
                 width: 1,
                 style: 'double',
@@ -924,7 +925,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx, shiftKey: e.shiftKey });
     changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
-    console.log(areas);
   };
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
@@ -1206,11 +1206,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Family
                         </Label>
-                        <TextField
+                        <ComboBox
                           key='font-family'
-                          value={style.font.family.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, family: e.currentTarget.value}} });
+                          defaultSelectedKey={style.font.family}
+                          options={FamilyFont.map(family => ({key: family, text: family}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, family: value!.text}} })
                           }}
                         />
                       </div>
@@ -1220,7 +1221,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         </Label>
                         <TextField
                           key='font-style'
-                          value={style.font.style.toString()}
+                          value={style.font.style}
                           onChange={(e) => {
                             designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, style: e.currentTarget.value}} });
                           }}
@@ -1259,13 +1260,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Style
                         </Label>
-                        <TextField
+                        <ComboBox
                           key='border-style'
-                          value={style.border.style.toString()}
-                          onChange={(e) => {
-                            /*e.currentTarget.value === TStyleBorder[0] || e.currentTarget.value === TStyleBorder[1] ?
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, style: e.currentTarget.value}} })
-                            : undefined*/
+                          defaultSelectedKey={style.border.style}
+                          options={StyleBorder.map(style => ({key: style, text: style}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, style: value!.text}} })
                           }}
                         />
                       </div>
@@ -1281,11 +1281,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           }}
                         />
                       </div>
-                    </div>
-                    <div>
-                      <Label>
-                        Align
-                      </Label>
                     </div>
                   </div>
                 </>
@@ -1575,6 +1570,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       display: 'flex',
                       flexDirection: area.direction,
                       justifyContent: 'flex-start',
+                      background: `${area.style.background}`,
+                      margin: `${area.style.margin}px`,
+                      padding: `${area.style.padding}px`,
+                      border: area.style.border.style === 'none' ? `1px solid ${area.style.background}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
+                      borderRadius: `${area.style.border.radius}px`,
+                      fontFamily: `${area.style.font.family}`
                     }}
                     onMouseDown={getOnMouseDownForArea(idx)}
                   >
@@ -1584,12 +1585,14 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           styles={area.direction === 'row'
                             ? {
                               root: {
-                                flexGrow: 1
+                                flexGrow: 1,
+                                fontFamily: `${area.style.font.family}`
                               }
                             }
                             : {
                               root: {
-                                flexGrow: 0
+                                flexGrow: 0,
+                                fontFamily: `${area.style.font.family}`
                               }
                             }
                           }
