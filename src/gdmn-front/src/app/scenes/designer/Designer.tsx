@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights, DefaultButton } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
 import { ChromePicker  } from 'react-color';
 
@@ -16,11 +16,6 @@ interface ISize {
 interface IGridSize {
   columns: ISize[];
   rows: ISize[];
-};
-
-interface ICoord {
-  x: number;
-  y: number;
 };
 
 interface IRectangle {
@@ -40,11 +35,14 @@ interface IArea {
   style: IStyleFieldsAndAreas;
 }
 
-type TStyleBorder = 'solid' | 'double' | 'groove' | 'ridge';
+const StyleBorder = ['none', 'solid', 'double', 'groove', 'ridge', 'dashed', 'dotted', 'inset', 'outset'];
+const FamilyFont = ["Times New Roman, serif", "Arial, sans-serif", "Courier New, monospace", "Bickley Script, cursive, serif", "Euclid Fraktur, fantasy, serif", "Lucida Console, Monaco, monospace"];
+const StyleFont = ["normal", "italic"];
+const WeightFont = ["normal", "bold"];
 
 interface IBorder {
   width: number;
-  style: TStyleBorder;
+  style: string;
   color: string;
   radius: number;
 }
@@ -54,6 +52,7 @@ interface IFont {
   style: string;
   family: string;
   color: string;
+  weight: string;
 }
 
 interface IStyleFieldsAndAreas {
@@ -65,29 +64,18 @@ interface IStyleFieldsAndAreas {
   align: string;
 }
 
-const inRectangle = (cell: ICoord, rect: IRectangle) => cell.x >= rect.left && cell.x <= rect.right && cell.y >= rect.top && cell.y <= rect.bottom;
-
-const intersect = (r1: IRectangle, r2: IRectangle) => inRectangle({ x: r1.left, y: r1.top }, r2)
-  || inRectangle({ x: r1.left, y: r1.bottom }, r2)
-  || inRectangle({ x: r1.right, y: r1.top }, r2)
-  || inRectangle({ x: r1.right, y: r1.bottom }, r2);
-
 export interface IDesignerState {
   grid: IGridSize;
-  activeCell: ICoord;
   entityName: string;
   selection?: IRectangle;
   areas: IArea[];
   activeArea?: number;
-  setGridSize?: boolean;
-  showAreaExplorer?: boolean;
   changeArray: IDesignerState[];
   previewMode?: boolean;
-  format?: boolean;
   activeTab: string;
 };
 
-const ButtonExample = (): JSX.Element => {
+const ButtonExample = (props: {color: string, onChangeColor: (color: string) => void}): JSX.Element => {
   const [displayColorPicker, onChange] = useState(false);
 
   const handleClick = () => {
@@ -100,41 +88,26 @@ const ButtonExample = (): JSX.Element => {
 
     return (
       <div>
-        <button onClick={() => handleClick() }>Select</button>
+        <DefaultButton onClick={() => handleClick() }>Select</DefaultButton>
         { displayColorPicker ?
-          <div
-            style={{
-              position: "absolute"
-            }}
-          >
+          <>
             <div
-              style={{
-                position: 'fixed',
-                top: '0px',
-                right: '0px',
-                bottom: '0px',
-                left: '0px',
-              }}
               onClick={() => handleClose() }
             />
-          <ChromePicker />
-        </div> : null }
+              <ChromePicker color={ props.color } onChangeComplete={(c) => props.onChangeColor(c.hex) } />
+          </> : null }
       </div>
     )
   }
 
-type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
-  | { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
+  type Action = { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
   | { type: 'SET_ROW_SIZE', row: number, size: ISize }
   | { type: 'SET_STYLE_AREA', style: IStyleFieldsAndAreas }
   | { type: 'AREA_FIELD', fieldName: string, include: boolean }
   | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection }
   | { type: 'PREVIEW_MODE' }
-  | { type: 'TOGGLE_FORMAT' }
   | { type: 'SET_ACTIVE_TAB', tab: string }
-  | { type: 'TOGGLE_SET_GRID_SIZE' }
-  | { type: 'TOGGLE_SHOW_AREA_EXPLORER' }
   | { type: 'ADD_COLUMN' }
   | { type: 'ADD_ROW' }
   | { type: 'DELETE_COLUMN' }
@@ -149,43 +122,6 @@ type Action = { type: 'SET_ACTIVE_CELL', activeCell: ICoord, shiftKey: boolean }
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
   switch (action.type) {
-    case 'SET_ACTIVE_CELL': {
-      const { activeCell, shiftKey } = action;
-      const { selection, activeCell: prevActiveCell } = state;
-
-      if (!shiftKey) {
-        return {
-          ...state,
-          activeCell,
-          selection: undefined,
-        };
-      }
-
-      if (!selection) {
-        return {
-          ...state,
-          activeCell,
-          selection: {
-            left: Math.min(prevActiveCell.x, activeCell.x),
-            top: Math.min(prevActiveCell.y, activeCell.y),
-            right: Math.max(prevActiveCell.x, activeCell.x),
-            bottom: Math.max(prevActiveCell.y, activeCell.y),
-          },
-        };
-      } else {
-        return {
-          ...state,
-          activeCell,
-          selection: {
-            left: Math.min(selection.left, activeCell.x),
-            top: Math.min(selection.top, activeCell.y),
-            right: Math.max(selection.right, activeCell.x),
-            bottom: Math.max(selection.bottom, activeCell.y),
-          },
-        };
-      }
-    }
-
     case 'SET_ACTIVE_AREA': {
       const { activeArea, shiftKey } = action;
       const { areas, activeArea: prevActiveArea, selection } = state;
@@ -290,29 +226,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       } else {
         return {
           ...state,
-          previewMode: true,
-          format: false,
-          setGridSize: false,
-          showAreaExplorer: false,
+          previewMode: true
         };
       }
-    }
-
-    case 'TOGGLE_FORMAT': {
-      const { format } = state;
-      if(format) {
-        return {
-          ...state,
-          format: false
-        }
-      }
-      return {
-        ...state,
-        format: true,
-        previewMode: false,
-        setGridSize: false,
-        showAreaExplorer: false,
-      };
     }
 
     case 'SET_ACTIVE_TAB': {
@@ -382,9 +298,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                     size: 14,
                     style: 'normal',
                     family: 'Lucida Calligraphy',
-                    color: '#ff0088'
+                    color: '#ff0088',
+                    weight: 'normal'
                   },
-                  background: '#50ff00',
+                  background: '#DBE5FF',
                   border: {
                     width: 1,
                     style: 'double',
@@ -396,9 +313,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               }],
             activeArea: state.areas.length,
             selection: undefined,
-            showAreaExplorer: true,
-            setGridSize: false,
-            format: false,
             changeArray: [...changeArray!, {...state}]
         }
       }
@@ -473,24 +387,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
     }
 
-    case 'TOGGLE_SET_GRID_SIZE': {
-      return {
-        ...state,
-        setGridSize: !state.setGridSize,
-        showAreaExplorer: !state.setGridSize ? undefined : state.showAreaExplorer,
-      }
-    }
-
-    case 'TOGGLE_SHOW_AREA_EXPLORER': {
-      return {
-        ...state,
-        setGridSize: !state.showAreaExplorer ? undefined : state.setGridSize,
-        showAreaExplorer: !state.showAreaExplorer,
-      }
-    }
-
     case 'ADD_COLUMN': {
-      const { grid, activeCell: { x }, areas, changeArray } = state;
+      const { grid, areas, activeArea, changeArray } = state;
       const newAreas = grid.rows.map((_, row) => {
         return {
           rect: {
@@ -509,9 +407,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               size: 14,
               style: 'normal',
               family: 'Lucida Calligraphy',
-              color: '#ff0088'
+              color: '#ff0088',
+              weight: 'normal'
             },
-            background: '#50ff00',
+            background: '#DBE5FF',
             border: {
               width: 1,
               style: 'double',
@@ -526,7 +425,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         grid: {
           ...grid,
-          columns: [...grid.columns.slice(0, x + 1), { unit: 'AUTO', value: 1 }, ...grid.columns.slice(x + 1)]
+          columns: [...grid.columns.slice(0, areas[activeArea!].rect.right + 1), { unit: 'AUTO', value: 1 }, ...grid.columns.slice(areas[activeArea!].rect.right + 1)]
         },
         areas: [...areas, ...newAreas],
         changeArray: [...changeArray!, {...state}]
@@ -534,7 +433,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'ADD_ROW': {
-      const { grid, activeCell: { y }, areas, changeArray } = state;
+      const { grid, areas, activeArea, changeArray } = state;
       const newAreas = grid.columns.map((_, column) => {
         return {
           rect: {
@@ -553,9 +452,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               size: 14,
               style: 'normal',
               family: 'Lucida Calligraphy',
-              color: '#ff0088'
+              color: '#ff0088',
+              weight: 'normal'
             },
-            background: '#50ff00',
+            background: '#DBE5FF',
             border: {
               width: 1,
               style: 'double',
@@ -570,7 +470,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         grid: {
           ...grid,
-          rows: [...grid.rows.slice(0, y + 1), { unit: 'AUTO', value: 1 }, ...grid.rows.slice(y + 1)]
+          rows: [...grid.rows.slice(0, areas[activeArea!].rect.bottom + 1), { unit: 'AUTO', value: 1 }, ...grid.rows.slice(areas[activeArea!].rect.bottom + 1)]
         },
       changeArray: [...changeArray!, {...state}],
       areas: [...areas, ...newAreas]
@@ -580,7 +480,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 
     case 'DELETE_COLUMN': {
-      const { grid, selection, areas, activeArea, activeCell: { x, y }, changeArray } = state;
+      const { grid, selection, areas, activeArea, changeArray } = state;
 
       if (grid.columns.length === 1 || selection) {
         return state;
@@ -596,11 +496,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         grid: {
           ...grid,
-          columns: [...grid.columns.slice(0, active ? active.rect.left : x), ...grid.columns.slice(active ? active.rect.left + 1 : x + 1)]
-        },
-        activeCell: {
-          x: x > 0 && x >= (grid.columns.length - 1) ? x - 1 : x,
-          y
+          columns: [...grid.columns.slice(0, active!.rect.left), ...grid.columns.slice( active!.rect.left + 1 )]
         },
         areas: newAreas,
         activeArea: activeArea === undefined || !newAreas.length
@@ -613,7 +509,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'DELETE_ROW': {
-      const { grid, selection, areas, activeArea, activeCell: { x, y }, changeArray } = state;
+      const { grid, selection, areas, activeArea, changeArray } = state;
 
       if (grid.rows.length === 1 || selection) {
         return state;
@@ -629,11 +525,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         grid: {
           ...grid,
-          rows: [...grid.rows.slice(0, active ? active.rect.top : y), ...grid.rows.slice(active ? active.rect.top + 1 : y + 1)]
-        },
-        activeCell: {
-          x,
-          y: y > 0 && y >= (grid.rows.length - 1) ? y - 1 : y
+          rows: [...grid.rows.slice(0, active!.rect.top), ...grid.rows.slice(active!.rect.top + 1)]
         },
         areas: newAreas,
         activeArea: activeArea === undefined || !newAreas.length
@@ -654,10 +546,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           grid: localState.grid,
           entityName: localState.entityName,
           areas: localState.areas,
-          setGridSize: localState.setGridSize,
-          showAreaExplorer: localState.showAreaExplorer,
           previewMode: localState.previewMode,
-          format: localState.format,
           changeArray: localState.changeArray
         }
       } else {
@@ -674,10 +563,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           grid: localState.grid,
           entityName: localState.entityName,
           areas: localState.areas,
-          setGridSize: localState.setGridSize,
-          showAreaExplorer: localState.showAreaExplorer,
           previewMode: localState.previewMode,
-          format: localState.format,
           changeArray: []
         }
       } else {
@@ -685,10 +571,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           grid: {
             columns: [{ unit: 'PX', value: 350 }, { unit: 'AUTO', value: 1 }],
             rows: [{ unit: 'AUTO', value: 1 }],
-          },
-          activeCell: {
-            x: 0,
-            y: 0
           },
           areas: [{
             rect: {
@@ -710,13 +592,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -738,13 +621,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -764,10 +648,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           columns: [{ unit: 'AUTO', value: 1 }],
           rows: [{ unit: 'AUTO', value: 1 }],
         },
-        activeCell: {
-          x: 0,
-          y: 0
-        },
         areas: [{
           rect: {
             left: 0,
@@ -785,20 +665,20 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               size: 14,
               style: 'normal',
               family: 'Lucida Calligraphy',
-              color: '#ff0088'
+              color: '#ff0088',
+              weight: 'normal'
             },
-            background: '#50ff00',
+            background: '#ffffff',
             border: {
               width: 1,
               style: 'double',
-              color: '#0088ff',
+              color: '#ffffff',
               radius: 3
             },
             align: 'center'
           }
         }],
         activeArea: 0,
-        showAreaExplorer: true,
         entityName: entityName,
         changeArray: [...changeArray!, {...state}],
         activeTab: 'Настройка'
@@ -828,7 +708,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   const changes = useRef(getSavedLastEdit());
 
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
-  const [{ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format, changeArray, activeTab }, designerDispatch] =
+  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab }, designerDispatch] =
     useReducer(reducer, changes.current !== undefined
       ? changes.current
       : localState !== undefined
@@ -837,10 +717,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           grid: {
             columns: [{ unit: 'PX', value: 350 }, { unit: 'AUTO', value: 1 }],
             rows: [{ unit: 'AUTO', value: 1 }],
-          },
-          activeCell: {
-            x: 0,
-            y: 0
           },
           areas: [{
             rect: {
@@ -862,13 +738,14 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -890,20 +767,20 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
             }
           }],
           entityName: entityName,
-          showAreaExplorer: true,
           activeArea: 0,
           changeArray: [],
           activeTab: 'Настройка'
@@ -935,7 +812,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'ADD_COLUMN' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
         }
       },
       {
@@ -947,7 +824,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_COLUMN' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
         }
       },
       {
@@ -959,7 +836,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'ADD_ROW' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
         }
       },
       {
@@ -971,7 +848,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_ROW' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
         }
 
       },
@@ -984,7 +861,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'CREATE_GROUP' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
         }
       },
       {
@@ -999,32 +876,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_GROUP' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
-        }
-      },
-      {
-        key: 'toggleSetGridSize',
-        disabled: previewMode,
-        checked: !!setGridSize,
-        text: 'Установить размер',
-        iconProps: {
-          iconName: 'BackToWindow'
-        },
-        onClick: () => {
-          designerDispatch({ type: 'TOGGLE_SET_GRID_SIZE' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
-        }
-      },
-      {
-        key: 'toggleShowAreaExplorer',
-        disabled: previewMode || activeArea === undefined,
-        text: 'Настройка',
-        iconProps: {
-          iconName: 'Settings'
-        },
-        onClick: () => {
-          designerDispatch({ type: 'TOGGLE_SHOW_AREA_EXPLORER' });
-          changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
         }
       },
       {
@@ -1038,16 +890,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         onClick: () => {
           designerDispatch({ type: 'PREVIEW_MODE' });
         }
-      },
-      {
-        key: 'toggleFormat',
-        text: 'Форматирование',
-        iconProps: {
-          iconName: 'FabricTextHighlight'
-        },
-        onClick: () => {
-          designerDispatch({ type: 'TOGGLE_FORMAT' });
-        }
       }
     ],
     [
@@ -1060,7 +902,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         onClick: () => {
           changes.current = undefined;
-          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, changeArray: [] }));
+          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, selection, areas, activeArea, previewMode, changeArray: [] }));
           designerDispatch({ type: 'SAVE_CHANGES' });
           props.outDesigner();
         }
@@ -1115,18 +957,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     ]
 ];
 
-  const getOnMouseDown = (x: number, y: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    e.stopPropagation();
-    e.preventDefault();
-    designerDispatch({ type: 'SET_ACTIVE_CELL', activeCell: { x, y }, shiftKey: e.shiftKey });
-    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
-  };
-
   const getOnMouseDownForArea = (idx: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.stopPropagation();
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx, shiftKey: e.shiftKey });
-    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
   };
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
@@ -1135,7 +970,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         display: 'grid',
         width: '100%',
         height: '100%',
-        gridTemplateColumns: !setGridSize ? 'auto 360px' : 'auto 240px',
+        gridTemplateColumns:'auto 360px',
         gridTemplateRows: 'auto',
         gridAutoFlow: 'column',
      }}>
@@ -1173,129 +1008,21 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   };
 
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
-    //if (!showAreaExplorer || activeArea === undefined) {
+    if ( activeArea === undefined) {
       return props.children;
-    /*}
+    }
 
     const area = areas[activeArea];
+    const tabs = ["Настройка", "Поля"];
+    const style = area.style;
 
-    return !showAreaExplorer || activeArea === undefined ? props.children :
+    return activeArea === undefined ? props.children :
       <WithToolPanel
         {...props}
         toolPanel={
-          <>
-            <ChoiceGroup
-              styles={{
-                root: {
-                  paddingBottom: '8px'
-                },
-                flexContainer: {
-                  display: 'flex'
-                }
-              }}
-              options={[
-                {
-                  key: 'column',
-                  text: 'column',
-                  styles: {
-                    root: {
-                      paddingRight: '8px'
-                    }
-                  }
-                },
-                {
-                  key: 'row',
-                  text: 'row'
-                }
-              ]}
-              selectedKey={area.direction}
-              label='Direction'
-              onChange={(_, option) =>
-                option
-                && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
-                && (changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState)
-              }
-            />
-          </>
-        }
-      />*/
-  }, styles, { allowMultiple: true });
-
-  const OneSize = ({ label, size, onChange }: { label: string, size: ISize, onChange: (newSize: ISize) => void }) => {
-
-    const getOnChangeColumnSpin = (delta: number = 0) => (value: string) => {
-      if (isNaN(Number(value))) {
-        return '1';
-      }
-
-      let newValue = Number(value) + delta;
-
-      if (newValue < 1) {
-        newValue = 1;
-      }
-
-      if (newValue > 8000) {
-        newValue = 8000;
-      }
-
-      onChange({ unit: size.unit, value: newValue });
-
-      return newValue.toString();
-    };
-
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'flex-end',
-          marginBottom: '4px'
-        }}
-      >
-        <ComboBox
-          style={{
-            width: '86px',
-            marginRight: '8px'
-          }}
-          options={[
-            { key: 'AUTO', text: 'Auto' },
-            { key: 'FR', text: 'Fr' },
-            { key: 'PX', text: 'Px' }
-          ]}
-          selectedKey={size.unit}
-          label={label}
-          onChange={(_, option) => option && onChange({ unit: option.key as TUnit, value: size.value })}
-        />
-        {
-          !size.value || size.unit === 'AUTO'
-            ? null
-            : <SpinButton
-              styles={{
-                root: {
-                  width: '104px'
-                }
-              }}
-              value={size.value.toString()}
-              onIncrement={getOnChangeColumnSpin(1)}
-              onDecrement={getOnChangeColumnSpin(-1)}
-              onValidate={getOnChangeColumnSpin()}
-            />
-        }
-      </div>
-    );
-  };
-
-  const WithSetting = (props: { children: JSX.Element }): JSX.Element => {
-      const tabs = ['Настройка', 'Поля'];
-      const style = areas[activeArea!].style;
-      
-      return (
-        <WithToolPanel
-        {...props}
-        toolPanel={
-          <>
-          <div className="SignInForm">
-            <div className="SignInFormTabs"
+        <>
+          <div className="SettingForm">
+            <div className="SettingFormTabs"
               style={{
                 width: '100%',
                 height: '32px',
@@ -1476,11 +1203,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       <Label>
                         Background
                       </Label>
-                      <TextField
+                      <ButtonExample
                         key='background'
-                        value={style.background.toString()}
-                        onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: e.currentTarget.value} });
+                        color={style.background}
+                        onChangeColor={(e) => {
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: e} });
                         }}
                       />
                     </div>
@@ -1504,11 +1231,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <TextField
+                        <ButtonExample
                           key='font-color'
-                          value={style.font.color.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color: e.currentTarget.value}} });
+                          color={style.font.color}
+                          onChangeColor={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color: e}} });
                           }}
                         />
                       </div>
@@ -1516,11 +1243,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Family
                         </Label>
-                        <TextField
+                        <ComboBox
                           key='font-family'
-                          value={style.font.family.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, family: e.currentTarget.value}} });
+                          defaultSelectedKey={style.font.family}
+                          options={FamilyFont.map(family => ({key: family, text: family}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, family: value!.text}} })
                           }}
                         />
                       </div>
@@ -1528,11 +1256,25 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Style
                         </Label>
-                        <TextField
+                        <ComboBox
                           key='font-style'
-                          value={style.font.style.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, style: e.currentTarget.value}} });
+                          defaultSelectedKey={style.font.style}
+                          options={StyleFont.map(style => ({key: style, text: style}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, style: value!.text}} })
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label>
+                          Weight
+                        </Label>
+                        <ComboBox
+                          key='font-weight'
+                          defaultSelectedKey={style.font.weight}
+                          options={WeightFont.map(weight => ({key: weight, text: weight}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, weight: value!.text}} })
                           }}
                         />
                       </div>
@@ -1545,11 +1287,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <TextField
+                        <ButtonExample
                           key='border-color'
-                          value={style.border.color.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e.currentTarget.value}} });
+                          color={style.border.color}
+                          onChangeColor={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e}} });
                           }}
                         />
                       </div>
@@ -1569,13 +1311,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Style
                         </Label>
-                        <TextField
+                        <ComboBox
                           key='border-style'
-                          value={style.border.style.toString()}
-                          onChange={(e) => {
-                            /*e.currentTarget.value === TStyleBorder[0] || e.currentTarget.value === TStyleBorder[1] ?
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, style: e.currentTarget.value}} })
-                            : undefined*/
+                          defaultSelectedKey={style.border.style}
+                          options={StyleBorder.map(style => ({key: style, text: style}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, style: value!.text}} })
                           }}
                         />
                       </div>
@@ -1591,11 +1332,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           }}
                         />
                       </div>
-                    </div>
-                    <div>
-                      <Label>
-                        Align
-                      </Label>
                     </div>
                   </div>
                 </>
@@ -1617,7 +1353,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           checked={!!areas[activeArea!].fields.find(areaF => areaF === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
                           onChange={(_, isChecked) => {
                             designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
-                            changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+                            changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
                           }}
                         />
                       )
@@ -1627,27 +1363,201 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
             </div>
           </div>
           </>
-          /*
-          <>
-            <div onClick={() => designerDispatch({ type: 'TOGGLE_FORMAT' })}>Format</div>
-            <div onClick={() => designerDispatch({ type: 'TOGGLE_FIELD' })}>Setting</div>
-            <div>Show format text and field in grid</div>
+          /*<>
+            <Label>
+              Selected area #{activeArea}
+            </Label>
+
+            <TextField
+              label='Left'
+              value={area.rect.left.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.left) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, left: parseInt(newValue) } });
+                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                  }
+                }
+              }
+            />
+
+            <TextField
+              label='Top'
+              value={area.rect.top.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.top) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, top: parseInt(newValue) } });
+                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                  }
+                }
+              }
+            />
+
+            <TextField
+              label='Right'
+              value={area.rect.right.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.right) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, right: parseInt(newValue) } });
+                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                  }
+                }
+              }
+            />
+
+            <TextField
+              label='Bottom'
+              value={area.rect.bottom.toString()}
+              mask='9'
+              onChange={
+                (_, newValue) => {
+                  if (newValue && Number(newValue) !== area.rect.bottom) {
+                    designerDispatch({ type: 'CONFIGURE_AREA', rect: { ...area.rect, bottom: parseInt(newValue) } });
+                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                  }
+                }
+              }
+            />
+
+            <ChoiceGroup
+              styles={{
+                root: {
+                  paddingBottom: '8px'
+                },
+                flexContainer: {
+                  display: 'flex'
+                }
+              }}
+              options={[
+                {
+                  key: 'column',
+                  text: 'column',
+                  styles: {
+                    root: {
+                      paddingRight: '8px'
+                    }
+                  }
+                },
+                {
+                  key: 'row',
+                  text: 'row'
+                }
+              ]}
+              selectedKey={area.direction}
+              label='Direction'
+              onChange={(_, option) =>
+                option
+                && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
+                && (changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState)
+              }
+            />
+
+            <Label>
+              Show fields:
+            </Label>
+            {
+              fields!.map(field =>
+                <Checkbox
+                  styles={{
+                    root: {
+                      paddingBottom: '4px'
+                    }
+                  }}
+                  key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                  label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                  checked={!!areas[activeArea].fields.find(areaF => areaF === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
+                  onChange={(_, isChecked) => {
+                    designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
+                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                  }}
+                />
+              )
+            }
           </>*/
         }
-        />
-      );
+      />
+  }, styles, { allowMultiple: true });
 
-    return !setGridSize ? props.children :
-      <WithToolPanel
+  const OneSize = ({ label, size, onChange }: { label: string, size: ISize, onChange: (newSize: ISize) => void }) => {
+
+    const getOnChangeColumnSpin = (delta: number = 0) => (value: string) => {
+      if (isNaN(Number(value))) {
+        return '1';
+      }
+
+      let newValue = Number(value) + delta;
+
+      if (newValue < 1) {
+        newValue = 1;
+      }
+
+      if (newValue > 8000) {
+        newValue = 8000;
+      }
+
+      onChange({ unit: size.unit, value: newValue });
+
+      return newValue.toString();
+    };
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-end',
+          marginBottom: '4px'
+        }}
+      >
+        <ComboBox
+          style={{
+            width: '86px',
+            marginRight: '8px'
+          }}
+          options={[
+            { key: 'AUTO', text: 'Auto' },
+            { key: 'FR', text: 'Fr' },
+            { key: 'PX', text: 'Px' }
+          ]}
+          selectedKey={size.unit}
+          label={label}
+          onChange={(_, option) => option && onChange({ unit: option.key as TUnit, value: size.value })}
+        />
+        {
+          !size.value || size.unit === 'AUTO'
+            ? null
+            : <SpinButton
+              styles={{
+                root: {
+                  width: '104px'
+                }
+              }}
+              value={size.value.toString()}
+              onIncrement={getOnChangeColumnSpin(1)}
+              onDecrement={getOnChangeColumnSpin(-1)}
+              onValidate={getOnChangeColumnSpin()}
+            />
+        }
+      </div>
+    );
+  };
+
+  const WithGridSize = (props: { children: JSX.Element }): JSX.Element => {
+    return props.children;
+      /*(<WithToolPanel
         {...props}
         toolPanel={
           <>
-            {!setGridSize ? props.children : undefined}
             {
               grid.columns.map((c, idx) =>
                 <OneSize key={`c${idx}`} label={`Column ${idx}`} size={c} onChange={(size: ISize) => {
                   designerDispatch({ type: 'SET_COLUMN_SIZE', column: idx, size });
-                  changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+                  changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
                 }} />
               )
             }
@@ -1655,13 +1565,13 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
               grid.rows.map((r, idx) =>
                 <OneSize key={`r${idx}`} label={`Row ${idx}`} size={r} onChange={(size: ISize) => {
                   designerDispatch({ type: 'SET_ROW_SIZE', row: idx, size });
-                  changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+                  changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
                 }} />
               )
             }
           </>
         }
-      />
+      />);*/
   };
 
   const areasGroups = areas.filter(areaIsGroup => areaIsGroup.group);
@@ -1687,34 +1597,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       <CommandBar items={commandBarItems[0]} />
       <CommandBar items={commandBarItems[1]} />
       <WithAreaExplorer>
-        <WithSetting>
+        <WithGridSize>
           <div
             style={getGridStyle()}
             tabIndex={0}
           >
-            <ButtonExample />
-            {
-              previewMode
-                ?
-                null
-                :
-                grid.columns.map((c, x) => grid.rows.map((r, y) => {
-                  if ((x === activeCell.x && y === activeCell.y) || inSelection(x, y)) {
-                    return null;
-                  } else {
-                    return (
-                      <div
-                        key={x * 1000 + y}
-                        styleName="commonStyle cell"
-                        style={getCellStyle(x, y)}
-                        onMouseDown={getOnMouseDown(x, y)}
-                      >
-                        {x}, {y}
-                      </div>
-                    )
-                  }
-                }))
-            }
             {
               areas.length
                 ? areas
@@ -1722,15 +1609,34 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                     showAreas.find(findArea => area === findArea) ? 
                   <div
                     key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
+                    style={{
+                      gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
+                      display: 'flex',
+                      flexDirection: area.direction,
+                      justifyContent: 'flex-start',
+                      background: `${area.style.background}`,
+                      margin: `${area.style.margin}px`,
+                      padding: `${area.style.padding}px`,
+                      border: area.style.border.style === 'none' ? `1px solid ${area.style.background}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
+                      borderRadius: `${area.style.border.radius}px`,
+                      color: `${area.style.font.color}`,
+                      fontSize: `${area.style.font.size}px`,
+                      fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                      fontStyle: `${area.style.font.style}`,
+                      fontFamily: `${area.style.font.family}`
+                    }}
+                    onMouseDown={getOnMouseDownForArea(idx)}
+                    >
+                      <div
                     styleName={
                       previewMode
                         ? "commonStyle"
                         : activeArea === idx
                           ? "commonStyle activeArea"
-                          : "commonStyle area"
+                          : "commonStyle"
                     }
-                    onMouseDown={getOnMouseDownForArea(idx)}
                   >
+                    <div>Я хочу проверить шрифты</div>
                     {
                       area.fields.map(f =>
                         <TextField
@@ -1739,22 +1645,22 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                               root: {
                                 flexGrow: 1
                               },
-                              field: {
-                                border: `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
-                                fontSize: `${area.style.font.size}`,
-                                background: `${area.style.background}`,
-                                borderRadius: `${area.style.border.radius}px`
+                              description: {
+                                color: `${area.style.font.color}`,
+                                fontSize: `${area.style.font.size}px`,
+                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                                fontFamily: `${area.style.font.family}`
                               }
                             }
                             : {
                               root: {
                                 flexGrow: 0
                               },
-                              field: {
-                                border: `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
-                                fontSize: `${area.style.font.size}`,
-                                background: `${area.style.background}`,
-                                borderRadius: `${area.style.border.radius}px`
+                              description: {
+                                color: `${area.style.font.color}`,
+                                fontSize: `${area.style.font.size}px`,
+                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                                fontFamily: `${area.style.font.family}`
                               }
                             }
                           }
@@ -1763,6 +1669,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         />
                       )
                     }
+                  </div>
                   </div>
                 : null
               ))
@@ -1780,31 +1687,14 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                   }}
                   onClick={() => {
                     designerDispatch({ type: 'CLEAR_SELECTION' });
-                    changes.current = { grid, activeCell, selection, setGridSize, areas, activeArea, showAreaExplorer, previewMode, format } as IDesignerState;
+                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
                   }}
                 >
                   selection
                 </div>
             }
-            {
-              previewMode
-                ||
-                (selection && inRectangle(activeCell, selection))
-                ||
-                (areas.length && areas.some(area => inRectangle(activeCell, area.rect)))
-                ?
-                null
-                :
-                <div
-                  styleName="commonStyle activeCell"
-                  style={getCellStyle(activeCell.x, activeCell.y)}
-                  onMouseDown={getOnMouseDown(activeCell.x, activeCell.y)}
-                >
-                  {activeCell.x}, {activeCell.y}
-                </div>
-            }
           </div>
-        </WithSetting>
+        </WithGridSize>
       </WithAreaExplorer>
     </>
   );
