@@ -1,31 +1,29 @@
-import React, { PureComponent } from 'react';
 import './ParamsPanel.css';
+import React, { useState } from "react";
 import {
   Checkbox,
   DetailsList,
   DetailsListLayoutMode,
-  Selection,
   SelectionMode,
-  TextField
+  TextField,
+  Selection
 } from 'office-ui-fabric-react';
-import { IParamsField } from './ParamsDialog';
 import { Columns } from '.';
 
-interface IParamsPanelProps {
+export interface IParamsPanelProps {
   columns: Columns;
   onToggle: (columnName: string) => void;
 }
 
-export interface IPanelState {
-  selectionFieldName: string;
-  fieldList: IParamsField[]; 
+export interface IParamsField {
+  fieldname: string;
+  columnname: string;
 }
 
-class ParamsPanel extends PureComponent<IParamsPanelProps, IPanelState> {
-  private _selection: Selection;
-  private _allItems: IParamsField[];
+export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
+  const {columns, onToggle} = props;
 
-  public static columns = [
+  const columnsParams = [
     {
       key: 'columnname',
       name: 'COLUMN NAME',
@@ -44,46 +42,66 @@ class ParamsPanel extends PureComponent<IParamsPanelProps, IPanelState> {
       maxWidth: 150,
       isResizable: true,
       isMultiline: true,
-      data: 'string'
+      data: 'string' 
     }    
-  ];
+  ];  
 
-  constructor(props: IParamsPanelProps) {
-    super(props);
-    this._allItems = this.props.columns.map(c => ({ columnname: c.caption ? c.caption.join('; ') : (c.fields.map(f => f.caption).join('; ') && c.name),  
-      fieldname: c.name}));
-    this._selection = new Selection({
-      onSelectionChanged: () => {
-        if (this._selection.getSelectedCount() > 0) {
-          this.setState({
-            selectionFieldName: this._getSelectionDetails()
-          });
-        }
+  const [selectedItems, setSelectedItems] = useState([] as string[]);   
+  const [filterText, setFilterText] = useState('');
+
+  const selection: Selection = new Selection({
+    onSelectionChanged: () => {  
+      /** Если выделены все записи, то последнюю оставляем невыбранной */
+      if (selection.count === columns.length) {
+        selection.setIndexSelected(selection.count - 1, false, false);
       }
-    });
-    this.state = {
-      selectionFieldName: this._getSelectionDetails(),
-      fieldList: this._allItems
-    };
-  }
+      const newSelection = selection.getSelection() as IParamsField[]; 
+      /** Записываем новый массив выделенных записей */
+      setSelectedItems(newSelection.map(i => i.fieldname));
+    }
+  });  
 
-  public render() {
-    const { columns, onToggle } = this.props;
-    const { fieldList, selectionFieldName } = this.state;
-    const curColumn = columns.find(c => c.name === selectionFieldName);
-    return (
-      <div>
+  const isChecked = (): boolean => { 
+    if (selectedItems.length === 0) return false;
+    /**hidden - св-во hidden первой выделенной записи,
+    selectedColumns - массив объектов columns из выделенных записей
+    если признак hidden у всех выделенных записей одинаковый, то в checkbox указываем !hidden первой выделенной записи, иначе false 
+    */
+    const hidden = !!columns.filter(c => c.name === selectedItems[0])[0].hidden;
+    const selectedColumns: Columns = []; 
+    columns.forEach(c => { if (!!c.hidden === hidden && selectedItems.find(s => s === c.name)) selectedColumns.push(c) });
+    return (selectedItems.length === selectedColumns.length ? !hidden : false);       
+  }    
+  /** Cоздаем items - массив полей для отображения в DetailsList, учитывая фильтр */
+  const items: IParamsField[] = columns.map(c => (
+      { columnname: c.caption ? c.caption.join('; ') : (c.fields.map(f => f.caption).join('; ') && c.name),  
+        fieldname: c.name
+      }
+    )).filter(i => 
+      filterText === '' 
+      || i.fieldname.toUpperCase().indexOf(filterText.toUpperCase()) > -1 
+      || i.columnname.toUpperCase().indexOf(filterText.toUpperCase()) > -1
+    );    
+          
+  return (   
+     <div>
         <div className="ColumnsPanel">
-          <TextField label="Filter by name:" onChange={this._onFilter} styles={{ root: { maxWidth: '300px' } }} />
+          <TextField 
+            label="Filter by name:" 
+            onChange={(ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, text?: string): void => {
+              setFilterText(text!); 
+            }} 
+            styles={{ root: { maxWidth: '300px' }}} 
+          />
           <div className="ColumnsList">
             <DetailsList
-              selectionMode={SelectionMode.single}
+              selectionMode={SelectionMode.multiple}
               selectionPreservedOnEmptyClick={true}
               enterModalSelectionOnTouch={true}
               data-is-scrollable="true"
-              items={fieldList}
-              selection={this._selection}
-              columns={ParamsPanel.columns}
+              items={items}
+              selection={selection}
+              columns={columnsParams}
               setKey="set"
               layoutMode={DetailsListLayoutMode.fixedColumns}
               compact={true}
@@ -94,26 +112,17 @@ class ParamsPanel extends PureComponent<IParamsPanelProps, IPanelState> {
         <div className="Options">
           <span className="OptionsTitle">OPTIONS</span>
           <Checkbox
-            checked={curColumn ? !curColumn.hidden : false} 
+            checked={isChecked()}             
             label="Show column"
-            onChange={() => onToggle(selectionFieldName)}
+            onChange={ (_ev: React.FormEvent<HTMLElement> | undefined, isChecked?: boolean)  => 
+              selectedItems.forEach( i => {        
+                const selectedColumns = columns.find(c => c.name === i);
+                const hidden = selectedColumns && selectedColumns.hidden !== undefined ? selectedColumns.hidden : false; 
+                if (hidden === isChecked) onToggle(i);
+              })
+            }
           />
         </div>
-      </div>
-    );
-  }
-
-  private _getSelectionDetails(): string {
-    return this._selection.getSelectedCount() > 0 ? (this._selection.getSelection()[0] as IParamsField).fieldname : '';
-  }
-
-  private _onFilter = (ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, text?: string): void => {
-    this.setState({
-      fieldList: text
-        ? this._allItems.filter(i => i.fieldname.toLowerCase().indexOf(text.toLowerCase()) > -1)
-        : this._allItems
-    });
-  };
+      </div>    
+  )
 }
-
-export { ParamsPanel, IParamsPanelProps };
