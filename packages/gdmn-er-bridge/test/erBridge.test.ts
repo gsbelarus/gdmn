@@ -1074,7 +1074,7 @@ describe("ERBridge", () => {
       }));
       expect(await erBuilder.delete(erModel, erModel.entity("CHILD_ENTITY")).then(
         (response) => response, (error) => error
-      )).toEqual(new Error("Entity has dependencies"))
+      )).toEqual(new Error("Entity has dependencies CHECK_14,CHECK_14,CHECK_15,CHECK_15,CHECK_16,CHECK_17"))
 
     })
   })
@@ -1105,7 +1105,7 @@ describe("ERBridge", () => {
       }));
       expect(await erBuilder.delete(erModel, erModel.entity("CHILD_ENTITY")).then(
         (response) => response, (error) => error
-      )).toEqual(new Error("Entity has dependencies"));
+      )).toEqual(new Error("Entity has dependencies CHECK_14,CHECK_14,CHECK_15,CHECK_15"));
     })
   })
 
@@ -1120,9 +1120,61 @@ describe("ERBridge", () => {
       await erBuilder.ddlHelper.addDefaultProcedure("MAIN_ENTITY");
       expect(await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY")).then(
         (response) => response, (error) => error
-      )).toEqual(new Error("Entity has dependencies"));
+      )).toEqual(new Error("Entity has dependencies MAIN_ENTITY1"));
 
       await erBuilder.ddlHelper.dropProcedure("MAIN_ENTITY1");
+      await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"));
+      expect(() => {
+          try {
+            erModel.entity("MAIN_ENTITY")
+          } catch (error) {
+            throw error;
+          }
+        }
+      ).toThrowError(new Error("Unknown entity MAIN_ENTITY"));
+    })
+  })
+
+  it("Delete Entity with calculated field", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+      await eBuilder.createAttribute(MainEntity, new StringAttribute({
+        name: "TEST_STRING",
+        lName: {}
+      }));
+
+      await eBuilder.createAttribute(MainEntity, new StringAttribute({
+        name: "TEST_STRING1",
+        lName: {}
+      }));
+
+      await erBuilder.ddlHelper.addDefaultCalculatedFields(
+        "MAIN_ENTITY",
+        'TEST_STRING',
+        'TEST_STRING1');
+      expect(await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY")).then(
+        (response) => response, (error) => error
+      )).toEqual(new Error("Entity has dependencies RDB$1,RDB$1"));
+    })
+  })
+
+  it("Delete Entity with unique", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+      await eBuilder.createAttribute(MainEntity, new StringAttribute({
+        name: "TEST_STRING",
+        lName: {}
+      }));
+
+      await erBuilder.ddlHelper.addDefaultUnique("MAIN_ENTITY");
       await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"));
       expect(() => {
           try {

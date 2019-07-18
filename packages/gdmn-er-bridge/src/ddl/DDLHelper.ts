@@ -394,9 +394,9 @@ export class DDLHelper {
     const listDependencies = await this._cachedStatements.getDependencies(tableName);
     // проверяем есть ли в RDB$DEPENDENCIES зависимости, которых нет в ранее полученом списке
     const hasDependencies = await this._cachedStatements.checkDependencies(listDependencies, tableName);
-
+    console.log(hasDependencies)
     if (hasDependencies && hasDependencies.length){
-      throw new Error('Entity has dependencies')
+     throw new Error(`Entity has dependencies ${hasDependencies.map((dep) => dep.replace(/\s+/g,'')).join(',')}`)
     }
     // удаляем зависимости
     for await (const dependence of listDependencies) {
@@ -437,5 +437,25 @@ export class DDLHelper {
   private async _loggedExecute(sql: string): Promise<void> {
     this._logs.push(sql);
     await this._connection.execute(this._transaction, sql);
+  }
+
+  public async addDefaultCalculatedFields(tableName: string,
+                                   fieldName1: string,
+                                   fieldName2: string,
+                                   ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`
+    ALTER TABLE ${tableName} 
+    ADD CALC VARCHAR(74) GENERATED ALWAYS AS (${fieldName1} || ${fieldName2})
+    `);
+    await this._transaction.commitRetaining();
+  }
+
+  public async addDefaultUnique(tableName: string,
+                                ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`
+    ALTER TABLE ${tableName} 
+    ADD TEST_UNIQUE VARCHAR(74) UNIQUE
+    `);
+    await this._transaction.commitRetaining();
   }
 }
