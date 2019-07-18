@@ -20,7 +20,7 @@
   display: grid;
   width: 100%;
   height: 100%;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 320px 1fr;
   grid-template-rows: 1fr;
 }
 
@@ -34,7 +34,7 @@
 }
 
 .BPColumn > .BPCard {
-  margin-bottom: 8px;
+  margin-top: 8px;
 }
 
 .BPFlow {

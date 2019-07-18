@@ -3,11 +3,10 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, Dropdown } from 'office-ui-fabric-react';
 import { businessProcesses } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
 import cytoscape, { Core } from 'cytoscape';
-import { isTransition } from '@src/app/fsm/types';
 import dagre from 'cytoscape-dagre';
 import nodeHtmlLabel from 'cytoscape-node-html-label';
 
@@ -58,13 +57,13 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
             }
           },
           {
-            selector: 'node#SHOW_DATA',
+            selector: 'node#S_SHOW_DATA',
             css: {
               'height': 200
             }
           },
           {
-            selector: 'node#TEST_CONDITION',
+            selector: 'node#S_TEST_CONDITION',
             css: {
               'shape': 'diamond'
             }
@@ -82,28 +81,15 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         ],
 
         elements: {
-          nodes: bp.nodes.map( n => ({ data: { id: n.id, label: n.id } }) ),
+          nodes: Object.values(bp.states).map( state => ({ data: { id: state.id, state, label: state.caption ? state.caption : state.type.caption ? state.type.caption : state.id } }) ),
           edges: bp.flow.flatMap( e => {
-            if (isTransition(e)) {
-              if (e.returning) {
-                return [
-                  { data: { source: e.fromState, target: e.toState } },
-                  { data: { source: e.toState, target: e.fromState } }
-                ];
-              } else {
-                return { data: { source: e.fromState, target: e.toState } };
-              }
-            } else {
-              return [
-                { data: { source: e.fromState, target: e.thenState } },
-                { data: { source: e.fromState, target: e.elseState } }
-              ];
-            }
+            return { data: { source: e.sFrom.id, target: e.sTo.id } };
            } )
         },
 
         layout: {
           name: 'dagre',
+          fit: false,
           // dagre algo options, uses default value on undefined
           nodeSep: undefined, // the separation between adjacent nodes in the same rank
           edgeSep: undefined, // the separation between adjacent edges in the same rank
@@ -127,7 +113,25 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         halign: 'left',
         valignBox: 'bottom',
         halignBox: 'right',
-        tpl: (data : any) => '<div class="BPNode"><div class="BPNodeTitle">' + data.id + '</div><div>abc...</div></div>'
+        tpl: (data: any) => {
+          let stateParams = '';
+
+          if (data.state && data.state.params) {
+            stateParams =
+              '<ul>' +
+                Object.entries(data.state.params).map( ([name, p]) => '<li>' + name + ': ' + p + '</li>' )
+              '</ul>';
+          }
+
+          return (
+            '<div class="BPNode">' +
+              '<div class="BPNodeTitle">' +
+                data.label +
+              '</div>' +
+              stateParams +
+            '</div>'
+          );
+        }
       }
     ]);
 
@@ -153,17 +157,22 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       <div styleName="SGridTable">
         <div styleName="BPList">
           <div styleName="BPColumn">
+            <Dropdown
+              label="Бизнес-процесс"
+              selectedKey={activeBP}
+              onChange={ (_event, option) => option && typeof option.key === 'string' && setActiveBP(option.key) }
+              placeholder="Select a business process"
+              options={Object.entries(businessProcesses).map( ([key, bp]) =>({ key, text: getLName(bp.caption, ['ru']) }) )}
+              //styles={{ dropdown: { width: 300 } }}
+            />
             {
-              Object.entries(businessProcesses).map( ([name, bp]) =>
-                <div
-                  key={name}
-                  styleName={`BPCard ${ name === activeBP ? 'SelectedBP' : '' }`}
-                  onClick={ () => setActiveBP(name) }
-                >
-                  <h2>{getLName(bp.caption, ['ru'])}</h2>
-                  <article>{getLName(bp.description, ['ru'])}</article>
-                </div>
-              )
+              activeBP
+              &&
+              <div
+                styleName="BPCard"
+              >
+                {getLName(businessProcesses[activeBP].description, ['ru'])}
+              </div>
             }
           </div>
           <div styleName="BPFlow" id="cy">
