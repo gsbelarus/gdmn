@@ -283,7 +283,6 @@ export class EntityBuilder extends Builder {
   }
 
   public async deleteAttribute(entity: Entity, attribute: Attribute): Promise<void> {
-    // TODO
-    throw new Error("Unsupported yet");
+    entity.remove(attribute);
   }
 }

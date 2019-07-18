@@ -20,7 +20,8 @@ import {
   GetSessionsInfoCmd,
   GetNextIdCmd,
   QuerySetCmd,
-  AddEntityCmd
+  AddEntityCmd,
+  DeleteEntityCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -179,6 +180,14 @@ export class AppCommandProvider {
     // TODO
   }
 
+  private static _verifyDeleteEntityCmd(command: ICmd<AppAction, any>): command is DeleteEntityCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "entityName" in command.payload
+      && typeof command.payload.entityName === "string";
+    // TODO
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -297,6 +306,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushAddEntityCmd(session, command);
+      }
+      case "DELETE_ENTITY": {
+        if (!AppCommandProvider._verifyDeleteEntityCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushDeleteEntityCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");

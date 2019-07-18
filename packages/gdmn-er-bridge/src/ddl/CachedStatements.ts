@@ -55,6 +55,11 @@ export interface IATIndicesInput {
   uniqueFlag?: boolean;
 }
 
+export interface IDependence {
+  name: string;
+  type: string;
+}
+
 interface IStatements {
   sequenceExists?: AStatement;
   tableExists?: AStatement;
@@ -63,6 +68,8 @@ interface IStatements {
   indexExists?: AStatement;
   domainExists?: AStatement;
   triggerExists?: AStatement;
+  getDependencies?: AStatement;
+  checkDependencies?: AStatement;
 
   ddlUniqueSequence?: AStatement;
 
@@ -91,6 +98,8 @@ interface IStatements {
   dropATTriggers?: AStatement;
   dropATGenerator?: AStatement;
   dropATIndices?: AStatement;
+
+  getDomainName?: AStatement;
 }
 
 export class CachedStatements {
@@ -745,6 +754,79 @@ export class CachedStatements {
     }
     await this._statements.dropATIndices.execute({
       indexName: input.indexName
+    });
+  }
+
+  public async getDependencies(tableName: string): Promise<IDependence[]> {
+    this._checkDisposed();
+
+    if (!this._statements.getDependencies) {
+      this._statements.getDependencies = await this._connection.prepare(this._transaction, `
+        SELECT T.RDB$TRIGGER_NAME as NAME, 'TRIGGER' as DEPTYPE
+        FROM RDB$TRIGGERS T
+        WHERE T.RDB$RELATION_NAME = :RELATION_NAME
+          AND T.RDB$SYSTEM_FLAG = 0
+        UNION
+        SELECT rc.RDB$CONSTRAINT_NAME as NAME, 'CONSTRAINT' as DEPTYPE
+        FROM RDB$RELATION_CONSTRAINTS rc
+        WHERE rc.RDB$RELATION_NAME = :RELATION_NAME
+        UNION
+        SELECT i.RDB$INDEX_NAME as NAME, 'INDEX' as DEPTYPE
+        FROM rdb$indices i
+        WHERE i.RDB$RELATION_NAME = :RELATION_NAME
+          AND i.RDB$SYSTEM_FLAG = 0
+        UNION
+        SELECT DISTINCT dep.RDB$DEPENDENT_NAME as NAME, 'PROCEDURE' as DEPTYPE
+        FROM RDB$DEPENDENCIES dep
+        WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+          AND (dep.RDB$DEPENDENT_NAME LIKE ('%_P_RESTR%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_GCHC_%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_CHLDCT_%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EXLIM_%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EXPANDLIMIT%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_GETCHILDCOUNT%')
+          OR dep.RDB$DEPENDENT_NAME LIKE ('%_P_EL_%'))
+          AND dep.RDB$DEPENDENT_TYPE = 5
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.getDependencies,
+      params: {RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: IDependence[] = [];
+        while (await resultSet.next()) {
+          result.push({name: await resultSet.getString('NAME'), type: await resultSet.getString('DEPTYPE')} )
+        }
+        return result
+      }
+    });
+  }
+
+  public async checkDependencies(arrDependencies: IDependence[], tableName: string): Promise<string[]> {
+    this._checkDisposed();
+    const dependenciesStr = `'${arrDependencies.map(dep => dep.name).join('\',\'')}'`;
+
+    if (!this._statements.checkDependencies) {
+      this._statements.checkDependencies = await this._connection.prepare(this._transaction, `
+        SELECT dep.RDB$DEPENDENT_NAME
+        FROM RDB$DEPENDENCIES dep
+        WHERE dep.RDB$DEPENDED_ON_NAME = :RELATION_NAME
+          AND dep.RDB$DEPENDENT_NAME NOT IN (${dependenciesStr})
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.checkDependencies,
+      params: { RELATION_NAME: tableName},
+      callback: async (resultSet) => {
+        const result: string[] = [];
+        while (await resultSet.next()) {
+          const name = await resultSet.getString('RDB$DEPENDENT_NAME');
+         if (name) {
+           result.push(name)
+         }
+        }
+        return result
+      }
     });
   }
 

@@ -388,8 +388,78 @@ export class DDLHelper {
     }
   }
 
+  public async checkAndDropTable(tableName: string,
+                                 ignore: boolean = this._defaultIgnore): Promise<void> {
+    // получаем список зависимостей объекта : триггера, ограничения, индексы и процедуры
+    const listDependencies = await this._cachedStatements.getDependencies(tableName);
+    // проверяем есть ли в RDB$DEPENDENCIES зависимости, которых нет в ранее полученом списке
+    const hasDependencies = await this._cachedStatements.checkDependencies(listDependencies, tableName);
+    if (hasDependencies && hasDependencies.length){
+     throw new Error(`Entity has dependencies ${hasDependencies.map((dep) => dep.replace(/\s+/g,'')).join(',')}`)
+    }
+    // удаляем зависимости
+    for await (const dependence of listDependencies) {
+      switch (dependence.type) {
+        case 'TRIGGER':
+          this.dropTrigger(dependence.name);
+          break;
+        case 'CONSTRAINT':
+          this.dropConstraint(dependence.name, tableName);
+          break;
+        case 'INDEX':
+          this.dropIndex(dependence.name);
+          break;
+        case 'PROCEDURE':
+          this.dropProcedure(dependence.name);
+          break;
+      }
+    }
+    // удаляем физическую таблицу
+     await this.dropTable(tableName);
+
+  }
+  public async addDefaultProcedure(tableName: string,
+                                 ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`
+    CREATE PROCEDURE ${tableName+'1'}
+    AS
+      DECLARE variable i integer;
+    BEGIN      
+      SELECT count(*)
+      FROM ${tableName}
+      INTO: i;
+    END
+    `);
+    await this._transaction.commitRetaining();
+  }
+
+  public async dropProcedure(procedureName: string,
+                             ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`DROP PROCEDURE ${procedureName}`);
+    await this._transaction.commitRetaining();
+  }
   private async _loggedExecute(sql: string): Promise<void> {
     this._logs.push(sql);
     await this._connection.execute(this._transaction, sql);
+  }
+
+  public async addDefaultCalculatedFields(tableName: string,
+                                   fieldName1: string,
+                                   fieldName2: string,
+                                   ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`
+    ALTER TABLE ${tableName} 
+    ADD CALC VARCHAR(74) GENERATED ALWAYS AS (${fieldName1} || ${fieldName2})
+    `);
+    await this._transaction.commitRetaining();
+  }
+
+  public async addDefaultUnique(tableName: string,
+                                ignore: boolean = this._defaultIgnore): Promise<void> {
+    await this._loggedExecute(`
+    ALTER TABLE ${tableName} 
+    ADD TEST_UNIQUE VARCHAR(74) UNIQUE
+    `);
+    await this._transaction.commitRetaining();
   }
 }
