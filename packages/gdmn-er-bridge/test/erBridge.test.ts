@@ -1166,24 +1166,28 @@ describe("ERBridge", () => {
     const erModel = await initERModel();
     await execute(async ({erBuilder, eBuilder}) => {
       const MainEntity = await erBuilder.create(erModel, new Entity({
-        name: "MAIN_ENTITY",
+        name: "MAIN_ENTITY2",
         lName: {}
       }));
       await eBuilder.createAttribute(MainEntity, new StringAttribute({
         name: "TEST_STRING",
         lName: {}
       }));
+      await eBuilder.createAttribute(MainEntity, new StringAttribute({
+        name: "TEST_STRING1",
+        lName: {}
+      }));
 
-      await erBuilder.ddlHelper.addDefaultUnique("MAIN_ENTITY");
-      await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"));
+      await erBuilder.ddlHelper.addDefaultUnique("MAIN_ENTITY2");
+      await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY2"));
       expect(() => {
           try {
-            erModel.entity("MAIN_ENTITY")
+            erModel.entity("MAIN_ENTITY2")
           } catch (error) {
             throw error;
           }
         }
-      ).toThrowError(new Error("Unknown entity MAIN_ENTITY"));
+      ).toThrowError(new Error("Unknown entity MAIN_ENTITY2"));
     })
   })
 });
