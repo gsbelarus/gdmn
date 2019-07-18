@@ -8,7 +8,7 @@ import { businessProcesses } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
 import cytoscape, { Core } from 'cytoscape';
 import dagre from 'cytoscape-dagre';
-import nodeHtmlLabel from 'cytoscape-node-html-label';
+//import nodeHtmlLabel from 'cytoscape-node-html-label';
 
 cytoscape.use(dagre);
 
@@ -36,30 +36,28 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       {
         container: document.getElementById('cy'),
 
+        zoom: 1,
         boxSelectionEnabled: false,
-        autounselectify: false,
 
-        wheelSensitivity: 0.07,
+        //wheelSensitivity: 0.07,
 
         style: [
           {
             selector: 'node',
             css: {
-              'height': 40,
-              'width': 200,
+              'height': 'label',
+              'width': 'label',
               'border-color': '#000',
               'border-width': 1,
-              //'content': 'data(id)',
-              //'text-valign': 'center',
-              //'font-size': 10,
-              'background-color': 'gray',
-              'shape': 'rectangle'
-            }
-          },
-          {
-            selector: 'node#S_SHOW_DATA',
-            css: {
-              'height': 200
+              'content': 'data(label)',
+              'text-valign': 'center',
+              'font-size': '12',
+              //'font-weight': 400,
+              'font-family': 'Segoe UI,Helvetica,Roboto,sans',
+              'color': 'white',
+              'background-color': '#404040',
+              'shape': 'rectangle',
+              'padding': '12px'
             }
           },
           {
@@ -75,13 +73,13 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               'mid-target-arrow-shape': 'vee',
               'mid-target-arrow-color': 'gray',
               'line-color': 'gray',
-              'curve-style': 'unbundled-bezier'
+              'curve-style': 'bezier'
             } as any
           }
         ],
 
         elements: {
-          nodes: Object.values(bp.states).map( state => ({ data: { id: state.id, state, label: state.caption ? state.caption : state.type.caption ? state.type.caption : state.id } }) ),
+          nodes: Object.values(bp.states).map( state => ({ data: { id: state.id, state, label: state.label ? state.label : state.type.label ? state.type.label : state.id } }) ),
           edges: bp.flow.flatMap( e => {
             return { data: { source: e.sFrom.id, target: e.sTo.id } };
            } )
@@ -102,11 +100,12 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       }
     );
 
+    // set nodeHtmlLabel for your Cy instance
+    /*
     if (!Object.getPrototypeOf(cyInstance)['nodeHtmlLabel']) {
       nodeHtmlLabel(cytoscape);
     };
 
-    // set nodeHtmlLabel for your Cy instance
     (cyInstance as any).nodeHtmlLabel([{
         query: 'node',
         valign: 'top',
@@ -134,6 +133,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         }
       }
     ]);
+    */
 
     setCy(cyInstance);
   }, [bp]);
@@ -162,7 +162,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               selectedKey={activeBP}
               onChange={ (_event, option) => option && typeof option.key === 'string' && setActiveBP(option.key) }
               placeholder="Select a business process"
-              options={Object.entries(businessProcesses).map( ([key, bp]) =>({ key, text: getLName(bp.caption, ['ru']) }) )}
+              options={Object.entries(businessProcesses).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
               //styles={{ dropdown: { width: 300 } }}
             />
             {

@@ -12,7 +12,7 @@ export type ID = string;
 
 export interface IStateType {
   id: ID;
-  caption: string;
+  label: string;
   inParams?: IStateTypeParam[];
   outParams?: IStateTypeParam[];
   stateParams?: IStateTypeParam[];
@@ -25,7 +25,7 @@ export interface IStateTypes {
 const stateTypes: IStateTypes = {
   logged: {
     id: 'LOGGED',
-    caption: 'Вход в систему',
+    label: 'Вход в систему',
     outParams: [
       {
         name: 'userName',
@@ -37,7 +37,7 @@ const stateTypes: IStateTypes = {
 
   showData: {
     id: 'SHOW_DATA',
-    caption: 'Отображение данных',
+    label: 'Отображение данных',
     inParams: [
       {
         name: 'userName',
@@ -62,27 +62,27 @@ const stateTypes: IStateTypes = {
 
   workDone: {
     id: 'WORK_DONE',
-    caption: 'Завершение'
+    label: 'Завершение'
   },
 
   filterAndSort: {
     id: 'FILTER_AND_SORT',
-    caption: 'Выборка и сортировка'
+    label: 'Выборка и сортировка'
   },
 
   addRecord: {
     id: 'ADD_RECORD',
-    caption: 'Добавление записи'
+    label: 'Добавление записи'
   },
 
   editRecord: {
     id: 'EDIT_RECORD',
-    caption: 'Редактирование записи'
+    label: 'Редактирование записи'
   },
 
   deleteRecord: {
     id: 'DELETE_RECORD',
-    caption: 'Удаление записи'
+    label: 'Удаление записи'
   }
 };
 
@@ -93,7 +93,7 @@ export interface IStateParams {
 export interface IState {
   id: ID;
   type: IStateType;
-  caption?: string;
+  label?: string;
   params?: IStateParams;
 };
 
@@ -144,7 +144,7 @@ export interface ITransition {
 };
 
 export interface IBusinessProcess {
-  caption: LName;
+  label: LName;
   description: LName;
   states: IStates;
   flow: ITransition[];
@@ -156,7 +156,7 @@ export interface IBusinessProcesses {
 
 export const businessProcesses: IBusinessProcesses = {
   'WorkTime': {
-    caption: {
+    label: {
       ru: {
         name: 'Регистрация рабочего времени'
       }
@@ -201,7 +201,7 @@ export const businessProcesses: IBusinessProcesses = {
     ]
   },
   'Test': {
-    caption: {
+    label: {
       ru: {
         name: 'Тестовый процесс'
       }
