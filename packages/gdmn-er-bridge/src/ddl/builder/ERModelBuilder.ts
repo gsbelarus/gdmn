@@ -160,7 +160,7 @@ export class ERModelBuilder extends Builder {
     } else if (source instanceof Entity) {
       const tableName = AdapterUtils.getOwnRelationName(source);
 
-      // проверяем являеися ли объкт родителем у других объектов
+      // проверяем является ли объкт родителем у других объектов
       const foundParent = Object.entries(erModel.entities).reduce(
         (prev, [_name, entity]) => {
           if (entity === source) {
