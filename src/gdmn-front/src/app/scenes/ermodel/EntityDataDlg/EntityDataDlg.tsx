@@ -878,10 +878,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   style={{
                     gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
                     display: 'flex',
-                    margin: '1px',
-                    padding: '4px',
                     flexDirection: area.direction,
-                    justifyContent: 'flex-start'
+                    justifyContent: 'flex-start',
+                    background: `${area.style.background}`,
+                    margin: area.style.margin ? `${area.style.margin}px` : '1px',
+                    padding: area.style.padding ? `${area.style.padding}px` : '4px',
+                    border: area.style.border.style === 'none' ? `1px solid ${area.style.background}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
+                    borderRadius: `${area.style.border.radius}px`,
+                    color: `${area.style.font.color}`,
+                    fontSize: `${area.style.font.size}px`,
+                    fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                    fontStyle: `${area.style.font.style}`,
+                    fontFamily: `${area.style.font.family}`
                   }}
                 >
                   {

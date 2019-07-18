@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useRef, Fragment } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
@@ -35,7 +35,9 @@ interface IArea {
 }
 
 const StyleBorder = ['none', 'solid', 'double', 'groove', 'ridge', 'dashed', 'dotted', 'inset', 'outset'];
-const FamilyFont = ["Times New Roman, serif", "Arial, sans-serif", "Courier New, monospace", "Bickley Script, cursive, serif", "Euclid Fraktur, fantasy, serif", "Lucida Calligraphy"];
+const FamilyFont = ["Times New Roman, serif", "Arial, sans-serif", "Courier New, monospace", "Bickley Script, cursive, serif", "Euclid Fraktur, fantasy, serif", "Lucida Console, Monaco, monospace"];
+const StyleFont = ["normal", "italic"];
+const WeightFont = ["normal", "bold"];
 
 interface IBorder {
   width: number;
@@ -49,6 +51,7 @@ interface IFont {
   style: string;
   family: string;
   color: string;
+  weight: string;
 }
 
 interface IStyleFieldsAndAreas {
@@ -269,9 +272,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                     size: 14,
                     style: 'normal',
                     family: 'Lucida Calligraphy',
-                    color: '#ff0088'
+                    color: '#ff0088',
+                    weight: 'normal'
                   },
-                  background: '#50ff00',
+                  background: '#DBE5FF',
                   border: {
                     width: 1,
                     style: 'double',
@@ -377,9 +381,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               size: 14,
               style: 'normal',
               family: 'Lucida Calligraphy',
-              color: '#ff0088'
+              color: '#ff0088',
+              weight: 'normal'
             },
-            background: '#50ff00',
+            background: '#DBE5FF',
             border: {
               width: 1,
               style: 'double',
@@ -421,9 +426,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               size: 14,
               style: 'normal',
               family: 'Lucida Calligraphy',
-              color: '#ff0088'
+              color: '#ff0088',
+              weight: 'normal'
             },
-            background: '#50ff00',
+            background: '#DBE5FF',
             border: {
               width: 1,
               style: 'double',
@@ -560,9 +566,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#DBE5FF',
               border: {
                 width: 1,
                 style: 'double',
@@ -588,9 +595,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#DBE5FF',
               border: {
                 width: 1,
                 style: 'double',
@@ -631,9 +639,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               size: 14,
               style: 'normal',
               family: 'Lucida Calligraphy',
-              color: '#ff0088'
+              color: '#ff0088',
+              weight: 'normal'
             },
-            background: '#50ff00',
+            background: '#DBE5FF',
             border: {
               width: 1,
               style: 'double',
@@ -703,9 +712,10 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#50ff00',
+              background: '#DBE5FF',
               border: {
                 width: 1,
                 style: 'double',
@@ -731,9 +741,10 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 size: 14,
                 style: 'normal',
                 family: 'Lucida Calligraphy',
-                color: '#ff0088'
+                color: '#ff0088',
+                weight: 'normal'
               },
-              background: '#ff5885',
+              background: '#EBEBEB',
               border: {
                 width: 1,
                 style: 'double',
@@ -1219,11 +1230,25 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Style
                         </Label>
-                        <TextField
+                        <ComboBox
                           key='font-style'
-                          value={style.font.style}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, style: e.currentTarget.value}} });
+                          defaultSelectedKey={style.font.style}
+                          options={StyleFont.map(style => ({key: style, text: style}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, style: value!.text}} })
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label>
+                          Weight
+                        </Label>
+                        <ComboBox
+                          key='font-weight'
+                          defaultSelectedKey={style.font.weight}
+                          options={WeightFont.map(weight => ({key: weight, text: weight}))}
+                          onChange={(e, value) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, weight: value!.text}} })
                           }}
                         />
                       </div>
@@ -1575,23 +1600,38 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       padding: `${area.style.padding}px`,
                       border: area.style.border.style === 'none' ? `1px solid ${area.style.background}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
                       borderRadius: `${area.style.border.radius}px`,
+                      color: `${area.style.font.color}`,
+                      fontSize: `${area.style.font.size}px`,
+                      fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                      fontStyle: `${area.style.font.style}`,
                       fontFamily: `${area.style.font.family}`
                     }}
                     onMouseDown={getOnMouseDownForArea(idx)}
                   >
+                    <div>Я хочу проверить шрифты</div>
                     {
                       area.fields.map(f =>
                         <TextField
                           styles={area.direction === 'row'
                             ? {
                               root: {
-                                flexGrow: 1,
+                                flexGrow: 1
+                              },
+                              description: {
+                                color: `${area.style.font.color}`,
+                                fontSize: `${area.style.font.size}px`,
+                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
                                 fontFamily: `${area.style.font.family}`
                               }
                             }
                             : {
                               root: {
-                                flexGrow: 0,
+                                flexGrow: 0
+                              },
+                              description: {
+                                color: `${area.style.font.color}`,
+                                fontSize: `${area.style.font.size}px`,
+                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
                                 fontFamily: `${area.style.font.family}`
                               }
                             }
