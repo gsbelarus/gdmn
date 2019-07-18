@@ -215,9 +215,15 @@ export type TGetNextIdTaskCmd = TTaskCmd<TTaskActionNames.GET_NEXT_ID>;
 
 export type TGetNextIdTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_NEXT_ID>;
 
-// entity add
+// entity: add
 
 export type TAddEntityTaskCmd = TTaskCmd<TTaskActionNames.ADD_ENTITY>;
 
 export type TAddEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.ADD_ENTITY>;
 
+
+// entity: delete
+
+export type TDeleteEntityTaskCmd = TTaskCmd<TTaskActionNames.DELETE_ENTITY>;
+
+export type TDeleteEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_ENTITY>;

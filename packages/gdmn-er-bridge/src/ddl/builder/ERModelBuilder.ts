@@ -158,8 +158,45 @@ export class ERModelBuilder extends Builder {
       throw new Error("Unsupported yet");
 
     } else if (source instanceof Entity) {
-      // TODO
-      throw new Error("Unsupported yet");
+      const tableName = AdapterUtils.getOwnRelationName(source);
+
+      // проверяем является ли объкт родителем у других объектов
+      const foundParent = Object.entries(erModel.entities).reduce(
+        (prev, [_name, entity]) => {
+          if (entity === source) {
+            return prev;
+          }
+
+          if (entity.parent === source) {
+            prev.push(entity);
+          }
+          return prev;
+        },
+        [] as Entity[]
+      );
+
+      if (foundParent.length) {
+        throw new Error(`Entity ${source.name} are the parent link to other entities ${foundParent.map((entity) => entity.name).join(',')}.`);
+      }
+      // проверяем используется ли таблица объекта в других объектах
+      const foundEntities = Object.entries(erModel.entities).reduce(
+        (prev, [_name, entity]) => {
+          if (entity === source) {
+            return prev;
+          }
+          entity.adapter!.relation.forEach((rel) => {
+            if (rel.relationName === tableName) {
+              prev.push(entity);
+            }
+          });
+          return prev;
+        },
+        [] as Entity[]
+      );
+      if (!foundEntities.length) {
+        await this.ddlHelper.checkAndDropTable(tableName);
+      }
+      erModel.remove(source);
     }
   }
 }
