@@ -394,20 +394,24 @@ export class DDLHelper {
     const listDependencies = await this._cachedStatements.getDependencies(tableName);
     // проверяем есть ли в RDB$DEPENDENCIES зависимости, которых нет в ранее полученом списке
     const hasDependencies = await this._cachedStatements.checkDependencies(listDependencies, tableName);
-    console.log(hasDependencies)
     if (hasDependencies && hasDependencies.length){
      throw new Error(`Entity has dependencies ${hasDependencies.map((dep) => dep.replace(/\s+/g,'')).join(',')}`)
     }
     // удаляем зависимости
     for await (const dependence of listDependencies) {
-      if (dependence.type === 'TRIGGER'){
-        this.dropTrigger(dependence.name);
-      } else if (dependence.type === 'CONSTRAINT'){
-        this.dropConstraint(dependence.name, tableName);
-      }else if (dependence.type === 'INDEX'){
-        this.dropIndex(dependence.name);
-      }else if (dependence.type === 'PROCEDURE'){
-        this.dropProcedure(dependence.name);
+      switch (dependence.type) {
+        case 'TRIGGER':
+          this.dropTrigger(dependence.name);
+          break;
+        case 'CONSTRAINT':
+          this.dropConstraint(dependence.name, tableName);
+          break;
+        case 'INDEX':
+          this.dropIndex(dependence.name);
+          break;
+        case 'PROCEDURE':
+          this.dropProcedure(dependence.name);
+          break;
       }
     }
     // удаляем физическую таблицу
