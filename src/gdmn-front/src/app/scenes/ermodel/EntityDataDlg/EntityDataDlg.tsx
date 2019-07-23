@@ -599,7 +599,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     width: '100%',
     gridTemplateColumns: (localState as IDesignerState).grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
     gridTemplateRows: (localState as IDesignerState).grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
-    height: '91.8%',
     overflow: 'auto',
   });
 
