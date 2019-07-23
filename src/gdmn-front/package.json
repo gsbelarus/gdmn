@@ -40,6 +40,7 @@
     "gdmn-recordset": "1.0.0",
     "immutable": "^3",
     "jwt-decode": "^2",
+    "mxgraph": "^4.0.2",
     "office-ui-fabric-react": "^7",
     "react": "^16",
     "react-content-loader": "^4",
