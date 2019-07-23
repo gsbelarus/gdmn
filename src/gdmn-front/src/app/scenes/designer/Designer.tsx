@@ -1,9 +1,10 @@
-import React, { useReducer, useRef, Fragment, useEffect } from 'react';
+import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights, DefaultButton } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
+import { ChromePicker  } from 'react-color';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -74,7 +75,32 @@ export interface IDesignerState {
   activeTab: string;
 };
 
-type Action = { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
+const ButtonExample = (props: {color: string, onChangeColor: (color: string) => void}): JSX.Element => {
+  const [displayColorPicker, onChange] = useState(false);
+
+  const handleClick = () => {
+    onChange(!displayColorPicker)
+  };
+
+  const handleClose = () => {
+    onChange( false )
+  };
+
+    return (
+      <div>
+        <DefaultButton onClick={() => handleClick() }>Select</DefaultButton>
+        { displayColorPicker ?
+          <>
+            <div
+              onClick={() => handleClose() }
+            />
+              <ChromePicker color={ props.color } onChangeComplete={(c) => props.onChangeColor(c.hex) } />
+          </> : null }
+      </div>
+    )
+  }
+
+  type Action = { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
   | { type: 'SET_ROW_SIZE', row: number, size: ISize }
   | { type: 'SET_STYLE_AREA', style: IStyleFieldsAndAreas }
@@ -569,11 +595,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 color: '#ff0088',
                 weight: 'normal'
               },
-              background: '#DBE5FF',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -598,11 +624,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 color: '#ff0088',
                 weight: 'normal'
               },
-              background: '#DBE5FF',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -642,11 +668,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               color: '#ff0088',
               weight: 'normal'
             },
-            background: '#DBE5FF',
+            background: '#ffffff',
             border: {
               width: 1,
               style: 'double',
-              color: '#0088ff',
+              color: '#ffffff',
               radius: 3
             },
             align: 'center'
@@ -715,11 +741,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 color: '#ff0088',
                 weight: 'normal'
               },
-              background: '#DBE5FF',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -744,11 +770,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 color: '#ff0088',
                 weight: 'normal'
               },
-              background: '#EBEBEB',
+              background: '#ffffff',
               border: {
                 width: 1,
                 style: 'double',
-                color: '#0088ff',
+                color: '#ffffff',
                 radius: 3
               },
               align: 'center'
@@ -1180,11 +1206,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       <Label>
                         Background
                       </Label>
-                      <TextField
+                      <ButtonExample
                         key='background'
-                        value={style.background.toString()}
-                        onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: e.currentTarget.value} });
+                        color={style.background}
+                        onChangeColor={(e) => {
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: e} });
                         }}
                       />
                     </div>
@@ -1208,11 +1234,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <TextField
+                        <ButtonExample
                           key='font-color'
-                          value={style.font.color.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color: e.currentTarget.value}} });
+                          color={style.font.color}
+                          onChangeColor={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color: e}} });
                           }}
                         />
                       </div>
@@ -1264,11 +1290,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <TextField
+                        <ButtonExample
                           key='border-color'
-                          value={style.border.color.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e.currentTarget.value}} });
+                          color={style.border.color}
+                          onChangeColor={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e}} });
                           }}
                         />
                       </div>
@@ -1586,13 +1612,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                     showAreas.find(findArea => area === findArea) ? 
                   <div
                     key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
-                    styleName={
-                      previewMode
-                        ? "commonStyle"
-                        : activeArea === idx
-                          ? "commonStyle activeArea"
-                          : "commonStyle area"
-                    }
                     style={{
                       gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
                       display: 'flex',
@@ -1610,6 +1629,15 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       fontFamily: `${area.style.font.family}`
                     }}
                     onMouseDown={getOnMouseDownForArea(idx)}
+                    >
+                      <div
+                    styleName={
+                      previewMode
+                        ? "commonStyle"
+                        : activeArea === idx
+                          ? "commonStyle activeArea"
+                          : "commonStyle"
+                    }
                   >
                     {
                       area.fields.map(f =>
@@ -1651,6 +1679,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         />
                       )
                     }
+                  </div>
                   </div>
                 : null
               ))
