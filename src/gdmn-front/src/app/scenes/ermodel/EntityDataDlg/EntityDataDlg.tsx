@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles, ScrollablePane, ScrollbarVisibility } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -713,6 +713,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
+              styles={props.styles as ITextFieldStyles}
             />
           );
         }
@@ -756,8 +757,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
+            styles={props.styles as ITextFieldStyles}
         />);
       } else if (props.fd.dataType === TFieldType.Boolean) {
+        let subComponentStyle = props.styles ? (props.styles as ITextFieldStyles)!.subComponentStyles.label : undefined;
+        const styleCheckBox = subComponentStyle !== undefined ? {
+          root: {marginTop: '10px'},
+          text: {...subComponentStyle.root}
+        } : {
+          root: {marginTop: '10px'}
+        }
         return (
           <Checkbox
             key={props.fd.fieldName}
@@ -789,7 +798,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={{root: {marginTop: '10px'}}}
+            styles={styleCheckBox}
           />
         )
       } else {
@@ -798,6 +807,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             key={props.fd.fieldName}
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+            styles={props.styles}
             defaultValue={
               lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName && typeof lastEdited.current.value === 'string'
               ? lastEdited.current.value
@@ -887,7 +897,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     borderRadius: `${area.style.border.radius}px`,
                     color: `${area.style.font.color}`,
                     fontSize: `${area.style.font.size}px`,
-                    fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                    fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
                     fontStyle: `${area.style.font.style}`,
                     fontFamily: `${area.style.font.family}`
                   }}
@@ -903,11 +913,31 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                         styles = {
                           root: {
                             flexGrow: 1
+                          },
+                          subComponentStyles: {
+                            label: {
+                              root: {
+                                color: `${area.style.font.color}`,
+                                fontSize: `${area.style.font.size}px`,
+                                fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${area.style.font.family}`
+                              }
+                            }
                           }
                         }
                         else styles = {
                           root: {
                             flexGrow: 0
+                          },
+                          subComponentStyles: {
+                            label: {
+                              root: {
+                                color: `${area.style.font.color}`,
+                                fontSize: `${area.style.font.size}px`,
+                                fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${area.style.font.family}`
+                              }
+                            }
                           }
                         }
                         if (fd) {
@@ -922,7 +952,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               </div>
             :
-              <div styleName="FieldsColumn">
+              <div styleName="FieldsColumn" style={{top: '0px'}}>
                 {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
                   const attr = entity.attributes[setAttrName] as EntityAttribute;
                   const linkEntity = attr.entities[0];

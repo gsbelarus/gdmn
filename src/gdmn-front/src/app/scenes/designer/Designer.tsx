@@ -1,8 +1,8 @@
-import React, { useEffect, useReducer, useRef, Fragment } from 'react';
+import React, { useReducer, useRef, Fragment, useEffect } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
@@ -610,7 +610,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           }],
           entityName: entityName,
           changeArray: [],
-          activeTab: ''
+          activeTab: 'Настройка'
         };
       }
     }
@@ -765,7 +765,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     width: '100%',
     gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
-    height: '86%',
+    height: '87%',
     overflow: 'auto'
  });
 
@@ -1006,7 +1006,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
               }}
             >
               {tabs.map(t =>
-                t === activeTab ? (
+                (activeTab === undefined ? (t === 'Настройка') : (t === activeTab)) ? (
                   <Fragment key={t}>
                     <div
                       className="SettingFormTab"
@@ -1019,6 +1019,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         flexDirection: 'column',
                         justifyContent: 'flex-start'
                       }}
+                      key={t}
                     >
                       <div
                         className="SettingFormActiveColor"
@@ -1064,6 +1065,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           flexDirection: 'column',
                           justifyContent: 'flex-start'
                         }}
+                        key={t}
                       >
                         <div
                           className="SettingFormTabText SettingFormInactiveTab"
@@ -1127,7 +1129,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 padding: '12px'
               }}
             >
-              {activeTab === 'Настройка' ? (
+              { activeTab === undefined || activeTab === 'Настройка' ? (
                 <>
                   <div
                     style={{
@@ -1136,6 +1138,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       alignItems: 'flex-start',
                       marginBottom: '4px'
                     }}
+                    key='Setting'
                   >
                     <div>
                       <Label>
@@ -1608,7 +1611,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                     }}
                     onMouseDown={getOnMouseDownForArea(idx)}
                   >
-                    <div>Я хочу проверить шрифты</div>
                     {
                       area.fields.map(f =>
                         <TextField
@@ -1617,22 +1619,30 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                               root: {
                                 flexGrow: 1
                               },
-                              description: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
-                                fontFamily: `${area.style.font.family}`
+                              subComponentStyles: {
+                                label: {
+                                  root: {
+                                    color: `${area.style.font.color}`,
+                                    fontSize: `${area.style.font.size}px`,
+                                    fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                                    fontFamily: `${area.style.font.family}`
+                                  }
+                                }
                               }
                             }
                             : {
                               root: {
                                 flexGrow: 0
                               },
-                              description: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
-                                fontFamily: `${area.style.font.family}`
+                              subComponentStyles: {
+                                label: {
+                                  root: {
+                                    color: `${area.style.font.color}`,
+                                    fontSize: `${area.style.font.size}px`,
+                                    fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
+                                    fontFamily: `${area.style.font.family}`
+                                  }
+                                }
                               }
                             }
                           }
