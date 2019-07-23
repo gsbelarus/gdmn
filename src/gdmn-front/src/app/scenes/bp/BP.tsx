@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
-import { businessProcesses } from '@src/app/fsm/fsm';
+import { CommandBar, ICommandBarItemProps, Dropdown } from 'office-ui-fabric-react';
+import { businessProcesses, IState } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
-import { Edge as DagreEdge, graphlib, layout } from 'dagre';
-import { Rect } from './Rect';
-import { Edge } from './Edge';
+import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants, mxPerimeter } from 'mxgraph/javascript/mxClient';
+
+interface IGraphState{
+  graph: any;
+};
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
   const { url, viewTab, dispatch } = props;
   const [activeBP, setActiveBP] = useState( Object.keys(businessProcesses).length ? Object.keys(businessProcesses)[0] : null );
   const bp = activeBP ? businessProcesses[activeBP] : undefined;
+  const [graphState, setGraphState] = useState<IGraphState | null>(null);
+  const graphContainer = useRef(null);
 
   useEffect( () => {
     if (!viewTab) {
@@ -25,6 +29,74 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       }));
     }
   }, []);
+
+  useEffect( () => {
+    const container = graphContainer.current;
+
+    if (!bp || !container) return;
+
+    // Disables the built-in context menu
+    mxEvent.disableContextMenu(container);
+
+    // Creates the graph inside the given container
+    const graph = graphState && graphState.graph ? graphState.graph : new mxGraph(container);
+
+    if (!graphState || !graphState.graph) {
+      // Enables rubberband selection
+      new mxRubberband(graph);
+
+      const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
+      vertexStyle[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
+      vertexStyle[mxConstants.STYLE_GRADIENTCOLOR] = 'white';
+      vertexStyle[mxConstants.STYLE_PERIMETER_SPACING] = 6;
+      vertexStyle[mxConstants.STYLE_ROUNDED] = true;
+      vertexStyle[mxConstants.STYLE_SHADOW] = true;
+      vertexStyle[mxConstants.STYLE_FONTFAMILY] = 'Segoe UI';
+
+      const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
+      edgeStyle[mxConstants.STYLE_ROUNDED] = true;
+
+      graph.gridSize = 20;
+    }
+
+    // Gets the default parent for inserting new cells. This
+    // is normally the first child of the root (ie. layer 0).
+    const parent = graph.getDefaultParent();
+
+    const layout = new mxHierarchicalLayout(graph);
+
+    layout.forceConstant = 80;
+
+    const w = 200;
+    const h = 40;
+
+    // Adds cells to the model in a single step
+    graph.getModel().beginUpdate();
+    try
+    {
+      graph.removeCells(graph.getChildVertices(parent));
+
+      const map = new Map<IState, any>();
+      Object.entries(bp.states).forEach( ([name, s]) => {
+        const v = graph.insertVertex(parent, null, s.label ? s.label : name, 0, 0, w, h);
+        map.set(s, v);
+      });
+
+      bp.flow.forEach( f => {
+        graph.insertEdge(parent, null, '', map.get(f.sFrom), map.get(f.sTo));
+      });
+
+      layout.execute(parent);
+    }
+    finally
+    {
+      // Updates the display
+      graph.getModel().endUpdate();
+    }
+
+    setGraphState({ graph });
+
+  }, [bp, graphContainer.current]);
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
@@ -37,61 +109,6 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
     }
   ];
 
-  // Create a new directed graph
-  const g = new graphlib.Graph({ multigraph: true, directed: true });
-
-  if (bp) {
-    // Set an object for the graph label
-    g.setGraph({});
-
-    // Default to assigning a new object as a label for each new edge.
-    g.setDefaultEdgeLabel(() => {
-      return {};
-    });
-
-    const created: { [name: string]: boolean } = {};
-
-    const createStateNode = (label: string) => {
-      if (!created[label]) {
-        g.setNode(label, {
-          label,
-          width: label.length * 9 + 8,
-          height: 26,
-          className: 'state',
-          rank: 'min'
-        });
-        created[label] = true;
-      }
-    };
-
-    bp.flow.forEach( t => {
-      createStateNode(t.fromState);
-      createStateNode(t.toState);
-      g.setEdge(t.fromState, t.toState);
-      if (t.returning) {
-        g.setEdge(t.toState, t.fromState);
-      }
-    });
-
-    g.graph().ranksep = 64;
-    g.graph().marginx = 2;
-    g.graph().marginy = 2;
-    layout(g);
-  }
-
-  const makeRect = (n: string, idx: number) => {
-    const nd = g.node(n);
-    if (!nd) return null;
-
-    const x = nd.x - nd.width / 2;
-    const y = nd.y - nd.height / 2;
-    return (
-      <Rect key={idx} x={x} y={y} width={nd.width} height={nd.height} text={nd.label} className={nd.className} />
-    );
-  };
-
-  const makeEdge = (e: DagreEdge, idx: number) => <Edge key={idx} points={g.edge(e).points} />;
-
   return (
     <div styleName="SGrid">
       <div styleName="SGridTop">
@@ -100,47 +117,26 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       <div styleName="SGridTable">
         <div styleName="BPList">
           <div styleName="BPColumn">
+            <Dropdown
+              label="Бизнес-процесс"
+              selectedKey={activeBP}
+              onChange={ (_event, option) => option && typeof option.key === 'string' && setActiveBP(option.key) }
+              placeholder="Select a business process"
+              options={Object.entries(businessProcesses).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
+              //styles={{ dropdown: { width: 300 } }}
+            />
             {
-              Object.entries(businessProcesses).map( ([name, bp]) =>
-                <div
-                  styleName={`BPCard ${ name === activeBP ? 'SelectedBP' : '' }`}
-                  onClick={ () => setActiveBP(name) }
-                >
-                  <h2>{getLName(bp.caption, ['ru'])}</h2>
-                  <article>{getLName(bp.description, ['ru'])}</article>
-                </div>
-              )
+              activeBP
+              &&
+              <div
+                styleName="BPCard"
+              >
+                {getLName(businessProcesses[activeBP].description, ['ru'])}
+              </div>
             }
           </div>
-          <div styleName="BPFlow">
-            {g.graph() ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={g.graph().width}
-                height={g.graph().height}
-                viewBox={'0 0 ' + g.graph().width + ' ' + g.graph().height}
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <defs>
-                  <marker
-                    id="arrow"
-                    viewBox="0 0 10 10"
-                    refX="9"
-                    refY="5"
-                    markerUnits="strokeWidth"
-                    markerWidth="10"
-                    markerHeight="8"
-                    orient="auto"
-                  >
-                    <path d="M 0 0 L 10 5 L 0 10 Z" style={{ strokeWidth: '1', fill: 'gray' }} />
-                  </marker>
-                </defs>
-                <g>
-                  {g.nodes().map((n, idx) => makeRect(n, idx))}
-                  {g.edges().map((e, idx) => makeEdge(e, idx))}
-                </g>
-              </svg>
-            ) : null}
+          <div styleName="BPFlow" ref={graphContainer}>
+
           </div>
         </div>
       </div>

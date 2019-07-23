@@ -1,0 +1,10 @@
+.BPNode {
+  margin: 4px;
+  font-size: 12px;
+  max-width: 200px;
+}
+
+.BPNodeTitle {
+  color: white;
+  font-weight: 600;
+}
