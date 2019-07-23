@@ -5,6 +5,7 @@ import { Sql } from "./Sql";
 
 export const SqlContainer = connect(
   (state: IState, ownProps: ISqlContainerProps): ISQLStateProps => ({
+    erModel: state.gdmnState.erModel,
     rs: state.recordSet[ownProps.id],
     gcs: state.grid[ownProps.id],
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url )

@@ -11,9 +11,6 @@ import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { SqlContainer } from '../sql/SqlContainer';
-import { SqlViewContainer } from '../sql/EditView/container';
-import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
-import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';

@@ -1,0 +1,48 @@
+.history-wrapper {
+  height: 80vh;
+  width: 60vw;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+}
+
+.history-container {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  overflow-x: hidden;
+}
+
+.history-header {
+  flex: 1 1 auto;
+  background-color: cornflowerblue;
+  color: #fff;
+  display: flex;
+  font-size: 1.3em;
+  align-items: center;
+  padding: 0 28px;
+  min-height: 40px;
+}
+
+.history-body {
+  /* display: flex; */
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+  padding: 5px;
+  overflow-y: hidden;
+}
+
+.history-buttons {
+  display: flex;
+  justify-content: flex-end;
+  padding: 5px;
+}
+
+.history-buttons button {
+  margin: 2px;
+}

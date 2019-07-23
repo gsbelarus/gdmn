@@ -11,12 +11,11 @@ import { apiService } from '@src/app/services/apiService';
 import { rsMetaActions } from '@src/app/store/rsmeta';
 
 import { gdmnActions } from '../gdmn/actions';
-// import { ISessionData } from '../gdmn/types';
 import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
 import { ParamsDialog } from './ParamsDialog';
-import { HistoryDialog } from './HistoryDialog';
+import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
 
 export interface ISQLParam {
   name: string;
@@ -77,7 +76,7 @@ const initialState: ISQLViewState = {
 
 export const Sql = CSSModules(
   (props: ISQLProps): JSX.Element => {
-    const { url, viewTab, dispatch, rs, gcs, id, history } = props;
+    const { url, viewTab, dispatch, rs, gcs, id, history, erModel } = props;
 
     const [state, setState] = useReducer(reducer, initialState);
 
@@ -355,7 +354,13 @@ export const Sql = CSSModules(
           {state.showParams && state.expression.length > 0 && (
             <ParamsDialog params={state.params} onClose={handleCloseParams} />
           )}
-          {state.showHistory && <HistoryDialog onClose={handleCloseHistory} onSelect={handleSelectExpression} />}
+          {state.showHistory && (
+            <HistoryDialogContainer
+              id={`dialog${id}`}
+              onClose={handleCloseHistory}
+              onSelect={handleSelectExpression}
+            />
+          )}
         </div>
         <div styleName="grid-container">
           <div styleName={`sql-container ${state.viewMode}`}>
