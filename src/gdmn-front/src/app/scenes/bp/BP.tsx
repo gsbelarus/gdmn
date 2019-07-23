@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
 import { CommandBar, ICommandBarItemProps, Dropdown } from 'office-ui-fabric-react';
-import { businessProcesses } from '@src/app/fsm/fsm';
+import { businessProcesses, IState } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
-import cytoscape, { Core } from 'cytoscape';
-import dagre from 'cytoscape-dagre';
-//import nodeHtmlLabel from 'cytoscape-node-html-label';
+import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants, mxPerimeter } from 'mxgraph/javascript/mxClient';
 
-cytoscape.use(dagre);
+interface IGraphState{
+  graph: any;
+};
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
   const { url, viewTab, dispatch } = props;
   const [activeBP, setActiveBP] = useState( Object.keys(businessProcesses).length ? Object.keys(businessProcesses)[0] : null );
   const bp = activeBP ? businessProcesses[activeBP] : undefined;
-  const [cy, setCy] = useState<Core | null>(null);
+  const [graphState, setGraphState] = useState<IGraphState | null>(null);
+  const graphContainer = useRef(null);
 
   useEffect( () => {
     if (!viewTab) {
@@ -30,113 +31,72 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
   }, []);
 
   useEffect( () => {
-    if (!bp) return;
+    const container = graphContainer.current;
 
-    const cyInstance = cytoscape(
-      {
-        container: document.getElementById('cy'),
+    if (!bp || !container) return;
 
-        zoom: 1,
-        boxSelectionEnabled: false,
+    // Disables the built-in context menu
+    mxEvent.disableContextMenu(container);
 
-        //wheelSensitivity: 0.07,
+    // Creates the graph inside the given container
+    const graph = graphState && graphState.graph ? graphState.graph : new mxGraph(container);
 
-        style: [
-          {
-            selector: 'node',
-            css: {
-              'height': 'label',
-              'width': 'label',
-              'border-color': '#000',
-              'border-width': 1,
-              'content': 'data(label)',
-              'text-valign': 'center',
-              'font-size': '12',
-              //'font-weight': 400,
-              'font-family': 'Segoe UI,Helvetica,Roboto,sans',
-              'color': 'white',
-              'background-color': '#404040',
-              'shape': 'rectangle',
-              'padding': '12px'
-            }
-          },
-          {
-            selector: 'node#S_TEST_CONDITION',
-            css: {
-              'shape': 'diamond'
-            }
-          },
-          {
-            selector: 'edge',
-            css: {
-              'width': 1,
-              'mid-target-arrow-shape': 'vee',
-              'mid-target-arrow-color': 'gray',
-              'line-color': 'gray',
-              'curve-style': 'bezier'
-            } as any
-          }
-        ],
+    if (!graphState || !graphState.graph) {
+      // Enables rubberband selection
+      new mxRubberband(graph);
 
-        elements: {
-          nodes: Object.values(bp.states).map( state => ({ data: { id: state.id, state, label: state.label ? state.label : state.type.label ? state.type.label : state.id } }) ),
-          edges: bp.flow.flatMap( e => {
-            return { data: { source: e.sFrom.id, target: e.sTo.id } };
-           } )
-        },
+      const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
+      vertexStyle[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
+      vertexStyle[mxConstants.STYLE_GRADIENTCOLOR] = 'white';
+      vertexStyle[mxConstants.STYLE_PERIMETER_SPACING] = 6;
+      vertexStyle[mxConstants.STYLE_ROUNDED] = true;
+      vertexStyle[mxConstants.STYLE_SHADOW] = true;
+      vertexStyle[mxConstants.STYLE_FONTFAMILY] = 'Segoe UI';
 
-        layout: {
-          name: 'dagre',
-          fit: false,
-          // dagre algo options, uses default value on undefined
-          nodeSep: undefined, // the separation between adjacent nodes in the same rank
-          edgeSep: undefined, // the separation between adjacent edges in the same rank
-          rankSep: undefined, // the separation between adjacent nodes in the same rank
-          rankDir: undefined, // 'TB' for top to bottom flow, 'LR' for left to right,
-          ranker: undefined, // Type of algorithm to assign a rank to each node in the input graph. Possible values: 'network-simplex', 'tight-tree' or 'longest-path'
-          minLen: function( _edge: any ){ return 1; }, // number of ranks to keep between the source and target of the edge
-          edgeWeight: function( _edge: any ){ return 1; }, // higher weight edges are generally made shorter and straighter than lower weight edges
-        } as any
-      }
-    );
+      const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
+      edgeStyle[mxConstants.STYLE_ROUNDED] = true;
 
-    // set nodeHtmlLabel for your Cy instance
-    /*
-    if (!Object.getPrototypeOf(cyInstance)['nodeHtmlLabel']) {
-      nodeHtmlLabel(cytoscape);
-    };
+      graph.gridSize = 20;
+    }
 
-    (cyInstance as any).nodeHtmlLabel([{
-        query: 'node',
-        valign: 'top',
-        halign: 'left',
-        valignBox: 'bottom',
-        halignBox: 'right',
-        tpl: (data: any) => {
-          let stateParams = '';
+    // Gets the default parent for inserting new cells. This
+    // is normally the first child of the root (ie. layer 0).
+    const parent = graph.getDefaultParent();
 
-          if (data.state && data.state.params) {
-            stateParams =
-              '<ul>' +
-                Object.entries(data.state.params).map( ([name, p]) => '<li>' + name + ': ' + p + '</li>' )
-              '</ul>';
-          }
+    const layout = new mxHierarchicalLayout(graph);
 
-          return (
-            '<div class="BPNode">' +
-              '<div class="BPNodeTitle">' +
-                data.label +
-              '</div>' +
-              stateParams +
-            '</div>'
-          );
-        }
-      }
-    ]);
-    */
+    layout.forceConstant = 80;
 
-    setCy(cyInstance);
-  }, [bp]);
+    const w = 200;
+    const h = 40;
+
+    // Adds cells to the model in a single step
+    graph.getModel().beginUpdate();
+    try
+    {
+      graph.removeCells(graph.getChildVertices(parent));
+
+      const map = new Map<IState, any>();
+      Object.entries(bp.states).forEach( ([name, s]) => {
+        const v = graph.insertVertex(parent, null, s.label ? s.label : name, 0, 0, w, h);
+        map.set(s, v);
+      });
+
+      bp.flow.forEach( f => {
+        graph.insertEdge(parent, null, '', map.get(f.sFrom), map.get(f.sTo));
+      });
+
+      layout.execute(parent);
+    }
+    finally
+    {
+      // Updates the display
+      graph.getModel().endUpdate();
+    }
+
+    setGraphState({ graph });
+
+  }, [bp, graphContainer.current]);
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
@@ -175,7 +135,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               </div>
             }
           </div>
-          <div styleName="BPFlow" id="cy">
+          <div styleName="BPFlow" ref={graphContainer}>
 
           </div>
         </div>
