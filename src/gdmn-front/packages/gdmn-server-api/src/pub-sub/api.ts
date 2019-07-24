@@ -164,6 +164,7 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.ADD_ENTITY]: {
     entityName: string;
+    parentName?: string;
     attributes?: IAttribute[]
   };
   [TTaskActionNames.DELETE_ENTITY]: {
@@ -270,6 +271,7 @@ export interface ISqlQueryResponse {
 
 export interface IAddEntity {
   entityName: string;
+  parentName?: string;
   attributes?: IAttribute[]
 }
 
