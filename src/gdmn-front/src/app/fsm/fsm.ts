@@ -1,30 +1,34 @@
 import { LName } from "gdmn-internals";
 
-export type StateTypeParamDataType = 'string' | 'number';
+export type Shape = 'PROCESS' | 'START' | 'END' | 'DECISION';
 
-export interface IStateTypeParam {
+export type BlockTypeParamDataType = 'string' | 'number';
+
+export interface IBlockTypeParam {
   name: string;
-  dataType: StateTypeParamDataType;
+  dataType: BlockTypeParamDataType;
   required?: boolean;
 };
 
 export type ID = string;
 
-export interface IStateType {
+export interface IBlockType {
   id: ID;
+  shape: Shape;
   label: string;
-  inParams?: IStateTypeParam[];
-  outParams?: IStateTypeParam[];
-  stateParams?: IStateTypeParam[];
+  inParams?: IBlockTypeParam[];
+  outParams?: IBlockTypeParam[];
+  blockParams?: IBlockTypeParam[];
 };
 
-export interface IStateTypes {
-  [name: string]: IStateType;
+export interface IBlockTypes {
+  [id: string]: IBlockType;
 };
 
-const stateTypes: IStateTypes = {
-  logged: {
-    id: 'LOGGED',
+const blockTypes: IBlockTypes = {
+  login: {
+    id: 'login',
+    shape: 'START',
     label: 'Вход в систему',
     outParams: [
       {
@@ -36,7 +40,8 @@ const stateTypes: IStateTypes = {
   },
 
   showData: {
-    id: 'SHOW_DATA',
+    id: 'showData',
+    shape: 'PROCESS',
     label: 'Отображение данных',
     inParams: [
       {
@@ -51,7 +56,7 @@ const stateTypes: IStateTypes = {
         dataType: 'string'
       }
     ],
-    stateParams: [
+    blockParams: [
       {
         name: 'queryPhrase',
         dataType: 'string',
@@ -61,100 +66,131 @@ const stateTypes: IStateTypes = {
   },
 
   workDone: {
-    id: 'WORK_DONE',
+    id: 'workDone',
+    shape: 'END',
     label: 'Завершение'
   },
 
-  filterAndSort: {
-    id: 'FILTER_AND_SORT',
-    label: 'Выборка и сортировка'
+  chooseUserAction: {
+    id: 'chooseUserAction',
+    shape: 'PROCESS',
+    label: 'Choose user action'
   },
 
   addRecord: {
-    id: 'ADD_RECORD',
+    id: 'addRecord',
+    shape: 'PROCESS',
     label: 'Добавление записи'
   },
 
   editRecord: {
-    id: 'EDIT_RECORD',
+    id: 'editRecord',
+    shape: 'PROCESS',
     label: 'Редактирование записи'
   },
 
   deleteRecord: {
-    id: 'DELETE_RECORD',
+    id: 'deleteRecord',
+    shape: 'PROCESS',
     label: 'Удаление записи'
+  },
+
+  decision: {
+    id: 'decision',
+    shape: 'DECISION',
+    label: 'decision'
   }
 };
 
-export interface IStateParams {
+export interface IBlockParams {
   [name: string]: any;
 };
 
-export interface IState {
+export interface IBlock {
   id: ID;
-  type: IStateType;
+  type: IBlockType;
   label?: string;
-  params?: IStateParams;
+  params?: IBlockParams;
 };
 
-export interface IStates {
-  [id: string]: IState;
+export interface IBlocks {
+  [id: string]: IBlock;
 };
 
-export const states: IStates = {
-  sLogged: {
-    id: 'S_LOGGED',
-    type: stateTypes.logged,
+export const states: IBlocks = {
+  login: {
+    id: 'login',
+    type: blockTypes.login,
   },
-  sShowData: {
-    id: 'S_SHOW_DATA',
-    type: stateTypes.showData,
+  showData: {
+    id: 'showData',
+    type: blockTypes.showData,
     params: {
       queryPhrase: 'Покажи рабочее время текущего пользователя.'
     }
   },
-  sWorkDone: {
-    id: 'S_WORK_DONE',
-    type: stateTypes.workDone
+  chooseUserAction: {
+    id: 'chooseUserAction',
+    type: blockTypes.chooseUserAction
   },
-  sAddRecord: {
-    id: 'S_ADD_RECORD',
-    type: stateTypes.addRecord
+  workDone: {
+    id: 'workDone',
+    type: blockTypes.workDone
   },
-  sEditRecord: {
-    id: 'S_EDIT_RECORD',
-    type: stateTypes.editRecord
+  addRecord: {
+    id: 'addRecord',
+    type: blockTypes.addRecord
   },
-  sDeleteRecord: {
-    id: 'S_DELETE_RECORD',
-    type: stateTypes.deleteRecord
+  editRecord: {
+    id: 'editRecord',
+    type: blockTypes.editRecord
   },
-  sFilterAndSort: {
-    id: 'S_FILTER_AND_SORT',
-    type: stateTypes.filterAndSort
+  deleteRecord: {
+    id: 'deleteRecord',
+    type: blockTypes.deleteRecord
+  },
+  decision: {
+    id: 'decision',
+    type: blockTypes.decision,
+    label: 'Created less than 2 hrs ago?'
   }
 };
 
-export type StateTransitionEvent = 'onLogin' | 'onUserAction';
-
-export interface ITransition {
-  sFrom: IState;
-  sTo: IState;
-  onEvent: StateTransitionEvent;
+export interface ITransitionBase {
+  from: IBlock;
 };
 
-export interface IBusinessProcess {
+export interface ITransition extends ITransitionBase {
+  to: IBlock;
+};
+
+export interface IXORTransition extends ITransitionBase {
+  to: IBlock[];
+};
+
+export interface IDecisionTransition extends ITransitionBase {
+  yes: IBlock | IBlock[];
+  no: IBlock | IBlock[];
+};
+
+export function isDecisionTransition(transition: Transition): transition is IDecisionTransition {
+  return (transition as IDecisionTransition).yes !== undefined;
+};
+
+export type Transition = ITransition | IXORTransition | IDecisionTransition;
+
+export interface IFlowchart {
   label: LName;
   description: LName;
-  states: IStates;
-  flow: ITransition[];
+  states: IBlocks;
+  flow: Transition[];
 };
 
-export interface IBusinessProcesses {
-  [name: string]: IBusinessProcess;
+export interface IFlowcharts {
+  [name: string]: IFlowchart;
 };
 
-export const businessProcesses: IBusinessProcesses = {
+export const flowCharts: IFlowcharts = {
   'WorkTime': {
     label: {
       ru: {
@@ -169,34 +205,33 @@ export const businessProcesses: IBusinessProcesses = {
     states,
     flow: [
       {
-        sFrom: states.sLogged,
-        sTo: states.sShowData,
-        onEvent: 'onLogin'
+        from: states.login,
+        to: states.showData
       },
       {
-        sFrom: states.sShowData,
-        sTo: states.sWorkDone,
-        onEvent: 'onUserAction'
+        from: states.showData,
+        to: states.chooseUserAction
       },
       {
-        sFrom: states.sShowData,
-        sTo: states.sFilterAndSort,
-        onEvent: 'onUserAction'
+        from: states.chooseUserAction,
+        to: [states.addRecord, states.decision, states.workDone]
       },
       {
-        sFrom: states.sFilterAndSort,
-        sTo: states.sShowData,
-        onEvent: 'onUserAction'
+        from: states.addRecord,
+        to: states.showData
       },
       {
-        sFrom: states.sShowData,
-        sTo: states.sAddRecord,
-        onEvent: 'onUserAction'
+        from: states.decision,
+        yes: [states.deleteRecord, states.editRecord],
+        no: states.showData
       },
       {
-        sFrom: states.sAddRecord,
-        sTo: states.sShowData,
-        onEvent: 'onUserAction'
+        from: states.deleteRecord,
+        to: states.showData
+      },
+      {
+        from: states.editRecord,
+        to: states.showData
       }
     ]
   },

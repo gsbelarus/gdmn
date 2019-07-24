@@ -3,8 +3,8 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps, Dropdown } from 'office-ui-fabric-react';
-import { businessProcesses, IState } from '@src/app/fsm/fsm';
+import { CommandBar, ICommandBarItemProps, Dropdown, arraysEqual } from 'office-ui-fabric-react';
+import { flowCharts, IBlock, isDecisionTransition } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
 import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants, mxPerimeter } from 'mxgraph/javascript/mxClient';
 
@@ -15,8 +15,8 @@ interface IGraphState{
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
   const { url, viewTab, dispatch } = props;
-  const [activeBP, setActiveBP] = useState( Object.keys(businessProcesses).length ? Object.keys(businessProcesses)[0] : null );
-  const bp = activeBP ? businessProcesses[activeBP] : undefined;
+  const [activeBP, setActiveBP] = useState( Object.keys(flowCharts).length ? Object.keys(flowCharts)[0] : null );
+  const bp = activeBP ? flowCharts[activeBP] : undefined;
   const [graphState, setGraphState] = useState<IGraphState | null>(null);
   const graphContainer = useRef(null);
 
@@ -48,9 +48,9 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
       vertexStyle[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
       vertexStyle[mxConstants.STYLE_GRADIENTCOLOR] = 'white';
-      vertexStyle[mxConstants.STYLE_PERIMETER_SPACING] = 6;
+      vertexStyle[mxConstants.STYLE_PERIMETER_SPACING] = 2;
       vertexStyle[mxConstants.STYLE_ROUNDED] = true;
-      vertexStyle[mxConstants.STYLE_SHADOW] = true;
+      vertexStyle[mxConstants.STYLE_SHADOW] = false;
       vertexStyle[mxConstants.STYLE_FONTFAMILY] = 'Segoe UI';
 
       const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
@@ -76,14 +76,32 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
     {
       graph.removeCells(graph.getChildVertices(parent));
 
-      const map = new Map<IState, any>();
+      const map = new Map<IBlock, any>();
       Object.entries(bp.states).forEach( ([name, s]) => {
-        const v = graph.insertVertex(parent, null, s.label ? s.label : name, 0, 0, w, h);
+        const v = graph.insertVertex(parent, null, s.label ? s.label : name, 0, 0, w, h, 'shape=rectangle');
         map.set(s, v);
       });
 
       bp.flow.forEach( f => {
-        graph.insertEdge(parent, null, '', map.get(f.sFrom), map.get(f.sTo));
+        if (isDecisionTransition(f)) {
+          if (Array.isArray(f.yes)) {
+            f.yes.forEach( to => graph.insertEdge(parent, null, '', map.get(f.from), map.get(to)) );
+          } else {
+            graph.insertEdge(parent, null, '', map.get(f.from), map.get(f.yes));
+          }
+
+          if (Array.isArray(f.no)) {
+            f.no.forEach( to => graph.insertEdge(parent, null, '', map.get(f.from), map.get(to)) );
+          } else {
+            graph.insertEdge(parent, null, '', map.get(f.from), map.get(f.no));
+          }
+        } else {
+          if (Array.isArray(f.to)) {
+            f.to.forEach( to => graph.insertEdge(parent, null, '', map.get(f.from), map.get(to)) );
+          } else {
+            graph.insertEdge(parent, null, '', map.get(f.from), map.get(f.to));
+          }
+        }
       });
 
       layout.execute(parent);
@@ -122,7 +140,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               selectedKey={activeBP}
               onChange={ (_event, option) => option && typeof option.key === 'string' && setActiveBP(option.key) }
               placeholder="Select a business process"
-              options={Object.entries(businessProcesses).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
+              options={Object.entries(flowCharts).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
               //styles={{ dropdown: { width: 300 } }}
             />
             {
@@ -131,7 +149,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
               <div
                 styleName="BPCard"
               >
-                {getLName(businessProcesses[activeBP].description, ['ru'])}
+                {getLName(flowCharts[activeBP].description, ['ru'])}
               </div>
             }
           </div>
