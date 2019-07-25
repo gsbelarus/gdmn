@@ -54,7 +54,8 @@ export type AppAction =
   | "GET_SESSIONS_INFO"
   | "GET_MAIN_SESSIONS_INFO"
   | "GET_NEXT_ID"
-  | "ADD_ENTITY";
+  | "ADD_ENTITY"
+  | "DELETE_ENTITY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -77,8 +78,8 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, attributes?: IAttribute[] }>;
-
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, parentName?:string, attributes?: IAttribute[]}>;
+export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string}>;
 export class Application extends ADatabase {
 
   public sessionLogger = log4js.getLogger("Session");
@@ -352,19 +353,32 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
+        const {entityName, parentName, attributes} = context.command.payload;
 
-        const {entityName, attributes} = context.command.payload;
-
+        const getNewEntity = () => {
+          if (parentName) {
+            try {
+              return new Entity({
+                parent: this.erModel.entity(parentName),
+                name: entityName,
+                lName: {}
+              });
+            } catch (error) {
+              throw error;
+            } 
+          }
+          return new Entity({
+            name: entityName,
+            lName: {}
+          });
+        }  
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel, new Entity({
-                name: entityName,
-                lName: {}
-              }));
+              const entity = await erBuilder.create(this.erModel, getNewEntity());
               if (attributes) {
                 const lengthArr = attributes.length;
                 for (let i = 0; i < lengthArr; i++) {
@@ -372,6 +386,38 @@ export class Application extends ADatabase {
                   await eBuilder.createAttribute(entity, attr);
                 }
               }
+            }
+          })
+        }));
+        return {entityName};
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushDeleteEntityCmd(session: Session,
+                             command: DeleteEntityCmd
+  ): Task<DeleteEntityCmd, { entityName: string}> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {entityName} = context.command.payload;
+
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async ({erBuilder}) => {
+               await erBuilder.delete(this.erModel, this.erModel.entity(entityName));
             }
           })
         }));
@@ -756,7 +802,7 @@ export class Application extends ADatabase {
   }
 
   public pushGetNextIdCmd(session: Session,
-                          command: GetNextIdCmd): Task<GetNextIdCmd, { id: number }> {
+                          command: GetNextIdCmd): Task<GetNextIdCmd, {id: number}> {
     const task = new Task({
       session,
       command,
@@ -766,7 +812,7 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const nextId = await context.session.executeConnection(async (connection): Promise<number> => {
-          const idResult = await connection.executeReturning(connection.readTransaction, `
+          const idResult = await connection.executeReturning(connection.readTransaction,  `
           EXECUTE BLOCK
           RETURNS
            (ID INTEGER)

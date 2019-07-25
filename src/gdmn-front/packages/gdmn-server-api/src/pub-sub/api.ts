@@ -63,7 +63,8 @@ export const enum TTaskActionNames {
   GET_SESSIONS_INFO = 'GET_SESSIONS_INFO',
   GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
   GET_NEXT_ID = 'GET_NEXT_ID',
-  ADD_ENTITY = 'ADD_ENTITY'
+  ADD_ENTITY = 'ADD_ENTITY',
+  DELETE_ENTITY = 'DELETE_ENTITY'
 }
 
 // MESSAGES DATA
@@ -163,7 +164,11 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.ADD_ENTITY]: {
     entityName: string;
+    parentName?: string;
     attributes?: IAttribute[]
+  };
+  [TTaskActionNames.DELETE_ENTITY]: {
+    entityName: string;
   };
 }
 
@@ -203,6 +208,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
   [TTaskActionNames.ADD_ENTITY]: IAddEntity;
+  [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -265,7 +271,12 @@ export interface ISqlQueryResponse {
 
 export interface IAddEntity {
   entityName: string;
+  parentName?: string;
   attributes?: IAttribute[]
+}
+
+export interface IDeleteEntity {
+  entityName: string;
 }
 
 export interface IDefinedEntity {

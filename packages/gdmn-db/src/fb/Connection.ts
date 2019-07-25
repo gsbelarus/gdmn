@@ -61,40 +61,59 @@ export class Connection extends AConnection {
 
     protected async _createDatabase(options: IConnectionOptions): Promise<void> {
         await this.client.create();
+        try {
         this.handler = await this.client.statusAction((status) => (
             createDpb(options, this.client.client!.util, status, async (buffer, length) => {
                 const uri = Connection._optionsToUri(options);
                 return await this.client!.client!.dispatcher!.createDatabaseAsync(status, uri, length, buffer);
             })
         ));
+        } catch (error) {
+         await this.client.destroy(); 
+         throw error;
+         ;
+        }
     }
 
     protected async _dropDatabase(): Promise<void> {
         if (this.transactionsCount > 0) {
             throw new Error("Not all transactions finished");
         }
-
+        try {
         await this.client.statusAction((status) => this.handler!.dropDatabaseAsync(status));
+        } catch (error) {
+            await this.client.destroy();
+            throw error;
+        }
         this.handler = undefined;
         await this.client.destroy();
     }
 
     protected async _connect(options: IConnectionOptions): Promise<void> {
         await this.client.create();
-        this.handler = await this.client.statusAction((status) => (
-            createDpb(options, this.client.client!.util, status, async (buffer, length) => {
-                const uri = Connection._optionsToUri(options);
-                return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
-            })
-        ));
+        try {
+            this.handler = await this.client.statusAction((status) => (
+                createDpb(options, this.client.client!.util, status, async (buffer, length) => {
+                    const uri = Connection._optionsToUri(options);
+                    return await this.client!.client!.dispatcher!.attachDatabaseAsync(status, uri, length, buffer);
+                })
+            )); 
+        } catch (error) {
+            await this.client.destroy();
+            throw error;
+        }
     }
 
     protected async _disconnect(): Promise<void> {
         if (this.transactionsCount > 0) {
             throw new Error("Not all transactions finished");
         }
-
-        await this.client.statusAction((status) => this.handler!.detachAsync(status));
+        try { 
+            await this.client.statusAction((status) => this.handler!.detachAsync(status));
+        } catch (error) {
+            await this.client.destroy();
+            throw error;
+        }
         await this.client.destroy();
         this.handler = undefined;
     }
