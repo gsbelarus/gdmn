@@ -1420,7 +1420,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       </div>
                     </div>
                     {
-                      selectedField ? 
+                      selectedField && areas[activeArea].fields !== [] ? 
                     <div>
                       <Label>
                         Field

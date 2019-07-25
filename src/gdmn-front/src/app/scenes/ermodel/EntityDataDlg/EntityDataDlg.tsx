@@ -905,7 +905,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     area.fields.map( f =>
                       {
                         let fd = rs.fieldDefs.find(fieldDef =>
-                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
+                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
                         )
                         let  styles;
                         if(area.direction === 'row')
@@ -922,7 +922,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                                 fontFamily: `${area.style.font.family}`
                               }
                             }
-                          }
+                          },
+                          fieldGroup: {background: f.color}
                         }
                         else styles = {
                           root: {
@@ -937,7 +938,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                                 fontFamily: `${area.style.font.family}`
                               }
                             }
-                          }
+                          },
+                          fieldGroup: {background: f.color}
                         }
                         if (fd) {
                           return field({fd, styles })
