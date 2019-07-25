@@ -1,12 +1,15 @@
 .ScrollableDlg {
+  width: 100%;
   overflow: auto;
-  height: 91.8%;
+  height: 92%;
   margin: 1px;
   padding: 4px;
 }
 
 .FieldsColumn {
   width: 380px;
+  margin: 1px;
+  padding: 4px;
 }
 
 .commonStyle {

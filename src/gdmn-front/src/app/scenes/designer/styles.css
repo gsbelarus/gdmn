@@ -1,9 +1,13 @@
+.areas > * {
+  border: 1px solid #606060;
+}
+
 .commonStyle {
   background-size: 16px 16px;
   margin: 1px;
   border-radius: 4px;
   padding: 4px;
-  height: 100%;
+  min-height: 64px;
 }
 /*
 .commonStyle > div:focus {
@@ -26,6 +30,7 @@
 
 .activeArea {
   border: 3px dashed #d84141;
+  height: 100%;
 }
 
 .selectedField {

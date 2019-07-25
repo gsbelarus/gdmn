@@ -1,24 +1,25 @@
 import React from 'react';
 import CalendarJSX from './Calendar';
 import "@src/styles/Datepicker.css";
-import { TextField, IconButton, ITextField } from "office-ui-fabric-react";
+import { TextField, IconButton, ITextField, ITextFieldStyles } from "office-ui-fabric-react";
 
 export interface IDatepickerProps {
-  fieldName?: string,
-  label?: string,
-  value?: string,
-  onChange: (newValue?: string) => void,
-  onFocus: () => void,
-  componentRef?: (ref: ITextField | null) => void
+  fieldName?: string;
+  label?: string;
+  value?: string;
+  onChange: (newValue?: string) => void;
+  onFocus: () => void;
+  componentRef?: (ref: ITextField | null) => void;
+  styles?: ITextFieldStyles;
 }
 
 export interface IDatepickerState {
-  showCalendar: boolean,
-  value: string,
-  selectDate: string,
-  selectDay: number,
-  selectMonth: number,
-  selectYear: number
+  showCalendar: boolean;
+  value: string;
+  selectDate: string;
+  selectDay: number;
+  selectMonth: number;
+  selectYear: number;
 }
 
 export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepickerState> {
@@ -156,6 +157,7 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
                 event.key === 'Enter' ? this.setDate() : undefined;
               }
             }
+            styles={this.props.styles!}
           />
           <IconButton
             iconProps={{ iconName: 'Calendar' }}
