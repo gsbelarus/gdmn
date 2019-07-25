@@ -695,8 +695,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     return apiService.query({ query: linkEq.inspect() })
                       .then( response => {
                         const result = response.payload.result!;
-                        const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                        const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                        const idAlias = Object.entries(result.aliases).find( ([_, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                        const nameAlias = Object.entries(result.aliases).find( ([_, data]) => data.linkAlias === 'z'
                           && (data.attribute === presentField!.name))![0];
                         return result.data.map( (r): IComboBoxOption => ({
                           key: r[idAlias],
@@ -725,7 +725,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       if (props.fd.dataType === TFieldType.Date) {
         return (
           <DatepickerJSX
-            key={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}
+          key={`${props.fd.fieldName}`}
             fieldName={`${props.fd.fieldName}`}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
             value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}
@@ -907,7 +907,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     area.fields.map( f =>
                       {
                         let fd = rs.fieldDefs.find(fieldDef =>
-                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
+                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
                         )
                         let  styles;
                         if(area.direction === 'row')
@@ -924,7 +924,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                                 fontFamily: `${area.style.font.family}`
                               }
                             }
-                          }
+                          },
+                          fieldGroup: {background: f.color}
                         }
                         else styles = {
                           root: {
@@ -939,7 +940,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                                 fontFamily: `${area.style.font.family}`
                               }
                             }
-                          }
+                          },
+                          fieldGroup: {background: f.color}
                         }
                         if (fd) {
                           return field({fd, styles })
