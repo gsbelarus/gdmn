@@ -177,6 +177,10 @@ export function isDecisionTransition(transition: Transition): transition is IDec
   return (transition as IDecisionTransition).yes !== undefined;
 };
 
+export function isXORTransition(transition: Transition): transition is IXORTransition {
+  return Array.isArray((transition as IXORTransition).to);
+};
+
 export type Transition = ITransition | IXORTransition | IDecisionTransition;
 
 export interface IFlowchart {

@@ -2171,11 +2171,6 @@
     "@types/keygrip" "*"
     "@types/node" "*"
 
-"@types/cytoscape@^3.4.3":
-  version "3.8.0"
-  resolved "https://registry.yarnpkg.com/@types/cytoscape/-/cytoscape-3.8.0.tgz#334006612fc6285dac83ee3665132743d7651f58"
-  integrity sha512-8TJL7HuMEgjQRCcUC3xKenb7Y6Ra3ZJ3LvYDlpxlt5LlAatzRyTBtIuE1JOdRelqAla8r87XJUzTgi92mlUlQQ==
-
 "@types/dagre@^0", "@types/dagre@^0.7.42":
   version "0.7.42"
   resolved "https://registry.yarnpkg.com/@types/dagre/-/dagre-0.7.42.tgz#2b0cd7678d5fc273df7816a88b8b34016e3a5d85"
