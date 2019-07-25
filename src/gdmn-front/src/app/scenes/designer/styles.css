@@ -5,7 +5,11 @@
   padding: 4px;
   height: 100%;
 }
-
+/*
+.commonStyle > div:focus {
+  border: 2px solid red;
+}
+*/
 .selection {
   background-image: linear-gradient(
     135deg,
@@ -23,3 +27,14 @@
 .activeArea {
   border: 3px dashed #d84141;
 }
+
+.selectedField {
+  /*border: 2px solid #d61b1b;
+  border-color: blue;
+  border: 8px solid;
+  padding: 80px;*/
+}
+
+/*.field {
+  border: none;
+}*/

@@ -2,9 +2,10 @@ import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights, DefaultButton, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
 import { ChromePicker  } from 'react-color';
+import { statement } from '@babel/template';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -29,10 +30,14 @@ type TDirection = 'row' | 'column';
 
 interface IArea {
   rect: IRectangle;
-  fields: string[];
+  fields: IField[];
   direction: TDirection;
   group: boolean;
   style: IStyleFieldsAndAreas;
+}
+interface IField {
+  key: string,
+  color: string
 }
 
 const StyleBorder = ['none', 'solid', 'double', 'groove', 'ridge', 'dashed', 'dotted', 'inset', 'outset'];
@@ -62,6 +67,7 @@ interface IStyleFieldsAndAreas {
   background: string;
   border: IBorder;
   align: string;
+  fieldColor: string;
 }
 
 export interface IDesignerState {
@@ -73,6 +79,7 @@ export interface IDesignerState {
   changeArray: IDesignerState[];
   previewMode?: boolean;
   activeTab: string;
+  selectedField?: string;
 };
 
 const ButtonExample = (props: {color: string, onChangeColor: (color: string) => void}): JSX.Element => {
@@ -104,6 +111,8 @@ const ButtonExample = (props: {color: string, onChangeColor: (color: string) => 
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
   | { type: 'SET_ROW_SIZE', row: number, size: ISize }
   | { type: 'SET_STYLE_AREA', style: IStyleFieldsAndAreas }
+  | { type: 'SET_STYLE_FIELD', color: string }
+  | { type: 'SET_SELECTED_FIELD', value?: string }
   | { type: 'AREA_FIELD', fieldName: string, include: boolean }
   | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection }
   | { type: 'PREVIEW_MODE' }
@@ -239,6 +248,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       };
     }
 
+    case 'SET_SELECTED_FIELD': {
+      const { value } = action;
+      return {
+        ...state,
+        selectedField: value
+      };
+    }
+
     case 'AREA_FIELD': {
       const { activeArea, areas, changeArray } = state;
       const { fieldName, include } = action;
@@ -250,17 +267,17 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const newAreas = [...areas];
 
 
-      if (include && !areas[activeArea].fields.find(f => f === fieldName)) {
+      if (include && !areas[activeArea].fields.find(f => f.key === fieldName)) {
         newAreas[activeArea] = {
           ...newAreas[activeArea],
-          fields: [...newAreas[activeArea].fields, fieldName]
+          fields: [...newAreas[activeArea].fields, {key: fieldName, color: '#000000'}]
         };
       }
 
-      if (!include && !!areas[activeArea].fields.find(f => f === fieldName)) {
+      if (!include && !!areas[activeArea].fields.find(f => f.key === fieldName)) {
         newAreas[activeArea] = {
           ...newAreas[activeArea],
-          fields: newAreas[activeArea].fields.filter(f => f !== fieldName)
+          fields: newAreas[activeArea].fields.filter(f => f.key !== fieldName)
         };
       }
 
@@ -282,7 +299,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             && selection.top <= area.rect.top
             && selection.bottom >= area.rect.bottom
             && area.fields)
-        const fields = selectAreas.reduce( (prevFields, currArea) => [...currArea.fields, ...prevFields], [] as string[])
+        const fields = selectAreas.reduce( (prevFields, currArea) => [...currArea.fields, ...prevFields], [] as IField[])
           return {
             ...state,
             areas: [
@@ -297,7 +314,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                   font: {
                     size: 14,
                     style: 'normal',
-                    family: 'Lucida Calligraphy',
+                    family: 'Arial, sans-serif',
                     color: '#ff0088',
                     weight: 'normal'
                   },
@@ -308,7 +325,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                     color: '#0088ff',
                     radius: 3
                   },
-                  align: 'center'
+                  align: 'center',
+                  fieldColor: '#0088ff',
                 }
               }],
             activeArea: state.areas.length,
@@ -387,6 +405,18 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
     }
 
+    case 'SET_STYLE_FIELD': {
+      const { selectedField, areas, activeArea } = state;
+      const { color } = action;
+      const fields = areas[activeArea!].fields.map(
+        field => field.key === selectedField ? {key: field.key, color} as IField : field
+      );
+      return {
+        ...state,
+        areas: [...areas.map((area, idx) => idx !== Number(activeArea!) ? area : {...area, fields})],
+      }
+    } 
+
     case 'ADD_COLUMN': {
       const { grid, areas, activeArea, changeArray } = state;
       const newAreas = grid.rows.map((_, row) => {
@@ -406,7 +436,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             font: {
               size: 14,
               style: 'normal',
-              family: 'Lucida Calligraphy',
+              family: 'Arial, sans-serif',
               color: '#ff0088',
               weight: 'normal'
             },
@@ -417,7 +447,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               color: '#0088ff',
               radius: 3
             },
-            align: 'center'
+            align: 'center',
+            fieldColor: '#0088ff',
           }
         } as IArea;
       });
@@ -451,7 +482,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             font: {
               size: 14,
               style: 'normal',
-              family: 'Lucida Calligraphy',
+              family: 'Arial, sans-serif',
               color: '#ff0088',
               weight: 'normal'
             },
@@ -462,7 +493,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               color: '#0088ff',
               radius: 3
             },
-            align: 'center'
+            align: 'center',
+            fieldColor: '#0088ff',
           }
         } as IArea;
       });
@@ -477,8 +509,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
   }
   
-
-
     case 'DELETE_COLUMN': {
       const { grid, selection, areas, activeArea, changeArray } = state;
 
@@ -581,7 +611,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             },
             fields:
               fields!.map(field => {
-                return `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`
+                return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: '#000000'}
               }),
             direction: 'column',
             group: false,
@@ -591,7 +621,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               font: {
                 size: 14,
                 style: 'normal',
-                family: 'Lucida Calligraphy',
+                family: 'Arial, sans-serif',
                 color: '#ff0088',
                 weight: 'normal'
               },
@@ -602,7 +632,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 color: '#ffffff',
                 radius: 3
               },
-              align: 'center'
+              align: 'center',
+              fieldColor: '#0088ff',
             }
           },{
             rect: {
@@ -620,7 +651,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               font: {
                 size: 14,
                 style: 'normal',
-                family: 'Lucida Calligraphy',
+                family: 'Arial, sans-serif',
                 color: '#ff0088',
                 weight: 'normal'
               },
@@ -631,7 +662,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
                 color: '#ffffff',
                 radius: 3
               },
-              align: 'center'
+              align: 'center',
+              fieldColor: '#0088ff',
             }
           }],
           entityName: entityName,
@@ -664,7 +696,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             font: {
               size: 14,
               style: 'normal',
-              family: 'Lucida Calligraphy',
+              family: 'Arial, sans-serif',
               color: '#ff0088',
               weight: 'normal'
             },
@@ -675,7 +707,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               color: '#ffffff',
               radius: 3
             },
-            align: 'center'
+            align: 'center',
+            fieldColor: '#0088ff',
           }
         }],
         activeArea: 0,
@@ -697,7 +730,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields } = props;
-  
+
   const getSavedLastEdit = (): IDesignerState | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.changesDesigner instanceof Object) {
       return viewTab.sessionData.changesDesigner as IDesignerState;
@@ -708,7 +741,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   const changes = useRef(getSavedLastEdit());
 
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
-  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab }, designerDispatch] =
+  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab, selectedField }, designerDispatch] =
     useReducer(reducer, changes.current !== undefined
       ? changes.current
       : localState !== undefined
@@ -727,7 +760,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
             },
             fields:
               fields!.map(field => {
-                return `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`
+                return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: '#000000'}
               }),
             direction: 'column',
             group: false,
@@ -737,18 +770,19 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
               font: {
                 size: 14,
                 style: 'normal',
-                family: 'Lucida Calligraphy',
+                family: 'Arial, sans-serif',
                 color: '#ff0088',
                 weight: 'normal'
               },
               background: '#ffffff',
               border: {
                 width: 1,
-                style: 'double',
+                style: 'none',
                 color: '#ffffff',
                 radius: 3
               },
-              align: 'center'
+              align: 'center',
+              fieldColor: '#0088ff',
             }
           },{
             rect: {
@@ -766,18 +800,19 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
               font: {
                 size: 14,
                 style: 'normal',
-                family: 'Lucida Calligraphy',
+                family: 'Arial, sans-serif',
                 color: '#ff0088',
                 weight: 'normal'
               },
               background: '#ffffff',
               border: {
                 width: 1,
-                style: 'double',
+                style: 'none',
                 color: '#ffffff',
                 radius: 3
               },
-              align: 'center'
+              align: 'center',
+              fieldColor: '#0088ff',
             }
           }],
           entityName: entityName,
@@ -961,6 +996,14 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     e.stopPropagation();
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx, shiftKey: e.shiftKey });
+    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+  };
+
+  const getOnMouseDownForField = (area: number, field: string) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: area, shiftKey: e.shiftKey });
+    designerDispatch({ type: 'SET_SELECTED_FIELD', value: field });
     changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
   };
 
@@ -1333,6 +1376,23 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         />
                       </div>
                     </div>
+                    <div>
+                      <Label>
+                        Field
+                      </Label>
+                      <div>
+                        <Label>
+                          Color
+                        </Label>
+                        <ButtonExample
+                          key='fieldColor'
+                          color={style.fieldColor}
+                          onChangeColor={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_FIELD', color: e });
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -1350,7 +1410,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           }}
                           key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
                           label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
-                          checked={!!areas[activeArea!].fields.find(areaF => areaF === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
+                          checked={!!areas[activeArea!].fields.find(areaF => areaF.key === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
                           onChange={(_, isChecked) => {
                             designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
                             changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
@@ -1592,6 +1652,25 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       ))
       : areas;
 
+  const getStyleField = (area: IArea, field: IField): Partial<ITextFieldStyles> => {
+    const style = {
+            description: {
+              color: `${area.style.font.color}`,
+              fontSize: `${area.style.font.size}px`,
+              fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
+              fontFamily: `${area.style.font.family}`
+            },
+            root: {
+              flexGrow: area.direction === 'row' ? 1 : 0,
+            }
+          }
+    return {
+      ...style,
+      fieldGroup: field.key === selectedField ? {border: '3px solid', background: field.color} : {background: field.color},
+
+    } as Partial<ITextFieldStyles>;
+  }
+
   return (
     <>
       <CommandBar items={commandBarItems[0]} />
@@ -1636,37 +1715,20 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           : "commonStyle"
                     }
                   >
-                    <div>Я хочу проверить шрифты</div>
                     {
-                      area.fields.map(f =>
+                      area.fields.map(f => {return (
+                        <div
+                        key={f.key}
+                          //className={f === selectedField ? "selectedField" : "field"} 
+                          styleName={f.key === selectedField ? "selectedField" : undefined}
+                          onMouseDown={getOnMouseDownForField(idx, f.key)}
+                        >
                         <TextField
-                          styles={area.direction === 'row'
-                            ? {
-                              root: {
-                                flexGrow: 1
-                              },
-                              description: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
-                                fontFamily: `${area.style.font.family}`
-                              }
-                            }
-                            : {
-                              root: {
-                                flexGrow: 0
-                              },
-                              description: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 700,
-                                fontFamily: `${area.style.font.family}`
-                              }
-                            }
-                          }
-                          key={f}
-                          label={f}
+                          styles={getStyleField(area, f)}
+                          key={f.key}
+                          label={f.key}
                         />
+                        </div>)}
                       )
                     }
                   </div>
