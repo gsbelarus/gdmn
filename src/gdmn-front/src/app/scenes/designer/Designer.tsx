@@ -2,9 +2,23 @@ import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, DefaultButton } from 'office-ui-fabric-react';
-import { IFieldDef } from 'gdmn-recordset';
+import {
+  CommandBar,
+  ICommandBarItemProps,
+  ComboBox, SpinButton,
+  Checkbox,
+  TextField,
+  Label,
+  DefaultButton,
+  IStyleFunction,
+  ITextFieldStyleProps,
+  ITextFieldStyles
+} from 'office-ui-fabric-react';
+import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { ChromePicker  } from 'react-color';
+import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
+import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
+import { EntityAttribute } from 'gdmn-orm';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -696,7 +710,73 @@ let tempSavedScrollToolPanel = 0;
 
 export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
-  const { entityName, viewTab, fields } = props;
+  const { entityName, viewTab, fields, rs, entity } = props;
+
+  const field = (props: { fd: IFieldDef, styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles> }): JSX.Element | undefined => {
+  const locked = rs ? rs.locked : false;
+
+  if (!props.fd.eqfa) {
+    return undefined;
+  }
+  if (props.fd.eqfa.linkAlias !== rs!.eq!.link.alias && props.fd.eqfa.attribute === 'ID') {
+    const fkFieldName = props.fd.eqfa.linkAlias;
+    const attr = entity!.attributes[fkFieldName] as EntityAttribute;
+    if (attr instanceof EntityAttribute) {
+      return (
+        <LookupComboBox
+          key={fkFieldName}
+          name={fkFieldName}
+          label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+          onLookup={(filter, limit) => {return Promise.resolve([])}}
+          onChanged={() => {}}
+          styles={props.styles as ITextFieldStyles}
+        />
+      );
+    }
+  }
+
+  if (props.fd.eqfa.linkAlias !== rs!.eq!.link.alias) {
+    return undefined;
+  }
+
+  if (props.fd.dataType === TFieldType.Date) {
+    return (
+      <DatepickerJSX
+        key={props.fd.fieldName}
+        fieldName={`${props.fd.fieldName}`}
+        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+        value=''
+        onChange={() => {}}
+        styles={props.styles as ITextFieldStyles}
+    />);
+  } else if (props.fd.dataType === TFieldType.Boolean) {
+    let subComponentStyle = props.styles ? (props.styles as ITextFieldStyles)!.subComponentStyles.label : undefined;
+    const styleCheckBox = subComponentStyle !== undefined ? {
+      root: {marginTop: '10px'},
+      text: {...subComponentStyle.root}
+    } : {
+      root: {marginTop: '10px'}
+    }
+    return (
+      <Checkbox
+        key={props.fd.fieldName}
+        disabled={locked}
+        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+        defaultChecked={rs!.getBoolean(props.fd.fieldName)}
+        styles={styleCheckBox}
+      />
+    )
+  } else {
+    return (
+      <TextField
+        key={props.fd.fieldName}
+        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+        styles={props.styles}
+        defaultValue={rs!.getString(props.fd.fieldName)}
+      />
+    )
+  }
+}
   
   const getSavedLastEdit = (): IDesignerState | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.changesDesigner instanceof Object) {
@@ -1564,42 +1644,45 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                   >
                     {
                       area.fields.map(f =>
-                        <TextField
-                          styles={area.direction === 'row'
-                            ? {
-                              root: {
-                                flexGrow: 1
-                              },
-                              subComponentStyles: {
-                                label: {
-                                  root: {
-                                    color: `${area.style.font.color}`,
-                                    fontSize: `${area.style.font.size}px`,
-                                    fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                                    fontFamily: `${area.style.font.family}`
-                                  }
-                                }
-                              }
-                            }
-                            : {
-                              root: {
-                                flexGrow: 0
-                              },
-                              subComponentStyles: {
-                                label: {
-                                  root: {
-                                    color: `${area.style.font.color}`,
-                                    fontSize: `${area.style.font.size}px`,
-                                    fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                                    fontFamily: `${area.style.font.family}`
-                                  }
+                        { 
+                          const fd: IFieldDef | undefined = rs!.fieldDefs.find(fieldDef =>
+                            `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
+                          );
+                          const styles = area.direction === 'row'
+                          ? {
+                            root: {
+                              flexGrow: 1
+                            },
+                            subComponentStyles: {
+                              label: {
+                                root: {
+                                  color: `${area.style.font.color}`,
+                                  fontSize: `${area.style.font.size}px`,
+                                  fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
+                                  fontFamily: `${area.style.font.family}`
                                 }
                               }
                             }
                           }
-                          key={f}
-                          label={f}
-                        />
+                          : {
+                            root: {
+                              flexGrow: 0
+                            },
+                            subComponentStyles: {
+                              label: {
+                                root: {
+                                  color: `${area.style.font.color}`,
+                                  fontSize: `${area.style.font.size}px`,
+                                  fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
+                                  fontFamily: `${area.style.font.family}`
+                                }
+                              }
+                            }
+                          }
+                        return fd !== undefined
+                        ? field({fd, styles})
+                        : undefined
+                        }
                       )
                     }
                   </div>

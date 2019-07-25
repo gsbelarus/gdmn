@@ -5,10 +5,10 @@ import { TextField, IconButton, ITextField, ITextFieldStyles } from "office-ui-f
 
 export interface IDatepickerProps {
   fieldName?: string;
-  label?: string;
-  value?: string;
+  label: string;
+  value: string;
   onChange: (newValue?: string) => void;
-  onFocus: () => void;
+  onFocus?: () => void;
   componentRef?: (ref: ITextField | null) => void;
   styles?: ITextFieldStyles;
 }
@@ -135,7 +135,7 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
             }}
             onFocus={
               () => {
-                this.props.onFocus();
+                this.props.onFocus!();
               }
             }
             componentRef={

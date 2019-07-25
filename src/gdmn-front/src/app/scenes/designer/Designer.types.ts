@@ -1,5 +1,6 @@
 import { IViewTab } from "../gdmn/types";
-import { IFieldDef } from 'gdmn-recordset';
+import { IFieldDef, RecordSet } from 'gdmn-recordset';
+import { Entity } from 'gdmn-orm';
 
 export interface IDesignerStateProps {
   viewTab?: IViewTab;
@@ -10,4 +11,6 @@ export interface IDesignerProps {
   outDesigner: () => void;
   viewTab?: IViewTab;
   fields?: IFieldDef[];
+  entity?: Entity;
+  rs?: RecordSet;
 };
