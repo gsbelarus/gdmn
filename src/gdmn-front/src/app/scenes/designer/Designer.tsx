@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, ChoiceGroup, Label, FontWeights, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, DefaultButton } from 'office-ui-fabric-react';
 import { IFieldDef } from 'gdmn-recordset';
 import { ChromePicker  } from 'react-color';
 
@@ -691,6 +691,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
   }
 };
 
+let tempSavedScroll = 0;
+let tempSavedScrollToolPanel = 0;
+
 export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields } = props;
@@ -703,6 +706,8 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   };
 
   const changes = useRef(getSavedLastEdit());
+  const divRef = useRef<HTMLDivElement | null>(null);
+  const toolPanelRef = useRef<HTMLDivElement | null>(null);
 
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
   const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab }, designerDispatch] =
@@ -783,6 +788,18 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           activeTab: 'Настройка'
         });
 
+  useEffect( () => {
+    if (tempSavedScroll && divRef.current) {
+      divRef.current.scrollTop = tempSavedScroll;
+    }
+  }, [divRef.current]);
+
+  useEffect( () => {
+    if (tempSavedScrollToolPanel && toolPanelRef.current) {
+      toolPanelRef.current.scrollTop = tempSavedScrollToolPanel;
+    }
+  }, [toolPanelRef.current]);
+
   const getGridStyle = (): React.CSSProperties => ({
     display: 'grid',
     width: '100%',
@@ -790,7 +807,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
     height: '87%',
     overflow: 'auto'
- });
+  });
 
   const commandBarItems: ICommandBarItemProps[][] = [
     [
@@ -980,12 +997,16 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           gridArea: '1 / 2 / 2 / 3',
           padding: '4px',
           overflow: 'auto'
-        }}>
+        }}
+          ref={toolPanelRef}
+          onScroll={ (e) => {
+            e.currentTarget && (tempSavedScrollToolPanel = e.currentTarget.scrollTop)
+          } }
+        >
           <div style={{
             width: '100%',
             display: 'flex',
             flexDirection: 'column',
-            border: '1px solid violet',
             borderRadius: '4px',
             justifyContent: 'center',
             padding: '0px 8px'
@@ -1011,7 +1032,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       <WithToolPanel
         {...props}
         toolPanel={
-        <>
           <div className="SettingForm">
             <div className="SettingFormTabs"
               style={{
@@ -1393,7 +1413,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 )}
             </div>
           </div>
-          </>
         }
       />)
   }, styles, { allowMultiple: true });
@@ -1435,6 +1454,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
               .reduce((value, curr) => {return value + curr.value!}, 0)
             : {unit: 'AUTO'} as ISize
         : size.value;
+
     return (
       <div
         style={{
@@ -1503,6 +1523,10 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           <div
             style={getGridStyle()}
             tabIndex={0}
+            ref={divRef}
+            onScroll={ (e) => {
+              e.currentTarget && (tempSavedScroll = e.currentTarget.scrollTop)
+            } }
           >
             {
               areas.length
