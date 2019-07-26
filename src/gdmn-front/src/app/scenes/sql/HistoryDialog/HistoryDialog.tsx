@@ -1,4 +1,4 @@
-import { GDMNGrid, createGrid, TSetCursorPosEvent, setCursorCol } from 'gdmn-grid';
+import { GDMNGrid, createGrid, TSetCursorPosEvent, setCursorCol, resizeColumn, TColumnResizeEvent } from 'gdmn-grid';
 import { TFieldType, rsActions } from 'gdmn-recordset';
 import { TextField } from 'office-ui-fabric-react';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/Button';
@@ -9,8 +9,7 @@ import { prepareDefaultEntityQuery } from '../../ermodel/EntityDataView/utils';
 import styles from './styles.css';
 import { IHistoryProps } from './HistoryDialog.types';
 import { loadRSActions } from '@src/app/store/loadRSActions';
-
-// import { TFieldType } from 'gdmn-recordset';
+import {} from '../utils';
 
 export const HistoryDialog = (props: IHistoryProps) => {
   const { rs, gcs, onClose, onSelect, erModel, dispatch, id } = props;
@@ -18,7 +17,6 @@ export const HistoryDialog = (props: IHistoryProps) => {
   const [state, setState] = useState({ expression: '' });
 
   useEffect(() => {
-    console.log('new rs');
     // Создаём грид из RS
     if (!gcs && rs) {
       dispatch(
@@ -66,6 +64,16 @@ export const HistoryDialog = (props: IHistoryProps) => {
     });
   };
 
+  const handleColumnResize = (event: TColumnResizeEvent) => {
+    dispatch(
+      resizeColumn({
+        name: event.rs.name,
+        columnIndex: event.columnIndex,
+        newWidth: event.newWidth
+      })
+    );
+  };
+
   return (
     <Modal
       containerClassName={styles['history-wrapper']}
@@ -81,7 +89,9 @@ export const HistoryDialog = (props: IHistoryProps) => {
         </div>
         <div className={styles['history-body']} id="historySQLSubTitleID">
           <div>
-            {rs && gcs && <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={() => false} />}
+            {rs && gcs && (
+              <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize} />
+            )}
           </div>
           <div>
             <TextField

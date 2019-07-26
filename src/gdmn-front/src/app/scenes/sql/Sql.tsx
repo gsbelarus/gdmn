@@ -1,4 +1,12 @@
-import { createGrid, deleteGrid, GDMNGrid, setCursorCol, TSetCursorPosEvent } from 'gdmn-grid';
+import {
+  createGrid,
+  deleteGrid,
+  GDMNGrid,
+  setCursorCol,
+  TSetCursorPosEvent,
+  TColumnResizeEvent,
+  resizeColumn
+} from 'gdmn-grid';
 import { IDataRow, RecordSet, rsActions, TFieldType } from 'gdmn-recordset';
 import { List } from 'immutable';
 import { CommandBar, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
@@ -182,6 +190,15 @@ export const Sql = CSSModules(
         dispatch(setCursorCol({ name: id, cursorCol: event.cursorCol }));
       });
 
+    const handleColumnResize = (event: TColumnResizeEvent) =>
+      dispatch(
+        resizeColumn({
+          name: event.rs.name,
+          columnIndex: event.columnIndex,
+          newWidth: event.newWidth
+        })
+      );
+
     const handleExecuteSql = useCallback(() => {
       dispatch(async (dispatch, getState) => {
         dispatch(rsMetaActions.setRsMeta(id, {}));
@@ -191,7 +208,7 @@ export const Sql = CSSModules(
         apiService
           .prepareSqlQuery({
             select: state.expression,
-            params /* : []  state.params.map(i => ({[i.name]: i.value})) */
+            params
           })
           .subscribe(async value => {
             switch (value.payload.status) {
@@ -230,7 +247,7 @@ export const Sql = CSSModules(
                       sequentially: !!rsm.taskKey,
                       sql: {
                         select: state.expression,
-                        params /* : []state.params.map(i => ({ [i.name]: i.value }))  */
+                        params
                       }
                     });
 
@@ -294,7 +311,7 @@ export const Sql = CSSModules(
           text: 'Очистить',
           disabled: !state.expression || !state.expression.length,
           iconProps: {
-            iconName: 'Clear'
+            iconName: 'ClearFormatting'
           },
           onClick: () => setState({ type: 'CLEAR_EXPRESSION' })
         },
@@ -355,11 +372,7 @@ export const Sql = CSSModules(
             <ParamsDialog params={state.params} onClose={handleCloseParams} />
           )}
           {state.showHistory && (
-            <HistoryDialogContainer
-              id={`dialog${id}`}
-              onClose={handleCloseHistory}
-              onSelect={handleSelectExpression}
-            />
+            <HistoryDialogContainer id={`dialog${id}`} onClose={handleCloseHistory} onSelect={handleSelectExpression} />
           )}
         </div>
         <div styleName="grid-container">
@@ -379,7 +392,7 @@ export const Sql = CSSModules(
             </div>
             <div>
               {rs && gcs && (
-                <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={() => false} />
+                <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize} />
               )}
             </div>
           </div>
