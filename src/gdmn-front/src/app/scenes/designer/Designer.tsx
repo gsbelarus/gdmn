@@ -119,6 +119,79 @@ const ButtonExample = (props: {color: string, onChangeColor: (color: string) => 
     )
   }
 
+  const defaultState = (entityName: string, fields?: IFieldDef[]) => {return {
+    grid: {
+      columns: [{ unit: 'PX', value: 350 }, { unit: 'FR', value: 1 }],
+      rows: [{ unit: 'FR', value: 1 }],
+    },
+    areas: [{
+      rect: {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0
+      },
+      fields:
+        fields!.map(field => {
+          return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: '#ffffff'}
+        }),
+      direction: 'column',
+      group: false,
+      style: {
+        padding: 4,
+        margin: 0,
+        font: {
+          size: 14,
+          style: 'normal',
+          family: 'Arial, sans-serif',
+          color: '#000000',
+          weight: 'normal'
+        },
+        background: '#ffffff',
+        border: {
+          width: 1,
+          style: 'none',
+          color: '#ffffff',
+          radius: 3
+        },
+        align: 'center',
+      }
+    },{
+      rect: {
+        left: 1,
+        top: 0,
+        right: 1,
+        bottom: 0
+      },
+      fields: [],
+      direction: 'column',
+      group: false,
+      style: {
+        padding: 4,
+        margin: 0,
+        font: {
+          size: 14,
+          style: 'normal',
+          family: 'Arial, sans-serif',
+          color: '#000000',
+          weight: 'normal'
+        },
+        background: '#ffffff',
+        border: {
+          width: 1,
+          style: 'none',
+          color: '#ffffff',
+          radius: 3
+        },
+        align: 'center',
+      }
+    }],
+    entityName: entityName,
+    activeArea: 0,
+    changeArray: [],
+    activeTab: 'Настройка'
+  } as IDesignerState};
+
   type Action = { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
   | { type: 'SET_ROW_SIZE', row: number, size: ISize }
@@ -418,7 +491,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'SET_STYLE_FIELD': {
-      const { selectedField, areas, activeArea } = state;
+      const { selectedField, areas, activeArea, changeArray } = state;
       const { color } = action;
       const fields = areas[activeArea!].fields.map(
         field => field.key === selectedField ? {key: field.key, color} as IField : field
@@ -426,6 +499,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       return {
         ...state,
         areas: [...areas.map((area, idx) => idx !== Number(activeArea!) ? area : {...area, fields})],
+        changeArray: [...changeArray!, {...state}]
       }
     } 
 
@@ -460,7 +534,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               radius: 3
             },
             align: 'center',
-            fieldColor: '#0088ff',
           }
         } as IArea;
       });
@@ -506,7 +579,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
               radius: 3
             },
             align: 'center',
-            fieldColor: '#0088ff',
           }
         } as IArea;
       });
@@ -609,78 +681,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           changeArray: []
         }
       } else {
-        return {
-          grid: {
-            columns: [{ unit: 'PX', value: 350 }, { unit: 'FR', value: 1 }],
-            rows: [{ unit: 'FR', value: 1 }],
-          },
-          areas: [{
-            rect: {
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0
-            },
-            fields:
-              fields!.map(field => {
-                return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: '#000000'}
-              }),
-            direction: 'column',
-            group: false,
-            style: {
-              padding: 4,
-              margin: 0,
-              font: {
-                size: 14,
-                style: 'normal',
-                family: 'Arial, sans-serif',
-                color: '#000000',
-                weight: 'normal'
-              },
-              background: '#ffffff',
-              border: {
-                width: 1,
-                style: 'none',
-                color: '#323130',
-                radius: 3
-              },
-              align: 'center',
-            }
-          },{
-            rect: {
-              left: 1,
-              top: 0,
-              right: 1,
-              bottom: 0
-            },
-            fields: [],
-            direction: 'column',
-            group: false,
-            style: {
-              padding: 4,
-              margin: 0,
-              font: {
-                size: 14,
-                style: 'normal',
-                family: 'Arial, sans-serif',
-                color: '#000000',
-                weight: 'normal'
-              },
-              background: '#ffffff',
-              border: {
-                width: 1,
-                style: 'none',
-                color: '#ffffff',
-                radius: 3
-              },
-              align: 'center',
-            }
-          }],
-          entityName: entityName,
-          activeArea: 0,
-          changeArray: [],
-          activeTab: 'Настройка'
-        };
+        return defaultState(entityName, fields);
       }
     }
 
@@ -820,85 +821,14 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   const changes = useRef(getSavedLastEdit());
   const divRef = useRef<HTMLDivElement | null>(null);
   const toolPanelRef = useRef<HTMLDivElement | null>(null);
-
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
   const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab, selectedField }, designerDispatch] =
     useReducer(reducer, changes.current !== undefined
       ? changes.current
       : localState !== undefined
         ? localState as IDesignerState
-        : {
-          grid: {
-            columns: [{ unit: 'PX', value: 350 }, { unit: 'FR', value: 1 }],
-            rows: [{ unit: 'FR', value: 1 }],
-          },
-          areas: [{
-            rect: {
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0
-            },
-            fields:
-              fields!.map(field => {
-                return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: '#ffffff'}
-              }),
-            direction: 'column',
-            group: false,
-            style: {
-              padding: 4,
-              margin: 0,
-              font: {
-                size: 14,
-                style: 'normal',
-                family: 'Arial, sans-serif',
-                color: '#000000',
-                weight: 'normal'
-              },
-              background: '#ffffff',
-              border: {
-                width: 1,
-                style: 'none',
-                color: '#ffffff',
-                radius: 3
-              },
-              align: 'center',
-            }
-          },{
-            rect: {
-              left: 1,
-              top: 0,
-              right: 1,
-              bottom: 0
-            },
-            fields: [],
-            direction: 'column',
-            group: false,
-            style: {
-              padding: 4,
-              margin: 0,
-              font: {
-                size: 14,
-                style: 'normal',
-                family: 'Arial, sans-serif',
-                color: '#000000',
-                weight: 'normal'
-              },
-              background: '#ffffff',
-              border: {
-                width: 1,
-                style: 'none',
-                color: '#ffffff',
-                radius: 3
-              },
-              align: 'center',
-            }
-          }],
-          entityName: entityName,
-          activeArea: 0,
-          changeArray: [],
-          activeTab: 'Настройка'
-        });
+        : defaultState(entityName, fields) 
+        ) ;
 
   useEffect( () => {
     if (tempSavedScroll && divRef.current) {
