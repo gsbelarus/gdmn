@@ -19,7 +19,7 @@ function stateType<
   T extends string,
   D = undefined
 >(type: T, data?: D) {
-  return { type, data } as any;
+  return { type, data } as StateWithData<T, D>;
 };
 
 export interface TypeMeta<T extends string> {
@@ -49,17 +49,49 @@ export function createStateType<
   });
 };
 
+export type StateTypes<
+  TStateTypeCreatorOrMap extends any
+> = TStateTypeCreatorOrMap extends StateTypeCreator<string>
+  ? ReturnType<TStateTypeCreatorOrMap>
+  : TStateTypeCreatorOrMap extends Record<any, any>
+  ? {
+      [K in keyof TStateTypeCreatorOrMap]: StateType<TStateTypeCreatorOrMap[K]>;
+    }[keyof TStateTypeCreatorOrMap]
+  : TStateTypeCreatorOrMap extends infer R // TODO: should be just never but compiler yell with circularly references itself error
+  ? never
+  : never;
+
 export interface ITransition {
   fromState: string;
   toState: string;
   returning?: boolean;
 };
 
-export type Flow = ITransition[];
+export interface IFork {
+  fromState: string;
+  condition: string;
+  thenState: string;
+  elseState: string;
+};
+
+export function isTransition(t: ITransition | IFork): t is ITransition {
+  return (t as ITransition).toState !== undefined;
+};
+
+export function isFork(f: ITransition | IFork): f is IFork {
+  return (f as IFork).condition !== undefined;
+};
+
+export type Flow = (ITransition | IFork)[];
+
+export interface INode {
+  id: string;
+};
 
 export interface IBusinessProcess {
   caption: LName;
   description: LName;
+  nodes: INode[];
   flow: Flow;
 };
 
