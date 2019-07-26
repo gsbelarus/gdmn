@@ -179,18 +179,33 @@ export const Sql = CSSModules(
 
     const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
 
+    const handleUpdateTab = (historyRsName: string) => {
+      console.log('Update tab');
+      if (rs && viewTab) {
+        dispatch(
+          gdmnActions.updateViewTab({
+            url,
+            viewTab: {
+              rs: [rs.name, historyRsName]
+            }
+          })
+        );
+      }
+    };
+
     const handleSelectExpression = (expression: string) => {
       setState({ type: 'SHOW_HISTORY', showHistory: false });
       setState({ type: 'SET_EXPRESSION', expression });
     };
 
-    const handleGridSelect = (event: TSetCursorPosEvent) =>
+    const handleGridSelect = (event: TSetCursorPosEvent) => {
       dispatch(dispatch => {
         dispatch(rsActions.setCurrentRow({ name: id, currentRow: event.cursorRow }));
         dispatch(setCursorCol({ name: id, cursorCol: event.cursorCol }));
       });
+    };
 
-    const handleColumnResize = (event: TColumnResizeEvent) =>
+    const handleColumnResize = (event: TColumnResizeEvent) => {
       dispatch(
         resizeColumn({
           name: event.rs.name,
@@ -198,6 +213,7 @@ export const Sql = CSSModules(
           newWidth: event.newWidth
         })
       );
+    };
 
     const handleExecuteSql = useCallback(() => {
       dispatch(async (dispatch, getState) => {
@@ -372,7 +388,12 @@ export const Sql = CSSModules(
             <ParamsDialog params={state.params} onClose={handleCloseParams} />
           )}
           {state.showHistory && (
-            <HistoryDialogContainer id={`dialog${id}`} onClose={handleCloseHistory} onSelect={handleSelectExpression} />
+            <HistoryDialogContainer
+              id={`dialog${id}`}
+              onClose={handleCloseHistory}
+              onSelect={handleSelectExpression}
+              onUpdate={handleUpdateTab}
+            />
           )}
         </div>
         <div styleName="grid-container">

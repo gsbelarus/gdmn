@@ -9,12 +9,21 @@ import { prepareDefaultEntityQuery } from '../../ermodel/EntityDataView/utils';
 import styles from './styles.css';
 import { IHistoryProps } from './HistoryDialog.types';
 import { loadRSActions } from '@src/app/store/loadRSActions';
-import {} from '../utils';
 
 export const HistoryDialog = (props: IHistoryProps) => {
-  const { rs, gcs, onClose, onSelect, erModel, dispatch, id } = props;
+  const { rs, gcs, onClose, onSelect, onUpdate, erModel, dispatch, id } = props;
 
   const [state, setState] = useState({ expression: '' });
+  const [rsName, setRsName] = useState('');
+
+  useEffect(() => {
+    if (rsName) {
+      console.log('Update tab. start');
+      // Добавляем имя rs к закладке
+      // console.log(rsName);
+      onUpdate(rsName)
+    }
+  }, [rsName]);
 
   useEffect(() => {
     // Создаём грид из RS
@@ -36,6 +45,10 @@ export const HistoryDialog = (props: IHistoryProps) => {
     }
 
     if (rs) {
+      if (!rsName) {
+        setRsName(rs.name);
+      }
+      // в textarea подставляем sql из активной записи
       const sqlField = rs.fieldDefs.find(i => i.caption === 'SQL_TEXT');
       if (!sqlField) return;
 

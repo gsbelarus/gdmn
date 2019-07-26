@@ -12,6 +12,7 @@ import { LoadRSActions } from '@src/app/store/loadRSActions';
 
 export interface IHistoryContainerProps {
   id: string;
+  onUpdate: (rsName: string) => void;
   onClose: () => void;
   onSelect: (expression: string) => void;
 }
