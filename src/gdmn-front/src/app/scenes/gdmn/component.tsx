@@ -1,33 +1,32 @@
-import React, { Component, Fragment } from 'react';
-import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
-import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
-import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
-import { gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
-import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
-import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
-import { Dispatch } from 'redux';
-import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
-import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
-import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
-import { StompDemoViewContainer } from './components/StompDemoViewContainer';
-import { SqlContainer } from '../sql/SqlContainer';
-import { SqlViewContainer } from '../sql/EditView/container';
-import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
-import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
-import { AccountViewContainer } from './components/AccountViewContainer';
-import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
-import { InternalsContainer } from '../internals/container';
-import { rootActions } from '../root/actions';
-import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
-import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
-import { ApplicationsViewContainer } from './components/ApplicationsViewContainer';
-import { IApplicationInfo } from '@gdmn/server-api';
-import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
-import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
-import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
-import { ERModelView2Container } from '../ermodel/ERModelView2Container';
-import { DesignerContainer } from '../designer/DesignerContainer';
-import { BPContainer } from '../bp/BPContainer';
+import React, {Component, Fragment} from 'react';
+import {Link, Redirect, Route, RouteComponentProps, Switch} from 'react-router-dom';
+import {Icon} from 'office-ui-fabric-react/lib/components/Icon';
+import {IconButton} from 'office-ui-fabric-react/lib/components/Button';
+import {gdmnActionsAsync} from "@src/app/scenes/gdmn/actions";
+import {ContextualMenuItem, IContextualMenuItemProps} from 'office-ui-fabric-react/lib/components/ContextualMenu';
+import {ProgressIndicator} from 'office-ui-fabric-react/lib/ProgressIndicator';
+import {Dispatch} from 'redux';
+import {ErrorBoundary, isDevMode} from '@gdmn/client-core';
+import {commandsToContextualMenuItems, commandToLink} from '@src/app/services/uiCommands';
+import {ViewTabsContainer} from '@src/app/components/ViewTab/ViewTabsContainer';
+import {StompDemoViewContainer} from './components/StompDemoViewContainer';
+import {SqlContainer} from '../sql/SqlContainer';
+import {AccountViewContainer} from './components/AccountViewContainer';
+import {ERModelBoxContainer} from '../ermodel2/ERModelBoxContainer';
+import {InternalsContainer} from '../internals/container';
+import {rootActions} from '../root/actions';
+import {MessageBar, MessageBarType} from 'office-ui-fabric-react';
+import {LostConnectWarnMsgBar} from './components/LostConnectWarnMsgBar';
+import {ApplicationsViewContainer} from './components/ApplicationsViewContainer';
+import {IApplicationInfo} from '@gdmn/server-api';
+import {EntityDataDlgContainer} from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
+import {IEntityDataDlgRouteProps} from '../ermodel/EntityDataDlg/EntityDataDlg.types';
+import {EntityDataViewContainer} from '../ermodel/EntityDataView/EntityDataViewContainer';
+import {ERModelView2Container} from '../ermodel/ERModelView2Container';
+import {DesignerContainer} from '../designer/DesignerContainer';
+import {BPContainer} from '../bp/BPContainer';
+import {NewEntityContainer} from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
+
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -304,6 +303,18 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                       id={props.match.params.id}
                       url={props.match.url}
                       newRecord={false}
+                    />
+                  )}
+                />
+              }
+              {
+                <Route
+                  path={`${match.path}/addEntity`}
+                  render={(props: RouteComponentProps<IEntityDataDlgRouteProps>)  => (
+                    <NewEntityContainer
+                      {...props}
+                      newRecord={true}
+                      url={props.match.url}
                     />
                   )}
                 />

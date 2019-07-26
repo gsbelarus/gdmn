@@ -1,0 +1,18 @@
+.ScrollableDlg {
+  overflow: scroll;
+  height: 100%;
+}
+
+.FieldsColumn {
+  width: 380px;
+  padding: 16px;
+}
+
+.container {
+  display: flex; /* or inline-flex */
+  justify-content: flex-start;
+}
+
+.item {
+  align-self: flex-end;
+}

@@ -1,0 +1,17 @@
+export const listType = [
+  {key: 'Detail', text: 'Detail'},
+  {key: 'Parent', text: 'Parent'},
+  {key: 'Entity', text: 'Entity'},
+  {key: 'String', text: 'String'},
+  {key: 'Set', text: 'Set'},
+  {key: 'Sequence', text: 'Sequence'},
+  {key: 'Integer', text: 'Integer'},
+  {key: 'Numeric', text: 'Numeric'},
+  {key: 'Float', text: 'Float'},
+  {key: 'Boolean', text: 'Boolean'},
+  {key: 'Date', text: 'Date'},
+  {key: 'TimeStamp', text: 'TimeStamp'},
+  {key: 'Time', text: 'Time'},
+  {key: 'Blob', text: 'Blob'},
+  {key: 'Enum', text: 'Enum'},
+]
