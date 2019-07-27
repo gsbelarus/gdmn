@@ -4,9 +4,10 @@ import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
 import { CommandBar, ICommandBarItemProps, Dropdown } from 'office-ui-fabric-react';
-import { flowCharts, IBlock, isDecisionTransition, isXORTransition } from '@src/app/fsm/fsm';
 import { getLName } from 'gdmn-internals';
-import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants, mxPerimeter } from 'mxgraph/javascript/mxClient';
+import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants } from 'mxgraph/javascript/mxClient';
+import { flowCharts } from '@src/app/fsm/flowCharts';
+import { IBlock, isDecisionTransition } from '@src/app/fsm/types';
 
 interface IGraphState{
   graph: any;
@@ -74,7 +75,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       graph.removeCells(graph.getChildVertices(parent));
 
       const map = new Map<IBlock, any>();
-      Object.entries(bp.states).forEach( ([name, s]) => {
+      Object.entries(bp.blocks).forEach( ([name, s]) => {
         const style = s.type.shape === 'PROCESS'
           ? 'shape=rectangle'
           : s.type.shape === 'DECISION'
