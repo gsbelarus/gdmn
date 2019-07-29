@@ -60,7 +60,8 @@ import {
   TGetMainSessionsInfoCmdResult,
   TGetNextIdTaskCmdResult,
   TQuerySetTaskCmdResult,
-  TAddEntityTaskCmdResult
+  TAddEntityTaskCmdResult,
+  TDeleteEntityTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -393,6 +394,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.ADD_ENTITY,
+        payload
+      }
+    });
+  }
+
+  public deleteEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE_ENTITY]): Promise<TDeleteEntityTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.DELETE_ENTITY,
         payload
       }
     });
