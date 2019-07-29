@@ -26,6 +26,7 @@ import {
   TCommitResult,
   TCommitFunc} from "./types";
 import {checkField, getAsBoolean, getAsDate, getAsNumber, getAsString, isNull} from "./utils";
+import { IDateFormat, INumberFormat } from "./format";
 
 export interface IRSSQLParams {
   [name: string]: any;
@@ -771,16 +772,18 @@ export class RecordSet {
     return checkField(this._get(rowIdx, calcFields).data, fieldName, defaultValue);
   }
 
-  public getString(fieldName: string, rowIdx?: number, defaultValue?: string): string {
+  public getString(fieldName: string, rowIdx?: number, defaultValue?: string, dateFormat? : IDateFormat, numberFormat?: INumberFormat): string {
     const {calcFields} = this._params;
     const fd = this.getFieldDef(fieldName);
     switch (fd.dataType) {
-      case (TFieldType.Float, TFieldType.Integer, TFieldType.Currency):
+      case TFieldType.Float:
+      case TFieldType.Integer:
+      case TFieldType.Currency:
         return getAsString(
           this._get(rowIdx, calcFields).data,
           fieldName,
           defaultValue,
-          fd.numberFormat
+          numberFormat ? numberFormat : fd.numberFormat
         );
       case TFieldType.Date:
         return getAsString(
@@ -788,7 +791,7 @@ export class RecordSet {
           fieldName,
           defaultValue,
           undefined,
-          fd.dateFormat
+          dateFormat ? dateFormat : fd.dateFormat
         );
       default:
         return getAsString(this._get(rowIdx, calcFields).data, fieldName, defaultValue);

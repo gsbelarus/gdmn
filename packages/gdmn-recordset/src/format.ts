@@ -1,4 +1,5 @@
 export interface INumberFormat {
+  name?: string;
   minIntDigits?: number;
   minDecDigits?: number;
   maxDecDigits?: number;
@@ -28,7 +29,7 @@ export const formatNumber: FormatNumber = (n: number, format?: INumberFormat): s
       decDigits = Math.max(decDigits, minDecDigits);
     }
 
-    if (maxDecDigits) {
+    if (maxDecDigits || maxDecDigits === 0) {
       decDigits = Math.min(decDigits, maxDecDigits);
     }
 
