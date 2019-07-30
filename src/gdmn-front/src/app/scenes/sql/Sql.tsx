@@ -181,12 +181,15 @@ export const Sql = CSSModules(
 
     const handleUpdateTab = (historyRsName: string) => {
       console.log('Update tab');
-      if (rs && viewTab) {
+
+      console.log(rs, viewTab);
+      if (viewTab && (!viewTab.rs || (viewTab.rs && !viewTab.rs.includes(historyRsName)))) {
+        console.log('Update tab. end');
         dispatch(
           gdmnActions.updateViewTab({
             url,
             viewTab: {
-              rs: [rs.name, historyRsName]
+              rs: viewTab.rs ? [...viewTab.rs, historyRsName] : [historyRsName]
             }
           })
         );
