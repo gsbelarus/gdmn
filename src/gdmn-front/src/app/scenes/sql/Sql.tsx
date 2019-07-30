@@ -180,11 +180,7 @@ export const Sql = CSSModules(
     const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
 
     const handleUpdateTab = (historyRsName: string) => {
-      console.log('Update tab');
-
-      console.log(rs, viewTab);
       if (viewTab && (!viewTab.rs || (viewTab.rs && !viewTab.rs.includes(historyRsName)))) {
-        console.log('Update tab. end');
         dispatch(
           gdmnActions.updateViewTab({
             url,

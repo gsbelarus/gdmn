@@ -18,9 +18,7 @@ export const HistoryDialog = (props: IHistoryProps) => {
 
   useEffect(() => {
     if (rsName) {
-      console.log('Update tab. start');
       // Добавляем имя rs к закладке
-      // console.log(rsName);
       onUpdate(rsName)
     }
   }, [rsName]);
