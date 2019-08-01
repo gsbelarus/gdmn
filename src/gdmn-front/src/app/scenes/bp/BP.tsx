@@ -103,7 +103,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         }
       };
 
-      bp.flow.forEach( f => {
+      Object.values(bp.flow).forEach( f => {
         if (isDecisionTransition(f)) {
           connectBlocks(f.from, f.yes, 'Yes');
           connectBlocks(f.from, f.no, 'No');

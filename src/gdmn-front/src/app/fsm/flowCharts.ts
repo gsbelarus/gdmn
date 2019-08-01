@@ -53,37 +53,37 @@ export const flowCharts: IFlowcharts = {
       }
     },
     blocks,
-    flow: [
-      {
+    flow: {
+      'begin': {
         from: blocks.login,
         to: blocks.showData
       },
-      {
+      'ui': {
         from: blocks.showData,
         to: blocks.chooseUserAction
       },
-      {
+      'userAction': {
         from: blocks.chooseUserAction,
         to: [blocks.addRecord, blocks.decision, blocks.workDone]
       },
-      {
+      'addRecord': {
         from: blocks.addRecord,
         to: blocks.showData
       },
-      {
+      'test2hrs': {
         from: blocks.decision,
         yes: [blocks.deleteRecord, blocks.editRecord],
         no: blocks.showData
       },
-      {
+      'deleteRecord': {
         from: blocks.deleteRecord,
         to: blocks.showData
       },
-      {
+      'editRecord': {
         from: blocks.editRecord,
         to: blocks.showData
       }
-    ]
+    }
   },
   'Test': {
     label: {
@@ -97,6 +97,6 @@ export const flowCharts: IFlowcharts = {
       }
     },
     blocks: {},
-    flow: []
+    flow: {}
   }
 };

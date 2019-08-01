@@ -67,11 +67,15 @@ export function isXORTransition(transition: Transition): transition is IXORTrans
 
 export type Transition = ITransition | IXORTransition | IDecisionTransition;
 
+export interface IFlow {
+  [id: string]: Transition;
+};
+
 export interface IFlowchart {
   label: LName;
   description: LName;
   blocks: IBlocks;
-  flow: Transition[];
+  flow: IFlow;
 };
 
 export interface IFlowcharts {
