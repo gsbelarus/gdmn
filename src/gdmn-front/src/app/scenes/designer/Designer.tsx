@@ -15,12 +15,16 @@ import {
   ITextFieldStyles
 } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
-import { ChromePicker  } from 'react-color';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
+
+interface ITheme {
+  background: string,
+  color: string
+}
 
 interface ISize {
   unit: TUnit;
@@ -54,9 +58,9 @@ interface IField {
 }
 
 const StyleBorder = ['none', 'solid', 'double', 'groove', 'ridge', 'dashed', 'dotted', 'inset', 'outset'];
-const FamilyFont = ["Times New Roman, serif", "Arial, sans-serif", "Courier New, monospace", "Bickley Script, cursive, serif", "Euclid Fraktur, fantasy, serif", "Lucida Console, Monaco, monospace"];
-const StyleFont = ["normal", "italic"];
-const WeightFont = ["normal", "bold"];
+const FamilyFont = ['Times New Roman, serif', 'Arial, sans-serif', 'Courier New, monospace', 'Bickley Script, cursive, serif', 'Euclid Fraktur, fantasy, serif', 'Lucida Console, Monaco, monospace'];
+const StyleFont = ['normal', 'italic'];
+const WeightFont = ['normal', 'bold'];
 
 interface IBorder {
   width: number;
@@ -94,30 +98,10 @@ export interface IDesignerState {
   selectedField?: string;
 };
 
-const ButtonExample = (props: {color: string, onChangeColor: (color: string) => void}): JSX.Element => {
-  const [displayColorPicker, onChange] = useState(false);
-
-  const handleClick = () => {
-    onChange(!displayColorPicker)
-  };
-
-  const handleClose = () => {
-    onChange( false )
-  };
-
-    return (
-      <div>
-        <DefaultButton onClick={() => handleClick() }>Select</DefaultButton>
-        { displayColorPicker ?
-          <>
-            <div
-              onClick={() => handleClose() }
-            />
-              <ChromePicker color={ props.color } onChangeComplete={(c) => props.onChangeColor(c.hex) } />
-          </> : null }
-      </div>
-    )
-  }
+const defaultTheme: ITheme = {
+  background: '#FFFFFF',
+  color: '#000000'
+}
 
   const defaultState = (entityName: string, fields?: IFieldDef[]) => {return {
     grid: {
@@ -144,14 +128,14 @@ const ButtonExample = (props: {color: string, onChangeColor: (color: string) => 
           size: 14,
           style: 'normal',
           family: 'Arial, sans-serif',
-          color: '#000000',
+          color: defaultTheme.color,
           weight: 'normal'
         },
-        background: '#ffffff',
+        background: defaultTheme.background,
         border: {
           width: 1,
           style: 'none',
-          color: '#ffffff',
+          color: defaultTheme.background,
           radius: 3
         },
         align: 'center',
@@ -173,14 +157,14 @@ const ButtonExample = (props: {color: string, onChangeColor: (color: string) => 
           size: 14,
           style: 'normal',
           family: 'Arial, sans-serif',
-          color: '#000000',
+          color: defaultTheme.color,
           weight: 'normal'
         },
-        background: '#ffffff',
+        background: defaultTheme.background,
         border: {
           width: 1,
           style: 'none',
-          color: '#ffffff',
+          color: defaultTheme.background,
           radius: 3
         },
         align: 'center',
@@ -191,6 +175,9 @@ const ButtonExample = (props: {color: string, onChangeColor: (color: string) => 
     changeArray: [],
     activeTab: 'Настройка'
   } as IDesignerState};
+
+//  const secondsColors = ['#70E500', '#74B5F5', '#aa5fe3', '#FFD300', '#FFFFFF', '#000000']
+  const secondsColors = ['#79bf6d', '#62aaf0', '#aa5fe3', '#FFD300', '#FFFFFF', '#000000']
 
   type Action = { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
@@ -493,12 +480,19 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'SET_STYLE_FIELD': {
       const { selectedField, areas, activeArea, changeArray } = state;
       const { color } = action;
-      const fields = areas[activeArea!].fields.map(
-        field => field.key === selectedField ? {key: field.key, color} as IField : field
-      );
+      if(selectedField) {
+        const fields = areas[activeArea!].fields.map(
+          field => field.key === selectedField ? {key: field.key, color} as IField : field
+        );
+        return {
+          ...state,
+          areas: [...areas.map((area, idx) => idx !== Number(activeArea!) ? area : {...area, fields})],
+          changeArray: [...changeArray!, {...state}]
+        }
+      }
       return {
         ...state,
-        areas: [...areas.map((area, idx) => idx !== Number(activeArea!) ? area : {...area, fields})],
+        areas: [...areas.map(area => {return {...area, fields: area.fields.map(field => {return {...field, color}})}})],
         changeArray: [...changeArray!, {...state}]
       }
     } 
@@ -745,21 +739,18 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields, rs, entity } = props;
 
-  const field = (props: { fd: IFieldDef, styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles> }): JSX.Element | undefined => {
+  const Field = (props: { fd: IFieldDef, styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles> }): JSX.Element => {
   const locked = rs ? rs.locked : false;
 
-  if (!props.fd.eqfa) {
-    return undefined;
-  }
-  if (props.fd.eqfa.linkAlias !== rs!.eq!.link.alias && props.fd.eqfa.attribute === 'ID') {
-    const fkFieldName = props.fd.eqfa.linkAlias;
+  if (props.fd.eqfa!.linkAlias !== rs!.eq!.link.alias && props.fd.eqfa!.attribute === 'ID') {
+    const fkFieldName = props.fd.eqfa!.linkAlias;
     const attr = entity!.attributes[fkFieldName] as EntityAttribute;
     if (attr instanceof EntityAttribute) {
       return (
         <LookupComboBox
           key={fkFieldName}
           name={fkFieldName}
-          label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+          label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
           onLookup={(filter, limit) => {return Promise.resolve([])}}
           onChanged={() => {}}
           styles={props.styles as ITextFieldStyles}
@@ -768,25 +759,64 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     }
   }
 
-  if (props.fd.eqfa.linkAlias !== rs!.eq!.link.alias) {
-    return undefined;
-  }
-
   if (props.fd.dataType === TFieldType.Date) {
+    let rootStyle = props.styles ? (props.styles as ITextFieldStyles)! : undefined;
     return (
       <DatepickerJSX
         key={props.fd.fieldName}
         fieldName={`${props.fd.fieldName}`}
-        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         value=''
         onChange={() => {}}
-        styles={props.styles as ITextFieldStyles}
+        styles={props.styles}
+        styleIcon={{
+          root: {
+            backgroundColor: rootStyle!.fieldGroup!.background,
+            color: `${rootStyle!.root!.color}99`,
+            border: `1px solid ${rootStyle!.root!.color}`,
+            borderLeft: 'none'
+          },
+          rootHovered: {
+            color: `${rootStyle!.root!.color}`,
+            backgroundColor: rootStyle!.fieldGroup!.background,
+            borderColor: `${rootStyle!.root!.color}`,
+            borderLeft: 'none'
+          },
+          rootChecked: {
+            color: `${rootStyle!.root!.color}`,
+            backgroundColor: rootStyle!.fieldGroup!.background,
+            borderColor: `${rootStyle!.root!.color}`,
+            borderLeft: 'none'
+          },
+    
+          rootCheckedHovered: {
+            color: `${rootStyle!.root!.color}`,
+            backgroundColor: rootStyle!.fieldGroup!.background,
+            borderColor: `${rootStyle!.root!.color}`,
+            borderLeft: 'none'
+          }
+        }}
     />);
   } else if (props.fd.dataType === TFieldType.Boolean) {
     let subComponentStyle = props.styles ? (props.styles as ITextFieldStyles)!.subComponentStyles.label : undefined;
     const styleCheckBox = subComponentStyle !== undefined ? {
-      root: {marginTop: '10px'},
-      text: {...subComponentStyle.root}
+      root: {marginTop: '10px',
+      selectors: {
+        ':hover .ms-Checkbox-checkbox': {
+          borderColor: subComponentStyle.root.color
+        },
+        ':hover .ms-Checkbox-checkmark': {
+          color: `${subComponentStyle.root.color}99`
+        },
+        ':hover .ms-Checkbox-text': {
+          color: subComponentStyle.root.color
+        }
+      }
+    },
+      text: {...subComponentStyle.root},
+      checkbox: {
+        borderColor: subComponentStyle.root.color
+      }
     } : {
       root: {marginTop: '10px'}
     }
@@ -794,7 +824,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       <Checkbox
         key={props.fd.fieldName}
         disabled={locked}
-        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         defaultChecked={rs!.getBoolean(props.fd.fieldName)}
         styles={styleCheckBox}
       />
@@ -803,13 +833,21 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     return (
       <TextField
         key={props.fd.fieldName}
-        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+        label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         styles={props.styles}
         defaultValue={rs!.getString(props.fd.fieldName)}
+        readOnly={true}
       />
     )
   }
 }
+
+const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
+  if (prevProps === nextProps) {
+    return true;
+  }
+  return false;
+})
   
   const getSavedLastEdit = (): IDesignerState | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.changesDesigner instanceof Object) {
@@ -1068,6 +1106,13 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     );
   };
 
+  const MemoToolPanel = React.memo(WithToolPanel, (prevProps, nextProps) => {
+    if (prevProps === nextProps) {
+      return true;
+    }
+    return false;
+  })
+
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
 
     const area = areas[activeArea];
@@ -1079,7 +1124,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
 
     return (
-      <WithToolPanel
+      <MemoToolPanel
         {...props}
         toolPanel={
           <div className="SettingForm">
@@ -1227,6 +1272,62 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                     }}
                     key='Setting'
                   >
+                    <div className='selectBackground' style={{display: 'flex'}}>
+                      <div
+                        key='light'
+                        onClick={e => {
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: '#FFFFFF'} })
+                          designerDispatch({ type: 'SET_STYLE_FIELD', color: '#FFFFFF' })
+                        }}
+                        style={{
+                          height: '36px',
+                          width: '72px',
+                          background: '#FFFFFF',
+                          borderColor: style.background === '#FFFFFF' ? '#FF0000' : undefined,
+                          borderStyle: 'solid',
+                          borderWidth: '1px',
+                          margin: '2px',
+                          alignItems: 'center'
+                    }}
+                      >light</div> 
+                      <div
+                        key='dark'
+                        onClick={e => {
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: '#2E2E2E'} })
+                          designerDispatch({ type: 'SET_STYLE_FIELD', color: '#2E2E2E' })
+                        }}
+                        style={{
+                          height: '36px',
+                          width: '72px',
+                          background: '#2E2E2E',
+                          color: '#FFFFFF',
+                          borderColor: style.background !== '#FFFFFF' ? '#FF0000' : undefined,
+                          borderStyle: 'solid',
+                          borderWidth: '1px',
+                          margin: '2px'
+                        }}
+                      >dark</div>
+                      </div>
+                      <div className='selectSecondColor' style={{display: 'flex'}}>
+                        {secondsColors.map((color, idx) => {
+                          return <div
+                            className={`color ${color}`}
+                            key={color}
+                            onClick={e => designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color}} })}
+                            style={{
+                              background: color,
+                              color: idx === secondsColors.length - 1 ? '#FFFFFF' : undefined,
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '16px',
+                              borderStyle: 'solid',
+                              borderWidth: '1px',
+                              borderColor: style.font.color === color ? '#FF0000' : '#696969',
+                              margin: '2px'
+                            }}
+                          ></div>
+                        })}
+                      </div>
                     <div>
                       <Label>Size</Label>
                       <>
@@ -1302,18 +1403,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                     </div>
                     <div>
                       <Label>
-                        Background
-                      </Label>
-                      <ButtonExample
-                        key='background'
-                        color={style.background}
-                        onChangeColor={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: e} });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>
                         Font
                       </Label>
                       <div>
@@ -1325,18 +1414,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                           value={style.font.size.toString()}
                           onChange={(e) => {
                             designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, size: Number(e.currentTarget.value)}} });
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <Label>
-                          Color
-                        </Label>
-                        <ButtonExample
-                          key='font-color'
-                          color={style.font.color}
-                          onChangeColor={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color: e}} });
                           }}
                         />
                       </div>
@@ -1388,11 +1465,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <ButtonExample
+                        <TextField
                           key='border-color'
-                          color={style.border.color}
-                          onChangeColor={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e}} });
+                          value={style.border.color}
+                          onChange={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e.currentTarget.value}} });
                           }}
                         />
                       </div>
@@ -1444,11 +1521,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <ButtonExample
+                        <TextField
                           key='fieldColor'
-                          color={areas[activeArea!].fields.find(field => field.key === selectedField)!.color}
-                          onChangeColor={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_FIELD', color: e });
+                          value={areas[activeArea!].fields.find(field => field.key === selectedField)!.color}
+                          onChange={(e) => {
+                            designerDispatch({ type: 'SET_STYLE_FIELD', color: e.currentTarget.value });
                           }}
                         />
                       </div>
@@ -1487,6 +1564,84 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       />)
   }, styles, { allowMultiple: true });
+
+  const Area = (props: {area: IArea, idx: number}): JSX.Element => {
+    const {area, idx} = props;
+    return (
+    <div
+        key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
+        style={{
+          gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
+          display: 'flex',
+          flexDirection: area.direction,
+          justifyContent: 'flex-start',
+          background: `${area.style.background}`,
+          margin: `${area.style.margin}px`,
+          padding: `${area.style.padding}px`,
+          border: area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style.background : '#606060'}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
+          borderRadius: `${area.style.border.radius}px`,
+          color: `${area.style.font.color}`,
+          fontSize: `${area.style.font.size}px`,
+          fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
+          fontStyle: `${area.style.font.style}`,
+          fontFamily: `${area.style.font.family}`
+        }}
+        onMouseDown={getOnMouseDownForArea(idx)}
+        >
+          <div
+            style={
+              previewMode
+              ? {
+                backgroundSize: '16px 16px',
+                margin: '1px',
+                borderRadius: '4px',
+                padding: '4px',
+                minHeight: '64px'
+              }
+              : activeArea === idx
+                ? {
+                  backgroundSize: '16px 16px',
+                  margin: '1px',
+                  borderRadius: '4px',
+                  padding: '4px',
+                  minHeight: '64px',
+                  border: '2px dashed #d84141',
+                  height: '100%'
+                }
+                : {
+                  backgroundSize: '16px 16px',
+                  margin: '1px',
+                  borderRadius: '4px',
+                  padding: '4px',
+                  minHeight: '64px'
+                }
+            }
+          >
+          {
+            area.fields.map(f =>
+              { 
+                const fd: IFieldDef | undefined = rs!.fieldDefs.find(fieldDef =>
+                  `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
+                );
+              return fd !== undefined
+              ? <div
+                key={f.key}
+                onMouseDown={getOnMouseDownForField(idx, f.key)}
+              ><FieldMemo fd={fd} styles={getStyleField(area, f)}/></div>
+              : undefined
+              }
+            )
+          }
+        </div>
+      </div>);
+  }
+
+  const MemoArea = React.memo(Area, (prevProps, nextProps) => {
+    if (prevProps === nextProps) {
+      return true;
+    }
+    return false;
+  })
 
   const OneSize = ({ label, size, isRow, onChange }: { label: string, size: ISize, isRow: boolean, onChange: (newSize: ISize) => void }) => {
 
@@ -1599,21 +1754,49 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       },
       root: {
+        color: `${area.style.font.color}`,
         flexGrow: area.direction === 'row' ? 1 : 0,
+        background: `${area.style.background}`,
+        selectors: {
+          ':hover': {
+            borderColor: `${area.style.font.color}99`
+          }
+        }
+      },
+      fieldGroup: {
+        borderColor: `${area.style.font.color}`,
+        borderWidth: field.key === selectedField ? '3px' : '1px',
+        background: field.color,
+        selectors: {
+          ':hover': {
+            borderColor: `${area.style.font.color}99`
+          }
+        }
+      },
+      field: {
+        color: `${area.style.background}`
+      },
+      input: {
+        borderColor: `${area.style.font.color}`,
+        borderWidth: field.key === selectedField ? '3px' : '1px',
+        background: field.color,
+        selectors: {
+          ':hover': {
+            borderColor: `${area.style.font.color}99`
+          }
+        }
       }
     }
-    return {
-      ...style,
-      fieldGroup: field.key === selectedField ? {border: '3px solid', background: field.color} : {background: field.color},
-    } as Partial<ITextFieldStyles>;
+    return style as Partial<ITextFieldStyles>;
   }
 
   return (
     <>
-      <CommandBar items={commandBarItems[0]} />
-      <CommandBar items={commandBarItems[1]} />
+      <CommandBar key={'commandBarFunctional'} items={commandBarItems[0]} />
+      <CommandBar key={'commandBarAction'} items={commandBarItems[1]} />
       <WithAreaExplorer>
           <div
+            key='withAreaExplorer'
             style={getGridStyle()}
             tabIndex={0}
             ref={divRef}
@@ -1626,55 +1809,10 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                 ? areas
                   .map((area, idx) => (
                     showAreas.find(findArea => area === findArea) ? 
-                  <div
-                    key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
-                    style={{
-                      gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
-                      display: 'flex',
-                      flexDirection: area.direction,
-                      justifyContent: 'flex-start',
-                      background: `${area.style.background}`,
-                      margin: `${area.style.margin}px`,
-                      padding: `${area.style.padding}px`,
-                      border: area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style.background : '#606060'}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
-                      borderRadius: `${area.style.border.radius}px`,
-                      color: `${area.style.font.color}`,
-                      fontSize: `${area.style.font.size}px`,
-                      fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                      fontStyle: `${area.style.font.style}`,
-                      fontFamily: `${area.style.font.family}`
-                    }}
-                    onMouseDown={getOnMouseDownForArea(idx)}
-                    >
-                      <div
-                    styleName={
-                      previewMode
-                        ? "commonStyle"
-                        : activeArea === idx
-                          ? "commonStyle activeArea"
-                          : "commonStyle"
-                    }
-                  >
-                    {
-                      area.fields.map(f =>
-                        { 
-                          const fd: IFieldDef | undefined = rs!.fieldDefs.find(fieldDef =>
-                            `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
-                          );
-                        return fd !== undefined
-                        ? <div
-                          key={f.key}
-                          onMouseDown={getOnMouseDownForField(idx, f.key)}
-                        >{field({fd, styles: getStyleField(area, f)})}</div>
-                        : undefined
-                        }
-                      )
-                    }
-                  </div>
-                  </div>
+                      <MemoArea key={idx} area={area} idx={idx} />
+                    : null
+                  ))
                 : null
-              ))
-            : null
             }
             {
               previewMode || !selection

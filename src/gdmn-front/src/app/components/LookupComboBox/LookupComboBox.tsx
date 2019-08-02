@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef, ITextFieldStyles } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef, ITextFieldStyles, IComboBoxStyles, IStyle } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
@@ -299,6 +299,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
   };
 
   const styleLable = styles ? styles.subComponentStyles.label : undefined;
+  const srt = styles ? styles.root : undefined
 
   return (
     <ComboBox
@@ -319,6 +320,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       styles={
         selectedOption && styles
         ? {
+          ...styles,
           root: {
             backgroundColor: '#77ff77'
           },
@@ -338,7 +340,23 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
         }
         : styles ?
         {
-          label: {...styleLable!.root}
+          ...styles,
+          label: {...styleLable!.root},
+          root: {...styles.fieldGroup!.valueOf()},
+          rootHovered: {...styles.fieldGroup!.valueOf()}
+        }
+        : undefined
+      }
+      caretDownButtonStyles={
+        styles ? {
+          rootHovered: {
+            color: `#474747`,
+            backgroundColor: `${srt!.color}`
+          },
+          rootChecked: {
+            color: `${srt!.color}`,
+            backgroundColor: `#474747`
+          }
         }
         : undefined
       }

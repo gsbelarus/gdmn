@@ -1,7 +1,7 @@
 import React from 'react';
 import CalendarJSX from './Calendar';
 import "@src/styles/Datepicker.css";
-import { TextField, IconButton, ITextField, ITextFieldStyles } from "office-ui-fabric-react";
+import { TextField, IconButton, ITextField, ITextFieldStyles, IStyleFunction, ITextFieldStyleProps, IButtonStyles } from "office-ui-fabric-react";
 
 export interface IDatepickerProps {
   fieldName?: string;
@@ -10,7 +10,8 @@ export interface IDatepickerProps {
   onChange: (newValue?: string) => void;
   onFocus?: () => void;
   componentRef?: (ref: ITextField | null) => void;
-  styles?: ITextFieldStyles;
+  styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles>;
+  styleIcon?: IButtonStyles;
 }
 
 export interface IDatepickerState {
@@ -22,7 +23,7 @@ export interface IDatepickerState {
   selectYear: number;
 }
 
-export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepickerState> {
+export class DatepickerJSX extends React.PureComponent<IDatepickerProps, IDatepickerState> {
   private _node: React.RefObject<HTMLDivElement>;
   private ref: React.MutableRefObject<ITextField | null>;
 
@@ -162,6 +163,29 @@ export class DatepickerJSX extends React.Component<IDatepickerProps, IDatepicker
           <IconButton
             iconProps={{ iconName: 'Calendar' }}
             className="icon-calendar"
+            styles={
+              this.props.styleIcon
+                ? this.props.styleIcon
+                : {
+                root: {
+                  border: `1px solid #8A8886`,
+                  borderLeft: 'none'
+                },
+                rootHovered: {
+                  border: `1px solid #8A8886`,
+                  borderLeft: 'none'
+                },
+                rootChecked: {
+                  border: `1px solid #8A8886`,
+                  borderLeft: 'none'
+                },
+          
+                rootCheckedHovered: {
+                  border: `1px solid #8A8886`,
+                  borderLeft: 'none'
+                }
+              }
+            }
             onClick={() => { this.setState({ showCalendar: true }) }}
           />
         </div>
