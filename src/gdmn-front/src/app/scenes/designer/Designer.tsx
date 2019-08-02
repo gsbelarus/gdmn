@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react';
+import React, { useEffect, useReducer, useRef, Fragment } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
@@ -9,13 +9,11 @@ import {
   Checkbox,
   TextField,
   Label,
-  DefaultButton,
   IStyleFunction,
   ITextFieldStyleProps,
   ITextFieldStyles
 } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
-import { ChromePicker  } from 'react-color';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
@@ -93,31 +91,6 @@ export interface IDesignerState {
   activeTab: string;
   selectedField?: string;
 };
-
-const ButtonExample = (props: {color: string, onChangeColor: (color: string) => void}): JSX.Element => {
-  const [displayColorPicker, onChange] = useState(false);
-
-  const handleClick = () => {
-    onChange(!displayColorPicker)
-  };
-
-  const handleClose = () => {
-    onChange( false )
-  };
-
-    return (
-      <div>
-        <DefaultButton onClick={() => handleClick() }>Select</DefaultButton>
-        { displayColorPicker ?
-          <>
-            <div
-              onClick={() => handleClose() }
-            />
-              <ChromePicker color={ props.color } onChangeComplete={(c) => props.onChangeColor(c.hex) } />
-          </> : null }
-      </div>
-    )
-  }
 
   const defaultState = (entityName: string, fields?: IFieldDef[]) => {return {
     grid: {
@@ -1100,6 +1073,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       onClick={() => designerDispatch({ type: 'SET_ACTIVE_TAB', tab: t }) }
                       style={{
                         backgroundColor: 'white',
+                        cursor: 'pointer',
                         color: '#404040',
                         minWidth: '96px',
                         display: 'flex',
@@ -1145,6 +1119,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         className="SettingFormTab"
                         onClick={() => designerDispatch({ type: 'SET_ACTIVE_TAB', tab: t }) }
                         style={{
+                          cursor: 'pointer',
                           backgroundColor: 'white',
                           color: '#404040',
                           minWidth: '96px',
@@ -1304,13 +1279,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                       <Label>
                         Background
                       </Label>
-                      <ButtonExample
-                        key='background'
-                        color={style.background}
-                        onChangeColor={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: e} });
-                        }}
-                      />
                     </div>
                     <div>
                       <Label>
@@ -1332,13 +1300,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <ButtonExample
-                          key='font-color'
-                          color={style.font.color}
-                          onChangeColor={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color: e}} });
-                          }}
-                        />
                       </div>
                       <div>
                         <Label>
@@ -1388,13 +1349,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <ButtonExample
-                          key='border-color'
-                          color={style.border.color}
-                          onChangeColor={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e}} });
-                          }}
-                        />
                       </div>
                       <div>
                         <Label>
@@ -1444,13 +1398,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
                         <Label>
                           Color
                         </Label>
-                        <ButtonExample
-                          key='fieldColor'
-                          color={areas[activeArea!].fields.find(field => field.key === selectedField)!.color}
-                          onChangeColor={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_FIELD', color: e });
-                          }}
-                        />
                       </div>
                     </div>
                     : undefined
