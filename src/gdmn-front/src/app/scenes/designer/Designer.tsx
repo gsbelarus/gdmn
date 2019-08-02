@@ -9,10 +9,8 @@ import {
   Checkbox,
   TextField,
   Label,
-  DefaultButton,
-  IStyleFunction,
-  ITextFieldStyleProps,
-  ITextFieldStyles
+  IComboBoxStyles,
+  IButtonStyles
 } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
@@ -739,13 +737,48 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields, rs, entity } = props;
 
-  const Field = (props: { fd: IFieldDef, styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles> }): JSX.Element => {
+  const Field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection }): JSX.Element => {
   const locked = rs ? rs.locked : false;
 
   if (props.fd.eqfa!.linkAlias !== rs!.eq!.link.alias && props.fd.eqfa!.attribute === 'ID') {
     const fkFieldName = props.fd.eqfa!.linkAlias;
     const attr = entity!.attributes[fkFieldName] as EntityAttribute;
     if (attr instanceof EntityAttribute) {
+      const style = {
+        label: {
+          color: props.areaStyle!.font.color,
+          fontSize: `${props.areaStyle!.font.size}px`,
+          fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
+          fontFamily: props.areaStyle!.font.family
+        },
+        root: {
+          color: props.areaStyle!.font.color,
+          flexGrow: props.aeraDirection! === 'row' ? 1 : 0,
+          background: props.areaStyle!.background,
+          borderColor: props.areaStyle!.font.color,
+          borderWidth: props.field!.key === selectedField ? '3px' : '1px'
+        },
+        input: {
+          color: props.areaStyle!.font.color, 
+          background: props.field!.color
+        },
+        rootHovered: {
+          color: `#474747`,
+          borderColor: `${props.areaStyle!.font.color}99`
+        }
+      }
+      const styleCaretDownButton = {
+        rootHovered: {
+          color: `#474747`,
+          backgroundColor: props.areaStyle!.font.color,
+          borderColor: `${props.areaStyle!.font.color}99`
+        },
+        rootChecked: {
+          color: props.areaStyle!.font.color,
+          backgroundColor: `#474747`,
+          borderColor: `${props.areaStyle!.font.color}99`
+        }
+      }
       return (
         <LookupComboBox
           key={fkFieldName}
@@ -753,14 +786,85 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
           onLookup={(filter, limit) => {return Promise.resolve([])}}
           onChanged={() => {}}
-          styles={props.styles as ITextFieldStyles}
+          styles={style as Partial<IComboBoxStyles>}
+          caretDownButtonStyles={styleCaretDownButton as IButtonStyles}
         />
       );
     }
   }
 
   if (props.fd.dataType === TFieldType.Date) {
-    let rootStyle = props.styles ? (props.styles as ITextFieldStyles)! : undefined;
+    const style = {
+      subComponentStyles: {
+        label: {
+          root: {
+            color: props.areaStyle!.font.color,
+            fontSize: `${props.areaStyle!.font.size}px`,
+            fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
+            fontFamily: props.areaStyle!.font.family
+          }
+        }
+      },
+      root: {
+        color: props.areaStyle!.font.color,
+        flexGrow: props.aeraDirection === 'row' ? 1 : 0,
+        background: props.areaStyle!.background,
+        selectors: {
+          ':hover': {
+            borderColor: `${props.areaStyle!.font.color}99`
+          }
+        }
+      },
+      fieldGroup: {
+        borderColor: props.areaStyle!.font.color,
+        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
+        background: props.field!.color,
+        selectors: {
+          ':hover': {
+            borderColor: `${props.areaStyle!.font.color}99`
+          }
+        }
+      },
+      field: {
+        color: props.areaStyle!.background
+      },
+      input: {
+        borderColor: props.areaStyle!.font.color,
+        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
+        background: props.field!.color,
+        selectors: {
+          ':hover': {
+            borderColor: `${props.areaStyle!.font.color}99`
+          }
+        }
+      }
+    }
+    const styleIcon = {
+      root: {
+        backgroundColor: props.areaStyle!.background,
+        color: `${props.areaStyle!.font.color}99`,
+        border: `1px solid ${props.areaStyle!.font.color}`,
+        borderLeft: 'none'
+      },
+      rootHovered: {
+        color: props.areaStyle!.background,
+        backgroundColor: props.areaStyle!.font.color,
+        borderColor: props.areaStyle!.font.color,
+        borderLeft: 'none'
+      },
+      rootChecked: {
+        color: props.areaStyle!.background,
+        backgroundColor: props.areaStyle!.font.color,
+        borderColor: props.areaStyle!.font.color,
+        borderLeft: 'none'
+      },
+      rootCheckedHovered: {
+        color: props.areaStyle!.font.color,
+        backgroundColor: props.areaStyle!.background,
+        borderColor: props.areaStyle!.font.color,
+        borderLeft: 'none'
+      }
+    }
     return (
       <DatepickerJSX
         key={props.fd.fieldName}
@@ -768,54 +872,41 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         value=''
         onChange={() => {}}
-        styles={props.styles}
-        styleIcon={{
-          root: {
-            backgroundColor: rootStyle!.fieldGroup!.background,
-            color: `${rootStyle!.root!.color}99`,
-            border: `1px solid ${rootStyle!.root!.color}`,
-            borderLeft: 'none'
-          },
-          rootHovered: {
-            color: `${rootStyle!.root!.color}`,
-            backgroundColor: rootStyle!.fieldGroup!.background,
-            borderColor: `${rootStyle!.root!.color}`,
-            borderLeft: 'none'
-          },
-          rootChecked: {
-            color: `${rootStyle!.root!.color}`,
-            backgroundColor: rootStyle!.fieldGroup!.background,
-            borderColor: `${rootStyle!.root!.color}`,
-            borderLeft: 'none'
-          },
-    
-          rootCheckedHovered: {
-            color: `${rootStyle!.root!.color}`,
-            backgroundColor: rootStyle!.fieldGroup!.background,
-            borderColor: `${rootStyle!.root!.color}`,
-            borderLeft: 'none'
-          }
-        }}
+        styles={style}
+        styleIcon={styleIcon}
     />);
   } else if (props.fd.dataType === TFieldType.Boolean) {
-    let subComponentStyle = props.styles ? (props.styles as ITextFieldStyles)!.subComponentStyles.label : undefined;
-    const styleCheckBox = subComponentStyle !== undefined ? {
-      root: {marginTop: '10px',
-      selectors: {
-        ':hover .ms-Checkbox-checkbox': {
-          borderColor: subComponentStyle.root.color
-        },
-        ':hover .ms-Checkbox-checkmark': {
-          color: `${subComponentStyle.root.color}99`
-        },
-        ':hover .ms-Checkbox-text': {
-          color: subComponentStyle.root.color
+    const styleCheckBox = props.areaStyle !== undefined ? {
+      root: {
+        marginTop: '10px',
+        selectors: {
+          ':hover .ms-Checkbox-checkbox': {
+            borderColor: `${props.areaStyle.font.color}AA`,
+            background: `${props.areaStyle.font.color}00`,
+            color: props.areaStyle.font.color
+          },
+          ':hover .ms-Checkbox-checkmark': {
+            background: props.areaStyle.background,
+            color: `${props.areaStyle.font.color}AA`
+          },
+          ':hover .ms-Checkbox-text': {
+            color: props.areaStyle.font.color
+          }
         }
-      }
-    },
-      text: {...subComponentStyle.root},
+      },
+      text: {
+        color: props.areaStyle.font.color,
+        flexGrow: props.aeraDirection! === 'row' ? 1 : 0,
+        background: props.areaStyle.background
+      },
       checkbox: {
-        borderColor: subComponentStyle.root.color
+        borderColor: props.areaStyle.font.color,
+        background: `${props.areaStyle.font.color}00`,
+        color: props.areaStyle.background
+      },
+      checkmark: {
+        background: props.areaStyle.font.color,
+        color: props.areaStyle.background
       }
     } : {
       root: {marginTop: '10px'}
@@ -830,13 +921,58 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       />
     )
   } else {
+    const style = {
+      subComponentStyles: {
+        label: {
+          root: {
+            color: props.areaStyle!.font.color,
+            fontSize: `${props.areaStyle!.font.size}px`,
+            fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
+            fontFamily: props.areaStyle!.font.family
+          }
+        }
+      },
+      root: {
+        color: props.areaStyle!.font.color,
+        flexGrow: props.aeraDirection === 'row' ? 1 : 0,
+        background: `${props.areaStyle!.background}`,
+        selectors: {
+          ':hover': {
+            borderColor: `${props.areaStyle!.font.color}99`
+          }
+        }
+      },
+      fieldGroup: {
+        borderColor: props.areaStyle!.font.color,
+        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
+        background: props.field!.color,
+        selectors: {
+          ':hover': {
+            borderColor: `${props.areaStyle!.font.color}99`
+          }
+        }
+      },
+      field: {
+        color: props.areaStyle!.background
+      },
+      input: {
+        borderColor: props.areaStyle!.font.color,
+        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
+        background: props.field!.color,
+        selectors: {
+          ':hover': {
+            borderColor: `${props.areaStyle!.font.color}99`
+          }
+        }
+      }
+    }
     return (
       <TextField
         key={props.fd.fieldName}
         label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
-        styles={props.styles}
         defaultValue={rs!.getString(props.fd.fieldName)}
         readOnly={true}
+        styles={style}
       />
     )
   }
@@ -1627,7 +1763,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               ? <div
                 key={f.key}
                 onMouseDown={getOnMouseDownForField(idx, f.key)}
-              ><FieldMemo fd={fd} styles={getStyleField(area, f)}/></div>
+              ><FieldMemo fd={fd} field={f} areaStyle={area.style} aeraDirection={area.direction}/></div>
               : undefined
               }
             )
@@ -1740,55 +1876,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         && group.rect.bottom >= area.rect.bottom)
       ))
       : areas;
-
-  const getStyleField = (area: IArea, field: IField): Partial<ITextFieldStyles> => {
-    const style = {
-      subComponentStyles: {
-        label: {
-          root: {
-            color: `${area.style.font.color}`,
-            fontSize: `${area.style.font.size}px`,
-            fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-            fontFamily: `${area.style.font.family}`
-          }
-        }
-      },
-      root: {
-        color: `${area.style.font.color}`,
-        flexGrow: area.direction === 'row' ? 1 : 0,
-        background: `${area.style.background}`,
-        selectors: {
-          ':hover': {
-            borderColor: `${area.style.font.color}99`
-          }
-        }
-      },
-      fieldGroup: {
-        borderColor: `${area.style.font.color}`,
-        borderWidth: field.key === selectedField ? '3px' : '1px',
-        background: field.color,
-        selectors: {
-          ':hover': {
-            borderColor: `${area.style.font.color}99`
-          }
-        }
-      },
-      field: {
-        color: `${area.style.background}`
-      },
-      input: {
-        borderColor: `${area.style.font.color}`,
-        borderWidth: field.key === selectedField ? '3px' : '1px',
-        background: field.color,
-        selectors: {
-          ':hover': {
-            borderColor: `${area.style.font.color}99`
-          }
-        }
-      }
-    }
-    return style as Partial<ITextFieldStyles>;
-  }
 
   return (
     <>

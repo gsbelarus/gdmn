@@ -179,7 +179,6 @@ export class DatepickerJSX extends React.PureComponent<IDatepickerProps, IDatepi
                   border: `1px solid #8A8886`,
                   borderLeft: 'none'
                 },
-          
                 rootCheckedHovered: {
                   border: `1px solid #8A8886`,
                   borderLeft: 'none'
