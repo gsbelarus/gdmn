@@ -5,6 +5,7 @@ import { BP } from "./BP";
 
 export const BPContainer = connect(
   (state: IState, ownProps: IBPContainerProps): IBPStateProps => ({
-    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url )
+    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
+    fsm: state.fsm.fsm
   })
 )(BP);
