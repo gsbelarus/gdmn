@@ -136,7 +136,8 @@ export class DatepickerJSX extends React.PureComponent<IDatepickerProps, IDatepi
             }}
             onFocus={
               () => {
-                this.props.onFocus!();
+                if(this.props.onFocus !== undefined)
+                this.props.onFocus();
               }
             }
             componentRef={

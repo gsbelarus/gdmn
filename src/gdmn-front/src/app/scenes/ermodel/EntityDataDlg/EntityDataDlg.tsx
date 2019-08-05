@@ -27,7 +27,7 @@ import {
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
-import { Designer, IDesignerState } from '../../designer/Designer';
+import { Designer, IDesignerState, IField, IStyleFieldsAndAreas, TDirection } from '../../designer/Designer';
 
 interface ILastEdited {
   fieldName: string;
@@ -602,7 +602,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     overflow: 'auto',
   });
 
-  const field = (props: { fd: IFieldDef, styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles> }): JSX.Element | undefined => {
+  const field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element | undefined => {
       if (!props.fd.eqfa) {
         return undefined;
       }
@@ -712,7 +712,42 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
-              styles={props.styles as ITextFieldStyles}
+              styles={{
+                label: {
+                  color: props.areaStyle!.font.color,
+                  fontSize: `${props.areaStyle!.font.size}px`,
+                  fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
+                  fontFamily: props.areaStyle!.font.family
+                },
+                root: {
+                  color: props.areaStyle!.font.color,
+                  flexGrow: props.areaDirection! === 'row' ? 1 : 0,
+                  background: props.areaStyle!.background,
+                  borderColor: props.areaStyle!.font.color,
+                  borderWidth: '1px'
+                },
+                input: {
+                  color: props.areaStyle!.font.color, 
+                  background: props.field!.color,
+                  borderWidth: '1px'
+                },
+                rootHovered: {
+                  color: `#474747`,
+                  borderColor: `${props.areaStyle!.font.color}99`
+                }
+              }}
+              caretDownButtonStyles={{
+                rootHovered: {
+                  color: `#474747`,
+                  backgroundColor: props.areaStyle!.font.color,
+                  borderColor: `${props.areaStyle!.font.color}99`
+                },
+                rootChecked: {
+                  color: props.areaStyle!.font.color,
+                  backgroundColor: `#474747`,
+                  borderColor: `${props.areaStyle!.font.color}99`
+                }
+              }}
             />
           );
         }
@@ -756,16 +791,98 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={props.styles as ITextFieldStyles}
+            styles={{
+              subComponentStyles: {
+                label: {
+                  root: {
+                    color: props.areaStyle!.font.color,
+                    fontSize: `${props.areaStyle!.font.size}px`,
+                    fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
+                    fontFamily: props.areaStyle!.font.family
+                  }
+                }
+              },
+              root: {
+                flexGrow: props.areaDirection === 'row' ? 1 : 0
+              },
+              fieldGroup: {
+                borderWidth: '1px',
+                borderColor: props.areaStyle!.font.color,
+                background: props.field!.color,
+                selectors: {
+                  ':hover': {
+                    borderColor: `${props.areaStyle!.font.color}99`
+                  }
+                }
+              },
+              field: {
+                color: props.areaStyle!.font.color
+              }
+            }}
+            styleIcon={{
+              root: {
+                backgroundColor: props.areaStyle!.background,
+                color: `${props.areaStyle!.font.color}99`,
+                border: `1px solid ${props.areaStyle!.font.color}`,
+                borderLeft: 'none'
+              },
+              rootHovered: {
+                color: props.areaStyle!.background,
+                backgroundColor: props.areaStyle!.font.color,
+                borderColor: props.areaStyle!.font.color,
+                borderLeft: 'none'
+              },
+              rootChecked: {
+                color: props.areaStyle!.background,
+                backgroundColor: props.areaStyle!.font.color,
+                borderColor: props.areaStyle!.font.color,
+                borderLeft: 'none'
+              },
+              rootCheckedHovered: {
+                color: props.areaStyle!.font.color,
+                backgroundColor: props.areaStyle!.background,
+                borderColor: props.areaStyle!.font.color,
+                borderLeft: 'none'
+              }
+            }}
         />);
       } else if (props.fd.dataType === TFieldType.Boolean) {
-        let subComponentStyle = props.styles ? (props.styles as ITextFieldStyles)!.subComponentStyles.label : undefined;
-        const styleCheckBox = subComponentStyle !== undefined ? {
-          root: {marginTop: '10px'},
-          text: {...subComponentStyle.root}
+        let subComponentStyle = props.areaStyle !== undefined ? {
+          root: {
+            marginTop: '10px',
+            selectors: {
+              ':hover .ms-Checkbox-checkbox': {
+                borderColor: `${props.areaStyle.font.color}AA`,
+                background: `${props.areaStyle.font.color}00`,
+                color: props.areaStyle.font.color
+              },
+              ':hover .ms-Checkbox-checkmark': {
+                background: props.areaStyle.background,
+                color: `${props.areaStyle.font.color}AA`
+              },
+              ':hover .ms-Checkbox-text': {
+                color: props.areaStyle.font.color
+              }
+            }
+          },
+          text: {
+            color: props.areaStyle.font.color,
+            flexGrow: props.areaDirection! === 'row' ? 1 : 0,
+            background: props.areaStyle.background
+          },
+          checkbox: {
+            borderColor: props.areaStyle.font.color,
+            background: `${props.areaStyle.font.color}00`,
+            color: props.areaStyle.background
+          },
+          checkmark: {
+            background: props.areaStyle.font.color,
+            color: props.areaStyle.background
+          }
         } : {
-          root: {marginTop: '10px'}
-        }
+          root: {marginTop: '10px'},
+          borderWidth: '1px'
+        };
         return (
           <Checkbox
             key={props.fd.fieldName}
@@ -797,7 +914,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={styleCheckBox}
+            styles={subComponentStyle}
           />
         )
       } else {
@@ -806,7 +923,35 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             key={props.fd.fieldName}
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            styles={props.styles}
+            styles={{
+              subComponentStyles: {
+                label: {
+                  root: {
+                    color: props.areaStyle!.font.color,
+                    fontSize: `${props.areaStyle!.font.size}px`,
+                    fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
+                    fontFamily: props.areaStyle!.font.family
+                  }
+                }
+              },
+              root: {
+                flexGrow: props.areaDirection === 'row' ? 1 : 0
+              },
+              fieldGroup: {
+                color: props.areaStyle!.font.color,
+                borderWidth: '1px',
+                borderColor: props.areaStyle!.font.color,
+                background: props.field!.color,
+                selectors: {
+                  ':hover': {
+                    borderColor: `${props.areaStyle!.font.color}99`
+                  }
+                }
+              },
+              field: {
+                color: props.areaStyle!.font.color,
+              }
+            }}
             defaultValue={
               lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName && typeof lastEdited.current.value === 'string'
               ? lastEdited.current.value
@@ -891,16 +1036,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     display: 'flex',
                     flexDirection: area.direction,
                     justifyContent: 'flex-start',
-                    background: `${area.style.background}`,
-                    margin: area.style.margin ? `${area.style.margin}px` : '1px',
-                    padding: area.style.padding ? `${area.style.padding}px` : '4px',
-                    border: area.style.border.style === 'none' ? `1px solid ${area.style.background}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
-                    borderRadius: `${area.style.border.radius}px`,
-                    color: `${area.style.font.color}`,
-                    fontSize: `${area.style.font.size}px`,
-                    fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                    fontStyle: `${area.style.font.style}`,
-                    fontFamily: `${area.style.font.family}`
+                    background: `${(localState as IDesignerState).styleSetting.background}`,
+                    margin: (localState as IDesignerState).styleSetting.margin ? `${(localState as IDesignerState).styleSetting.margin}px` : '1px',
+                    padding: (localState as IDesignerState).styleSetting.padding ? `${(localState as IDesignerState).styleSetting.padding}px` : '4px',
+                    border: (localState as IDesignerState).styleSetting.border.style === 'none'
+                      ? `1px solid ${(localState as IDesignerState).styleSetting.background}`
+                      : `${(localState as IDesignerState).styleSetting.border.width}px ${(localState as IDesignerState).styleSetting.border.style} ${(localState as IDesignerState).styleSetting.border.color}`,
+                    borderRadius: `${(localState as IDesignerState).styleSetting.border.radius}px`,
+                    color: `${(localState as IDesignerState).styleSetting.font.color}`,
+                    fontSize: `${(localState as IDesignerState).styleSetting.font.size}px`,
+                    fontWeight: (localState as IDesignerState).styleSetting.font.weight === 'normal' ? 400 : 600,
+                    fontStyle: `${(localState as IDesignerState).styleSetting.font.style}`,
+                    fontFamily: `${(localState as IDesignerState).styleSetting.font.family}`
                   }}
                 >
                   {
@@ -918,10 +1065,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           subComponentStyles: {
                             label: {
                               root: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${area.style.font.family}`
+                                color: `${(localState as IDesignerState).styleSetting.font.color}`,
+                                fontSize: `${(localState as IDesignerState).styleSetting.font.size}px`,
+                                fontWeight: (localState as IDesignerState).styleSetting.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${(localState as IDesignerState).styleSetting.font.family}`
                               }
                             }
                           },
@@ -934,17 +1081,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           subComponentStyles: {
                             label: {
                               root: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${area.style.font.family}`
+                                color: `${(localState as IDesignerState).styleSetting.font.color}`,
+                                fontSize: `${(localState as IDesignerState).styleSetting.font.size}px`,
+                                fontWeight: (localState as IDesignerState).styleSetting.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${(localState as IDesignerState).styleSetting.font.family}`
                               }
                             }
                           },
                           fieldGroup: {background: f.color}
                         }
                         if (fd) {
-                          return field({fd, styles })
+                          return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).styleSetting, areaDirection: area.direction})
                         }
                         return undefined;
                       }

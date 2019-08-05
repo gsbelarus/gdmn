@@ -41,16 +41,16 @@ interface IRectangle {
   bottom: number;
 };
 
-type TDirection = 'row' | 'column';
+export type TDirection = 'row' | 'column';
 
 interface IArea {
   rect: IRectangle;
   fields: IField[];
   direction: TDirection;
   group: boolean;
-  style: IStyleFieldsAndAreas;
+  style?: IStyleFieldsAndAreas;
 }
-interface IField {
+export interface IField {
   key: string,
   color: string
 }
@@ -75,7 +75,7 @@ interface IFont {
   weight: string;
 }
 
-interface IStyleFieldsAndAreas {
+export interface IStyleFieldsAndAreas {
   padding: number;
   margin: number;
   font: IFont;
@@ -89,7 +89,8 @@ export interface IDesignerState {
   entityName: string;
   selection?: IRectangle;
   areas: IArea[];
-  activeArea: number;
+  styleSetting: IStyleFieldsAndAreas;
+  activeArea?: number;
   changeArray: IDesignerState[];
   previewMode?: boolean;
   activeTab: string;
@@ -118,26 +119,7 @@ const defaultTheme: ITheme = {
           return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: '#ffffff'}
         }),
       direction: 'column',
-      group: false,
-      style: {
-        padding: 4,
-        margin: 0,
-        font: {
-          size: 14,
-          style: 'normal',
-          family: 'Arial, sans-serif',
-          color: defaultTheme.color,
-          weight: 'normal'
-        },
-        background: defaultTheme.background,
-        border: {
-          width: 1,
-          style: 'none',
-          color: defaultTheme.background,
-          radius: 3
-        },
-        align: 'center',
-      }
+      group: false
     },{
       rect: {
         left: 1,
@@ -147,29 +129,28 @@ const defaultTheme: ITheme = {
       },
       fields: [],
       direction: 'column',
-      group: false,
-      style: {
-        padding: 4,
-        margin: 0,
-        font: {
-          size: 14,
-          style: 'normal',
-          family: 'Arial, sans-serif',
-          color: defaultTheme.color,
-          weight: 'normal'
-        },
-        background: defaultTheme.background,
-        border: {
-          width: 1,
-          style: 'none',
-          color: defaultTheme.background,
-          radius: 3
-        },
-        align: 'center',
-      }
+      group: false
     }],
+    styleSetting: {
+      padding: 4,
+      margin: 0,
+      font: {
+        size: 14,
+        style: 'normal',
+        family: 'Arial, sans-serif',
+        color: defaultTheme.color,
+        weight: 'normal'
+      },
+      background: defaultTheme.background,
+      border: {
+        width: 1,
+        style: 'none',
+        color: defaultTheme.background,
+        radius: 3
+      },
+      align: 'center',
+    },
     entityName: entityName,
-    activeArea: 0,
     changeArray: [],
     activeTab: 'Настройка'
   } as IDesignerState};
@@ -177,11 +158,12 @@ const defaultTheme: ITheme = {
 //  const secondsColors = ['#70E500', '#74B5F5', '#aa5fe3', '#FFD300', '#FFFFFF', '#000000']
   const secondsColors = ['#79bf6d', '#62aaf0', '#aa5fe3', '#FFD300', '#FFFFFF', '#000000']
 
-  type Action = { type: 'SET_ACTIVE_AREA', activeArea: number, shiftKey: boolean }
+  type Action = { type: 'SET_ACTIVE_AREA', activeArea?: number, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
   | { type: 'SET_ROW_SIZE', row: number, size: ISize }
   | { type: 'SET_STYLE_AREA', style: IStyleFieldsAndAreas }
   | { type: 'SET_STYLE_FIELD', color: string }
+  | { type: 'SET_STYLE_SETTING', style: IStyleFieldsAndAreas }
   | { type: 'SET_SELECTED_FIELD', value?: string }
   | { type: 'AREA_FIELD', fieldName: string, include: boolean }
   | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection }
@@ -204,6 +186,14 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'SET_ACTIVE_AREA': {
       const { activeArea, shiftKey } = action;
       const { areas, activeArea: prevActiveArea, selection, selectedField } = state;
+
+      if(activeArea === undefined) {
+        return {
+          ...state,
+          activeArea,
+          selectedField: undefined
+        }
+      }
 
       if (activeArea >= 0 && activeArea <= (areas.length - 1) && prevActiveArea !== undefined) {
         const area = areas[activeArea];
@@ -260,6 +250,10 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'CONFIGURE_AREA': {
       const { direction, rect } = action;
       const { areas, activeArea, grid, changeArray } = state;
+
+      if(activeArea === undefined) {
+        return state;
+      }
 
       if (activeArea >= 0 && activeArea <= (areas.length - 1)) {
         const newAreas = [...areas];
@@ -335,8 +329,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { activeArea, areas, changeArray } = state;
       const { fieldName, include } = action;
 
-      const newAreas = [...areas];
+      if(activeArea === undefined) {
+        return state;
+      }
 
+      const newAreas = [...areas];
 
       if (include && !areas[activeArea].fields.find(f => f.key === fieldName)) {
         newAreas[activeArea] = {
@@ -416,8 +413,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
       return {
         ...state,
-        activeArea: areas.findIndex(area => area.rect.left === areas[activeArea].rect.left && area.rect.top === areas[activeArea].rect.top),
-        areas: areas.slice(0, activeArea).concat(areas.slice(activeArea + 1)),
+        activeArea: areas.findIndex(area => area.rect.left === areas[activeArea!].rect.left && area.rect.top === areas[activeArea!].rect.top),
+        areas: areas.slice(0, activeArea).concat(areas.slice(+activeArea! + 1)),
         changeArray: [...changeArray!, {...state}]
     }
   }
@@ -467,7 +464,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { style } = action;
 
       const newAreas = [...areas];
-      newAreas[activeArea] = {...newAreas[activeArea], style}
+      newAreas[activeArea!] = {...newAreas[activeArea!], style}
       return {
         ...state,
         areas: newAreas,
@@ -493,10 +490,26 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         areas: [...areas.map(area => {return {...area, fields: area.fields.map(field => {return {...field, color}})}})],
         changeArray: [...changeArray!, {...state}]
       }
-    } 
+    }
+
+    case 'SET_STYLE_SETTING': {
+      const { changeArray } = state;
+      const { style } = action;
+
+      return {
+        ...state,
+        styleSetting: style,
+        changeArray: [...changeArray!, {...state}]
+      }
+    }
 
     case 'ADD_COLUMN': {
       const { grid, areas, activeArea, changeArray } = state;
+
+      if(activeArea === undefined) {
+        return state;
+      }
+
       const newAreas = grid.rows.map((_, row) => {
         return {
           rect: {
@@ -542,6 +555,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     case 'ADD_ROW': {
       const { grid, areas, activeArea, changeArray } = state;
+
+      if(activeArea === undefined) {
+        return state;
+      }
+
       const newAreas = grid.columns.map((_, column) => {
         return {
           rect: {
@@ -588,7 +606,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'DELETE_COLUMN': {
       const { grid, selection, areas, activeArea, changeArray } = state;
 
-      if (grid.columns.length === 1 || selection) {
+      if (grid.columns.length === 1 || selection || activeArea === undefined) {
         return state;
       }
 
@@ -617,7 +635,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'DELETE_ROW': {
       const { grid, selection, areas, activeArea, changeArray } = state;
 
-      if (grid.rows.length === 1 || selection) {
+      if (grid.rows.length === 1 || selection || activeArea === undefined) {
         return state;
       }
 
@@ -653,6 +671,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           entityName: localState.entityName,
           areas: localState.areas,
           previewMode: localState.previewMode,
+          styleSetting: localState.styleSetting,
           changeArray: localState.changeArray
         }
       } else {
@@ -670,6 +689,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           entityName: localState.entityName,
           areas: localState.areas,
           previewMode: localState.previewMode,
+          styleSetting: localState.styleSetting,
           changeArray: []
         }
       } else {
@@ -693,27 +713,27 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           },
           fields:[],
           direction: 'column',
-          group: false,
-          style: {
-            padding: 4,
-            margin: 0,
-            font: {
-              size: 14,
-              style: 'normal',
-              family: 'Arial, sans-serif',
-              color: '#000000',
-              weight: 'normal'
-            },
-            background: '#ffffff',
-            border: {
-              width: 1,
-              style: 'none',
-              color: '#323130',
-              radius: 3
-            },
-            align: 'center',
-          }
+          group: false
         }],
+        styleSetting: {
+          padding: 4,
+          margin: 0,
+          font: {
+            size: 14,
+            style: 'normal',
+            family: 'Arial, sans-serif',
+            color: '#000000',
+            weight: 'normal'
+          },
+          background: '#ffffff',
+          border: {
+            width: 1,
+            style: 'none',
+            color: '#323130',
+            radius: 3
+          },
+          align: 'center',
+        },
         activeArea: 0,
         entityName: entityName,
         changeArray: [...changeArray!, {...state}],
@@ -737,7 +757,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields, rs, entity } = props;
 
-  const Field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection }): JSX.Element => {
+  const Field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element => {
   const locked = rs ? rs.locked : false;
 
   if (props.fd.eqfa!.linkAlias !== rs!.eq!.link.alias && props.fd.eqfa!.attribute === 'ID') {
@@ -753,14 +773,15 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         },
         root: {
           color: props.areaStyle!.font.color,
-          flexGrow: props.aeraDirection! === 'row' ? 1 : 0,
+          flexGrow: props.areaDirection! === 'row' ? 1 : 0,
           background: props.areaStyle!.background,
           borderColor: props.areaStyle!.font.color,
           borderWidth: props.field!.key === selectedField ? '3px' : '1px'
         },
         input: {
           color: props.areaStyle!.font.color, 
-          background: props.field!.color
+          background: props.field!.color,
+          borderWidth: props.field!.key === selectedField ? '3px' : '1px'
         },
         rootHovered: {
           color: `#474747`,
@@ -806,18 +827,11 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       },
       root: {
-        color: props.areaStyle!.font.color,
-        flexGrow: props.aeraDirection === 'row' ? 1 : 0,
-        background: props.areaStyle!.background,
-        selectors: {
-          ':hover': {
-            borderColor: `${props.areaStyle!.font.color}99`
-          }
-        }
+        flexGrow: props.areaDirection === 'row' ? 1 : 0
       },
       fieldGroup: {
+        borderWidth: props.field!.key === selectedField ? '3px' : '1px',
         borderColor: props.areaStyle!.font.color,
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
         background: props.field!.color,
         selectors: {
           ':hover': {
@@ -826,17 +840,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       },
       field: {
-        color: props.areaStyle!.background
-      },
-      input: {
-        borderColor: props.areaStyle!.font.color,
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
-        background: props.field!.color,
-        selectors: {
-          ':hover': {
-            borderColor: `${props.areaStyle!.font.color}99`
-          }
-        }
+        color: props.areaStyle!.font.color
       }
     }
     const styleIcon = {
@@ -844,6 +848,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         backgroundColor: props.areaStyle!.background,
         color: `${props.areaStyle!.font.color}99`,
         border: `1px solid ${props.areaStyle!.font.color}`,
+        borderWidth: props.field!.key === selectedField ? '3px' : '1px',
         borderLeft: 'none'
       },
       rootHovered: {
@@ -896,7 +901,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       },
       text: {
         color: props.areaStyle.font.color,
-        flexGrow: props.aeraDirection! === 'row' ? 1 : 0,
+        flexGrow: props.areaDirection! === 'row' ? 1 : 0,
         background: props.areaStyle.background
       },
       checkbox: {
@@ -909,7 +914,8 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         color: props.areaStyle.background
       }
     } : {
-      root: {marginTop: '10px'}
+      root: {marginTop: '10px'},
+      borderWidth: props.field!.key === selectedField ? '3px' : '1px'
     }
     return (
       <Checkbox
@@ -933,18 +939,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       },
       root: {
-        color: props.areaStyle!.font.color,
-        flexGrow: props.aeraDirection === 'row' ? 1 : 0,
-        background: `${props.areaStyle!.background}`,
-        selectors: {
-          ':hover': {
-            borderColor: `${props.areaStyle!.font.color}99`
-          }
-        }
+        flexGrow: props.areaDirection === 'row' ? 1 : 0
       },
       fieldGroup: {
+        color: props.areaStyle!.font.color,
+        borderWidth: props.field!.key === selectedField ? '3px' : '1px',
         borderColor: props.areaStyle!.font.color,
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
         background: props.field!.color,
         selectors: {
           ':hover': {
@@ -953,17 +953,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         }
       },
       field: {
-        color: props.areaStyle!.background
-      },
-      input: {
-        borderColor: props.areaStyle!.font.color,
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
-        background: props.field!.color,
-        selectors: {
-          ':hover': {
-            borderColor: `${props.areaStyle!.font.color}99`
-          }
-        }
+        color: props.areaStyle!.font.color,
       }
     }
     return (
@@ -996,7 +986,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   const divRef = useRef<HTMLDivElement | null>(null);
   const toolPanelRef = useRef<HTMLDivElement | null>(null);
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
-  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab, selectedField }, designerDispatch] =
+  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab, selectedField, styleSetting }, designerDispatch] =
     useReducer(reducer, changes.current !== undefined
       ? changes.current
       : localState !== undefined
@@ -1090,7 +1080,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       },
       {
         key: 'deleteArea',
-        disabled: previewMode
+        disabled: previewMode || activeArea === undefined
           || areas[activeArea] === undefined || (areas[activeArea]!.rect.bottom === areas[activeArea]!.rect.top
             && areas[activeArea]!.rect.right === areas[activeArea]!.rect.left),
         text: 'Разгруппировать',
@@ -1125,7 +1115,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           changes.current = undefined;
-          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, selection, areas, activeArea, previewMode, changeArray: [] }));
+          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, selection, areas, styleSetting, activeArea, previewMode, changeArray: [] }));
           designerDispatch({ type: 'SAVE_CHANGES' });
           props.outDesigner();
         }
@@ -1190,8 +1180,24 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   const getOnMouseDownForField = (area: number, field: string) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     e.stopPropagation();
     e.preventDefault();
-    designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: area, shiftKey: e.shiftKey });
-    designerDispatch({ type: 'SET_SELECTED_FIELD', value: field });
+    if(activeArea !== undefined && activeArea === area) {
+      designerDispatch({ type: 'SET_SELECTED_FIELD', value: field });
+    }
+    else {
+      designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: area, shiftKey: e.shiftKey });
+    }
+    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+  };
+
+  const getOnContextMenuForArea = () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if(activeArea) {
+      designerDispatch({ type: 'SET_SELECTED_FIELD' });
+    }
+    else {
+      designerDispatch({ type: 'SET_ACTIVE_AREA', shiftKey: e.shiftKey });
+    }
     changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
   };
 
@@ -1250,14 +1256,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   })
 
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
-
-    const area = areas[activeArea];
     const tabs = ["Настройка", "Поля"];
-    const style = area.style;
-
-    const idc = areas[activeArea].rect.left
-    const idr = areas[activeArea].rect.top
-
+    const idc = activeArea ? areas[activeArea].rect.left : -1;
+    const idr = activeArea ? areas[activeArea].rect.top : -1;
 
     return (
       <MemoToolPanel
@@ -1412,14 +1413,14 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       <div
                         key='light'
                         onClick={e => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: '#FFFFFF'} })
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...styleSetting, background: '#FFFFFF'} })
                           designerDispatch({ type: 'SET_STYLE_FIELD', color: '#FFFFFF' })
                         }}
                         style={{
                           height: '36px',
                           width: '72px',
                           background: '#FFFFFF',
-                          borderColor: style.background === '#FFFFFF' ? '#FF0000' : undefined,
+                          borderColor: styleSetting.background === '#FFFFFF' ? '#FF0000' : undefined,
                           borderStyle: 'solid',
                           borderWidth: '1px',
                           margin: '2px',
@@ -1429,7 +1430,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       <div
                         key='dark'
                         onClick={e => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, background: '#2E2E2E'} })
+                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, background: '#2E2E2E'} })
                           designerDispatch({ type: 'SET_STYLE_FIELD', color: '#2E2E2E' })
                         }}
                         style={{
@@ -1437,7 +1438,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           width: '72px',
                           background: '#2E2E2E',
                           color: '#FFFFFF',
-                          borderColor: style.background !== '#FFFFFF' ? '#FF0000' : undefined,
+                          borderColor: styleSetting.background !== '#FFFFFF' ? '#FF0000' : undefined,
                           borderStyle: 'solid',
                           borderWidth: '1px',
                           margin: '2px'
@@ -1449,7 +1450,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           return <div
                             className={`color ${color}`}
                             key={color}
-                            onClick={e => designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, color}} })}
+                            onClick={e => designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, color}} })}
                             style={{
                               background: color,
                               color: idx === secondsColors.length - 1 ? '#FFFFFF' : undefined,
@@ -1458,58 +1459,61 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                               borderRadius: '16px',
                               borderStyle: 'solid',
                               borderWidth: '1px',
-                              borderColor: style.font.color === color ? '#FF0000' : '#696969',
+                              borderColor: styleSetting.font.color === color ? '#FF0000' : '#696969',
                               margin: '2px'
                             }}
                           ></div>
                         })}
                       </div>
-                    <div>
-                      <Label>Size</Label>
-                      <>
-                        {
-                          <OneSize key='column_size' label='Width' size={grid.columns[idc]} isRow={false} onChange={(size: ISize) => {
-                            const left = idc;
-                            const right = areas[activeArea].rect.right;
-                            if(left === right && size.unit === 'AUTO') {
-                              designerDispatch({ type: 'SET_COLUMN_SIZE', column: idc, size });
-                              changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
-                            } else {
-                              const value = size.value! / (right + 1 - left);
-                              for(let i = left; i <= right; i++) {
-                                designerDispatch({ type: 'SET_COLUMN_SIZE', column: i, size: {...size, value} });
+                      { activeArea
+                        ? <div>
+                        <Label>Size</Label>
+                        <>
+                          {
+                            <OneSize key='column_size' label='Width' size={grid.columns[idc]} isRow={false} onChange={(size: ISize) => {
+                              const left = idc;
+                              const right = areas[activeArea!].rect.right;
+                              if(left === right && size.unit === 'AUTO') {
+                                designerDispatch({ type: 'SET_COLUMN_SIZE', column: idc, size });
                                 changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              } else {
+                                const value = size.value! / (right + 1 - left);
+                                for(let i = left; i <= right; i++) {
+                                  designerDispatch({ type: 'SET_COLUMN_SIZE', column: i, size: {...size, value} });
+                                  changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                                }
                               }
-                            }
-                          }} />
-                        }
-                        {
-                          <OneSize key='row_size' label='Height' size={grid.rows[idr]} isRow={true} onChange={(size: ISize) => {
-                            const top = idr;
-                            const bottom = areas[activeArea].rect.bottom;
-                            if(top === bottom && size.unit === 'AUTO') {
-                              designerDispatch({ type: 'SET_ROW_SIZE', row: idr, size });
-                              changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
-                            } else {
-                              const value = size.value! / (bottom + 1 - top);
-                              for(let i = top; i <= bottom; i++) {
-                                designerDispatch({ type: 'SET_ROW_SIZE', row: i, size: {...size, value} });
+                            }} />
+                          }
+                          {
+                            <OneSize key='row_size' label='Height' size={grid.rows[idr]} isRow={true} onChange={(size: ISize) => {
+                              const top = idr;
+                              const bottom = areas[activeArea!].rect.bottom;
+                              if(top === bottom && size.unit === 'AUTO') {
+                                designerDispatch({ type: 'SET_ROW_SIZE', row: idr, size });
                                 changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              } else {
+                                const value = size.value! / (bottom + 1 - top);
+                                for(let i = top; i <= bottom; i++) {
+                                  designerDispatch({ type: 'SET_ROW_SIZE', row: i, size: {...size, value} });
+                                  changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                                }
                               }
-                            }
-                          }} />
-                        }
-                      </>
-                    </div>
+                            }} />
+                          }
+                        </>
+                      </div>
+                      : undefined
+                      }
                     <div>
                       <Label>
                         Padding
                       </Label>
                       <TextField
                         key='padding'
-                        value={style.padding.toString()}
+                        value={styleSetting.padding.toString()}
                         onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, padding: Number(e.currentTarget.value)} });
+                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  padding: Number(e.currentTarget.value)} });
                         }}
                       />
                     </div>
@@ -1519,9 +1523,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       </Label>
                       <TextField
                         key='margin'
-                        value={style.margin.toString()}
+                        value={styleSetting.margin.toString()}
                         onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, margin: Number(e.currentTarget.value)} });
+                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  margin: Number(e.currentTarget.value)} });
                         }}
                       />
                     </div>
@@ -1531,9 +1535,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       </Label>
                       <TextField
                         key='align'
-                        value={style.align.toString()}
+                        value={styleSetting.align.toString()}
                         onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, align: e.currentTarget.value} });
+                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  align: e.currentTarget.value} });
                         }}
                       />
                     </div>
@@ -1547,9 +1551,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <TextField
                           key='font-size'
-                          value={style.font.size.toString()}
+                          value={styleSetting.font.size.toString()}
                           onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, size: Number(e.currentTarget.value)}} });
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  font: {...styleSetting.font, size: Number(e.currentTarget.value)}} });
                           }}
                         />
                       </div>
@@ -1559,10 +1563,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <ComboBox
                           key='font-family'
-                          defaultSelectedKey={style.font.family}
+                          defaultSelectedKey={styleSetting.font.family}
                           options={FamilyFont.map(family => ({key: family, text: family}))}
                           onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, family: value!.text}} })
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, family: value!.text}} })
                           }}
                         />
                       </div>
@@ -1572,10 +1576,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <ComboBox
                           key='font-style'
-                          defaultSelectedKey={style.font.style}
+                          defaultSelectedKey={styleSetting.font.style}
                           options={StyleFont.map(style => ({key: style, text: style}))}
                           onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, style: value!.text}} })
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, style: value!.text}} })
                           }}
                         />
                       </div>
@@ -1585,10 +1589,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <ComboBox
                           key='font-weight'
-                          defaultSelectedKey={style.font.weight}
+                          defaultSelectedKey={styleSetting.font.weight}
                           options={WeightFont.map(weight => ({key: weight, text: weight}))}
                           onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, weight: value!.text}} })
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, weight: value!.text}} })
                           }}
                         />
                       </div>
@@ -1603,9 +1607,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <TextField
                           key='border-color'
-                          value={style.border.color}
+                          value={styleSetting.border.color}
                           onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, color: e.currentTarget.value}} });
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, border: {...styleSetting.border, color: e.currentTarget.value}} });
                           }}
                         />
                       </div>
@@ -1615,9 +1619,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <TextField
                           key='border-width'
-                          value={style.border.width.toString()}
+                          value={styleSetting.border.width.toString()}
                           onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, width: Number(e.currentTarget.value)}} });
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, border: {...styleSetting.border, width: Number(e.currentTarget.value)}} });
                           }}
                         />
                       </div>
@@ -1627,10 +1631,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <ComboBox
                           key='border-style'
-                          defaultSelectedKey={style.border.style}
+                          defaultSelectedKey={styleSetting.border.style}
                           options={StyleBorder.map(style => ({key: style, text: style}))}
                           onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, style: value!.text}} })
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, border: {...styleSetting.border, style: value!.text}} })
                           }}
                         />
                       </div>
@@ -1640,15 +1644,15 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         </Label>
                         <TextField
                           key='border-radius'
-                          value={style.border.radius.toString()}
+                          value={styleSetting.border.radius.toString()}
                           onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, border: {...style.border, radius: Number(e.currentTarget.value)}} });
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, border: {...styleSetting.border, radius: Number(e.currentTarget.value)}} });
                           }}
                         />
                       </div>
                     </div>
                     {
-                      selectedField && areas[activeArea].fields !== [] ? 
+                      activeArea !== undefined && selectedField && areas[activeArea].fields !== [] ? 
                     <div>
                       <Label>
                         Field
@@ -1711,18 +1715,19 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           display: 'flex',
           flexDirection: area.direction,
           justifyContent: 'flex-start',
-          background: `${area.style.background}`,
-          margin: `${area.style.margin}px`,
-          padding: `${area.style.padding}px`,
-          border: area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style.background : '#606060'}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
-          borderRadius: `${area.style.border.radius}px`,
-          color: `${area.style.font.color}`,
-          fontSize: `${area.style.font.size}px`,
-          fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-          fontStyle: `${area.style.font.style}`,
-          fontFamily: `${area.style.font.family}`
+          background: `${styleSetting.background}`,
+          margin: `${styleSetting.margin}px`,
+          padding: `${styleSetting.padding}px`,
+          border: styleSetting.border.style === 'none' ? `1px solid ${previewMode ? styleSetting.background : '#606060'}` : `${styleSetting.border.width}px ${styleSetting.border.style} ${styleSetting.border.color}`,
+          borderRadius: `${styleSetting.border.radius}px`,
+          color: `${styleSetting.font.color}`,
+          fontSize: `${styleSetting.font.size}px`,
+          fontWeight: styleSetting.font.weight === 'normal' ? 400 : 600,
+          fontStyle: `${styleSetting.font.style}`,
+          fontFamily: `${styleSetting.font.family}`
         }}
-        onMouseDown={getOnMouseDownForArea(idx)}
+        onClick={getOnMouseDownForArea(idx)}
+        onContextMenu={getOnContextMenuForArea()}
         >
           <div
             style={
@@ -1762,8 +1767,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               return fd !== undefined
               ? <div
                 key={f.key}
-                onMouseDown={getOnMouseDownForField(idx, f.key)}
-              ><FieldMemo fd={fd} field={f} areaStyle={area.style} aeraDirection={area.direction}/></div>
+                onClick={getOnMouseDownForField(idx, f.key)}
+              ><FieldMemo fd={fd} field={f} areaStyle={styleSetting} areaDirection={area.direction}/></div>
               : undefined
               }
             )
@@ -1802,17 +1807,17 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     };
 
     const value = isRow
-      ? areas[activeArea].rect.top !== areas[activeArea].rect.bottom
-        ? !grid.rows.filter((_, idr) => idr >= areas[activeArea].rect.top && idr <= areas[activeArea].rect.bottom )
+      ? areas[activeArea!].rect.top !== areas[activeArea!].rect.bottom
+        ? !grid.rows.filter((_, idr) => idr >= areas[activeArea!].rect.top && idr <= areas[activeArea!].rect.bottom )
           .some(row => row.unit === 'AUTO')
-            ? grid.rows.filter((_, idr) => idr >= areas[activeArea].rect.top && idr <= areas[activeArea].rect.bottom )
+            ? grid.rows.filter((_, idr) => idr >= areas[activeArea!].rect.top && idr <= areas[activeArea!].rect.bottom )
               .reduce((value, curr) => {return value + curr.value!}, 0)
             : {unit: 'AUTO'} as ISize
         : size.value
-      : areas[activeArea].rect.left !== areas[activeArea].rect.right
-        ? !grid.columns.filter((_, idc) => idc >= areas[activeArea].rect.left && idc <= areas[activeArea].rect.right )
+      : areas[activeArea!].rect.left !== areas[activeArea!].rect.right
+        ? !grid.columns.filter((_, idc) => idc >= areas[activeArea!].rect.left && idc <= areas[activeArea!].rect.right )
           .some(column => column.unit === 'AUTO')
-            ? grid.columns.filter((_, idc) => idc >= areas[activeArea].rect.left && idc <= areas[activeArea].rect.right )
+            ? grid.columns.filter((_, idc) => idc >= areas[activeArea!].rect.left && idc <= areas[activeArea!].rect.right )
               .reduce((value, curr) => {return value + curr.value!}, 0)
             : {unit: 'AUTO'} as ISize
         : size.value;
