@@ -712,40 +712,40 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
-              styles={{
+              styles={props.areaStyle === undefined ? undefined : {
                 label: {
-                  color: props.areaStyle!.font.color,
-                  fontSize: `${props.areaStyle!.font.size}px`,
-                  fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
-                  fontFamily: props.areaStyle!.font.family
+                  color: props.areaStyle.font.color,
+                  fontSize: `${props.areaStyle.font.size}px`,
+                  fontWeight: props.areaStyle.font.weight === 'normal' ? 400 : 600,
+                  fontFamily: props.areaStyle.font.family
                 },
                 root: {
-                  color: props.areaStyle!.font.color,
+                  color: props.areaStyle.font.color,
                   flexGrow: props.areaDirection! === 'row' ? 1 : 0,
-                  background: props.areaStyle!.background,
-                  borderColor: props.areaStyle!.font.color,
+                  background: props.areaStyle.background,
+                  borderColor: props.areaStyle.font.color,
                   borderWidth: '1px'
                 },
                 input: {
-                  color: props.areaStyle!.font.color, 
+                  color: props.areaStyle.font.color, 
                   background: props.field!.color,
                   borderWidth: '1px'
                 },
                 rootHovered: {
                   color: `#474747`,
-                  borderColor: `${props.areaStyle!.font.color}99`
+                  borderColor: `${props.areaStyle.font.color}99`
                 }
               }}
-              caretDownButtonStyles={{
+              caretDownButtonStyles={props.areaStyle === undefined ? undefined : {
                 rootHovered: {
                   color: `#474747`,
-                  backgroundColor: props.areaStyle!.font.color,
-                  borderColor: `${props.areaStyle!.font.color}99`
+                  backgroundColor: props.areaStyle.font.color,
+                  borderColor: `${props.areaStyle.font.color}99`
                 },
                 rootChecked: {
                   color: props.areaStyle!.font.color,
                   backgroundColor: `#474747`,
-                  borderColor: `${props.areaStyle!.font.color}99`
+                  borderColor: `${props.areaStyle.font.color}99`
                 }
               }}
             />
@@ -791,14 +791,14 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={{
+            styles={props.areaStyle === undefined ? undefined : {
               subComponentStyles: {
                 label: {
                   root: {
-                    color: props.areaStyle!.font.color,
-                    fontSize: `${props.areaStyle!.font.size}px`,
-                    fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
-                    fontFamily: props.areaStyle!.font.family
+                    color: props.areaStyle.font.color,
+                    fontSize: `${props.areaStyle.font.size}px`,
+                    fontWeight: props.areaStyle.font.weight === 'normal' ? 400 : 600,
+                    fontFamily: props.areaStyle.font.family
                   }
                 }
               },
@@ -807,47 +807,47 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               },
               fieldGroup: {
                 borderWidth: '1px',
-                borderColor: props.areaStyle!.font.color,
+                borderColor: props.areaStyle.font.color,
                 background: props.field!.color,
                 selectors: {
                   ':hover': {
-                    borderColor: `${props.areaStyle!.font.color}99`
+                    borderColor: `${props.areaStyle.font.color}99`
                   }
                 }
               },
               field: {
-                color: props.areaStyle!.font.color
+                color: props.areaStyle.font.color
               }
             }}
-            styleIcon={{
+            styleIcon={props.areaStyle === undefined ? undefined : {
               root: {
-                backgroundColor: props.areaStyle!.background,
-                color: `${props.areaStyle!.font.color}99`,
-                border: `1px solid ${props.areaStyle!.font.color}`,
+                backgroundColor: props.areaStyle.background,
+                color: `${props.areaStyle.font.color}99`,
+                border: `1px solid ${props.areaStyle.font.color}`,
                 borderLeft: 'none'
               },
               rootHovered: {
-                color: props.areaStyle!.background,
-                backgroundColor: props.areaStyle!.font.color,
-                borderColor: props.areaStyle!.font.color,
+                color: props.areaStyle.background,
+                backgroundColor: props.areaStyle.font.color,
+                borderColor: props.areaStyle.font.color,
                 borderLeft: 'none'
               },
               rootChecked: {
-                color: props.areaStyle!.background,
-                backgroundColor: props.areaStyle!.font.color,
-                borderColor: props.areaStyle!.font.color,
+                color: props.areaStyle.background,
+                backgroundColor: props.areaStyle.font.color,
+                borderColor: props.areaStyle.font.color,
                 borderLeft: 'none'
               },
               rootCheckedHovered: {
-                color: props.areaStyle!.font.color,
-                backgroundColor: props.areaStyle!.background,
-                borderColor: props.areaStyle!.font.color,
+                color: props.areaStyle.font.color,
+                backgroundColor: props.areaStyle.background,
+                borderColor: props.areaStyle.font.color,
                 borderLeft: 'none'
               }
             }}
         />);
       } else if (props.fd.dataType === TFieldType.Boolean) {
-        let subComponentStyle = props.areaStyle !== undefined ? {
+        const subComponentStyle = props.areaStyle !== undefined ? {
           root: {
             marginTop: '10px',
             selectors: {
@@ -923,14 +923,14 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             key={props.fd.fieldName}
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            styles={{
+            styles={props.areaStyle === undefined ? undefined : {
               subComponentStyles: {
                 label: {
                   root: {
-                    color: props.areaStyle!.font.color,
-                    fontSize: `${props.areaStyle!.font.size}px`,
-                    fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
-                    fontFamily: props.areaStyle!.font.family
+                    color: props.areaStyle.font.color,
+                    fontSize: `${props.areaStyle.font.size}px`,
+                    fontWeight: props.areaStyle.font.weight === 'normal' ? 400 : 600,
+                    fontFamily: props.areaStyle.font.family
                   }
                 }
               },
@@ -938,18 +938,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 flexGrow: props.areaDirection === 'row' ? 1 : 0
               },
               fieldGroup: {
-                color: props.areaStyle!.font.color,
+                color: props.areaStyle.font.color,
                 borderWidth: '1px',
-                borderColor: props.areaStyle!.font.color,
+                borderColor: props.areaStyle.font.color,
                 background: props.field!.color,
                 selectors: {
                   ':hover': {
-                    borderColor: `${props.areaStyle!.font.color}99`
+                    borderColor: `${props.areaStyle.font.color}99`
                   }
                 }
               },
               field: {
-                color: props.areaStyle!.font.color,
+                color: props.areaStyle.font.color,
               }
             }}
             defaultValue={
