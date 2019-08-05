@@ -28,6 +28,15 @@ export interface IAttributeData {
   fieldName: string;
   type: string;
   linkName?: string;
+  lName?: string;
+  required: boolean;
+  semCategories: string;
+  hidden: boolean;
+  mask: string;
+  alignment: string;
+  format?: string;
+  formatDate?: string;
+  formatBoolean?: string;
 };
 
 export interface IEntityName {
