@@ -40,8 +40,9 @@ export const blocks: IBlocks = {
   }
 };
 
-export const flowCharts: IFlowcharts = {
+export const flowcharts: IFlowcharts = {
   'WorkTime': {
+    name: 'WorkTime',
     label: {
       ru: {
         name: 'Регистрация рабочего времени'
@@ -86,6 +87,7 @@ export const flowCharts: IFlowcharts = {
     }
   },
   'Test': {
+    name: 'Test',
     label: {
       ru: {
         name: 'Тестовый процесс'
@@ -96,7 +98,12 @@ export const flowCharts: IFlowcharts = {
         name: 'Присутствует в списке из соображений тестирования.'
       }
     },
-    blocks: {},
-    flow: {}
+    blocks: Object.fromEntries(Object.entries(blocks).filter( ([_, b]) => b.id === 'login' || b.id === 'workDone' )),
+    flow: {
+      'begin': {
+        from: blocks.login,
+        to: blocks.workDone
+      }
+    }
   }
 };
