@@ -72,6 +72,7 @@ export interface IFlow {
 };
 
 export interface IFlowchart {
+  name: string;
   label: LName;
   description: LName;
   blocks: IBlocks;
