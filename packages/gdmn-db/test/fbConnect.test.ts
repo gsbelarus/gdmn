@@ -35,18 +35,18 @@ describe("Firebird driver tests", () => {
     await connection.connect(dbOptions);
     await connection.dropDatabase();
   });
-//почему то начал зависать тест и за этого не может отработать yarn test
+
   it("100 connections", async () => {
-    // for (let i = 0; i < 100; i++) {
-    //   try {
-    //     await connection.connect(dbOptionsFail);
-    //   } catch (error) {
-    //    // console.log(error);
-    //     if (connection.connected) {
-    //       console.log(connection.connected);
-    //       await connection.disconnect();
-    //     }
-    //   }
-    // }
+    for (let i = 0; i < 100; i++) {
+      try {
+        await connection.connect(dbOptionsFail);
+      } catch (error) {
+       // console.log(error);
+        if (connection.connected) {
+        //  console.log(connection.connected);
+          await connection.disconnect();
+        }
+      }
+    }
   });
 });

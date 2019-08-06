@@ -16,7 +16,7 @@ import {
 import {
   alignmentlist,
   BooleanFormats,
-  dateFormats,
+  dateFormats, getFieldType,
   listType,
   numberFormats
 } from "@src/app/scenes/ermodel/Entity/new/utils";
@@ -26,12 +26,9 @@ import {IAttributeData} from "@src/app/scenes/ermodel/utils";
 export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.Element => {
   const {erModel, useAttributeData, deleteAttributeData, attributeData, numberRow, useLastFocused, lastFocusedRow} = props;
 
-  const changed = useRef(attributeData.length ? attributeData[numberRow] : {} as IAttributeData);
+  const changed = useRef(attributeData.length  && attributeData[numberRow]  ? attributeData[numberRow] : {} as IAttributeData);
   const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
-  const [hiddenLink, setHiddenLink] = useState(false);
-  const [hiddenFormat, setHiddenFormat] = useState(false);
-  const [hiddenFormatDate, setHiddenFormatDate] = useState(false);
-  const [hiddenFormatBoolean, setHiddenFormatBoolean] = useState(false);
+  const [hiddenFormat, setHiddenFormat] = useState(attributeData.length  && attributeData[numberRow]  ? getFieldType(attributeData[numberRow].type) : {}  as {fieldType: string});
 
   useEffect(() => {
     if (needFocus.current) {
@@ -42,36 +39,31 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
 
   const onChangedType = (event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
     if (option && option.text) {
-      changed.current["type"] = option!.text;
+      changed.current["type"] = option!.key as string;
       useAttributeData(changed.current, numberRow);
-      if (option!.text === 'Parent' || option!.text === 'Entity' || option!.text === 'Set') {
-        setHiddenLink(true)
-        setHiddenFormat(false)
-        setHiddenFormatDate(false)
-        setHiddenFormatBoolean(false)
-      } else if (option!.text === 'Integer' || option!.text === 'Numeric' || option!.text === 'Float') {
-        setHiddenFormat(true)
-        setHiddenFormatDate(false)
-        setHiddenLink(false)
-        setHiddenFormatBoolean(false)
-      } else if (option!.text === 'Date' || option!.text === 'TimeStamp') {
-        setHiddenFormatDate(true)
-        setHiddenLink(false)
-        setHiddenFormat(false)
-        setHiddenFormatBoolean(false)
-      } else if (option!.text === 'Boolean') {
-        setHiddenFormatBoolean(true)
-        setHiddenFormatDate(false)
-        setHiddenLink(false)
-        setHiddenFormat(false)
-      } else {
-        setHiddenLink(false)
-        setHiddenFormat(false)
-        setHiddenFormatDate(false)
-        setHiddenFormatBoolean(false)
-
-        changed.current["linkName"] = '';
-        useAttributeData(changed.current, numberRow);
+      switch (option!.key) {
+        case 'Parent':
+        case 'Entity':
+        case 'Set':
+          setHiddenFormat({fieldType: "link"});
+          break;
+        case 'Integer':
+        case 'Numeric':
+        case 'Float':
+          setHiddenFormat({fieldType: "number"});
+          break;
+        case 'Date':
+        case 'Time':
+        case 'TimeStamp':
+          setHiddenFormat({fieldType: "date"});
+          break;
+        case 'Boolean':
+          setHiddenFormat({fieldType: "boolean"});
+          break;
+        default:
+          setHiddenFormat({fieldType: ""});
+          changed.current["linkName"] = '';
+          useAttributeData(changed.current, numberRow);
       }
     }
   };
@@ -145,9 +137,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
             />
           </div>
           <div styleName="item">
-            {attributeData.length && attributeData[numberRow] && attributeData[numberRow].hasOwnProperty('type')
-            && (attributeData[numberRow].type === 'Entity' || attributeData[numberRow].type === 'Parent'
-              || attributeData[numberRow].type === 'Set') ?
+            {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "link" ?
               <ComboBox
                 selectedKey={attributeData.length
                   ? attributeData[numberRow] && attributeData[numberRow].linkName! : undefined}
@@ -156,7 +146,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
                 options={Object.keys(erModel!.entities).map(key => ({key, text: key}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
                   if (option && option.text) {
-                    changed.current["linkName"] = option!.text;
+                    changed.current["linkName"] = option!.key as string;
                     useAttributeData(changed.current, numberRow)
                   }
                 }}
@@ -172,7 +162,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
               options={alignmentlist.map(arr => ({key: arr.key, text: arr.text}))}
               onChange={(_ev: React.FormEvent<HTMLElement> | undefined, option?: IChoiceGroupOption): void => {
                 if (option && option.text) {
-                  changed.current["alignment"] = option!.text;
+                  changed.current["alignment"] = option!.key as string;
                   useAttributeData(changed.current, numberRow);
                 }
               }}
@@ -181,8 +171,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
             />
           </div>
           <div styleName="item">
-            {attributeData.length && attributeData[numberRow] && attributeData[numberRow].hasOwnProperty('type')
-            && (attributeData[numberRow].type === 'Date') ?
+            {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "date" ?
               <ComboBox
                 selectedKey={attributeData.length
                   ? attributeData[numberRow] && attributeData[numberRow].formatDate! : undefined}
@@ -191,7 +180,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
                 options={dateFormats.map(key => ({key, text: key}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
                   if (option && option.text) {
-                    changed.current["formatDate"] = option!.text;
+                    changed.current["formatDate"] = option!.key as string;
                     useAttributeData(changed.current, numberRow)
                   }
                 }}
@@ -200,9 +189,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
             }
           </div>
           <div styleName="item">
-            {attributeData.length && attributeData[numberRow] && attributeData[numberRow].hasOwnProperty('type')
-            && (attributeData[numberRow].type === 'Integer' ||
-              attributeData[numberRow].type === 'Numeric' || attributeData[numberRow].type === 'Float') ?
+            {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "number" ?
               <ComboBox
                 selectedKey={attributeData.length
                   ? attributeData[numberRow] && attributeData[numberRow].format! : undefined}
@@ -211,7 +198,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
                 options={numberFormats.map(key => ({key: key.name, text: key.name}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
                   if (option && option.text) {
-                    changed.current["format"] = option!.text;
+                    changed.current["format"] = option!.key as string;
                     useAttributeData(changed.current, numberRow)
                   }
                 }}
@@ -219,8 +206,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
             }
           </div>
           <div styleName="item">
-            {attributeData.length && attributeData[numberRow] && attributeData[numberRow].hasOwnProperty('type')
-            && (attributeData[numberRow].type === 'Boolean') ?
+            {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "boolean" ?
               <ComboBox
                 selectedKey={attributeData.length
                   ? attributeData[numberRow] && attributeData[numberRow].formatBoolean! : undefined}
@@ -229,7 +215,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
                 options={BooleanFormats.map(key => ({key, text: key}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
                   if (option && option.text) {
-                    changed.current["formatBoolean"] = option!.text;
+                    changed.current["formatBoolean"] = option!.key as string;
                     useAttributeData(changed.current, numberRow)
                   }
                 }}

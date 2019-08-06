@@ -391,14 +391,14 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
                 autoComplete="on"
                 options={Object.keys(erModel!.entities).map(key => ({key, text: key}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
-                  if (option && option.text) {
+                  if (option && option.key) {
                     lastEdited.current = {
                       fieldName: "Parent",
-                      value: option.text
+                      value: option.key as string
                     };
                     parentName.current = {
                       fieldName: "Parent",
-                      value: option.text
+                      value: option.key as string
                     };
                     changedFields.current["Parent"] = true;
                     setChanged(true);

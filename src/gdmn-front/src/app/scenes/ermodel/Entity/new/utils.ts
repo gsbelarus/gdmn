@@ -76,3 +76,27 @@ export const numberFormats = [
 export const BooleanFormats = ["Yes, No", "True, false", "1, 0"];
 
 
+export const getFieldType = (value: string) => {
+  switch (value) {
+    case 'Parent':
+    case 'Entity':
+    case 'Set':
+      return {fieldType: "link"};
+      break;
+    case 'Integer':
+    case 'Numeric':
+    case 'Float':
+      return {fieldType: "number"};
+      break;
+    case 'Date':
+    case 'Time':
+    case 'TimeStamp':
+      return {fieldType: "date"};
+      break;
+    case 'Boolean':
+      return {fieldType: "boolean"};
+      break;
+    default:
+      return {fieldType: ""};
+  }
+};
