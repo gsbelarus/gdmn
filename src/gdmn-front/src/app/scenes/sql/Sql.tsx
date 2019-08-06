@@ -24,6 +24,7 @@ import styles from './styles.css';
 import { sql2fd } from './utils';
 import { ParamsDialog } from './ParamsDialog';
 import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
+import { IEntityInsertFieldInspector } from 'gdmn-orm';
 
 export interface ISQLParam {
   name: string;
@@ -274,6 +275,37 @@ export const Sql = CSSModules(
                     } else {
                       dispatch(rsActions.createRecordSet({ name: rs.name, rs }));
                     }
+
+                    // Сохраняем SQL в историю запросов
+                    const fields: IEntityInsertFieldInspector[] = [
+                      {
+                        attribute: 'SQL_TEXT',
+                        value: state.expression
+                      },
+                      {
+                        attribute: 'CREATORKEY',
+                        value: 650002
+                      },
+                      {
+                        attribute: 'EDITORKEY',
+                        value: 650002
+                      }
+                    ];
+
+                    const insertResponse = await apiService.insert({
+                      insert: {
+                        entity: 'TgdcSQLHistory',
+                        fields
+                      }
+                    });
+
+                    if (insertResponse.error) {
+                      dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: insertResponse.error.message } }));
+                      // dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
+                      return;
+                    }
+
+                    // TODO: Обновить стейт HistoryDialog
                     break;
                   }
                   case TTaskStatus.FAILED: {

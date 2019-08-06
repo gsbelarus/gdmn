@@ -48,6 +48,7 @@ export const HistoryDialog = (props: IHistoryProps) => {
       }
       // в textarea подставляем sql из активной записи
       const sqlField = rs.fieldDefs.find(i => i.caption === 'SQL_TEXT');
+
       if (!sqlField) return;
 
       setState({ expression: rs.getString(sqlField.fieldName) });
