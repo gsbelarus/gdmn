@@ -28,6 +28,7 @@ import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataVie
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { DesignerContainer } from '../designer/DesignerContainer';
 import { BPContainer } from '../bp/BPContainer';
+import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -117,7 +118,7 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     );
                   },
                   items: commandsToContextualMenuItems(
-                    ['userProfile', '-', 'logout'],
+                    ['userProfile', 'themeEditor', '-', 'logout'],
                     action => dispatch(action),
                     (link: string) => history.push(`${match.url}${link}`)
                   )
@@ -261,6 +262,16 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                 path={`${match.path}/designer`}
                 render={props => (
                   <DesignerContainer
+                    {...props}
+                    url={props.match.url}
+                  />
+                )}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/themeEditor`}
+                render={props => (
+                  <ThemeEditorContainer
                     {...props}
                     url={props.match.url}
                   />
