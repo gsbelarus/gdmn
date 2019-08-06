@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles, ScrollablePane, ScrollbarVisibility } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -760,7 +760,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       if (props.fd.dataType === TFieldType.Date) {
         return (
           <DatepickerJSX
-          key={`${props.fd.fieldName}`}
+            key={`${props.fd.fieldName}`}
             fieldName={`${props.fd.fieldName}`}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
             value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}

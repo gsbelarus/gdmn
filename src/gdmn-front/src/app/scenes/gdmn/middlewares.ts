@@ -12,6 +12,8 @@ import { GdmnPubSubApi, GdmnPubSubError } from '@src/app/services/GdmnPubSubApi'
 import { selectAuthState } from '@src/app/store/selectors';
 import { TThunkMiddleware } from '@src/app/store/middlewares';
 import { loadRSActions } from '@src/app/store/loadRSActions';
+import { themes } from '../themeeditor/themes';
+import { loadTheme } from '@uifabric/styling';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
@@ -280,11 +282,26 @@ const viewTabMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => 
   return next(action);
 };
 
+const selectThemeMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => (action: ActionType<typeof gdmnActions.selectTheme>) => {
+  if (action.type === getType(gdmnActions.selectTheme)) {
+    const namedTheme = themes.find( t => t.name === action.payload );
+
+    if (!namedTheme) {
+      throw new Error(`Invalid theme name ${action.payload}`);
+    }
+
+    loadTheme(namedTheme.theme);
+  }
+
+  return next(action);
+};
+
 const getGdmnMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
   abortNetReconnectMiddleware,
   getApiMiddleware(apiService),
   loadingMiddleware,
-  viewTabMiddleware
+  viewTabMiddleware,
+  selectThemeMiddleware
 ];
 
 export { getGdmnMiddlewares };

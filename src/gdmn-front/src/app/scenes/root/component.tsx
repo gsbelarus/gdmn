@@ -7,8 +7,6 @@ import { Store } from 'redux';
 import { PersistGate } from 'redux-persist/integration/react';
 // @ts-ignore
 import { Persistor } from 'redux-persist/lib/types';
-import { Customizer, Fabric} from 'office-ui-fabric-react';
-import { FluentCustomizations } from '@uifabric/fluent-theme';
 import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 
 // TODO const history = browserHistory; // syncHistoryWithStore(browserHistory, store)
@@ -25,11 +23,7 @@ export const Root: FC<IRootProps> = ({ store, persistor, routes, }) => (
   <ErrBoundary>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <Fabric>
-          <Customizer {...FluentCustomizations}>
-            <BrowserRouter>{routes}</BrowserRouter>
-          </Customizer>
-        </Fabric>
+        <BrowserRouter>{routes}</BrowserRouter>
       </PersistGate>
     </Provider>
   </ErrBoundary>

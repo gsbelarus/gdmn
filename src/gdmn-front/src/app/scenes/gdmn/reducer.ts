@@ -3,6 +3,7 @@ import { ERModel } from 'gdmn-orm';
 import { gdmnActions, GdmnAction } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 import { IApplicationInfo, ITemplateApplication } from '@gdmn/server-api';
+import { themes } from '../themeeditor/themes';
 
 export type TGdmnState = {
   erModel: ERModel;
@@ -13,6 +14,7 @@ export type TGdmnState = {
   apps: Array<IApplicationInfo & {loading: boolean}>;
   templates?: ITemplateApplication[];
   sessionInfo: any[];
+  theme: string;
 };
 
 const initialState: TGdmnState = {
@@ -21,7 +23,8 @@ const initialState: TGdmnState = {
   loadingCounter: 0,
   viewTabs: [],
   apps: [],
-  sessionInfo: []
+  sessionInfo: [],
+  theme: themes[0].name
 };
 
 export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
@@ -177,6 +180,13 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
       return {
         ...state,
         sessionInfo: action.payload
+      };
+    }
+
+    case getType(gdmnActions.selectTheme): {
+      return {
+        ...state,
+        theme: action.payload
       };
     }
 
