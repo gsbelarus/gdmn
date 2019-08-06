@@ -9,13 +9,12 @@ import {
   Checkbox,
   TextField,
   Label,
-  IComboBoxStyles,
-  IButtonStyles
 } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
+import { loadStyles, loadTheme } from '@microsoft/load-themed-styles';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -97,11 +96,6 @@ export interface IDesignerState {
   selectedField?: string;
 };
 
-const defaultTheme: ITheme = {
-  background: '#FFFFFF',
-  color: '#000000'
-}
-
   const defaultState = (entityName: string, fields?: IFieldDef[]) => {return {
     grid: {
       columns: [{ unit: 'PX', value: 350 }, { unit: 'FR', value: 1 }],
@@ -138,14 +132,14 @@ const defaultTheme: ITheme = {
         size: 14,
         style: 'normal',
         family: 'Arial, sans-serif',
-        color: defaultTheme.color,
+        color: '#000000',
         weight: 'normal'
       },
-      background: defaultTheme.background,
+      background: '#FFFFFF',
       border: {
         width: 1,
         style: 'none',
-        color: defaultTheme.background,
+        color: '#000000',
         radius: 3
       },
       align: 'center',
@@ -154,9 +148,6 @@ const defaultTheme: ITheme = {
     changeArray: [],
     activeTab: 'Настройка'
   } as IDesignerState};
-
-//  const secondsColors = ['#70E500', '#74B5F5', '#aa5fe3', '#FFD300', '#FFFFFF', '#000000']
-  const secondsColors = ['#79bf6d', '#62aaf0', '#aa5fe3', '#FFD300', '#FFFFFF', '#000000']
 
   type Action = { type: 'SET_ACTIVE_AREA', activeArea?: number, shiftKey: boolean }
   | { type: 'SET_COLUMN_SIZE', column: number, size: ISize }
@@ -756,6 +747,7 @@ let tempSavedScrollToolPanel = 0;
 export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields, rs, entity } = props;
+  loadStyles('body { background: "[theme:primaryBackgroundColor, default: #FFAAFA]"');
 
   const Field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element => {
   const locked = rs ? rs.locked : false;
@@ -764,42 +756,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
     const fkFieldName = props.fd.eqfa!.linkAlias;
     const attr = entity!.attributes[fkFieldName] as EntityAttribute;
     if (attr instanceof EntityAttribute) {
-      const style = {
-        label: {
-          color: props.areaStyle!.font.color,
-          fontSize: `${props.areaStyle!.font.size}px`,
-          fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
-          fontFamily: props.areaStyle!.font.family
-        },
-        root: {
-          color: props.areaStyle!.font.color,
-          flexGrow: props.areaDirection! === 'row' ? 1 : 0,
-          background: props.areaStyle!.background,
-          borderColor: props.areaStyle!.font.color,
-          borderWidth: props.field!.key === selectedField ? '3px' : '1px'
-        },
-        input: {
-          color: props.areaStyle!.font.color, 
-          background: props.field!.color,
-          borderWidth: props.field!.key === selectedField ? '3px' : '1px'
-        },
-        rootHovered: {
-          color: `#474747`,
-          borderColor: `${props.areaStyle!.font.color}99`
-        }
-      }
-      const styleCaretDownButton = {
-        rootHovered: {
-          color: `#474747`,
-          backgroundColor: props.areaStyle!.font.color,
-          borderColor: `${props.areaStyle!.font.color}99`
-        },
-        rootChecked: {
-          color: props.areaStyle!.font.color,
-          backgroundColor: `#474747`,
-          borderColor: `${props.areaStyle!.font.color}99`
-        }
-      }
       return (
         <LookupComboBox
           key={fkFieldName}
@@ -807,69 +763,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
           onLookup={(filter, limit) => {return Promise.resolve([])}}
           onChanged={() => {}}
-          styles={style as Partial<IComboBoxStyles>}
-          caretDownButtonStyles={styleCaretDownButton as IButtonStyles}
         />
       );
     }
   }
 
   if (props.fd.dataType === TFieldType.Date) {
-    const style = {
-      subComponentStyles: {
-        label: {
-          root: {
-            color: props.areaStyle!.font.color,
-            fontSize: `${props.areaStyle!.font.size}px`,
-            fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
-            fontFamily: props.areaStyle!.font.family
-          }
-        }
-      },
-      root: {
-        flexGrow: props.areaDirection === 'row' ? 1 : 0
-      },
-      fieldGroup: {
-        borderWidth: props.field!.key === selectedField ? '3px' : '1px',
-        borderColor: props.areaStyle!.font.color,
-        background: props.field!.color,
-        selectors: {
-          ':hover': {
-            borderColor: `${props.areaStyle!.font.color}99`
-          }
-        }
-      },
-      field: {
-        color: props.areaStyle!.font.color
-      }
-    }
-    const styleIcon = {
-      root: {
-        backgroundColor: props.areaStyle!.background,
-        color: `${props.areaStyle!.font.color}99`,
-        border: `1px solid ${props.areaStyle!.font.color}`,
-        borderWidth: props.field!.key === selectedField ? '3px' : '1px',
-        borderLeft: 'none'
-      },
-      rootHovered: {
-        color: props.areaStyle!.background,
-        backgroundColor: props.areaStyle!.font.color,
-        borderColor: props.areaStyle!.font.color,
-        borderLeft: 'none'
-      },
-      rootChecked: {
-        color: props.areaStyle!.background,
-        backgroundColor: props.areaStyle!.font.color,
-        borderColor: props.areaStyle!.font.color,
-        borderLeft: 'none'
-      },
-      rootCheckedHovered: {
-        color: props.areaStyle!.font.color,
-        backgroundColor: props.areaStyle!.background,
-        borderColor: props.areaStyle!.font.color,
-        borderLeft: 'none'
-      }
-    }
     return (
       <DatepickerJSX
         key={props.fd.fieldName}
@@ -877,92 +776,23 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
         label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         value=''
         onChange={() => {}}
-        styles={style}
-        styleIcon={styleIcon}
     />);
   } else if (props.fd.dataType === TFieldType.Boolean) {
-    const styleCheckBox = props.areaStyle !== undefined ? {
-      root: {
-        marginTop: '10px',
-        selectors: {
-          ':hover .ms-Checkbox-checkbox': {
-            borderColor: `${props.areaStyle.font.color}AA`,
-            background: `${props.areaStyle.font.color}00`,
-            color: props.areaStyle.font.color
-          },
-          ':hover .ms-Checkbox-checkmark': {
-            background: props.areaStyle.background,
-            color: `${props.areaStyle.font.color}AA`
-          },
-          ':hover .ms-Checkbox-text': {
-            color: props.areaStyle.font.color
-          }
-        }
-      },
-      text: {
-        color: props.areaStyle.font.color,
-        flexGrow: props.areaDirection! === 'row' ? 1 : 0,
-        background: props.areaStyle.background
-      },
-      checkbox: {
-        borderColor: props.areaStyle.font.color,
-        background: `${props.areaStyle.font.color}00`,
-        color: props.areaStyle.background
-      },
-      checkmark: {
-        background: props.areaStyle.font.color,
-        color: props.areaStyle.background
-      }
-    } : {
-      root: {marginTop: '10px'},
-      borderWidth: props.field!.key === selectedField ? '3px' : '1px'
-    }
     return (
       <Checkbox
         key={props.fd.fieldName}
         disabled={locked}
         label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         defaultChecked={rs!.getBoolean(props.fd.fieldName)}
-        styles={styleCheckBox}
       />
     )
   } else {
-    const style = {
-      subComponentStyles: {
-        label: {
-          root: {
-            color: props.areaStyle!.font.color,
-            fontSize: `${props.areaStyle!.font.size}px`,
-            fontWeight: props.areaStyle!.font.weight === 'normal' ? 400 : 600,
-            fontFamily: props.areaStyle!.font.family
-          }
-        }
-      },
-      root: {
-        flexGrow: props.areaDirection === 'row' ? 1 : 0
-      },
-      fieldGroup: {
-        color: props.areaStyle!.font.color,
-        borderWidth: props.field!.key === selectedField ? '3px' : '1px',
-        borderColor: props.areaStyle!.font.color,
-        background: props.field!.color,
-        selectors: {
-          ':hover': {
-            borderColor: `${props.areaStyle!.font.color}99`
-          }
-        }
-      },
-      field: {
-        color: props.areaStyle!.font.color,
-      }
-    }
     return (
       <TextField
         key={props.fd.fieldName}
         label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa!.attribute}`}
         defaultValue={rs!.getString(props.fd.fieldName)}
         readOnly={true}
-        styles={style}
       />
     )
   }
@@ -1409,62 +1239,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     }}
                     key='Setting'
                   >
-                    <div className='selectBackground' style={{display: 'flex'}}>
-                      <div
-                        key='light'
-                        onClick={e => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...styleSetting, background: '#FFFFFF'} })
-                          designerDispatch({ type: 'SET_STYLE_FIELD', color: '#FFFFFF' })
-                        }}
-                        style={{
-                          height: '36px',
-                          width: '72px',
-                          background: '#FFFFFF',
-                          borderColor: styleSetting.background === '#FFFFFF' ? '#FF0000' : undefined,
-                          borderStyle: 'solid',
-                          borderWidth: '1px',
-                          margin: '2px',
-                          alignItems: 'center'
-                    }}
-                      >light</div> 
-                      <div
-                        key='dark'
-                        onClick={e => {
-                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, background: '#2E2E2E'} })
-                          designerDispatch({ type: 'SET_STYLE_FIELD', color: '#2E2E2E' })
-                        }}
-                        style={{
-                          height: '36px',
-                          width: '72px',
-                          background: '#2E2E2E',
-                          color: '#FFFFFF',
-                          borderColor: styleSetting.background !== '#FFFFFF' ? '#FF0000' : undefined,
-                          borderStyle: 'solid',
-                          borderWidth: '1px',
-                          margin: '2px'
-                        }}
-                      >dark</div>
-                      </div>
-                      <div className='selectSecondColor' style={{display: 'flex'}}>
-                        {secondsColors.map((color, idx) => {
-                          return <div
-                            className={`color ${color}`}
-                            key={color}
-                            onClick={e => designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, color}} })}
-                            style={{
-                              background: color,
-                              color: idx === secondsColors.length - 1 ? '#FFFFFF' : undefined,
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '16px',
-                              borderStyle: 'solid',
-                              borderWidth: '1px',
-                              borderColor: styleSetting.font.color === color ? '#FF0000' : '#696969',
-                              margin: '2px'
-                            }}
-                          ></div>
-                        })}
-                      </div>
                       { activeArea
                         ? <div>
                         <Label>Size</Label>
@@ -1531,6 +1305,21 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     </div>
                     <div>
                       <Label>
+                        Background
+                      </Label>
+                      <TextField
+                        key='background'
+                        value={styleSetting.background}
+                        onChange={(e) => {
+                          loadTheme({
+                            white: styleSetting.background
+                          });
+                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, background: e.currentTarget.value} });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>
                         Align
                       </Label>
                       <TextField
@@ -1567,6 +1356,21 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           options={FamilyFont.map(family => ({key: family, text: family}))}
                           onChange={(e, value) => {
                             designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, family: value!.text}} })
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label>
+                          Color
+                        </Label>
+                        <TextField
+                          key='font-color'
+                          value={styleSetting.font.color}
+                          onChange={(e) => {
+                            loadTheme({
+                              neutralPrimary: styleSetting.font.color
+                            });
+                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, color: e.currentTarget.value}} });
                           }}
                         />
                       </div>
@@ -1609,6 +1413,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           key='border-color'
                           value={styleSetting.border.color}
                           onChange={(e) => {
+                            loadTheme({
+                              themePrimary: styleSetting.border.color
+                            });
                             designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, border: {...styleSetting.border, color: e.currentTarget.value}} });
                           }}
                         />
