@@ -96,6 +96,36 @@ export const themes: INamedTheme[] = [
         white: '#023906',
       }
     }
+  },
+  {
+    name: 'Red',
+    isInverted: true,
+    theme: {
+      palette: {
+          themePrimary: '#f4c971',
+          themeLighterAlt: '#0a0805',
+          themeLighter: '#272012',
+          themeLight: '#493c22',
+          themeTertiary: '#927944',
+          themeSecondary: '#d7b163',
+          themeDarkAlt: '#f5cf7e',
+          themeDark: '#f7d692',
+          themeDarker: '#f9e1ae',
+          neutralLighterAlt: '#ae0202',
+          neutralLighter: '#ab0202',
+          neutralLight: '#a40202',
+          neutralQuaternaryAlt: '#990202',
+          neutralQuaternary: '#920202',
+          neutralTertiaryAlt: '#8c0202',
+          neutralTertiary: '#fdf0e2',
+          neutralSecondary: '#fdf2e7',
+          neutralPrimaryAlt: '#fef5ec',
+          neutralPrimary: '#fce8d4',
+          neutralDark: '#fefaf5',
+          black: '#fffcfa',
+          white: '#b20202',
+        }
+    }
   }
 ];
 
