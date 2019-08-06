@@ -225,7 +225,9 @@ export const gdmnActions = {
 
   getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
     return (sessionInfo: any[]) => resolve(sessionInfo)
-  })
+  }),
+
+  selectTheme: createAction('gdmn/SELECT_THEME', resolve => (theme: string) => resolve(theme) )
 };
 
 export type GdmnAction = ActionType<typeof gdmnActions>;

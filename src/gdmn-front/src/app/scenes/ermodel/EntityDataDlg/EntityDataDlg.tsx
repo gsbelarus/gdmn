@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -573,7 +573,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           {error}
         </MessageBar>
       }
-      <div styleName="ScrollableDlg">
+      <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
         <div styleName="FieldsColumn">
           {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
             const attr = entity.attributes[setAttrName] as EntityAttribute;

@@ -43,255 +43,269 @@ const NotFoundView = () => <h2>GDMN: 404!</h2>;
 const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 //@CSSModules(styles, { allowMultiple: true })
-export class GdmnView extends Component<IGdmnViewProps, {}> {
-  public render() {
-    const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened } = this.props;
-    if (!match) return null;
+export function GdmnView (props: IGdmnViewProps) {
+  const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened } = props;
+  if (!match) return null;
 
-    const topAreaHeight = 56 + 36 + ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
-    const homeButton = this.props.application
-      ? (
-        <Icon
-          data-is-focusable={true}
-          iconName="Home"
-          className="RoundIcon"
-          onClick={() => {
-            this.props.history.push(match.path);
-            this.props.dispatch(gdmnActionsAsync.reconnectToApp())
-          }}/>
-      )
-      : (
-        <Link to={`${match.path}`}>
-          <Icon iconName="Home" className="RoundIcon"/>
-        </Link>
-      );
-    return (
-      <>
-        <div className="TopArea" style={{ height: topAreaHeight }}>
-          <div className="Header">
-            {homeButton}
-            <Icon iconName="Chat" className="NoFrameIcon" />
-            <div className="SearchBox">
-              find something...
-              <span className="WhereToSearch">/</span>
-            </div>
-            <div className="ImportantMenu" hidden={!!this.props.application}>{commandToLink('applications', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('bp', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
-            <div className="ImportantMenu">{commandToLink('designer', match.url)}</div>
-            <div className="RightSideHeaderPart">
+  const topAreaHeight = 56 + 36 + ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
+  const homeButton = props.application
+    ? (
+      <Icon
+        data-is-focusable={true}
+        iconName="Home"
+        className="RoundIcon"
+        onClick={() => {
+          props.history.push(match.path);
+          props.dispatch(gdmnActionsAsync.reconnectToApp())
+        }}/>
+    )
+    : (
+      <Link to={`${match.path}`}>
+        <Icon iconName="Home" className="RoundIcon"/>
+      </Link>
+    );
+  return (
+    <>
+      <div className="TopArea" style={{ height: topAreaHeight }}>
+        <div className="Header">
+          {homeButton}
+          <Icon iconName="Chat" className="NoFrameIcon" />
+          <div className="SearchBox">
+            find something...
+            <span className="WhereToSearch">/</span>
+          </div>
+          <div className="ImportantMenu" hidden={!!props.application}>{commandToLink('applications', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('bp', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
+          <div className="ImportantMenu">{commandToLink('designer', match.url)}</div>
+          <div className="RightSideHeaderPart">
+          <div>
+          <span className="BigLogo">
+              <b>
+                <i>#GDMN</i>
+              </b>{' '}
+              &mdash; революционная платформа
+            </span>
             <div>
-            <span className="BigLogo">
-                <b>
-                  <i>#GDMN</i>
-                </b>{' '}
-                &mdash; революционная платформа
-              </span>
-              <div>
-                Подключение к базе{this.props.application ? ': ' + this.props.application.alias : ' авторизации'}
-              </div>
-            </div>
-              <span className="WithNotificationsCount">
-                <Icon iconName="Ringer" className="NoFrameIcon" />
-                <span className="NotificationsCount">4</span>
-              </span>
-              <IconButton
-                style={{ backgroundColor: 'transparent' }}
-                iconProps={{ iconName: 'Contact' }}
-                styles={{ menuIcon: { display: 'none' } }}
-                className="RoundIcon"
-                menuProps={{
-                  shouldFocusOnMount: true,
-                  gapSpace: 2,
-                  isBeakVisible: true,
-                  contextualMenuItemAs: (props: IContextualMenuItemProps) => {
-                    return props.item.link ? (
-                      <Link to={props.item.link}>
-                        <ContextualMenuItem {...props} />
-                      </Link>
-                    ) : (
-                      <ContextualMenuItem {...props} />
-                    );
-                  },
-                  items: commandsToContextualMenuItems(
-                    ['userProfile', 'themeEditor', '-', 'logout'],
-                    action => dispatch(action),
-                    (link: string) => history.push(`${match.url}${link}`)
-                  )
-                }}
-              />
+              Подключение к базе{props.application ? ': ' + props.application.alias : ' авторизации'}
             </div>
           </div>
-          {
-            loading ?
-              <ProgressIndicator
-                styles={{ itemProgress: { padding: 0 } }}
-                barHeight={4}
-                description={this.props.loadingMessage}
-              />
-            : undefined
-          }
-          {
-            (errorMessage && errorMessage.length > 0) ?
-              <MessageBar
-                messageBarType={MessageBarType.error}
-                isMultiline={false}
-                onDismiss={() => dispatch(rootActions.hideMessage())}
-                dismissButtonAriaLabel="Close"
-              >
-                {errorMessage.join(', ')}
-              </MessageBar>
-            : undefined
-          }
-          {
-            lostConnectWarnOpened ?
-              <LostConnectWarnMsgBar
-                onDismiss={ () => dispatch(rootActions.setLostConnectWarnOpened(false)) }
-                onYesAction={ () => dispatch(rootActions.abortNetReconnect()) }
-              />
-            : undefined
-          }
-          <ViewTabsContainer history={history} match={match} location={location} />
+            <span className="WithNotificationsCount">
+              <Icon iconName="Ringer" className="NoFrameIcon" />
+              <span className="NotificationsCount">4</span>
+            </span>
+            <IconButton
+              style={{ backgroundColor: 'transparent' }}
+              iconProps={{ iconName: 'Contact' }}
+              styles={{ menuIcon: { display: 'none' } }}
+              className="RoundIcon"
+              menuProps={{
+                shouldFocusOnMount: true,
+                gapSpace: 2,
+                isBeakVisible: true,
+                contextualMenuItemAs: (props: IContextualMenuItemProps) => {
+                  return props.item.link ? (
+                    <Link to={props.item.link}>
+                      <ContextualMenuItem {...props} />
+                    </Link>
+                  ) : (
+                    <ContextualMenuItem {...props} />
+                  );
+                },
+                items: commandsToContextualMenuItems(
+                  ['userProfile', 'themeEditor', '-', 'logout'],
+                  action => dispatch(action),
+                  (link: string) => history.push(`${match.url}${link}`)
+                )
+              }}
+            />
+          </div>
         </div>
-        <main className="WorkArea" style={{ height: `calc(100vh - ${topAreaHeight}px)` }}>
-          <ErrBoundary>
-            <Switch>
-              {
-                !this.props.application
-                ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} />
-                : <Redirect exact={true} from={`${match.path}/applications`} to={`${match.path}`} />
-              }
-              <Route
-                path={`${match.path}/account`}
-                render={props => (
-                  <AccountViewContainer
+        {
+          loading ?
+            <ProgressIndicator
+              styles={{ itemProgress: { padding: 0 } }}
+              barHeight={4}
+              description={props.loadingMessage}
+            />
+          : undefined
+        }
+        {
+          (errorMessage && errorMessage.length > 0) ?
+            <MessageBar
+              messageBarType={MessageBarType.error}
+              isMultiline={false}
+              onDismiss={() => dispatch(rootActions.hideMessage())}
+              dismissButtonAriaLabel="Close"
+            >
+              {errorMessage.join(', ')}
+            </MessageBar>
+          : undefined
+        }
+        {
+          lostConnectWarnOpened ?
+            <LostConnectWarnMsgBar
+              onDismiss={ () => dispatch(rootActions.setLostConnectWarnOpened(false)) }
+              onYesAction={ () => dispatch(rootActions.abortNetReconnect()) }
+            />
+          : undefined
+        }
+        <ViewTabsContainer history={history} match={match} location={location} />
+      </div>
+      <main className="WorkArea" style={{ height: `calc(100vh - ${topAreaHeight}px)` }}>
+        <ErrBoundary>
+          <Switch>
+            {
+              !props.application
+              ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} />
+              : <Redirect exact={true} from={`${match.path}/applications`} to={`${match.path}`} />
+            }
+            <Route
+              path={`${match.path}/account`}
+              render={props => (
+                <AccountViewContainer
+                  {...props}
+                />
+              )}
+            />
+            <Route
+              path={`${match.path}/applications`}
+              render={props => {
+                return (
+                  <ApplicationsViewContainer
+                  {...props}
+                  />
+                );
+              }}
+            />
+            <Route
+              path={`${match.path}/web-stomp`}
+              render={props => {
+                return (
+                  <StompDemoViewContainer
                     {...props}
                   />
-                )}
-              />
-              <Route
-                path={`${match.path}/applications`}
-                render={props => {
-                  return (
-                    <ApplicationsViewContainer
-                    {...props}
-                    />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/web-stomp`}
-                render={props => {
-                  return (
-                    <StompDemoViewContainer
-                      {...props}
-                    />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/bp`}
-                render={props => {
-                  return (
-                    <BPContainer
-                      {...props}
-                      url={props.match.url}
-                    />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/internals`}
-                render={props => {
-                  return (
-                    <InternalsContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/er-model`}
-                render={props => {
-                  return (
-                    //<ERModelViewContainer {...props} />
-                    <ERModelView2Container {...props} />
-                  );
-                }}
-              />
-              <Route
-                path={`${match.path}/er-model2`}
-                render={props => {
-                  return (
-                    <ERModelBoxContainer {...props} />
-                  );
-                }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/sql`}
-                render={props => {
-                  return (
-                    <SqlContainer
-                      {...props}
-                      url={props.match.url}
-                      id="SQL"
-                      key="SQL"
-                    />
-                  );
-                }}
-              />
-              <Route
-                exact={false}
-                path={`${match.path}/sql/:id`}
-                render={props => {
-                  return (
-                    <SqlContainer
-                      {...props}
-                      key={props.match.url}
-                      url={props.match.url}
-                      id={props.match.params.id}
-                    />
-                  );
-                }}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/designer`}
-                render={props => (
-                  <DesignerContainer
+                );
+              }}
+            />
+            <Route
+              path={`${match.path}/bp`}
+              render={props => {
+                return (
+                  <BPContainer
                     {...props}
                     url={props.match.url}
                   />
-                )}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/themeEditor`}
-                render={props => (
-                  <ThemeEditorContainer
+                );
+              }}
+            />
+            <Route
+              path={`${match.path}/internals`}
+              render={props => {
+                return (
+                  <InternalsContainer {...props} />
+                );
+              }}
+            />
+            <Route
+              path={`${match.path}/er-model`}
+              render={props => {
+                return (
+                  //<ERModelViewContainer {...props} />
+                  <ERModelView2Container {...props} />
+                );
+              }}
+            />
+            <Route
+              path={`${match.path}/er-model2`}
+              render={props => {
+                return (
+                  <ERModelBoxContainer {...props} />
+                );
+              }}
+            />
+            <Route
+              exact={true}
+              path={`${match.path}/sql`}
+              render={props => {
+                return (
+                  <SqlContainer
                     {...props}
                     url={props.match.url}
+                    id="SQL"
+                    key="SQL"
                   />
-                )}
-              />
-              <Route
-                exact={true}
-                path={`${match.path}/entity/:entityName`}
-                render={props => (
-                  <EntityDataViewContainer
+                );
+              }}
+            />
+            <Route
+              exact={false}
+              path={`${match.path}/sql/:id`}
+              render={props => {
+                return (
+                  <SqlContainer
                     {...props}
                     key={props.match.url}
-                    entityName={props.match.params.entityName}
                     url={props.match.url}
+                    id={props.match.params.id}
                   />
-                )}
-              />
-              {
+                );
+              }}
+            />
+            <Route
+              exact={true}
+              path={`${match.path}/designer`}
+              render={props => (
+                <DesignerContainer
+                  {...props}
+                  url={props.match.url}
+                />
+              )}
+            />
+            <Route
+              exact={true}
+              path={`${match.path}/themeEditor`}
+              render={props => (
+                <ThemeEditorContainer
+                  {...props}
+                  url={props.match.url}
+                />
+              )}
+            />
+            <Route
+              exact={true}
+              path={`${match.path}/entity/:entityName`}
+              render={props => (
+                <EntityDataViewContainer
+                  {...props}
+                  key={props.match.url}
+                  entityName={props.match.params.entityName}
+                  url={props.match.url}
+                />
+              )}
+            />
+            {
+            <Route
+              path={`${match.path}/entity/:entityName/add/:id`}
+              render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                <EntityDataDlgContainer
+                  {...props}
+                  key={props.match.url}
+                  entityName={props.match.params.entityName}
+                  id={props.match.params.id}
+                  url={props.match.url}
+                  newRecord={true}
+                />
+              )}
+            />
+            }
+            {
               <Route
-                path={`${match.path}/entity/:entityName/add/:id`}
+                path={`${match.path}/entity/:entityName/edit/:id`}
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
                   <EntityDataDlgContainer
                     {...props}
@@ -299,31 +313,15 @@ export class GdmnView extends Component<IGdmnViewProps, {}> {
                     entityName={props.match.params.entityName}
                     id={props.match.params.id}
                     url={props.match.url}
-                    newRecord={true}
+                    newRecord={false}
                   />
                 )}
               />
-              }
-              {
-                <Route
-                  path={`${match.path}/entity/:entityName/edit/:id`}
-                  render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
-                    <EntityDataDlgContainer
-                      {...props}
-                      key={props.match.url}
-                      entityName={props.match.params.entityName}
-                      id={props.match.params.id}
-                      url={props.match.url}
-                      newRecord={false}
-                    />
-                  )}
-                />
-              }
-              <Route path={`${match.path}/*`} component={NotFoundView} />
-            </Switch>
-          </ErrBoundary>
-        </main>
-      </>
-    );
-  }
+            }
+            <Route path={`${match.path}/*`} component={NotFoundView} />
+          </Switch>
+        </ErrBoundary>
+      </main>
+    </>
+  );
 }

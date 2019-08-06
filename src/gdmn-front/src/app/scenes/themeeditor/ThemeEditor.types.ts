@@ -11,8 +11,10 @@ export interface IThemeEditorProps {
   url: string;
   dispatch: ThunkDispatch<IState, never, GdmnAction>;
   viewTab?: IViewTab;
+  theme: string;
 };
 
 export interface IThemeEditorStateProps {
   viewTab?: IViewTab;
+  theme: string;
 };
