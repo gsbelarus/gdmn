@@ -573,7 +573,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           {error}
         </MessageBar>
       }
-      <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
+      <div styleName="ScrollableDlg">
         <div styleName="FieldsColumn">
           {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
             const attr = entity.attributes[setAttrName] as EntityAttribute;

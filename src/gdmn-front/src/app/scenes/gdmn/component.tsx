@@ -99,12 +99,18 @@ export function GdmnView (props: IGdmnViewProps) {
 
   return (
     <>
-      <div className="TopArea" style={{ height: topAreaHeight }}>
+      <div
+        className="TopArea"
+        style={{
+          height: topAreaHeight ,
+          backgroundColor: getTheme().semanticColors.bodyBackground,
+        }}
+      >
         <Stack
           className="Header"
           styles={{
             root: {
-              backgroundColor: getTheme().palette.neutralPrimary,
+              backgroundColor: getTheme().palette.themeDarker,
               color: getTheme().palette.neutralLight
             }
           }}
@@ -215,7 +221,14 @@ export function GdmnView (props: IGdmnViewProps) {
         }
         <ViewTabsContainer history={history} match={match} location={location} />
       </div>
-      <main className="WorkArea" style={{ height: `calc(100vh - ${topAreaHeight}px)` }}>
+      <main
+        className="WorkArea"
+        style={{
+          height: `calc(100vh - ${topAreaHeight}px)`,
+          backgroundColor: getTheme().semanticColors.bodyBackground,
+          color: getTheme().semanticColors.bodyText
+        }}
+      >
         <ErrBoundary>
           <Switch>
             {
@@ -228,6 +241,7 @@ export function GdmnView (props: IGdmnViewProps) {
               render={props => (
                 <AccountViewContainer
                   {...props}
+                  url={props.match.url}
                 />
               )}
             />

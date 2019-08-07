@@ -55,7 +55,7 @@ export const ThemeEditor = CSSModules( (props: IThemeEditorProps): JSX.Element =
         })}
       />
       <Label>Examples</Label>
-      <PrimaryButton styles={{ root: { backgroundColor: 'yellow' } }}>Primary button</PrimaryButton>
+      <PrimaryButton>Primary button</PrimaryButton>
       <DefaultButton>Test</DefaultButton>
     </>
   )
