@@ -12,25 +12,17 @@
   width: 100%;
   height: 56px;
   padding: 8px 12px 8px 12px;
-  background-color: #404040;
-  color: white;
 }
 
 .RoundIcon {
   cursor: pointer;
   font-size: 20px;
-  border: 1px solid white;
+  border: 1px solid;
   padding: 8px 10px 10px 10px;
   border-radius: 50%;
   margin-right: 16px;
-  color: white;
   width: 42px;
   height: 42px;
-}
-
-.RoundIcon:hover {
-  color: lightblue;
-  border-color: lightblue;
 }
 
 .NoFrameIcon {
@@ -42,7 +34,7 @@
 
 .SearchBox {
   position: relative;
-  border: 1px solid white;
+  border: 1px solid;
   font-style: italic;
   font-size: 12px;
   padding: 2px 4px 2px 4px;
@@ -55,20 +47,10 @@
   right: 2px;
   top: 2px;
   bottom: 2px;
-  border: 1px solid silver;
+  border: 1px solid;
   padding: 1px 4px 2px 4px;
   font-size: 8px;
   border-radius: 2px;
-}
-
-.ImportantMenu {
-  font-weight: 700;
-  margin-bottom: 12px;
-  margin-right: 16px;
-}
-
-.ImportantMenu:hover {
-  color: lightblue;
 }
 
 .RightSideHeaderPart {

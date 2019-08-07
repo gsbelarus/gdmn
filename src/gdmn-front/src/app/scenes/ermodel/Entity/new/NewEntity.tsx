@@ -161,7 +161,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           return {
             name: obj.fieldName,
             type: obj.type,
-            lName: obj.lName,
+            lName: {ru: {name: obj.lName}},
             required: obj.required,
             semCategories: obj.semCategories,
             references: [`${obj.linkName}`],
@@ -172,7 +172,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           return {
             name: obj.fieldName,
             type: obj.type,
-            lName: obj.lName,
+            lName: {ru: {name: obj.lName}},
             required: obj.required,
             semCategories: obj.semCategories,
             adapter: {relation: `${name.value.toUpperCase()}`, field: `${obj.fieldName.toUpperCase()}`},
@@ -182,7 +182,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           return {
             name: obj.fieldName,
             type: obj.type,
-            lName: obj.lName,
+            lName: {ru: {name: obj.lName}},
             required: obj.required,
             semCategories: obj.semCategories,
             references: [`${obj.linkName}`]
@@ -191,13 +191,13 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           return {
             name: obj.fieldName,
             type: obj.type,
-            lName: obj.lName,
+            lName: {ru: {name: obj.lName}},
             required: obj.required,
             semCategories: obj.semCategories
           } as IAttribute;
         }
       });
-
+    console.log(attributes)
     dispatch(async (dispatch, getState) => {
       if (parent) {
         await apiService.AddEntity({

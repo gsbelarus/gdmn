@@ -14,9 +14,11 @@ import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer
 import { ISqlState, reducer as sqlReducer} from '@src/app/scenes/sql/EditView/reducer';
 import { ISqlDataViewState, reducer as sqlDataViewReducer} from '@src/app/scenes/sql/data/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
+import { reducer as fsmReducer, IFSMState } from '@src/app/fsm/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IRsMetaState, rsMetaReducer } from './rsmeta';
+import { FSM } from '@src/app/fsm/fsm';
 
 initializeIcons(/* optional base url */);
 
@@ -29,6 +31,7 @@ export interface IState {
   readonly recordSet: RecordSetReducerState;
   readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
+  readonly fsm: IFSMState;
 }
 
 const authPersistConfig = {
@@ -55,7 +58,8 @@ const reducer = combineReducers<IState>({
   sqlState: withReset(sqlReducer),
   recordSet: withReset(recordSetReducer),
   rsMeta: withReset(rsMetaReducer),
-  grid: withReset(gridReducer)
+  grid: withReset(gridReducer),
+  fsm: withReset(fsmReducer)
 });
 
 export type TReducer = Reducer<IState & PersistPartial, TActions>;
