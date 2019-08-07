@@ -291,8 +291,6 @@ const selectThemeMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next
     }
 
     loadTheme(namedTheme.theme);
-
-    console.log(`theme loaded ${action.payload}`);
   }
 
   return next(action);

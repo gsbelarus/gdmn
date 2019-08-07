@@ -780,7 +780,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               if (fd.dataType === TFieldType.Date) {
                 return (
                   <DatepickerJSX
-                    key={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? String(lastEdited.current.value) : rs.getString(fd.fieldName)}
+                    key={fd.fieldName}
                     fieldName={`${fd.fieldName}`}
                     label={`${fd.caption}-${fd.fieldName}-${fd.eqfa.attribute}`}
                     value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? String(lastEdited.current.value) : rs.getString(fd.fieldName)}

@@ -18,8 +18,6 @@ export const ViewTabs = (props: IViewTabsProps & RouteComponentProps<any>) => {
     const { viewTabs, onClose, recordSet, rsMeta, theme } = props;
     const { viewTabsBand, viewTabSpace, viewRestSpace } = useMemo( () => getViewTabStyles(theme), [theme]);
 
-    console.log(`viewTabs render ${theme}`);
-
     return viewTabs.length ?
       <div style={viewTabsBand}>
         <div style={viewTabSpace} />
