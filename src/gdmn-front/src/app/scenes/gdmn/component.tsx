@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
@@ -15,7 +15,7 @@ import { AccountViewContainer } from './components/AccountViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
 import { rootActions } from '../root/actions';
-import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
+import { MessageBar, MessageBarType, getTheme, Stack, Label } from 'office-ui-fabric-react';
 import { LostConnectWarnMsgBar } from './components/LostConnectWarnMsgBar';
 import { ApplicationsViewContainer } from './components/ApplicationsViewContainer';
 import { IApplicationInfo } from '@gdmn/server-api';
@@ -33,6 +33,7 @@ export interface IGdmnViewProps extends RouteComponentProps<any> {
   lostConnectWarnOpened: boolean;
   dispatch: Dispatch<any>;
   application?: IApplicationInfo;
+  theme: string;
 };
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
@@ -53,50 +54,108 @@ export function GdmnView (props: IGdmnViewProps) {
         onClick={() => {
           props.history.push(match.path);
           props.dispatch(gdmnActionsAsync.reconnectToApp())
-        }}/>
+        }}
+        styles={{
+          root: {
+            selectors: {
+              ':hover': {
+                color: getTheme().palette.themeTertiary
+              }
+            }
+          }
+        }}
+      />
     )
     : (
       <Link to={`${match.path}`}>
         <Icon iconName="Home" className="RoundIcon"/>
       </Link>
     );
+
+  const importantMenu = (link: JSX.Element, hidden: boolean = false) => (
+    hidden ? null : <Label
+      disabled={!!props.application}
+      styles={{
+        root: {
+          color: getTheme().palette.neutralLight,
+          fontWeight: 700,
+          marginBottom: '7px',
+          marginRight: '12px',
+          selectors: {
+            ':hover': {
+              color: getTheme().palette.themeTertiary
+            }
+          }
+        }
+      }}
+    >
+      {link}
+    </Label>
+  );
+
   return (
     <>
       <div className="TopArea" style={{ height: topAreaHeight }}>
-        <div className="Header">
+        <Stack
+          className="Header"
+          styles={{
+            root: {
+              backgroundColor: getTheme().palette.neutralPrimary,
+              color: getTheme().palette.neutralLight
+            }
+          }}
+        >
           {homeButton}
           <Icon iconName="Chat" className="NoFrameIcon" />
           <div className="SearchBox">
             find something...
             <span className="WhereToSearch">/</span>
           </div>
-          <div className="ImportantMenu" hidden={!!props.application}>{commandToLink('applications', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('webStomp', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('bp', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('erModel', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('erModel2', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('internals', match.url)}</div>
-          <div className="ImportantMenu">{commandToLink('sql', match.url)}</div>
+          {importantMenu(commandToLink('applications', match.url), !!props.application)}
+          {importantMenu(commandToLink('webStomp', match.url))}
+          {importantMenu(commandToLink('bp', match.url))}
+          {importantMenu(commandToLink('erModel', match.url))}
+          {importantMenu(commandToLink('erModel2', match.url))}
+          {importantMenu(commandToLink('internals', match.url))}
+          {importantMenu(commandToLink('sql', match.url))}
           <div className="RightSideHeaderPart">
-          <div>
-          <span className="BigLogo">
-              <b>
-                <i>#GDMN</i>
-              </b>{' '}
-              &mdash; революционная платформа
-            </span>
             <div>
-              Подключение к базе{props.application ? ': ' + props.application.alias : ' авторизации'}
+              <span className="BigLogo">
+                <b>
+                  <i>#GDMN</i>
+                </b>{' '}
+                &mdash; революционная платформа
+              </span>
+              <div>
+                Подключение к базе{props.application ? ': ' + props.application.alias : ' авторизации'}
+              </div>
             </div>
-          </div>
             <span className="WithNotificationsCount">
               <Icon iconName="Ringer" className="NoFrameIcon" />
               <span className="NotificationsCount">4</span>
             </span>
             <IconButton
-              style={{ backgroundColor: 'transparent' }}
+              //style={{ backgroundColor: 'transparent' }}
               iconProps={{ iconName: 'Contact' }}
-              styles={{ menuIcon: { display: 'none' } }}
+              styles={{
+                menuIcon: { display: 'none' },
+                rootHovered: {
+                  backgroundColor: 'transparent',
+                  color: getTheme().palette.themeTertiary
+                },
+                rootExpanded: {
+                  backgroundColor: 'transparent',
+                  color: getTheme().palette.neutralLight
+                },
+                rootPressed: {
+                  backgroundColor: 'transparent',
+                  color: getTheme().palette.themeTertiary
+                },
+                root: {
+                  backgroundColor: 'transparent',
+                  color: getTheme().palette.neutralLight
+                }
+              }}
               className="RoundIcon"
               menuProps={{
                 shouldFocusOnMount: true,
@@ -119,7 +178,7 @@ export function GdmnView (props: IGdmnViewProps) {
               }}
             />
           </div>
-        </div>
+        </Stack>
         {
           loading ?
             <ProgressIndicator

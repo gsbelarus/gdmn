@@ -615,44 +615,54 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         const linkEntity = attr.entities[0];
         if (attr instanceof EntityAttribute) {
           return (
-            <LookupComboBox
+            <SetLookupComboBox
               key={fkFieldName}
               name={fkFieldName}
               label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
               preSelectedOption={ rs.isNull(refIdFieldAlias)
                 ? undefined
-                : {
+                : [{
                   key: rs.getString(refIdFieldAlias),
                   text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
-                }
+                }]
               }
               getSessionData={
                 () => {
                   if (!controlsData.current) {
                     controlsData.current = {};
+      /*<div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
+        <div styleName="FieldsColumn">
+          {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
+            const attr = entity.attributes[setAttrName] as EntityAttribute;
+            const linkEntity = attr.entities[0];
+            return (
+              <SetLookupComboBox
+                key={setAttrName}
+                name={setAttrName}
+                label={setAttrName}
+                preSelectedOption={data ? data : undefined}
+                getSessionData={
+                  () => {
+                    if (!controlsData.current) {
+                      controlsData.current = {};
+                    }
+                    return controlsData.current;
+*/
                   }
                   return controlsData.current;
                 }
               }
               onChanged={
-                (option: IComboBoxOption | undefined) => {
-                  let changedRs = rs;
+                (option: IComboBoxOption[] | undefined) => {
                   if (option) {
-                    changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                    if (refNameFieldAlias) {
-                      changedRs = changedRs.setValue(refNameFieldAlias, option.text);
-                    }
-                  } else {
-                    changedRs = changedRs.setNull(refIdFieldAlias);
-                    if (refNameFieldAlias) {
-                      changedRs = changedRs.setNull(refNameFieldAlias);
-                    }
+                    setSetComboBoxData( {...setComboBoxData,
+                      [fkFieldName]: option
+                    });
+                    setChanged(true);
+                    changedFields.current[fkFieldName] = true;
                   }
-                  dispatch(rsActions.setRecordSet(changedRs));
-                  setChanged(true);
-                  changedFields.current[refIdFieldAlias] = true;
                 }
-              }
+              }/*
               onFocus={
                 () => {
                   lastFocused.current = props.fd.fieldName;
@@ -660,58 +670,58 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     applyLastEdited();
                   }
                 }
-              }
-                onLookup={
-                  (filter: string, limit: number) => {
-                    const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                    const scalarAttrs = Object.values(linkEntity.attributes)
-                      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+              }*/
+              onLookup={
+                (filter: string, limit: number) => {
+                  const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                  const scalarAttrs = Object.values(linkEntity.attributes)
+                    .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
 
-                    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                      || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                      || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                      || scalarAttrs.find((attr) => attr.type === "String");
-                    if (presentField) {
-                      linkFields.push(new EntityLinkField(presentField));
-                    }
-                    const linkEq = new EntityQuery(
-                      new EntityLink(linkEntity, 'z', linkFields),
-                      new EntityQueryOptions(
-                        limit + 1,
-                        undefined,
-                        filter ?
-                          [{
-                            contains: [
-                              {
-                                alias: 'z',
-                                attribute: presentField!,
-                                value: filter!
-                              }
-                            ]
-                          }]
-                        : undefined
-                      )
-                    );
-                    return apiService.query({ query: linkEq.inspect() })
-                      .then( response => {
-                        const result = response.payload.result!;
-                        const idAlias = Object.entries(result.aliases).find( ([_, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                        const nameAlias = Object.entries(result.aliases).find( ([_, data]) => data.linkAlias === 'z'
-                          && (data.attribute === presentField!.name))![0];
-                        return result.data.map( (r): IComboBoxOption => ({
-                          key: r[idAlias],
-                          text: r[nameAlias]
-                        }));
-                      });
+                  const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                    || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                    || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                    || scalarAttrs.find((attr) => attr.type === "String");
+                  if (presentField) {
+                    linkFields.push(new EntityLinkField(presentField));
                   }
+                  const linkEq = new EntityQuery(
+                    new EntityLink(linkEntity, 'z', linkFields),
+                    new EntityQueryOptions(
+                      limit + 1,
+                      undefined,
+                      filter ?
+                        [{
+                          contains: [
+                            {
+                              alias: 'z',
+                              attribute: presentField!,
+                              value: filter!
+                            }
+                          ]
+                        }]
+                      : undefined
+                    )
+                  );
+                  return apiService.query({ query: linkEq.inspect() })
+                    .then( response => {
+                      const result = response.payload.result!;
+                      const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                      const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                        && (data.attribute === presentField!.name))![0];
+                      return result.data.map( (r): IComboBoxOption => ({
+                        key: r[idAlias],
+                        text: r[nameAlias]
+                      }));
+                    });
                 }
+              }
               componentRef={
                 ref => {
                   if (ref && lastFocused.current === props.fd.fieldName) {
                     needFocus.current = ref;
                   }
                 }
-              }
+              }/*
               styles={props.areaStyle === undefined ? undefined : {
                 label: {
                   color: props.areaStyle.font.color,
@@ -747,7 +757,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   backgroundColor: `#474747`,
                   borderColor: `${props.areaStyle.font.color}99`
                 }
-              }}
+              }}*/
             />
           );
         }
@@ -1017,7 +1027,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               {error}
             </MessageBar>
           }
-          <div styleName="ScrollableDlg">
+          <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
             {
               localState !== undefined ?
               <div
