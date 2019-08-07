@@ -1,7 +1,7 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Spinner, SpinnerSize } from 'office-ui-fabric-react';
-import { useViewTabStyles } from './useViewTabStyles';
+import { getViewTabStyles } from './getViewTabStyles';
 
 export interface IViewTabProps {
   caption: string;
@@ -15,7 +15,8 @@ export interface IViewTabProps {
 
 export const ViewTab = (props: IViewTabProps) => {
     const { caption, url, loading, changed, error, onClose, theme } = props;
-    const { viewTab, viewActiveColor, inactiveShadow, viewTabSpace, viewTabSpinner, viewTabCross, viewTabText, viewInactiveTab } = useViewTabStyles(theme, error);
+    const { viewTab, viewActiveColor, inactiveShadow, viewTabSpace, viewTabSpinner,
+      viewTabCross, viewTabText, viewInactiveTab } = useMemo( () => getViewTabStyles(theme, error), [theme, error]);
 
     const InnerTab = (props: {active?: boolean}) => (
       <Link to={url}>

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { IViewTab } from '@src/app/scenes/gdmn/types';
 import { ViewTab } from './ViewTab';
 import { RouteComponentProps } from 'react-router-dom';
 import { RecordSetReducerState, TStatus } from 'gdmn-recordset';
 import { IRsMetaState } from '@src/app/store/rsmeta';
-import { useViewTabStyles } from './useViewTabStyles';
+import { getViewTabStyles } from './getViewTabStyles';
 
 export interface IViewTabsProps {
   viewTabs: IViewTab[];
@@ -16,7 +16,9 @@ export interface IViewTabsProps {
 
 export const ViewTabs = (props: IViewTabsProps & RouteComponentProps<any>) => {
     const { viewTabs, onClose, recordSet, rsMeta, theme } = props;
-    const { viewTabsBand, viewTabSpace, viewRestSpace } = useViewTabStyles(theme);
+    const { viewTabsBand, viewTabSpace, viewRestSpace } = useMemo( () => getViewTabStyles(theme), [theme]);
+
+    console.log(`viewTabs render ${theme}`);
 
     return viewTabs.length ?
       <div style={viewTabsBand}>
