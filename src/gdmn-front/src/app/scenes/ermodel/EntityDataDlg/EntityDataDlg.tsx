@@ -12,7 +12,6 @@ import {
 } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
-import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import {
   EntityQuery,
   EntityLink,
@@ -630,24 +629,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 () => {
                   if (!controlsData.current) {
                     controlsData.current = {};
-      /*<div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
-        <div styleName="FieldsColumn">
-          {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
-            const attr = entity.attributes[setAttrName] as EntityAttribute;
-            const linkEntity = attr.entities[0];
-            return (
-              <SetLookupComboBox
-                key={setAttrName}
-                name={setAttrName}
-                label={setAttrName}
-                preSelectedOption={data ? data : undefined}
-                getSessionData={
-                  () => {
-                    if (!controlsData.current) {
-                      controlsData.current = {};
-                    }
-                    return controlsData.current;
-*/
                   }
                   return controlsData.current;
                 }
@@ -721,32 +702,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     needFocus.current = ref;
                   }
                 }
-              }/*
+              }
               styles={props.areaStyle === undefined ? undefined : {
-                label: {
-                  color: props.areaStyle.font.color,
-                  fontSize: `${props.areaStyle.font.size}px`,
-                  fontWeight: props.areaStyle.font.weight === 'normal' ? 400 : 600,
-                  fontFamily: props.areaStyle.font.family
-                },
-                root: {
-                  color: props.areaStyle.font.color,
-                  flexGrow: props.areaDirection! === 'row' ? 1 : 0,
-                  background: props.areaStyle.background,
-                  borderColor: props.areaStyle.font.color,
-                  borderWidth: '1px'
-                },
-                input: {
-                  color: props.areaStyle.font.color, 
-                  background: props.field!.color,
-                  borderWidth: '1px'
-                },
-                rootHovered: {
-                  color: `#474747`,
-                  borderColor: `${props.areaStyle.font.color}99`
-                }
-              }}
-              caretDownButtonStyles={props.areaStyle === undefined ? undefined : {
+                  root: {
+                    background: props.areaStyle!.background
+                  },
+                  input: {
+                    background: props.areaStyle!.background
+                  }
+                }}
+              /*caretDownButtonStyles={props.areaStyle === undefined ? undefined : {
                 rootHovered: {
                   color: `#474747`,
                   backgroundColor: props.areaStyle.font.color,
@@ -802,94 +767,38 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               }
             }
             styles={props.areaStyle === undefined ? undefined : {
-              subComponentStyles: {
-                label: {
-                  root: {
-                    color: props.areaStyle.font.color,
-                    fontSize: `${props.areaStyle.font.size}px`,
-                    fontWeight: props.areaStyle.font.weight === 'normal' ? 400 : 600,
-                    fontFamily: props.areaStyle.font.family
-                  }
-                }
-              },
               root: {
-                flexGrow: props.areaDirection === 'row' ? 1 : 0
+                background: props.areaStyle!.background
               },
               fieldGroup: {
-                borderWidth: '1px',
-                borderColor: props.areaStyle.font.color,
-                background: props.field!.color,
-                selectors: {
-                  ':hover': {
-                    borderColor: `${props.areaStyle.font.color}99`
-                  }
-                }
-              },
-              field: {
-                color: props.areaStyle.font.color
+                background: props.areaStyle!.background
               }
             }}
             styleIcon={props.areaStyle === undefined ? undefined : {
               root: {
-                backgroundColor: props.areaStyle.background,
-                color: `${props.areaStyle.font.color}99`,
-                border: `1px solid ${props.areaStyle.font.color}`,
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
                 borderLeft: 'none'
               },
               rootHovered: {
-                color: props.areaStyle.background,
-                backgroundColor: props.areaStyle.font.color,
-                borderColor: props.areaStyle.font.color,
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
                 borderLeft: 'none'
               },
               rootChecked: {
-                color: props.areaStyle.background,
-                backgroundColor: props.areaStyle.font.color,
-                borderColor: props.areaStyle.font.color,
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
                 borderLeft: 'none'
               },
               rootCheckedHovered: {
-                color: props.areaStyle.font.color,
-                backgroundColor: props.areaStyle.background,
-                borderColor: props.areaStyle.font.color,
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
                 borderLeft: 'none'
               }
             }}
         />);
       } else if (props.fd.dataType === TFieldType.Boolean) {
-        const subComponentStyle = props.areaStyle !== undefined ? {
-          root: {
-            marginTop: '10px',
-            selectors: {
-              ':hover .ms-Checkbox-checkbox': {
-                borderColor: `${props.areaStyle.font.color}AA`,
-                background: `${props.areaStyle.font.color}00`,
-                color: props.areaStyle.font.color
-              },
-              ':hover .ms-Checkbox-checkmark': {
-                background: props.areaStyle.background,
-                color: `${props.areaStyle.font.color}AA`
-              },
-              ':hover .ms-Checkbox-text': {
-                color: props.areaStyle.font.color
-              }
-            }
-          },
-          text: {
-            color: props.areaStyle.font.color,
-            flexGrow: props.areaDirection! === 'row' ? 1 : 0,
-            background: props.areaStyle.background
-          },
-          checkbox: {
-            borderColor: props.areaStyle.font.color,
-            background: `${props.areaStyle.font.color}00`,
-            color: props.areaStyle.background
-          },
-          checkmark: {
-            background: props.areaStyle.font.color,
-            color: props.areaStyle.background
-          }
-        } : {
+        const subComponentStyle = {
           root: {marginTop: '10px'},
           borderWidth: '1px'
         };
@@ -934,32 +843,14 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
             styles={props.areaStyle === undefined ? undefined : {
-              subComponentStyles: {
-                label: {
-                  root: {
-                    color: props.areaStyle.font.color,
-                    fontSize: `${props.areaStyle.font.size}px`,
-                    fontWeight: props.areaStyle.font.weight === 'normal' ? 400 : 600,
-                    fontFamily: props.areaStyle.font.family
-                  }
-                }
-              },
               root: {
-                flexGrow: props.areaDirection === 'row' ? 1 : 0
+                background: props.areaStyle!.background
               },
               fieldGroup: {
-                color: props.areaStyle.font.color,
-                borderWidth: '1px',
-                borderColor: props.areaStyle.font.color,
-                background: props.field!.color,
-                selectors: {
-                  ':hover': {
-                    borderColor: `${props.areaStyle.font.color}99`
-                  }
-                }
+                background: props.areaStyle!.background
               },
               field: {
-                color: props.areaStyle.font.color,
+                background: props.areaStyle!.background
               }
             }}
             defaultValue={
@@ -1046,18 +937,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     display: 'flex',
                     flexDirection: area.direction,
                     justifyContent: 'flex-start',
-                    background: `${(localState as IDesignerState).styleSetting.background}`,
-                    margin: (localState as IDesignerState).styleSetting.margin ? `${(localState as IDesignerState).styleSetting.margin}px` : '1px',
-                    padding: (localState as IDesignerState).styleSetting.padding ? `${(localState as IDesignerState).styleSetting.padding}px` : '4px',
-                    border: (localState as IDesignerState).styleSetting.border.style === 'none'
-                      ? `1px solid ${(localState as IDesignerState).styleSetting.background}`
-                      : `${(localState as IDesignerState).styleSetting.border.width}px ${(localState as IDesignerState).styleSetting.border.style} ${(localState as IDesignerState).styleSetting.border.color}`,
-                    borderRadius: `${(localState as IDesignerState).styleSetting.border.radius}px`,
-                    color: `${(localState as IDesignerState).styleSetting.font.color}`,
-                    fontSize: `${(localState as IDesignerState).styleSetting.font.size}px`,
-                    fontWeight: (localState as IDesignerState).styleSetting.font.weight === 'normal' ? 400 : 600,
-                    fontStyle: `${(localState as IDesignerState).styleSetting.font.style}`,
-                    fontFamily: `${(localState as IDesignerState).styleSetting.font.family}`
+                    background: `${(localState as IDesignerState).areas[idx].style!.background}`,
+                    margin: (localState as IDesignerState).areas[idx].style!.margin ? `${(localState as IDesignerState).areas[idx].style!.margin}px` : '1px',
+                    padding: (localState as IDesignerState).areas[idx].style!.padding ? `${(localState as IDesignerState).areas[idx].style!.padding}px` : '4px',
+                    border: (localState as IDesignerState).areas[idx].style!.border.style === 'none'
+                      ? `1px solid ${(localState as IDesignerState).areas[idx].style!.background}`
+                      : `${(localState as IDesignerState).areas[idx].style!.border.width}px ${(localState as IDesignerState).areas[idx].style!.border.style} ${(localState as IDesignerState).areas[idx].style!.border.color}`,
+                    borderRadius: `${(localState as IDesignerState).areas[idx].style!.border.radius}px`,
+                    color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
+                    fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
+                    fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
+                    fontStyle: `${(localState as IDesignerState).areas[idx].style!.font.style}`,
+                    fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                   }}
                 >
                   {
@@ -1075,10 +966,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           subComponentStyles: {
                             label: {
                               root: {
-                                color: `${(localState as IDesignerState).styleSetting.font.color}`,
-                                fontSize: `${(localState as IDesignerState).styleSetting.font.size}px`,
-                                fontWeight: (localState as IDesignerState).styleSetting.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${(localState as IDesignerState).styleSetting.font.family}`
+                                color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
+                                fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
+                                fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                               }
                             }
                           },
@@ -1091,17 +982,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           subComponentStyles: {
                             label: {
                               root: {
-                                color: `${(localState as IDesignerState).styleSetting.font.color}`,
-                                fontSize: `${(localState as IDesignerState).styleSetting.font.size}px`,
-                                fontWeight: (localState as IDesignerState).styleSetting.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${(localState as IDesignerState).styleSetting.font.family}`
+                                color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
+                                fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
+                                fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                               }
                             }
                           },
                           fieldGroup: {background: f.color}
                         }
                         if (fd) {
-                          return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).styleSetting, areaDirection: area.direction})
+                          return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).areas[idx].style!, areaDirection: area.direction})
                         }
                         return undefined;
                       }
