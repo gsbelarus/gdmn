@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, IStyleFunction, ITextFieldStyleProps, ITextFieldStyles, ScrollablePane, ScrollbarVisibility } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -12,7 +12,6 @@ import {
 } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
-import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import {
   EntityQuery,
   EntityLink,
@@ -27,7 +26,7 @@ import {
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
-import { Designer, IDesignerState } from '../../designer/Designer';
+import { Designer, IDesignerState, IField, IStyleFieldsAndAreas, TDirection } from '../../designer/Designer';
 
 interface ILastEdited {
   fieldName: string;
@@ -602,7 +601,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     overflow: 'auto',
   });
 
-  const field = (props: { fd: IFieldDef, styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles> }): JSX.Element | undefined => {
+  const field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element | undefined => {
       if (!props.fd.eqfa) {
         return undefined;
       }
@@ -615,16 +614,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         const linkEntity = attr.entities[0];
         if (attr instanceof EntityAttribute) {
           return (
-            <LookupComboBox
+            <SetLookupComboBox
               key={fkFieldName}
               name={fkFieldName}
               label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
               preSelectedOption={ rs.isNull(refIdFieldAlias)
                 ? undefined
-                : {
+                : [{
                   key: rs.getString(refIdFieldAlias),
                   text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
-                }
+                }]
               }
               getSessionData={
                 () => {
@@ -635,24 +634,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
               onChanged={
-                (option: IComboBoxOption | undefined) => {
-                  let changedRs = rs;
+                (option: IComboBoxOption[] | undefined) => {
                   if (option) {
-                    changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                    if (refNameFieldAlias) {
-                      changedRs = changedRs.setValue(refNameFieldAlias, option.text);
-                    }
-                  } else {
-                    changedRs = changedRs.setNull(refIdFieldAlias);
-                    if (refNameFieldAlias) {
-                      changedRs = changedRs.setNull(refNameFieldAlias);
-                    }
+                    setSetComboBoxData( {...setComboBoxData,
+                      [fkFieldName]: option
+                    });
+                    setChanged(true);
+                    changedFields.current[fkFieldName] = true;
                   }
-                  dispatch(rsActions.setRecordSet(changedRs));
-                  setChanged(true);
-                  changedFields.current[refIdFieldAlias] = true;
                 }
-              }
+              }/*
               onFocus={
                 () => {
                   lastFocused.current = props.fd.fieldName;
@@ -660,51 +651,51 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     applyLastEdited();
                   }
                 }
-              }
-                onLookup={
-                  (filter: string, limit: number) => {
-                    const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                    const scalarAttrs = Object.values(linkEntity.attributes)
-                      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+              }*/
+              onLookup={
+                (filter: string, limit: number) => {
+                  const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                  const scalarAttrs = Object.values(linkEntity.attributes)
+                    .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
 
-                    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                      || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                      || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                      || scalarAttrs.find((attr) => attr.type === "String");
-                    if (presentField) {
-                      linkFields.push(new EntityLinkField(presentField));
-                    }
-                    const linkEq = new EntityQuery(
-                      new EntityLink(linkEntity, 'z', linkFields),
-                      new EntityQueryOptions(
-                        limit + 1,
-                        undefined,
-                        filter ?
-                          [{
-                            contains: [
-                              {
-                                alias: 'z',
-                                attribute: presentField!,
-                                value: filter!
-                              }
-                            ]
-                          }]
-                        : undefined
-                      )
-                    );
-                    return apiService.query({ query: linkEq.inspect() })
-                      .then( response => {
-                        const result = response.payload.result!;
-                        const idAlias = Object.entries(result.aliases).find( ([_, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                        const nameAlias = Object.entries(result.aliases).find( ([_, data]) => data.linkAlias === 'z'
-                          && (data.attribute === presentField!.name))![0];
-                        return result.data.map( (r): IComboBoxOption => ({
-                          key: r[idAlias],
-                          text: r[nameAlias]
-                        }));
-                      });
+                  const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+                    || scalarAttrs.find((attr) => attr.name === "USR$NAME")
+                    || scalarAttrs.find((attr) => attr.name === "ALIAS")
+                    || scalarAttrs.find((attr) => attr.type === "String");
+                  if (presentField) {
+                    linkFields.push(new EntityLinkField(presentField));
                   }
+                  const linkEq = new EntityQuery(
+                    new EntityLink(linkEntity, 'z', linkFields),
+                    new EntityQueryOptions(
+                      limit + 1,
+                      undefined,
+                      filter ?
+                        [{
+                          contains: [
+                            {
+                              alias: 'z',
+                              attribute: presentField!,
+                              value: filter!
+                            }
+                          ]
+                        }]
+                      : undefined
+                    )
+                  );
+                  return apiService.query({ query: linkEq.inspect() })
+                    .then( response => {
+                      const result = response.payload.result!;
+                      const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                      const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                        && (data.attribute === presentField!.name))![0];
+                      return result.data.map( (r): IComboBoxOption => ({
+                        key: r[idAlias],
+                        text: r[nameAlias]
+                      }));
+                    });
                 }
+              }
               componentRef={
                 ref => {
                   if (ref && lastFocused.current === props.fd.fieldName) {
@@ -712,7 +703,26 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
-              styles={props.styles as ITextFieldStyles}
+              styles={props.areaStyle === undefined ? undefined : {
+                  root: {
+                    background: props.areaStyle!.background
+                  },
+                  input: {
+                    background: props.areaStyle!.background
+                  }
+                }}
+              /*caretDownButtonStyles={props.areaStyle === undefined ? undefined : {
+                rootHovered: {
+                  color: `#474747`,
+                  backgroundColor: props.areaStyle.font.color,
+                  borderColor: `${props.areaStyle.font.color}99`
+                },
+                rootChecked: {
+                  color: props.areaStyle!.font.color,
+                  backgroundColor: `#474747`,
+                  borderColor: `${props.areaStyle.font.color}99`
+                }
+              }}*/
             />
           );
         }
@@ -725,7 +735,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       if (props.fd.dataType === TFieldType.Date) {
         return (
           <DatepickerJSX
-          key={`${props.fd.fieldName}`}
+            key={`${props.fd.fieldName}`}
             fieldName={`${props.fd.fieldName}`}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
             value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}
@@ -756,16 +766,42 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={props.styles as ITextFieldStyles}
+            styles={props.areaStyle === undefined ? undefined : {
+              root: {
+                background: props.areaStyle!.background
+              },
+              fieldGroup: {
+                background: props.areaStyle!.background
+              }
+            }}
+            styleIcon={props.areaStyle === undefined ? undefined : {
+              root: {
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
+                borderLeft: 'none'
+              },
+              rootHovered: {
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
+                borderLeft: 'none'
+              },
+              rootChecked: {
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
+                borderLeft: 'none'
+              },
+              rootCheckedHovered: {
+                border: '1px solid',
+                borderColor: getTheme().semanticColors.inputBorder,
+                borderLeft: 'none'
+              }
+            }}
         />);
       } else if (props.fd.dataType === TFieldType.Boolean) {
-        let subComponentStyle = props.styles ? (props.styles as ITextFieldStyles)!.subComponentStyles.label : undefined;
-        const styleCheckBox = subComponentStyle !== undefined ? {
+        const subComponentStyle = {
           root: {marginTop: '10px'},
-          text: {...subComponentStyle.root}
-        } : {
-          root: {marginTop: '10px'}
-        }
+          borderWidth: '1px'
+        };
         return (
           <Checkbox
             key={props.fd.fieldName}
@@ -797,7 +833,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={styleCheckBox}
+            styles={subComponentStyle}
           />
         )
       } else {
@@ -806,7 +842,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             key={props.fd.fieldName}
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            styles={props.styles}
+            styles={props.areaStyle === undefined ? undefined : {
+              root: {
+                background: props.areaStyle!.background
+              },
+              fieldGroup: {
+                background: props.areaStyle!.background
+              },
+              field: {
+                background: props.areaStyle!.background
+              }
+            }}
             defaultValue={
               lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName && typeof lastEdited.current.value === 'string'
               ? lastEdited.current.value
@@ -872,7 +918,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               {error}
             </MessageBar>
           }
-          <div styleName="ScrollableDlg">
+          <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
             {
               localState !== undefined ?
               <div
@@ -891,16 +937,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     display: 'flex',
                     flexDirection: area.direction,
                     justifyContent: 'flex-start',
-                    background: `${area.style.background}`,
-                    margin: area.style.margin ? `${area.style.margin}px` : '1px',
-                    padding: area.style.padding ? `${area.style.padding}px` : '4px',
-                    border: area.style.border.style === 'none' ? `1px solid ${area.style.background}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
-                    borderRadius: `${area.style.border.radius}px`,
-                    color: `${area.style.font.color}`,
-                    fontSize: `${area.style.font.size}px`,
-                    fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                    fontStyle: `${area.style.font.style}`,
-                    fontFamily: `${area.style.font.family}`
+                    background: `${(localState as IDesignerState).areas[idx].style!.background}`,
+                    margin: (localState as IDesignerState).areas[idx].style!.margin ? `${(localState as IDesignerState).areas[idx].style!.margin}px` : '1px',
+                    padding: (localState as IDesignerState).areas[idx].style!.padding ? `${(localState as IDesignerState).areas[idx].style!.padding}px` : '4px',
+                    border: (localState as IDesignerState).areas[idx].style!.border.style === 'none'
+                      ? `1px solid ${(localState as IDesignerState).areas[idx].style!.background}`
+                      : `${(localState as IDesignerState).areas[idx].style!.border.width}px ${(localState as IDesignerState).areas[idx].style!.border.style} ${(localState as IDesignerState).areas[idx].style!.border.color}`,
+                    borderRadius: `${(localState as IDesignerState).areas[idx].style!.border.radius}px`,
+                    color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
+                    fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
+                    fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
+                    fontStyle: `${(localState as IDesignerState).areas[idx].style!.font.style}`,
+                    fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                   }}
                 >
                   {
@@ -918,10 +966,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           subComponentStyles: {
                             label: {
                               root: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${area.style.font.family}`
+                                color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
+                                fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
+                                fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                               }
                             }
                           },
@@ -934,17 +982,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           subComponentStyles: {
                             label: {
                               root: {
-                                color: `${area.style.font.color}`,
-                                fontSize: `${area.style.font.size}px`,
-                                fontWeight: area.style.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${area.style.font.family}`
+                                color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
+                                fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
+                                fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
+                                fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                               }
                             }
                           },
                           fieldGroup: {background: f.color}
                         }
                         if (fd) {
-                          return field({fd, styles })
+                          return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).areas[idx].style!, areaDirection: area.direction})
                         }
                         return undefined;
                       }

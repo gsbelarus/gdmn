@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef, ITextFieldStyles } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef, ITextFieldStyles, IComboBoxStyles, IStyle, IButtonStyles } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
@@ -13,7 +13,8 @@ export interface ILookupComboBoxProps {
   onChanged: (option: IComboBoxOption | undefined) => void;
   onFocus?: () => void;
   componentRef?: (ref: IComboBox | null) => void;
-  styles?: ITextFieldStyles;
+  styles?: Partial<IComboBoxStyles>;
+  caretDownButtonStyles?: IButtonStyles;
 };
 
 type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
@@ -139,7 +140,7 @@ function init(preSelectedOption: IComboBoxOption | undefined): ILookupComboboxSt
 
 export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef, styles } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef, styles, caretDownButtonStyles } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOption, queryState, text, lookupText, limit, dropDown } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -298,8 +299,6 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
     }
   };
 
-  const styleLable = styles ? styles.subComponentStyles.label : undefined;
-
   return (
     <ComboBox
       label={label}
@@ -319,13 +318,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       styles={
         selectedOption && styles
         ? {
-          root: {
-            backgroundColor: '#77ff77'
-          },
-          input: {
-            backgroundColor: '#77ff77'
-          },
-          label: {...styleLable!.root}
+          ...styles
         }
         : selectedOption ?
         {
@@ -338,10 +331,11 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
         }
         : styles ?
         {
-          label: {...styleLable!.root}
+          ...styles,
         }
         : undefined
       }
+      caretDownButtonStyles={ caretDownButtonStyles ? caretDownButtonStyles : undefined }
       onChange={onChange}
       onPendingValueChanged={onPendingValueChanged}
       onKeyDown={onKeyDown}

@@ -24,8 +24,6 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^5.2.0",
-    "@types/cytoscape": "^3.4.3",
-    "@types/dagre": "^0.7.42",
     "@uifabric/fluent-theme": "^7",
     "dagre": "^0.8.4",
     "es6-error": "^4",
@@ -54,6 +52,7 @@
     "typesafe-actions": "^4"
   },
   "devDependencies": {
+    "@types/dagre": "^0.7.42",
     "@types/html-webpack-plugin": "^3",
     "@types/jest": "^24",
     "@types/jwt-decode": "^2",
