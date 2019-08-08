@@ -1460,9 +1460,26 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         key='margin'
                         value={styleSetting.margin.toString()}
                         onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  margin: Number(e.currentTarget.value)} });
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, margin: Number(e.currentTarget.value)} });
                         }}
                       />
+                    </div>
+                    <div>
+                      <Label>
+                        Align
+                      </Label>
+                      <TextField
+                        key='align'
+                        value={style.align.toString()}
+                        onChange={(e) => {
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, align: e.currentTarget.value} });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>
+                        Background
+                      </Label>
                     </div>
                     <div>
                       <Label>
@@ -1476,9 +1493,14 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           key='font-size'
                           value={styleSetting.font.size.toString()}
                           onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  font: {...styleSetting.font, size: Number(e.currentTarget.value)}} });
+                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, size: Number(e.currentTarget.value)}} });
                           }}
                         />
+                      </div>
+                      <div>
+                        <Label>
+                          Color
+                        </Label>
                       </div>
                       <div>
                         <Label>
