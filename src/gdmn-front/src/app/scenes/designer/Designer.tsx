@@ -1,8 +1,8 @@
-import React, { useEffect, useReducer, useRef, useState, Fragment } from 'react';
+import React, { useEffect, useReducer, useRef, Fragment } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Icon, IDropdownOption, Dropdown, Stack, IComboBoxOption, IComboBoxStyles, IButtonStyles } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
@@ -166,6 +166,8 @@ export interface IDesignerState {
   | { type: 'CREATE_GROUP' }
   | { type: 'DELETE_GROUP' }
   | { type: 'CLEAR_SELECTION' }
+  | { type: 'LIFT_FIELD', field: string }
+  | { type: 'LOWER_FIELD', field: string }
   | { type: 'CANCEL_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'RETURN_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'CLEAR' }
@@ -632,6 +634,50 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             : 0,
             changeArray: [...changeArray!, {...state}]
       }
+    }
+
+    case 'LIFT_FIELD': {
+      const {areas, activeArea, changeArray} = state;
+      const {field} = action;
+      if(activeArea === undefined) {
+        return state;
+      }
+      const fields = areas[activeArea].fields;
+      const idx = fields.findIndex(item => item.key === field)
+      if(idx === 0) {
+        return state;
+      }
+      const changeArea = {
+        ...areas[activeArea],
+        fields: [...fields.slice(0, idx - 1), fields[idx], fields[idx - 1], ...fields.slice(idx + 1)]
+      }
+      return {
+        ...state,
+        areas: [...areas.slice(0, activeArea), changeArea, ...areas.slice(activeArea + 1)],
+        changeArray: [...changeArray!, {...state}]
+      };
+    }
+
+    case 'LOWER_FIELD': {
+      const {areas, activeArea, changeArray} = state;
+      const {field} = action;
+      if(activeArea === undefined) {
+        return state;
+      }
+      const fields = areas[activeArea].fields;
+      const idx = fields.findIndex(item => item.key === field)
+      if(idx === fields.length - 1) {
+        return state;
+      }
+      const changeArea = {
+        ...areas[activeArea],
+        fields: [...fields.slice(0, idx), fields[idx + 1], fields[idx], ...fields.slice(idx + 2)]
+      }
+      return {
+        ...state,
+        areas: [...areas.slice(0, activeArea), changeArea, ...areas.slice(activeArea + 1)],
+        changeArray: [...changeArray!, {...state}]
+      };
     }
 
     case 'CANCEL_CHANGES': {
@@ -1538,7 +1584,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         />
                       </div>
                     </div>
-                    {
+                    {/*
                       activeArea !== undefined && selectedField && area.fields !== [] ? 
                         <div>
                           <Label>
@@ -1558,6 +1604,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           </div>
                         </div>
                       : undefined
+                      */
                     }
                   </>
                   : undefined
@@ -1571,20 +1618,39 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     </Label>
                     {
                       fields!.map(field =>
-                        <Checkbox
-                          styles={{
-                            root: {
-                              paddingBottom: '4px'
-                            }
-                          }}
-                          key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
-                          label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
-                          checked={!!areas[activeArea!].fields.find(areaF => areaF.key === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
-                          onChange={(_, isChecked) => {
-                            designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
-                            changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
-                          }}
-                        />
+                        <div key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+                          <Checkbox
+                            styles={{
+                              root: {
+                                paddingBottom: '4px'
+                              }
+                            }}
+                            label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
+                            checked={!!areas[activeArea!].fields.find(areaF => areaF.key === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
+                            onChange={(_, isChecked) => {
+                              designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
+                              changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                            }}
+                          />
+                          <div style={{display: 'flex', flexDirection: 'row'}}>
+                            <IconButton
+                              key='lift_field'
+                              iconProps={{ iconName: 'CaretUp8' }}
+                              onClick={() => {
+                                designerDispatch({ type: 'LIFT_FIELD', field: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` });
+                                changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              }}
+                            />
+                            <IconButton
+                              key='lower_field'
+                              iconProps={{ iconName: 'CaretDown8' }}
+                              onClick={() => {
+                                designerDispatch({ type: 'LOWER_FIELD', field: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` });
+                                changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              }}
+                            />
+                          </div>
+                        </div>
                       )
                     }
                   </>
@@ -1608,7 +1674,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           background: area.style ? area.style.background : theme.palette.white,
           margin: area.style ? `${area.style.margin}px` : '1px',
           padding: area.style ? `${area.style.padding}px` : '1px',
-          border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : '#606060'}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
+          border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
           borderRadius: area.style ? `${area.style.border.radius}px` : '3px',
           //color: `${area.style!.font.color}`,
           fontSize: area.style ? `${area.style.font.size}px` : '14px',
