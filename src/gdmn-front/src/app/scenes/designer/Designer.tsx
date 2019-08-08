@@ -69,6 +69,12 @@ export interface IStyleFieldsAndAreas {
   border: IBorder;
 }
 
+interface IAdditionallyObject {
+  images: string[],
+  texts: string[],
+  icons: string[]
+}
+
 export interface IDesignerState {
   grid: IGridSize;
   entityName: string;
@@ -79,6 +85,7 @@ export interface IDesignerState {
   previewMode?: boolean;
   activeTab: string;
   selectedField?: string;
+  additionallyObject?: IAdditionallyObject;
 };
 
   const defaultState = (entityName: string, fields?: IFieldDef[]) => {return {
@@ -168,6 +175,9 @@ export interface IDesignerState {
   | { type: 'CLEAR_SELECTION' }
   | { type: 'LIFT_FIELD', field: string }
   | { type: 'LOWER_FIELD', field: string }
+  | { type: 'ADD_ADDITIONALLY_TEXT', text: string }
+  | { type: 'ADD_ADDITIONALLY_IMAGE', image: string }
+  | { type: 'ADD_ADDITIONALLY_ICON', icon: string }
   | { type: 'CANCEL_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'RETURN_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'CLEAR' }
@@ -677,6 +687,43 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         ...state,
         areas: [...areas.slice(0, activeArea), changeArea, ...areas.slice(activeArea + 1)],
         changeArray: [...changeArray!, {...state}]
+      };
+    }
+
+    case 'ADD_ADDITIONALLY_TEXT' : {
+      const {additionallyObject} = state;
+      const {text} = action;
+      if(text === '') {
+        return state;
+      }
+      const ф = {additionallyObject: {...additionallyObject!, texts: [...additionallyObject!.texts, text] }}
+      return {
+        ...state,
+        additionallyObject: {...additionallyObject!, texts: [...additionallyObject!.texts, text] }
+      };
+    }
+
+    case 'ADD_ADDITIONALLY_IMAGE' : {
+      const {additionallyObject} = state;
+      const {image} = action;
+      if(image === '') {
+        return state;
+      }
+      return {
+        ...state,
+        additionallyObject: {...additionallyObject!, images: [...additionallyObject!.images, image] }
+      };
+    }
+
+    case 'ADD_ADDITIONALLY_ICON' : {
+      const {additionallyObject} = state;
+      const {icon} = action;
+      if(icon === '') {
+        return state;
+      }
+      return {
+        ...state,
+        additionallyObject: {...additionallyObject!, icons: [...additionallyObject!.icons, icon] }
       };
     }
 
