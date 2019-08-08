@@ -9,7 +9,8 @@ export const ViewTabsContainer = connect(
   (state: IState) => ({
     recordSet: state.recordSet,
     rsMeta: state.rsMeta,
-    viewTabs: state.gdmnState.viewTabs
+    viewTabs: state.gdmnState.viewTabs,
+    theme: state.gdmnState.theme
   }),
   (dispatch, ownProps: RouteComponentProps<any>) => ({
     onClose: (viewTab: IViewTab) => {

@@ -1,24 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/components/TextField';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
+import { Label, getTheme } from 'office-ui-fabric-react';
+import { gdmnActions, gdmnActionsAsync } from '../actions';
+import { IAccountViewProps } from './AccountView.types';
 
-import { IViewProps, View } from '@src/app/components/View';
 
-export interface IAccountViewProps extends IViewProps {
-  apiDeleteAccount: () => void;
-}
+export const AccountView = (props: IAccountViewProps) => {
 
-export class AccountView extends View<IAccountViewProps, {}> {
-  public getViewCaption(): string {
-    return 'User profile';
-  }
+  const { viewTab, dispatch, url } = props;
 
-  private handleDeleteAccount = () => {
-    this.props.apiDeleteAccount();
-  };
+  useEffect( () => {
+    if (!viewTab) {
+      dispatch(gdmnActions.addViewTab({
+        url,
+        caption: 'User profile',
+        canClose: true
+      }));
+    }
+  }, []);
 
-  public render() {
-    return this.renderOneColumn(
+  return (
+    <div className="ViewOneColumn">
+      <Label styles={{ root: { ...getTheme().fonts.xLarge } }}>User Profile</Label>
       <div className="ViewBody">
         <TextField label="Name:" />
         <TextField label="Surname:" />
@@ -26,9 +30,11 @@ export class AccountView extends View<IAccountViewProps, {}> {
         <PrimaryButton text="Save changes" />
         <div className="DangerZone">
           <div>Будьте внимательны! Удаление учетной записи необратимая операция.</div>
-          <DefaultButton onClick={this.handleDeleteAccount} text="Delete account" />
+          <DefaultButton onClick={ () => dispatch(gdmnActionsAsync.apiDeleteAccount) } text="Delete account" />
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  )
+};
+
+

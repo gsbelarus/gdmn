@@ -209,7 +209,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
-    <div styleName="SGrid" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
+    <div styleName="SGrid">
       {
         showSQL && rs && rs.sql &&
         <SQLForm
