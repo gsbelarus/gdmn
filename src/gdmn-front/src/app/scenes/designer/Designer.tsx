@@ -1,8 +1,8 @@
-import React, { useEffect, useReducer, useRef, Fragment } from 'react';
+import React, { useEffect, useReducer, useRef, Fragment, useState } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
@@ -70,9 +70,9 @@ export interface IStyleFieldsAndAreas {
 }
 
 interface IAdditionallyObject {
-  images: string[],
-  texts: string[],
-  icons: string[]
+  images?: string[],
+  texts?: string[],
+  icons?: string[]
 }
 
 export interface IDesignerState {
@@ -691,16 +691,19 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'ADD_ADDITIONALLY_TEXT' : {
-      const {additionallyObject} = state;
+      const {additionallyObject, changeArray} = state;
       const {text} = action;
       if(text === '') {
         return state;
       }
-      const ф = {additionallyObject: {...additionallyObject!, texts: [...additionallyObject!.texts, text] }}
       return {
         ...state,
-        additionallyObject: {...additionallyObject!, texts: [...additionallyObject!.texts, text] }
-      };
+        additionallyObject:
+          additionallyObject
+            ? {...additionallyObject, texts: additionallyObject!.texts !== undefined ? [...additionallyObject!.texts, text] : [text] }
+            : { texts: [text]},
+        changeArray: [...changeArray!, {...state}]
+          };
     }
 
     case 'ADD_ADDITIONALLY_IMAGE' : {
@@ -711,7 +714,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
       return {
         ...state,
-        additionallyObject: {...additionallyObject!, images: [...additionallyObject!.images, image] }
+        additionallyObject: additionallyObject ? {...additionallyObject, images: [...additionallyObject!.images!, image] } : {images: [image]}
       };
     }
 
@@ -723,7 +726,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
       return {
         ...state,
-        additionallyObject: {...additionallyObject!, icons: [...additionallyObject!.icons, icon] }
+        additionallyObject: {...additionallyObject!, icons: [...additionallyObject!.icons!, icon] }
       };
     }
 
@@ -959,7 +962,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   const divRef = useRef<HTMLDivElement | null>(null);
   const toolPanelRef = useRef<HTMLDivElement | null>(null);
   const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
-  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab, selectedField }, designerDispatch] =
+  const [{ grid, selection, areas, activeArea, previewMode, changeArray, activeTab, selectedField, additionallyObject }, designerDispatch] =
     useReducer(reducer, changes.current !== undefined
       ? changes.current
       : localState !== undefined
@@ -999,7 +1002,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           designerDispatch({ type: 'ADD_COLUMN' });
-          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
       },
       {
@@ -1011,7 +1014,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_COLUMN' });
-          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
       },
       {
@@ -1023,7 +1026,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           designerDispatch({ type: 'ADD_ROW' });
-          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
       },
       {
@@ -1035,7 +1038,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_ROW' });
-          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
 
       },
@@ -1048,7 +1051,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           designerDispatch({ type: 'CREATE_GROUP' });
-          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
       },
       {
@@ -1062,7 +1065,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           designerDispatch({ type: 'DELETE_GROUP' });
-          changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
       },
       {
@@ -1147,7 +1150,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     e.stopPropagation();
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx, shiftKey: e.shiftKey });
-    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+    changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
   };
 
   const getOnMouseDownForField = (area: number, field: string) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -1159,7 +1162,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     else {
       designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: area, shiftKey: e.shiftKey });
     }
-    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+    changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
   };
 
   const getOnContextMenuForArea = () => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -1171,7 +1174,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     else if(activeArea !== undefined) {
       designerDispatch({ type: 'SET_ACTIVE_AREA', shiftKey: e.shiftKey });
     }
-    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+    changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
   };
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
@@ -1233,6 +1236,11 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
     const tabs = ["Настройка", "Поля"];
     const area = areas[activeArea!];
+    const [viewAddObject, onChangeView] = useState(false);
+    const [addTexts, onchangeText] = useState('');
+    const [addUrlImage, onchangeUrlImage] = useState('');
+    const [addIcon, onchangeIcon] = useState('');
+
     const idc = activeArea!==undefined ? areas[activeArea].rect.left : -1;
     const idr = activeArea!==undefined ? areas[activeArea].rect.top : -1;
     const theme = getTheme();
@@ -1402,12 +1410,12 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           const right = areas[activeArea!].rect.right;
                           if(left === right && size.unit === 'AUTO') {
                             designerDispatch({ type: 'SET_COLUMN_SIZE', column: idc, size });
-                            changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                           } else {
                             const value = size.value! / (right + 1 - left);
                             for(let i = left; i <= right; i++) {
                               designerDispatch({ type: 'SET_COLUMN_SIZE', column: i, size: {...size, value} });
-                              changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                             }
                           }
                         }} />
@@ -1418,12 +1426,12 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           const bottom = areas[activeArea!].rect.bottom;
                           if(top === bottom && size.unit === 'AUTO') {
                             designerDispatch({ type: 'SET_ROW_SIZE', row: idr, size });
-                            changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                           } else {
                             const value = size.value! / (bottom + 1 - top);
                             for(let i = top; i <= bottom; i++) {
                               designerDispatch({ type: 'SET_ROW_SIZE', row: i, size: {...size, value} });
-                              changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                             }
                           }
                         }} />
@@ -1626,7 +1634,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           onChange={(_, option) =>
                             option
                             && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
-                            && (changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState)
+                            && (changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState)
                           }
                         />
                       </div>
@@ -1660,6 +1668,48 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 </>
               ) : (
                   <>
+                  <DefaultButton
+                    key='viewAdditionallyObject'
+                    onClick={() => {
+                      onChangeView(!viewAddObject)
+                    }}
+                  >Add additionallyObject</DefaultButton>
+                  {
+                    viewAddObject ?
+                    <>
+                    <TextField
+                      key='additionallyText'
+                      value={addTexts}
+                      onChange={(e) => {
+                        onchangeText(e.currentTarget.value)
+                      }}
+                    />
+                      <DefaultButton
+                        key='addText'
+                        onClick={() => {
+                          designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: addTexts});
+                          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                        }}
+                      >Add text</DefaultButton>
+                      <TextField
+                        key='additionallyImage'
+                        value={addUrlImage}
+                        onChange={(e) => {
+                          onchangeUrlImage(e.currentTarget.value)
+                        }}
+                      />
+                      <DefaultButton
+                        key='addUrlImage'
+                        onClick={() => {
+                          //designerDispatch({ type: 'ADD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
+                          //changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                        }}
+                      >Add image</DefaultButton>
+                      <ComboBox />
+                      <DefaultButton>Add icon</DefaultButton>
+                    </>
+                    : undefined
+                  }
                     <Label>
                       Show fields:
                     </Label>
@@ -1676,7 +1726,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                             checked={!!areas[activeArea!].fields.find(areaF => areaF.key === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
                             onChange={(_, isChecked) => {
                               designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
-                              changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                             }}
                           />
                           <div style={{display: 'flex', flexDirection: 'row'}}>
@@ -1685,7 +1735,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                               iconProps={{ iconName: 'CaretUp8' }}
                               onClick={() => {
                                 designerDispatch({ type: 'LIFT_FIELD', field: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` });
-                                changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                               }}
                             />
                             <IconButton
@@ -1693,7 +1743,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                               iconProps={{ iconName: 'CaretDown8' }}
                               onClick={() => {
                                 designerDispatch({ type: 'LOWER_FIELD', field: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` });
-                                changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                               }}
                             />
                           </div>
@@ -1934,7 +1984,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                   }}
                   onClick={() => {
                     designerDispatch({ type: 'CLEAR_SELECTION' });
-                    changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                    changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                   }}
                 >
                   selection
