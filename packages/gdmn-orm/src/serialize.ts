@@ -28,6 +28,7 @@ export interface IAttribute {
   required: boolean;
   semCategories: string;
   adapter?: any;
+  id?: string;
 }
 
 export interface IEnumAttribute extends IAttribute {

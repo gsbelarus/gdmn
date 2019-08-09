@@ -16,15 +16,16 @@ import {
 } from "office-ui-fabric-react";
 import {RecordSet} from "gdmn-recordset";
 import {gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {IAttributeData, IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/utils";
-import {ISessionData, IViewTab} from "@src/app/scenes/gdmn/types";
+import {IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/utils";
+import {ISessionData} from "@src/app/scenes/gdmn/types";
 import {apiService} from "@src/app/services/apiService";
-import {IAttribute} from "gdmn-orm";
+import {IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
 import {EntityAttributeContainer} from "@src/app/scenes/ermodel/Entity/new/EntityAttributeContainer";
-import {ILastFocusedRow} from "@src/app/scenes/ermodel/Entity/new/utils";
+
 
 export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
-  const {rs, history, dispatch, url, viewTab, erModel, gcsEntities} = props;
+  const {history, dispatch, url, viewTab, erModel} = props;
+
   const getSavedControlsData = (): ISessionData | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.controls instanceof Object) {
       return viewTab.sessionData.controls as ISessionData;
@@ -45,12 +46,6 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     }
     return undefined;
   };
-  const getSavedLastFocusedRow = (): ILastFocusedRow | undefined => {
-    if (viewTab && viewTab.sessionData && viewTab.sessionData.lastFocusedRow instanceof Object) {
-      return viewTab.sessionData.lastFocusedRow;
-    }
-    return undefined;
-  };
 
   const getSavedChangedFields = (): IChangedFields => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.changedFields instanceof Object) {
@@ -59,16 +54,16 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     return {};
   };
 
-  const getCountEntityAttributes = (): number[] => {
-    if (viewTab && viewTab.sessionData) {
+  const getCountEntityAttributes = (): string[] => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.countEntityAttributes) {
       return viewTab.sessionData.countEntityAttributes;
     }
     return [];
   };
 
-  const getAttributeData = (): IAttributeData[] => {
-    if (viewTab && viewTab.sessionData && viewTab.sessionData.attributeData) {
-      return viewTab.sessionData.attributeData as IAttributeData[];
+  const getRefAttribute= (): IAttribute[] | IEntityAttribute[] | ISetAttribute[] => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.refAttribute) {
+      return viewTab.sessionData.refAttribute;
     }
     return [];
   };
@@ -97,54 +92,57 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
 
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
-  const lastFocusedRow = useRef(getSavedLastFocusedRow());
+
   const controlsData = useRef(getSavedControlsData());
   const changedFields = useRef(getSavedChangedFields());
-  const countEntityAttributes = useRef(getCountEntityAttributes());
-  const valueHiddenParent = useRef(getValueHiddenParent());
+  const refAttribute = useRef(getRefAttribute());
 
-  const attributeData = useRef(getAttributeData());
+  const valueHiddenParent = useRef(getValueHiddenParent());
   const entityName = useRef(getEntityName());
   const parentName = useRef(getParentName());
+  const countEntityAttributes = useRef(getCountEntityAttributes());
+
   const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
-  const [changedCountEntityAttributes, setCountEntityAttributes] = useState(countEntityAttributes.current);
+
+  const [changedCountEntityAttributes, setCountEntityAttributes] = useState(getCountEntityAttributes());
   const [changed, setChanged] = useState(!!(lastEdited.current));
   const [hiddenParent, setHiddenParent] = useState(valueHiddenParent.current);
+  const [attributeData, setAttributeData] = useState(getRefAttribute());
 
+  const useAttributeData = (value: IAttribute | IEntityAttribute | ISetAttribute, idRow: string) => {
+    const attributes = attributeData.slice();
+    const findAttr =  attributes.find(fn=> idRow === fn.id);
 
-  const useAttributeData = (value: IAttributeData, numberRow: number) => {
-     attributeData.current[numberRow] = {...value};
+    if (!findAttr){
+      attributes.push({...value, id:idRow})
+    } else{
+      const ind = attributes.indexOf(findAttr, 0);
+      attributes[ind] = {...value, id:idRow};
+    }
+
+    setAttributeData(attributes)
+    refAttribute.current = attributes;
   };
 
-  const deleteAttributeData = (numberRow: number) => {
-
-    attributeData.current = attributeData.current
-      .filter((field, index) => index !== numberRow)
+  const deleteAttributeData = (idRow: string) => {
+    const attributes = attributeData.slice();
+    const newAttributes = attributes
+      .filter((field, index) => field.id !== idRow)
       .map((field) => {
         return field
       });
 
+    setAttributeData(newAttributes)
 
     const newArr = changedCountEntityAttributes
-      .filter((field, index) => field !== numberRow)
+      .filter((field, index) => field !== idRow)
       .map((field) => {
-        if (field < numberRow) {
-          return field
-        }
-        return field - 1
+        return field
       });
+
     setCountEntityAttributes(newArr);
     countEntityAttributes.current = newArr;
-
-
-  };
-
-  const useLastFocused = (value: string, numberRow: number) => {
-    lastFocused.current = undefined;
-    lastFocusedRow.current = {
-      value,
-      numberRow
-    };
+    refAttribute.current = newAttributes;
   };
 
   const postChanges = useCallback((close: boolean) => {
@@ -155,58 +153,15 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     }
     const parent = parentName.current;
 
-    const attributes = attributeData.current
-      .map(obj => {
-        if (obj.type === "Set") {
-          return {
-            name: obj.fieldName,
-            type: obj.type,
-            lName: {ru: {name: obj.lName}},
-            required: obj.required,
-            semCategories: obj.semCategories,
-            references: [`${obj.linkName}`],
-            attributes: [],
-            presLen: 1
-          } as IAttribute;
-        } else if (obj.type === "Entity") {
-          return {
-            name: obj.fieldName,
-            type: obj.type,
-            lName: {ru: {name: obj.lName}},
-            required: obj.required,
-            semCategories: obj.semCategories,
-            adapter: {relation: `${name.value.toUpperCase()}`, field: `${obj.fieldName.toUpperCase()}`},
-            references: [`${obj.linkName}`]
-          } as IAttribute;
-        } else if (obj.type === "Parent") {
-          return {
-            name: obj.fieldName,
-            type: obj.type,
-            lName: {ru: {name: obj.lName}},
-            required: obj.required,
-            semCategories: obj.semCategories,
-            references: [`${obj.linkName}`]
-          } as IAttribute;
-        } else {
-          return {
-            name: obj.fieldName,
-            type: obj.type,
-            lName: {ru: {name: obj.lName}},
-            required: obj.required,
-            semCategories: obj.semCategories
-          } as IAttribute;
-        }
-      });
-    console.log(attributes)
-    dispatch(async (dispatch, getState) => {
+    dispatch(async () => {
       if (parent) {
         await apiService.AddEntity({
           entityName: name.value.toUpperCase(),
           parentName: parent.value.toUpperCase(),
-          attributes
+          attributes: attributeData
         });
       } else {
-        await apiService.AddEntity({entityName: name.value.toUpperCase(), attributes});
+        await apiService.AddEntity({entityName: name.value.toUpperCase(), attributes: attributeData});
       }
     });
 
@@ -216,7 +171,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     if (close) {
       deleteViewTab(true);
     }
-  }, [rs, changed]);
+  }, [changed]);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -267,16 +222,13 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
   ].map(i => i);
 
   useEffect(() => {
-    if (!rs) {
-      const f = async () => {
-        addViewTab(undefined);
-      };
+    const f = async () => {
+      addViewTab(undefined);
+    };
+    f();
+  }, []);
 
-      f();
-    }
-  }, [rs]);
-
-  useEffect( () => {
+  useEffect(() => {
     if (needFocus.current) {
       needFocus.current.focus();
       needFocus.current = undefined;
@@ -295,9 +247,8 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           countEntityAttributes: countEntityAttributes.current,
           entityName: entityName.current,
           parentName: parentName.current,
-          attributeData: attributeData.current,
+          refAttribute: refAttribute.current,
           valueHiddenParent: valueHiddenParent.current,
-          lastFocusedRow: lastFocusedRow.current,
         }
       }));
     };
@@ -413,7 +364,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
         <DefaultButton
           onClick={() => {
             const newArr = changedCountEntityAttributes.slice();
-            newArr.push(changedCountEntityAttributes.length)
+            newArr.push(Math.random().toString());
             setCountEntityAttributes(newArr);
             countEntityAttributes.current = newArr.slice();
           }}
@@ -421,15 +372,13 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
       </div>
       <div>
         <ul>
-          {changedCountEntityAttributes.map((number) =>
-            <li key={number}>
+          {changedCountEntityAttributes.map((id) =>
+            <li key={id}>
               <EntityAttributeContainer
-              useAttributeData={useAttributeData}
-              deleteAttributeData={deleteAttributeData}
-              attributeData={attributeData.current}
-              numberRow={number}
-              useLastFocused={useLastFocused}
-              lastFocusedRow={lastFocusedRow.current}
+                useAttributeData={useAttributeData}
+                deleteAttributeData={deleteAttributeData}
+                attributeDataRow={attributeData.find((fn)=> fn.id === id )}
+                idRow={id}
               />
             </li>
           )}
