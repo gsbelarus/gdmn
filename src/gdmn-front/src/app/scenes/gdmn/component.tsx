@@ -1,7 +1,7 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment, useMemo } from 'react';
 import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
-import { IconButton } from 'office-ui-fabric-react/lib/components/Button';
+import { IconButton, IButtonStyles } from 'office-ui-fabric-react/lib/components/Button';
 import { gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
@@ -11,9 +11,6 @@ import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
 import { SqlContainer } from '../sql/SqlContainer';
-import { SqlViewContainer } from '../sql/EditView/container';
-import { SqlDataViewContainer } from '../sql/data/SqlDataViewContainer';
-import { SqlDataDlgViewContainer } from '../sql/data/DlgView/SqlDataDlgViewContainer';
 import { AccountViewContainer } from './components/AccountViewContainer';
 import { ERModelBoxContainer } from '../ermodel2/ERModelBoxContainer';
 import { InternalsContainer } from '../internals/container';
@@ -29,7 +26,8 @@ import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { DesignerContainer } from '../designer/DesignerContainer';
 import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
-import {NewEntityContainer} from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
+import { NewEntityContainer } from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
+import { themes } from '../themeeditor/themes';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -46,7 +44,7 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 //@CSSModules(styles, { allowMultiple: true })
 export function GdmnView (props: IGdmnViewProps) {
-  const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened } = props;
+  const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened, theme } = props;
   if (!match) return null;
 
   const topAreaHeight = 56 + 36 + ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
@@ -82,7 +80,6 @@ export function GdmnView (props: IGdmnViewProps) {
       disabled={!!props.application}
       styles={{
         root: {
-          color: getTheme().palette.neutralLight,
           fontWeight: 700,
           marginBottom: '7px',
           marginRight: '12px',
@@ -98,6 +95,68 @@ export function GdmnView (props: IGdmnViewProps) {
     </Label>
   );
 
+  const memoizedStyles = useMemo( () => {
+    const namedTheme = themes.find( t => t.name === theme );
+
+    if (namedTheme && namedTheme.isInverted) {
+      return {
+        stackStyles: {
+          root: {
+            //backgroundColor: getTheme().palette.themeLight,
+            color: getTheme().semanticColors.bodyText,
+          }
+        },
+        iconButtonStyles: {
+          menuIcon: { display: 'none' },
+          rootHovered: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.themeTertiary
+          },
+          rootExpanded: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.neutralLight
+          },
+          rootPressed: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.themeTertiary
+          },
+          root: {
+            backgroundColor: 'transparent',
+            color: getTheme().semanticColors.bodyText
+          }
+        } as IButtonStyles
+      }
+    } else {
+      return {
+        stackStyles: {
+          root: {
+            backgroundColor: getTheme().palette.themeDarker,
+            color: getTheme().palette.neutralLight
+          }
+        },
+        iconButtonStyles: {
+          menuIcon: { display: 'none' },
+          rootHovered: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.themeTertiary
+          },
+          rootExpanded: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.neutralLight
+          },
+          rootPressed: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.themeTertiary
+          },
+          root: {
+            backgroundColor: 'transparent',
+            color: getTheme().palette.neutralLight
+          }
+        } as IButtonStyles
+      }
+    }
+  }, [theme] );
+
   return (
     <>
       <div
@@ -109,12 +168,7 @@ export function GdmnView (props: IGdmnViewProps) {
       >
         <Stack
           className="Header"
-          styles={{
-            root: {
-              backgroundColor: getTheme().palette.themeDarker,
-              color: getTheme().palette.neutralLight
-            }
-          }}
+          styles={memoizedStyles.stackStyles}
         >
           {homeButton}
           <Icon iconName="Chat" className="NoFrameIcon" />
@@ -149,25 +203,7 @@ export function GdmnView (props: IGdmnViewProps) {
             <IconButton
               //style={{ backgroundColor: 'transparent' }}
               iconProps={{ iconName: 'Contact' }}
-              styles={{
-                menuIcon: { display: 'none' },
-                rootHovered: {
-                  backgroundColor: 'transparent',
-                  color: getTheme().palette.themeTertiary
-                },
-                rootExpanded: {
-                  backgroundColor: 'transparent',
-                  color: getTheme().palette.neutralLight
-                },
-                rootPressed: {
-                  backgroundColor: 'transparent',
-                  color: getTheme().palette.themeTertiary
-                },
-                root: {
-                  backgroundColor: 'transparent',
-                  color: getTheme().palette.neutralLight
-                }
-              }}
+              styles={memoizedStyles.iconButtonStyles}
               className="RoundIcon"
               menuProps={{
                 shouldFocusOnMount: true,
