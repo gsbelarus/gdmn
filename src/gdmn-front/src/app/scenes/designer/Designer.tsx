@@ -7,6 +7,7 @@ import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
+import { iconNames } from './iconNames';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -1711,6 +1712,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         onClick={() => {
                           designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: addTexts});
                           changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                          console.log('additionallyText');
                         }}
                       >Add text</DefaultButton>
                       <TextField
@@ -1723,18 +1725,50 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       <DefaultButton
                         key='addUrlImage'
                         onClick={() => {
-                          //designerDispatch({ type: 'ADD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
-                          //changes.current = { grid, selection, areas, activeArea, previewMode } as IDesignerState;
+                          designerDispatch({ type: 'ADD_ADDITIONALLY_IMAGE', image: addUrlImage });
+                          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                          console.log('additionallyImage');
                         }}
                       >Add image</DefaultButton>
-                      <ComboBox />
-                      <DefaultButton>Add icon</DefaultButton>
+                      <ComboBox 
+                        key='additionallyIcon'
+                        defaultSelectedKey={addIcon}
+                        options={
+                          iconNames.map(icon => ({key: icon, text: icon}))
+                        }
+                        onRenderOption={(option) =>
+                          {
+                            return (
+                            <Stack style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'center'
+                            }}>
+                              <IconButton key={(option as IComboBoxOption).text} iconProps={{ iconName: (option as IComboBoxOption).text }}/>
+                              <span>{(option as IComboBoxOption).text}</span>
+                            </Stack>
+                          );}
+                        }
+                        onChange={(e, value) => {
+                          onchangeIcon(value!.text)
+                        }}
+                        />
+                      <DefaultButton
+                        key='addIcon'
+                        onClick={() => {
+                          designerDispatch({ type: 'ADD_ADDITIONALLY_ICON', icon: addIcon });
+                          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                        }}
+                      >Add icon</DefaultButton>
                     </>
                     : undefined
                   }
                     <Label>
                       Show fields:
                     </Label>
+                    {
+                      console.log()
+                    }
                     {
                       fields!.map(field =>
                         <div key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
