@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Label, IconButton, Image } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -954,10 +954,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   {
                     area.fields.map( f =>
                       {
+                        let styles;
                         let fd = rs.fieldDefs.find(fieldDef =>
                           `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
                         )
-                        let  styles;
                         if(area.direction === 'row')
                         styles = {
                           root: {
@@ -994,7 +994,13 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                         if (fd) {
                           return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).areas[idx].style!, areaDirection: area.direction})
                         }
-                        return undefined;
+                        return (localState as IDesignerState).additionallyObject!.texts!.find(text => text === f.key)
+                          ? <Label>{f.key}</Label>
+                          : (localState as IDesignerState).additionallyObject!.images!.find(image => image === f.key)
+                            ? <Image height={100} width={100} src={f.key} alt='Text' />
+                            : (localState as IDesignerState).additionallyObject!.icons!.find(icon => icon === f.key)
+                              ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
+                              : undefined
                       }
                     )
                   }

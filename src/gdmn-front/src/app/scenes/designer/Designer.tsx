@@ -708,26 +708,34 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     }
 
     case 'ADD_ADDITIONALLY_IMAGE' : {
-      const {additionallyObject} = state;
+      const {additionallyObject, changeArray} = state;
       const {image} = action;
       if(image === '') {
         return state;
       }
       return {
         ...state,
-        additionallyObject: additionallyObject ? {...additionallyObject, images: [...additionallyObject!.images!, image] } : {images: [image]}
+        additionallyObject:
+          additionallyObject
+            ? {...additionallyObject, images: additionallyObject!.images !== undefined ? [...additionallyObject!.images, image] : [image] }
+            : { images: [image]},
+        changeArray: [...changeArray!, {...state}]
       };
     }
 
     case 'ADD_ADDITIONALLY_ICON' : {
-      const {additionallyObject} = state;
+      const {additionallyObject, changeArray} = state;
       const {icon} = action;
       if(icon === '') {
         return state;
       }
       return {
         ...state,
-        additionallyObject: {...additionallyObject!, icons: [...additionallyObject!.icons!, icon] }
+        additionallyObject:
+          additionallyObject
+          ? {...additionallyObject, icons: additionallyObject!.icons !== undefined ? [...additionallyObject!.icons, icon] : [icon] }
+          : { icons: [icon]},
+        changeArray: [...changeArray!, {...state}]
       };
     }
 
@@ -758,6 +766,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           entityName: localState.entityName,
           areas: localState.areas,
           previewMode: localState.previewMode,
+          additionallyObject: localState.additionallyObject,
           changeArray: []
         }
       } else {
@@ -1092,7 +1101,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         },
         onClick: () => {
           changes.current = undefined;
-          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, selection, areas, activeArea, previewMode, changeArray: [] }));
+          localStorage.setItem(`des-${entityName}`, JSON.stringify({ grid, selection, areas, activeArea, previewMode, additionallyObject, changeArray: [] }));
           designerDispatch({ type: 'SAVE_CHANGES' });
           props.outDesigner();
         }
@@ -1810,16 +1819,14 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     <Label>
                       Show fields:
                     </Label>
-                    { additionallyObject ?
-                      [...additionallyObject.texts!, ...additionallyObject.images!, ...additionallyObject.icons!].map(object =>
-                        object !== undefined ?
-                          <MemoCheckboxForObjectsInInspector field={object} />
-                        : undefined
-                      )
-                    : undefined
-                  }
-                    {
-                      console.log()
+                    {}
+                      { additionallyObject ?
+                        [...additionallyObject.texts!, ...additionallyObject.images!, ...additionallyObject.icons!].map(object =>
+                          object !== undefined ?
+                            <MemoCheckboxForObjectsInInspector field={object} />
+                          : undefined
+                        )
+                      : undefined
                     }
                     {
                       fields!.map(field =>
