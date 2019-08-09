@@ -1241,8 +1241,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     const [addUrlImage, onchangeUrlImage] = useState('');
     const [addIcon, onchangeIcon] = useState('');
 
-    const idc = activeArea!==undefined ? areas[activeArea].rect.left : -1;
-    const idr = activeArea!==undefined ? areas[activeArea].rect.top : -1;
+    const idc = activeArea!==undefined ? area.rect.left : -1;
+    const idr = activeArea!==undefined ? area.rect.top : -1;
     const theme = getTheme();
 
     return (
@@ -1735,6 +1735,46 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     <Label>
                       Show fields:
                     </Label>
+                    { additionallyObject ?
+                      [...additionallyObject.texts!, ...additionallyObject.images!, ...additionallyObject.icons!].map(object =>
+                        object !== undefined ?
+                        <div key={object} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+                          <Checkbox
+                            styles={{
+                              root: {
+                                paddingBottom: '4px'
+                              }
+                            }}
+                            label={object}
+                            checked={!!areas[activeArea!].fields.find(areaF => areaF.key === object)}
+                            onChange={(_, isChecked) => {
+                              designerDispatch({ type: 'AREA_FIELD', fieldName: object, include: !!isChecked });
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                            }}
+                          />
+                          <div style={{display: 'flex', flexDirection: 'row'}}>
+                            <IconButton
+                              key='lift_field'
+                              iconProps={{ iconName: 'CaretUp8' }}
+                              onClick={() => {
+                                designerDispatch({ type: 'LIFT_FIELD', field: object });
+                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                              }}
+                            />
+                            <IconButton
+                              key='lower_field'
+                              iconProps={{ iconName: 'CaretDown8' }}
+                              onClick={() => {
+                                designerDispatch({ type: 'LOWER_FIELD', field: object });
+                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                              }}
+                            />
+                          </div>
+                        </div>
+                        : undefined
+                      )
+                    : undefined
+                  }
                     {
                       fields!.map(field =>
                         <div key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -1857,7 +1897,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 key={f.key}
                 onClick={getOnMouseDownForField(idx, f.key)}
               ><FieldMemo fd={fd} field={f} areaStyle={area.style!} /></div>
-              : undefined
+              : <div>{f.key}</div>
               }
             )
           }
