@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useRef, Fragment, useState } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
@@ -1233,6 +1233,50 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     return false;
   })
 
+  const CheckboxForObjectsInInspector = (props: {field: string}): JSX.Element => {
+    return (<div key={props.field} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+        <Checkbox
+          styles={{
+            root: {
+              paddingBottom: '4px'
+            }
+          }}
+          label={props.field}
+          checked={!!areas[activeArea!].fields.find(areaF => areaF.key === props.field)}
+          onChange={(_, isChecked) => {
+            designerDispatch({ type: 'AREA_FIELD', fieldName: props.field, include: !!isChecked });
+            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+          }}
+        />
+        <div style={{display: 'flex', flexDirection: 'row'}}>
+          <IconButton
+            key='lift_field'
+            iconProps={{ iconName: 'CaretUp8' }}
+            onClick={() => {
+              designerDispatch({ type: 'LIFT_FIELD', field: props.field });
+              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+            }}
+          />
+          <IconButton
+            key='lower_field'
+            iconProps={{ iconName: 'CaretDown8' }}
+            onClick={() => {
+              designerDispatch({ type: 'LOWER_FIELD', field: props.field });
+              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+            }}
+          />
+        </div>
+      </div>
+    )
+  };
+
+  const MemoCheckboxForObjectsInInspector = React.memo(CheckboxForObjectsInInspector, (prevProps, nextProps) => {
+    if (prevProps === nextProps) {
+      return true;
+    }
+    return false;
+  })
+
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
     const tabs = ["Настройка", "Поля"];
     const area = areas[activeArea!];
@@ -1738,78 +1782,14 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     { additionallyObject ?
                       [...additionallyObject.texts!, ...additionallyObject.images!, ...additionallyObject.icons!].map(object =>
                         object !== undefined ?
-                        <div key={object} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                          <Checkbox
-                            styles={{
-                              root: {
-                                paddingBottom: '4px'
-                              }
-                            }}
-                            label={object}
-                            checked={!!areas[activeArea!].fields.find(areaF => areaF.key === object)}
-                            onChange={(_, isChecked) => {
-                              designerDispatch({ type: 'AREA_FIELD', fieldName: object, include: !!isChecked });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }}
-                          />
-                          <div style={{display: 'flex', flexDirection: 'row'}}>
-                            <IconButton
-                              key='lift_field'
-                              iconProps={{ iconName: 'CaretUp8' }}
-                              onClick={() => {
-                                designerDispatch({ type: 'LIFT_FIELD', field: object });
-                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                              }}
-                            />
-                            <IconButton
-                              key='lower_field'
-                              iconProps={{ iconName: 'CaretDown8' }}
-                              onClick={() => {
-                                designerDispatch({ type: 'LOWER_FIELD', field: object });
-                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                              }}
-                            />
-                          </div>
-                        </div>
+                          <MemoCheckboxForObjectsInInspector field={object} />
                         : undefined
                       )
                     : undefined
                   }
                     {
                       fields!.map(field =>
-                        <div key={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                          <Checkbox
-                            styles={{
-                              root: {
-                                paddingBottom: '4px'
-                              }
-                            }}
-                            label={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`}
-                            checked={!!areas[activeArea!].fields.find(areaF => areaF.key === `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)}
-                            onChange={(_, isChecked) => {
-                              designerDispatch({ type: 'AREA_FIELD', fieldName: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, include: !!isChecked });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }}
-                          />
-                          <div style={{display: 'flex', flexDirection: 'row'}}>
-                            <IconButton
-                              key='lift_field'
-                              iconProps={{ iconName: 'CaretUp8' }}
-                              onClick={() => {
-                                designerDispatch({ type: 'LIFT_FIELD', field: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` });
-                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                              }}
-                            />
-                            <IconButton
-                              key='lower_field'
-                              iconProps={{ iconName: 'CaretDown8' }}
-                              onClick={() => {
-                                designerDispatch({ type: 'LOWER_FIELD', field: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` });
-                                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                              }}
-                            />
-                          </div>
-                        </div>
+                        <MemoCheckboxForObjectsInInspector field={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} />
                       )
                     }
                   </>
@@ -1897,7 +1877,13 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 key={f.key}
                 onClick={getOnMouseDownForField(idx, f.key)}
               ><FieldMemo fd={fd} field={f} areaStyle={area.style!} /></div>
-              : <div>{f.key}</div>
+              : additionallyObject!.texts!.find(text => text === f.key)
+                ? <Label>{f.key}</Label>
+                : additionallyObject!.images!.find(image => image === f.key)
+                  ? <Image height={100} width={100} src={f.key} alt='Text' />
+                  : additionallyObject!.icons!.find(icon => icon === f.key)
+                    ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
+                    : undefined
               }
             )
           }
