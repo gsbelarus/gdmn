@@ -1156,9 +1156,11 @@ describe("ERBridge", () => {
         "MAIN_ENTITY",
         'TEST_STRING',
         'TEST_STRING1');
-      expect(await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY")).then(
-        (response) => response, (error) => error
-      )).toEqual(new Error("Entity has dependencies RDB$1,RDB$1"));
+      try {
+        await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"))
+      } catch (error) {
+        expect(error).toEqual(new Error("Entity has dependencies RDB$1,RDB$1"));
+      }
     })
   })
 

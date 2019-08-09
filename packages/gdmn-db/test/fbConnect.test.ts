@@ -43,7 +43,7 @@ describe("Firebird driver tests", () => {
       } catch (error) {
        // console.log(error);
         if (connection.connected) {
-          console.log(connection.connected);
+        //  console.log(connection.connected);
           await connection.disconnect();
         }
       }

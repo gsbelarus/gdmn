@@ -29,6 +29,7 @@ import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { DesignerContainer } from '../designer/DesignerContainer';
 import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
+import {NewEntityContainer} from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -390,11 +391,23 @@ export function GdmnView (props: IGdmnViewProps) {
                   />
                 )}
               />
-            }
-            <Route path={`${match.path}/*`} component={NotFoundView} />
-          </Switch>
-        </ErrBoundary>
-      </main>
-    </>
-  );
+              }
+              {
+                <Route
+                  path={`${match.path}/addEntity`}
+                  render={(props: RouteComponentProps<IEntityDataDlgRouteProps>)  => (
+                    <NewEntityContainer
+                      {...props}
+                      newRecord={true}
+                      url={props.match.url}
+                    />
+                  )}
+                />
+              }
+              <Route path={`${match.path}/*`} component={NotFoundView} />
+            </Switch>
+          </ErrBoundary>
+        </main>
+      </>
+    );
 }

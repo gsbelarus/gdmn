@@ -1,0 +1,27 @@
+.ScrollableDlg {
+  overflow: scroll;
+  height: 100%;
+}
+
+.FieldsColumn {
+  width: 380px;
+  padding: 16px;
+}
+
+.container {
+  display: flex; /* or inline-flex */
+  justify-content: flex-start;
+}
+.containerBorder {
+  display: flex; /* or inline-flex */
+  justify-content: flex-start;
+  border: 1px solid; /* Параметры границы */
+  padding: 5px; /* Поля вокруг текста */
+  border-radius: 10px;
+
+}
+
+.item {
+   padding: 5px;
+   align-self: flex-end;
+ }
