@@ -1135,34 +1135,34 @@ describe("ERBridge", () => {
     })
   })
 
-  // it("Delete Entity with calculated field", async () => {
-  //   const erModel = await initERModel();
-  //   await execute(async ({erBuilder, eBuilder}) => {
-  //     const MainEntity2 = await erBuilder.create(erModel, new Entity({
-  //       name: "MAIN_ENTITY",
-  //       lName: {}
-  //     }));
-  //     await eBuilder.createAttribute(MainEntity2, new StringAttribute({
-  //       name: "TEST_STRING",
-  //       lName: {}
-  //     }));
-  //
-  //     await eBuilder.createAttribute(MainEntity2, new StringAttribute({
-  //       name: "TEST_STRING1",
-  //       lName: {}
-  //     }));
-  //
-  //     await erBuilder.ddlHelper.addDefaultCalculatedFields(
-  //       "MAIN_ENTITY",
-  //       'TEST_STRING',
-  //       'TEST_STRING1');
-  //     try {
-  //       await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"))
-  //     } catch (error) {
-  //       expect(error).toEqual(new Error("Entity has dependencies RDB$1,RDB$1"));
-  //     }
-  //   })
-  // })
+  it("Delete Entity with calculated field", async () => {
+    const erModel = await initERModel();
+    await execute(async ({erBuilder, eBuilder}) => {
+      const MainEntity2 = await erBuilder.create(erModel, new Entity({
+        name: "MAIN_ENTITY",
+        lName: {}
+      }));
+      await eBuilder.createAttribute(MainEntity2, new StringAttribute({
+        name: "TEST_STRING",
+        lName: {}
+      }));
+
+      await eBuilder.createAttribute(MainEntity2, new StringAttribute({
+        name: "TEST_STRING1",
+        lName: {}
+      }));
+
+      await erBuilder.ddlHelper.addDefaultCalculatedFields(
+        "MAIN_ENTITY",
+        'TEST_STRING',
+        'TEST_STRING1');
+      try {
+        await erBuilder.delete(erModel, erModel.entity("MAIN_ENTITY"))
+      } catch (error) {
+        expect(error).toEqual(new Error("Entity has dependencies RDB$1,RDB$1"));
+      }
+    })
+  })
 
   // it("Delete Entity with unique", async () => {
   //   const erModel = await initERModel();
