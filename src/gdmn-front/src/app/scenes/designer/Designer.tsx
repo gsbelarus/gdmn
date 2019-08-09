@@ -2,12 +2,11 @@ import React, { useEffect, useReducer, useRef, Fragment, useState } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton, Link } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
-import { iconNames } from './iconNames';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -1160,6 +1159,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     e.stopPropagation();
     e.preventDefault();
     designerDispatch({ type: 'SET_ACTIVE_AREA', activeArea: idx, shiftKey: e.shiftKey });
+    designerDispatch({ type: 'SET_SELECTED_FIELD'});
     changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
   };
 
@@ -1246,6 +1246,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   const CheckboxForObjectsInInspector = (props: {field: string}): JSX.Element => {
     return (<div key={props.field} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
         <Checkbox
+          key={props.field}
           styles={{
             root: {
               paddingBottom: '4px'
@@ -1363,7 +1364,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       }}
                     />
                   </Fragment>
-                ) : activeArea === undefined ? undefined : (
+                ) : activeArea === undefined || areas[activeArea] === undefined ? undefined : (
                     <Fragment key={t}>
                       <div
                         className="SettingFormTab"
@@ -1453,9 +1454,69 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                     }}
                     key='Setting'
                   >
-                  { activeArea !== undefined
+                  { activeArea !== undefined && selectedField === undefined
                     ? <>
                     <div>
+                      <>
+                      <DefaultButton
+                        key='viewAdditionallyObject'
+                        onClick={() => {
+                          onChangeView(!viewAddObject)
+                        }}
+                      >Add additionallyObject</DefaultButton>
+                      {
+                        viewAddObject ?
+                        <>
+                        <TextField
+                          key='additionallyText'
+                          value={addTexts}
+                          onChange={(e) => {
+                            onchangeText(e.currentTarget.value)
+                          }}
+                        />
+                          <DefaultButton
+                            key='addText'
+                            onClick={() => {
+                              designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: addTexts});
+                              designerDispatch({ type: 'AREA_FIELD', fieldName: addTexts, include: true });
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                            }}
+                          >Add text</DefaultButton>
+                          <TextField
+                            key='additionallyImage'
+                            value={addUrlImage}
+                            onChange={(e) => {
+                              onchangeUrlImage(e.currentTarget.value)
+                            }}
+                          />
+                          <DefaultButton
+                            key='addUrlImage'
+                            onClick={() => {
+                              designerDispatch({ type: 'ADD_ADDITIONALLY_IMAGE', image: addUrlImage });
+                              designerDispatch({ type: 'AREA_FIELD', fieldName: addUrlImage, include: true });
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                            }}
+                          >Add image</DefaultButton>
+                          <TextField
+                            key='additionallyIcon'
+                            value={addIcon}
+                            onChange={(e) => {
+                              onchangeIcon(e.currentTarget.value)
+                            }}
+                          />
+                          <Link href="https://uifabricicons.azurewebsites.net/">Посмотреть и выбрать</Link>
+                          <DefaultButton
+                            key='addIcon'
+                            onClick={() => {
+                              designerDispatch({ type: 'ADD_ADDITIONALLY_ICON', icon: addIcon });
+                              designerDispatch({ type: 'AREA_FIELD', fieldName: addIcon, include: true });
+                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+                            }}
+                          >Add icon</DefaultButton>
+                        </>
+                        : undefined
+                      }
+                      </>
                     <Label>Size</Label>
                     <>
                       {
@@ -1492,17 +1553,15 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       }
                     </>
                   </div>
-                  {
-                    /*
                     <div>
                       <Label>
                         Padding
                       </Label>
                       <TextField
                         key='padding'
-                        value={styleSetting.padding.toString()}
+                        value={area.style!.padding.toString()}
                         onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting,  padding: Number(e.currentTarget.value)} });
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!,  padding: Number(e.currentTarget.value)} });
                         }}
                       />
                     </div>
@@ -1512,12 +1571,14 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       </Label>
                       <TextField
                         key='margin'
-                        value={styleSetting.margin.toString()}
+                        value={area.style!.margin.toString()}
                         onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, margin: Number(e.currentTarget.value)} });
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, margin: Number(e.currentTarget.value)} });
                         }}
                       />
                     </div>
+                  {
+                    /*
                     <div>
                       <Label>
                         Align
@@ -1529,11 +1590,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, align: e.currentTarget.value} });
                         }}
                       />
-                    </div>
-                    <div>
-                      <Label>
-                        Background
-                      </Label>
                     </div>
                     <div>
                       <Label>
@@ -1738,90 +1794,20 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       */
                     }
                   </>
-                  : undefined
+                  : selectedField && activeArea !== undefined
+                    ? <Label>{`Выбранный объект: ${selectedField}`}</Label>
+                    : undefined
                   }
                   </div>
                 </>
               ) : (
                   <>
-                  <DefaultButton
-                    key='viewAdditionallyObject'
-                    onClick={() => {
-                      onChangeView(!viewAddObject)
-                    }}
-                  >Add additionallyObject</DefaultButton>
-                  {
-                    viewAddObject ?
-                    <>
-                    <TextField
-                      key='additionallyText'
-                      value={addTexts}
-                      onChange={(e) => {
-                        onchangeText(e.currentTarget.value)
-                      }}
-                    />
-                      <DefaultButton
-                        key='addText'
-                        onClick={() => {
-                          designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: addTexts});
-                          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                          console.log('additionallyText');
-                        }}
-                      >Add text</DefaultButton>
-                      <TextField
-                        key='additionallyImage'
-                        value={addUrlImage}
-                        onChange={(e) => {
-                          onchangeUrlImage(e.currentTarget.value)
-                        }}
-                      />
-                      <DefaultButton
-                        key='addUrlImage'
-                        onClick={() => {
-                          designerDispatch({ type: 'ADD_ADDITIONALLY_IMAGE', image: addUrlImage });
-                          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                          console.log('additionallyImage');
-                        }}
-                      >Add image</DefaultButton>
-                      <ComboBox 
-                        key='additionallyIcon'
-                        defaultSelectedKey={addIcon}
-                        options={
-                          iconNames.map(icon => ({key: icon, text: icon}))
-                        }
-                        onRenderOption={(option) =>
-                          {
-                            return (
-                            <Stack style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center'
-                            }}>
-                              <IconButton key={(option as IComboBoxOption).text} iconProps={{ iconName: (option as IComboBoxOption).text }}/>
-                              <span>{(option as IComboBoxOption).text}</span>
-                            </Stack>
-                          );}
-                        }
-                        onChange={(e, value) => {
-                          onchangeIcon(value!.text)
-                        }}
-                        />
-                      <DefaultButton
-                        key='addIcon'
-                        onClick={() => {
-                          designerDispatch({ type: 'ADD_ADDITIONALLY_ICON', icon: addIcon });
-                          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                        }}
-                      >Add icon</DefaultButton>
-                    </>
-                    : undefined
-                  }
                     <Label>
                       Show fields:
                     </Label>
                     {}
                       { additionallyObject ?
-                        [...additionallyObject.texts!, ...additionallyObject.images!, ...additionallyObject.icons!].map(object =>
+                        [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!].reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []).map(object =>
                           object !== undefined ?
                             <MemoCheckboxForObjectsInInspector field={object} />
                           : undefined
@@ -1857,10 +1843,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
           borderRadius: area.style ? `${area.style.border.radius}px` : '3px',
           //color: `${area.style!.font.color}`,
-          fontSize: area.style ? `${area.style.font.size}px` : '14px',
-          fontWeight: !area.style || area.style.font.weight === 'normal' ? 400 : 600,
-          fontStyle: area.style ? `${area.style.font.style}` : 'normal',
-          fontFamily: area.style ? `${area.style.font.family}` : 'normal'
+          //fontSize: area.style ? `${area.style.font.size}px` : '14px',
+          //fontWeight: !area.style || area.style.font.weight === 'normal' ? 400 : 600,
+          //fontStyle: area.style ? `${area.style.font.style}` : 'normal',
+          //fontFamily: area.style ? `${area.style.font.family}` : 'normal'
         }}
         onClick={getOnMouseDownForArea(idx)}
         onContextMenu={getOnContextMenuForArea()}
@@ -1917,13 +1903,13 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               ? <div
                 key={f.key}
                 onClick={getOnMouseDownForField(idx, f.key)}
-              ><FieldMemo fd={fd} field={f} areaStyle={area.style!} /></div>
-              : additionallyObject!.texts!.find(text => text === f.key)
-                ? <Label>{f.key}</Label>
-                : additionallyObject!.images!.find(image => image === f.key)
-                  ? <Image height={100} width={100} src={f.key} alt='Text' />
-                  : additionallyObject!.icons!.find(icon => icon === f.key)
-                    ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
+              ><FieldMemo key={f.key} fd={fd} field={f} areaStyle={area.style!} /></div>
+              : additionallyObject!.texts && additionallyObject!.texts!.find(text => text === f.key)
+                ? <div key={f.key} onClick={getOnMouseDownForField(idx, f.key)}><Label>{f.key}</Label></div>
+                : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
+                  ? <Image key={f.key} onClick={getOnMouseDownForField(idx, f.key)} height={100} width={100} src={f.key} alt='Text' styles={{ root: {borderColor: theme.semanticColors.inputBorder}}} />
+                  : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
+                    ? <IconButton key={f.key} iconProps={{ iconName: f.key }} onClick={getOnMouseDownForField(idx, f.key)} />
                     : undefined
               }
             )

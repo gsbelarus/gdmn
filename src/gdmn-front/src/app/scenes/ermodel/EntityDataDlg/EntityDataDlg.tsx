@@ -994,11 +994,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                         if (fd) {
                           return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).areas[idx].style!, areaDirection: area.direction})
                         }
-                        return (localState as IDesignerState).additionallyObject!.texts!.find(text => text === f.key)
-                          ? <Label>{f.key}</Label>
-                          : (localState as IDesignerState).additionallyObject!.images!.find(image => image === f.key)
-                            ? <Image height={100} width={100} src={f.key} alt='Text' />
-                            : (localState as IDesignerState).additionallyObject!.icons!.find(icon => icon === f.key)
+                        const additionallyObject = (localState as IDesignerState).additionallyObject;
+                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f.key)
+                          ? <Label key={f.key}>{f.key}</Label>
+                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
+                            ? <Image key={f.key} height={100} width={100} src={f.key} alt='Text' />
+                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
                               ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
                               : undefined
                       }
