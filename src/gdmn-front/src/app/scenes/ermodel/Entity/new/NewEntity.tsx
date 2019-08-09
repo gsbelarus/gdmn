@@ -364,7 +364,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
         <DefaultButton
           onClick={() => {
             const newArr = changedCountEntityAttributes.slice();
-            newArr.push("NewAttr" + changedCountEntityAttributes.length);
+            newArr.push(`f${(+new Date).toString(16)}`);
             setCountEntityAttributes(newArr);
             countEntityAttributes.current = newArr.slice();
           }}
