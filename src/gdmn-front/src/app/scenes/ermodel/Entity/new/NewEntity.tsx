@@ -364,7 +364,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
         <DefaultButton
           onClick={() => {
             const newArr = changedCountEntityAttributes.slice();
-            newArr.push(Math.random().toString());
+            newArr.push("NewAttr" + changedCountEntityAttributes.length);
             setCountEntityAttributes(newArr);
             countEntityAttributes.current = newArr.slice();
           }}
