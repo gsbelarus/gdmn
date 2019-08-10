@@ -1684,7 +1684,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           );}
                         }
                         onChange={(e, value) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, background: Object.values(theme.palette)[+value!.key]} })
+                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, background: value!.text} })
                         }}
                       />
                     </div>
@@ -1833,11 +1833,15 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     return (
     <div
         key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
+        className={
+          "commonStyle"
+        }
         style={{
           gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
           display: 'flex',
           justifyContent: 'flex-start',
-          background: area.style ? area.style.background : theme.palette.white,
+          //flexGrow: area.direction === 'row' ? 1 : 0,
+          background: area.style ? Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.background)] : theme.palette.white,
           margin: area.style ? `${area.style.margin}px` : '1px',
           padding: area.style ? `${area.style.padding}px` : '1px',
           border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
@@ -1856,38 +1860,32 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               previewMode
               ? {
                 backgroundSize: '16px 16px',
-                margin: '1px',
-                borderRadius: '4px',
-                padding: '4px',
-                minHeight: '64px',
+                justifyContent: 'flex-start',
                 display: 'flex',
                 flexWrap: 'wrap',
+                flexGrow: area.direction === 'row' ? 1 : 0,
                 flexDirection: area.direction,
                 alignContent: 'flex-start'
               }
               : activeArea === idx
                 ? {
                   backgroundSize: '16px 16px',
-                  margin: '1px',
-                  borderRadius: '4px',
-                  padding: '4px',
-                  minHeight: '64px',
+                  justifyContent: 'flex-start',
                   border: '2px dashed #d84141',
                   height: '100%',
                   width: '100%',
                   display: 'flex',
                   flexWrap: 'wrap',
+                  flexGrow: area.direction === 'row' ? 1 : 0,
                   flexDirection: area.direction,
                   alignContent: 'flex-start'
                 }
                 : {
                   backgroundSize: '16px 16px',
-                  margin: '1px',
-                  borderRadius: '4px',
-                  padding: '4px',
-                  minHeight: '64px',
+                  justifyContent: 'flex-start',
                   display: 'flex',
                   flexWrap: 'wrap',
+                  flexGrow: area.direction === 'row' ? 1 : 0,
                   flexDirection: area.direction,
                   alignContent: 'flex-start'
                 }
@@ -1903,7 +1901,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               ? <div
                 key={f.key}
                 onClick={getOnMouseDownForField(idx, f.key)}
-              ><FieldMemo key={f.key} fd={fd} field={f} areaStyle={area.style!} /></div>
+              ><FieldMemo key={f.key} fd={fd} field={f} areaStyle={area.style!} aeraDirection={area.direction} /></div>
               : additionallyObject!.texts && additionallyObject!.texts!.find(text => text === f.key)
                 ? <div key={f.key} onClick={getOnMouseDownForField(idx, f.key)}><Label>{f.key}</Label></div>
                 : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)

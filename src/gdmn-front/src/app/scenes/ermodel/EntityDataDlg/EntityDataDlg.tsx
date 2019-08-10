@@ -926,7 +926,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 tabIndex={0}
               >
                 {
-              (localState as IDesignerState).areas.map( (area, idx) => (
+              (localState as IDesignerState).areas.map( (area, idx) =>
+              {
+                const background = Object.values(getTheme().palette)[Object.keys(getTheme().palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.background)]
+                return (
                 <div
                   key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
                   className={
@@ -937,60 +940,22 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     display: 'flex',
                     flexDirection: area.direction,
                     justifyContent: 'flex-start',
-                    background: `${(localState as IDesignerState).areas[idx].style!.background}`,
+                    flexWrap: 'wrap',
+                    background: background,
                     margin: (localState as IDesignerState).areas[idx].style!.margin ? `${(localState as IDesignerState).areas[idx].style!.margin}px` : '1px',
                     padding: (localState as IDesignerState).areas[idx].style!.padding ? `${(localState as IDesignerState).areas[idx].style!.padding}px` : '4px',
                     border: (localState as IDesignerState).areas[idx].style!.border.style === 'none'
                       ? `1px solid ${(localState as IDesignerState).areas[idx].style!.background}`
                       : `${(localState as IDesignerState).areas[idx].style!.border.width}px ${(localState as IDesignerState).areas[idx].style!.border.style} ${(localState as IDesignerState).areas[idx].style!.border.color}`,
                     borderRadius: `${(localState as IDesignerState).areas[idx].style!.border.radius}px`,
-                    color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
-                    fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
-                    fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
-                    fontStyle: `${(localState as IDesignerState).areas[idx].style!.font.style}`,
-                    fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
                   }}
                 >
                   {
                     area.fields.map( f =>
                       {
-                        let styles;
                         let fd = rs.fieldDefs.find(fieldDef =>
                           `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
                         )
-                        if(area.direction === 'row')
-                        styles = {
-                          root: {
-                            flexGrow: 1
-                          },
-                          subComponentStyles: {
-                            label: {
-                              root: {
-                                color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
-                                fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
-                                fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
-                              }
-                            }
-                          },
-                          fieldGroup: {background: f.color}
-                        }
-                        else styles = {
-                          root: {
-                            flexGrow: 0
-                          },
-                          subComponentStyles: {
-                            label: {
-                              root: {
-                                color: `${(localState as IDesignerState).areas[idx].style!.font.color}`,
-                                fontSize: `${(localState as IDesignerState).areas[idx].style!.font.size}px`,
-                                fontWeight: (localState as IDesignerState).areas[idx].style!.font.weight === 'normal' ? 400 : 600,
-                                fontFamily: `${(localState as IDesignerState).areas[idx].style!.font.family}`
-                              }
-                            }
-                          },
-                          fieldGroup: {background: f.color}
-                        }
                         if (fd) {
                           return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).areas[idx].style!, areaDirection: area.direction})
                         }
@@ -1006,7 +971,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     )
                   }
                 </div>
-              ))
+                )})
                 }
               </div>
             :
