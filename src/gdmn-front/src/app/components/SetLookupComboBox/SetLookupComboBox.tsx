@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, IComboBoxStyles } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
@@ -12,6 +12,7 @@ export interface ISetLookupComboBoxProps {
   getSessionData?: () => ISessionData;
   onChanged: (option: IComboBoxOption[] | undefined) => void;
   componentRef?: (ref: IComboBox | null) => void;
+  styles?: Partial<IComboBoxStyles>;
 };
 
 type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
@@ -108,7 +109,7 @@ function init(preSelectedOption: IComboBoxOption[] | undefined): ISetLookupCombo
 
 export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, componentRef, onChanged } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, componentRef, onChanged, styles } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOptions, queryState, text, limit } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -250,8 +251,9 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
       }
       onRenderOption={onRenderOption}
       styles={
-        selectedOptions
+        selectedOptions && styles
         ? {
+          ...styles,
           root: {
             backgroundColor: '#77ff77'
           },
@@ -259,7 +261,9 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
             backgroundColor: '#77ff77'
           }
         }
-        : undefined
+        : styles
+          ? styles
+          : undefined
       }
       onChange={onChangeMulti}
       onPendingValueChanged={onPendingValueChanged}

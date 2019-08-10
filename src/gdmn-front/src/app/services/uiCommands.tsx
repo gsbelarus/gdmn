@@ -24,13 +24,6 @@ export interface IUICommand {
 
 export const uiCommands: IUICommand[] = [
   {
-    command: 'designer',
-    form: 'mainHeader',
-    group: 'designer',
-    caption: 'Designer',
-    link: `/designer`
-  },
-  {
     command: 'sql',
     form: 'mainHeader',
     group: 'sql',

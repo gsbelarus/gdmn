@@ -23,7 +23,6 @@ import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgCo
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
 import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
-import { DesignerContainer } from '../designer/DesignerContainer';
 import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
 import { NewEntityContainer } from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
@@ -183,7 +182,6 @@ export function GdmnView (props: IGdmnViewProps) {
           {importantMenu(commandToLink('erModel2', match.url))}
           {importantMenu(commandToLink('internals', match.url))}
           {importantMenu(commandToLink('sql', match.url))}
-          {importantMenu(commandToLink('designer', match.url))}
           <div className="RightSideHeaderPart">
             <div>
               <span className="BigLogo">
@@ -365,16 +363,6 @@ export function GdmnView (props: IGdmnViewProps) {
                   />
                 );
               }}
-            />
-            <Route
-              exact={true}
-              path={`${match.path}/designer`}
-              render={props => (
-                <DesignerContainer
-                  {...props}
-                  url={props.match.url}
-                />
-              )}
             />
             <Route
               exact={true}

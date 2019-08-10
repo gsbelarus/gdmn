@@ -1,38 +1,13 @@
+.areas > * {
+  border: 1px solid #606060;
+}
+
 .commonStyle {
   background-size: 16px 16px;
   margin: 1px;
   border-radius: 4px;
   padding: 4px;
   min-height: 64px;
-}
-
-.activeCell {
-  background-image: linear-gradient(
-    135deg,
-    #ff9999 4.55%,
-    white 4.55%,
-    white 50%,
-    #ff9999 50%,
-    #ff9999 54.55%,
-    white 54.55%,
-    white 100%
-  );
-  border: 1px solid #ff9999;
-}
-
-.cell {
-  background-image: linear-gradient(
-    135deg,
-    #99ff99 4.55%,
-    white 4.55%,
-    white 50%,
-    #99ff99 50%,
-    #99ff99 54.55%,
-    white 54.55%,
-    white 100%
-  );
-  border: 1px solid #99ff99;
-  color: silver;
 }
 
 .selection {
@@ -49,30 +24,7 @@
   border: 1px dotted #9999ff;
 }
 
-.area {
-  background-image: linear-gradient(
-    45deg,
-    #ff99ff 4.55%,
-    white 4.55%,
-    white 50%,
-    #ff99ff 50%,
-    #ff99ff 54.55%,
-    white 54.55%,
-    white 100%
-  );
-  border: 1px solid #ff99ff;
-}
-
 .activeArea {
-  background-image: linear-gradient(
-    45deg,
-    #ff9944 4.55%,
-    white 4.55%,
-    white 50%,
-    #ff9944 50%,
-    #ff9944 54.55%,
-    white 54.55%,
-    white 100%
-  );
-  border: 2px dotted #ff9944;
+  border: 2px dashed #d84141;
+  height: 100%;
 }
