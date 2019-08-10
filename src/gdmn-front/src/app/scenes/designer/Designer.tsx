@@ -1658,7 +1658,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       <Label>Backgroung</Label>
                       <ComboBox
                         key='background'
-                        defaultSelectedKey={
+                        selectedKey={
                           activeArea !== undefined && areas[activeArea!].style && area.style!.background ? Object.values(theme.palette).findIndex( color => color === area.style!.background) : Object.values(theme.palette).findIndex( color => color === theme.palette.white)
                         }
                         options={
@@ -1729,6 +1729,40 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                               value={area.style!.border.radius.toString()}
                               onChange={(e) => {
                                 designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, radius: Number(e.currentTarget.value)}} });
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <Label>Color</Label>
+                            <ComboBox
+                              key='border-color'
+                              selectedKey={
+                                activeArea !== undefined && areas[activeArea!].style && area.style!.border.color ? Object.values(theme.palette).findIndex( color => color === area.style!.border.color) : Object.values(theme.palette).findIndex( color => color === theme.palette.white)
+                              }
+                              options={
+                                Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
+                              }
+                              onRenderOption={(option) =>
+                                {
+                                  return (
+                                  <Stack style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center'
+                                  }}>
+                                    <span style={{
+                                      background: Object.values(theme.palette)[+(option as IComboBoxOption).key],
+                                      border: `1px solid ${theme.palette.black}`,
+                                      height:'16px',
+                                      width: '16px',
+                                      marginRight: '4px'
+                                    }}></span>
+                                    <span>{(option as IComboBoxOption).text}</span>
+                                  </Stack>
+                                );}
+                              }
+                              onChange={(e, value) => {
+                                designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, color: value!.text} } })
                               }}
                             />
                           </div>
@@ -1844,7 +1878,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           background: area.style ? Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.background)] : theme.palette.white,
           margin: area.style ? `${area.style.margin}px` : '1px',
           padding: area.style ? `${area.style.padding}px` : '1px',
-          border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${area.style.border.color}`,
+          border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.border.color)]}`,
           borderRadius: area.style ? `${area.style.border.radius}px` : '3px',
           //color: `${area.style!.font.color}`,
           //fontSize: area.style ? `${area.style.font.size}px` : '14px',

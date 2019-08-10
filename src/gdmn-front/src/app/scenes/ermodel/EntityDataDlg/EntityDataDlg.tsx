@@ -929,6 +929,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               (localState as IDesignerState).areas.map( (area, idx) =>
               {
                 const background = Object.values(getTheme().palette)[Object.keys(getTheme().palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.background)]
+                const borderColor = Object.values(getTheme().palette)[Object.keys(getTheme().palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.border.color)]
                 return (
                 <div
                   key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
@@ -946,7 +947,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     padding: (localState as IDesignerState).areas[idx].style!.padding ? `${(localState as IDesignerState).areas[idx].style!.padding}px` : '4px',
                     border: (localState as IDesignerState).areas[idx].style!.border.style === 'none'
                       ? `1px solid ${(localState as IDesignerState).areas[idx].style!.background}`
-                      : `${(localState as IDesignerState).areas[idx].style!.border.width}px ${(localState as IDesignerState).areas[idx].style!.border.style} ${(localState as IDesignerState).areas[idx].style!.border.color}`,
+                      : `${(localState as IDesignerState).areas[idx].style!.border.width}px ${(localState as IDesignerState).areas[idx].style!.border.style} ${borderColor}`,
                     borderRadius: `${(localState as IDesignerState).areas[idx].style!.border.radius}px`,
                   }}
                 >
