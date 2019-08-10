@@ -928,8 +928,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 {
               (localState as IDesignerState).areas.map( (area, idx) =>
               {
-                const background = Object.values(getTheme().palette)[Object.keys(getTheme().palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.background)]
-                const borderColor = Object.values(getTheme().palette)[Object.keys(getTheme().palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.border.color)]
+                const theme = getTheme();
+                const background = Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.background)]
+                const borderColor = Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.border.color)]
+                const areaStyle = (localState as IDesignerState).areas[idx].style;
                 return (
                 <div
                   key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
@@ -942,13 +944,14 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     flexDirection: area.direction,
                     justifyContent: 'flex-start',
                     flexWrap: 'wrap',
+                    alignContent: 'flex-start',  
                     background: background,
-                    margin: (localState as IDesignerState).areas[idx].style!.margin ? `${(localState as IDesignerState).areas[idx].style!.margin}px` : '1px',
-                    padding: (localState as IDesignerState).areas[idx].style!.padding ? `${(localState as IDesignerState).areas[idx].style!.padding}px` : '4px',
-                    border: (localState as IDesignerState).areas[idx].style!.border.style === 'none'
-                      ? `1px solid ${(localState as IDesignerState).areas[idx].style!.background}`
-                      : `${(localState as IDesignerState).areas[idx].style!.border.width}px ${(localState as IDesignerState).areas[idx].style!.border.style} ${borderColor}`,
-                    borderRadius: `${(localState as IDesignerState).areas[idx].style!.border.radius}px`,
+                    margin: areaStyle && areaStyle.margin ? `${areaStyle.margin}px` : '1px',
+                    padding: areaStyle && areaStyle.padding ? `${areaStyle.padding}px` : '4px',
+                    border: areaStyle!.border.style === 'none'
+                      ? `1px solid ${areaStyle!.background}`
+                      : `${areaStyle!.border.width}px ${areaStyle!.border.style} ${borderColor}`,
+                    borderRadius: areaStyle && areaStyle.border.radius ? `${areaStyle.border.radius}px` : undefined
                   }}
                 >
                   {
@@ -958,11 +961,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
                         )
                         if (fd) {
-                          return field({fd: fd, field: f, areaStyle: (localState as IDesignerState).areas[idx].style!, areaDirection: area.direction})
+                          return <div style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{field({fd: fd, field: f, areaStyle: areaStyle!, areaDirection: area.direction})}</div>
                         }
                         const additionallyObject = (localState as IDesignerState).additionallyObject;
                         return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f.key)
-                          ? <Label key={f.key}>{f.key}</Label>
+                          ? <Label key={f.key} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f.key}</Label>
                           : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
                             ? <Image key={f.key} height={100} width={100} src={f.key} alt='Text' />
                             : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)

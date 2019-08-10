@@ -841,7 +841,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
       if (attr instanceof EntityAttribute) {
         const style = {
           root: {
-            flexGrow: props.aeraDirection === 'row' ? 1 : 0,
             background: props.areaStyle!.background
           },
           input: {
@@ -870,15 +869,12 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   if (props.fd.dataType === TFieldType.Date) {
     const style = {
       root: {
-        flexGrow: props.aeraDirection === 'row' ? 1 : 0,
         background: props.areaStyle!.background,
       },
       fieldGroup: {
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
         background: props.areaStyle!.background,
       },
       input: {
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
         background: props.areaStyle!.background,
       }
     }
@@ -926,18 +922,15 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   } else {
     const style = {
       root: {
-        flexGrow: props.aeraDirection === 'row' ? 1 : 0,
         background: props.areaStyle!.background,
       },
       fieldGroup: {
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
         background: props.areaStyle!.background,
       },
       field: {
         background: props.areaStyle!.background,
       },
       input: {
-        borderWidth: props.field!.color === selectedField ? '3px' : '1px',
         background: props.areaStyle!.background,
       }
     };
@@ -1659,7 +1652,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       <ComboBox
                         key='background'
                         selectedKey={
-                          activeArea !== undefined && areas[activeArea!].style && area.style!.background ? Object.values(theme.palette).findIndex( color => color === area.style!.background) : Object.values(theme.palette).findIndex( color => color === theme.palette.white)
+                          activeArea !== undefined && area.style && area.style.background
+                            ? Object.keys(theme.palette).findIndex( color => color === area.style!.background)
+                            : Object.keys(theme.palette).findIndex( color => color === 'white')
                         }
                         options={
                           Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
@@ -1737,7 +1732,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                             <ComboBox
                               key='border-color'
                               selectedKey={
-                                activeArea !== undefined && areas[activeArea!].style && area.style!.border.color ? Object.values(theme.palette).findIndex( color => color === area.style!.border.color) : Object.values(theme.palette).findIndex( color => color === theme.palette.white)
+                                activeArea !== undefined && area.style && area.style.border.color
+                                  ? Object.keys(theme.palette).findIndex( color => color === area.style!.border.color)
+                                  : Object.keys(theme.palette).findIndex( color => color === 'white')
                               }
                               options={
                                 Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
@@ -1874,17 +1871,16 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
           display: 'flex',
           justifyContent: 'flex-start',
-          //flexGrow: area.direction === 'row' ? 1 : 0,
           background: area.style ? Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.background)] : theme.palette.white,
-          margin: area.style ? `${area.style.margin}px` : '1px',
-          padding: area.style ? `${area.style.padding}px` : '1px',
+          margin: area.style && area.style.margin ? `${area.style.margin}px` : '1px',
+          padding: area.style && area.style.padding ? `${area.style.padding}px` : '4px',
           border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.border.color)]}`,
-          borderRadius: area.style ? `${area.style.border.radius}px` : '3px',
-          //color: `${area.style!.font.color}`,
-          //fontSize: area.style ? `${area.style.font.size}px` : '14px',
-          //fontWeight: !area.style || area.style.font.weight === 'normal' ? 400 : 600,
-          //fontStyle: area.style ? `${area.style.font.style}` : 'normal',
-          //fontFamily: area.style ? `${area.style.font.family}` : 'normal'
+          borderRadius: area.style && area.style.border.radius ? `${area.style.border.radius}px` : undefined,
+          //color: area.style ? `${area.style.font.color}` : undefined,
+          //fontSize: area.style ? `${area.style.font.size}px` : undefined,
+          //fontWeight: area.style && area.style.font.weight === 'normal' ? 400 : 700,
+          //fontStyle: area.style ? `${area.style.font.style}` : undefined,
+          //fontFamily: area.style ? `${area.style.font.family}` : undefined
         }}
         onClick={getOnMouseDownForArea(idx)}
         onContextMenu={getOnContextMenuForArea()}
@@ -1893,58 +1889,64 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
             style={
               previewMode
               ? {
-                backgroundSize: '16px 16px',
-                justifyContent: 'flex-start',
+                margin: '1px',
+                padding: '4px',
                 display: 'flex',
-                flexWrap: 'wrap',
-                flexGrow: area.direction === 'row' ? 1 : 0,
+                height: '100%',
+                width: '100%',
+                minHeight: '64px',
                 flexDirection: area.direction,
+                flexWrap: 'wrap',
                 alignContent: 'flex-start'
               }
               : activeArea === idx
                 ? {
-                  backgroundSize: '16px 16px',
-                  justifyContent: 'flex-start',
+                  margin: '1px',
+                  borderRadius: '4px',
+                  padding: '4px',
                   border: '2px dashed #d84141',
                   height: '100%',
                   width: '100%',
+                  minHeight: '64px',
                   display: 'flex',
-                  flexWrap: 'wrap',
-                  flexGrow: area.direction === 'row' ? 1 : 0,
                   flexDirection: area.direction,
+                  flexWrap: 'wrap',
                   alignContent: 'flex-start'
                 }
                 : {
-                  backgroundSize: '16px 16px',
-                  justifyContent: 'flex-start',
+                  margin: '1px',
+                  padding: '4px',
                   display: 'flex',
-                  flexWrap: 'wrap',
-                  flexGrow: area.direction === 'row' ? 1 : 0,
+                  height: '100%',
+                  width: '100%',
+                  minHeight: '64px',
                   flexDirection: area.direction,
+                  flexWrap: 'wrap',
                   alignContent: 'flex-start'
                 }
             }
           >
           {
-            area.fields.map(f =>
-              { 
-                const fd: IFieldDef | undefined = rs!.fieldDefs.find(fieldDef =>
-                  `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
-                );
+            area.fields.map(f => {
+              const fd: IFieldDef | undefined = rs!.fieldDefs.find(fieldDef =>
+                `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
+              );
               return fd !== undefined
               ? <div
                 key={f.key}
                 onClick={getOnMouseDownForField(idx, f.key)}
+                style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}
               ><FieldMemo key={f.key} fd={fd} field={f} areaStyle={area.style!} aeraDirection={area.direction} /></div>
               : additionallyObject!.texts && additionallyObject!.texts!.find(text => text === f.key)
-                ? <div key={f.key} onClick={getOnMouseDownForField(idx, f.key)}><Label>{f.key}</Label></div>
+                ? <div key={f.key} onClick={getOnMouseDownForField(idx, f.key)} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>
+                    <Label>{f.key}</Label>
+                  </div>
                 : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
                   ? <Image key={f.key} onClick={getOnMouseDownForField(idx, f.key)} height={100} width={100} src={f.key} alt='Text' styles={{ root: {borderColor: theme.semanticColors.inputBorder}}} />
                   : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
                     ? <IconButton key={f.key} iconProps={{ iconName: f.key }} onClick={getOnMouseDownForField(idx, f.key)} />
                     : undefined
-              }
-            )
+            })
           }
         </div>
       </div>);
@@ -2025,6 +2027,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               styles={{
                 root: {
                   width: '104px'
+                },
+                input: {
+                  backgroundColor: getTheme().semanticColors.inputBackground,
+                  color: getTheme().semanticColors.inputText,
                 }
               }}
               value={value!.toString()}
