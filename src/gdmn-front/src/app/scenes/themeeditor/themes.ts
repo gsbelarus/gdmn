@@ -68,6 +68,36 @@ export const themes: INamedTheme[] = [
     }
   },
   {
+    name: 'Red',
+    isInverted: false,
+    theme: {
+      palette: {
+        themePrimary: '#dd0000',
+        themeLighterAlt: '#fef4f4',
+        themeLighter: '#fad2d2',
+        themeLight: '#f5acac',
+        themeTertiary: '#eb5e5e',
+        themeSecondary: '#e21b1b',
+        themeDarkAlt: '#c80000',
+        themeDark: '#a90000',
+        themeDarker: '#7c0000',
+        neutralLighterAlt: '#f8f8f8',
+        neutralLighter: '#f4f4f4',
+        neutralLight: '#eaeaea',
+        neutralQuaternaryAlt: '#dadada',
+        neutralQuaternary: '#d0d0d0',
+        neutralTertiaryAlt: '#c8c8c8',
+        neutralTertiary: '#c6c6c6',
+        neutralSecondary: '#8c8c8c',
+        neutralPrimaryAlt: '#575757',
+        neutralPrimary: '#404040',
+        neutralDark: '#303030',
+        black: '#242424',
+        white: '#ffffff',
+      }
+    }
+  },
+  {
     name: 'DarkViolet',
     isInverted: true,
     theme: {
@@ -128,7 +158,7 @@ export const themes: INamedTheme[] = [
     }
   },
   {
-    name: 'Red',
+    name: 'DarkRed',
     isInverted: true,
     theme: {
       palette: {
@@ -155,6 +185,36 @@ export const themes: INamedTheme[] = [
           black: '#fffcfa',
           white: '#b20202',
         }
+    }
+  },
+  {
+    name: 'Graphite',
+    isInverted: true,
+    theme: {
+      palette: {
+        themePrimary: '#dfdfdf',
+        themeLighterAlt: '#e3e3e3',
+        themeLighter: '#e6e6e6',
+        themeLight: '#eaeaea',
+        themeTertiary: '#ededed',
+        themeSecondary: '#f1f1f1',
+        themeDarkAlt: '#f4f4f4',
+        themeDark: '#f8f8f8',
+        themeDarker: '#fbfbfb',
+        neutralLighterAlt: '#343434',
+        neutralLighter: '#3c3c3c',
+        neutralLight: '#4a4a4a',
+        neutralQuaternaryAlt: '#525252',
+        neutralQuaternary: '#595959',
+        neutralTertiaryAlt: '#757575',
+        neutralTertiary: '#f2f2f2',
+        neutralSecondary: '#f4f4f4',
+        neutralPrimaryAlt: '#f6f6f6',
+        neutralPrimary: '#ececec',
+        neutralDark: '#fbfbfb',
+        black: '#fdfdfd',
+        white: '#2b2b2b',
+      }
     }
   }
 ];

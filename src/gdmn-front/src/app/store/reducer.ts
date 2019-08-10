@@ -1,5 +1,5 @@
 import { combineReducers, Reducer } from 'redux';
-import { ActionType, createAction, getType } from 'typesafe-actions';
+import { getType } from 'typesafe-actions';
 // @ts-ignore
 import persistLocalStorage from 'redux-persist/lib/storage';
 // @ts-ignore
@@ -18,7 +18,8 @@ import { reducer as fsmReducer, IFSMState } from '@src/app/fsm/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IRsMetaState, rsMetaReducer } from './rsmeta';
-import { FSM } from '@src/app/fsm/fsm';
+import { themes } from '../scenes/themeeditor/themes';
+import { loadTheme } from 'office-ui-fabric-react';
 
 initializeIcons(/* optional base url */);
 
@@ -40,6 +41,21 @@ const authPersistConfig = {
   whitelist: ['application', 'authenticated', 'accessTokenPayload', 'refreshTokenPayload', 'accessToken', 'refreshToken']
 };
 
+const gdmnStatePersistConfig = {
+  key: 'gdmn::root::gdmnState',
+  storage: persistLocalStorage,
+  whitelist: ['theme'],
+  migrate: (state: TGdmnState) => {
+    const namedTheme = themes.find( t => t.name === state.theme );
+
+    if (namedTheme) {
+      loadTheme(namedTheme.theme);
+    }
+
+    return Promise.resolve(state);
+  }
+};
+
 function withReset(reducer: any) {
   return (state: any, action: any) =>
     reducer(
@@ -52,7 +68,7 @@ function withReset(reducer: any) {
 
 const reducer = combineReducers<IState>({
   rootState: withReset(rootReducer),
-  gdmnState: withReset(gdmnReducer),
+  gdmnState: persistReducer(gdmnStatePersistConfig, withReset(gdmnReducer)),
   authState: persistReducer(authPersistConfig, withReset(authReducer)),
   sqlDataViewState: withReset(sqlDataViewReducer),
   sqlState: withReset(sqlReducer),

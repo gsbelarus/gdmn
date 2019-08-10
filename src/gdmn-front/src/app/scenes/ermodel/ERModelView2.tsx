@@ -1,16 +1,16 @@
-import { IERModelView2Props } from "./ERModelView2.types";
-import React, { useEffect, useRef, useState } from "react";
-import { rsActions, RecordSet, TFieldType, IDataRow } from "gdmn-recordset";
-import { List } from "immutable";
-import { createGrid, GDMNGrid } from "gdmn-grid";
-import { gdmnActions, gdmnActionsAsync } from "../gdmn/actions";
-import { linkCommandBarButton } from "@src/app/components/LinkCommandBarButton";
-import { ICommandBarItemProps, CommandBar, TextField } from "office-ui-fabric-react";
-import { bindGridActions } from "./utils";
+import {IERModelView2Props} from "./ERModelView2.types";
+import React, {useEffect, useState} from "react";
+import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
+import {List} from "immutable";
+import {createGrid, GDMNGrid} from "gdmn-grid";
+import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
+import {linkCommandBarButton} from "@src/app/components/LinkCommandBarButton";
+import {CommandBar, ICommandBarItemProps, TextField} from "office-ui-fabric-react";
+import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
-import { InspectorForm } from "@src/app/components/InspectorForm";
-import { useSaveGridState } from "./EntityDataView/useSavedGridState";
+import {InspectorForm} from "@src/app/components/InspectorForm";
+import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -240,6 +240,15 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'FileCode'
       },
       onClick: () => setShowInspector(true)
+    },
+    {
+      key: 'addEntity',
+      disabled: !entities || !entities.size,
+      text: 'Add Entity',
+      iconProps: {
+        iconName: 'FileCode'
+      },
+      commandBarButtonAs:linkCommandBarButton(`addEntity`)
     }
   ];
 

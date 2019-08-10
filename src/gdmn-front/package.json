@@ -87,7 +87,7 @@
     "react-hot-loader": "^4",
     "redux-logger": "^3",
     "shx": "^0",
-    "style-loader": "^0",
+    "style-loader": "^1",
     "terser-webpack-plugin": "^1",
     "ts-loader": "^6",
     "ts-node": "^8",
