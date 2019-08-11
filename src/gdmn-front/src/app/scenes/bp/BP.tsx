@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps, Dropdown } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, Dropdown, getTheme } from 'office-ui-fabric-react';
 import { getLName } from 'gdmn-internals';
 import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants } from 'mxgraph/javascript/mxClient';
 import { flowcharts } from '@src/app/fsm/flowcharts';
@@ -17,7 +17,7 @@ interface IGraphState{
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
-  const { url, viewTab, dispatch, fsm } = props;
+  const { url, viewTab, dispatch, fsm, theme } = props;
   const [flowchart, setFlowchart] = useState( fsm ? fsm.flowchart : Object.values(flowcharts).length ? Object.values(flowcharts)[0] : null );
   const [graphState, setGraphState] = useState<IGraphState | null>(null);
   const graphContainer = useRef(null);
@@ -31,6 +31,20 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       }));
     }
   }, []);
+
+  const graphStyles = useMemo( () => {
+    const t = getTheme();
+    return {
+      current: {
+        terminator: 'fillColor=firebrick;strokeColor=maroon;fontColor=white;',
+        process: 'fillColor=mediumblue;strokeColor=navy;fontColor=white;'
+      },
+      regular: {
+        terminator: 'fillColor=pink;strokeColor=red;',
+        process: 'fillColor=powderblue;strokeColor=cornflowerblue;'
+      }
+    };
+  }, [theme]);
 
   useEffect( () => {
     const container = graphContainer.current;
@@ -76,23 +90,25 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       graph.removeCells(graph.getChildVertices(parent));
 
       const map = new Map<IBlock, any>();
-      Object.entries(flowchart.blocks).forEach( ([name, s]) => {
-        const style = s.type.shape === 'PROCESS'
-          ? 'shape=rectangle'
-          : s.type.shape === 'DECISION'
+      Object.entries(flowchart.blocks).forEach( ([name, block]) => {
+        const variantStyle = fsm && fsm.block === block ? graphStyles.current : graphStyles.regular;
+
+        const style = block.type.shape === 'PROCESS'
+          ? 'shape=rectangle' + variantStyle.process
+          : block.type.shape === 'DECISION'
           ? 'shape=rhombus'
-          : 'shape=rectangle;rounded=1;fillColor=pink;strokeColor=red';
+          : 'shape=rectangle;rounded=1;' + variantStyle.terminator;
 
         const v = graph.insertVertex(
           parent,
           null,
-          s.label ? s.label : name,
+          block.label ? block.label : name,
           0,
           0,
           w,
-          s.type.shape === 'DECISION' ? h * 1.5 : h,
+          block.type.shape === 'DECISION' ? h * 1.5 : h,
           style);
-        map.set(s, v);
+        map.set(block, v);
       });
 
       const connectBlocks = (fromBlock: IBlock, toBlock: IBlock | IBlock[], edgeLabel: string = '') => {

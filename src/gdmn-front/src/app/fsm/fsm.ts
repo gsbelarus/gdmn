@@ -30,4 +30,8 @@ export class FSM {
   get flowchart() {
     return this._params.flowchart;
   }
+
+  get block() {
+    return this._params.block;
+  }
 };
