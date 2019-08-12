@@ -1,12 +1,15 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps, Dropdown, arraysEqual } from 'office-ui-fabric-react';
-import { flowCharts, IBlock, isDecisionTransition } from '@src/app/fsm/fsm';
+import { CommandBar, ICommandBarItemProps, Dropdown, getTheme } from 'office-ui-fabric-react';
 import { getLName } from 'gdmn-internals';
-import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants, mxPerimeter } from 'mxgraph/javascript/mxClient';
+import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants } from 'mxgraph/javascript/mxClient';
+import { flowcharts } from '@src/app/fsm/flowcharts';
+import { IBlock, isDecisionTransition } from '@src/app/fsm/types';
+import { fsmActions } from '@src/app/fsm/actions';
+import { FSM } from '@src/app/fsm/fsm';
 
 interface IGraphState{
   graph: any;
@@ -14,9 +17,8 @@ interface IGraphState{
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
-  const { url, viewTab, dispatch } = props;
-  const [activeBP, setActiveBP] = useState( Object.keys(flowCharts).length ? Object.keys(flowCharts)[0] : null );
-  const bp = activeBP ? flowCharts[activeBP] : undefined;
+  const { url, viewTab, dispatch, fsm, theme } = props;
+  const [flowchart, setFlowchart] = useState( fsm ? fsm.flowchart : Object.values(flowcharts).length ? Object.values(flowcharts)[0] : null );
   const [graphState, setGraphState] = useState<IGraphState | null>(null);
   const graphContainer = useRef(null);
 
@@ -30,10 +32,24 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
     }
   }, []);
 
+  const graphStyles = useMemo( () => {
+    const t = getTheme();
+    return {
+      current: {
+        terminator: 'fillColor=firebrick;strokeColor=maroon;fontColor=white;',
+        process: 'fillColor=mediumblue;strokeColor=navy;fontColor=white;'
+      },
+      regular: {
+        terminator: 'fillColor=pink;strokeColor=red;',
+        process: 'fillColor=powderblue;strokeColor=cornflowerblue;'
+      }
+    };
+  }, [theme]);
+
   useEffect( () => {
     const container = graphContainer.current;
 
-    if (!bp || !container) return;
+    if (!flowchart || !container) return;
 
     // Disables the built-in context menu
     mxEvent.disableContextMenu(container);
@@ -46,11 +62,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       new mxRubberband(graph);
 
       const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
-      vertexStyle[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
-      vertexStyle[mxConstants.STYLE_GRADIENTCOLOR] = 'white';
       vertexStyle[mxConstants.STYLE_PERIMETER_SPACING] = 2;
-      vertexStyle[mxConstants.STYLE_ROUNDED] = true;
-      vertexStyle[mxConstants.STYLE_SHADOW] = false;
       vertexStyle[mxConstants.STYLE_FONTFAMILY] = 'Segoe UI';
 
       const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
@@ -65,10 +77,11 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
     const layout = new mxHierarchicalLayout(graph);
 
+    layout.interRankCellSpacing = 40;
     layout.forceConstant = 80;
 
     const w = 200;
-    const h = 40;
+    const h = 32;
 
     // Adds cells to the model in a single step
     graph.getModel().beginUpdate();
@@ -77,30 +90,44 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       graph.removeCells(graph.getChildVertices(parent));
 
       const map = new Map<IBlock, any>();
-      Object.entries(bp.states).forEach( ([name, s]) => {
-        const v = graph.insertVertex(parent, null, s.label ? s.label : name, 0, 0, w, h, 'shape=rectangle');
-        map.set(s, v);
+      Object.entries(flowchart.blocks).forEach( ([name, block]) => {
+        const variantStyle = fsm && fsm.block === block ? graphStyles.current : graphStyles.regular;
+
+        const style = block.type.shape === 'PROCESS'
+          ? 'shape=rectangle' + variantStyle.process
+          : block.type.shape === 'DECISION'
+          ? 'shape=rhombus'
+          : 'shape=rectangle;rounded=1;' + variantStyle.terminator;
+
+        const v = graph.insertVertex(
+          parent,
+          null,
+          block.label ? block.label : name,
+          0,
+          0,
+          w,
+          block.type.shape === 'DECISION' ? h * 1.5 : h,
+          style);
+        map.set(block, v);
       });
 
-      bp.flow.forEach( f => {
-        if (isDecisionTransition(f)) {
-          if (Array.isArray(f.yes)) {
-            f.yes.forEach( to => graph.insertEdge(parent, null, '', map.get(f.from), map.get(to)) );
-          } else {
-            graph.insertEdge(parent, null, '', map.get(f.from), map.get(f.yes));
-          }
-
-          if (Array.isArray(f.no)) {
-            f.no.forEach( to => graph.insertEdge(parent, null, '', map.get(f.from), map.get(to)) );
-          } else {
-            graph.insertEdge(parent, null, '', map.get(f.from), map.get(f.no));
-          }
+      const connectBlocks = (fromBlock: IBlock, toBlock: IBlock | IBlock[], edgeLabel: string = '') => {
+        if (Array.isArray(toBlock)) {
+          const v = graph.insertVertex(parent, null, 'X', 0, 0, 24, 24, 'shape=rhombus;rounded=false;perimeterSpacing=2');
+          graph.insertEdge(parent, null, edgeLabel, map.get(fromBlock), v);
+          toBlock.forEach( to => graph.insertEdge(parent, null, '', v, map.get(to)) );
         } else {
-          if (Array.isArray(f.to)) {
-            f.to.forEach( to => graph.insertEdge(parent, null, '', map.get(f.from), map.get(to)) );
-          } else {
-            graph.insertEdge(parent, null, '', map.get(f.from), map.get(f.to));
-          }
+          graph.insertEdge(parent, null, edgeLabel, map.get(fromBlock), map.get(toBlock));
+        }
+      };
+
+      Object.values(flowchart.flow).forEach( f => {
+        if (isDecisionTransition(f)) {
+          connectBlocks(f.from, f.yes, 'Yes');
+          connectBlocks(f.from, f.no, 'No');
+        }
+        else {
+          connectBlocks(f.from, f.to);
         }
       });
 
@@ -114,16 +141,35 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
     setGraphState({ graph });
 
-  }, [bp, graphContainer.current]);
+  }, [flowchart, graphContainer.current, fsm]);
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
-      key: 'start',
-      text: 'Старт',
+      key: 'active',
+      text: 'Активный',
+      disabled: !fsm || fsm.flowchart === flowchart,
       iconProps: {
         iconName: 'CRMProcesses'
       },
-      onClick: () => {}
+      onClick: () => setFlowchart(fsm!.flowchart)
+    },
+    {
+      key: 'start',
+      text: 'Старт',
+      disabled: !!fsm || !flowchart,
+      iconProps: {
+        iconName: 'Play'
+      },
+      onClick: () => dispatch(fsmActions.setFSM(FSM.create(flowchart!)))
+    },
+    {
+      key: 'stop',
+      text: 'Стоп',
+      disabled: !fsm || flowchart !== fsm.flowchart,
+      iconProps: {
+        iconName: 'Stop'
+      },
+      onClick: () => dispatch(fsmActions.destroyFSM())
     }
   ];
 
@@ -137,19 +183,19 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
           <div styleName="BPColumn">
             <Dropdown
               label="Бизнес-процесс"
-              selectedKey={activeBP}
-              onChange={ (_event, option) => option && typeof option.key === 'string' && setActiveBP(option.key) }
+              selectedKey={flowchart ? flowchart.name : undefined}
+              onChange={ (_event, option) => option && typeof option.key === 'string' && setFlowchart(flowcharts[option.key]) }
               placeholder="Select a business process"
-              options={Object.entries(flowCharts).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
+              options={Object.entries(flowcharts).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
               //styles={{ dropdown: { width: 300 } }}
             />
             {
-              activeBP
+              flowchart
               &&
               <div
                 styleName="BPCard"
               >
-                {getLName(flowCharts[activeBP].description, ['ru'])}
+                {getLName(flowchart.description, ['ru'])}
               </div>
             }
           </div>
