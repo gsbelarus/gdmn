@@ -23,19 +23,16 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
 
   const deleteRecord = useCallback(() => {
-    if (entities) {
+    if (entities && entities.size) {
       dispatch(async (dispatch, getState) => {
-        let tempRs = entities;
 
         const result = await apiService.deleteEntity({
           entityName: entities.getString('name')
         });
 
-        if (result.error) {
-          dispatch(gdmnActions.updateViewTab({ url: viewTab!.url, viewTab: { error: result.error.message } }));
-        } else {
+        if (!result.error) {
           dispatch(rsActions.setRecordSet(
-            tempRs.delete(true, tempRs.locate([entities.getString('name')] as TDataType[], true))))
+            entities.delete(true)))
         }
       });
     }
