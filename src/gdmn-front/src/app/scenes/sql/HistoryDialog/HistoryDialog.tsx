@@ -1,6 +1,15 @@
-import { GDMNGrid, createGrid, TSetCursorPosEvent, setCursorCol, resizeColumn, TColumnResizeEvent } from 'gdmn-grid';
-import { TFieldType, rsActions } from 'gdmn-recordset';
-import { TextField } from 'office-ui-fabric-react';
+import {
+  GDMNGrid,
+  createGrid,
+  TSetCursorPosEvent,
+  setCursorCol,
+  resizeColumn,
+  TColumnResizeEvent,
+  Columns,
+  deleteGrid
+} from 'gdmn-grid';
+import { rsActions, RecordSet, TFieldType } from 'gdmn-recordset';
+import { TextField, Stack } from 'office-ui-fabric-react';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Modal } from 'office-ui-fabric-react/lib/Modal';
 import React, { useEffect, useState } from 'react';
@@ -11,63 +20,46 @@ import { IHistoryProps } from './HistoryDialog.types';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 
 export const HistoryDialog = (props: IHistoryProps) => {
-  const { rs, gcs, onClose, onSelect, onUpdate, erModel, dispatch, id } = props;
+  const { rs, gcs, onClose, onSelect, erModel, dispatch, id } = props;
 
   const [state, setState] = useState({ expression: '' });
-  const [rsName, setRsName] = useState('');
 
   useEffect(() => {
-    if (rsName) {
-      // Добавляем имя rs к закладке
-      onUpdate(rsName)
-    }
-  }, [rsName]);
-
-  useEffect(() => {
-    // Создаём грид из RS
-    if (!gcs && rs) {
-      dispatch(
-        createGrid({
-          name: `dialog${id}`,
-          columns: rs.fieldDefs.map(fd => ({
-            name: fd.fieldName,
-            caption: [fd.caption || fd.fieldName],
-            fields: [{ ...fd }],
-            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-          })),
-          leftSideColumns: 0,
-          rightSideColumns: 0,
-          hideFooter: true
-        })
-      );
-    }
-
     if (rs) {
-      if (!rsName) {
-        setRsName(rs.name);
-      }
       // в textarea подставляем sql из активной записи
       const sqlField = rs.fieldDefs.find(i => i.caption === 'SQL_TEXT');
+      sqlField && setState({ expression: rs.getString(sqlField.fieldName) });
 
-      if (!sqlField) return;
-
-      setState({ expression: rs.getString(sqlField.fieldName) });
+      dispatch(
+        resizeColumn({
+          name: rs.name,
+          columnIndex: 1,
+          newWidth: 500
+        })
+      );
     }
   }, [rs]);
 
   useEffect(() => {
     const loadHistory = async () => {
-      const eq = await prepareDefaultEntityQuery(erModel.entity('TgdcSQLHistory'));
-
-      if (!eq) return;
-
-      dispatch(loadRSActions.attachRS({ name: id, eq }));
+      const eq = await prepareDefaultEntityQuery(erModel.entity('TgdcSQLHistory'), undefined, undefined, [
+        { name: 'EDITIONDATE', order: 'DESC' }
+      ]);
+      eq && dispatch(loadRSActions.attachRS({ name: id, eq }));
     };
 
     if (!rs && id) {
       loadHistory();
     }
   }, [rs, id]);
+
+  useEffect(() => {
+    // При закрытии диалога удаляем RS и Грид
+    return () => {
+      dispatch(deleteGrid({ name: id }));
+      dispatch(loadRSActions.deleteRS({ name: id }));
+    };
+  }, []);
 
   const handleGridSelect = (event: TSetCursorPosEvent) => {
     dispatch(dispatch => {
@@ -95,14 +87,20 @@ export const HistoryDialog = (props: IHistoryProps) => {
       onDismiss={onClose}
       isBlocking={false}
     >
-      <div className={styles['history-container']}>
+      <Stack className={styles['history-container']}>
         <div className={styles['history-header']}>
           <span id="historySQLTitleID">SQL History</span>
         </div>
         <div className={styles['history-body']} id="historySQLSubTitleID">
           <div>
             {rs && gcs && (
-              <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize} />
+              <GDMNGrid
+                {...gcs}
+                columns={gcs.columns.filter(c => ['SQL_TEXT', 'EDITIONDATE'].includes(c.caption!.join(',')))}
+                rs={rs}
+                onSetCursorPos={handleGridSelect}
+                onColumnResize={handleColumnResize}
+              />
             )}
           </div>
           <div>
@@ -123,7 +121,7 @@ export const HistoryDialog = (props: IHistoryProps) => {
           <PrimaryButton onClick={() => onSelect(state.expression)} text="OK" />
           <DefaultButton onClick={onClose} text="Close" />
         </div>
-      </div>
+      </Stack>
     </Modal>
   );
 };

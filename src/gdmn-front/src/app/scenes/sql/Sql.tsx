@@ -75,8 +75,8 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
 }
 
 const initialState: ISQLViewState = {
-  expression: 'select * from gd_good where id = :id',
-  params: [{ name: 'id', type: TFieldType.Integer, value: 147107053 }],
+  expression: 'select * from gd_good',
+  params: [],
   viewMode: 'hor',
   showPlan: false,
   showParams: false,
@@ -179,19 +179,6 @@ export const Sql = CSSModules(
     const handleCloseParams = () => setState({ type: 'SHOW_PARAMS', showParams: false });
 
     const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
-
-    const handleUpdateTab = (historyRsName: string) => {
-      if (viewTab && (!viewTab.rs || (viewTab.rs && !viewTab.rs.includes(historyRsName)))) {
-        dispatch(
-          gdmnActions.updateViewTab({
-            url,
-            viewTab: {
-              rs: viewTab.rs ? [...viewTab.rs, historyRsName] : [historyRsName]
-            }
-          })
-        );
-      }
-    };
 
     const handleSelectExpression = (expression: string) => {
       setState({ type: 'SHOW_HISTORY', showHistory: false });
@@ -301,11 +288,9 @@ export const Sql = CSSModules(
 
                     if (insertResponse.error) {
                       dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: insertResponse.error.message } }));
-                      // dispatch(rsActions.setRecordSet(tempRs.setLocked(false)));
                       return;
                     }
 
-                    // TODO: Обновить стейт HistoryDialog
                     break;
                   }
                   case TTaskStatus.FAILED: {
@@ -423,7 +408,6 @@ export const Sql = CSSModules(
               id={`dialog${id}`}
               onClose={handleCloseHistory}
               onSelect={handleSelectExpression}
-              onUpdate={handleUpdateTab}
             />
           )}
         </div>
