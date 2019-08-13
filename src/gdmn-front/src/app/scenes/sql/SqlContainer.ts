@@ -1,10 +1,11 @@
 import { connect } from "react-redux";
 import { IState } from "@src/app/store/reducer";
-import { ISqlStateProps, ISqlContainerProps } from "./Sql.types";
+import { ISQLStateProps, ISqlContainerProps } from "./Sql.types";
 import { Sql } from "./Sql";
 
 export const SqlContainer = connect(
-  (state: IState, ownProps: ISqlContainerProps): ISqlStateProps => ({
+  (state: IState, ownProps: ISqlContainerProps): ISQLStateProps => ({
+    erModel: state.gdmnState.erModel,
     rs: state.recordSet[ownProps.id],
     gcs: state.grid[ownProps.id],
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url )
