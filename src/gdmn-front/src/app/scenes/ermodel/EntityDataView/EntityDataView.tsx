@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, PrimaryButton, getTheme, Dialog, DialogType, DialogFooter, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, ThemeGenerator, getTheme } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -9,7 +9,7 @@ import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IGridState } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue } from 'gdmn-grid';
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
@@ -214,15 +214,14 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       },
       onClick: () => {
         (async () => {
-          const res = await messageBox({
-            message: 'Message sdkf fskj dfhsdj fjksd fsdjk fsdjk fhsdjk fsdjk fskjd fskdj fskjd fksjd fjks dfhsdhf sjd f jksdfjk sdfkj sdfjksdsdhfjks dfj sdfj ksf',
-            type: 'MB_YESNOCANCEL',
-            icon: 'Information',
-            defButton: 2
-          });
-
-          if (res === 'OK') {
-            messageBox({ title: 'Ok', message: 'Ok' });
+          if (await messageBox({
+            message: 'abc',
+            icon: 'Warning',
+            type: 'MB_YESNOCANCEL'
+          }) === 'YES') {
+            messageBox({
+              message: `Button YES has been pressed`
+            });
           }
         })();
       }
@@ -274,7 +273,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
                   errorMessage={ phraseError ? phraseError : undefined }
                   onRenderSuffix={
-                    props =>
+                    () =>
                       <span
                         onClick={applyPhrase}
                       >

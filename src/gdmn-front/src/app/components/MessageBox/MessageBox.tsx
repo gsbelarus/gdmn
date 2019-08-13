@@ -19,7 +19,7 @@ interface IMessageBoxParams {
 };
 
 type MessageBoxComponent = (props: IMessageBoxProps) => JSX.Element;
-type MessageBoxFunc = (msgBoxParams: IMessageBoxParams | null) => Promise<MBResult>;
+type MessageBoxFunc = (msgBoxParams: IMessageBoxParams | string) => Promise<MBResult>;
 type ResolveFunc = (result: MBResult) => void;
 
 export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
@@ -52,7 +52,7 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
       default:
         return 'StatusCircleQuestionMark'
     }
-  }
+  };
 
   const MessageBox = (props: IMessageBoxProps) => {
     return params
@@ -125,7 +125,11 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
   };
 
   const messageBox: MessageBoxFunc = msgBoxParams => {
-    setParams(msgBoxParams);
+    if (typeof msgBoxParams === 'string') {
+      setParams({ message: msgBoxParams });
+    } else {
+      setParams(msgBoxParams);
+    }
     return new Promise( res => resolve.current = res );
   };
 
