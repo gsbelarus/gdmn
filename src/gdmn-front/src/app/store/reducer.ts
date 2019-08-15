@@ -11,8 +11,6 @@ import { gridReducer, GridReducerState } from 'gdmn-grid';
 import { TActions } from '@src/app/store/TActions';
 import { IAuthState, reducer as authReducer } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
-import { ISqlState, reducer as sqlReducer} from '@src/app/scenes/sql/EditView/reducer';
-import { ISqlDataViewState, reducer as sqlDataViewReducer} from '@src/app/scenes/sql/data/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { reducer as fsmReducer, IFSMState } from '@src/app/fsm/reducer';
 import { authActions } from '@src/app/scenes/auth/actions';
@@ -27,9 +25,7 @@ export interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: TGdmnState;
-  readonly sqlState: ISqlState;
-  readonly sqlDataViewState: ISqlDataViewState;
-  readonly recordSet: RecordSetReducerState;
+    readonly recordSet: RecordSetReducerState;
   readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
   readonly fsm: IFSMState;
@@ -70,8 +66,6 @@ const reducer = combineReducers<IState>({
   rootState: withReset(rootReducer),
   gdmnState: persistReducer(gdmnStatePersistConfig, withReset(gdmnReducer)),
   authState: persistReducer(authPersistConfig, withReset(authReducer)),
-  sqlDataViewState: withReset(sqlDataViewReducer),
-  sqlState: withReset(sqlReducer),
   recordSet: withReset(recordSetReducer),
   rsMeta: withReset(rsMetaReducer),
   grid: withReset(gridReducer),

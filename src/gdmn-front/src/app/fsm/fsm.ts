@@ -1,4 +1,5 @@
 import { IFlowchart, IBlock } from "./types";
+import { blockTypes } from "./blockTypes";
 
 interface IFSMParams {
   flowchart: IFlowchart;
@@ -29,5 +30,19 @@ export class FSM {
 
   get flowchart() {
     return this._params.flowchart;
+  }
+
+  get block() {
+    return this._params.block;
+  }
+
+  run() {
+    switch (this.block.type) {
+      case blockTypes.login:
+        return;
+
+      default:
+        throw new Error(`Unknown block type ${this.block.type.id}`);
+    }
   }
 };

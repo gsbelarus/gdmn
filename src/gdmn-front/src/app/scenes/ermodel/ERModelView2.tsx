@@ -1,6 +1,6 @@
 import {IERModelView2Props} from "./ERModelView2.types";
-import React, {useEffect, useState} from "react";
-import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
+import React, {useCallback, useEffect, useState} from "react";
+import {IDataRow, RecordSet, rsActions, TFieldType, TDataType} from "gdmn-recordset";
 import {List} from "immutable";
 import {createGrid, GDMNGrid} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
@@ -11,6 +11,7 @@ import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
 import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "./EntityDataView/useSavedGridState";
+import {apiService} from "@src/app/services/apiService";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -21,7 +22,22 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
 
-  useEffect( () => {
+  const deleteRecord = useCallback(() => {
+    if (entities && entities.size) {
+      dispatch(async (dispatch, getState) => {
+
+        const result = await apiService.deleteEntity({
+          entityName: entities.getString('name')
+        });
+
+        if (!result.error) {
+          dispatch(rsActions.setRecordSet(
+            entities.delete(true)))
+        }
+      });
+    }
+  }, [entities, viewTab]);
+  useEffect(() => {
     if (!erModel || !Object.keys(erModel.entities).length) {
       return;
     }
@@ -243,12 +259,21 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
     },
     {
       key: 'addEntity',
-      disabled: !entities || !entities.size,
-      text: 'Add Entity',
+      text: 'Add',
       iconProps: {
-        iconName: 'FileCode'
+        iconName: 'Add'
       },
-      commandBarButtonAs:linkCommandBarButton(`addEntity`)
+      commandBarButtonAs: linkCommandBarButton(`addEntity`)
+    }
+    ,
+    {
+      key: 'deleteEntity',
+      disabled: !entities || !entities.size,
+      text: 'Delete',
+      iconProps: {
+        iconName: 'Delete'
+      },
+      onClick: deleteRecord
     }
   ];
 

@@ -12,6 +12,7 @@ export interface IBPContainerProps {
 export interface IBPStateProps {
   viewTab?: IViewTab;
   fsm?: FSM;
+  theme: string;
 };
 
 export interface IBPProps {
@@ -19,4 +20,5 @@ export interface IBPProps {
   dispatch: ThunkDispatch<IState, never, GdmnAction | FSMActions>;
   viewTab?: IViewTab;
   fsm?: FSM;
+  theme: string;
 };
