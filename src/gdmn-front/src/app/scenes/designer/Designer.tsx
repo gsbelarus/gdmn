@@ -9,6 +9,7 @@ import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBo
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
 import { DetailsListDragDrop } from '@src/app/components/DetailsListDragAndDrop';
+import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -155,7 +156,7 @@ export interface IDesignerState {
     }],
     entityName: entityName,
     changeArray: [],
-    activeTab: 'Настройка'
+    activeTab: 'Свойства'
   } as IDesignerState};
 
   type Action = { type: 'SET_ACTIVE_AREA', activeArea?: number, shiftKey: boolean }
@@ -836,7 +837,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         activeArea: 0,
         entityName: entityName,
         changeArray: [...changeArray!, {...state}],
-        activeTab: 'Настройка'
+        activeTab: 'Свойства'
       };
     }
 
@@ -1014,16 +1015,16 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     width: '100%',
     gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
-    height: '87%',
+    height: '92%',
     overflow: 'auto'
   });
 
-  const commandBarItems: ICommandBarItemProps[][] = [
-    [
+  const commandBarItems: ICommandBarItemProps[] = [
       {
         key: 'addColumn',
         disabled: previewMode,
-        text: 'Добавить колонку',
+        name: 'Добавить колонку',
+        iconOnly: true,
         iconProps: {
           iconName: 'InsertColumnsRight'
         },
@@ -1035,7 +1036,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       {
         key: 'deleteColumn',
         disabled: previewMode || grid.columns.length <= 1 || !!selection,
-        text: 'Удалить колонку',
+        name: 'Удалить колонку',
+        iconOnly: true,
         iconProps: {
           iconName: 'DeleteColumns'
         },
@@ -1047,7 +1049,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       {
         key: 'addRow',
         disabled: previewMode,
-        text: 'Добавить строку',
+        name: 'Добавить строку',
+        iconOnly: true,
         iconProps: {
           iconName: 'InsertRowsBelow'
         },
@@ -1059,7 +1062,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       {
         key: 'deleteRow',
         disabled: previewMode || grid.rows.length <= 1 || !!selection,
-        text: 'Удалить строку',
+        name: 'Удалить строку',
+        iconOnly: true,
         iconProps: {
           iconName: 'DeleteRows'
         },
@@ -1067,12 +1071,12 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           designerDispatch({ type: 'DELETE_ROW' });
           changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
         }
-
       },
       {
         key: 'createArea',
         disabled: previewMode || !selection,
-        text: 'Сгруппировать',
+        name: 'Сгруппировать',
+        iconOnly: true,
         iconProps: {
           iconName: 'GroupObject'
         },
@@ -1086,7 +1090,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         disabled: previewMode || activeArea === undefined
           || areas[activeArea] === undefined || (areas[activeArea]!.rect.bottom === areas[activeArea]!.rect.top
             && areas[activeArea]!.rect.right === areas[activeArea]!.rect.left),
-        text: 'Разгруппировать',
+        name: 'Разгруппировать',
+        iconOnly: true,
         iconProps: {
           iconName: 'UngroupObject'
         },
@@ -1099,20 +1104,20 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         key: 'previewMode',
         disabled: !areas.length,
         checked: !!previewMode,
-        text: 'Просмотр',
+        name: 'Просмотр',
+        iconOnly: true,
         iconProps: {
           iconName: 'Tiles'
         },
         onClick: () => {
           designerDispatch({ type: 'PREVIEW_MODE' });
         }
-      }
-    ],
-    [
+      },
       {
         key: 'saveAndClose',
         disabled: changeArray && changeArray.length === 0,
-        text: 'Сохранить',
+        name: 'Сохранить',
+        iconOnly: true,
         iconProps: {
           iconName: 'Save'
         },
@@ -1123,10 +1128,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           props.outDesigner();
         }
       },
-
       {
         key: 'cancelAndClose',
-        text: 'Закрыть',
+        name: 'Закрыть',
+        iconOnly: true,
         iconProps: {
           iconName: 'Cancel'
         },
@@ -1138,7 +1143,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       {
         key: 'revert',
         disabled: changeArray && changeArray.length === 0,
-        text: 'Отменить шаг',
+        name: 'Отменить шаг',
+        iconOnly: true,
         iconProps: {
           iconName: 'Undo'
         },
@@ -1150,7 +1156,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       {
         key: 'return',
         disabled: changeArray && changeArray.length === 0,
-        text: 'Вернуть',
+        name: 'Вернуть',
+        iconOnly: true,
         iconProps: {
           iconName: 'ReturnToSession'
         },
@@ -1161,7 +1168,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       },
       {
         key: 'clear',
-        text: 'Очистить',
+        name: 'Очистить',
+        iconOnly: true,
         iconProps: {
           iconName: 'Broom'
         },
@@ -1170,7 +1178,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           designerDispatch({ type: 'CLEAR' });
         }
       }
-    ]
 ];
 
   const getOnMouseDownForArea = (idx: number) => (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -1222,16 +1229,15 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           height: '100%',
           gridArea: '1 / 1 / 2 / 2',
           margin: '1px',
-          padding: '4px',
+          padding: '0px 0px 0px 4px',
           overflow: 'auto',
-      }}>
-        {props.children}
+        }}>
+          {props.children}
         </div>
         <div style={{
           width: '100%',
-          height: '87%',
+          height: '92%',
           gridArea: '1 / 2 / 2 / 3',
-          padding: '4px',
           overflow: 'auto',
         }}
           ref={toolPanelRef}
@@ -1245,7 +1251,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
             flexDirection: 'column',
             borderRadius: '4px',
             justifyContent: 'center',
-            padding: '0px 8px',
+            padding: '0px 4px 0px 6px',
           }}>
             {props.toolPanel}
           </div>
@@ -1308,7 +1314,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
 
   const TabSettingsArea = ({}): JSX.Element => {
     const area = areas[activeArea!];
-    const [viewAddObject, onChangeView] = useState(false);
+    const [viewAddText, viewAddImage] = useState(false);
+    const [viewAddIcon, onChangeView] = useState(false);
     const [addTexts, onchangeText] = useState('');
     const [addUrlImage, onchangeUrlImage] = useState('');
     const [addIcon, onchangeIcon] = useState('');
@@ -1317,27 +1324,40 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     const idr = activeArea!==undefined ? area.rect.top : -1;
     const theme = getTheme();
 
-    return <div
+    return <>
+    <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
         marginBottom: '4px'
       }}
-      styleName='Setting'
+      key='Setting'
     >
     { activeArea !== undefined && selectedField === undefined
       ? <>
       <div>
         <>
         <DefaultButton
-          key='viewAdditionallyObject'
+          key='viewAddText'
           onClick={() => {
-            onChangeView(!viewAddObject)
+            onChangeView(!viewAddText)
           }}
-        >Add additionallyObject</DefaultButton>
+        >Добавить текст</DefaultButton>
+        <DefaultButton
+          key='viewAddImage'
+          onClick={() => {
+            onChangeView(!viewAddImage)
+          }}
+        >Добавить изображение</DefaultButton>
+        <DefaultButton
+          key='viewAddIcon'
+          onClick={() => {
+            onChangeView(!viewAddIcon)
+          }}
+        >Добавить иконку</DefaultButton>
         {
-          viewAddObject ?
+          viewAddText ?
           <>
           <TextField
             key='additionallyText'
@@ -1354,6 +1374,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
               }}
             >Add text</DefaultButton>
+            }
             <TextField
               key='additionallyImage'
               value={addUrlImage}
@@ -1645,41 +1666,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           </>
           : undefined
         }
-        <div>
-          <Label>Direction fields</Label>
-          <ChoiceGroup
-            styles={{
-              root: {
-                paddingBottom: '8px'
-              },
-              flexContainer: {
-                display: 'flex'
-              }
-            }}
-            options={[
-              {
-                key: 'column',
-                text: 'column',
-                styles: {
-                  root: {
-                    paddingRight: '8px'
-                  }
-                }
-              },
-              {
-                key: 'row',
-                text: 'row'
-              }
-            ]}
-            selectedKey={area.direction}
-            label='Direction'
-            onChange={(_, option) =>
-              option
-              && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
-              && (changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState)
-            }
-          />
-        </div>
       </div>
       {/*
         activeArea !== undefined && selectedField && area.fields !== [] ? 
@@ -1709,6 +1695,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       : undefined
     }
     </div>
+  </>
   }
 
   const TabFields = (): JSX.Element => {
@@ -1773,30 +1760,63 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     })
 
     return <>
-    <DetailsListDragDrop
-      items={items}
-      onInsertItem={(item, position) => {
-        designerDispatch({ type: 'DRAG_FIELD', field: item, position: position });
-        changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-      }}
-    />
-      <Label>
-        Show fields:
-      </Label>
-        { /*additionallyObject ?
-          [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!]
-          .reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []).map(object =>
-            object !== undefined ?
-              <MemoCheckboxForObjectsInInspector field={object} />
-            : undefined
-          )
-        : undefined*/
-      }
-      {/*
-        fields!.map(field =>
-          <MemoCheckboxForObjectsInInspector field={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} />
-        )*/
-      }
+    <div>
+      <ChoiceGroup
+        styles={{
+          root: {
+            paddingBottom: '8px'
+          },
+          flexContainer: {
+            display: 'flex'
+          }
+        }}
+        options={[
+          {
+            key: 'column',
+            text: 'колонкой',
+            styles: {
+              root: {
+                paddingRight: '8px'
+              }
+            }
+          },
+          {
+            key: 'row',
+            text: 'строкой'
+          }
+        ]}
+        selectedKey={areas[activeArea!].direction}
+        label='Положение объектов'
+        onChange={(_, option) =>
+          option
+          && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
+          && (changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState)
+        }
+      />
+    </div>
+        <Label>
+          Отобразить объекты:
+        </Label>
+        <DetailsListDragDrop
+          items={items}
+          onInsertItem={(item, position) => {
+            designerDispatch({ type: 'DRAG_FIELD', field: item, position: position });
+            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+          }}
+        />
+          {/* additionallyObject ?
+            [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!].reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []).map(object =>
+              object !== undefined ?
+                <MemoCheckboxForObjectsInInspector field={object} />
+              : undefined
+            )
+          : undefined*/
+        }
+        {/*
+          fields!.map(field =>
+            <MemoCheckboxForObjectsInInspector field={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} />
+          )*/
+        }
     </>
   }
 
@@ -1816,12 +1836,12 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'flex-start',
-                background: theme.palette.white,
-                color: theme.palette.neutralPrimary
+                backgroundColor: getTheme().semanticColors.bodyBackground,
+                color: getTheme().semanticColors.bodyText
               }}
             >
               {tabs.map(t =>
-                (activeTab === undefined ? (t === 'Настройка') : (t === activeTab)) ? (
+                (activeTab === undefined ? (t === 'Свойства') : (t === activeTab)) ? (
                   <Fragment key={t}>
                     <div
                       className="SettingFormTab"
@@ -1832,8 +1852,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         cursor: 'pointer',
                         flexDirection: 'column',
                         justifyContent: 'flex-start',
-                        background: theme.palette.white,
-                        color: theme.palette.neutralPrimary
+                        backgroundColor: getTheme().semanticColors.bodyBackground,
+                        color: getTheme().semanticColors.bodyText
                       }}
                       key={t}
                     >
@@ -1841,20 +1861,27 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         className="SettingFormActiveColor"
                         style={{
                           height: '5px',
-                          backgroundImage: `linear-gradient(${theme.palette.neutralPrimary}, ${theme.palette.white})`,
                           borderLeft: '1px solid',
-                          borderRight: '1px solid'
+                          borderRight: '1px solid',
+                          borderColor: getTheme().semanticColors.bodyText,
+                          backgroundColor: getTheme().palette.themeSecondary
                         }}
                       />
                       <div
                         className="SettingFormTabText SignInFormActiveTab"
                         style={{
                           flex: '1 0 auto',
-                          height: '30px',
                           padding: '2px 4px 0px 4px',
                           textAlign: 'center',
+                          minHeight: '27px',
+                          width: '100%',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
                           borderLeft: '1px solid',
-                          borderRight: '1px solid'
+                          borderRight: '1px solid',
+                          borderColor: getTheme().semanticColors.bodyText
                         }}
                       >{t}</div>
                     </div>
@@ -1864,6 +1891,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         minWidth: '4px',
                         backgroundColor: 'transparent',
                         borderBottom: '1px solid',
+                        borderColor: getTheme().semanticColors.bodyText,
                         flex: '0 0 initial'
                       }}
                     />
@@ -1874,8 +1902,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                         className="SettingFormTab"
                         onClick={() => designerDispatch({ type: 'SET_ACTIVE_TAB', tab: t }) }
                         style={{
-                          background: theme.palette.white,
-                          color: theme.palette.themeTertiary,
+                          backgroundColor: getTheme().semanticColors.bodyBackground,
+                          color: getTheme().semanticColors.bodyText,
                           cursor: 'pointer',
                           minWidth: '96px',
                           display: 'flex',
@@ -1888,21 +1916,28 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           className="SettingFormTabText SettingFormInactiveTab"
                           style={{
                             flex: '1 0 auto',
-                            height: '30px',
                             padding: '2px 4px 0px 4px',
                             textAlign: 'center',
+                            minHeight: '27px',
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
                             borderLeft: '1px solid',
                             borderRight: '1px solid',
-                            borderTop: '1px solid'
+                            borderTop: '1px solid',
+                            borderColor: getTheme().semanticColors.bodyText
                           }}
                         >{t}</div>
                         <div
                           className="SettingFormInactiveShadow"
                           style={{
+                            borderColor: getTheme().semanticColors.bodyText,
+                            backgroundColor: getTheme().semanticColors.bodyDivider,
                             height: '6px',
                             flex: '0 0 initial',
                             justifySelf: 'flex-end',
-                            backgroundImage: `linear-gradient(${theme.palette.neutralPrimary}, ${theme.palette.themePrimary})`,
                             borderLeft: '1px solid',
                             borderRight: '1px solid',
                             borderBottom: '1px solid'
@@ -1915,6 +1950,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                           minWidth: '4px',
                           backgroundColor: 'transparent',
                           borderBottom: '1px solid',
+                          borderColor: getTheme().semanticColors.bodyText,
                           flex: '0 0 initial'
                         }}
                       />
@@ -1925,9 +1961,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 className="SettingFormRestSpace"
                 style={{
                   backgroundColor: 'transparent',
-                  borderBottom: `1px solid`,
+                  borderBottom: '1px solid',
                   flex: '1 1 auto',
-                  justifySelf: 'flex-end'
+                  justifySelf: 'flex-end',
+                  borderColor: getTheme().semanticColors.bodyText
                 }}
               />
             </div>
@@ -1972,7 +2009,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           display: 'flex',
           justifyContent: 'flex-start',
           background: area.style ? Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.background)] : theme.palette.white,
-          margin: area.style && area.style.margin ? `${area.style.margin}px` : '1px',
+          margin: area.style && area.style.margin ? `${area.style.margin}px` : '0px',
           padding: area.style && area.style.padding ? `${area.style.padding}px` : '4px',
           border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.border.color)]}`,
           borderRadius: area.style && area.style.border.radius ? `${area.style.border.radius}px` : undefined,
@@ -2004,7 +2041,8 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                   margin: '1px',
                   borderRadius: '4px',
                   padding: '4px',
-                  border: '2px dashed #d84141',
+                  border: '2px dashed',
+                  borderColor: getTheme().palette.themeSecondary,
                   height: '100%',
                   width: '100%',
                   minHeight: '64px',
@@ -2161,10 +2199,11 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       ))
       : areas;
 
+      const theme = getTheme();
+
   return (
     <>
-      <CommandBar key={'commandBarFunctional'} items={commandBarItems[0]} />
-      <CommandBar key={'commandBarAction'} items={commandBarItems[1]} />
+      <CommandBar key={'commandBar'} items={commandBarItems}/>
       <WithAreaExplorer>
           <div
             key='withAreaExplorer'
@@ -2191,16 +2230,25 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 null
                 :
                 <div
-                  styleName="commonStyle selection"
+                  styleName="commonStyle"
                   style={{
-                    gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`
+                    gridArea: `${selection.top + 1} / ${selection.left + 1} / ${selection.bottom + 2} / ${selection.right + 2}`,
+                    backgroundImage: `linear-gradient(
+                      135deg,
+                      ${theme.palette.themeSecondary} 4.55%,
+                      ${theme.palette.white} 4.55%,
+                      ${theme.palette.white} 50%,
+                      ${theme.palette.themeSecondary} 50%,
+                      ${theme.palette.themeSecondary} 54.55%,
+                      ${theme.palette.white} 54.55%,
+                      ${theme.palette.white} 100%
+                    )`
                   }}
                   onClick={() => {
                     designerDispatch({ type: 'CLEAR_SELECTION' });
                     changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
                   }}
                 >
-                  selection
                 </div>
             }
           </div>
