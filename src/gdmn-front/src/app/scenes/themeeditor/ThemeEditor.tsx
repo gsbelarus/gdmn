@@ -131,9 +131,8 @@ export const ThemeEditor = CSSModules( (props: IThemeEditorProps): JSX.Element =
         <DefaultButton
           onClick={
             () => {
-              selection.setItems(items);
               for (let i = 1; i <= 3; i++) {
-                selection.setKeySelected(`${i}`, true, false);
+                selection.setKeySelected(`${i}`, !selection.isKeySelected(`${i}`), false);
               }
               setSelectionDetails(getSelectionDetails());
             }
