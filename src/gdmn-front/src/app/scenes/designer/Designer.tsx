@@ -4,9 +4,11 @@ import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
 import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton, Link } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
+import { Selection } from 'office-ui-fabric-react/lib/DetailsList';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
+import { DetailsListDragDrop } from '@src/app/components/DetailsListDragAndDrop';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -175,6 +177,7 @@ export interface IDesignerState {
   | { type: 'CLEAR_SELECTION' }
   | { type: 'LIFT_FIELD', field: string }
   | { type: 'LOWER_FIELD', field: string }
+  | { type: 'DRAG_FIELD', field: string, position: number }
   | { type: 'ADD_ADDITIONALLY_TEXT', text: string }
   | { type: 'ADD_ADDITIONALLY_IMAGE', image: string }
   | { type: 'ADD_ADDITIONALLY_ICON', icon: string }
@@ -682,6 +685,28 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const changeArea = {
         ...areas[activeArea],
         fields: [...fields.slice(0, idx), fields[idx + 1], fields[idx], ...fields.slice(idx + 2)]
+      }
+      return {
+        ...state,
+        areas: [...areas.slice(0, activeArea), changeArea, ...areas.slice(activeArea + 1)],
+        changeArray: [...changeArray!, {...state}]
+      };
+    }
+
+    case 'DRAG_FIELD' : {
+      const {areas, activeArea, changeArray} = state;
+      const {field, position} = action;
+
+      if(activeArea === undefined) {
+        return state;
+      }
+
+      const fields = areas[activeArea].fields.filter(item => item.key !== field);
+      fields.splice(position, 0, {key: field, color: getTheme().palette.white} )
+
+      const changeArea = {
+        ...areas[activeArea],
+        fields: fields
       }
       return {
         ...state,
@@ -1281,8 +1306,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     return false;
   })
 
-  const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
-    const tabs = ["Настройка", "Поля"];
+  const TabSettingsArea = ({}): JSX.Element => {
     const area = areas[activeArea!];
     const [viewAddObject, onChangeView] = useState(false);
     const [addTexts, onchangeText] = useState('');
@@ -1291,6 +1315,493 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
 
     const idc = activeArea!==undefined ? area.rect.left : -1;
     const idr = activeArea!==undefined ? area.rect.top : -1;
+    const theme = getTheme();
+
+    return <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        marginBottom: '4px'
+      }}
+      styleName='Setting'
+    >
+    { activeArea !== undefined && selectedField === undefined
+      ? <>
+      <div>
+        <>
+        <DefaultButton
+          key='viewAdditionallyObject'
+          onClick={() => {
+            onChangeView(!viewAddObject)
+          }}
+        >Add additionallyObject</DefaultButton>
+        {
+          viewAddObject ?
+          <>
+          <TextField
+            key='additionallyText'
+            value={addTexts}
+            onChange={(e) => {
+              onchangeText(e.currentTarget.value)
+            }}
+          />
+            <DefaultButton
+              key='addText'
+              onClick={() => {
+                designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: addTexts});
+                designerDispatch({ type: 'AREA_FIELD', fieldName: addTexts, include: true });
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }}
+            >Add text</DefaultButton>
+            <TextField
+              key='additionallyImage'
+              value={addUrlImage}
+              onChange={(e) => {
+                onchangeUrlImage(e.currentTarget.value)
+              }}
+            />
+            <DefaultButton
+              key='addUrlImage'
+              onClick={() => {
+                designerDispatch({ type: 'ADD_ADDITIONALLY_IMAGE', image: addUrlImage });
+                designerDispatch({ type: 'AREA_FIELD', fieldName: addUrlImage, include: true });
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }}
+            >Add image</DefaultButton>
+            <TextField
+              key='additionallyIcon'
+              value={addIcon}
+              onChange={(e) => {
+                onchangeIcon(e.currentTarget.value)
+              }}
+            />
+            <Link href="https://uifabricicons.azurewebsites.net/">Посмотреть и выбрать</Link>
+            <DefaultButton
+              key='addIcon'
+              onClick={() => {
+                designerDispatch({ type: 'ADD_ADDITIONALLY_ICON', icon: addIcon });
+                designerDispatch({ type: 'AREA_FIELD', fieldName: addIcon, include: true });
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }}
+            >Add icon</DefaultButton>
+          </>
+          : undefined
+        }
+        </>
+      <Label>Size</Label>
+      <>
+        {
+          <OneSize key='column_size' label='Width' size={grid.columns[idc]} isRow={false} onChange={(size: ISize) => {
+            const left = idc;
+            const right = areas[activeArea!].rect.right;
+            if(left === right && size.unit === 'AUTO') {
+              designerDispatch({ type: 'SET_COLUMN_SIZE', column: idc, size });
+              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+            } else {
+              const value = size.value! / (right + 1 - left);
+              for(let i = left; i <= right; i++) {
+                designerDispatch({ type: 'SET_COLUMN_SIZE', column: i, size: {...size, value} });
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }
+            }
+          }} />
+        }
+        {
+          <OneSize key='row_size' label='Height' size={grid.rows[idr]} isRow={true} onChange={(size: ISize) => {
+            const top = idr;
+            const bottom = areas[activeArea!].rect.bottom;
+            if(top === bottom && size.unit === 'AUTO') {
+              designerDispatch({ type: 'SET_ROW_SIZE', row: idr, size });
+              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+            } else {
+              const value = size.value! / (bottom + 1 - top);
+              for(let i = top; i <= bottom; i++) {
+                designerDispatch({ type: 'SET_ROW_SIZE', row: i, size: {...size, value} });
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }
+            }
+          }} />
+        }
+      </>
+    </div>
+      <div>
+        <Label>
+          Padding
+        </Label>
+        <TextField
+          key='padding'
+          value={area.style!.padding.toString()}
+          onChange={(e) => {
+            designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!,  padding: Number(e.currentTarget.value)} });
+          }}
+        />
+      </div>
+      <div>
+        <Label>
+          Margin
+        </Label>
+        <TextField
+          key='margin'
+          value={area.style!.margin.toString()}
+          onChange={(e) => {
+            designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, margin: Number(e.currentTarget.value)} });
+          }}
+        />
+      </div>
+    {
+      /*
+      <div>
+        <Label>
+          Align
+        </Label>
+        <TextField
+          key='align'
+          value={style.align.toString()}
+          onChange={(e) => {
+            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, align: e.currentTarget.value} });
+          }}
+        />
+      </div>
+      <div>
+        <Label>
+          Font
+        </Label>
+        <div>
+          <Label>
+            Size
+          </Label>
+          <TextField
+            key='font-size'
+            value={styleSetting.font.size.toString()}
+            onChange={(e) => {
+              designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, size: Number(e.currentTarget.value)}} });
+            }}
+          />
+        </div>
+        <div>
+          <Label>
+            Color
+          </Label>
+        </div>
+        <div>
+          <Label>
+            Family
+          </Label>
+          <ComboBox
+            key='font-family'
+            defaultSelectedKey={styleSetting.font.family}
+            options={FamilyFont.map(family => ({key: family, text: family}))}
+            onChange={(e, value) => {
+              designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, family: value!.text}} })
+            }}
+          />
+        </div>
+        <div>
+          <Label>
+            Style
+          </Label>
+          <ComboBox
+            key='font-style'
+            defaultSelectedKey={styleSetting.font.style}
+            options={StyleFont.map(style => ({key: style, text: style}))}
+            onChange={(e, value) => {
+              designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, style: value!.text}} })
+            }}
+          />
+        </div>
+        <div>
+          <Label>
+            Weight
+          </Label>
+          <ComboBox
+            key='font-weight'
+            defaultSelectedKey={styleSetting.font.weight}
+            options={WeightFont.map(weight => ({key: weight, text: weight}))}
+            onChange={(e, value) => {
+              designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, weight: value!.text}} })
+            }}
+          />
+        </div>
+      </div>
+      */
+    }
+      <div>
+        <Label>Backgroung</Label>
+        <ComboBox
+          key='background'
+          selectedKey={
+            activeArea !== undefined && area.style && area.style.background
+              ? Object.keys(theme.palette).findIndex( color => color === area.style!.background)
+              : Object.keys(theme.palette).findIndex( color => color === 'white')
+          }
+          options={
+            Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
+          }
+          onRenderOption={(option) =>
+            {
+              return (
+              <Stack style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center'
+              }}>
+                <span style={{
+                  background: Object.values(theme.palette)[+(option as IComboBoxOption).key],
+                  border: `1px solid ${theme.palette.black}`,
+                  height:'16px',
+                  width: '16px',
+                  marginRight: '4px'
+                }}></span>
+                <span>{(option as IComboBoxOption).text}</span>
+              </Stack>
+            );}
+          }
+          onChange={(e, value) => {
+            designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, background: value!.text} })
+          }}
+        />
+      </div>
+      <div>
+        <Label>
+          Border
+        </Label>
+        <div>
+          <Label>
+            Style
+          </Label>
+          <ComboBox
+            key='border-style'
+            defaultSelectedKey={activeArea !== undefined && area.style !== undefined && area.style!.border !== undefined ? area.style!.border.style : 'none'}
+            options={StyleBorder.map(style => ({key: style, text: style}))}
+            onChange={(e, value) => {
+              designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, style: value!.text}} })
+            }}
+          />
+        </div>
+        {
+          area.style !== undefined && area.style!.border.style !== 'none' ?
+          <>
+            <div>
+              <Label>
+                Width
+              </Label>
+              <TextField
+                key='border-width'
+                value={area.style!.border.width.toString()}
+                onChange={(e) => {
+                  designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, width: Number(e.currentTarget.value)}} });
+                }}
+              />
+            </div>
+            <div>
+              <Label>
+                Radius
+              </Label>
+              <TextField
+                key='border-radius'
+                value={area.style!.border.radius.toString()}
+                onChange={(e) => {
+                  designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, radius: Number(e.currentTarget.value)}} });
+                }}
+              />
+            </div>
+            <div>
+              <Label>Color</Label>
+              <ComboBox
+                key='border-color'
+                selectedKey={
+                  activeArea !== undefined && area.style && area.style.border.color
+                    ? Object.keys(theme.palette).findIndex( color => color === area.style!.border.color)
+                    : Object.keys(theme.palette).findIndex( color => color === 'white')
+                }
+                options={
+                  Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
+                }
+                onRenderOption={(option) =>
+                  {
+                    return (
+                    <Stack style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{
+                        background: Object.values(theme.palette)[+(option as IComboBoxOption).key],
+                        border: `1px solid ${theme.palette.black}`,
+                        height:'16px',
+                        width: '16px',
+                        marginRight: '4px'
+                      }}></span>
+                      <span>{(option as IComboBoxOption).text}</span>
+                    </Stack>
+                  );}
+                }
+                onChange={(e, value) => {
+                  designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, color: value!.text} } })
+                }}
+              />
+            </div>
+          </>
+          : undefined
+        }
+        <div>
+          <Label>Direction fields</Label>
+          <ChoiceGroup
+            styles={{
+              root: {
+                paddingBottom: '8px'
+              },
+              flexContainer: {
+                display: 'flex'
+              }
+            }}
+            options={[
+              {
+                key: 'column',
+                text: 'column',
+                styles: {
+                  root: {
+                    paddingRight: '8px'
+                  }
+                }
+              },
+              {
+                key: 'row',
+                text: 'row'
+              }
+            ]}
+            selectedKey={area.direction}
+            label='Direction'
+            onChange={(_, option) =>
+              option
+              && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
+              && (changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState)
+            }
+          />
+        </div>
+      </div>
+      {/*
+        activeArea !== undefined && selectedField && area.fields !== [] ? 
+          <div>
+            <Label>
+              Field
+            </Label>
+            <div>
+              <Label>
+                Color
+              </Label>
+              <TextField
+                key='fieldColor'
+                value={area.fields.find(field => field.key === selectedField)!.color}
+                onChange={(e) => {
+                  designerDispatch({ type: 'SET_STYLE_FIELD', color: e.currentTarget.value });
+                }}
+              />
+            </div>
+          </div>
+        : undefined
+        */
+      }
+    </>
+    : selectedField && activeArea !== undefined
+      ? <Label>{`Выбранный объект: ${selectedField}`}</Label>
+      : undefined
+    }
+    </div>
+  }
+
+  const TabFields = (): JSX.Element => {
+    const additionalliesObjects = [...(additionallyObject ? [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!]
+      .reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []) : []), ...fields!.map(field => `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)];
+    const items = additionalliesObjects.map( object => {
+      return {
+        name: <Checkbox
+        key={object}
+        styles={{
+          root: {
+            paddingBottom: '4px'
+          }
+        }}
+        label={object}
+        checked={!!areas[activeArea!].fields.find(areaF => areaF.key === object)}
+        onChange={(_, isChecked) => {
+          designerDispatch({ type: 'AREA_FIELD', fieldName: object, include: !!isChecked });
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+        }}
+      />,
+        order: (<div style={{display: 'flex', flexDirection: 'row'}}>
+        <IconButton
+          key='lift_field'
+          iconProps={{ iconName: 'CaretUp8' }}
+          onClick={() => {
+            designerDispatch({ type: 'LIFT_FIELD', field: object });
+            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+          }}
+        />
+        <IconButton
+          key='lower_field'
+          iconProps={{ iconName: 'CaretDown8' }}
+          onClick={() => {
+            designerDispatch({ type: 'LOWER_FIELD', field: object });
+            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+          }}
+        />
+      </div>),
+      key: object
+      }
+    })
+    const selectionItems = additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object))
+    /*additionalliesObjects.forEach(object =>
+      areas[activeArea!].fields.find(areaF => areaF.key === object) !== undefined
+      ? selectionItems.setItems([{key: 'ID-F$1-ID'}], false)
+      : undefined)
+    selectionItems.setKeySelected(additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object)).map(object => 
+      {return {key: object}}))*/
+
+      /*
+      onChange={(_, isChecked) => {
+            designerDispatch({ type: 'AREA_FIELD', fieldName: props.field, include: !!isChecked });
+            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+          }}
+      */
+     const r = new Selection({ 
+      onSelectionChanged: () => {
+        //designerDispatch({ type: 'AREA_FIELD', fieldName: props.field, include: !!isChecked });
+        changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+      } 
+    })
+
+    return <>
+    <DetailsListDragDrop
+      items={items}
+      onInsertItem={(item, position) => {
+        designerDispatch({ type: 'DRAG_FIELD', field: item, position: position });
+        changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+      }}
+    />
+      <Label>
+        Show fields:
+      </Label>
+        { /*additionallyObject ?
+          [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!]
+          .reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []).map(object =>
+            object !== undefined ?
+              <MemoCheckboxForObjectsInInspector field={object} />
+            : undefined
+          )
+        : undefined*/
+      }
+      {/*
+        fields!.map(field =>
+          <MemoCheckboxForObjectsInInspector field={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} />
+        )*/
+      }
+    </>
+  }
+
+  const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
+    const tabs = ["Настройка", "Поля"];
     const theme = getTheme();
 
     return (
@@ -1436,422 +1947,11 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 padding: '12px'
               }}
             >
-              { activeTab === undefined || activeTab === 'Настройка' ? (
-                <>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      marginBottom: '4px'
-                    }}
-                    key='Setting'
-                  >
-                  { activeArea !== undefined && selectedField === undefined
-                    ? <>
-                    <div>
-                      <>
-                      <DefaultButton
-                        key='viewAdditionallyObject'
-                        onClick={() => {
-                          onChangeView(!viewAddObject)
-                        }}
-                      >Add additionallyObject</DefaultButton>
-                      {
-                        viewAddObject ?
-                        <>
-                        <TextField
-                          key='additionallyText'
-                          value={addTexts}
-                          onChange={(e) => {
-                            onchangeText(e.currentTarget.value)
-                          }}
-                        />
-                          <DefaultButton
-                            key='addText'
-                            onClick={() => {
-                              designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: addTexts});
-                              designerDispatch({ type: 'AREA_FIELD', fieldName: addTexts, include: true });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }}
-                          >Add text</DefaultButton>
-                          <TextField
-                            key='additionallyImage'
-                            value={addUrlImage}
-                            onChange={(e) => {
-                              onchangeUrlImage(e.currentTarget.value)
-                            }}
-                          />
-                          <DefaultButton
-                            key='addUrlImage'
-                            onClick={() => {
-                              designerDispatch({ type: 'ADD_ADDITIONALLY_IMAGE', image: addUrlImage });
-                              designerDispatch({ type: 'AREA_FIELD', fieldName: addUrlImage, include: true });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }}
-                          >Add image</DefaultButton>
-                          <TextField
-                            key='additionallyIcon'
-                            value={addIcon}
-                            onChange={(e) => {
-                              onchangeIcon(e.currentTarget.value)
-                            }}
-                          />
-                          <Link href="https://uifabricicons.azurewebsites.net/">Посмотреть и выбрать</Link>
-                          <DefaultButton
-                            key='addIcon'
-                            onClick={() => {
-                              designerDispatch({ type: 'ADD_ADDITIONALLY_ICON', icon: addIcon });
-                              designerDispatch({ type: 'AREA_FIELD', fieldName: addIcon, include: true });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }}
-                          >Add icon</DefaultButton>
-                        </>
-                        : undefined
-                      }
-                      </>
-                    <Label>Size</Label>
-                    <>
-                      {
-                        <OneSize key='column_size' label='Width' size={grid.columns[idc]} isRow={false} onChange={(size: ISize) => {
-                          const left = idc;
-                          const right = areas[activeArea!].rect.right;
-                          if(left === right && size.unit === 'AUTO') {
-                            designerDispatch({ type: 'SET_COLUMN_SIZE', column: idc, size });
-                            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                          } else {
-                            const value = size.value! / (right + 1 - left);
-                            for(let i = left; i <= right; i++) {
-                              designerDispatch({ type: 'SET_COLUMN_SIZE', column: i, size: {...size, value} });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }
-                          }
-                        }} />
-                      }
-                      {
-                        <OneSize key='row_size' label='Height' size={grid.rows[idr]} isRow={true} onChange={(size: ISize) => {
-                          const top = idr;
-                          const bottom = areas[activeArea!].rect.bottom;
-                          if(top === bottom && size.unit === 'AUTO') {
-                            designerDispatch({ type: 'SET_ROW_SIZE', row: idr, size });
-                            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                          } else {
-                            const value = size.value! / (bottom + 1 - top);
-                            for(let i = top; i <= bottom; i++) {
-                              designerDispatch({ type: 'SET_ROW_SIZE', row: i, size: {...size, value} });
-                              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-                            }
-                          }
-                        }} />
-                      }
-                    </>
-                  </div>
-                    <div>
-                      <Label>
-                        Padding
-                      </Label>
-                      <TextField
-                        key='padding'
-                        value={area.style!.padding.toString()}
-                        onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!,  padding: Number(e.currentTarget.value)} });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>
-                        Margin
-                      </Label>
-                      <TextField
-                        key='margin'
-                        value={area.style!.margin.toString()}
-                        onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, margin: Number(e.currentTarget.value)} });
-                        }}
-                      />
-                    </div>
-                  {
-                    /*
-                    <div>
-                      <Label>
-                        Align
-                      </Label>
-                      <TextField
-                        key='align'
-                        value={style.align.toString()}
-                        onChange={(e) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, align: e.currentTarget.value} });
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>
-                        Font
-                      </Label>
-                      <div>
-                        <Label>
-                          Size
-                        </Label>
-                        <TextField
-                          key='font-size'
-                          value={styleSetting.font.size.toString()}
-                          onChange={(e) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, size: Number(e.currentTarget.value)}} });
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <Label>
-                          Color
-                        </Label>
-                      </div>
-                      <div>
-                        <Label>
-                          Family
-                        </Label>
-                        <ComboBox
-                          key='font-family'
-                          defaultSelectedKey={styleSetting.font.family}
-                          options={FamilyFont.map(family => ({key: family, text: family}))}
-                          onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, family: value!.text}} })
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <Label>
-                          Style
-                        </Label>
-                        <ComboBox
-                          key='font-style'
-                          defaultSelectedKey={styleSetting.font.style}
-                          options={StyleFont.map(style => ({key: style, text: style}))}
-                          onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, style: value!.text}} })
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <Label>
-                          Weight
-                        </Label>
-                        <ComboBox
-                          key='font-weight'
-                          defaultSelectedKey={styleSetting.font.weight}
-                          options={WeightFont.map(weight => ({key: weight, text: weight}))}
-                          onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, weight: value!.text}} })
-                          }}
-                        />
-                      </div>
-                    </div>
-                    */
-                  }
-                    <div>
-                      <Label>Backgroung</Label>
-                      <ComboBox
-                        key='background'
-                        selectedKey={
-                          activeArea !== undefined && area.style && area.style.background
-                            ? Object.keys(theme.palette).findIndex( color => color === area.style!.background)
-                            : Object.keys(theme.palette).findIndex( color => color === 'white')
-                        }
-                        options={
-                          Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
-                        }
-                        onRenderOption={(option) =>
-                          {
-                            return (
-                            <Stack style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center'
-                            }}>
-                              <span style={{
-                                background: Object.values(theme.palette)[+(option as IComboBoxOption).key],
-                                border: `1px solid ${theme.palette.black}`,
-                                height:'16px',
-                                width: '16px',
-                                marginRight: '4px'
-                              }}></span>
-                              <span>{(option as IComboBoxOption).text}</span>
-                            </Stack>
-                          );}
-                        }
-                        onChange={(e, value) => {
-                          designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, background: value!.text} })
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>
-                        Border
-                      </Label>
-                      <div>
-                        <Label>
-                          Style
-                        </Label>
-                        <ComboBox
-                          key='border-style'
-                          defaultSelectedKey={activeArea !== undefined && area.style !== undefined && area.style!.border !== undefined ? area.style!.border.style : 'none'}
-                          options={StyleBorder.map(style => ({key: style, text: style}))}
-                          onChange={(e, value) => {
-                            designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, style: value!.text}} })
-                          }}
-                        />
-                      </div>
-                      {
-                        area.style !== undefined && area.style!.border.style !== 'none' ?
-                        <>
-                          <div>
-                            <Label>
-                              Width
-                            </Label>
-                            <TextField
-                              key='border-width'
-                              value={area.style!.border.width.toString()}
-                              onChange={(e) => {
-                                designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, width: Number(e.currentTarget.value)}} });
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <Label>
-                              Radius
-                            </Label>
-                            <TextField
-                              key='border-radius'
-                              value={area.style!.border.radius.toString()}
-                              onChange={(e) => {
-                                designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, radius: Number(e.currentTarget.value)}} });
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <Label>Color</Label>
-                            <ComboBox
-                              key='border-color'
-                              selectedKey={
-                                activeArea !== undefined && area.style && area.style.border.color
-                                  ? Object.keys(theme.palette).findIndex( color => color === area.style!.border.color)
-                                  : Object.keys(theme.palette).findIndex( color => color === 'white')
-                              }
-                              options={
-                                Object.keys(theme.palette).map((color, idx) => { return {key: idx, text: color } })
-                              }
-                              onRenderOption={(option) =>
-                                {
-                                  return (
-                                  <Stack style={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center'
-                                  }}>
-                                    <span style={{
-                                      background: Object.values(theme.palette)[+(option as IComboBoxOption).key],
-                                      border: `1px solid ${theme.palette.black}`,
-                                      height:'16px',
-                                      width: '16px',
-                                      marginRight: '4px'
-                                    }}></span>
-                                    <span>{(option as IComboBoxOption).text}</span>
-                                  </Stack>
-                                );}
-                              }
-                              onChange={(e, value) => {
-                                designerDispatch({ type: 'SET_STYLE_AREA', style: {...area.style!, border: {...area.style!.border, color: value!.text} } })
-                              }}
-                            />
-                          </div>
-                        </>
-                        : undefined
-                      }
-                      <div>
-                        <Label>Direction fields</Label>
-                        <ChoiceGroup
-                          styles={{
-                            root: {
-                              paddingBottom: '8px'
-                            },
-                            flexContainer: {
-                              display: 'flex'
-                            }
-                          }}
-                          options={[
-                            {
-                              key: 'column',
-                              text: 'column',
-                              styles: {
-                                root: {
-                                  paddingRight: '8px'
-                                }
-                              }
-                            },
-                            {
-                              key: 'row',
-                              text: 'row'
-                            }
-                          ]}
-                          selectedKey={area.direction}
-                          label='Direction'
-                          onChange={(_, option) =>
-                            option
-                            && designerDispatch({ type: 'CONFIGURE_AREA', direction: option.key as TDirection })
-                            && (changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState)
-                          }
-                        />
-                      </div>
-                    </div>
-                    {/*
-                      activeArea !== undefined && selectedField && area.fields !== [] ? 
-                        <div>
-                          <Label>
-                            Field
-                          </Label>
-                          <div>
-                            <Label>
-                              Color
-                            </Label>
-                            <TextField
-                              key='fieldColor'
-                              value={area.fields.find(field => field.key === selectedField)!.color}
-                              onChange={(e) => {
-                                designerDispatch({ type: 'SET_STYLE_FIELD', color: e.currentTarget.value });
-                              }}
-                            />
-                          </div>
-                        </div>
-                      : undefined
-                      */
-                    }
-                  </>
-                  : selectedField && activeArea !== undefined
-                    ? <Label>{`Выбранный объект: ${selectedField}`}</Label>
-                    : undefined
-                  }
-                  </div>
-                </>
-              ) : (
-                  <>
-                    <Label>
-                      Show fields:
-                    </Label>
-                    {}
-                      { additionallyObject ?
-                        [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!].reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []).map(object =>
-                          object !== undefined ?
-                            <MemoCheckboxForObjectsInInspector field={object} />
-                          : undefined
-                        )
-                      : undefined
-                    }
-                    {
-                      fields!.map(field =>
-                        <MemoCheckboxForObjectsInInspector field={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} />
-                      )
-                    }
-                  </>
-                )}
+              { activeTab === undefined || activeTab === 'Настройка' ?
+                <TabSettingsArea />
+              :
+                  <TabFields />
+                }
             </div>
           </div>
         }
