@@ -2,18 +2,17 @@ import React from 'react';
 import { useState } from 'react';
 import { IDragDropEvents, buildColumns, getTheme, mergeStyles, IDragDropContext } from 'office-ui-fabric-react';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
-import { DetailsList, Selection, SelectionMode } from 'office-ui-fabric-react/lib/DetailsList';
+import { DetailsList, Selection } from 'office-ui-fabric-react/lib/DetailsList';
 
 const theme = getTheme();
 const dragEnterClass = mergeStyles({
   backgroundColor: theme.palette.neutralLight
 });
 
-export const DetailsListDragDrop = (props: {items: any[], onInsertItem: (item: any, position: number) => void}): JSX.Element => {
+export const DetailsListDragDrop = (props: {items: any[], selection: Selection, onInsertItem: (item: any, position: number) => void}): JSX.Element => {
   let _draggedItem: any | undefined;
   let _draggedIndex: number = -1;
 
-  const _selection = new Selection()
   const [items, onChangeItems] = useState(props.items)
   const columns = buildColumns(items, true);
 
@@ -52,8 +51,8 @@ export const DetailsListDragDrop = (props: {items: any[], onInsertItem: (item: a
   const _dragDropEvents: IDragDropEvents = _getDragDropEvents();
 
   const _insertBeforeItem = (item: any): void => {
-    const draggedItems = _selection.isIndexSelected(_draggedIndex)
-      ? (_selection.getSelection())
+    const draggedItems = props.selection.isIndexSelected(_draggedIndex)
+      ? (props.selection.getSelection())
       : [_draggedItem!];
 
     const itemsfilter = items.filter(itm => draggedItems.indexOf(itm) === -1);
@@ -70,13 +69,14 @@ export const DetailsListDragDrop = (props: {items: any[], onInsertItem: (item: a
 
   return (
     <div>
-      <MarqueeSelection selection={_selection}>
+      <MarqueeSelection selection={props.selection}>
         <DetailsList
           setKey="items"
+          getKey={ (item: any) => item.key }
           items={items}
           columns={columns}
+          selection={props.selection}
           selectionPreservedOnEmptyClick={true}
-          selectionMode={SelectionMode.none}
           dragDropEvents={_dragDropEvents}
         />
       </MarqueeSelection>

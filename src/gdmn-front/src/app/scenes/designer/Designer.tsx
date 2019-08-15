@@ -1699,8 +1699,25 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   }
 
   const TabFields = (): JSX.Element => {
+    const [selectionItems, setSelectionItems] = useState(
+      new Selection({
+        onSelectionChanged: () => console.log('selection'),
+        getKey: (item: any) => item.key
+      })
+    );
+
     const additionalliesObjects = [...(additionallyObject ? [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!]
       .reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []) : []), ...fields!.map(field => `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)];
+    
+      useEffect( () => {
+      if (selectionItems) {
+        
+        additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object)).forEach(item => {
+        selectionItems.setKeySelected(item, true, false)
+        console.log(selectionItems.isKeySelected(item))
+      })}
+    }, [selectionItems]);
+
     const items = additionalliesObjects.map( object => {
       return {
         name: <Checkbox
@@ -1738,26 +1755,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       key: object
       }
     })
-    const selectionItems = additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object))
-    /*additionalliesObjects.forEach(object =>
-      areas[activeArea!].fields.find(areaF => areaF.key === object) !== undefined
-      ? selectionItems.setItems([{key: 'ID-F$1-ID'}], false)
-      : undefined)
-    selectionItems.setKeySelected(additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object)).map(object => 
-      {return {key: object}}))*/
-
-      /*
-      onChange={(_, isChecked) => {
-            designerDispatch({ type: 'AREA_FIELD', fieldName: props.field, include: !!isChecked });
-            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-          }}
-      */
-     const r = new Selection({ 
-      onSelectionChanged: () => {
-        //designerDispatch({ type: 'AREA_FIELD', fieldName: props.field, include: !!isChecked });
-        changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-      } 
-    })
+    const setItems = additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object))
 
     return <>
     <div>
@@ -1798,30 +1796,18 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           Отобразить объекты:
         </Label>
         <DetailsListDragDrop
-          items={items}
+          items={additionalliesObjects.map((item, idx) => { return {name: item, key: item}})}
+          selection={selectionItems}
           onInsertItem={(item, position) => {
             designerDispatch({ type: 'DRAG_FIELD', field: item, position: position });
             changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
           }}
         />
-          {/* additionallyObject ?
-            [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!].reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []).map(object =>
-              object !== undefined ?
-                <MemoCheckboxForObjectsInInspector field={object} />
-              : undefined
-            )
-          : undefined*/
-        }
-        {/*
-          fields!.map(field =>
-            <MemoCheckboxForObjectsInInspector field={`${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`} />
-          )*/
-        }
     </>
   }
 
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
-    const tabs = ["Настройка", "Поля"];
+    const tabs = ["Свойства", "Объекты"];
     const theme = getTheme();
 
     return (
@@ -1984,7 +1970,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 padding: '12px'
               }}
             >
-              { activeTab === undefined || activeTab === 'Настройка' ?
+              { activeTab === undefined || activeTab === 'Свойства' ?
                 <TabSettingsArea />
               :
                   <TabFields />
