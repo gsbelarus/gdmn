@@ -1130,6 +1130,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       },
       {
         key: 'cancelAndClose',
+        disabled: previewMode,
         name: 'Закрыть',
         iconOnly: true,
         iconProps: {
@@ -1168,6 +1169,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       },
       {
         key: 'clear',
+        disabled: previewMode,
         name: 'Очистить',
         iconOnly: true,
         iconProps: {
@@ -1214,6 +1216,9 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
 
   const WithToolPanel = (props: { children: JSX.Element, toolPanel: JSX.Element }): JSX.Element => {
     const theme = getTheme();
+    if (previewMode || activeArea === undefined) {
+      return props.children;
+    }
     return (
       <div style={{
         display: 'grid',
