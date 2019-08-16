@@ -171,6 +171,11 @@ export interface IDesignerState {
   | { type: 'ADD_ADDITIONALLY_TEXT', text: string }
   | { type: 'ADD_ADDITIONALLY_IMAGE', image: string }
   | { type: 'ADD_ADDITIONALLY_ICON', icon: string }
+
+  | { type: 'SET_ADDITIONALLY_TEXT', text: string, newText: string }
+  | { type: 'SET_ADDITIONALLY_IMAGE', image: string, setURL: string }
+  | { type: 'SET_ADDITIONALLY_ICON', icon: string, setTitle: string }
+
   | { type: 'CANCEL_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'RETURN_CHANGES', entityName: string, fields: IFieldDef[] | undefined }
   | { type: 'CLEAR' }
@@ -687,7 +692,29 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             ? {...additionallyObject, texts: additionallyObject!.texts !== undefined ? [...additionallyObject!.texts, text] : [text] }
             : { texts: [text]},
         changeArray: [...changeArray!, {...state}]
-          };
+      };
+    }
+
+    case 'SET_ADDITIONALLY_TEXT' : {
+      const { additionallyObject, changeArray, areas, activeArea } = state;
+      const { text, newText } = action;
+      if(text === '' || newText === '' || activeArea === undefined) {
+        return state;
+      }
+      const newAreas = [...areas];
+      const selectArea = newAreas[activeArea];
+      newAreas[activeArea] = {...selectArea, fields: [...selectArea.fields.splice(selectArea.fields.findIndex(field => field === text), 1, newText )]}
+      const additionallyObjectTexts = additionallyObject!.texts!;
+      additionallyObjectTexts[additionallyObjectTexts.findIndex(object => text == object)] = newText;
+      return {
+        ...state,
+        additionallyObject: {
+          ...additionallyObject,
+          texts: additionallyObjectTexts,
+        },
+        selectedField: newText,
+        changeArray: [...changeArray!, {...state}]
+      };
     }
 
     case 'ADD_ADDITIONALLY_IMAGE' : {
@@ -706,6 +733,28 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       };
     }
 
+    case 'SET_ADDITIONALLY_IMAGE' : {
+      const { additionallyObject, changeArray, areas, activeArea } = state;
+      const {image, setURL} = action;
+      if(image === '' || activeArea === undefined) {
+        return state;
+      }
+      const newAreas = [...areas];
+      const selectArea = newAreas[activeArea];
+      newAreas[activeArea] = {...selectArea, fields: [...selectArea.fields.splice(selectArea.fields.findIndex(field => field === image), 1, setURL )]}
+      const additionallyObjectImages = additionallyObject!.images!;
+      additionallyObjectImages[additionallyObjectImages.findIndex(object => image == object)] = setURL;
+      return {
+        ...state,
+        additionallyObject: {
+          ...additionallyObject,
+          images: additionallyObjectImages,
+        },
+        selectedField: setURL,
+        changeArray: [...changeArray!, {...state}]
+      };
+    }
+
     case 'ADD_ADDITIONALLY_ICON' : {
       const {additionallyObject, changeArray} = state;
       const {icon} = action;
@@ -718,6 +767,28 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           additionallyObject
           ? {...additionallyObject, icons: additionallyObject!.icons !== undefined ? [...additionallyObject!.icons, icon] : [icon] }
           : { icons: [icon]},
+        changeArray: [...changeArray!, {...state}]
+      };
+    }
+
+    case 'SET_ADDITIONALLY_ICON' : {
+      const { additionallyObject, changeArray, areas, activeArea } = state;
+      const {icon, setTitle} = action;
+      if(icon === '' || activeArea === undefined) {
+        return state;
+      }
+      const newAreas = [...areas];
+      const selectArea = newAreas[activeArea];
+      newAreas[activeArea] = {...selectArea, fields: [...selectArea.fields.splice(selectArea.fields.findIndex(field => field === icon), 1, setTitle )]}
+      const additionallyObjectIcons = additionallyObject!.icons!;
+      additionallyObjectIcons[additionallyObjectIcons.findIndex(object => icon == object)] = setTitle;
+      return {
+        ...state,
+        additionallyObject: {
+          ...additionallyObject,
+          icons: additionallyObjectIcons,
+        },
+        selectedField: setTitle,
         changeArray: [...changeArray!, {...state}]
       };
     }
@@ -1046,6 +1117,48 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         }
       },
       {
+        key: 'addText',
+        disabled: previewMode || activeArea === undefined || selectedField !== undefined,
+        name: 'Добавить текст',
+        iconOnly: true,
+        iconProps: {
+          iconName: 'TextField'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'ADD_ADDITIONALLY_TEXT', text: 'text' });
+          designerDispatch({ type: 'AREA_FIELD', fieldName: 'text', include: true });
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+        }
+      },
+      {
+        key: 'addImage',
+        disabled: previewMode || activeArea === undefined || selectedField !== undefined,
+        name: 'Добавить картинку',
+        iconOnly: true,
+        iconProps: {
+          iconName: 'ImageDiff'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'ADD_ADDITIONALLY_IMAGE', image: 'data:image/png;base64,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' });
+          designerDispatch({ type: 'AREA_FIELD', fieldName: 'data:image/png;base64,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', include: true });
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+        }
+      },
+      {
+        key: 'addIcon',
+        disabled: previewMode || activeArea === undefined || selectedField !== undefined,
+        name: 'Добавить иконку',
+        iconOnly: true,
+        iconProps: {
+          iconName: 'IconSetsFlag'
+        },
+        onClick: () => {
+          designerDispatch({ type: 'ADD_ADDITIONALLY_ICON', icon: 'IncidentTriangle' });
+          designerDispatch({ type: 'AREA_FIELD', fieldName: 'IncidentTriangle', include: true });
+          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+        }
+      },
+      {
         key: 'previewMode',
         disabled: !areas.length,
         checked: !!previewMode,
@@ -1224,6 +1337,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     const [addTexts, onchangeText] = useState('');
     const [addUrlImage, onchangeUrlImage] = useState('');
     const [addIcon, onchangeIcon] = useState('');
+    const [valueText, setValueText] = useState(selectedField ? selectedField : '');
 
     const idc = activeArea!==undefined ? area.rect.left : -1;
     const idr = activeArea!==undefined ? area.rect.top : -1;
@@ -1497,7 +1611,39 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       </div>
     </>
     : selectedField && activeArea !== undefined
-      ? <Label>{`Выбранный объект: ${selectedField}`}</Label>
+      ? <>
+        <Label>{`Выбранный объект: ${selectedField}`}</Label>
+        {
+          additionallyObject
+            ? <TextField
+              key='setNewValueText'
+              value={valueText}
+              onChange={(event, newValue) => {
+                newValue
+                ? setValueText(newValue)
+                : setValueText('')
+              }}
+              onKeyDown={
+                (event: React.KeyboardEvent<HTMLInputElement>) => {
+                  if(event.key === 'Enter') {
+                    if(additionallyObject.texts && additionallyObject.texts.some(text => text === selectedField)) {
+                      designerDispatch({ type: 'SET_ADDITIONALLY_TEXT', text: selectedField, newText: valueText })
+                    }
+                    if(additionallyObject.images && additionallyObject.images.some(image => image === selectedField)) {
+                      designerDispatch({ type: 'SET_ADDITIONALLY_IMAGE', image: selectedField, setURL: valueText })
+                    }
+                    if(additionallyObject.icons && additionallyObject.icons.some(icon => icon === selectedField)) {
+                      designerDispatch({ type: 'SET_ADDITIONALLY_ICON', icon: selectedField, setTitle: valueText })
+                    }
+                    changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState
+                  }
+                }
+              }
+            />
+          : undefined
+        }
+        <Label></Label>
+      </>
       : undefined
     }
     </div>
@@ -1607,9 +1753,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 _insertBeforeItem(item);
                 const position = items.findIndex(object => object === item)
                 designerDispatch({ type: 'DRAG_FIELD', field: _draggedItem.current.key, position: position - 1 });
-                //console.log(_draggedItem.current)
-                //console.log(item)
-                //console.log(position)
                 changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
               }
             },
@@ -1886,15 +2029,17 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 onClick={getOnMouseDownForField(idx, f)}
                 style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}
               ><FieldMemo key={f} fd={fd} field={f} areaStyle={area.style!} aeraDirection={area.direction} /></div>
-              : additionallyObject && additionallyObject.texts && additionallyObject.texts!.find(text => text === f)
+              : additionallyObject
+                ? additionallyObject.texts && additionallyObject.texts!.find(text => text === f)
                 ? <div key={f} onClick={getOnMouseDownForField(idx, f)} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>
                     <Label>{f}</Label>
                   </div>
-                : additionallyObject && additionallyObject.images && additionallyObject.images.find(image => image === f)
+                : additionallyObject.images && additionallyObject.images.find(image => image === f)
                   ? <Image key={f} onClick={getOnMouseDownForField(idx, f)} height={100} width={100} src={f} alt='Text' styles={{ root: {borderColor: theme.semanticColors.inputBorder}}} />
-                  : additionallyObject && additionallyObject.icons && additionallyObject!.icons.find(icon => icon === f)
+                  : additionallyObject.icons && additionallyObject!.icons.find(icon => icon === f)
                     ? <IconButton key={f} iconProps={{ iconName: f }} onClick={getOnMouseDownForField(idx, f)} />
                     : undefined
+                : undefined
             })
           }
         </div>
