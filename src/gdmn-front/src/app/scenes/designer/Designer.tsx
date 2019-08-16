@@ -2,14 +2,37 @@ import React, { useEffect, useReducer, useRef, Fragment, useState } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton, Link } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton, Link, mergeStyles, MarqueeSelection } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
-import { Selection } from 'office-ui-fabric-react/lib/DetailsList';
+import { Selection, IColumn, buildColumns, DetailsList } from 'office-ui-fabric-react/lib/DetailsList';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
-import { DetailsListDragDrop } from '@src/app/components/DetailsListDragAndDrop';
-import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
+
+interface IShowObjects {
+  key: string,
+  name: string,
+}
+
+interface IObject {
+  id: string;
+}
+
+interface IFieldObject extends IObject {
+  fieldName: string;
+}
+
+interface ITextObject extends IObject {
+  text: string;
+}
+
+interface IImageObject extends IObject {
+  imageUrl: string;
+}
+
+function isTextObject(object: IObject | ITextObject | IImageObject): object is ITextObject {
+  return (object as ITextObject).text !== undefined;
+}
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -34,21 +57,14 @@ export type TDirection = 'row' | 'column';
 
 interface IArea {
   rect: IRectangle;
-  fields: IField[];
+  fields: string[];
   direction: TDirection;
   group: boolean;
   style?: IStyleFieldsAndAreas;
 }
-export interface IField {
-  key: string,
-  color: string
-}
 
 const StyleBorder = ['none', 'solid', 'double', 'groove', 'ridge', 'dashed', 'dotted', 'inset', 'outset'];
-/*const FamilyFont = ['Times New Roman, serif', 'Arial, sans-serif', 'Courier New, monospace', 'Bickley Script, cursive, serif', 'Euclid Fraktur, fantasy, serif', 'Lucida Console, Monaco, monospace'];
-const StyleFont = ['normal', 'italic'];
-const WeightFont = ['normal', 'bold'];
-*/
+
 interface IBorder {
   width: number;
   style: string;
@@ -56,18 +72,9 @@ interface IBorder {
   radius: number;
 }
 
-interface IFont {
-  size: number;
-  style: string;
-  family: string;
-  color: string;
-  weight: string;
-}
-
 export interface IStyleFieldsAndAreas {
   padding: number;
   margin: number;
-  font: IFont;
   background?: string;
   border: IBorder;
 }
@@ -103,22 +110,12 @@ export interface IDesignerState {
         right: 0,
         bottom: 0
       },
-      fields:
-        fields!.map(field => {
-          return {key: `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`, color: getTheme().palette.white}
-        }),
+      fields: fields!.map( field => `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}` ),
       direction: 'column',
       group: false,
       style: {
         padding: 4,
         margin: 0,
-        font: {
-          size: 14,
-          style: 'normal',
-          family: 'Arial, sans-serif',
-          color: getTheme().palette.black,
-          weight: 'normal'
-        },
         border: {
           style: 'none',
           width: 1,
@@ -139,13 +136,6 @@ export interface IDesignerState {
       style: {
         padding: 4,
         margin: 0,
-        font: {
-          size: 14,
-          style: 'normal',
-          family: 'Arial, sans-serif',
-          color: getTheme().palette.black,
-          weight: 'normal'
-        },
         border: {
           style: 'none',
           width: 1,
@@ -166,6 +156,7 @@ export interface IDesignerState {
   | { type: 'SET_STYLE_FIELD', color: string }
   | { type: 'SET_SELECTED_FIELD', value?: string }
   | { type: 'AREA_FIELD', fieldName: string, include: boolean }
+  | { type: 'SET_FIELDS_AREA', fields: string[] }
   | { type: 'CONFIGURE_AREA', rect?: IRectangle, direction?: TDirection }
   | { type: 'PREVIEW_MODE' }
   | { type: 'SET_ACTIVE_TAB', tab: string }
@@ -176,8 +167,6 @@ export interface IDesignerState {
   | { type: 'CREATE_GROUP' }
   | { type: 'DELETE_GROUP' }
   | { type: 'CLEAR_SELECTION' }
-  | { type: 'LIFT_FIELD', field: string }
-  | { type: 'LOWER_FIELD', field: string }
   | { type: 'DRAG_FIELD', field: string, position: number }
   | { type: 'ADD_ADDITIONALLY_TEXT', text: string }
   | { type: 'ADD_ADDITIONALLY_IMAGE', image: string }
@@ -323,6 +312,26 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       };
     }
 
+    case 'SET_FIELDS_AREA': {
+      const { areas, activeArea, changeArray } = state;
+      const { fields } = action;
+
+      if(activeArea === undefined) {
+        return state;
+      }
+
+      const newAreas = areas;
+      newAreas[activeArea] = {
+        ...newAreas[activeArea],
+        fields: fields.map(field => {return field})
+      }
+      return {
+        ...state,
+        areas: newAreas,
+        changeArray: [...changeArray!, {...state}]
+      };
+    }
+
     case 'SET_SELECTED_FIELD': {
       const { value } = action;
       return {
@@ -341,17 +350,17 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
       const newAreas = [...areas];
 
-      if (include && !areas[activeArea].fields.find(f => f.key === fieldName)) {
+      if (include && !areas[activeArea].fields.find(f => f === fieldName)) {
         newAreas[activeArea] = {
           ...newAreas[activeArea],
-          fields: [...newAreas[activeArea].fields, {key: fieldName, color: getTheme().palette.white}]
+          fields: [...newAreas[activeArea].fields, fieldName]
         };
       }
 
-      if (!include && !!areas[activeArea].fields.find(f => f.key === fieldName)) {
+      if (!include && !!areas[activeArea].fields.find(f => f === fieldName)) {
         newAreas[activeArea] = {
           ...newAreas[activeArea],
-          fields: newAreas[activeArea].fields.filter(f => f.key !== fieldName)
+          fields: newAreas[activeArea].fields.filter(f => f !== fieldName)
         };
       }
 
@@ -373,35 +382,28 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
             && selection.top <= area.rect.top
             && selection.bottom >= area.rect.bottom
             && area.fields)
-        const fields = selectAreas.reduce( (prevFields, currArea) => [...currArea.fields, ...prevFields], [] as IField[])
-          return {
-            ...state,
-            areas: [
-              ...areas,
-              { rect: selection,
-                fields: Array.from(new Set(fields)),
-                direction: selectAreas.length !== 0 ? selectAreas[0].direction : 'column',
-                group: !!selection,
-                style: {
-                  padding: 4,
-                  margin: 0,
-                  font: {
-                    size: 14,
-                    style: 'normal',
-                    family: 'Arial, sans-serif',
-                    color: getTheme().palette.black,
-                    weight: 'normal'
-                  },
-                  border: {
-                    width: 1,
-                    style: 'none',
-                    color: getTheme().palette.neutralPrimary,
-                    radius: 3
-                  }
+        const fields = selectAreas.flatMap( area => area.fields );
+        return {
+          ...state,
+          areas: [
+            ...areas,
+            { rect: selection,
+              fields: Array.from(new Set(fields)),
+              direction: selectAreas.length !== 0 ? selectAreas[0].direction : 'column',
+              group: !!selection,
+              style: {
+                padding: 4,
+                margin: 0,
+                border: {
+                  width: 1,
+                  style: 'none',
+                  color: getTheme().palette.neutralPrimary,
+                  radius: 3
                 }
-              }],
-            activeArea: state.areas.length,
-            selection: undefined,
+              }
+            }],
+          activeArea: state.areas.length,
+          selection: undefined,
             changeArray: [...changeArray!, {...state}]
         }
       }
@@ -481,7 +483,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       const { color } = action;
       if(selectedField) {
         const fields = areas[activeArea!].fields.map(
-          field => field.key === selectedField ? {key: field.key, color} as IField : field
+          field => field === selectedField ? field : field
         );
         return {
           ...state,
@@ -491,7 +493,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
       return {
         ...state,
-        areas: [...areas.map(area => {return {...area, fields: area.fields.map(field => {return {...field, color}})}})],
+        areas: [...areas.map(area => {return {...area, fields: area.fields.map(field => {return field})}})],
         changeArray: [...changeArray!, {...state}]
       }
     }
@@ -650,50 +652,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       }
     }
 
-    case 'LIFT_FIELD': {
-      const {areas, activeArea, changeArray} = state;
-      const {field} = action;
-      if(activeArea === undefined) {
-        return state;
-      }
-      const fields = areas[activeArea].fields;
-      const idx = fields.findIndex(item => item.key === field)
-      if(idx === 0) {
-        return state;
-      }
-      const changeArea = {
-        ...areas[activeArea],
-        fields: [...fields.slice(0, idx - 1), fields[idx], fields[idx - 1], ...fields.slice(idx + 1)]
-      }
-      return {
-        ...state,
-        areas: [...areas.slice(0, activeArea), changeArea, ...areas.slice(activeArea + 1)],
-        changeArray: [...changeArray!, {...state}]
-      };
-    }
-
-    case 'LOWER_FIELD': {
-      const {areas, activeArea, changeArray} = state;
-      const {field} = action;
-      if(activeArea === undefined) {
-        return state;
-      }
-      const fields = areas[activeArea].fields;
-      const idx = fields.findIndex(item => item.key === field)
-      if(idx === fields.length - 1) {
-        return state;
-      }
-      const changeArea = {
-        ...areas[activeArea],
-        fields: [...fields.slice(0, idx), fields[idx + 1], fields[idx], ...fields.slice(idx + 2)]
-      }
-      return {
-        ...state,
-        areas: [...areas.slice(0, activeArea), changeArea, ...areas.slice(activeArea + 1)],
-        changeArray: [...changeArray!, {...state}]
-      };
-    }
-
     case 'DRAG_FIELD' : {
       const {areas, activeArea, changeArray} = state;
       const {field, position} = action;
@@ -702,8 +660,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         return state;
       }
 
-      const fields = areas[activeArea].fields.filter(item => item.key !== field);
-      fields.splice(position, 0, {key: field, color: getTheme().palette.white} )
+      const fields = areas[activeArea].fields.filter(item => item !== field);
+      fields.splice(position, 0, field )
 
       const changeArea = {
         ...areas[activeArea],
@@ -816,13 +774,6 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           style: {
             padding: 4,
             margin: 0,
-            font: {
-              size: 14,
-              style: 'normal',
-              family: 'Arial, sans-serif',
-              color: getTheme().palette.black,
-              weight: 'normal'
-            },
             border: {
               width: 1,
               style: 'none',
@@ -857,7 +808,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
 
   const { entityName, viewTab, fields, rs, entity } = props;
 
-  const Field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection }): JSX.Element => {
+  const Field = (props: { fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection }): JSX.Element => {
     const locked = rs ? rs.locked : false;
     const theme = getTheme();
   
@@ -873,11 +824,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
             background: props.areaStyle!.background
           }
         }
-        const styleCaretDownButton = props.areaStyle !== undefined ? {
-          rootHovered: {
-            backgroundColor: props.areaStyle.font.color,
-          },
-        } : undefined
       return (
         <LookupComboBox
           key={fkFieldName}
@@ -886,7 +832,6 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
           onLookup={(filter, limit) => {return Promise.resolve([])}}
           onChanged={() => {}}
           styles={style as Partial<IComboBoxStyles>}
-          caretDownButtonStyles={styleCaretDownButton as IButtonStyles}
         />
       );
     }
@@ -1271,52 +1216,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
     }
     return false;
   })
-
-  const CheckboxForObjectsInInspector = (props: {field: string}): JSX.Element => {
-    return (<div key={props.field} style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Checkbox
-          key={props.field}
-          styles={{
-            root: {
-              paddingBottom: '4px'
-            }
-          }}
-          label={props.field}
-          checked={!!areas[activeArea!].fields.find(areaF => areaF.key === props.field)}
-          onChange={(_, isChecked) => {
-            designerDispatch({ type: 'AREA_FIELD', fieldName: props.field, include: !!isChecked });
-            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-          }}
-        />
-        <div style={{display: 'flex', flexDirection: 'row'}}>
-          <IconButton
-            key='lift_field'
-            iconProps={{ iconName: 'CaretUp8' }}
-            onClick={() => {
-              designerDispatch({ type: 'LIFT_FIELD', field: props.field });
-              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-            }}
-          />
-          <IconButton
-            key='lower_field'
-            iconProps={{ iconName: 'CaretDown8' }}
-            onClick={() => {
-              designerDispatch({ type: 'LOWER_FIELD', field: props.field });
-              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-            }}
-          />
-        </div>
-      </div>
-    )
-  };
-
-  const MemoCheckboxForObjectsInInspector = React.memo(CheckboxForObjectsInInspector, (prevProps, nextProps) => {
-    if (prevProps === nextProps) {
-      return true;
-    }
-    return false;
-  })
-
+  
   const TabSettingsArea = ({}): JSX.Element => {
     const area = areas[activeArea!];
     const [viewAddText, viewAddImage] = useState(false);
@@ -1475,83 +1375,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           }}
         />
       </div>
-    {
-      /*
-      <div>
-        <Label>
-          Align
-        </Label>
-        <TextField
-          key='align'
-          value={style.align.toString()}
-          onChange={(e) => {
-            designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, align: e.currentTarget.value} });
-          }}
-        />
-      </div>
-      <div>
-        <Label>
-          Font
-        </Label>
-        <div>
-          <Label>
-            Size
-          </Label>
-          <TextField
-            key='font-size'
-            value={styleSetting.font.size.toString()}
-            onChange={(e) => {
-              designerDispatch({ type: 'SET_STYLE_AREA', style: {...style, font: {...style.font, size: Number(e.currentTarget.value)}} });
-            }}
-          />
-        </div>
-        <div>
-          <Label>
-            Color
-          </Label>
-        </div>
-        <div>
-          <Label>
-            Family
-          </Label>
-          <ComboBox
-            key='font-family'
-            defaultSelectedKey={styleSetting.font.family}
-            options={FamilyFont.map(family => ({key: family, text: family}))}
-            onChange={(e, value) => {
-              designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, family: value!.text}} })
-            }}
-          />
-        </div>
-        <div>
-          <Label>
-            Style
-          </Label>
-          <ComboBox
-            key='font-style'
-            defaultSelectedKey={styleSetting.font.style}
-            options={StyleFont.map(style => ({key: style, text: style}))}
-            onChange={(e, value) => {
-              designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, style: value!.text}} })
-            }}
-          />
-        </div>
-        <div>
-          <Label>
-            Weight
-          </Label>
-          <ComboBox
-            key='font-weight'
-            defaultSelectedKey={styleSetting.font.weight}
-            options={WeightFont.map(weight => ({key: weight, text: weight}))}
-            onChange={(e, value) => {
-              designerDispatch({ type: 'SET_STYLE_SETTING', style: {...styleSetting, font: {...styleSetting.font, weight: value!.text}} })
-            }}
-          />
-        </div>
-      </div>
-      */
-    }
       <div>
         <Label>Backgroung</Label>
         <ComboBox
@@ -1672,28 +1495,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           : undefined
         }
       </div>
-      {/*
-        activeArea !== undefined && selectedField && area.fields !== [] ? 
-          <div>
-            <Label>
-              Field
-            </Label>
-            <div>
-              <Label>
-                Color
-              </Label>
-              <TextField
-                key='fieldColor'
-                value={area.fields.find(field => field.key === selectedField)!.color}
-                onChange={(e) => {
-                  designerDispatch({ type: 'SET_STYLE_FIELD', color: e.currentTarget.value });
-                }}
-              />
-            </div>
-          </div>
-        : undefined
-        */
-      }
     </>
     : selectedField && activeArea !== undefined
       ? <Label>{`Выбранный объект: ${selectedField}`}</Label>
@@ -1704,63 +1505,53 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   }
 
   const TabFields = (): JSX.Element => {
-    const [selectionItems, setSelectionItems] = useState(
-      new Selection({
-        onSelectionChanged: () => console.log('selection'),
-        getKey: (item: any) => item.key
-      })
-    );
+    const theme = getTheme();
+    const dragEnterClass = mergeStyles({
+      backgroundColor: theme.palette.neutralLight
+    });
 
-    const additionalliesObjects = [...(additionallyObject ? [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!]
+    const _draggedItem = useRef<any>(undefined);
+    const _draggedIndex = useRef(-1);
+
+    const allObjects = [...(additionallyObject ? [additionallyObject.texts!, additionallyObject.images!, additionallyObject.icons!]
       .reduce((arr, curr) => {return curr ? [...arr, ...curr] : [...arr] }, []) : []), ...fields!.map(field => `${field.caption}-${field.fieldName}-${field.eqfa!.attribute}`)];
-    
-      useEffect( () => {
-      if (selectionItems) {
-        
-        additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object)).forEach(item => {
-        selectionItems.setKeySelected(item, true, false)
-        console.log(selectionItems.isKeySelected(item))
-      })}
-    }, [selectionItems]);
 
-    const items = additionalliesObjects.map( object => {
-      return {
-        name: <Checkbox
-        key={object}
-        styles={{
-          root: {
-            paddingBottom: '4px'
-          }
-        }}
-        label={object}
-        checked={!!areas[activeArea!].fields.find(areaF => areaF.key === object)}
-        onChange={(_, isChecked) => {
-          designerDispatch({ type: 'AREA_FIELD', fieldName: object, include: !!isChecked });
-          changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-        }}
-      />,
-        order: (<div style={{display: 'flex', flexDirection: 'row'}}>
-        <IconButton
-          key='lift_field'
-          iconProps={{ iconName: 'CaretUp8' }}
-          onClick={() => {
-            designerDispatch({ type: 'LIFT_FIELD', field: object });
-            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-          }}
-        />
-        <IconButton
-          key='lower_field'
-          iconProps={{ iconName: 'CaretDown8' }}
-          onClick={() => {
-            designerDispatch({ type: 'LOWER_FIELD', field: object });
-            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
-          }}
-        />
-      </div>),
-      key: object
+    const selectedObjects = allObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF === object))
+    const unSelectedObjects = allObjects.filter( object => !areas[activeArea!].fields.some(areaF => areaF === object))
+    const items = [...areas[activeArea!].fields.map(item => ({key: item, name: item})), ...unSelectedObjects.map(item => ({key: item, name: item}))]
+
+    const [selectionForDL, setSelection] = useState(new Selection({
+      onSelectionChanged: () => {
+        designerDispatch({ type: 'SET_FIELDS_AREA', fields: selectionForDL.getSelection().map(item => (item.key as string)) });
+        changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+      },
+      getKey: (item: any) => item.key
+    }))
+
+    useEffect( () => {
+      if(selectionForDL) {
+        selectionForDL.setChangeEvents(false, false);
+        selectedObjects.forEach(item => {
+          selectionForDL.setKeySelected(item, true, false)
+        })
+      selectionForDL.setChangeEvents(true, true);
       }
-    })
-    const setItems = additionalliesObjects.filter( object => !!areas[activeArea!].fields.find(areaF => areaF.key === object))
+    }, [])
+
+    const _insertBeforeItem = (item: any): void => {
+      const draggedItems = selectionForDL.isIndexSelected(_draggedIndex.current)
+        ? (selectionForDL.getSelection())
+        : [_draggedItem.current];
+  
+      const itemsfilter = items.filter(itm => draggedItems.indexOf(itm) === -1);
+      let insertIndex = itemsfilter.indexOf(item);
+  
+      if (insertIndex === -1) {
+        insertIndex = 0;
+      }
+  
+      itemsfilter.splice(insertIndex, 0, ...draggedItems);
+    }
 
     return <>
     <div>
@@ -1797,19 +1588,53 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         }
       />
     </div>
-        <Label>
-          Отобразить объекты:
-        </Label>
-        <DetailsListDragDrop
-          items={additionalliesObjects.map((item, idx) => { return {name: item, key: item}})}
-          selection={selectionItems}
-          onInsertItem={(item, position) => {
-            designerDispatch({ type: 'DRAG_FIELD', field: item, position: position });
-            changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+      <Label>
+        Отобразить объекты:
+      </Label>
+      <MarqueeSelection selection={selectionForDL}>
+        <DetailsList
+          setKey="items"
+          items={items}
+          columns={buildColumns(items, true).filter(column => column.key !== 'key')}
+          selection={selectionForDL}
+          dragDropEvents={{
+            canDrop: () => true,
+            canDrag: () => true,
+            onDragEnter: () => dragEnterClass,
+            onDragLeave: undefined,
+            onDrop: (item?: any, event?: DragEvent) => {
+              if (_draggedItem.current) {
+                _insertBeforeItem(item);
+                const position = items.findIndex(object => object === item)
+                designerDispatch({ type: 'DRAG_FIELD', field: _draggedItem.current.key, position: position - 1 });
+                //console.log(_draggedItem.current)
+                //console.log(item)
+                //console.log(position)
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }
+            },
+            onDragStart: (item?: any, itemIndex?: number) => {
+              _draggedItem.current = item;
+              _draggedIndex.current = itemIndex!;
+            },
+            onDragEnd: () => {
+              _draggedItem.current = undefined;
+              _draggedIndex.current = -1;
+            }
           }}
+          selectionPreservedOnEmptyClick={true}
+          enterModalSelectionOnTouch={true}
         />
+      </MarqueeSelection>
     </>
   }
+
+  const MemoTabFields = React.memo(TabFields, (prevProps, nextProps) => {
+    if (prevProps === nextProps) {
+      return true;
+    }
+    return false;
+  })
 
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
     const tabs = ["Свойства", "Объекты"];
@@ -1978,7 +1803,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               { activeTab === undefined || activeTab === 'Свойства' ?
                 <TabSettingsArea />
               :
-                  <TabFields />
+                  <MemoTabFields />
                 }
             </div>
           </div>
@@ -2004,11 +1829,6 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           padding: area.style && area.style.padding ? `${area.style.padding}px` : '4px',
           border: !area.style || area.style.border.style === 'none' ? `1px solid ${previewMode ? area.style!.background : theme.semanticColors.inputBorder}` : `${area.style.border.width}px ${area.style.border.style} ${Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === area.style!.border.color)]}`,
           borderRadius: area.style && area.style.border.radius ? `${area.style.border.radius}px` : undefined,
-          //color: area.style ? `${area.style.font.color}` : undefined,
-          //fontSize: area.style ? `${area.style.font.size}px` : undefined,
-          //fontWeight: area.style && area.style.font.weight === 'normal' ? 400 : 700,
-          //fontStyle: area.style ? `${area.style.font.style}` : undefined,
-          //fontFamily: area.style ? `${area.style.font.family}` : undefined
         }}
         onClick={getOnMouseDownForArea(idx)}
         onContextMenu={getOnContextMenuForArea()}
@@ -2058,22 +1878,22 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
           {
             area.fields.map(f => {
               const fd: IFieldDef | undefined = rs!.fieldDefs.find(fieldDef =>
-                `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
+                `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
               );
               return fd !== undefined
               ? <div
-                key={f.key}
-                onClick={getOnMouseDownForField(idx, f.key)}
+                key={f}
+                onClick={getOnMouseDownForField(idx, f)}
                 style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}
-              ><FieldMemo key={f.key} fd={fd} field={f} areaStyle={area.style!} aeraDirection={area.direction} /></div>
-              : additionallyObject!.texts && additionallyObject!.texts!.find(text => text === f.key)
-                ? <div key={f.key} onClick={getOnMouseDownForField(idx, f.key)} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>
-                    <Label>{f.key}</Label>
+              ><FieldMemo key={f} fd={fd} field={f} areaStyle={area.style!} aeraDirection={area.direction} /></div>
+              : additionallyObject && additionallyObject.texts && additionallyObject.texts!.find(text => text === f)
+                ? <div key={f} onClick={getOnMouseDownForField(idx, f)} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>
+                    <Label>{f}</Label>
                   </div>
-                : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
-                  ? <Image key={f.key} onClick={getOnMouseDownForField(idx, f.key)} height={100} width={100} src={f.key} alt='Text' styles={{ root: {borderColor: theme.semanticColors.inputBorder}}} />
-                  : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
-                    ? <IconButton key={f.key} iconProps={{ iconName: f.key }} onClick={getOnMouseDownForField(idx, f.key)} />
+                : additionallyObject && additionallyObject.images && additionallyObject.images.find(image => image === f)
+                  ? <Image key={f} onClick={getOnMouseDownForField(idx, f)} height={100} width={100} src={f} alt='Text' styles={{ root: {borderColor: theme.semanticColors.inputBorder}}} />
+                  : additionallyObject && additionallyObject.icons && additionallyObject!.icons.find(icon => icon === f)
+                    ? <IconButton key={f} iconProps={{ iconName: f }} onClick={getOnMouseDownForField(idx, f)} />
                     : undefined
             })
           }

@@ -26,7 +26,7 @@ import {
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
-import { Designer, IDesignerState, IField, IStyleFieldsAndAreas, TDirection } from '../../designer/Designer';
+import { Designer, IDesignerState, IStyleFieldsAndAreas, TDirection } from '../../designer/Designer';
 
 interface ILastEdited {
   fieldName: string;
@@ -601,7 +601,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     overflow: 'auto',
   });
 
-  const field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element | undefined => {
+  const field = (props: { fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element | undefined => {
       if (!props.fd.eqfa) {
         return undefined;
       }
@@ -643,15 +643,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     changedFields.current[fkFieldName] = true;
                   }
                 }
-              }/*
-              onFocus={
-                () => {
-                  lastFocused.current = props.fd.fieldName;
-                  if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
-                    applyLastEdited();
-                  }
-                }
-              }*/
+              }
               onLookup={
                 (filter: string, limit: number) => {
                   const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
@@ -711,18 +703,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     background: props.areaStyle!.background
                   }
                 }}
-              /*caretDownButtonStyles={props.areaStyle === undefined ? undefined : {
-                rootHovered: {
-                  color: `#474747`,
-                  backgroundColor: props.areaStyle.font.color,
-                  borderColor: `${props.areaStyle.font.color}99`
-                },
-                rootChecked: {
-                  color: props.areaStyle!.font.color,
-                  backgroundColor: `#474747`,
-                  borderColor: `${props.areaStyle.font.color}99`
-                }
-              }}*/
             />
           );
         }
@@ -958,18 +938,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     area.fields.map( f =>
                       {
                         let fd = rs.fieldDefs.find(fieldDef =>
-                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
+                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
                         )
                         if (fd) {
                           return <div style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{field({fd: fd, field: f, areaStyle: areaStyle!, areaDirection: area.direction})}</div>
                         }
-                        const additionallyObject = (localState as IDesignerState).additionallyObject;
-                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f.key)
-                          ? <Label key={f.key} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f.key}</Label>
-                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
-                            ? <Image key={f.key} height={100} width={100} src={f.key} alt='Text' />
-                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
-                              ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
+                        const additionallyObject = (localState as IDesignerState).additionallyObject!;
+                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f)
+                          ? <Label key={f} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f}</Label>
+                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f)
+                            ? <Image key={f} height={100} width={100} src={f} alt='Text' />
+                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f)
+                              ? <IconButton key={f} iconProps={{ iconName: f }} />
                               : undefined
                       }
                     )
