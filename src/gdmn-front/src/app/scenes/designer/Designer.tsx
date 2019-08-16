@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useRef, Fragment, useState } from 'react'
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { IDesignerProps } from './Designer.types';
-import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton, Link } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, ComboBox, SpinButton, Checkbox, TextField, Label, getTheme, ChoiceGroup, Stack, Image, IComboBoxOption, IComboBoxStyles, IButtonStyles, IconButton, DefaultButton, Link, PrimaryButton } from 'office-ui-fabric-react';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
 import { Selection } from 'office-ui-fabric-react/lib/DetailsList';
 import { LookupComboBox } from '@src/app/components/LookupComboBox/LookupComboBox';
@@ -10,6 +10,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { EntityAttribute } from 'gdmn-orm';
 import { DetailsListDragDrop } from '@src/app/components/DetailsListDragAndDrop';
 import { ViewTabs } from '@src/app/components/ViewTab/ViewTabs';
+import { Icon } from 'office-ui-fabric-react/lib/Icon';
 
 type TUnit = 'AUTO' | 'FR' | 'PX';
 
@@ -1160,7 +1161,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
         name: 'Вернуть',
         iconOnly: true,
         iconProps: {
-          iconName: 'ReturnToSession'
+          iconName: 'Refresh'
         },
         onClick: () => {
           changes.current = undefined;
@@ -1339,6 +1340,84 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       }}
       key='Setting'
     >
+      <Stack horizontal verticalAlign="center">
+          <DefaultButton
+            styles={{
+              root: {
+                borderColor: theme.semanticColors.bodyBackground
+              }
+            }}
+            onClick={() => {
+              designerDispatch({ type: 'SET_ACTIVE_AREA', shiftKey: false});
+              designerDispatch({ type: 'SET_SELECTED_FIELD'});
+              changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+            }}
+          >Окно</DefaultButton>
+          {
+            activeArea !== undefined ?
+            <>
+            <Icon iconName="ChevronRight"/>
+            <DefaultButton
+              styles={{
+                root: {
+                  borderColor: theme.semanticColors.bodyBackground
+                }
+              }}
+              onClick={() => {
+                designerDispatch({ type: 'SET_SELECTED_FIELD'});
+                changes.current = { grid, selection, areas, activeArea, previewMode, additionallyObject } as IDesignerState;
+              }}
+            >Область</DefaultButton>
+            {
+              selectedField !== undefined ?
+              <>
+                <Icon iconName="ChevronRight"/>
+                <>
+                  {
+                    additionallyObject && additionallyObject.images!.find(image => image === selectedField)
+                    ? <Icon iconName="ImageDiff"
+                        styles={{
+                          root: {
+                            fontSize: '18px',
+                            paddingLeft: '20px'
+                          }
+                        }}
+                      />
+                      : additionallyObject && additionallyObject.texts!.find(text => text === selectedField)
+                        ? <Icon iconName="TextField"
+                            styles={{
+                              root: {
+                                fontSize: '18px',
+                                paddingLeft: '20px'
+                              }
+                            }}
+                          />
+                          : additionallyObject && additionallyObject.icons!.find(icon => icon === selectedField)
+                            ? <Icon iconName="IconSetsFlag"
+                                styles={{
+                                  root: {
+                                    fontSize: '18px',
+                                    paddingLeft: '20px'
+                                  }
+                                }}
+                              />
+                              : <Icon iconName="FieldEmpty"
+                                  styles={{
+                                    root: {
+                                      fontSize: '18px',
+                                      paddingLeft: '20px'
+                                    }
+                                  }}
+                                />
+                  }
+                </>
+              </>
+              : undefined
+            }
+            </>
+            : undefined
+          }
+        </Stack>
     { activeArea !== undefined && selectedField === undefined
       ? <>
       <div>
@@ -1814,6 +1893,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   const WithAreaExplorer = CSSModules((props: { children: JSX.Element }): JSX.Element => {
     const tabs = ["Свойства", "Объекты"];
     const theme = getTheme();
+    const canSelectedTabs = selectedField ? [tabs[0]] : tabs;
 
     return (
       <MemoToolPanel
@@ -1831,7 +1911,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 color: getTheme().semanticColors.bodyText
               }}
             >
-              {tabs.map(t =>
+              {canSelectedTabs.map(t =>
                 (activeTab === undefined ? (t === 'Свойства') : (t === activeTab)) ? (
                   <Fragment key={t}>
                     <div
@@ -1975,11 +2055,10 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                 padding: '12px'
               }}
             >
-              { activeTab === undefined || activeTab === 'Свойства' ?
-                <TabSettingsArea />
-              :
-                  <TabFields />
-                }
+              { activeTab === undefined || activeTab === 'Свойства'
+              ? <TabSettingsArea />
+              : <TabFields />
+              }
             </div>
           </div>
         }
