@@ -15,6 +15,7 @@ export interface INewEntityRouteProps {
 export interface INewEntityContainerProps extends RouteComponentProps<INewEntityRouteProps> {
   newRecord: boolean;
   url: string;
+  entityName?: string;
 };
 
 export interface INewEntityStateProps {
@@ -28,4 +29,6 @@ export interface INewEntityProps extends RouteComponentProps<INewEntityRouteProp
   dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction>;
   url: string;
   viewTab?: IViewTab;
+  entityName?: string;
+  newRecord: boolean;
 };

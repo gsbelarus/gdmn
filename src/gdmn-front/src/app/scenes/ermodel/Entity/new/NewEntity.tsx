@@ -16,15 +16,20 @@ import {
 } from "office-ui-fabric-react";
 import {RecordSet} from "gdmn-recordset";
 import {gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/utils";
+import {IEntityName, ILastEdited, IChangedFields} from "@src/app/scenes/ermodel/utils";
 import {ISessionData} from "@src/app/scenes/gdmn/types";
 import {apiService} from "@src/app/services/apiService";
 import {IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
 import {EntityAttributeContainer} from "@src/app/scenes/ermodel/Entity/new/EntityAttributeContainer";
+import {
+  prepareDefaultEntityQuery,
+  prepareDefaultEntityQuerySetAttr
+} from "@src/app/scenes/ermodel/EntityDataView/utils";
+
 
 
 export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
-  const {history, dispatch, url, viewTab, erModel} = props;
+  const {history, dispatch, url, viewTab, erModel, entityName, newRecord,} = props;
 
   const getSavedControlsData = (): ISessionData | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.controls instanceof Object) {
@@ -47,13 +52,6 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     return undefined;
   };
 
-  const getSavedChangedFields = (): IChangedFields => {
-    if (viewTab && viewTab.sessionData && viewTab.sessionData.changedFields instanceof Object) {
-      return viewTab.sessionData.changedFields as IChangedFields;
-    }
-    return {};
-  };
-
   const getCountEntityAttributes = (): string[] => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.countEntityAttributes) {
       return viewTab.sessionData.countEntityAttributes;
@@ -61,16 +59,16 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     return [];
   };
 
-  const getRefAttribute= (): IAttribute[] | IEntityAttribute[] | ISetAttribute[] => {
+  const getRefAttribute = (): IAttribute[] | IEntityAttribute[] | ISetAttribute[] => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.refAttribute) {
       return viewTab.sessionData.refAttribute;
     }
     return [];
   };
 
-  const getEntityName = (): IEntityName | undefined => {
-    if (viewTab && viewTab.sessionData && viewTab.sessionData.entityName) {
-      return viewTab.sessionData.entityName as IEntityName;
+  const getRefEntityName = (): IEntityName | undefined => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.refEntityName) {
+      return viewTab.sessionData.refEntityName as IEntityName;
     }
     return undefined;
   };
@@ -89,45 +87,54 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     }
     return false;
   };
+  const getSavedChangedFields = (): IChangedFields => {
+    if (viewTab && viewTab.sessionData && viewTab.sessionData.changedFields instanceof Object) {
+      return viewTab.sessionData.changedFields as IChangedFields;
+    }
+    return {};
+  };
 
   const lastEdited = useRef(getSavedLastEdit());
   const lastFocused = useRef(getSavedLastFocused());
 
   const controlsData = useRef(getSavedControlsData());
-  const changedFields = useRef(getSavedChangedFields());
   const refAttribute = useRef(getRefAttribute());
-
   const valueHiddenParent = useRef(getValueHiddenParent());
-  const entityName = useRef(getEntityName());
+  const refEntityName = useRef(getRefEntityName());
   const parentName = useRef(getParentName());
   const countEntityAttributes = useRef(getCountEntityAttributes());
+  const changedFields = useRef(getSavedChangedFields());
 
   const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
 
   const [changedCountEntityAttributes, setCountEntityAttributes] = useState(getCountEntityAttributes());
   const [changed, setChanged] = useState(!!(lastEdited.current));
-  const [hiddenParent, setHiddenParent] = useState(valueHiddenParent.current);
+  const [hiddenParent, setHiddenParent] = useState(getValueHiddenParent());
   const [attributeData, setAttributeData] = useState(getRefAttribute());
 
   const useAttributeData = (value: IAttribute | IEntityAttribute | ISetAttribute, idRow: string) => {
     const attributes = attributeData.slice();
-    const findAttr =  attributes.find(fn=> idRow === fn.id);
+    const findAttr = attributes.find(fn => idRow === fn.id);
 
-    if (!findAttr){
-      attributes.push({...value, id:idRow})
-    } else{
+    if (!findAttr) {
+      attributes.push({...value, id: idRow})
+    } else {
       const ind = attributes.indexOf(findAttr, 0);
-      attributes[ind] = {...value, id:idRow};
+      attributes[ind] = {...value, id: idRow};
     }
 
     setAttributeData(attributes)
     refAttribute.current = attributes;
   };
 
+  const setChangesToRowField = () => {
+    setChanged(true)
+  };
+
   const deleteAttributeData = (idRow: string) => {
     const attributes = attributeData.slice();
     const newAttributes = attributes
-      .filter((field, index) => field.id !== idRow)
+      .filter((field, index) => newRecord ?  field.id !== idRow : true)
       .map((field) => {
         return field
       });
@@ -143,31 +150,43 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     setCountEntityAttributes(newArr);
     countEntityAttributes.current = newArr;
     refAttribute.current = newAttributes;
+    changedFields.current[idRow] = "delete";
   };
 
   const postChanges = useCallback((close: boolean) => {
-    const name = entityName.current;
+    const name = refEntityName.current;
 
     if (!name) {
       throw new Error('"Name" field is required')
     }
     const parent = parentName.current;
+    if (newRecord) {
+      dispatch(async () => {
+        if (parent) {
+          await apiService.AddEntity({
+            entityName: name.value.toUpperCase(),
+            parentName: parent.value.toUpperCase(),
+            attributes: refAttribute.current
+          });
+        } else {
+          await apiService.AddEntity({entityName: name.value.toUpperCase(), attributes: refAttribute.current});
 
-    dispatch(async () => {
-      if (parent) {
-        await apiService.AddEntity({
-          entityName: name.value.toUpperCase(),
-          parentName: parent.value.toUpperCase(),
-          attributes: attributeData
-        });
-      } else {
-        await apiService.AddEntity({entityName: name.value.toUpperCase(), attributes: attributeData});
-      }
-    });
-
-    changedFields.current = {};
+        }
+      });
+    } else {
+      dispatch(async () => {
+        if (parent) {
+          await apiService.editEntity({
+            entityName: name.value.toUpperCase(),
+            changedFields: changedFields.current,
+            attributes: refAttribute.current
+          })
+        } else {
+         await apiService.editEntity({entityName: name.value.toUpperCase(), changedFields: changedFields.current, attributes: refAttribute.current})
+        }
+      });
+    }
     setChanged(false);
-
     if (close) {
       deleteViewTab(true);
     }
@@ -176,7 +195,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
       url,
-      caption: 'Add entity',
+      caption: newRecord ? 'Add entity' : entityName!,
       canClose: true,
     }));
   };
@@ -224,9 +243,79 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
   useEffect(() => {
     const f = async () => {
       addViewTab(undefined);
+
+
+      if (newRecord) {
+
+      } else {
+
+        const eq = prepareDefaultEntityQuery(erModel!.entity(entityName!));
+        const entity = erModel!.entity(entityName!);
+
+        refEntityName.current = {
+          fieldName: "EntityName",
+          value: entity.name
+        };
+
+        if (entity.parent) {
+          valueHiddenParent.current = true
+          parentName.current = {fieldName: "Parent", value: entity.parent.name};
+          setHiddenParent(true)
+        }
+
+        const attributes = eq.link.fields
+          .filter((field) => field.attribute.type !== "Sequence")
+          .map((field) => {
+            switch (field.attribute.type) {
+              case 'Parent':
+              case 'Entity':
+                return {
+                  id: field.attribute.name,
+                  name: field.attribute.name,
+                  lName: field.attribute.lName,
+                  type: field.attribute.type,
+                  references: field.links && field.links!.map((link) => link.entity.name),
+                } as IEntityAttribute;
+                break;
+              default:
+                return {
+                  id: field.attribute.name,
+                  name: field.attribute.name,
+                  lName: field.attribute.lName,
+                  type: field.attribute.type,
+                } as IAttribute;
+            }
+          });
+        const eqSet = prepareDefaultEntityQuerySetAttr(erModel!.entity(entityName!));
+        const attributesSet = eqSet.link.fields
+          .filter((field) => field.attribute.type !== "Sequence")
+          .map((field) => {
+            return {
+              id: field.attribute.name,
+              name: field.attribute.name,
+              lName: field.attribute.lName,
+              type: field.attribute.type,
+              references: field.links && field.links.map((link) => link.entity.name),
+              attributes: [],
+              presLen: 1,
+              semCategories: field.attribute.semCategories.join(','),
+              required: field.attribute.required
+            } as ISetAttribute;
+          });
+
+        const allAttributes = attributes.concat(attributesSet);
+
+        const arr = allAttributes.map((attr) => {
+          return attr.id!
+        });
+        setCountEntityAttributes(arr);
+        countEntityAttributes.current = arr.slice();
+        setAttributeData(allAttributes);
+        refAttribute.current = allAttributes;
+      }
     };
     f();
-  }, []);
+  }, [newRecord]);
 
   useEffect(() => {
     if (needFocus.current) {
@@ -243,9 +332,8 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           lastEdited: lastEdited.current,
           lastFocused: lastFocused.current,
           controls: controlsData.current,
-          changedFields: changedFields.current,
           countEntityAttributes: countEntityAttributes.current,
-          entityName: entityName.current,
+          refEntityName: refEntityName.current,
           parentName: parentName.current,
           refAttribute: refAttribute.current,
           valueHiddenParent: valueHiddenParent.current,
@@ -255,17 +343,17 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
   }, []);
 
   return (
-
     <div>
       <CommandBar items={commandBarItems}/>
       <div styleName="FieldsColumn">
         <TextField
-          label="Entity Name"
+          label="Entity Name - required"
           defaultValue={
-            entityName.current
-              ? entityName.current.value
-              : ''
+            refEntityName.current
+              ? refEntityName.current.value
+              : entityName ? entityName : ''
           }
+
           onChange={
             (_e, newValue?: string) => {
               if (newValue !== undefined) {
@@ -273,11 +361,10 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
                   fieldName: "EntityName",
                   value: newValue
                 };
-                entityName.current = {
+                refEntityName.current = {
                   fieldName: "EntityName",
                   value: newValue
                 };
-                changedFields.current["EntityName"] = true;
                 setChanged(true);
               }
             }
@@ -301,7 +388,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
               key={'hasParent'}
               disabled={false}
               label={`has parent`}
-              defaultChecked={valueHiddenParent.current}
+              checked={valueHiddenParent.current}
               styles={{root: {marginTop: '10px'}}}
               onChange={(_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
                 if (isChecked !== undefined) {
@@ -309,7 +396,6 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
                     fieldName: "hasParent",
                     value: isChecked
                   };
-                  changedFields.current["hasParent"] = true;
                   setChanged(true);
                   if (isChecked) {
                     setHiddenParent(true);
@@ -343,15 +429,8 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
                 options={Object.keys(erModel!.entities).map(key => ({key, text: key}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
                   if (option && option.key) {
-                    lastEdited.current = {
-                      fieldName: "Parent",
-                      value: option.key as string
-                    };
-                    parentName.current = {
-                      fieldName: "Parent",
-                      value: option.key as string
-                    };
-                    changedFields.current["Parent"] = true;
+                    lastEdited.current = {fieldName: "Parent", value: option.key as string};
+                    parentName.current = {fieldName: "Parent", value: option.key as string};
                     setChanged(true);
                   }
                 }}
@@ -359,14 +438,15 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           </div>
         </div>
       </div>
-
       <div styleName="item">
         <DefaultButton
           onClick={() => {
             const newArr = changedCountEntityAttributes.slice();
-            newArr.push(`f${(+new Date).toString(16)}`);
+            const id = `f${(+new Date).toString(16)}`;
+            newArr.push(id);
             setCountEntityAttributes(newArr);
             countEntityAttributes.current = newArr.slice();
+            changedFields.current[id] = "add";
           }}
           text="Add attribute"/>
       </div>
@@ -377,15 +457,16 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
               <EntityAttributeContainer
                 useAttributeData={useAttributeData}
                 deleteAttributeData={deleteAttributeData}
-                attributeDataRow={attributeData.find((fn)=> fn.id === id )}
+                attributeDataRow={attributeData.find((fn) => fn.id === id)}
                 idRow={id}
+                setChangesToRowField={setChangesToRowField}
+                newRecord={newRecord}
               />
             </li>
           )}
         </ul>
       </div>
       <div>
-
       </div>
     </div>
   );

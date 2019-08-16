@@ -264,8 +264,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'Add'
       },
       commandBarButtonAs: linkCommandBarButton(`addEntity`)
-    }
-    ,
+    },
     {
       key: 'deleteEntity',
       disabled: !entities || !entities.size,
@@ -274,6 +273,15 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'Delete'
       },
       onClick: deleteRecord
+    },
+    {
+      key: 'editEntity',
+      disabled: !entities || !entities.size,
+      text: 'Edit',
+      iconProps: {
+        iconName: 'Edit'
+      },
+      commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`${entities.getString('name')}/edit`) : undefined
     }
   ];
 

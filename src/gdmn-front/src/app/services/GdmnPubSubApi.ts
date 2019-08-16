@@ -61,7 +61,8 @@ import {
   TGetNextIdTaskCmdResult,
   TQuerySetTaskCmdResult,
   TAddEntityTaskCmdResult,
-  TDeleteEntityTaskCmdResult
+  TDeleteEntityTaskCmdResult,
+  TEditEntityTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -403,6 +404,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.DELETE_ENTITY,
+        payload
+      }
+    });
+  }
+
+  public editEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.EDIT_ENTITY]): Promise<TEditEntityTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.EDIT_ENTITY,
         payload
       }
     });

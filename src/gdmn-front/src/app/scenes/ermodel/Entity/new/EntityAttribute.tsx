@@ -8,14 +8,16 @@ import {AttributeTypes, IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-
 
 
 export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.Element => {
-  const {erModel, useAttributeData, deleteAttributeData, attributeDataRow, idRow} = props;
-  const changed = useRef( attributeDataRow  ? attributeDataRow :{} as IAttribute | ISetAttribute | IEntityAttribute);
+  const {erModel, useAttributeData, deleteAttributeData, attributeDataRow, idRow, setChangesToRowField, newRecord} = props;
+  const changedData = useRef( attributeDataRow  ? attributeDataRow :{} as IAttribute | ISetAttribute | IEntityAttribute);
   const [hiddenFormat, setHiddenFormat] = useState(attributeDataRow  && attributeDataRow  ? getFieldType(attributeDataRow.type) : {}  as {fieldType: string});
+  const lname = attributeDataRow && attributeDataRow.lName && attributeDataRow.lName.hasOwnProperty('ru') && attributeDataRow.lName.ru ? attributeDataRow.lName.ru.name : '';
 
   const onChangedType = (event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
     if (option && option.text) {
-      changed.current["type"] = option!.key as AttributeTypes;
-      useAttributeData(changed.current, idRow);
+      changedData.current["type"] = option!.key as AttributeTypes;
+      setChangesToRowField();
+      useAttributeData(changedData.current, idRow);
       switch (option!.key) {
         case 'Parent':
         case 'Entity':
@@ -37,8 +39,7 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
           break;
         default:
           setHiddenFormat({fieldType: ""});
-          //changed.current["linkName"] = '';
-          useAttributeData(changed.current, idRow);
+          useAttributeData(changedData.current, idRow);
       }
     }
   };
@@ -48,33 +49,34 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
       <div styleName="containerBorder">
         <div styleName="container">
           <div styleName="item">
-            {idRow + '.'}
           </div>
           <div styleName="item">
             <TextField
-              label="Name"
+              label="Name - required"
               onChange={(e, value) => {
-                changed.current["name"] = value as string;
-                useAttributeData(changed.current, idRow)
+                changedData.current["name"] = value as string;
+                useAttributeData(changedData.current, idRow);
+                setChangesToRowField();
               }}
               defaultValue={ attributeDataRow ? attributeDataRow.name : ''}
             />
           </div>
           <div styleName="item">
             <TextField
-              label="lName"
+              label="lName - required"
               onChange={(e, value) => {
-                changed.current["lName"] = {ru: {name: value ? value as string : ''}};
-                useAttributeData(changed.current, idRow);
+                changedData.current["lName"] = {ru: {name: value ? value as string : ''}};
+                useAttributeData(changedData.current, idRow);
+                setChangesToRowField()
               }}
-              defaultValue={ attributeDataRow ? attributeDataRow.lName as string : '' }
+              defaultValue={lname}
             />
           </div>
           <div styleName="item">
             <ComboBox
               selectedKey={attributeDataRow
                 ? attributeDataRow.type! : undefined}
-              label="Type"
+              label="Type - required"
               autoComplete="on"
               options={listType.map(arr => ({key: arr.key, text: arr.text}))}
               onChange={onChangedType}
@@ -86,22 +88,22 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
                 selectedKey={attributeDataRow
                   ?  ((attributeDataRow as IEntityAttribute).references
                     || (attributeDataRow as IEntityAttribute).references) : undefined}
-                label="Entity"
+                label="Entity - required"
                 autoComplete="on"
                 options={Object.keys(erModel!.entities).map(key => ({key, text: key}))}
                 onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {
                   if (option && option.key) {
                     switch (attributeDataRow.type) {
                       case 'Set':
-                        const setAttribute = changed.current as ISetAttribute
+                        const setAttribute = changedData.current as ISetAttribute
                         setAttribute["references"] = [option!.key as string];
                         setAttribute["attributes"] = [];
                         break;
                       default:
-                        const entityAttribute = changed.current as IEntityAttribute
+                        const entityAttribute = changedData.current as IEntityAttribute
                         entityAttribute["references"] = [option!.key as string];
                     }
-                    useAttributeData(changed.current, idRow)
+                    useAttributeData(changedData.current, idRow)
                   }
                 }}
               />
@@ -110,72 +112,6 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
           </div>
         </div>
         <div styleName="container">
-          {/*<div styleName="item">*/}
-          {/*  <ChoiceGroup*/}
-          {/*    defaultSelectedKey={attributeData.length ? attributeData[numberRow] && attributeData[numberRow].alignment! : undefined}*/}
-          {/*    options={alignmentlist.map(arr => ({key: arr.key, text: arr.text}))}*/}
-          {/*    onChange={(_ev: React.FormEvent<HTMLElement> | undefined, option?: IChoiceGroupOption): void => {*/}
-          {/*      if (option && option.text) {*/}
-          {/*        changed.current["alignment"] = option!.key as string;*/}
-          {/*        useAttributeData(changed.current, numberRow);*/}
-          {/*      }*/}
-          {/*    }}*/}
-          {/*    label="alignment"*/}
-          {/*    required={true}*/}
-          {/*  />*/}
-          {/*</div>*/}
-          {/*<div styleName="item">*/}
-          {/*  {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "date" ?*/}
-          {/*    <ComboBox*/}
-          {/*      selectedKey={attributeData.length*/}
-          {/*        ? attributeData[numberRow] && attributeData[numberRow].formatDate! : undefined}*/}
-          {/*      label="format date"*/}
-          {/*      autoComplete="on"*/}
-          {/*      options={dateFormats.map(key => ({key, text: key}))}*/}
-          {/*      onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {*/}
-          {/*        if (option && option.text) {*/}
-          {/*          changed.current["formatDate"] = option!.key as string;*/}
-          {/*          useAttributeData(changed.current, numberRow)*/}
-          {/*        }*/}
-          {/*      }}*/}
-
-          {/*    /> : undefined*/}
-          {/*  }*/}
-          {/*</div>*/}
-          {/*<div styleName="item">*/}
-          {/*  {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "number" ?*/}
-          {/*    <ComboBox*/}
-          {/*      selectedKey={attributeData.length*/}
-          {/*        ? attributeData[numberRow] && attributeData[numberRow].format! : undefined}*/}
-          {/*      label="format"*/}
-          {/*      autoComplete="on"*/}
-          {/*      options={numberFormats.map(key => ({key: key.name, text: key.name}))}*/}
-          {/*      onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {*/}
-          {/*        if (option && option.text) {*/}
-          {/*          changed.current["format"] = option!.key as string;*/}
-          {/*          useAttributeData(changed.current, numberRow)*/}
-          {/*        }*/}
-          {/*      }}*/}
-          {/*    /> : undefined*/}
-          {/*  }*/}
-          {/*</div>*/}
-          {/*<div styleName="item">*/}
-          {/*  {attributeData.length && attributeData[numberRow] && hiddenFormat.fieldType === "boolean" ?*/}
-          {/*    <ComboBox*/}
-          {/*      selectedKey={attributeData.length*/}
-          {/*        ? attributeData[numberRow] && attributeData[numberRow].formatBoolean! : undefined}*/}
-          {/*      label="format"*/}
-          {/*      autoComplete="on"*/}
-          {/*      options={BooleanFormats.map(key => ({key, text: key}))}*/}
-          {/*      onChange={(event: React.FormEvent<IComboBox>, option?: IComboBoxOption, index?: number, value?: string) => {*/}
-          {/*        if (option && option.text) {*/}
-          {/*          changed.current["formatBoolean"] = option!.key as string;*/}
-          {/*          useAttributeData(changed.current, numberRow)*/}
-          {/*        }*/}
-          {/*      }}*/}
-          {/*    /> : undefined*/}
-          {/*  }*/}
-          {/*</div>*/}
           <div styleName="item">
             <Checkbox
               key={'required'}
@@ -188,36 +124,20 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
               styles={{root: {marginTop: '10px'}}}
               onChange={(_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
                 if (isChecked !== undefined) {
-                  changed.current["required"] = isChecked;
-                  useAttributeData(changed.current, idRow)
+                  changedData.current["required"] = isChecked;
+                  useAttributeData(changedData.current, idRow);
+                  setChangesToRowField()
                 }
               }}
             />
           </div>
-          {/*<div styleName="item">*/}
-          {/*  <Checkbox*/}
-          {/*    key={'hidden'}*/}
-          {/*    disabled={false}*/}
-          {/*    label={`hidden`}*/}
-          {/*    defaultChecked={*/}
-          {/*      attributeData.length*/}
-          {/*        ? attributeData[numberRow] && attributeData[numberRow].hidden*/}
-          {/*        : false}*/}
-          {/*    styles={{root: {marginTop: '10px'}}}*/}
-          {/*    onChange={(_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {*/}
-          {/*      if (isChecked !== undefined) {*/}
-          {/*        changed.current["hidden"] = isChecked;*/}
-          {/*        useAttributeData(changed.current, numberRow)*/}
-          {/*      }*/}
-          {/*    }}*/}
-          {/*  />*/}
-          {/*</div>*/}
           <div styleName="item">
             <TextField
               label="semCategories"
               onChange={(e, value) => {
-                changed.current["semCategories"] = value as string;
-                useAttributeData(changed.current, idRow)
+                changedData.current["semCategories"] = value as string;
+                useAttributeData(changedData.current, idRow)
+                setChangesToRowField()
               }
               }
               defaultValue={
@@ -227,28 +147,14 @@ export const EntityAttribute = CSSModules((props: IEntityAttributeProps): JSX.El
               }
             />
           </div>
-          {/*<div styleName="item">*/}
-          {/*  <TextField*/}
-          {/*    label="mask"*/}
-          {/*    onChange={(e, value) => {*/}
-          {/*      changed.current["mask"] = value as string;*/}
-          {/*      useAttributeData(changed.current, numberRow)*/}
-          {/*    }*/}
-          {/*    }*/}
-          {/*    defaultValue={*/}
-          {/*      attributeData.length*/}
-          {/*        ? attributeData[numberRow] && attributeData[numberRow].mask*/}
-          {/*        : ''*/}
-          {/*    }*/}
-          {/*  />*/}
-          {/*</div>*/}
         </div>
         <div styleName="container">
           <div styleName="item">
             <DefaultButton
               onClick={() => {
-                changed.current = {} as IAttribute;
-                deleteAttributeData(idRow)
+                changedData.current = {} as IAttribute;
+                deleteAttributeData(idRow);
+                setChangesToRowField();
               }}
               text="Delete"/>
           </div>

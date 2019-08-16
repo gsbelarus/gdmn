@@ -27,6 +27,7 @@ import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
 import { NewEntityContainer } from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
 import { themes } from '../themeeditor/themes';
+import {INewEntityRouteProps} from "@src/app/scenes/ermodel/Entity/new/NewEntity.types";
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -419,7 +420,7 @@ export function GdmnView (props: IGdmnViewProps) {
               {
                 <Route
                   path={`${match.path}/addEntity`}
-                  render={(props: RouteComponentProps<IEntityDataDlgRouteProps>)  => (
+                  render={(props: RouteComponentProps<INewEntityRouteProps>)  => (
                     <NewEntityContainer
                       {...props}
                       newRecord={true}
@@ -428,6 +429,19 @@ export function GdmnView (props: IGdmnViewProps) {
                   )}
                 />
               }
+            {
+              <Route
+                path={`${match.path}/:entityName/edit`}
+                render={(props: RouteComponentProps<INewEntityRouteProps>)  => (
+                  <NewEntityContainer
+                    {...props}
+                    newRecord={false}
+                    url={props.match.url}
+                    entityName={props.match.params.entityName}
+                  />
+                )}
+              />
+            }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>

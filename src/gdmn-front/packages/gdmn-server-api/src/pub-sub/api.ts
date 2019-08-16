@@ -14,6 +14,7 @@ import {
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 import { ISqlQueryResponseAliases } from 'gdmn-internals';
+import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
   TASK = '/task',
@@ -64,7 +65,8 @@ export const enum TTaskActionNames {
   GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
   GET_NEXT_ID = 'GET_NEXT_ID',
   ADD_ENTITY = 'ADD_ENTITY',
-  DELETE_ENTITY = 'DELETE_ENTITY'
+  DELETE_ENTITY = 'DELETE_ENTITY',
+  EDIT_ENTITY = 'EDIT_ENTITY'
 }
 
 // MESSAGES DATA
@@ -170,6 +172,12 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.DELETE_ENTITY]: {
     entityName: string;
   };
+  [TTaskActionNames.EDIT_ENTITY]: {
+    entityName: string;
+    parentName?: string;
+    changedFields: IChangedFields;
+    attributes: IAttribute[]
+  };
 }
 
 // -- TASK-RESULT
@@ -209,6 +217,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_NEXT_ID]: INextId;
   [TTaskActionNames.ADD_ENTITY]: IAddEntity;
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
+  [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -262,7 +271,9 @@ export type AppAction =
   | "SEQUENCE_QUERY"
   | "GET_SESSIONS_INFO"
   | "GET_NEXT_ID"
-  | "ADD_ENTITY";
+  | "ADD_ENTITY"
+  | "DELETE_ENTITY"
+  | "EDIT_ENTITY";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];
@@ -277,6 +288,13 @@ export interface IAddEntity {
 
 export interface IDeleteEntity {
   entityName: string;
+}
+
+export interface IEditEntity {
+  entityName: string;
+  parentName?: string;
+  changedFields: IChangedFields;
+  attributes: IAttribute[]
 }
 
 export interface IDefinedEntity {

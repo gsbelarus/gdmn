@@ -1,4 +1,3 @@
-const currentDate = new Date();
 export const listType = [
   {key: 'Detail', text: 'Detail'},
   {key: 'Parent', text: 'Parent'},

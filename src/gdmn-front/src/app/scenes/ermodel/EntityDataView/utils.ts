@@ -70,10 +70,9 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
   );
 }
 
-export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname: string, pkValues?: any[], alias: string = 'root'): EntityQuerySet {
-
+export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname?: string, pkValues?: any[], alias: string = 'root'): EntityQuerySet {
   const setLinkFields = Object.values(entity.attributes)
-  .filter((attr) => attr.type === "Set" && attr.name === fieldname)
+  .filter((attr) => attr.type === "Set" && (fieldname? attr.name === fieldname : true))
   .map((attr) => {
     const linkAttr = attr as EntityAttribute;
     const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
@@ -92,15 +91,18 @@ export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname: stri
     return new EntityLinkField(attr, [link]);
   });
 
+  const where = fieldname && pkValues && [{
+    equals: pkValues.map((value, index) => ({
+      alias:fieldname,
+      value
+    }))
+  }]
+
   return new EntityQuerySet(
     new EntityLink(entity, alias, setLinkFields),
     pkValues && new EntityQuerySetOptions(
-    [{
-      equals: pkValues.map((value, index) => ({
-        alias:fieldname,
-        value
-      }))
-    }])
+    where ? where : undefined
+    )
   );
 }
 
