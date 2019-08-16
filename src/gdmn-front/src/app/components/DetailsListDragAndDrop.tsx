@@ -1,59 +1,37 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { IDragDropEvents, buildColumns, getTheme, mergeStyles, IDragDropContext } from 'office-ui-fabric-react';
 import { MarqueeSelection } from 'office-ui-fabric-react/lib/MarqueeSelection';
-import { DetailsList, Selection } from 'office-ui-fabric-react/lib/DetailsList';
+import { DetailsList, Selection, IColumn } from 'office-ui-fabric-react/lib/DetailsList';
 
 const theme = getTheme();
 const dragEnterClass = mergeStyles({
   backgroundColor: theme.palette.neutralLight
 });
 
-export const DetailsListDragDrop = (props: {items: any[], selection: Selection, onInsertItem: (item: any, position: number) => void}): JSX.Element => {
-  let _draggedItem: any | undefined;
-  let _draggedIndex: number = -1;
+export interface IDetailsListDragDropProps {
+  items: any[], 
+  onInsertItem: (item: any, position: number) => void
+};
 
-  const [items, onChangeItems] = useState(props.items)
-  const columns = buildColumns(items, true);
+export const DetailsListDragDrop = (props: IDetailsListDragDropProps): JSX.Element => {
 
-  const _getDragDropEvents = (): IDragDropEvents => {
-    return {
-      canDrop: (dropContext?: IDragDropContext, dragContext?: IDragDropContext) => {
-        return true;
-      },
-      canDrag: (item?: any) => {
-        return true;
-      },
-      onDragEnter: (item?: any, event?: DragEvent) => {
-        return dragEnterClass;
-      },
-      onDragLeave: (item?: any, event?: DragEvent) => {
-        return;
-      },
-      onDrop: (item?: any, event?: DragEvent) => {
-        if (_draggedItem) {
-          _insertBeforeItem(item);
-          const position = items.findIndex(object => object === item)
-          props.onInsertItem(_draggedItem.key, position - 1)
-        }
-      },
-      onDragStart: (item?: any, itemIndex?: number, selectedItems?: any[], event?: MouseEvent) => {
-        _draggedItem = item;
-        _draggedIndex = itemIndex!;
-      },
-      onDragEnd: (item?: any, event?: DragEvent) => {
-        _draggedItem = undefined;
-        _draggedIndex = -1;
-      }
-    };
-  }
-  
-  const _dragDropEvents: IDragDropEvents = _getDragDropEvents();
+  const { items } = props; 
+
+  const _draggedItem = useRef<any>(undefined);
+  const _draggedIndex = useRef(-1);
+
+  const [columns, setColumns] = useState([] as IColumn[]);
+  const [selection, setSelection] = useState(new Selection());
+
+  useEffect( () => {
+    setColumns(buildColumns(items, true));
+  }, [items]);
 
   const _insertBeforeItem = (item: any): void => {
-    const draggedItems = props.selection.isIndexSelected(_draggedIndex)
-      ? (props.selection.getSelection())
-      : [_draggedItem!];
+    const draggedItems = selection.isIndexSelected(_draggedIndex.current)
+      ? (selection.getSelection())
+      : [_draggedItem.current];
 
     const itemsfilter = items.filter(itm => draggedItems.indexOf(itm) === -1);
     let insertIndex = itemsfilter.indexOf(item);
@@ -63,23 +41,40 @@ export const DetailsListDragDrop = (props: {items: any[], selection: Selection, 
     }
 
     itemsfilter.splice(insertIndex, 0, ...draggedItems);
-
-    onChangeItems(itemsfilter);
   }
 
   return (
-    <div>
-      <MarqueeSelection selection={props.selection}>
-        <DetailsList
-          setKey="items"
-          getKey={ (item: any) => item.key }
-          items={items}
-          columns={columns}
-          selection={props.selection}
-          selectionPreservedOnEmptyClick={true}
-          dragDropEvents={_dragDropEvents}
-        />
-      </MarqueeSelection>
-    </div>
+    <MarqueeSelection selection={selection}>
+      <DetailsList
+        setKey="items"
+        getKey={ (item: any) => item.key }
+        items={items}
+        columns={columns}
+        selection={selection}
+        dragDropEvents={{
+          canDrop: () => true,
+          canDrag: () => true,
+          onDragEnter: () => dragEnterClass,
+          onDragLeave: undefined,
+          onDrop: (item?: any, event?: DragEvent) => {
+            if (_draggedItem.current) {
+              _insertBeforeItem(item);
+              const position = items.findIndex(object => object === item)
+              props.onInsertItem(_draggedItem.current.key, position - 1)
+            }
+          },
+          onDragStart: (item?: any, itemIndex?: number, selectedItems?: any[], event?: MouseEvent) => {
+            _draggedItem.current = item;
+            _draggedIndex.current = itemIndex!;
+          },
+          onDragEnd: (item?: any, event?: DragEvent) => {
+            _draggedItem.current = undefined;
+            _draggedIndex.current = -1;
+          }
+        }}
+        selectionPreservedOnEmptyClick={true}
+        enterModalSelectionOnTouch={true}
+      />
+    </MarqueeSelection>
   );
 }
