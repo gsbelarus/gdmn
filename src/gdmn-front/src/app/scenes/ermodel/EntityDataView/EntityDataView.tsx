@@ -14,6 +14,7 @@ import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
+import {apiService} from "@src/app/services/apiService";
 
 interface IEntityDataViewState {
   phrase: string;
@@ -61,11 +62,12 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
-  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs } = props;
+  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
+  const nextUrl = useRef(url);
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -135,6 +137,22 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   }, [rs, viewTab]);
 
+  const addRecord = () => {
+    if (entityName) {
+
+      const f = async () => {
+        const result = await apiService.getNextID({withError: false});
+        const newID = result.payload.result!.id;
+        if (newID) {
+          nextUrl.current = `/spa/gdmn/entity/${entityName}/add/${newID}`;
+          history.push(nextUrl.current);
+        }
+      };
+
+      f();
+    }
+  };
+
   const loadMoreRsData = async (event: TLoadMoreRsDataEvent) => {
     const rowsCount = event.stopIndex - (event.rs ? event.rs.size : 0);
     dispatch(loadRSActions.loadMoreRsData({ name: event.rs.name, rowsCount }));
@@ -158,7 +176,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       iconProps: {
         iconName: 'Add'
       },
-      commandBarButtonAs: linkCommandBarButton(`${url}/add`)
+      onClick: addRecord
     },
     {
       key: `edit`,
