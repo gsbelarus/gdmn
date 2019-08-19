@@ -4,8 +4,8 @@ import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize } from "./types";
-import { inRect, makeRect, rectIntersect } from "./utils";
+import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea } from "./types";
+import { inRect, makeRect, rectIntersect, isSingleCell } from "./utils";
 
 /**
  *
@@ -41,48 +41,6 @@ import { inRect, makeRect, rectIntersect } from "./utils";
  * щелкнуть по нему мышью или выбрать из выпадающего списка в Инспекторе объектов.
  *
  */
-
-type TObjectType = 'WINDOW' | 'AREA' | 'LABEL';
-
-const objectNamePrefixes = {
-  'WINDOW': 'Window',
-  'AREA': 'Area',
-  'LABEL': 'Label'
-};
-
-interface IObject {
-  name: string;
-  parent?: string;
-  type: TObjectType;
-  color?: string;
-  backgroundColor?: string;
-};
-
-interface IWindow extends IObject {
-  type: 'WINDOW';
-};
-
-function isWindow(x: IObject): x is IArea {
-  return x.type === 'WINDOW';
-};
-
-interface ILabel extends IObject {
-  type: 'LABEL';
-  text: string;
-};
-
-interface IObjectWithCoord extends IObject, IRectangle { };
-
-interface IArea extends IObjectWithCoord {
-  type: 'AREA';
-  horizontal?: boolean;
-};
-
-function isArea(x: IObject): x is IArea {
-  return x.type === 'AREA';
-};
-
-type Object = IWindow | IArea | ILabel;
 
 interface IDesigner2State {
   grid: IGridSize;
@@ -130,12 +88,13 @@ const getDefaultState = (): IDesigner2State => {
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'SHOW_GRID', showGrid: boolean }
   | { type: 'SET_GRID_SELECTION', gridSelection?: IRectangle }
+  | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'SELECT_OBJECT_BY_NAME', name: string }
   | { type: 'INSERT_OBJECT', objectType: 'LABEL' }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
-  | { type: 'ADD_COLUMN' }
   | { type: 'CREATE_AREA' }
+  | { type: 'ADD_COLUMN' }
   | { type: 'ADD_ROW' }
   | { type: 'DELETE_COLUMN' }
   | { type: 'DELETE_ROW' };
@@ -168,9 +127,50 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     }
 
     case 'SET_GRID_SELECTION': {
+      const area = isSingleCell(action.gridSelection) ?
+        state.objects
+          .filter( object => object.type === 'AREA' )
+          .find( area => rectIntersect(area as IArea, action.gridSelection!) )
+        : undefined;
+
       return {
         ...state,
+        selectedObject: area ? area : state.selectedObject,
         gridSelection: action.gridSelection
+      }
+    }
+
+    case 'UPDATE_GRID': {
+      if (action.updateColumn) {
+        const columns = [...state.grid.columns];
+
+        columns[action.idx] = {
+          ...columns[action.idx],
+          ...action.newSize
+        };
+
+        return {
+          ...state,
+          grid: {
+            ...state.grid,
+            columns
+          }
+        }
+      } else {
+        const rows = [...state.grid.rows];
+
+        rows[action.idx] = {
+          ...rows[action.idx],
+          ...action.newSize
+        };
+
+        return {
+          ...state,
+          grid: {
+            ...state.grid,
+            rows
+          }
+        }
       }
     }
 
@@ -226,9 +226,11 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 
     case 'CREATE_AREA': {
       if (state.gridSelection) {
+        const newArea: IArea = { name: getObjectName('AREA'), type: 'AREA', parent: 'Window', ...state.gridSelection };
         return {
           ...state,
-          objects: [...state.objects, { name: getObjectName('AREA'), type: 'AREA', parent: 'Window', ...state.gridSelection}]
+          selectedObject: newArea,
+          objects: [...state.objects, newArea]
         }
       }
       return state;
@@ -314,7 +316,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
           gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`,
           borderColor: getTheme().palette.redDark,
           backgroundColor: getTheme().palette.red,
-          opacity: 0.5,
+          opacity: area === selectedObject ? 0.5 : 0.2,
           border: '1px solid',
           borderRadius: '4px',
           margin: '2px',
@@ -472,8 +474,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
                 <GridInspector
                   grid={grid}
                   gridSelection={gridSelection}
-                  onSetColumnWidth={ (column, size) => {} }
-                  onSetRowHeight={ (column, size) => {} }
+                  onUpdateGrid={ (updateColumn, idx, newSize) => designerDispatch({ type: 'UPDATE_GRID', updateColumn, idx, newSize }) }
                 />
               :
                 <>

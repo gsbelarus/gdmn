@@ -1,85 +1,46 @@
 import React from "react";
-import { Stack, Dropdown, TextField } from "office-ui-fabric-react";
-import { IGridSize, IRectangle, ISize } from "./types";
+import { IGridSize, IRectangle, ISize, IArea } from "./types";
 import { isSingleCell } from "./utils";
+import { SizeLine } from "./SizeLine";
 
 export interface IGridInspectorProps {
   grid: IGridSize;
   gridSelection?: IRectangle;
-  onSetColumnWidth: (column: number, size: ISize) => void;
-  onSetRowHeight: (row: number, size: ISize) => void;
+  selectedArea?: IArea;
+  onUpdateGrid: (updateColumn: boolean, idx: number, newSize: ISize) => void;
 };
 
 export const GridInspector = (props: IGridInspectorProps) => {
 
-  const { grid, gridSelection } = props;
-  const columnSize = gridSelection && isSingleCell(gridSelection) ? grid.columns[gridSelection.left] : undefined;
-  const rowSize = gridSelection && isSingleCell(gridSelection) ? grid.rows[gridSelection.top] : undefined;
+  const { grid, gridSelection, onUpdateGrid } = props;
 
-  const options = [
-    { key: 'AUTO', text: 'AUTO' },
-    { key: 'FR', text: 'FR' },
-    { key: 'PX', text: 'PX' }
-  ];
-
-  const tokens = { childrenGap: 10 };
-
-  if (isSingleCell(gridSelection)) {
-    return (
-      <>
-        <Stack horizontal tokens={tokens}>
-          <Stack.Item align="end">
-            <Dropdown
-              label={`Column ${gridSelection!.left + 1}:`}
-              options={options}
-              selectedKey={columnSize ? columnSize.unit : undefined}
-              styles={{
-                root: {
-                  width: '96px'
-                }
-              }}
-            />
-          </Stack.Item>
-          {
-            columnSize && columnSize.unit !== 'AUTO'
-            ?
-              <Stack.Item align="end">
-                <TextField
-                />
-              </Stack.Item>
-            : null
-          }
-        </Stack>
-        <Stack horizontal tokens={tokens}>
-          <Stack.Item align="end">
-            <Dropdown
-              label={`Row ${gridSelection!.top + 1}:`}
-              selectedKey={rowSize ? rowSize.unit : undefined}
-              options={options}
-              styles={{
-                root: {
-                  width: '96px'
-                }
-              }}
-            />
-          </Stack.Item>
-          {
-            rowSize && rowSize.unit !== 'AUTO'
-            ?
-              <Stack.Item align="end">
-                <TextField
-                />
-              </Stack.Item>
-            : null
-          }
-        </Stack>
-      </>
-    );
-  } else {
+  if (!gridSelection || !isSingleCell(gridSelection)) {
     return (
       <div>
         Select one cell to adjust width and height of grid's column and row.
       </div>
     );
   }
+
+  const columnSize = grid.columns[gridSelection.left];
+  const rowSize = grid.rows[gridSelection.top];
+
+  return (
+    <>
+      <SizeLine
+        label="Column"
+        idx={gridSelection.left}
+        size={columnSize}
+        onSetUnit={ unit => onUpdateGrid(true, gridSelection.left, {...columnSize, unit}) }
+        onSetValue={ value => onUpdateGrid(true, gridSelection.left, {...columnSize, value}) }
+      />
+      <SizeLine
+        label="Row"
+        idx={gridSelection.top}
+        size={rowSize}
+        onSetUnit={ unit => onUpdateGrid(false, gridSelection.top, {...columnSize, unit}) }
+        onSetValue={ value => onUpdateGrid(false, gridSelection.top, {...columnSize, value}) }
+      />
+    </>
+  );
 };
