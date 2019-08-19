@@ -4,6 +4,45 @@ import { RSAction, rsActions } from "gdmn-recordset";
 import { GridAction, cancelSortDialog, TApplySortDialogEvent, applySortDialog,
   TColumnResizeEvent, resizeColumn, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent,
   TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent, TCancelSortDialogEvent } from "gdmn-grid";
+import {IComboBoxOption} from "office-ui-fabric-react";
+
+export interface ILastEdited {
+  fieldName: string;
+  value: string | boolean ;
+};
+
+export interface IChangedFields {
+  [fieldName: string]: boolean;
+};
+
+export interface ISetComboBoxData {
+  [setAttrName: string]: IComboBoxOption[];
+};
+
+export interface ILastEdited {
+  fieldName: string;
+  value: string | boolean ;
+};
+
+export interface IAttributeData {
+  fieldName: string;
+  type: string;
+  linkName?: string;
+  lName?: string;
+  required: boolean;
+  semCategories: string;
+  hidden: boolean;
+  mask: string;
+  alignment: string;
+  format?: string;
+  formatDate?: string;
+  formatBoolean?: string;
+};
+
+export interface IEntityName {
+  fieldName: string,
+  value: string
+};
 
 export function bindGridActions(dispatch: ThunkDispatch<IState, never, RSAction | GridAction>) {
   return {

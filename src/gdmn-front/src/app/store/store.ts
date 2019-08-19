@@ -13,7 +13,7 @@ import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 const persistConfig: PersistConfig = {
   key: 'gdmn::root',
   storage: persistLocalStorage,
-  whitelist: []
+  whitelist: ['theme']
 };
 
 const getStore = (apiService: GdmnPubSubApi) => {

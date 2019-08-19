@@ -1,68 +1,84 @@
 import { LName } from "gdmn-internals";
 
-/**
- * Based on ideas from typesafe actions by Piotrek Witek
- * https://github.com/piotrwitek/typesafe-actions
- */
+export type Shape = 'PROCESS' | 'START' | 'END' | 'DECISION';
 
-export type StateType<T extends string = string> = {
-  type: T;
+export type BlockTypeParamDataType = 'string' | 'number';
+
+export interface IBlockTypeParam {
+  name: string;
+  dataType: BlockTypeParamDataType;
+  required?: boolean;
 };
 
-type StateTypeCreator<T extends string = string> = (
-  ...args: any[]
-) => StateType<T>;
+export type ID = string;
 
-type StateWithData<T extends string, D> = { type: T; data: D };
-
-function stateType<
-  T extends string,
-  D = undefined
->(type: T, data?: D) {
-  return { type, data } as any;
+export interface IBlockType {
+  id: ID;
+  shape: Shape;
+  label: string;
+  inParams?: IBlockTypeParam[];
+  outParams?: IBlockTypeParam[];
+  blockParams?: IBlockTypeParam[];
 };
 
-export interface TypeMeta<T extends string> {
-  getType: () => T;
+export interface IBlockTypes {
+  [id: string]: IBlockType;
 };
 
-export function createStateType<
-  T extends string,
-  STC extends StateTypeCreator<T> = () => { type: T }
->(
-  type: T,
-  createHandler?: (
-    stateCallback: <D>(
-      data: D
-    ) => StateWithData<T, D>
-  ) => STC
-): STC & TypeMeta<T> {
-  const stateTypeCreator: STC =
-    createHandler == null
-      ? ((() => ({ type })) as STC)
-      : createHandler(stateType.bind(null, type) as Parameters<
-          typeof createHandler
-        >[0]);
-
-  return Object.assign(stateTypeCreator, {
-    getType: () => type
-  });
+export interface IBlockParams {
+  [name: string]: any;
 };
 
-export interface ITransition {
-  fromState: string;
-  toState: string;
-  returning?: boolean;
+export interface IBlock {
+  id: ID;
+  type: IBlockType;
+  label?: string;
+  params?: IBlockParams;
 };
 
-export type Flow = ITransition[];
+export interface IBlocks {
+  [id: string]: IBlock;
+};
 
-export interface IBusinessProcess {
-  caption: LName;
+export interface ITransitionBase {
+  from: IBlock;
+};
+
+export interface ITransition extends ITransitionBase {
+  to: IBlock;
+};
+
+export interface IXORTransition extends ITransitionBase {
+  to: IBlock[];
+};
+
+export interface IDecisionTransition extends ITransitionBase {
+  yes: IBlock | IBlock[];
+  no: IBlock | IBlock[];
+};
+
+export function isDecisionTransition(transition: Transition): transition is IDecisionTransition {
+  return (transition as IDecisionTransition).yes !== undefined;
+};
+
+export function isXORTransition(transition: Transition): transition is IXORTransition {
+  return Array.isArray((transition as IXORTransition).to);
+};
+
+export type Transition = ITransition | IXORTransition | IDecisionTransition;
+
+export interface IFlow {
+  [id: string]: Transition;
+};
+
+export interface IFlowchart {
+  name: string;
+  label: LName;
   description: LName;
-  flow: Flow;
+  blocks: IBlocks;
+  flow: IFlow;
 };
 
-export interface IBusinessProcesses {
-  [name: string]: IBusinessProcess;
+export interface IFlowcharts {
+  [name: string]: IFlowchart;
 };

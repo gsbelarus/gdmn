@@ -1,20 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react';
-import { businessProcesses } from '@src/app/fsm/fsm';
+import { CommandBar, ICommandBarItemProps, Dropdown, getTheme } from 'office-ui-fabric-react';
 import { getLName } from 'gdmn-internals';
-import { Edge as DagreEdge, graphlib, layout } from 'dagre';
-import { Rect } from './Rect';
-import { Edge } from './Edge';
+import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants } from 'mxgraph/javascript/mxClient';
+import { flowcharts } from '@src/app/fsm/flowcharts';
+import { IBlock, isDecisionTransition } from '@src/app/fsm/types';
+import { fsmActions } from '@src/app/fsm/actions';
+import { FSM } from '@src/app/fsm/fsm';
+
+interface IGraphState{
+  graph: any;
+};
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
-  const { url, viewTab, dispatch } = props;
-  const [activeBP, setActiveBP] = useState( Object.keys(businessProcesses).length ? Object.keys(businessProcesses)[0] : null );
-  const bp = activeBP ? businessProcesses[activeBP] : undefined;
+  const { url, viewTab, dispatch, fsm, theme } = props;
+  const [flowchart, setFlowchart] = useState( fsm ? fsm.flowchart : Object.values(flowcharts).length ? Object.values(flowcharts)[0] : null );
+  const [graphState, setGraphState] = useState<IGraphState | null>(null);
+  const graphContainer = useRef(null);
 
   useEffect( () => {
     if (!viewTab) {
@@ -26,71 +32,146 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
     }
   }, []);
 
+  const graphStyles = useMemo( () => {
+    const t = getTheme();
+    return {
+      current: {
+        terminator: 'fillColor=firebrick;strokeColor=maroon;fontColor=white;',
+        process: 'fillColor=mediumblue;strokeColor=navy;fontColor=white;'
+      },
+      regular: {
+        terminator: 'fillColor=pink;strokeColor=red;',
+        process: 'fillColor=powderblue;strokeColor=cornflowerblue;'
+      }
+    };
+  }, [theme]);
+
+  useEffect( () => {
+    const container = graphContainer.current;
+
+    if (!flowchart || !container) return;
+
+    // Disables the built-in context menu
+    mxEvent.disableContextMenu(container);
+
+    // Creates the graph inside the given container
+    const graph = graphState && graphState.graph ? graphState.graph : new mxGraph(container);
+
+    if (!graphState || !graphState.graph) {
+      // Enables rubberband selection
+      new mxRubberband(graph);
+
+      const vertexStyle = graph.getStylesheet().getDefaultVertexStyle();
+      vertexStyle[mxConstants.STYLE_PERIMETER_SPACING] = 2;
+      vertexStyle[mxConstants.STYLE_FONTFAMILY] = 'Segoe UI';
+
+      const edgeStyle = graph.getStylesheet().getDefaultEdgeStyle();
+      edgeStyle[mxConstants.STYLE_ROUNDED] = true;
+
+      graph.gridSize = 20;
+    }
+
+    // Gets the default parent for inserting new cells. This
+    // is normally the first child of the root (ie. layer 0).
+    const parent = graph.getDefaultParent();
+
+    const layout = new mxHierarchicalLayout(graph);
+
+    layout.interRankCellSpacing = 40;
+    layout.forceConstant = 80;
+
+    const w = 200;
+    const h = 32;
+
+    // Adds cells to the model in a single step
+    graph.getModel().beginUpdate();
+    try
+    {
+      graph.removeCells(graph.getChildVertices(parent));
+
+      const map = new Map<IBlock, any>();
+      Object.entries(flowchart.blocks).forEach( ([name, block]) => {
+        const variantStyle = fsm && fsm.block === block ? graphStyles.current : graphStyles.regular;
+
+        const style = block.type.shape === 'PROCESS'
+          ? 'shape=rectangle' + variantStyle.process
+          : block.type.shape === 'DECISION'
+          ? 'shape=rhombus'
+          : 'shape=rectangle;rounded=1;' + variantStyle.terminator;
+
+        const v = graph.insertVertex(
+          parent,
+          null,
+          block.label ? block.label : name,
+          0,
+          0,
+          w,
+          block.type.shape === 'DECISION' ? h * 1.5 : h,
+          style);
+        map.set(block, v);
+      });
+
+      const connectBlocks = (fromBlock: IBlock, toBlock: IBlock | IBlock[], edgeLabel: string = '') => {
+        if (Array.isArray(toBlock)) {
+          const v = graph.insertVertex(parent, null, 'X', 0, 0, 24, 24, 'shape=rhombus;rounded=false;perimeterSpacing=2');
+          graph.insertEdge(parent, null, edgeLabel, map.get(fromBlock), v);
+          toBlock.forEach( to => graph.insertEdge(parent, null, '', v, map.get(to)) );
+        } else {
+          graph.insertEdge(parent, null, edgeLabel, map.get(fromBlock), map.get(toBlock));
+        }
+      };
+
+      Object.values(flowchart.flow).forEach( f => {
+        if (isDecisionTransition(f)) {
+          connectBlocks(f.from, f.yes, 'Yes');
+          connectBlocks(f.from, f.no, 'No');
+        }
+        else {
+          connectBlocks(f.from, f.to);
+        }
+      });
+
+      layout.execute(parent);
+    }
+    finally
+    {
+      // Updates the display
+      graph.getModel().endUpdate();
+    }
+
+    setGraphState({ graph });
+
+  }, [flowchart, graphContainer.current, fsm]);
+
   const commandBarItems: ICommandBarItemProps[] = [
     {
-      key: 'start',
-      text: 'Старт',
+      key: 'active',
+      text: 'Активный',
+      disabled: !fsm || fsm.flowchart === flowchart,
       iconProps: {
         iconName: 'CRMProcesses'
       },
-      onClick: () => {}
+      onClick: () => setFlowchart(fsm!.flowchart)
+    },
+    {
+      key: 'start',
+      text: 'Старт',
+      disabled: !!fsm || !flowchart,
+      iconProps: {
+        iconName: 'Play'
+      },
+      onClick: () => dispatch(fsmActions.setFSM(FSM.create(flowchart!)))
+    },
+    {
+      key: 'stop',
+      text: 'Стоп',
+      disabled: !fsm || flowchart !== fsm.flowchart,
+      iconProps: {
+        iconName: 'Stop'
+      },
+      onClick: () => dispatch(fsmActions.destroyFSM())
     }
   ];
-
-  // Create a new directed graph
-  const g = new graphlib.Graph({ multigraph: true, directed: true });
-
-  if (bp) {
-    // Set an object for the graph label
-    g.setGraph({});
-
-    // Default to assigning a new object as a label for each new edge.
-    g.setDefaultEdgeLabel(() => {
-      return {};
-    });
-
-    const created: { [name: string]: boolean } = {};
-
-    const createStateNode = (label: string) => {
-      if (!created[label]) {
-        g.setNode(label, {
-          label,
-          width: label.length * 9 + 8,
-          height: 26,
-          className: 'state',
-          rank: 'min'
-        });
-        created[label] = true;
-      }
-    };
-
-    bp.flow.forEach( t => {
-      createStateNode(t.fromState);
-      createStateNode(t.toState);
-      g.setEdge(t.fromState, t.toState);
-      if (t.returning) {
-        g.setEdge(t.toState, t.fromState);
-      }
-    });
-
-    g.graph().ranksep = 64;
-    g.graph().marginx = 2;
-    g.graph().marginy = 2;
-    layout(g);
-  }
-
-  const makeRect = (n: string, idx: number) => {
-    const nd = g.node(n);
-    if (!nd) return null;
-
-    const x = nd.x - nd.width / 2;
-    const y = nd.y - nd.height / 2;
-    return (
-      <Rect key={idx} x={x} y={y} width={nd.width} height={nd.height} text={nd.label} className={nd.className} />
-    );
-  };
-
-  const makeEdge = (e: DagreEdge, idx: number) => <Edge key={idx} points={g.edge(e).points} />;
 
   return (
     <div styleName="SGrid">
@@ -100,47 +181,26 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       <div styleName="SGridTable">
         <div styleName="BPList">
           <div styleName="BPColumn">
+            <Dropdown
+              label="Бизнес-процесс"
+              selectedKey={flowchart ? flowchart.name : undefined}
+              onChange={ (_event, option) => option && typeof option.key === 'string' && setFlowchart(flowcharts[option.key]) }
+              placeholder="Select a business process"
+              options={Object.entries(flowcharts).map( ([key, bp]) =>({ key, text: getLName(bp.label, ['ru']) }) )}
+              //styles={{ dropdown: { width: 300 } }}
+            />
             {
-              Object.entries(businessProcesses).map( ([name, bp]) =>
-                <div
-                  styleName={`BPCard ${ name === activeBP ? 'SelectedBP' : '' }`}
-                  onClick={ () => setActiveBP(name) }
-                >
-                  <h2>{getLName(bp.caption, ['ru'])}</h2>
-                  <article>{getLName(bp.description, ['ru'])}</article>
-                </div>
-              )
+              flowchart
+              &&
+              <div
+                styleName="BPCard"
+              >
+                {getLName(flowchart.description, ['ru'])}
+              </div>
             }
           </div>
-          <div styleName="BPFlow">
-            {g.graph() ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={g.graph().width}
-                height={g.graph().height}
-                viewBox={'0 0 ' + g.graph().width + ' ' + g.graph().height}
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <defs>
-                  <marker
-                    id="arrow"
-                    viewBox="0 0 10 10"
-                    refX="9"
-                    refY="5"
-                    markerUnits="strokeWidth"
-                    markerWidth="10"
-                    markerHeight="8"
-                    orient="auto"
-                  >
-                    <path d="M 0 0 L 10 5 L 0 10 Z" style={{ strokeWidth: '1', fill: 'gray' }} />
-                  </marker>
-                </defs>
-                <g>
-                  {g.nodes().map((n, idx) => makeRect(n, idx))}
-                  {g.edges().map((e, idx) => makeEdge(e, idx))}
-                </g>
-              </svg>
-            ) : null}
+          <div styleName="BPFlow" ref={graphContainer}>
+
           </div>
         </div>
       </div>

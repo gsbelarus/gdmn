@@ -1,55 +1,59 @@
-import { createStateType, IBusinessProcesses } from "./types";
+import { IFlowchart, IBlock, Transition } from "./types";
+import { blockTypes } from "./blockTypes";
+import { store } from "..";
+import { ITransaction } from "@stomp/stompjs";
 
-const logged = createStateType('LOGGED', resolve => (userName: string) => resolve({ userName }) );
-const showData = createStateType('SHOW_DATA', resolve => (queryPhrase: string) => resolve({ queryPhrase }));
-const workDone = createStateType('WORK_DONE');
-const queryAndSort = createStateType('QUERY_AND_SORT');
-const addRecord = createStateType('ADD_RECORD');
+interface IFSMParams {
+  flowchart: IFlowchart;
+  path: IBlock[];
+  transition: Transition;
+};
 
-export const businessProcesses: IBusinessProcesses = {
-  'WorkTime': {
-    caption: {
-      ru: {
-        name: 'Регистрация рабочего времени'
-      }
-    },
-    description: {
-      ru: {
-        name: 'Просмотр, выборка, сортировка таблицы рабочего времени. Внесение, редактирование, удаление записей рабочего времени.'
-      }
-    },
-    flow: [
-      {
-        fromState: logged.getType(),
-        toState: showData.getType()
-      },
-      {
-        fromState: showData.getType(),
-        toState: workDone.getType()
-      },
-      {
-        fromState: showData.getType(),
-        toState: queryAndSort.getType(),
-        returning: true
-      },
-      {
-        fromState: showData.getType(),
-        toState: addRecord.getType(),
-        returning: true
-      }
-    ]
-  },
-  'Test': {
-    caption: {
-      ru: {
-        name: 'Тестовый процесс'
-      }
-    },
-    description: {
-      ru: {
-        name: 'Присутствует в списке из соображений тестирования.'
-      }
-    },
-    flow: []
+export class FSM {
+  private _params: IFSMParams;
+
+  constructor (params: IFSMParams) {
+    this._params = params;
+  }
+
+  static create(flowchart: IFlowchart) {
+    const transition = flowchart.flow['begin'];
+
+    if (!transition) {
+      throw new Error('No entry point for a chartflow given.');
+    }
+
+    return new FSM({
+      flowchart: flowchart,
+      path: [],
+      transition
+    });
+  }
+
+  get flowchart() {
+    return this._params.flowchart;
+  }
+
+  get transition() {
+    return this._params.transition;
+  }
+
+  get block() {
+    return this._params.transition.from;
+  }
+
+  run() {
+    const state = store.getState();
+
+    switch (this.block.type) {
+      case blockTypes.login:
+        if (!state.authState.accessToken) {
+          throw new Error('Not logged in');
+        }
+        return;
+
+      default:
+        throw new Error(`Unknown block type ${this.block.type.id}`);
+    }
   }
 };

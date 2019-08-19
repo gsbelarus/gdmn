@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef, ITextFieldStyles, IComboBoxStyles, IStyle, IButtonStyles } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
@@ -13,6 +13,8 @@ export interface ILookupComboBoxProps {
   onChanged: (option: IComboBoxOption | undefined) => void;
   onFocus?: () => void;
   componentRef?: (ref: IComboBox | null) => void;
+  styles?: Partial<IComboBoxStyles>;
+  caretDownButtonStyles?: IButtonStyles;
 };
 
 type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
@@ -138,7 +140,7 @@ function init(preSelectedOption: IComboBoxOption | undefined): ILookupComboboxSt
 
 export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef, styles, caretDownButtonStyles } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOption, queryState, text, lookupText, limit, dropDown } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -314,8 +316,12 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       }
       onRenderOption={onRenderOption}
       styles={
-        selectedOption
+        selectedOption && styles
         ? {
+          ...styles
+        }
+        : selectedOption ?
+        {
           root: {
             backgroundColor: '#77ff77'
           },
@@ -323,8 +329,13 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
             backgroundColor: '#77ff77'
           }
         }
+        : styles ?
+        {
+          ...styles,
+        }
         : undefined
       }
+      caretDownButtonStyles={ caretDownButtonStyles ? caretDownButtonStyles : undefined }
       onChange={onChange}
       onPendingValueChanged={onPendingValueChanged}
       onKeyDown={onKeyDown}

@@ -24,13 +24,6 @@ export interface IUICommand {
 
 export const uiCommands: IUICommand[] = [
   {
-    command: 'designer',
-    form: 'mainHeader',
-    group: 'designer',
-    caption: 'Designer',
-    link: `/designer`
-  },
-  {
     command: 'sql',
     form: 'mainHeader',
     group: 'sql',
@@ -88,6 +81,21 @@ export const uiCommands: IUICommand[] = [
     link: `/account`
   },
   {
+    command: 'themeEditor',
+    form: 'mainHeader',
+    group: 'userAccount',
+    caption: 'Theme editor...',
+    iconName: 'Color',
+    link: `/themeEditor`
+  },
+  {
+    command: 'designer2',
+    form: 'mainHeader',
+    group: 'designer2',
+    caption: 'Designer2',
+    link: `/designer2`
+  },
+  {
     command: 'logout',
     form: 'mainHeader',
     group: 'userAccount',
@@ -104,10 +112,14 @@ export const uiCommands: IUICommand[] = [
 ];
 
 export function commandsToContextualMenuItems(
-  commands: string[],
+  commandsOrGroup: string[] | string,
   dispatch: (action: AnyAction | TThunkAction) => void,
   redirect: (link: string) => void
 ): IContextualMenuItem[] {
+  const commands = typeof commandsOrGroup === 'string'
+    ? uiCommands.filter( uic => uic.group === commandsOrGroup ).map( uic => uic.command )
+    : commandsOrGroup;
+
   return commands.map((c, idx) => {
     if (c === '-') {
       return {

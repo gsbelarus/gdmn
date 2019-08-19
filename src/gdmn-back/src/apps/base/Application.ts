@@ -78,7 +78,7 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, attributes?: IAttribute[]}>;
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, parentName?:string, attributes?: IAttribute[]}>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string}>;
 export class Application extends ADatabase {
 
@@ -353,19 +353,32 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
+        const {entityName, parentName, attributes} = context.command.payload;
 
-        const {entityName, attributes} = context.command.payload;
-
+        const getNewEntity = () => {
+          if (parentName) {
+            try {
+              return new Entity({
+                parent: this.erModel.entity(parentName),
+                name: entityName,
+                lName: {}
+              });
+            } catch (error) {
+              throw error;
+            } 
+          }
+          return new Entity({
+            name: entityName,
+            lName: {}
+          });
+        }  
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel, new Entity({
-                name: entityName,
-                lName: {}
-              }));
+              const entity = await erBuilder.create(this.erModel, getNewEntity());
               if (attributes) {
                 const lengthArr = attributes.length;
                 for (let i = 0; i < lengthArr; i++) {

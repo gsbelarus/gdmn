@@ -1,16 +1,17 @@
-import { IERModelView2Props } from "./ERModelView2.types";
-import React, { useEffect, useState } from "react";
-import { rsActions, RecordSet, TFieldType, IDataRow } from "gdmn-recordset";
-import { List } from "immutable";
-import { createGrid, GDMNGrid } from "gdmn-grid";
-import { gdmnActions, gdmnActionsAsync } from "../gdmn/actions";
-import { linkCommandBarButton } from "@src/app/components/LinkCommandBarButton";
-import { ICommandBarItemProps, CommandBar, TextField } from "office-ui-fabric-react";
-import { bindGridActions } from "./utils";
+import {IERModelView2Props} from "./ERModelView2.types";
+import React, {useCallback, useEffect, useState} from "react";
+import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
+import {List} from "immutable";
+import {createGrid, GDMNGrid} from "gdmn-grid";
+import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
+import {linkCommandBarButton} from "@src/app/components/LinkCommandBarButton";
+import {CommandBar, ICommandBarItemProps, TextField} from "office-ui-fabric-react";
+import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
-import { InspectorForm } from "@src/app/components/InspectorForm";
-import { useSaveGridState } from "./EntityDataView/useSavedGridState";
+import {InspectorForm} from "@src/app/components/InspectorForm";
+import {useSaveGridState} from "./EntityDataView/useSavedGridState";
+import {apiService} from "@src/app/services/apiService";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -21,7 +22,22 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
 
-  useEffect( () => {
+  const deleteRecord = useCallback(() => {
+    if (entities && entities.size) {
+      dispatch(async (dispatch, getState) => {
+
+        const result = await apiService.deleteEntity({
+          entityName: entities.getString('name')
+        });
+
+        if (!result.error) {
+          dispatch(rsActions.setRecordSet(
+            entities.delete(true)))
+        }
+      });
+    }
+  }, [entities, viewTab]);
+  useEffect(() => {
     if (!erModel || !Object.keys(erModel.entities).length) {
       return;
     }
@@ -240,6 +256,24 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'FileCode'
       },
       onClick: () => setShowInspector(true)
+    },
+    {
+      key: 'addEntity',
+      text: 'Add',
+      iconProps: {
+        iconName: 'Add'
+      },
+      commandBarButtonAs: linkCommandBarButton(`addEntity`)
+    }
+    ,
+    {
+      key: 'deleteEntity',
+      disabled: !entities || !entities.size,
+      text: 'Delete',
+      iconProps: {
+        iconName: 'Delete'
+      },
+      onClick: deleteRecord
     }
   ];
 

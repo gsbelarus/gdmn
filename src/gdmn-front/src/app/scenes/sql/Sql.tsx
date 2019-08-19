@@ -1,4 +1,12 @@
-import { createGrid, deleteGrid, GDMNGrid, setCursorCol, TSetCursorPosEvent } from 'gdmn-grid';
+import {
+  createGrid,
+  deleteGrid,
+  GDMNGrid,
+  setCursorCol,
+  TSetCursorPosEvent,
+  TColumnResizeEvent,
+  resizeColumn
+} from 'gdmn-grid';
 import { IDataRow, RecordSet, rsActions, TFieldType } from 'gdmn-recordset';
 import { List } from 'immutable';
 import { CommandBar, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
@@ -11,13 +19,16 @@ import { apiService } from '@src/app/services/apiService';
 import { rsMetaActions } from '@src/app/store/rsmeta';
 
 import { gdmnActions } from '../gdmn/actions';
-// import { ISessionData } from '../gdmn/types';
-import { ISqlProps } from './Sql.types';
+import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd } from './utils';
+import { ParamsDialog } from './ParamsDialog';
+import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
+import { IEntityInsertFieldInspector } from 'gdmn-orm';
 
-interface ISQLParam {
+export interface ISQLParam {
   name: string;
+  type: TFieldType;
   value: any;
 }
 
@@ -25,8 +36,9 @@ interface ISQLViewState {
   expression: string;
   params: ISQLParam[];
   viewMode: 'hor' | 'ver';
-  showSQL?: boolean;
-  showPlan?: boolean;
+  showParams: boolean;
+  showPlan: boolean;
+  showHistory: boolean;
 }
 
 type Action =
@@ -34,36 +46,32 @@ type Action =
   | { type: 'SET_EXPRESSION'; expression: string }
   | { type: 'CLEAR_EXPRESSION' }
   | { type: 'CHANGE_VIEW' }
-  | { type: 'SHOW_PARAMS'; showSQL: boolean }
+  | { type: 'SHOW_PARAMS'; showParams: boolean }
   | { type: 'SET_PARAMS'; params: ISQLParam[] }
-  | { type: 'SHOW_PLAN'; showPlan: boolean };
+  | { type: 'SHOW_PLAN'; showPlan: boolean }
+  | { type: 'SHOW_HISTORY'; showHistory: boolean };
 
 function reducer(state: ISQLViewState, action: Action): ISQLViewState {
   switch (action.type) {
     case 'INIT':
       return action.state;
     case 'SET_EXPRESSION':
-      return { ...state, expression: action.expression };
+      return { ...state, expression: action.expression, params: [] };
     case 'CLEAR_EXPRESSION':
-      return { ...state, expression: '' };
+      return { ...state, expression: '', params: [] };
+    case 'SHOW_PARAMS':
+      return { ...state, showParams: action.showParams };
     case 'SET_PARAMS':
       return { ...state, params: action.params };
     case 'SHOW_PLAN':
       return { ...state, showPlan: action.showPlan };
     case 'CHANGE_VIEW':
       return { ...state, viewMode: state.viewMode === 'hor' ? 'ver' : 'hor' };
+    case 'SHOW_HISTORY':
+      return { ...state, showHistory: action.showHistory };
     default:
       return state;
   }
-}
-
-interface ILastEdited {
-  fieldName: string;
-  value: string | boolean;
-}
-
-interface IChangedFields {
-  [fieldName: string]: boolean;
 }
 
 const initialState: ISQLViewState = {
@@ -71,12 +79,13 @@ const initialState: ISQLViewState = {
   params: [],
   viewMode: 'hor',
   showPlan: false,
-  showSQL: false
+  showParams: false,
+  showHistory: false
 };
 
 export const Sql = CSSModules(
-  (props: ISqlProps): JSX.Element => {
-    const { url, viewTab, dispatch, rs, gcs, id, history } = props;
+  (props: ISQLProps): JSX.Element => {
+    const { url, viewTab, dispatch, rs, gcs, id, history, erModel } = props;
 
     const [state, setState] = useReducer(reducer, initialState);
 
@@ -167,20 +176,42 @@ export const Sql = CSSModules(
       }
     }, [rs]);
 
-    const handleGridSelect = (event: TSetCursorPosEvent) =>
+    const handleCloseParams = () => setState({ type: 'SHOW_PARAMS', showParams: false });
+
+    const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
+
+    const handleSelectExpression = (expression: string) => {
+      setState({ type: 'SHOW_HISTORY', showHistory: false });
+      setState({ type: 'SET_EXPRESSION', expression });
+    };
+
+    const handleGridSelect = (event: TSetCursorPosEvent) => {
       dispatch(dispatch => {
         dispatch(rsActions.setCurrentRow({ name: id, currentRow: event.cursorRow }));
         dispatch(setCursorCol({ name: id, cursorCol: event.cursorCol }));
       });
+    };
+
+    const handleColumnResize = (event: TColumnResizeEvent) => {
+      dispatch(
+        resizeColumn({
+          name: event.rs.name,
+          columnIndex: event.columnIndex,
+          newWidth: event.newWidth
+        })
+      );
+    };
 
     const handleExecuteSql = useCallback(() => {
       dispatch(async (dispatch, getState) => {
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
+        const params = state.params.map(i => ({ [i.name]: i.value }));
+
         apiService
           .prepareSqlQuery({
             select: state.expression,
-            params: state.params
+            params
           })
           .subscribe(async value => {
             switch (value.payload.status) {
@@ -217,7 +248,10 @@ export const Sql = CSSModules(
                       fieldDefs,
                       data: List(response.payload.result!.data as IDataRow[]),
                       sequentially: !!rsm.taskKey,
-                      sql: { select: state.expression, params: state.params }
+                      sql: {
+                        select: state.expression,
+                        params
+                      }
                     });
 
                     if (getState().grid[id]) {
@@ -228,6 +262,35 @@ export const Sql = CSSModules(
                     } else {
                       dispatch(rsActions.createRecordSet({ name: rs.name, rs }));
                     }
+
+                    // Сохраняем SQL в историю запросов
+                    const fields: IEntityInsertFieldInspector[] = [
+                      {
+                        attribute: 'SQL_TEXT',
+                        value: state.expression
+                      },
+                      {
+                        attribute: 'CREATORKEY',
+                        value: 650002
+                      },
+                      {
+                        attribute: 'EDITORKEY',
+                        value: 650002
+                      }
+                    ];
+
+                    const insertResponse = await apiService.insert({
+                      insert: {
+                        entity: 'TgdcSQLHistory',
+                        fields
+                      }
+                    });
+
+                    if (insertResponse.error) {
+                      dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: insertResponse.error.message } }));
+                      return;
+                    }
+
                     break;
                   }
                   case TTaskStatus.FAILED: {
@@ -280,7 +343,7 @@ export const Sql = CSSModules(
           text: 'Очистить',
           disabled: !state.expression || !state.expression.length,
           iconProps: {
-            iconName: 'Clear'
+            iconName: 'ClearFormatting'
           },
           onClick: () => setState({ type: 'CLEAR_EXPRESSION' })
         },
@@ -300,7 +363,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'ThumbnailView'
           },
-          onClick: () => setState({ type: 'SHOW_PARAMS', showSQL: true })
+          onClick: () => setState({ type: 'SHOW_PARAMS', showParams: true })
         },
         {
           key: 'plan',
@@ -317,7 +380,7 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'FullHistory'
           },
-          onClick: () => console.log('click history')
+          onClick: () => setState({ type: 'SHOW_HISTORY', showHistory: true })
         },
         {
           key: 'form-view',
@@ -326,7 +389,6 @@ export const Sql = CSSModules(
             iconName: 'ViewAll2'
           },
           onClick: () => {
-            // changedFields.current['viewMode'] = true;
             setState({ type: 'CHANGE_VIEW' });
           }
         }
@@ -335,24 +397,40 @@ export const Sql = CSSModules(
     );
 
     return (
-      <div styleName="grid-container">
-        <CommandBar items={commandBarItems} />
-        <div styleName={`sql-container ${state.viewMode}`}>
-          <div>
-            <TextField
-              resizable={false}
-              multiline
-              rows={8}
-              value={state.expression}
-              onChange={(_e, newValue?: string) => {
-                if (newValue !== undefined) {
-                  setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
-                }
-              }}
+      <div styleName="main-container">
+        <div styleName="top-container">
+          <CommandBar items={commandBarItems} />
+          {state.showParams && state.expression.length > 0 && (
+            <ParamsDialog params={state.params} onClose={handleCloseParams} />
+          )}
+          {state.showHistory && (
+            <HistoryDialogContainer
+              id={`dialog${id}`}
+              onClose={handleCloseHistory}
+              onSelect={handleSelectExpression}
             />
-          </div>
-          <div>
-            {rs && gcs && <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={() => false} />}
+          )}
+        </div>
+        <div styleName="grid-container">
+          <div styleName={`sql-container ${state.viewMode}`}>
+            <div>
+              <TextField
+                resizable={false}
+                multiline
+                rows={8}
+                value={state.expression}
+                onChange={(_e, newValue?: string) => {
+                  if (newValue !== undefined) {
+                    setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
+                  }
+                }}
+              />
+            </div>
+            <div>
+              {rs && gcs && (
+                <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize} />
+              )}
+            </div>
           </div>
         </div>
       </div>

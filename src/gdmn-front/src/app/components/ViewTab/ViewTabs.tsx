@@ -1,26 +1,26 @@
-import React from 'react';
-import CSSModules from 'react-css-modules';
-import styles from './styles.css';
+import React, { useMemo } from 'react';
 import { IViewTab } from '@src/app/scenes/gdmn/types';
 import { ViewTab } from './ViewTab';
 import { RouteComponentProps } from 'react-router-dom';
 import { RecordSetReducerState, TStatus } from 'gdmn-recordset';
 import { IRsMetaState } from '@src/app/store/rsmeta';
+import { getViewTabStyles } from './getViewTabStyles';
 
 export interface IViewTabsProps {
   viewTabs: IViewTab[];
   recordSet: RecordSetReducerState;
   rsMeta: IRsMetaState;
+  theme: string;
   onClose: (vt: IViewTab) => void;
 };
 
-export const ViewTabs = CSSModules(
-  (props: IViewTabsProps & RouteComponentProps<any>) => {
-    const { viewTabs, onClose, recordSet, rsMeta } = props;
+export const ViewTabs = (props: IViewTabsProps & RouteComponentProps<any>) => {
+    const { viewTabs, onClose, recordSet, rsMeta, theme } = props;
+    const { viewTabsBand, viewTabSpace, viewRestSpace } = useMemo( () => getViewTabStyles(theme), [theme]);
 
     return viewTabs.length ?
-      <div styleName="ViewTabs">
-        <div styleName="ViewTabSpace" />
+      <div style={viewTabsBand}>
+        <div style={viewTabSpace} />
         {
           viewTabs.map( vt => {
             const loading = !!vt.rs && vt.rs.reduce(
@@ -49,13 +49,14 @@ export const ViewTabs = CSSModules(
                 loading={loading}
                 changed={changed}
                 error={error}
+                theme={theme}
                 onClose={ vt.canClose ? () => onClose(vt) : undefined }
               />
             );
           })
         }
-        <div styleName="ViewRestSpace" />
+        <div style={viewRestSpace}/>
       </div>
     :
       null;
-  }, styles, { allowMultiple: true });
+  };

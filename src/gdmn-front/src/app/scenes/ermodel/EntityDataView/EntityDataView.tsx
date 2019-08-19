@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, PrimaryButton } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, ThemeGenerator, getTheme } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -9,11 +9,12 @@ import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IGridState } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue } from 'gdmn-grid';
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
+import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -66,6 +67,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
+  const [MessageBox, messageBox] = useMessageBox();
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -203,81 +205,103 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         iconName: 'FileCode'
       },
       onClick: () => viewDispatch({ type: 'SET_SHOW_SQL', showSQL: true })
+    },
+    {
+      key: 'testMessageBox',
+      text: 'Test MessageBox',
+      iconProps: {
+        iconName: 'FileCode'
+      },
+      onClick: () => {
+        (async () => {
+          if (await messageBox({
+            message: 'abc',
+            icon: 'Warning',
+            type: 'MB_YESNOCANCEL'
+          }) === 'YES') {
+            messageBox({
+              message: `Button YES has been pressed`
+            });
+          }
+        })();
+      }
     }
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
-    <div styleName="SGrid">
-      {
-        showSQL && rs && rs.sql &&
-        <SQLForm
-          rs={rs}
-          onCloseSQL={onCloseSQL}
-        />
-      }
-      <div styleName="SGridTop">
-        <CommandBar items={commandBarItems} />
+      <MessageBox>
+      <div styleName="SGrid">
         {
-          error
-          &&
-          <MessageBar
-            messageBarType={MessageBarType.error}
-            isMultiline={false}
-            onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
-            dismissButtonAriaLabel="Close"
-          >
-            {error}
-          </MessageBar>
-        }
-          <div styleName="OptionsPanel">
-            <TextField
-              disabled={!rs || rs.status !== TStatus.FULL}
-              label="Filter:"
-              value={filter}
-              onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
-            />
-            <span styleName="QueryBox">
-              <TextField
-                styles={{
-                  root: {
-                    width: '100%'
-                  }
-                }}
-                label="Query:"
-                value={phrase}
-                onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
-                errorMessage={ phraseError ? phraseError : undefined }
-                onRenderSuffix={
-                  props =>
-                    <span
-                      onClick={applyPhrase}
-                    >
-                      Применить
-                    </span>
-                }
-              />
-            </span>
-          </div>
-      </div>
-      <div styleName="SGridTable">
-        { rs && gcs &&
-          <GDMNGrid
-            {...gcs}
-            columns={gcs.columns.filter( c => !c.hidden )}
+          showSQL && rs && rs.sql &&
+          <SQLForm
             rs={rs}
-            loadMoreRsData={loadMoreRsData}
-            {...gridActions}
-            onDelete={onDelete}
-            onInsert={onInsert}
-            onCancel={onCancel}
-            onSetFieldValue={onSetFieldValue}
-            ref={ grid => grid && (gridRef.current = grid) }
-            savedState={getSavedState()}
+            onCloseSQL={onCloseSQL}
           />
         }
+        <div styleName="SGridTop">
+          <CommandBar items={commandBarItems} />
+          {
+            error
+            &&
+            <MessageBar
+              messageBarType={MessageBarType.error}
+              isMultiline={false}
+              onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
+              dismissButtonAriaLabel="Close"
+            >
+              {error}
+            </MessageBar>
+          }
+            <div styleName="OptionsPanel">
+              <TextField
+                disabled={!rs || rs.status !== TStatus.FULL}
+                label="Filter:"
+                value={filter}
+                onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+              />
+              <span styleName="QueryBox">
+                <TextField
+                  styles={{
+                    root: {
+                      width: '100%'
+                    }
+                  }}
+                  label="Query:"
+                  value={phrase}
+                  onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
+                  errorMessage={ phraseError ? phraseError : undefined }
+                  onRenderSuffix={
+                    () =>
+                      <span
+                        onClick={applyPhrase}
+                      >
+                        Применить
+                      </span>
+                  }
+                />
+              </span>
+            </div>
+        </div>
+        <div styleName="SGridTable">
+          { rs && gcs &&
+            <GDMNGrid
+              {...gcs}
+              columns={gcs.columns}
+              rs={rs}
+              loadMoreRsData={loadMoreRsData}
+              {...gridActions}
+              onDelete={onDelete}
+              onInsert={onInsert}
+              onCancel={onCancel}
+              onSetFieldValue={onSetFieldValue}
+              ref={ grid => grid && (gridRef.current = grid) }
+              savedState={getSavedState()}
+            />
+          }
+        </div>
       </div>
-    </div>
+      </MessageBox>
   );
 }, styles, { allowMultiple: true });
