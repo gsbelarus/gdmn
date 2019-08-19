@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, PrimaryButton } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
@@ -266,7 +266,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           <GDMNGrid
             {...gcs}
             columns={gcs.columns.filter( c => !c.hidden )}
-            allColumns={gcs.columns}
             rs={rs}
             loadMoreRsData={loadMoreRsData}
             {...gridActions}

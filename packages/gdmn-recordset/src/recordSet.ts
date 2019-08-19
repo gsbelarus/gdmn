@@ -26,7 +26,7 @@ import {
   TCommitResult,
   TCommitFunc} from "./types";
 import {checkField, getAsBoolean, getAsDate, getAsNumber, getAsString, isNull} from "./utils";
-import { IDateFormat, INumberFormat } from "./format";
+import { INumberFormat, IDateFormat } from "gdmn-internals";
 
 export interface IRSSQLParams {
   [name: string]: any;

@@ -1,14 +1,4 @@
-export interface INumberFormat {
-  name?: string;
-  minIntDigits?: number;
-  minDecDigits?: number;
-  maxDecDigits?: number;
-  decSeparator?: string;
-  groupSeparator?: string;
-  useGrouping?: boolean;
-  currSign?: string;
-  currSignPlaceBefore?: boolean;
-};
+import { INumberFormat, IDateFormat } from "gdmn-internals";
 
 export type FormatNumber = (n: number, format?: INumberFormat) => string;
 
@@ -94,8 +84,6 @@ export const globalCurrencyFormat: INumberFormat = {
   maxDecDigits: 2,
   useGrouping: true
 };
-
-export type IDateFormat = string;
 
 export type FormatDate = (d: Date, format?: IDateFormat) => string;
 
