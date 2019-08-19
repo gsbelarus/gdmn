@@ -288,8 +288,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           { rs && gcs &&
             <GDMNGrid
               {...gcs}
-              columns={gcs.columns.filter( c => !c.hidden )}
-              allColumns={gcs.columns}
+              columns={gcs.columns}
               rs={rs}
               loadMoreRsData={loadMoreRsData}
               {...gridActions}
