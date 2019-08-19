@@ -1,48 +1,46 @@
 import React, { useReducer, useMemo } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
-import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField } from "office-ui-fabric-react";
+import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
+import { ColorDropDown } from "./ColorDropDown";
+import { GridInspector } from "./GridInspector";
+import { IRectangle, IGridSize } from "./types";
+import { inRect, makeRect, rectIntersect } from "./utils";
 
-type TUnit = 'AUTO' | 'FR' | 'PX';
-
-interface ISize {
-  unit: TUnit;
-  value?: number;
-};
-
-interface IGridSize {
-  columns: ISize[];
-  rows: ISize[];
-};
-
-interface IRectangle {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-};
-
-const inRect = (rect: IRectangle | undefined, x: number, y: number) => rect && x >= rect.left && y >= rect.top && x <= rect.right && y <= rect.bottom;
-const rectIntersect = (rect1: IRectangle, rect2: IRectangle) => inRect(rect1, rect2.left, rect2.top)
-  || inRect(rect1, rect2.right, rect2.top)
-  || inRect(rect1, rect2.right, rect2.bottom)
-  || inRect(rect1, rect2.left, rect2.bottom);
-
-const makeRect = (rect: IRectangle, x: number, y: number) => inRect(rect, x, y)
-  ?
-    {
-      left: rect.left,
-      top: rect.top,
-      right: x,
-      bottom: y
-    }
-  :
-    {
-      left: Math.min(rect.left, x),
-      top: Math.min(rect.top, y),
-      right: Math.max(rect.right, x),
-      bottom: Math.max(rect.bottom, y),
-    };
+/**
+ *
+ * Переведенная в режим настройки форма может находиться в трех состояних: Дизайнер, Сетка, Просмотр.
+ *
+ * В режиме сетки мы задаем параметры CSS Grid (количество строк и столбцов, их ширину и высоту),
+ * а также создаем, изменяем или удаляем области. Области нужны для размещения на них управляющих
+ * элементов: полей ввода, меток, пиктограмок и т.п. Для создания области мы выделяем одну или несколько
+ * клеток грида и выбираем соответствующую команду. Для расширения мы выделяем клетку (клетки),
+ * прилежащие к области. Для уменьшения -- клетку (клетки) внутри области. Область -- это
+ * прямоугольная часть сетки, которая задается номерами столбца и колонки её левого верхнего
+ * и правого нижнего углов. Области не могут пересекаться. Каждая область -- это объект с уникальным
+ * именем и своими свойствами. Свойства области настраиваются в режиме Дизайнера.
+ *
+ * В режиме сетки доступны только команды настройки сетки, перехода в режим просмотра и выхода
+ * из режима настройки формы.
+ *
+ * Режим просмотра позволяет скрыть инспектор свойств и дополнительную разметку и просмотреть
+ * форму в виде, максимально приближенном к ее рабочему состоянию. В режиме просмотра доступны
+ * только команды выхода из этого режима и выхода из режима настройки формы.
+ *
+ * Режим дизайнера позволяет:
+ * 1) выбрать объект и настроить его свойства в инспекторе объектов.
+ * 2) удалить выбранный объект.
+ * 3) выбрать область и создать на ней новый объект.
+ *
+ * Доступны следующие типы объектов:
+ * 1) Область
+ * 2) Метка (текст)
+ * 3) Поле
+ *
+ * У каждого объекта есть уникальное в пределах формы, непустое имя. Для выбора объекта необходимо
+ * щелкнуть по нему мышью или выбрать из выпадающего списка в Инспекторе объектов.
+ *
+ */
 
 type TObjectType = 'WINDOW' | 'AREA' | 'LABEL';
 
@@ -56,10 +54,12 @@ interface IObject {
   name: string;
   parent?: string;
   type: TObjectType;
+  color?: string;
+  backgroundColor?: string;
 };
 
 interface IWindow extends IObject {
-  type: 'WINDOW'
+  type: 'WINDOW';
 };
 
 function isWindow(x: IObject): x is IArea {
@@ -67,14 +67,15 @@ function isWindow(x: IObject): x is IArea {
 };
 
 interface ILabel extends IObject {
-  type: 'LABEL',
-  text: string
+  type: 'LABEL';
+  text: string;
 };
 
 interface IObjectWithCoord extends IObject, IRectangle { };
 
 interface IArea extends IObjectWithCoord {
-  type: 'AREA'
+  type: 'AREA';
+  horizontal?: boolean;
 };
 
 function isArea(x: IObject): x is IArea {
@@ -328,26 +329,32 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         }
       >
         {area.name}
-        <Stack>
-          {
-            objects
-              .filter( object => object.parent === area.name )
-              .map( object => object.type === 'LABEL'
-                ? <Label
-                    key={object.name}
-                    onClick={
-                      e => {
-                        e.stopPropagation();
-                        designerDispatch({ type: 'SELECT_OBJECT', object });
-                      }
-                    }
-                  >
-                    {object.text}
-                  </Label>
-                : <div>Unknown object</div>
-              )
-          }
-        </Stack>
+        {
+          showGrid
+          ?
+            null
+          :
+            <Stack horizontal={area.horizontal}>
+              {
+                objects
+                  .filter( object => object.parent === area.name )
+                  .map( object => object.type === 'LABEL'
+                    ? <Label
+                        key={object.name}
+                        onClick={
+                          e => {
+                            e.stopPropagation();
+                            designerDispatch({ type: 'SELECT_OBJECT', object });
+                          }
+                        }
+                      >
+                        {object.text}
+                      </Label>
+                    : <div>Unknown object</div>
+                  )
+              }
+            </Stack>
+        }
       </div>
     )
   });
@@ -459,29 +466,72 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               padding: '4px'
             }}
           >
-            <Dropdown
-              label="Selected object"
-              selectedKey={selectedObject ? selectedObject.name : undefined}
-              onChange={ (_, option) => option && designerDispatch({ type: 'SELECT_OBJECT_BY_NAME', name: option.key as string }) }
-              options={ objects.map( object => ({ key: object.name, text: object.name }) ) }
-            />
             {
-              !selectedObject
-              ? null
-              : selectedObject.type === 'LABEL'
+              showGrid
               ?
-                <TextField
-                  label="Text"
-                  value={selectedObject.text}
-                  onChange={
-                    (e, newValue?: string) => {
-                      if (newValue !== undefined) {
-                        designerDispatch({ type: 'UPDATE_OBJECT', newProps: { text: newValue } })
-                      }
-                    }
-                  }
+                <GridInspector
+                  grid={grid}
+                  gridSelection={gridSelection}
+                  onSetColumnWidth={ (column, size) => {} }
+                  onSetRowHeight={ (column, size) => {} }
                 />
-              : null
+              :
+                <>
+                  <Dropdown
+                    label="Selected object"
+                    selectedKey={selectedObject ? selectedObject.name : undefined}
+                    onChange={ (_, option) => option && designerDispatch({ type: 'SELECT_OBJECT_BY_NAME', name: option.key as string }) }
+                    options={ objects.map( object => ({ key: object.name, text: object.name }) ) }
+                  />
+                  {
+                    !selectedObject
+                    ? null
+                    : selectedObject.type === 'LABEL'
+                    ?
+                      <TextField
+                        label="Text"
+                        value={selectedObject.text}
+                        onChange={
+                          (e, newValue?: string) => {
+                            if (newValue !== undefined) {
+                              designerDispatch({ type: 'UPDATE_OBJECT', newProps: { text: newValue } })
+                            }
+                          }
+                        }
+                      />
+                    : selectedObject.type === 'AREA'
+                    ? <ChoiceGroup
+                        label="Direction"
+                        selectedKey={ selectedObject.horizontal ? 'h' : 'v' }
+                        options={[
+                          { key: 'v', text: 'Vertical' },
+                          { key: 'h', text: 'Horizontal' }
+                        ]}
+                        onChange={ (_e, option) => option && designerDispatch({ type: 'UPDATE_OBJECT', newProps: { horizontal: option.key === 'h' } }) }
+                      />
+                    : null
+                  }
+                  {
+                    !selectedObject
+                    ? null
+                    :
+                      <ColorDropDown
+                        selectedColor={selectedObject.color}
+                        label="Color"
+                        onSelectColor={ color => designerDispatch({ type: 'UPDATE_OBJECT', newProps: { color } }) }
+                      />
+                  }
+                  {
+                    !selectedObject
+                    ? null
+                    :
+                      <ColorDropDown
+                        selectedColor={selectedObject.backgroundColor}
+                        label="Background Color"
+                        onSelectColor={ color => designerDispatch({ type: 'UPDATE_OBJECT', newProps: { backgroundColor: color } }) }
+                      />
+                  }
+                </>
             }
           </div>
         </div>
