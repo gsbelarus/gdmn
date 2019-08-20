@@ -383,14 +383,22 @@ describe('recordset', () => {
 
     rs = rs.setDate('c', tempDate);
     expect(rs.getCurrency('c')).toEqual(tempMs);
+
     rs = rs.setDate('s', tempDate);
     expect(rs.getString('s')).toEqual(tempDate.toString());
+
+    rs = rs.setDate('d', tempDate);
+    expect(rs.getString('d', undefined, undefined, 'dd.mm.yy')).toEqual('02.02.19');
+
+    rs = rs.setDate('d', tempDate);
+    expect(rs.getString('d', undefined, undefined, 'dd.mm.yyyy')).toEqual('02.02.2019');
 
     rs = rs.setDate('b', tempDate);
     expect(rs.getBoolean('b')).toEqual(true);
 
     rs = rs.setDate('d', tempDate);
     expect(rs.getDate('d')).toEqual(tempDate);
+    
 
     /**
      *

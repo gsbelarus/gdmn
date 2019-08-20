@@ -36,6 +36,7 @@ interface IArea {
   group: boolean;
   style?: IStyleFieldsAndAreas;
 }
+
 export interface IField {
   key: string,
   color: string
@@ -280,7 +281,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
           ...state,
           areas: newAreas,
           changeArray: [...changeArray!, {...state}]
-      } 
+      }
     } else {
         return state;
       }
@@ -291,7 +292,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       return {
         ...state,
         selection: undefined,
-        changeArray: [...changeArray!, {...state}] 
+        changeArray: [...changeArray!, {...state}]
     }
   }
 
@@ -587,7 +588,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       areas: [...areas, ...newAreas]
     }
   }
-  
+
     case 'DELETE_COLUMN': {
       const { grid, selection, areas, activeArea, changeArray } = state;
 
@@ -834,7 +835,7 @@ export const Designer = CSSModules((props: IDesignerProps): JSX.Element => {
   const Field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection }): JSX.Element => {
     const locked = rs ? rs.locked : false;
     const theme = getTheme();
-  
+
     if (props.fd.eqfa!.linkAlias !== rs!.eq!.link.alias && props.fd.eqfa!.attribute === 'ID') {
       const fkFieldName = props.fd.eqfa!.linkAlias;
       const attr = entity!.attributes[fkFieldName] as EntityAttribute;
@@ -952,7 +953,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
   }
   return false;
 })
-  
+
   const getSavedLastEdit = (): IDesignerState | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.changesDesigner instanceof Object) {
       return viewTab.sessionData.changesDesigner as IDesignerState;
@@ -969,7 +970,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
       ? changes.current
       : localState !== undefined
         ? localState as IDesignerState
-        : defaultState(entityName, fields) 
+        : defaultState(entityName, fields)
         ) ;
 
   useEffect( () => {
@@ -1803,7 +1804,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
                       </div>
                     </div>
                     {/*
-                      activeArea !== undefined && selectedField && area.fields !== [] ? 
+                      activeArea !== undefined && selectedField && area.fields !== [] ?
                         <div>
                           <Label>
                             Field
@@ -2079,7 +2080,7 @@ const FieldMemo = React.memo(Field, (prevProps, nextProps) => {
               areas.length
                 ? areas
                   .map((area, idx) => (
-                    showAreas.find(findArea => area === findArea) ? 
+                    showAreas.find(findArea => area === findArea) ?
                       <MemoArea key={idx} area={area} idx={idx} />
                     : null
                   ))

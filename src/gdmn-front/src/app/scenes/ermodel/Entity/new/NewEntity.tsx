@@ -245,10 +245,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
       addViewTab(undefined);
 
 
-      if (newRecord) {
-
-      } else {
-
+      if (!newRecord) {
         const eq = prepareDefaultEntityQuery(erModel!.entity(entityName!));
         const entity = erModel!.entity(entityName!);
 
@@ -258,7 +255,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
         };
 
         if (entity.parent) {
-          valueHiddenParent.current = true
+          valueHiddenParent.current = true;
           parentName.current = {fieldName: "Parent", value: entity.parent.name};
           setHiddenParent(true)
         }

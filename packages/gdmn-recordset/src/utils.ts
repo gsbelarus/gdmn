@@ -1,5 +1,6 @@
 import { IDataRow, TDataType } from "./types";
-import { INumberFormat, formatNumber, IDateFormat, formatDate } from "./format";
+import { formatNumber, formatDate } from "./format";
+import { INumberFormat, IDateFormat } from "gdmn-internals";
 
 export function checkField<R extends IDataRow = IDataRow>(row: R, fieldName: string, defaultValue?: TDataType): TDataType {
   const value = row[fieldName] as TDataType;

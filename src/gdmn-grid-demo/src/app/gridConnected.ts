@@ -13,7 +13,7 @@ import {
   TSetCursorPosEvent,
   TSortEvent,
   TToggleGroupEvent,
-  TRecordsetSetFieldValue
+  TRecordsetSetFieldValue 
 } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
@@ -27,7 +27,6 @@ import {
   deleteGrid,
   setFixedColumns,
   setFixedTailColumns,
-  toggleColumn,
   setSelectRows,
   toggleHideFooter,
   toggleHideHeader,
@@ -40,7 +39,7 @@ import {
 import { RecordSet, TRowState, TCommitResult, IDataRow, rsActions, RSAction } from "gdmn-recordset";
 import { GDMNGridPanel } from "gdmn-grid";
 
-export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | undefined) {
+export function connectGrid(name: string, rs: RecordSet, columns: Columns | undefined) {
   store.dispatch(createGrid({name,
     columns: columns || rs.fieldDefs.map( fd => (
       {
@@ -63,7 +62,7 @@ export function connectGrid(name: string, rs: RecordSet, columns: IColumn[] | un
       }
     },
     (thunkDispatch: ThunkDispatch<State, never, GridAction | RSAction>) => ({
-      onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
+       onCancelSortDialog: (event: TCancelSortDialogEvent) => thunkDispatch(
           cancelSortDialog({name: event.rs.name})
         ),
       onApplySortDialog: (event: TApplySortDialogEvent) => thunkDispatch(
@@ -125,8 +124,7 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
       const gridComponentState = state.grid[name];
 
       return {
-        ...gridComponentState,
-        visibleColumns: gridComponentState.columns.filter( c => !c.hidden )
+        ...gridComponentState
       }
     },
     (thunkDispatch: ThunkDispatch<State, never, GridAction | RSAction>) => ({
@@ -150,8 +148,6 @@ export function connectGridPanel(name: string, rs: RecordSet, getGridRef: GetGri
         () => thunkDispatch(showParamsDialog({name})),
       onCancelParamsDialog:
         () => thunkDispatch(cancelParamsDialog({name})),
-      onToggle:
-        (columnName: string) => thunkDispatch(toggleColumn({name, columnName})),
       onSetSelectRows:
         (value: boolean) => thunkDispatch(setSelectRows({name, value})),
       onToggleHideFooter:

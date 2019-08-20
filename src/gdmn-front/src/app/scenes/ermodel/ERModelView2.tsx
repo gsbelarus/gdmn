@@ -1,6 +1,6 @@
 import {IERModelView2Props} from "./ERModelView2.types";
 import React, {useCallback, useEffect, useState} from "react";
-import {IDataRow, RecordSet, rsActions, TFieldType, TDataType} from "gdmn-recordset";
+import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
 import {List} from "immutable";
 import {createGrid, GDMNGrid} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
@@ -313,8 +313,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           <GDMNGrid
             {...gcsEntities}
             rs={entities}
-            columns={gcsEntities.columns.filter( c => !c.hidden )}
-            allColumns={gcsEntities.columns}
+            columns={gcsEntities.columns}
             {...gridActions}
             ref={ grid => grid && (gridRefEntities.current = grid) }
             savedState={getSavedStateEntities()}
@@ -334,8 +333,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           <GDMNGrid
             {...gcsAttributes}
             rs={attributes}
-            columns={gcsAttributes.columns.filter( c => !c.hidden )}
-            allColumns={gcsAttributes.columns}
+            columns={gcsAttributes.columns}
             {...gridActions}
             ref={ grid => grid && (gridRefAttributes.current = grid) }
             savedState={getSavedStateAttributes()}
