@@ -8,11 +8,13 @@ import {
   ParentAttribute,
   ScalarAttribute,
   EntityQuerySet,
-  EntityQuerySetOptions
+  EntityQuerySetOptions,
+  IEntityQueryOrder,
+  EntityQueryOrderType
 } from "gdmn-orm";
 import {IFieldDef, TFieldType} from "gdmn-recordset";
 
-export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alias: string = 'root'): EntityQuery {
+export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alias: string = 'root', orderFields?: {name: string, order: EntityQueryOrderType}[]): EntityQuery {
   const scalarFields = Object.values(entity.attributes)
     .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
     .map((attr) => new EntityLinkField(attr));
@@ -55,18 +57,27 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
     linkFields.push(new EntityLinkField(parentAttr, [link]));
   }
 
+  const orderObj: IEntityQueryOrder[] = [];
+  orderFields && orderFields.forEach(fd => {
+    const sortAttrs = Object.values(entity.attributes).find(attr => attr.name === fd.name);
+    sortAttrs && orderObj.push({alias, type: fd.order, attribute: sortAttrs});
+  });
+
+  const whereObj = pkValues && [{
+    equals: pkValues.map((value, index) => ({
+      alias,
+      attribute: entity.pk[index],
+      value
+    }))
+  }];
+
   return new EntityQuery(
     new EntityLink(entity, alias, scalarFields.concat(linkFields)),
-    pkValues && new EntityQueryOptions(
+    new EntityQueryOptions(
     undefined,
     undefined,
-    [{
-      equals: pkValues.map((value, index) => ({
-        alias,
-        attribute: entity.pk[index],
-        value
-      }))
-    }])
+    whereObj,
+    orderObj)
   );
 }
 

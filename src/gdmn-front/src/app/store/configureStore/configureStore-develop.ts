@@ -1,4 +1,4 @@
-import { applyMiddleware, compose, createStore, Middleware } from 'redux';
+import { applyMiddleware, compose, createStore, Middleware, Store } from 'redux';
 import { createLogger } from 'redux-logger';
 // @ts-ignore
 import { persistReducer } from 'redux-persist';
@@ -49,7 +49,7 @@ function configureStore(persistedReducer: TReducer, middlewares: Middleware[] = 
     store.replaceReducer(nextPersistedReducer);
   }
 
-  return store;
+  return store as Store<IState, TActions>;
 }
 
 export { configureStore };

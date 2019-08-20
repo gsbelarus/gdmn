@@ -18,6 +18,8 @@ describe('format', () => {
     expect(formatNumber(1,       { maxDecDigits: 2 })).toEqual('1');
     expect(formatNumber(1.001,   { maxDecDigits: 2 })).toEqual('1.00');
 
+    expect(formatNumber(1.01,    { maxDecDigits: 0 })).toEqual('1');
+
     expect(formatNumber(1.01,    { minDecDigits: 2, maxDecDigits: 4 })).toEqual('1.01');
     expect(formatNumber(1,       { minDecDigits: 2, maxDecDigits: 4 })).toEqual('1.00');
     expect(formatNumber(1.001,   { minDecDigits: 2, maxDecDigits: 4 })).toEqual('1.001');

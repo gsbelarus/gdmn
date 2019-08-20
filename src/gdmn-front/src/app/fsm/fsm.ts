@@ -1,9 +1,12 @@
-import { IFlowchart, IBlock } from "./types";
+import { IFlowchart, IBlock, Transition } from "./types";
+import { blockTypes } from "./blockTypes";
+import { store } from "..";
+import { ITransaction } from "@stomp/stompjs";
 
 interface IFSMParams {
   flowchart: IFlowchart;
   path: IBlock[];
-  block: IBlock;
+  transition: Transition;
 };
 
 export class FSM {
@@ -23,7 +26,7 @@ export class FSM {
     return new FSM({
       flowchart: flowchart,
       path: [],
-      block: transition.from
+      transition
     });
   }
 
@@ -31,7 +34,26 @@ export class FSM {
     return this._params.flowchart;
   }
 
+  get transition() {
+    return this._params.transition;
+  }
+
   get block() {
-    return this._params.block;
+    return this._params.transition.from;
+  }
+
+  run() {
+    const state = store.getState();
+
+    switch (this.block.type) {
+      case blockTypes.login:
+        if (!state.authState.accessToken) {
+          throw new Error('Not logged in');
+        }
+        return;
+
+      default:
+        throw new Error(`Unknown block type ${this.block.type.id}`);
+    }
   }
 };

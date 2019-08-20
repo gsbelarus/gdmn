@@ -89,6 +89,13 @@ export const uiCommands: IUICommand[] = [
     link: `/themeEditor`
   },
   {
+    command: 'designer2',
+    form: 'mainHeader',
+    group: 'designer2',
+    caption: 'Designer2',
+    link: `/designer2`
+  },
+  {
     command: 'logout',
     form: 'mainHeader',
     group: 'userAccount',

@@ -12,7 +12,7 @@
     "watch": "tsc -w",
     "tslint": "tslint --project .",
     "test": "jest",
-    "static": "shx mkdir -p ./dist/src && shx cp -r ./src/*.css ./dist/src"
+    "static": "shx mkdir -p ./dist/src && shx cp -r ./src/*.css ./dist/src && shx cp -r ./src/GridParams/*.css ./dist/src/GridParams"
   },
   "repository": {
     "type": "git",
