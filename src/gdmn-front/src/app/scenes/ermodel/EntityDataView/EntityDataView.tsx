@@ -67,7 +67,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
-  const nextUrl = useRef(url);
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -144,8 +143,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         const result = await apiService.getNextID({withError: false});
         const newID = result.payload.result!.id;
         if (newID) {
-          nextUrl.current = `/spa/gdmn/entity/${entityName}/add/${newID}`;
-          history.push(nextUrl.current);
+          history.push(`/spa/gdmn/entity/${entityName}/add/${newID}`);
         }
       };
 
