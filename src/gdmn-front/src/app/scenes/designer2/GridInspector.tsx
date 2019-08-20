@@ -1,46 +1,39 @@
 import React from "react";
-import { IGridSize, IRectangle, ISize, IArea } from "./types";
-import { isSingleCell } from "./utils";
+import { IGridSize, ISize, IArea } from "./types";
 import { SizeLine } from "./SizeLine";
+import { AreaSize } from "./AreaSize";
 
 export interface IGridInspectorProps {
   grid: IGridSize;
-  gridSelection?: IRectangle;
   selectedArea?: IArea;
   onUpdateGrid: (updateColumn: boolean, idx: number, newSize: ISize) => void;
+  onChangeArea: (newArea: IArea) => void;
 };
 
-export const GridInspector = (props: IGridInspectorProps) => {
-
-  const { grid, gridSelection, onUpdateGrid } = props;
-
-  if (!gridSelection || !isSingleCell(gridSelection)) {
-    return (
-      <div>
-        Select one cell to adjust width and height of grid's column and row.
-      </div>
-    );
-  }
-
-  const columnSize = grid.columns[gridSelection.left];
-  const rowSize = grid.rows[gridSelection.top];
-
+export const GridInspector = ({ grid, onUpdateGrid, selectedArea, onChangeArea }: IGridInspectorProps) => {
   return (
     <>
-      <SizeLine
-        label="Column"
-        idx={gridSelection.left}
-        size={columnSize}
-        onSetUnit={ unit => onUpdateGrid(true, gridSelection.left, {...columnSize, unit}) }
-        onSetValue={ value => onUpdateGrid(true, gridSelection.left, {...columnSize, value}) }
-      />
-      <SizeLine
-        label="Row"
-        idx={gridSelection.top}
-        size={rowSize}
-        onSetUnit={ unit => onUpdateGrid(false, gridSelection.top, {...columnSize, unit}) }
-        onSetValue={ value => onUpdateGrid(false, gridSelection.top, {...columnSize, value}) }
-      />
+      <AreaSize selectedArea={selectedArea} onChange={onChangeArea} />
+      {grid.columns.map( (column, idx) =>
+        <SizeLine
+          key={`Column${idx}`}
+          label="Column"
+          idx={idx}
+          size={column}
+          onSetUnit={ unit => onUpdateGrid(true, idx, {...column, unit}) }
+          onSetValue={ value => onUpdateGrid(true, idx, {...column, value}) }
+        />
+      )}
+      {grid.rows.map( (row, idx) =>
+        <SizeLine
+          key={`Row${idx}`}
+          label="Row"
+          idx={idx}
+          size={row}
+          onSetUnit={ unit => onUpdateGrid(false, idx, {...row, unit}) }
+          onSetValue={ value => onUpdateGrid(false, idx, {...row, value}) }
+        />
+      )}
     </>
   );
 };

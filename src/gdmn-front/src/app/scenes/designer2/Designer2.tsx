@@ -1,24 +1,24 @@
 import React, { useReducer, useMemo } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
-import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
+import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup, FontWeights } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea } from "./types";
-import { inRect, makeRect, rectIntersect, isSingleCell } from "./utils";
+import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea } from "./types";
+import { inRect, makeRect, rectIntersect, isSingleCell, isValidRect, outOfBorder, rect } from "./utils";
 
 /**
  *
  * Переведенная в режим настройки форма может находиться в трех состояних: Дизайнер, Сетка, Просмотр.
  *
  * В режиме сетки мы задаем параметры CSS Grid (количество строк и столбцов, их ширину и высоту),
- * а также создаем, изменяем или удаляем области. Области нужны для размещения на них управляющих
- * элементов: полей ввода, меток, пиктограмок и т.п. Для создания области мы выделяем одну или несколько
- * клеток грида и выбираем соответствующую команду. Для расширения мы выделяем клетку (клетки),
- * прилежащие к области. Для уменьшения -- клетку (клетки) внутри области. Область -- это
- * прямоугольная часть сетки, которая задается номерами столбца и колонки её левого верхнего
- * и правого нижнего углов. Области не могут пересекаться. Каждая область -- это объект с уникальным
- * именем и своими свойствами. Свойства области настраиваются в режиме Дизайнера.
+ * а также создаем, изменяем или удаляем области. Область -- это прямоугольная часть сетки,
+ * которая задается номерами столбца и колонки её левого верхнего и правого нижнего углов.
+ * Области нужны для размещения на них управляющих элементов: полей ввода, меток, пиктограмок и т.п.
+ * Области не могут пересекаться. Для создания области мы выделяем одну или несколько
+ * клеток грида и выбираем соответствующую команду. Для изменения размеров области мы выделяем ее
+ * и устанавливаем границы в окне Инспектора. Каждая область имеет уникальное имя и набор свойств,
+ * которые настраиваются в режиме Дизайнера.
  *
  * В режиме сетки доступны только команды настройки сетки, перехода в режим просмотра и выхода
  * из режима настройки формы.
@@ -31,11 +31,13 @@ import { inRect, makeRect, rectIntersect, isSingleCell } from "./utils";
  * 1) выбрать объект и настроить его свойства в инспекторе объектов.
  * 2) удалить выбранный объект.
  * 3) выбрать область и создать на ней новый объект.
+ * 4) изменить порядок расположения объектов.
  *
  * Доступны следующие типы объектов:
  * 1) Область
  * 2) Метка (текст)
  * 3) Поле
+ * 4) Изображение
  *
  * У каждого объекта есть уникальное в пределах формы, непустое имя. Для выбора объекта необходимо
  * щелкнуть по нему мышью или выбрать из выпадающего списка в Инспекторе объектов.
@@ -94,6 +96,7 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'INSERT_OBJECT', objectType: 'LABEL' }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
   | { type: 'CREATE_AREA' }
+  | { type: 'DELETE_OBJECT' }
   | { type: 'ADD_COLUMN' }
   | { type: 'ADD_ROW' }
   | { type: 'DELETE_COLUMN' }
@@ -122,20 +125,27 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     case 'SHOW_GRID': {
       return {
         ...state,
-        showGrid: action.showGrid
+        showGrid: action.showGrid,
+        selectedObject: undefined,
+        gridSelection: undefined
       }
     }
 
     case 'SET_GRID_SELECTION': {
-      const area = isSingleCell(action.gridSelection) ?
-        state.objects
-          .filter( object => object.type === 'AREA' )
-          .find( area => rectIntersect(area as IArea, action.gridSelection!) )
-        : undefined;
+      if (!action.gridSelection) {
+        return {
+          ...state,
+          gridSelection: undefined
+        }
+      }
+
+      const area = state.objects
+        .filter( object => object.type === 'AREA' )
+        .find( area => rectIntersect(area as IArea, action.gridSelection!) );
 
       return {
         ...state,
-        selectedObject: area ? area : state.selectedObject,
+        selectedObject: area,
         gridSelection: action.gridSelection
       }
     }
@@ -181,6 +191,14 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
+    case 'DELETE_OBJECT': {
+      return {
+        ...state,
+        selectedObject: undefined,
+        objects: state.objects.filter( object => object !== state.selectedObject )
+      }
+    }
+
     case 'SELECT_OBJECT_BY_NAME': {
       return {
         ...state,
@@ -217,6 +235,12 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 
       const updatedObject = {...state.selectedObject, ...action.newProps} as Object;
 
+      if (isArea(updatedObject)) {
+        if (!isValidRect(updatedObject) || outOfBorder(updatedObject, rect(0, 0, state.grid.columns.length - 1, state.grid.rows.length - 1))) {
+          return state;
+        }
+      }
+
       return {
         ...state,
         objects: state.objects.map( object => object === state.selectedObject ? updatedObject : object ),
@@ -230,7 +254,8 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
         return {
           ...state,
           selectedObject: newArea,
-          objects: [...state.objects, newArea]
+          objects: [...state.objects, newArea],
+          gridSelection: undefined
         }
       }
       return state;
@@ -253,6 +278,98 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
           ...state.grid,
           rows: [...state.grid.rows, { unit: 'FR', value: 1 }]
         }
+      }
+    }
+
+    case 'DELETE_ROW': {
+      if (!state.gridSelection || state.grid.rows.length <= 1) {
+        return state;
+      }
+
+      let objects = state.objects;
+
+      for (let y = state.gridSelection.bottom; y >= state.gridSelection.top; y--) {
+        objects = objects
+          .map( object => {
+            if (isArea(object)) {
+              if (object.top > y) {
+                return {
+                  ...object,
+                  top: object.top - 1,
+                  bottom: object.bottom - 1
+                }
+              }
+
+              if (object.bottom >= y) {
+                return {
+                  ...object,
+                  bottom: object.bottom - 1
+                }
+              }
+            }
+
+            return object;
+          })
+          .filter( object => !isArea(object) || object.bottom >= object.top );
+      }
+
+      const rows = [...state.grid.rows];
+      rows.splice(state.gridSelection.top, state.gridSelection.bottom - state.gridSelection.top + 1)
+
+      return {
+        ...state,
+        grid: {
+          ...state.grid,
+          rows,
+        },
+        objects,
+        gridSelection: undefined
+      }
+    }
+
+    case 'DELETE_COLUMN': {
+      if (!state.gridSelection || state.grid.columns.length <= 1) {
+        return state;
+      }
+
+      let objects = state.objects;
+
+      for (let x = state.gridSelection.right; x >= state.gridSelection.left; x--) {
+        objects = objects
+          .map( object => {
+            if (isArea(object)) {
+              if (object.left > x) {
+                return {
+                  ...object,
+                  left: object.left - 1,
+                  right: object.right - 1
+                }
+              }
+
+              if (object.right >= x) {
+                return {
+                  ...object,
+                  right: object.right - 1
+                }
+              }
+            }
+
+            return object;
+          })
+          .filter( object => !isArea(object) || object.right >= object.left );
+      }
+
+      const columns = [...state.grid.columns];
+      columns.splice(state.gridSelection.left, state.gridSelection.right - state.gridSelection.left + 1)
+
+      return {
+        ...state,
+        grid: {
+          ...state.grid,
+          columns,
+        },
+        objects,
+        gridSelection: undefined
       }
     }
   }
@@ -290,7 +407,8 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               border: '1px dotted',
               borderRadius: '4px',
               margin: '6px',
-              zIndex: 10
+              zIndex: 10,
+              padding: '4px'
             }}
             onClick={ (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
               if (e.shiftKey && gridSelection) {
@@ -299,7 +417,9 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
                 designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: { left: x, top: y, right: x, bottom: y } });
               }
             }}
-          />
+          >
+            {`(${x}, ${y})`}
+          </div>
         )
       }
     }
@@ -316,7 +436,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
           gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`,
           borderColor: getTheme().palette.redDark,
           backgroundColor: getTheme().palette.red,
-          opacity: area === selectedObject ? 0.5 : 0.2,
+          opacity: area === selectedObject ? 0.5 : 0.3,
           border: '1px solid',
           borderRadius: '4px',
           margin: '2px',
@@ -330,11 +450,26 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
           }
         }
       >
-        {area.name}
         {
           showGrid
           ?
-            null
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                fontWeight: 600,
+                fontSize: '48px',
+                color: 'black'
+              }}
+            >
+              <div>
+                {area.name}
+              </div>
+            </div>
           :
             <Stack horizontal={area.horizontal}>
               {
@@ -380,6 +515,23 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       },
     },
     {
+      key: 'deleteObject',
+      disabled: previewMode || !selectedObject || selectedObject.type === 'WINDOW' || !!gridSelection,
+      text: 'Delete',
+      iconOnly: true,
+      iconProps: { iconName: 'Delete' },
+      onClick: () => designerDispatch({ type: 'DELETE_OBJECT' })
+    },
+    {
+      key: 'split2',
+      disabled: true,
+      iconOnly: true,
+      iconProps: {
+        iconName: 'Remove',
+        styles: { root: { transform: 'rotate(90deg)' } }
+      },
+    },
+    {
       key: 'showGrid',
       disabled: previewMode,
       checked: showGrid,
@@ -405,6 +557,22 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       onClick: () => designerDispatch({ type: 'ADD_ROW' })
     },
     {
+      key: 'deleteColumn',
+      disabled: previewMode || !showGrid || !gridSelection || grid.columns.length <= 1,
+      text: 'Delete Column',
+      iconOnly: true,
+      iconProps: { iconName: 'DeleteColumns' },
+      onClick: () => designerDispatch({ type: 'DELETE_COLUMN' })
+    },
+    {
+      key: 'deleteRow',
+      disabled: previewMode || !showGrid || !gridSelection || grid.rows.length <= 1,
+      text: 'Delete Row',
+      iconOnly: true,
+      iconProps: { iconName: 'DeleteRows' },
+      onClick: () => designerDispatch({ type: 'DELETE_ROW' })
+    },
+    {
       key: 'createArea',
       disabled: previewMode || !showGrid || !gridSelection || areas.some( area => rectIntersect(area, gridSelection) ),
       text: 'Create Area',
@@ -413,7 +581,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       onClick: () => designerDispatch({ type: 'CREATE_AREA' })
     },
     {
-      key: 'split2',
+      key: 'split3',
       disabled: true,
       iconOnly: true,
       iconProps: {
@@ -473,8 +641,9 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               ?
                 <GridInspector
                   grid={grid}
-                  gridSelection={gridSelection}
+                  selectedArea={selectedObject && selectedObject.type === 'AREA' ? selectedObject : undefined}
                   onUpdateGrid={ (updateColumn, idx, newSize) => designerDispatch({ type: 'UPDATE_GRID', updateColumn, idx, newSize }) }
+                  onChangeArea={ newArea => designerDispatch({ type: 'UPDATE_OBJECT', newProps: newArea }) }
                 />
               :
                 <>

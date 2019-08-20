@@ -25,7 +25,7 @@ export const SizeLine = ({ label, idx, size, onSetUnit, onSetValue }: ISizeLineP
     <Stack horizontal tokens={{ childrenGap: 10 }}>
       <Stack.Item align="end">
         <Dropdown
-          label={`${label} ${idx + 1}:`}
+          label={`${label} ${idx}:`}
           options={[
             { key: 'AUTO', text: 'AUTO' },
             { key: 'FR', text: 'FR' },
