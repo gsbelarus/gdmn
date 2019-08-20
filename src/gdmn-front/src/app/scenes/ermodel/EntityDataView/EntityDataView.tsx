@@ -231,7 +231,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
-      <MessageBox>
       <div styleName="SGrid">
         {
           showSQL && rs && rs.sql &&
@@ -285,7 +284,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             </div>
         </div>
         <div styleName="SGridTable">
-          { rs && gcs &&
+          { rs && gcs ?
             <GDMNGrid
               {...gcs}
               columns={gcs.columns}
@@ -299,9 +298,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               ref={ grid => grid && (gridRef.current = grid) }
               savedState={getSavedState()}
             />
+            : null
           }
         </div>
       </div>
-      </MessageBox>
   );
 }, styles, { allowMultiple: true });

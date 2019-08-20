@@ -7,7 +7,7 @@ type MBIcon = 'Information' | 'Warning' | 'Error' | 'Attention' | 'Question';
 type MBResult = 'OK' | 'CANCEL' | 'YES' | 'NO' | 'ABORT' | 'RETRY' | 'IGNORE';
 
 interface IMessageBoxProps {
-  children: JSX.Element;
+  children: JSX.Element | null;
 };
 
 interface IMessageBoxParams {
@@ -18,7 +18,7 @@ interface IMessageBoxParams {
   defButton?: number;
 };
 
-type MessageBoxComponent = (props: IMessageBoxProps) => JSX.Element;
+type MessageBoxComponent = (props: IMessageBoxProps) => JSX.Element | null;
 type MessageBoxFunc = (msgBoxParams: IMessageBoxParams | string) => Promise<MBResult>;
 type ResolveFunc = (result: MBResult) => void;
 
