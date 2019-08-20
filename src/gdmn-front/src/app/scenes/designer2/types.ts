@@ -17,12 +17,14 @@ export interface IRectangle {
   bottom: number;
 };
 
-export type TObjectType = 'WINDOW' | 'AREA' | 'LABEL';
+export type TObjectType = 'WINDOW' | 'AREA' | 'LABEL' | 'IMAGE' | 'FIELD';
 
 export const objectNamePrefixes = {
   'WINDOW': 'Window',
   'AREA': 'Area',
-  'LABEL': 'Label'
+  'LABEL': 'Label',
+  'IMAGE': 'Image',
+  'FIELD': 'Field'
 };
 
 export interface IObject {

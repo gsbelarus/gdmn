@@ -93,7 +93,7 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'SELECT_OBJECT_BY_NAME', name: string }
-  | { type: 'INSERT_OBJECT', objectType: 'LABEL' }
+  | { type: 'INSERT_OBJECT', objectType: TObjectType }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
   | { type: 'CREATE_AREA' }
   | { type: 'DELETE_OBJECT' }
@@ -426,24 +426,53 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     return res;
   };
 
+  const getColor = (color: string | undefined, defColor: string) => {
+    let res;
+
+    if (color) {
+      const [objName, colorName] = color.split('.');
+
+      if (objName === 'palette') {
+        res = (getTheme().palette as any)[colorName];
+      }
+
+      else if (objName === 'semanticColors') {
+        res = (getTheme().semanticColors as any)[colorName];
+      }
+
+    }
+
+    return res ? res : defColor;
+  };
+
   const areas = objects.filter( obj => obj.type === 'AREA' ) as IArea[];
   const getAreas = () => areas.map( obj => {
     const area = obj as IArea;
+
+    const style = showGrid
+      ? {
+        borderColor: getTheme().palette.redDark,
+        backgroundColor: getTheme().palette.red,
+        opacity: area === selectedObject ? 0.5 : 0.3,
+        border: '1px solid',
+        borderRadius: '4px',
+        margin: '2px',
+        padding: '4px',
+        zIndex: 1
+      }
+      : {
+        color: getColor(area.color, getTheme().semanticColors.bodyText),
+        backgroundColor: getColor(area.backgroundColor, getTheme().semanticColors.bodyBackground),
+      };
+
     return (
       <div
         key={area.name}
         style={{
+          ...style,
           gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`,
-          borderColor: getTheme().palette.redDark,
-          backgroundColor: getTheme().palette.red,
-          opacity: area === selectedObject ? 0.5 : 0.3,
-          border: '1px solid',
-          borderRadius: '4px',
-          margin: '2px',
-          padding: '4px',
-          zIndex: 1
         }}
-        onClick={
+        onClick={ previewMode ? undefined :
           e => {
             e.stopPropagation();
             designerDispatch({ type: 'SELECT_OBJECT', object: area });
@@ -498,12 +527,28 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
+      key: 'insertField',
+      disabled: previewMode || showGrid || !selectedObject || selectedObject.type !== 'AREA',
+      text: 'Insert Field',
+      iconOnly: true,
+      iconProps: { iconName: 'TextField' },
+      onClick: () => designerDispatch({ type: 'INSERT_OBJECT', objectType: 'FIELD' })
+    },
+    {
       key: 'insertLabel',
       disabled: previewMode || showGrid || !selectedObject || selectedObject.type !== 'AREA',
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
       onClick: () => designerDispatch({ type: 'INSERT_OBJECT', objectType: 'LABEL' })
+    },
+    {
+      key: 'insertPicture',
+      disabled: previewMode || showGrid || !selectedObject || selectedObject.type !== 'AREA',
+      text: 'Insert Picture',
+      iconOnly: true,
+      iconProps: { iconName: 'PictureCenter' },
+      onClick: () => designerDispatch({ type: 'INSERT_OBJECT', objectType: 'IMAGE' })
     },
     {
       key: 'split1',

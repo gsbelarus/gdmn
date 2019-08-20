@@ -2,6 +2,7 @@ import React from "react";
 import { IGridSize, ISize, IArea } from "./types";
 import { SizeLine } from "./SizeLine";
 import { AreaSize } from "./AreaSize";
+import { Label } from "office-ui-fabric-react";
 
 export interface IGridInspectorProps {
   grid: IGridSize;
@@ -14,6 +15,7 @@ export const GridInspector = ({ grid, onUpdateGrid, selectedArea, onChangeArea }
   return (
     <>
       <AreaSize selectedArea={selectedArea} onChange={onChangeArea} />
+      <Label>Grid size:</Label>
       {grid.columns.map( (column, idx) =>
         <SizeLine
           key={`Column${idx}`}
