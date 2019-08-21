@@ -1,11 +1,12 @@
 import React, { useReducer, useMemo } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
-import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup, FontWeights } from "office-ui-fabric-react";
+import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea } from "./types";
-import { inRect, makeRect, rectIntersect, isSingleCell, isValidRect, outOfBorder, rect } from "./utils";
+import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage } from "./types";
+import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect } from "./utils";
+import { SelectFields } from "./SelectFields";
 
 /**
  *
@@ -58,6 +59,7 @@ interface IDesigner2State {
   showGrid: boolean;
   objects: Object[];
   selectedObject?: Object;
+  selectFields?: boolean;
 };
 
 const getDefaultState = (): IDesigner2State => {
@@ -93,8 +95,11 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'SELECT_OBJECT_BY_NAME', name: string }
-  | { type: 'INSERT_OBJECT', objectType: TObjectType }
+  | { type: 'CREATE_LABEL', text?: string }
+  | { type: 'CREATE_IMAGE' }
+  | { type: 'CREATE_FIELD', fieldName: string, label?: string, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
+  | { type: 'SELECT_FIELDS', show: boolean }
   | { type: 'CREATE_AREA' }
   | { type: 'DELETE_OBJECT' }
   | { type: 'ADD_COLUMN' }
@@ -191,6 +196,13 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
+    case 'SELECT_FIELDS': {
+      return {
+        ...state,
+        selectFields: action.show
+      }
+    }
+
     case 'DELETE_OBJECT': {
       return {
         ...state,
@@ -206,25 +218,73 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
-    case 'INSERT_OBJECT': {
-      let newObject: Object;
-      const name = getObjectName(action.objectType);
+    case 'CREATE_LABEL': {
+      const { selectedObject } = state;
 
-      switch (action.objectType) {
-        default: {
-          newObject = {
-            name,
-            parent: state.selectedObject ? state.selectedObject.name : undefined,
-            type: 'LABEL',
-            text: name
-          };
-        }
+      if (!selectedObject || !isArea(selectedObject)) {
+        return state;
       }
+
+      const name = getObjectName('LABEL');
+
+      const newObject: ILabel = {
+        name,
+        parent: selectedObject.name,
+        type: 'LABEL',
+        text: action.text ? action.text : name
+      };
 
       return {
         ...state,
         objects: [...state.objects, newObject],
         selectedObject: newObject
+      }
+    }
+
+    case 'CREATE_IMAGE': {
+      const { selectedObject } = state;
+
+      if (!selectedObject || !isArea(selectedObject)) {
+        return state;
+      }
+
+      const name = getObjectName('IMAGE');
+
+      const newObject: IImage = {
+        name,
+        parent: selectedObject.name,
+        type: 'IMAGE',
+        alt: name
+      };
+
+      return {
+        ...state,
+        objects: [...state.objects, newObject],
+        selectedObject: newObject
+      }
+    }
+
+    case 'CREATE_FIELD': {
+      const { selectedObject } = state;
+
+      if (!selectedObject || !isArea(selectedObject)) {
+        return state;
+      }
+
+      const name = getObjectName('FIELD');
+
+      const newObject: IField = {
+        name,
+        parent: selectedObject.name,
+        type: 'FIELD',
+        fieldName: action.fieldName,
+        label: action.label ? action.label : action.fieldName
+      };
+
+      return {
+        ...state,
+        objects: [...state.objects, newObject],
+        selectedObject: action.makeSelected ? newObject : state.selectedObject
       }
     }
 
@@ -379,8 +439,8 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 
 export const Designer2 = (props: IDesigner2Props): JSX.Element => {
 
-  const { viewTab, url, dispatch } = props;
-  const [ { grid, previewMode, showGrid, gridSelection, objects, selectedObject }, designerDispatch ] = useReducer(reducer, getDefaultState());
+  const { viewTab, url, dispatch, erModel } = props;
+  const [ { grid, previewMode, showGrid, gridSelection, objects, selectedObject, selectFields }, designerDispatch ] = useReducer(reducer, getDefaultState());
 
   useTab(viewTab, url, 'Designer2', true, dispatch);
 
@@ -516,7 +576,20 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
                       >
                         {object.text}
                       </Label>
-                    : <div>Unknown object</div>
+                    : object.type === 'FIELD'
+                    ? <div
+                        onClick={
+                          e => {
+                            e.stopPropagation();
+                            designerDispatch({ type: 'SELECT_OBJECT', object });
+                          }
+                        }
+                      >
+                        <TextField
+                          label={object.label}
+                        />
+                      </div>
+                    : null
                   )
               }
             </Stack>
@@ -528,11 +601,11 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
   const commandBarItems: ICommandBarItemProps[] = [
     {
       key: 'insertField',
-      disabled: previewMode || showGrid || !selectedObject || selectedObject.type !== 'AREA',
+      disabled: previewMode || showGrid || !selectedObject || selectedObject.type !== 'AREA' || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
-      onClick: () => designerDispatch({ type: 'INSERT_OBJECT', objectType: 'FIELD' })
+      onClick: () => designerDispatch({ type: 'SELECT_FIELDS', show: true })
     },
     {
       key: 'insertLabel',
@@ -540,7 +613,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
-      onClick: () => designerDispatch({ type: 'INSERT_OBJECT', objectType: 'LABEL' })
+      onClick: () => designerDispatch({ type: 'CREATE_LABEL' })
     },
     {
       key: 'insertPicture',
@@ -548,7 +621,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
-      onClick: () => designerDispatch({ type: 'INSERT_OBJECT', objectType: 'IMAGE' })
+      onClick: () => designerDispatch({ type: 'CREATE_IMAGE' })
     },
     {
       key: 'split1',
@@ -562,7 +635,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     {
       key: 'deleteObject',
       disabled: previewMode || !selectedObject || selectedObject.type === 'WINDOW' || !!gridSelection,
-      text: 'Delete',
+      text: selectedObject && `Delete "${selectedObject.name}"`,
       iconOnly: true,
       iconProps: { iconName: 'Delete' },
       onClick: () => designerDispatch({ type: 'DELETE_OBJECT' })
@@ -757,6 +830,21 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
   return (
     <>
       <CommandBar items={commandBarItems} />
+      {
+        selectFields && erModel &&
+        <SelectFields
+          entity={erModel.entities['TgdcCompany']}
+          onCreate={ fields => {
+            if (fields.length === 1) {
+              designerDispatch({ type: 'CREATE_FIELD', fieldName: fields[0].fieldName, label: fields[0].label, makeSelected: true });
+            } else {
+              fields.forEach( ({ fieldName, label}) => designerDispatch({ type: 'CREATE_FIELD', fieldName, label }) );
+            }
+            designerDispatch({ type: 'SELECT_FIELDS', show: false });
+          } }
+          onCancel={ () => designerDispatch({ type: 'SELECT_FIELDS', show: false }) }
+        />
+      }
       <WithObjectInspector>
         <div style={gridStyle}>
           {

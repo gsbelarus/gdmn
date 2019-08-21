@@ -48,6 +48,18 @@ export interface ILabel extends IObject {
   text: string;
 };
 
+export interface IImage extends IObject {
+  type: 'IMAGE';
+  url?: string;
+  alt?: string;
+};
+
+export interface IField extends IObject {
+  type: 'FIELD';
+  fieldName: string;
+  label: string;
+};
+
 export interface IObjectWithCoord extends IObject, IRectangle { };
 
 export interface IArea extends IObjectWithCoord {
@@ -59,4 +71,4 @@ export function isArea(x: IObject): x is IArea {
   return x.type === 'AREA';
 };
 
-export type Object = IWindow | IArea | ILabel;
+export type Object = IWindow | IArea | ILabel | IImage | IField;
