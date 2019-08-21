@@ -299,6 +299,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               </span>
             </div>
         </div>
+        <MessageBox />
         <div styleName="SGridTable">
           { rs && gcs ?
             <GDMNGrid

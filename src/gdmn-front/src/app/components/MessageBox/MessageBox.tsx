@@ -6,9 +6,7 @@ type MBType = 'MB_OK'| 'MB_OKCANCEL' | 'MB_YESNO' | 'MB_YESNOCANCEL' | 'MB_ABORT
 type MBIcon = 'Information' | 'Warning' | 'Error' | 'Attention' | 'Question';
 type MBResult = 'OK' | 'CANCEL' | 'YES' | 'NO' | 'ABORT' | 'RETRY' | 'IGNORE';
 
-interface IMessageBoxProps {
-  children: JSX.Element | null;
-};
+interface IMessageBoxProps { };
 
 interface IMessageBoxParams {
   message: string;
@@ -56,72 +54,70 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
 
   const MessageBox = (props: IMessageBoxProps) => {
     return params
-      ? <>
-          <Dialog
-            hidden={false}
-            dialogContentProps={{
-              type: DialogType.normal,
-              title: params.title
-                ? params.title
-                : params.icon
-                ? params.icon
-                : 'Information'
-            }}
-            modalProps={{
-              isBlocking: true,
-              dragOptions: {
-                moveMenuItemText: 'Move',
-                closeMenuItemText: 'Close',
-                menu: ContextualMenu
-              }
-            }}
-          >
-            {
-              params && params.icon
-              ?
-                <Stack horizontal disableShrink verticalAlign="start">
-                  <Icon iconName={getIconName()} styles={{ root: { fontSize: '32px', marginRight: '16px' }}} />
-                  {params.message}
-                </Stack>
-              : params.message
+      ?
+        <Dialog
+          hidden={false}
+          dialogContentProps={{
+            type: DialogType.normal,
+            title: params.title
+              ? params.title
+              : params.icon
+              ? params.icon
+              : 'Information'
+          }}
+          modalProps={{
+            isBlocking: true,
+            dragOptions: {
+              moveMenuItemText: 'Move',
+              closeMenuItemText: 'Close',
+              menu: ContextualMenu
             }
-            {
-              params.type === undefined || params.type === 'MB_OK'
-              ?
-                <DialogFooter>
-                  {getButton('Ok')}
-                </DialogFooter>
-              : params.type === 'MB_OKCANCEL'
-              ? <DialogFooter>
-                  {getButton('Ok')}
-                  {getButton('Cancel', 'CANCEL', 1)}
-                </DialogFooter>
-              : params.type === 'MB_YESNO'
-              ? <DialogFooter>
-                  {getButton('Yes', 'YES')}
-                  {getButton('No', 'NO', 1)}
-                </DialogFooter>
-              : params.type === 'MB_YESNOCANCEL'
-              ? <DialogFooter>
-                  {getButton('Yes', 'YES')}
-                  {getButton('No', 'NO', 1)}
-                  {getButton('Cancel', 'CANCEL', 2)}
-                </DialogFooter>
-              : params.type === 'MB_ABORTRETRY'
-              ? <DialogFooter>
-                  {getButton('Abort', 'ABORT')}
-                  {getButton('Retry', 'RETRY', 1)}
-                </DialogFooter>
-              : <DialogFooter>
-                  {getButton('Abort', 'ABORT')}
-                  {getButton('Retry', 'RETRY', 1)}
-                  {getButton('Ignore', 'IGNORE', 2)}
-                </DialogFooter>
-            }
-          </Dialog>
-          {props.children}
-        </>
-      : props.children;
+          }}
+        >
+          {
+            params && params.icon
+            ?
+              <Stack horizontal disableShrink verticalAlign="start">
+                <Icon iconName={getIconName()} styles={{ root: { fontSize: '32px', marginRight: '16px' }}} />
+                {params.message}
+              </Stack>
+            : params.message
+          }
+          {
+            params.type === undefined || params.type === 'MB_OK'
+            ?
+              <DialogFooter>
+                {getButton('Ok')}
+              </DialogFooter>
+            : params.type === 'MB_OKCANCEL'
+            ? <DialogFooter>
+                {getButton('Ok')}
+                {getButton('Cancel', 'CANCEL', 1)}
+              </DialogFooter>
+            : params.type === 'MB_YESNO'
+            ? <DialogFooter>
+                {getButton('Yes', 'YES')}
+                {getButton('No', 'NO', 1)}
+              </DialogFooter>
+            : params.type === 'MB_YESNOCANCEL'
+            ? <DialogFooter>
+                {getButton('Yes', 'YES')}
+                {getButton('No', 'NO', 1)}
+                {getButton('Cancel', 'CANCEL', 2)}
+              </DialogFooter>
+            : params.type === 'MB_ABORTRETRY'
+            ? <DialogFooter>
+                {getButton('Abort', 'ABORT')}
+                {getButton('Retry', 'RETRY', 1)}
+              </DialogFooter>
+            : <DialogFooter>
+                {getButton('Abort', 'ABORT')}
+                {getButton('Retry', 'RETRY', 1)}
+                {getButton('Ignore', 'IGNORE', 2)}
+              </DialogFooter>
+          }
+        </Dialog>
+      : null;
   };
 
   const messageBox: MessageBoxFunc = msgBoxParams => {
