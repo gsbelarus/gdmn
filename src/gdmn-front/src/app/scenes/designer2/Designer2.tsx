@@ -1,12 +1,13 @@
-import React, { useReducer, useMemo } from "react";
+import React, { useReducer, useMemo, useCallback } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IObject } from "./types";
-import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect } from "./utils";
+import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IWindow } from "./types";
+import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, object2IStyle } from "./utils";
 import { SelectFields } from "./SelectFields";
+import { WithSelectionFrame } from "./WithSelectionFrame";
 
 /**
  *
@@ -18,8 +19,8 @@ import { SelectFields } from "./SelectFields";
  * Области нужны для размещения на них управляющих элементов: полей ввода, меток, пиктограмок и т.п.
  * Области не могут пересекаться. Для создания области мы выделяем одну или несколько
  * клеток грида и выбираем соответствующую команду. Для изменения размеров области мы выделяем ее
- * и устанавливаем границы в окне Инспектора. Каждая область имеет уникальное имя и набор свойств,
- * которые настраиваются в режиме Дизайнера.
+ * в режиме Сетки и устанавливаем границы в окне Инспектора. Каждая область имеет уникальное имя
+ * и набор свойств, которые настраиваются в окне Инспектора, в режиме Дизайнера.
  *
  * В режиме сетки доступны только команды настройки сетки, перехода в режим просмотра и выхода
  * из режима настройки формы.
@@ -57,10 +58,13 @@ interface IDesigner2State {
   gridSelection?: IRectangle;
   previewMode?: boolean;
   gridMode: boolean;
+  selectFieldsMode?: boolean;
   objects: Object[];
   selectedObject?: Object;
-  selectFields?: boolean;
 };
+
+const undo: IDesigner2State[] = [];
+const redo: IDesigner2State[] = [];
 
 const getDefaultState = (): IDesigner2State => {
   const objects: Object[] = [
@@ -100,6 +104,9 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'CREATE_FIELD', fieldName: string, label?: string, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
   | { type: 'SELECT_FIELDS', show: boolean }
+  | { type: 'MOVE_OBJECT', delta: number }
+  | { type: 'UNDO' }
+  | { type: 'REDO' }
   | { type: 'CREATE_AREA' }
   | { type: 'DELETE_OBJECT' }
   | { type: 'ADD_COLUMN' }
@@ -108,6 +115,30 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'DELETE_ROW' };
 
 function reducer(state: IDesigner2State, action: Action): IDesigner2State {
+
+  if (action.type === 'UNDO') {
+    if (undo.length) {
+      redo.push(state);
+      return undo.pop()!;
+    }
+
+    return state;
+  }
+
+  if (action.type === 'REDO') {
+    if (redo.length) {
+      return redo.pop()!;
+    }
+
+    return state;
+  }
+
+  undo.push(state);
+  if (undo.length > 20) {
+    undo.shift();
+  }
+
+  redo.length = 0;
 
   const getObjectName = (objectType: TObjectType) => {
     for (let i = 1; i < 1000000; i++) {
@@ -189,6 +220,13 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
+    case 'SELECT_FIELDS': {
+      return {
+        ...state,
+        selectFieldsMode: action.show
+      }
+    }
+
     case 'SELECT_OBJECT': {
       return {
         ...state,
@@ -196,10 +234,29 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
-    case 'SELECT_FIELDS': {
+    case 'MOVE_OBJECT': {
+      if (!state.selectedObject) {
+        return state;
+      }
+
+      const newObjects = [
+        ...state.objects.filter( object => object.type === 'WINDOW' || object.type === 'AREA' ),
+        ...state.objects.filter( object => object.type !== 'WINDOW' && object.type !== 'AREA' )
+      ];
+      const idx = newObjects.findIndex( object => object === state.selectedObject );
+      const newIdx = idx + action.delta;
+
+      if (idx === newIdx || idx === -1 || newIdx < 0 || newIdx >= newObjects.length) {
+        return state;
+      }
+
+      const temp = newObjects[newIdx];
+      newObjects[newIdx] = newObjects[idx];
+      newObjects[idx] = temp;
+
       return {
         ...state,
-        selectFields: action.show
+        objects: newObjects
       }
     }
 
@@ -444,27 +501,23 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 export const Designer2 = (props: IDesigner2Props): JSX.Element => {
 
   const { viewTab, url, dispatch, erModel } = props;
-  const [ { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFields }, designerDispatch ] = useReducer(reducer, getDefaultState());
+  const [state, designerDispatch] = useReducer(reducer, getDefaultState());
+  const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   useTab(viewTab, url, 'Designer2', true, dispatch);
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
     display: 'grid',
     width: '100%',
+    height: 'calc(100% - 44px)',
+    padding: '4px',
     gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
-    height: '87%',
     overflow: 'auto',
-    userSelect: 'none',
-    padding: '4px'
-  }), [grid]);
+    userSelect: gridMode ? 'none' : undefined,
+  }), [grid, gridMode]);
 
-  const object2style = (object: IObject): React.CSSProperties => ({
-    backgroundColor: object.backgroundColor === undefined ? 'inherit' : object.backgroundColor,
-    color: object.color === undefined ? 'inherit' : object.color,
-  });
-
-  const getGridCells = () => {
+  const gridCells = useMemo( () => {
     const res: JSX.Element[] = [];
     for (let x = 0; x < grid.columns.length; x++) {
       for (let y = 0; y < grid.rows.length; y++) {
@@ -474,7 +527,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
             style={{
               gridArea: `${y + 1} / ${x + 1} / ${y + 2} / ${x + 2}`,
               borderColor: getTheme().palette.neutralTertiary,
-              backgroundColor: inRect(gridSelection, x, y) ? getTheme().palette.red : 'inherit',
+              backgroundColor: inRect(gridSelection, x, y) ? getTheme().palette.red : undefined,
               border: '1px dotted',
               borderRadius: '4px',
               margin: '2px',
@@ -482,7 +535,9 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               padding: '4px',
               opacity: 0.6
             }}
-            onClick={ (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+            onClick={ e => {
+              e.stopPropagation();
+              e.preventDefault();
               if (e.shiftKey && gridSelection) {
                 designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: makeRect(gridSelection, x, y) });
               } else {
@@ -496,29 +551,10 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       }
     }
     return res;
-  };
-
-  const getColor = (color: string | undefined, defColor: string) => {
-    let res;
-
-    if (color) {
-      const [objName, colorName] = color.split('.');
-
-      if (objName === 'palette') {
-        res = (getTheme().palette as any)[colorName];
-      }
-
-      else if (objName === 'semanticColors') {
-        res = (getTheme().semanticColors as any)[colorName];
-      }
-
-    }
-
-    return res ? res : defColor;
-  };
+  }, [grid, gridSelection]);
 
   const areas = objects.filter( obj => obj.type === 'AREA' ) as IArea[];
-  const getAreas = () => areas.map( obj => {
+  const getAreas = useCallback( () => areas.map( obj => {
     const area = obj as IArea;
 
     const areaStyle = gridMode
@@ -534,30 +570,16 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       }
       : previewMode
       ? {
-        color: getColor(area.color, getTheme().semanticColors.bodyText),
-        backgroundColor: getColor(area.backgroundColor, getTheme().semanticColors.bodyBackground),
+        ...object2style(area),
         padding: '4px'
       }
       : {
-        border: '1px dotted',
+        ...object2style(area),
+        border: area === selectedObject ? '1px dotted' : '1px dashed',
         borderColor: area === selectedObject ? getTheme().palette.themePrimary : getTheme().palette.themeLight,
+        borderRadius: '4px',
         padding: '4px'
       };
-
-    interface IWithSelectionFrameProps {
-      children: JSX.Element | null;
-      selected: boolean;
-    };
-
-    const WithSelectionFrame = ({ children, selected }: IWithSelectionFrameProps) => (
-      <div
-        style={{
-          border: selected ? '1px dotted ' + getTheme().palette.themePrimary : '1px solid transparent'
-        }}
-      >
-        {children}
-      </div>
-    );
 
     const createControl = (object: Object) => {
       switch (object.type) {
@@ -565,6 +587,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
           return (
             <Label
               key={object.name}
+              styles={{ root: object2IStyle(object) }}
               onClick={
                 e => {
                   e.stopPropagation();
@@ -587,6 +610,10 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               }
             >
               <TextField
+                styles={{
+                  root: object2IStyle(object),
+                  wrapper: object2IStyle(object)
+                }}
                 label={object.label}
               />
             </div>
@@ -632,17 +659,17 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               </div>
             </div>
           :
-              <Stack horizontal={area.horizontal}>
-                {
-                  objects
-                    .filter( object => object.parent === area.name )
-                    .map( object => <WithSelectionFrame key={object.name} selected={object === selectedObject}>{createControl(object)}</WithSelectionFrame> )
-                }
-              </Stack>
+            <Stack horizontal={area.horizontal}>
+              {
+                objects
+                  .filter( object => object.parent === area.name )
+                  .map( object => <WithSelectionFrame key={object.name} selected={object === selectedObject}>{createControl(object)}</WithSelectionFrame> )
+              }
+            </Stack>
         }
       </div>
     )
-  });
+  }), [objects, selectedObject, grid, gridSelection, gridMode, previewMode]);
 
   const commandBarItems: ICommandBarItemProps[] = [
     {
@@ -687,7 +714,48 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       onClick: () => designerDispatch({ type: 'DELETE_OBJECT' })
     },
     {
+      key: 'undo',
+      disabled: previewMode || !undo.length,
+      text: 'Undo',
+      iconOnly: true,
+      iconProps: { iconName: 'Undo' },
+      onClick: () => designerDispatch({ type: 'UNDO' })
+    },
+    {
+      key: 'redo',
+      disabled: previewMode || !redo.length,
+      text: 'Redo',
+      iconOnly: true,
+      iconProps: { iconName: 'Redo' },
+      onClick: () => designerDispatch({ type: 'REDO' })
+    },
+    {
       key: 'split2',
+      disabled: true,
+      iconOnly: true,
+      iconProps: {
+        iconName: 'Remove',
+        styles: { root: { transform: 'rotate(90deg)' } }
+      },
+    },
+    {
+      key: 'moveUp',
+      disabled: previewMode || gridMode || !selectedObject || selectedObject.type === 'WINDOW' || selectedObject.type === 'AREA',
+      text: 'Move Up',
+      iconOnly: true,
+      iconProps: { iconName: 'Up' },
+      onClick: () => designerDispatch({ type: 'MOVE_OBJECT', delta: -1 })
+    },
+    {
+      key: 'moveDown',
+      disabled: previewMode || gridMode || !selectedObject || selectedObject.type === 'WINDOW' || selectedObject.type === 'AREA',
+      text: 'Move Down',
+      iconOnly: true,
+      iconProps: { iconName: 'Down' },
+      onClick: () => designerDispatch({ type: 'MOVE_OBJECT', delta: 1 })
+    },
+    {
+      key: 'split3',
       disabled: true,
       iconOnly: true,
       iconProps: {
@@ -745,7 +813,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       onClick: () => designerDispatch({ type: 'CREATE_AREA' })
     },
     {
-      key: 'split3',
+      key: 'split4',
       disabled: true,
       iconOnly: true,
       iconProps: {
@@ -873,11 +941,13 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     );
   };
 
+  const window = objects.find( object => object.type === 'WINDOW' ) as IWindow;
+
   return (
     <>
       <CommandBar items={commandBarItems} />
       {
-        selectFields && erModel &&
+        selectFieldsMode && erModel &&
         <SelectFields
           entity={erModel.entities['TgdcCompany']}
           onCreate={ fields => {
@@ -892,12 +962,19 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         />
       }
       <WithObjectInspector>
-        <div style={{...windowStyle, ...object2style(objects.find( object => object.type === 'WINDOW' )!)}}>
+        <div
+          style={{...windowStyle, ...object2style(window)}}
+          onClick={ e => {
+            e.stopPropagation();
+            e.preventDefault();
+            designerDispatch({ type: 'SELECT_OBJECT', object: window });
+          } }
+        >
           {
             previewMode
               ? getAreas()
               : gridMode
-              ? getGridCells().concat(getAreas())
+              ? gridCells.concat(getAreas())
               : getAreas()
           }
         </div>

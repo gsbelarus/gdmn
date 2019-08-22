@@ -1,4 +1,5 @@
-import { IRectangle } from "./types";
+import { IRectangle, IObject } from "./types";
+import { getTheme, IStyle } from "office-ui-fabric-react";
 
 export const isSingleCell = (rect?: IRectangle) => rect && rect.left === rect.right && rect.top === rect.bottom;
 export const inRect = (rect: IRectangle | undefined, x: number, y: number) => rect && x >= rect.left && y >= rect.top && x <= rect.right && y <= rect.bottom;
@@ -23,3 +24,32 @@ export const makeRect = (rect: IRectangle, x: number, y: number) => inRect(rect,
       right: Math.max(rect.right, x),
       bottom: Math.max(rect.bottom, y),
     };
+
+export const getColor = (color: string | undefined, defColor?: string) => {
+  let res;
+
+  if (color) {
+    const [objName, colorName] = color.split('.');
+
+    if (objName === 'palette') {
+      res = (getTheme().palette as any)[colorName];
+    }
+
+    else if (objName === 'semanticColors') {
+      res = (getTheme().semanticColors as any)[colorName];
+    }
+
+  }
+
+  return res ? res : defColor;
+};
+
+export const object2style = (object: IObject): React.CSSProperties => ({
+  backgroundColor: getColor(object.backgroundColor),
+  color: getColor(object.color),
+});
+
+export const object2IStyle = (object: IObject): IStyle => ({
+  backgroundColor: getColor(object.backgroundColor),
+  color: getColor(object.color),
+});
