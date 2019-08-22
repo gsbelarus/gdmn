@@ -52,6 +52,8 @@ export interface IImage extends IObject {
   type: 'IMAGE';
   url?: string;
   alt?: string;
+  width?: number;
+  height?: number;
 };
 
 export interface IField extends IObject {
@@ -72,3 +74,7 @@ export function isArea(x: IObject): x is IArea {
 };
 
 export type Object = IWindow | IArea | ILabel | IImage | IField;
+
+export type Objects = Object[];
+
+export const areas = (objects: Objects): IArea[] => objects.filter( object => isArea(object) ) as IArea[];

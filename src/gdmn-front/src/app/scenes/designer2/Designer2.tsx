@@ -4,7 +4,7 @@ import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IWindow } from "./types";
+import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IWindow, isWindow, areas } from "./types";
 import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, object2IStyle } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithSelectionFrame } from "./WithSelectionFrame";
@@ -57,7 +57,7 @@ interface IDesigner2State {
    */
   gridSelection?: IRectangle;
   previewMode?: boolean;
-  gridMode: boolean;
+  gridMode?: boolean;
   selectFieldsMode?: boolean;
   objects: Object[];
   selectedObject?: Object;
@@ -77,17 +77,16 @@ const getDefaultState = (): IDesigner2State => {
       type: 'AREA',
       left: 0,
       top: 0,
-      right: 1,
-      bottom: 1
+      right: 0,
+      bottom: 0
     }
   ];
 
   return {
     grid: {
-      columns: [{ unit: 'PX', value: 350 }, { unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
-      rows: [{ unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }, { unit: 'FR', value: 1 }],
+      columns: [{ unit: 'FR', value: 1 }],
+      rows: [{ unit: 'FR', value: 1 }],
     },
-    gridMode: true,
     objects,
     selectedObject: objects.find( object => object.type === 'WINDOW' )
   };
@@ -261,8 +260,14 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     }
 
     case 'DELETE_OBJECT': {
-      if (!state.selectedObject || state.selectedObject.type === 'WINDOW') {
+      if (!state.selectedObject || isWindow(state.selectedObject)) {
         return state;
+      }
+
+      if (!state.gridMode && isArea(state.selectedObject)) {
+        if (state.objects.filter( object => isArea(object)).length === 1) {
+          return state;
+        }
       }
 
       return {
@@ -510,7 +515,9 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     display: 'grid',
     width: '100%',
     height: 'calc(100% - 44px)',
-    padding: '4px',
+    paddingLeft: '4px',
+    paddingRight: '4px',
+    paddingBottom: '4px',
     gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
     gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
     overflow: 'auto',
@@ -553,10 +560,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     return res;
   }, [grid, gridSelection]);
 
-  const areas = objects.filter( obj => obj.type === 'AREA' ) as IArea[];
-  const getAreas = useCallback( () => areas.map( obj => {
-    const area = obj as IArea;
-
+  const getAreas = useCallback( () => areas(objects).map( area => {
     const areaStyle = gridMode
       ? {
         borderColor: getTheme().palette.themeDark,
@@ -671,7 +675,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     )
   }), [objects, selectedObject, grid, gridSelection, gridMode, previewMode]);
 
-  const commandBarItems: ICommandBarItemProps[] = [
+  const commandBarItems: ICommandBarItemProps[] = useMemo( () => [
     {
       key: 'insertField',
       disabled: previewMode || gridMode || !selectedObject || selectedObject.type !== 'AREA' || !erModel,
@@ -707,7 +711,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'deleteObject',
-      disabled: previewMode || !selectedObject || selectedObject.type === 'WINDOW',
+      disabled: previewMode || !selectedObject || isWindow(selectedObject) || (!gridMode && isArea(selectedObject) && areas(objects).length === 1),
       text: selectedObject && `Delete "${selectedObject.name}"`,
       iconOnly: true,
       iconProps: { iconName: 'Delete' },
@@ -806,7 +810,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'createArea',
-      disabled: previewMode || !gridMode || !gridSelection || areas.some( area => rectIntersect(area, gridSelection) ),
+      disabled: previewMode || !gridMode || !gridSelection || areas(objects).some( area => rectIntersect(area, gridSelection) ),
       text: 'Create Area',
       iconOnly: true,
       iconProps: { iconName: 'SelectAll' },
@@ -829,7 +833,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       iconProps: { iconName: 'RedEye' },
       onClick: () => designerDispatch({ type: 'TOGGLE_PREVIEW_MODE' })
     }
-  ];
+  ], [previewMode, gridMode, objects, selectedObject, grid, gridSelection]);
 
   const WithObjectInspector = ({ children }: { children: JSX.Element }) => {
     if (previewMode) {
@@ -857,7 +861,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         <div
           style={{
             gridArea: '1 2 2 3',
-            padding: '4px',
+            paddingRight: '4px'
           }}
         >
           <div
