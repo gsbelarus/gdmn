@@ -215,7 +215,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
-  [TTaskActionNames.ADD_ENTITY]: IAddEntity;
+  [TTaskActionNames.ADD_ENTITY]: string[];
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
 }

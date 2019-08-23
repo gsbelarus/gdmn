@@ -352,7 +352,7 @@ export class Application extends ADatabase {
 
   public pushAddEntityCmd(session: Session,
                           command: AddEntityCmd
-  ): Task<AddEntityCmd, { entityName: string }> {
+  ): Task<AddEntityCmd, string[]> {
     const task = new Task({
       session,
       command,
@@ -397,7 +397,7 @@ export class Application extends ADatabase {
             }
           })
         }));
-        return {entityName};
+        return this.erModel.entity(entityName).inspect();
       }
     });
     session.taskManager.add(task);

@@ -22,10 +22,10 @@ export interface INewEntityStateProps {
   erModel?: ERModel;
   viewTab?: IViewTab;
   gcsEntities?: GridComponentState;
+  entities?: RecordSet;
 };
 
 export interface INewEntityProps extends RouteComponentProps<INewEntityRouteProps>, INewEntityStateProps {
-  rs?: RecordSet;
   dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction>;
   url: string;
   viewTab?: IViewTab;

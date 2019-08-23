@@ -14,9 +14,9 @@ import {
   ITextField,
   TextField
 } from "office-ui-fabric-react";
-import {RecordSet} from "gdmn-recordset";
+import {IDataRow, RecordSet, rsActions} from "gdmn-recordset";
 import {gdmnActions} from "@src/app/scenes/gdmn/actions";
-import {IEntityName, ILastEdited, IChangedFields} from "@src/app/scenes/ermodel/utils";
+import {IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/utils";
 import {ISessionData} from "@src/app/scenes/gdmn/types";
 import {apiService} from "@src/app/services/apiService";
 import {IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
@@ -25,11 +25,11 @@ import {
   prepareDefaultEntityQuery,
   prepareDefaultEntityQuerySetAttr
 } from "@src/app/scenes/ermodel/EntityDataView/utils";
-
+import {parseEntity} from "@src/app/scenes/ermodel/Entity/new/utils";
 
 
 export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
-  const {history, dispatch, url, viewTab, erModel, entityName, newRecord,} = props;
+  const {history, dispatch, url, viewTab, erModel, entityName, newRecord, entities} = props;
 
   const getSavedControlsData = (): ISessionData | undefined => {
     if (viewTab && viewTab.sessionData && viewTab.sessionData.controls instanceof Object) {
@@ -134,7 +134,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
   const deleteAttributeData = (idRow: string) => {
     const attributes = attributeData.slice();
     const newAttributes = attributes
-      .filter((field, index) => newRecord ?  field.id !== idRow : true)
+      .filter((field, index) => newRecord ? field.id !== idRow : true)
       .map((field) => {
         return field
       });
@@ -162,17 +162,39 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     const parent = parentName.current;
     if (newRecord) {
       dispatch(async () => {
+
         if (parent) {
-          await apiService.AddEntity({
+          const result = await apiService.AddEntity({
             entityName: name.value.toUpperCase(),
             parentName: parent.value.toUpperCase(),
             attributes: refAttribute.current
           });
-        } else {
-          await apiService.AddEntity({entityName: name.value.toUpperCase(), attributes: refAttribute.current});
 
+          if(!result.error){
+            parseEntity(result.payload.result!, erModel!)
+          }
+
+        } else {
+          const result = await apiService.AddEntity({
+            entityName: name.value.toUpperCase(),
+            attributes: refAttribute.current
+          });
+
+          if(!result.error){
+            parseEntity(result.payload.result!, erModel!)
+          }
         }
       });
+
+      if (entities) {
+        dispatch( async (dispatch, getState) => {
+        dispatch(rsActions.setRecordSet(
+          entities.set({
+            name: name.value.toUpperCase(),
+            description: name.value.toUpperCase()
+          } as IDataRow)))
+        })
+      }
     } else {
       dispatch(async () => {
         if (parent) {
@@ -182,7 +204,11 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             attributes: refAttribute.current
           })
         } else {
-         await apiService.editEntity({entityName: name.value.toUpperCase(), changedFields: changedFields.current, attributes: refAttribute.current})
+          await apiService.editEntity({
+            entityName: name.value.toUpperCase(),
+            changedFields: changedFields.current,
+            attributes: refAttribute.current
+          })
         }
       });
     }
@@ -269,6 +295,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
                 return {
                   id: field.attribute.name,
                   name: field.attribute.name,
+                  required: field.attribute.required,
                   lName: field.attribute.lName,
                   type: field.attribute.type,
                   references: field.links && field.links!.map((link) => link.entity.name),
@@ -277,6 +304,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
               default:
                 return {
                   id: field.attribute.name,
+                  required: field.attribute.required,
                   name: field.attribute.name,
                   lName: field.attribute.lName,
                   type: field.attribute.type,

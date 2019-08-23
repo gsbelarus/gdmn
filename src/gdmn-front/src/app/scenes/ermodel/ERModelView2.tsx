@@ -92,14 +92,14 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       }
 
       if (attributes.masterLink.values[0].value !== currEntity) {
-        const data = currEntity
+        const data = currEntity && erModel.entities[currEntity]
           ?
           List(
             Object.entries(erModel.entities[currEntity].attributes).map(
               ([name, ent]) =>
                 ({
                   name,
-                  description: ent.lName.ru ? ent.lName.ru.name : name
+                  description: ent.lName && ent.lName.ru ? ent.lName.ru.name : name
                 } as IDataRow)
             )
           )
