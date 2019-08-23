@@ -60,10 +60,18 @@ export interface IImage extends IObject {
   height?: number;
 };
 
+export function isImage(x: IObject | undefined): x is IImage {
+  return x instanceof Object && x.type === 'IMAGE';
+};
+
 export interface IField extends IObject {
   type: 'FIELD';
   fieldName: string;
   label: string;
+};
+
+export function isField(x: IObject | undefined): x is IField {
+  return x instanceof Object && x.type === 'FIELD';
 };
 
 export interface IObjectWithCoord extends IObject, IRectangle { };

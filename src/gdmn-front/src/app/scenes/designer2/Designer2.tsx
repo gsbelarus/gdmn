@@ -98,7 +98,7 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'SELECT_OBJECT_BY_NAME', name: string }
-  | { type: 'CREATE_LABEL', text?: string }
+  | { type: 'CREATE_LABEL' }
   | { type: 'CREATE_IMAGE' }
   | { type: 'CREATE_FIELD', fieldName: string, label?: string, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
@@ -147,6 +147,30 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
     throw new Error(`Can't assign object namefor a type ${objectType}`);
+  };
+
+  const createObject = (propsOrType: any): IDesigner2State => {
+    const partialProps = typeof propsOrType === 'string' ? { type: propsOrType } : propsOrType;
+
+    const { selectedObject } = state;
+
+    if (!isArea(selectedObject) || !partialProps.type) {
+      return state;
+    }
+
+    const name = partialProps.name || getObjectName(partialProps.type);
+
+    const newObject = {
+      name,
+      parent: selectedObject.name,
+      ...partialProps
+    };
+
+    return {
+      ...state,
+      objects: [...state.objects, newObject],
+      selectedObject: newObject
+    }
   };
 
   switch (action.type) {
@@ -284,74 +308,25 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     }
 
     case 'CREATE_LABEL': {
-      const { selectedObject } = state;
-
-      if (!isArea(selectedObject)) {
-        return state;
-      }
-
       const name = getObjectName('LABEL');
 
-      const newObject: ILabel = {
+      return createObject({
         name,
-        parent: selectedObject.name,
         type: 'LABEL',
-        text: action.text ? action.text : name
-      };
-
-      return {
-        ...state,
-        objects: [...state.objects, newObject],
-        selectedObject: newObject
-      }
+        text: name
+      });
     }
 
-    case 'CREATE_IMAGE': {
-      const { selectedObject } = state;
+    case 'CREATE_IMAGE':
+      return createObject('IMAGE');
 
-      if (!isArea(selectedObject)) {
-        return state;
-      }
-
-      const name = getObjectName('IMAGE');
-
-      const newObject: IImage = {
-        name,
-        parent: selectedObject.name,
-        type: 'IMAGE',
-        alt: name
-      };
-
-      return {
-        ...state,
-        objects: [...state.objects, newObject],
-        selectedObject: newObject
-      }
-    }
-
-    case 'CREATE_FIELD': {
-      const { selectedObject } = state;
-
-      if (!isArea(selectedObject)) {
-        return state;
-      }
-
-      const name = getObjectName('FIELD');
-
-      const newObject: IField = {
-        name,
-        parent: selectedObject.name,
+    case 'CREATE_FIELD':
+      return createObject({
         type: 'FIELD',
+        text: name,
         fieldName: action.fieldName,
         label: action.label ? action.label : action.fieldName
-      };
-
-      return {
-        ...state,
-        objects: [...state.objects, newObject],
-        selectedObject: action.makeSelected ? newObject : state.selectedObject
-      }
-    }
+      });
 
     case 'UPDATE_OBJECT': {
       if (!state.selectedObject) {
