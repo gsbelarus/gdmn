@@ -5,7 +5,6 @@ import { ICommandBarItemProps, CommandBar, getTheme, Stack } from "office-ui-fab
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects } from "./types";
 import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style } from "./utils";
 import { SelectFields } from "./SelectFields";
-import { WithSelectionFrame } from "./WithSelectionFrame";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Control } from "./Control";
 
@@ -287,12 +286,14 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     }
 
     case 'DELETE_OBJECT': {
-      if (!state.selectedObject || isWindow(state.selectedObject)) {
+      const { selectedObject, objects, gridMode } = state;
+
+      if (!selectedObject || isWindow(selectedObject)) {
         return state;
       }
 
-      if (!state.gridMode && isArea(state.selectedObject)) {
-        if (state.objects.filter( object => isArea(object)).length === 1) {
+      if (!gridMode && isArea(selectedObject)) {
+        if (areas(objects).length === 1) {
           return state;
         }
       }
@@ -300,7 +301,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       return {
         ...state,
         selectedObject: undefined,
-        objects: state.objects.filter( object => object !== state.selectedObject )
+        objects: objects.filter( object => object !== selectedObject && object.parent !== selectedObject.name )
       }
     }
 

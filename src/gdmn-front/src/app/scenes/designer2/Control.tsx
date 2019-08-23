@@ -6,15 +6,9 @@ import { WithSelectionFrame } from "./WithSelectionFrame";
 
 interface IInternalControlProps {
   object: Object;
-  onSelectObject: () => void;
 };
 
-const InternalControl = ({ object, onSelectObject }: IInternalControlProps) => {
-
-  const onClick = (e: any) => {
-    e.stopPropagation();
-    onSelectObject();
-  };
+const InternalControl = ({ object }: IInternalControlProps) => {
 
   switch (object.type) {
     case 'LABEL':
@@ -22,7 +16,6 @@ const InternalControl = ({ object, onSelectObject }: IInternalControlProps) => {
         <Label
           key={object.name}
           styles={{ root: object2IStyle(object) }}
-          onClick={onClick}
         >
           {object.text}
         </Label>
@@ -30,7 +23,7 @@ const InternalControl = ({ object, onSelectObject }: IInternalControlProps) => {
 
     case 'FIELD':
       return (
-        <div onClick={onClick}>
+        <div>
           <TextField
             styles={{
               root: object2IStyle(object),
@@ -48,7 +41,6 @@ const InternalControl = ({ object, onSelectObject }: IInternalControlProps) => {
             src={object.url}
             alt={object.alt}
             style={object2style(object)}
-            onClick={onClick}
           />
         </div>
       )
@@ -66,7 +58,7 @@ interface IControlProps {
 };
 
 export const Control = ({ object, onSelectObject, selected, previewMode }: IControlProps) =>
-  <WithSelectionFrame selected={selected} previewMode={previewMode}>
-    <InternalControl object={object} onSelectObject={onSelectObject} />
+  <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject}>
+    <InternalControl object={object} />
   </WithSelectionFrame>
 
