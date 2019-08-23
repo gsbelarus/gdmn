@@ -1,7 +1,7 @@
 import React from "react";
 import { GridInspector, OnUpdateGrid } from "./GridInspector";
-import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel } from "./types";
-import { Dropdown, TextField, ChoiceGroup } from "office-ui-fabric-react";
+import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage } from "./types";
+import { Dropdown, TextField, ChoiceGroup, Stack } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 
 interface IWithObjectInspectorProps {
@@ -88,6 +88,32 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
                         }
                       }
                     />
+                  : isImage(selectedObject)
+                  ?
+                    <Stack>
+                      <TextField
+                        label="Image URL"
+                        value={selectedObject.url}
+                        onChange={
+                          (e, newValue?: string) => {
+                            if (newValue !== undefined) {
+                              onUpdateSelectedObject({ url: newValue })
+                            }
+                          }
+                        }
+                      />
+                      <TextField
+                        label="Image caption"
+                        value={selectedObject.alt}
+                        onChange={
+                          (e, newValue?: string) => {
+                            if (newValue !== undefined) {
+                              onUpdateSelectedObject({ alt: newValue })
+                            }
+                          }
+                        }
+                      />
+                    </Stack>
                   : isArea(selectedObject)
                   ? <ChoiceGroup
                       label="Direction"

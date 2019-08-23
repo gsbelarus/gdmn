@@ -2,7 +2,7 @@ import React, { useReducer, useMemo, useCallback } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Stack, Label, TextField } from "office-ui-fabric-react";
-import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects } from "./types";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects, IObject } from "./types";
 import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, object2IStyle } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithSelectionFrame } from "./WithSelectionFrame";
@@ -78,6 +78,12 @@ const getDefaultState = (): IDesigner2State => {
       top: 0,
       right: 0,
       bottom: 0
+    },
+    {
+      name: 'Image1',
+      type: 'IMAGE',
+      parent: 'Area1',
+      url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
     }
   ];
 
@@ -97,8 +103,7 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'CREATE_LABEL' }
-  | { type: 'CREATE_IMAGE' }
-  | { type: 'CREATE_FIELD', fieldName: string, label?: string, makeSelected?: boolean }
+  | { type: 'CREATE_OBJECT', objectType: TObjectType, newProps?: Partial<Object>, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
   | { type: 'SELECT_FIELDS', show: boolean }
   | { type: 'MOVE_OBJECT', delta: number }
@@ -147,12 +152,12 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     throw new Error(`Can't assign object namefor a type ${objectType}`);
   };
 
-  const createObject = (propsOrType: any): IDesigner2State => {
-    const partialProps = typeof propsOrType === 'string' ? { type: propsOrType } : propsOrType;
+  const createObject = (type: TObjectType, props?: Partial<Object>, makeSelected: boolean = true): IDesigner2State => {
+    const partialProps = props ? { type, ...props } : { type };
 
     const { selectedObject } = state;
 
-    if (!isArea(selectedObject) || !partialProps.type) {
+    if (!isArea(selectedObject)) {
       return state;
     }
 
@@ -162,12 +167,12 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       name,
       parent: selectedObject.name,
       ...partialProps
-    };
+    } as Object;
 
     return {
       ...state,
       objects: [...state.objects, newObject],
-      selectedObject: newObject
+      selectedObject: makeSelected ? newObject : selectedObject
     }
   };
 
@@ -300,24 +305,14 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 
     case 'CREATE_LABEL': {
       const name = getObjectName('LABEL');
-
-      return createObject({
-        name,
-        type: 'LABEL',
-        text: name
-      });
+      return createObject('LABEL', { name, text: name });
     }
 
-    case 'CREATE_IMAGE':
-      return createObject('IMAGE');
+    case 'CREATE_OBJECT': {
+      const { objectType, newProps, makeSelected } = action;
+      return createObject(objectType, newProps, makeSelected);
+    }
 
-    case 'CREATE_FIELD':
-      return createObject({
-        type: 'FIELD',
-        text: name,
-        fieldName: action.fieldName,
-        label: action.label ? action.label : action.fieldName
-      });
 
     case 'UPDATE_OBJECT': {
       const { selectedObject, grid, objects } = state;
@@ -599,6 +594,23 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
             </div>
           )
 
+        case 'IMAGE':
+          return (
+            <div>
+              <img
+                src={object.url}
+                alt={object.alt}
+                style={object2style(object)}
+                onClick={
+                  e => {
+                    e.stopPropagation();
+                    designerDispatch({ type: 'SELECT_OBJECT', object });
+                  }
+                }
+              />
+            </div>
+          )
+
         default:
           return null;
       }
@@ -643,7 +655,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               {
                 objects
                   .filter( object => object.parent === area.name )
-                  .map( object => <WithSelectionFrame key={object.name} selected={object === selectedObject}>{createControl(object)}</WithSelectionFrame> )
+                  .map( object => <WithSelectionFrame key={object.name} selected={object === selectedObject} previewMode={previewMode}>{createControl(object)}</WithSelectionFrame> )
               }
             </Stack>
         }
@@ -674,7 +686,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
-      onClick: () => designerDispatch({ type: 'CREATE_IMAGE' })
+      onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'IMAGE' })
     },
     {
       key: 'split1',
@@ -822,9 +834,9 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
           entity={erModel.entities['TgdcCompany']}
           onCreate={ fields => {
             if (fields.length === 1) {
-              designerDispatch({ type: 'CREATE_FIELD', fieldName: fields[0].fieldName, label: fields[0].label, makeSelected: true });
+              designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName: fields[0].fieldName, label: fields[0].label } });
             } else {
-              fields.forEach( ({ fieldName, label}) => designerDispatch({ type: 'CREATE_FIELD', fieldName, label }) );
+              fields.forEach( ({ fieldName, label }) => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName, label }, makeSelected: false }) );
             }
             designerDispatch({ type: 'SELECT_FIELDS', show: false });
           } }
