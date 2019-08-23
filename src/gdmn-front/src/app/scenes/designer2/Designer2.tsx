@@ -1,12 +1,13 @@
 import React, { useReducer, useMemo, useCallback } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
-import { ICommandBarItemProps, CommandBar, getTheme, Stack, Label, TextField } from "office-ui-fabric-react";
-import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects, IObject } from "./types";
-import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, object2IStyle } from "./utils";
+import { ICommandBarItemProps, CommandBar, getTheme, Stack } from "office-ui-fabric-react";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects } from "./types";
+import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithSelectionFrame } from "./WithSelectionFrame";
 import { WithObjectInspector } from "./WithObjectInspector";
+import { Control } from "./Control";
 
 /**
  *
@@ -556,65 +557,6 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         padding: '4px'
       };
 
-    const createControl = (object: Object) => {
-      switch (object.type) {
-        case 'LABEL':
-          return (
-            <Label
-              key={object.name}
-              styles={{ root: object2IStyle(object) }}
-              onClick={
-                e => {
-                  e.stopPropagation();
-                  designerDispatch({ type: 'SELECT_OBJECT', object });
-                }
-              }
-            >
-              {object.text}
-            </Label>
-          );
-
-        case 'FIELD':
-          return (
-            <div
-              onClick={
-                e => {
-                  e.stopPropagation();
-                  designerDispatch({ type: 'SELECT_OBJECT', object });
-                }
-              }
-            >
-              <TextField
-                styles={{
-                  root: object2IStyle(object),
-                  wrapper: object2IStyle(object)
-                }}
-                label={object.label}
-              />
-            </div>
-          )
-
-        case 'IMAGE':
-          return (
-            <div>
-              <img
-                src={object.url}
-                alt={object.alt}
-                style={object2style(object)}
-                onClick={
-                  e => {
-                    e.stopPropagation();
-                    designerDispatch({ type: 'SELECT_OBJECT', object });
-                  }
-                }
-              />
-            </div>
-          )
-
-        default:
-          return null;
-      }
-    };
 
     return (
       <div
@@ -655,7 +597,15 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               {
                 objects
                   .filter( object => object.parent === area.name )
-                  .map( object => <WithSelectionFrame key={object.name} selected={object === selectedObject} previewMode={previewMode}>{createControl(object)}</WithSelectionFrame> )
+                  .map( object =>
+                    <Control
+                      key={object.name}
+                      object={object}
+                      selected={object === selectedObject}
+                      previewMode={previewMode}
+                      onSelectObject={ () => designerDispatch({ type: 'SELECT_OBJECT', object }) }
+                    />
+                  )
               }
             </Stack>
         }
