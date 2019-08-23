@@ -1,13 +1,12 @@
 import React, { useReducer, useMemo, useCallback } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
-import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
-import { ColorDropDown } from "./ColorDropDown";
-import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IWindow, isWindow, areas, isLabel } from "./types";
+import { ICommandBarItemProps, CommandBar, getTheme, Stack, Label, TextField } from "office-ui-fabric-react";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects } from "./types";
 import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, object2IStyle } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithSelectionFrame } from "./WithSelectionFrame";
+import { WithObjectInspector } from "./WithObjectInspector";
 
 /**
  *
@@ -47,7 +46,7 @@ import { WithSelectionFrame } from "./WithSelectionFrame";
  */
 
 interface IDesigner2State {
-  grid: IGridSize;
+  grid: IGrid;
 
   /**
    * Выделенная прямоугольная группа клеток в гриде. Используется для создания области.
@@ -59,7 +58,7 @@ interface IDesigner2State {
   previewMode?: boolean;
   gridMode?: boolean;
   selectFieldsMode?: boolean;
-  objects: Object[];
+  objects: Objects;
   selectedObject?: Object;
 };
 
@@ -97,7 +96,6 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'SET_GRID_SELECTION', gridSelection?: IRectangle }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
-  | { type: 'SELECT_OBJECT_BY_NAME', name: string }
   | { type: 'CREATE_LABEL' }
   | { type: 'CREATE_IMAGE' }
   | { type: 'CREATE_FIELD', fieldName: string, label?: string, makeSelected?: boolean }
@@ -300,13 +298,6 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
-    case 'SELECT_OBJECT_BY_NAME': {
-      return {
-        ...state,
-        selectedObject: state.objects.find( object => object.name === action.name )
-      }
-    }
-
     case 'CREATE_LABEL': {
       const name = getObjectName('LABEL');
 
@@ -329,21 +320,32 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       });
 
     case 'UPDATE_OBJECT': {
-      if (!state.selectedObject) {
+      const { selectedObject, grid, objects } = state;
+      const { newProps } = action;
+
+      if (!selectedObject) {
         return state;
       }
 
-      const updatedObject = {...state.selectedObject, ...action.newProps} as Object;
+      if (newProps.name && newProps.name !== selectedObject.name) {
+        return state;
+      }
+
+      if (newProps.type && newProps.type !== selectedObject.type) {
+        return state;
+      }
+
+      const updatedObject = {...selectedObject, ...newProps} as Object;
 
       if (isArea(updatedObject)) {
-        if (!isValidRect(updatedObject) || outOfBorder(updatedObject, rect(0, 0, state.grid.columns.length - 1, state.grid.rows.length - 1))) {
+        if (!isValidRect(updatedObject) || outOfBorder(updatedObject, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1))) {
           return state;
         }
       }
 
       return {
         ...state,
-        objects: state.objects.map( object => object === state.selectedObject ? updatedObject : object ),
+        objects: objects.map( object => object === selectedObject ? updatedObject : object ),
         selectedObject: updatedObject
       }
     }
@@ -809,116 +811,6 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     }
   ], [previewMode, gridMode, objects, selectedObject, grid, gridSelection]);
 
-  const WithObjectInspector = ({ children }: { children: JSX.Element }) => {
-    if (previewMode) {
-      return children;
-    }
-
-    return (
-      <div
-        style = {{
-          display: 'grid',
-          width: '100%',
-          height: '100%',
-          gridTemplateColumns: '1fr 320px',
-          gridTemplateRows: '1fr'
-        }}
-      >
-        <div
-          style={{
-            gridArea: '1 1 2 2',
-            width: '100%'
-          }}
-        >
-          {children}
-        </div>
-        <div
-          style={{
-            gridArea: '1 2 2 3',
-            paddingRight: '4px'
-          }}
-        >
-          <div
-            style={{
-              border: '1px solid dimGray',
-              borderRadius: '4px',
-              height: 'calc(100% - 48px)',
-              padding: '4px'
-            }}
-          >
-            {
-              gridMode
-              ?
-                <GridInspector
-                  grid={grid}
-                  selectedArea={isArea(selectedObject) ? selectedObject : undefined}
-                  onUpdateGrid={ (updateColumn, idx, newSize) => designerDispatch({ type: 'UPDATE_GRID', updateColumn, idx, newSize }) }
-                  onChangeArea={ newArea => designerDispatch({ type: 'UPDATE_OBJECT', newProps: newArea }) }
-                />
-              :
-                <>
-                  <Dropdown
-                    label="Selected object"
-                    selectedKey={selectedObject ? selectedObject.name : undefined}
-                    onChange={ (_, option) => option && designerDispatch({ type: 'SELECT_OBJECT_BY_NAME', name: option.key as string }) }
-                    options={ objects.map( object => ({ key: object.name, text: object.name }) ) }
-                  />
-                  {
-                    !selectedObject
-                    ? null
-                    : isLabel(selectedObject)
-                    ?
-                      <TextField
-                        label="Text"
-                        value={selectedObject.text}
-                        onChange={
-                          (e, newValue?: string) => {
-                            if (newValue !== undefined) {
-                              designerDispatch({ type: 'UPDATE_OBJECT', newProps: { text: newValue } })
-                            }
-                          }
-                        }
-                      />
-                    : isArea(selectedObject)
-                    ? <ChoiceGroup
-                        label="Direction"
-                        selectedKey={ selectedObject.horizontal ? 'h' : 'v' }
-                        options={[
-                          { key: 'v', text: 'Vertical' },
-                          { key: 'h', text: 'Horizontal' }
-                        ]}
-                        onChange={ (_e, option) => option && designerDispatch({ type: 'UPDATE_OBJECT', newProps: { horizontal: option.key === 'h' } }) }
-                      />
-                    : null
-                  }
-                  {
-                    !selectedObject
-                    ? null
-                    :
-                      <ColorDropDown
-                        selectedColor={selectedObject.color}
-                        label="Color"
-                        onSelectColor={ color => designerDispatch({ type: 'UPDATE_OBJECT', newProps: { color } }) }
-                      />
-                  }
-                  {
-                    !selectedObject
-                    ? null
-                    :
-                      <ColorDropDown
-                        selectedColor={selectedObject.backgroundColor}
-                        label="Background Color"
-                        onSelectColor={ color => designerDispatch({ type: 'UPDATE_OBJECT', newProps: { backgroundColor: color } }) }
-                      />
-                  }
-                </>
-            }
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const window = objects.find( object => isWindow(object) ) as IWindow;
 
   return (
@@ -939,7 +831,16 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
           onCancel={ () => designerDispatch({ type: 'SELECT_FIELDS', show: false }) }
         />
       }
-      <WithObjectInspector>
+      <WithObjectInspector
+        previewMode={previewMode}
+        gridMode={gridMode}
+        grid={grid}
+        objects={objects}
+        selectedObject={selectedObject}
+        onUpdateGrid={ (updateColumn, idx, newSize) => designerDispatch({ type: 'UPDATE_GRID', updateColumn, idx, newSize }) }
+        onUpdateSelectedObject={ newProps => designerDispatch({ type: 'UPDATE_OBJECT', newProps }) }
+        onSelectObject={ object => designerDispatch({ type: 'SELECT_OBJECT', object }) }
+      >
         <div
           style={{...windowStyle, ...object2style(window, !gridMode)}}
           onClick={ e => {

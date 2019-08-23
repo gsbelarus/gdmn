@@ -1,13 +1,15 @@
 import React from "react";
-import { IGridSize, ISize, IArea } from "./types";
+import { IGrid, ISize, IArea } from "./types";
 import { SizeLine } from "./SizeLine";
 import { AreaSize } from "./AreaSize";
 import { Label } from "office-ui-fabric-react";
 
+export type OnUpdateGrid = (updateColumn: boolean, idx: number, newSize: ISize) => void;
+
 export interface IGridInspectorProps {
-  grid: IGridSize;
+  grid: IGrid;
   selectedArea?: IArea;
-  onUpdateGrid: (updateColumn: boolean, idx: number, newSize: ISize) => void;
+  onUpdateGrid: OnUpdateGrid;
   onChangeArea: (newArea: IArea) => void;
 };
 

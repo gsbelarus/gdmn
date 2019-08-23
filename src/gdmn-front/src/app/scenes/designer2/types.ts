@@ -5,7 +5,7 @@ export interface ISize {
   value?: number;
 };
 
-export interface IGridSize {
+export interface IGrid {
   columns: ISize[];
   rows: ISize[];
 };
@@ -90,3 +90,6 @@ export type Object = IWindow | IArea | ILabel | IImage | IField;
 export type Objects = Object[];
 
 export const areas = (objects: Objects): IArea[] => objects.filter( object => isArea(object) ) as IArea[];
+
+export type OnUpdateSelectedObject = (newProps: Partial<Object>) => void;
+
