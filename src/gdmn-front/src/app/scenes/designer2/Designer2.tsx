@@ -4,7 +4,7 @@ import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Dropdown, Stack, Label, TextField, ChoiceGroup } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 import { GridInspector } from "./GridInspector";
-import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IWindow, isWindow, areas } from "./types";
+import { IRectangle, IGridSize, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, ILabel, IField, IImage, IWindow, isWindow, areas, isLabel } from "./types";
 import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, object2IStyle } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithSelectionFrame } from "./WithSelectionFrame";
@@ -88,7 +88,7 @@ const getDefaultState = (): IDesigner2State => {
       rows: [{ unit: 'FR', value: 1 }],
     },
     objects,
-    selectedObject: objects.find( object => object.type === 'WINDOW' )
+    selectedObject: objects.find( object => isWindow(object) )
   };
 };
 
@@ -174,9 +174,8 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
         }
       }
 
-      const area = state.objects
-        .filter( object => object.type === 'AREA' )
-        .find( area => rectIntersect(area as IArea, action.gridSelection!) );
+      const area = areas(state.objects)
+        .find( area => rectIntersect(area, action.gridSelection) );
 
       return {
         ...state,
@@ -239,8 +238,8 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
 
       const newObjects = [
-        ...state.objects.filter( object => object.type === 'WINDOW' || object.type === 'AREA' ),
-        ...state.objects.filter( object => object.type !== 'WINDOW' && object.type !== 'AREA' )
+        ...state.objects.filter( object => isWindow(object) || isArea(object) ),
+        ...state.objects.filter( object => !isWindow(object) && !isArea(object) )
       ];
       const idx = newObjects.findIndex( object => object === state.selectedObject );
       const newIdx = idx + action.delta;
@@ -287,7 +286,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     case 'CREATE_LABEL': {
       const { selectedObject } = state;
 
-      if (!selectedObject || !isArea(selectedObject)) {
+      if (!isArea(selectedObject)) {
         return state;
       }
 
@@ -310,7 +309,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     case 'CREATE_IMAGE': {
       const { selectedObject } = state;
 
-      if (!selectedObject || !isArea(selectedObject)) {
+      if (!isArea(selectedObject)) {
         return state;
       }
 
@@ -333,7 +332,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     case 'CREATE_FIELD': {
       const { selectedObject } = state;
 
-      if (!selectedObject || !isArea(selectedObject)) {
+      if (!isArea(selectedObject)) {
         return state;
       }
 
@@ -678,7 +677,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
   const commandBarItems: ICommandBarItemProps[] = useMemo( () => [
     {
       key: 'insertField',
-      disabled: previewMode || gridMode || !selectedObject || selectedObject.type !== 'AREA' || !erModel,
+      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject) || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
@@ -686,7 +685,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'insertLabel',
-      disabled: previewMode || gridMode || !selectedObject || selectedObject.type !== 'AREA',
+      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
@@ -694,7 +693,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'insertPicture',
-      disabled: previewMode || gridMode || !selectedObject || selectedObject.type !== 'AREA',
+      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
@@ -744,7 +743,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'moveUp',
-      disabled: previewMode || gridMode || !selectedObject || selectedObject.type === 'WINDOW' || selectedObject.type === 'AREA',
+      disabled: previewMode || gridMode || !selectedObject || isWindow(selectedObject) || isArea(selectedObject),
       text: 'Move Up',
       iconOnly: true,
       iconProps: { iconName: 'Up' },
@@ -752,7 +751,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'moveDown',
-      disabled: previewMode || gridMode || !selectedObject || selectedObject.type === 'WINDOW' || selectedObject.type === 'AREA',
+      disabled: previewMode || gridMode || !selectedObject || isWindow(selectedObject) || isArea(selectedObject),
       text: 'Move Down',
       iconOnly: true,
       iconProps: { iconName: 'Down' },
@@ -877,7 +876,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               ?
                 <GridInspector
                   grid={grid}
-                  selectedArea={selectedObject && selectedObject.type === 'AREA' ? selectedObject : undefined}
+                  selectedArea={isArea(selectedObject) ? selectedObject : undefined}
                   onUpdateGrid={ (updateColumn, idx, newSize) => designerDispatch({ type: 'UPDATE_GRID', updateColumn, idx, newSize }) }
                   onChangeArea={ newArea => designerDispatch({ type: 'UPDATE_OBJECT', newProps: newArea }) }
                 />
@@ -892,7 +891,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
                   {
                     !selectedObject
                     ? null
-                    : selectedObject.type === 'LABEL'
+                    : isLabel(selectedObject)
                     ?
                       <TextField
                         label="Text"
@@ -905,7 +904,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
                           }
                         }
                       />
-                    : selectedObject.type === 'AREA'
+                    : isArea(selectedObject)
                     ? <ChoiceGroup
                         label="Direction"
                         selectedKey={ selectedObject.horizontal ? 'h' : 'v' }
@@ -945,7 +944,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     );
   };
 
-  const window = objects.find( object => object.type === 'WINDOW' ) as IWindow;
+  const window = objects.find( object => isWindow(object) ) as IWindow;
 
   return (
     <>
@@ -967,7 +966,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       }
       <WithObjectInspector>
         <div
-          style={{...windowStyle, ...object2style(window)}}
+          style={{...windowStyle, ...object2style(window, !gridMode)}}
           onClick={ e => {
             e.stopPropagation();
             e.preventDefault();

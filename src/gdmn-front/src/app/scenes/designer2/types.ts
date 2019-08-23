@@ -39,13 +39,17 @@ export interface IWindow extends IObject {
   type: 'WINDOW';
 };
 
-export function isWindow(x: IObject): x is IArea {
-  return x.type === 'WINDOW';
+export function isWindow(x: IObject | undefined): x is IWindow {
+  return x instanceof Object && x.type === 'WINDOW';
 };
 
 export interface ILabel extends IObject {
   type: 'LABEL';
   text: string;
+};
+
+export function isLabel(x: IObject | undefined): x is ILabel {
+  return x instanceof Object && x.type === 'LABEL';
 };
 
 export interface IImage extends IObject {
@@ -69,8 +73,8 @@ export interface IArea extends IObjectWithCoord {
   horizontal?: boolean;
 };
 
-export function isArea(x: IObject): x is IArea {
-  return x.type === 'AREA';
+export function isArea(x: IObject | undefined): x is IArea {
+  return x instanceof Object && x.type === 'AREA';
 };
 
 export type Object = IWindow | IArea | ILabel | IImage | IField;
