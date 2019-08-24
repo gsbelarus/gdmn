@@ -1,28 +1,61 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect, useMemo } from "react";
 import { IArea } from "./types";
-import { Label, Stack, TextField } from "office-ui-fabric-react";
-import { isValidRect, sameRect } from "./utils";
+import { Label, Stack, TextField, getTheme } from "office-ui-fabric-react";
+import { isValidRect, sameRect, rect } from "./utils";
 
 interface IAreaSizeProps {
   selectedArea?: IArea;
   onChange: (area: IArea) => void;
 };
 
-const propNames = ['Left', 'Top', 'Right', 'Bottom'];
-
 export const AreaSize = ({ selectedArea, onChange }: IAreaSizeProps) => {
 
-  const getOnChange = useCallback( (propName: string) => (_e: any, newValue?: string | undefined) => {
-    if (selectedArea && newValue !== '' && newValue !== undefined) {
-      const v = Number(newValue);
-      if (!isNaN(v)) {
-        const newArea = { ...selectedArea, [propName]: v };
-        if (isValidRect(newArea) && !sameRect(newArea, selectedArea)) {
-          onChange(newArea);
+  const [left, setLeft] = useState('');
+  const [top, setTop] = useState('');
+  const [right, setRight] = useState('');
+  const [bottom, setBottom] = useState('');
+  const [error, setError] = useState(false);
+  const [savedArea, setSavedArea] = useState<IArea | undefined>(undefined);
+
+  useEffect( () => {
+    setLeft(selectedArea ? selectedArea.left.toString() : '');
+    setTop(selectedArea ? selectedArea.top.toString() : '');
+    setRight(selectedArea ? selectedArea.right.toString() : '');
+    setBottom(selectedArea ? selectedArea.bottom.toString() : '');
+    setError(false);
+    setSavedArea(selectedArea);
+  }, [selectedArea]);
+
+  useEffect( () => {
+    if (savedArea === selectedArea) {
+      if (!selectedArea) {
+        setError(false);
+        return;
+      }
+
+      if (left === '' || top === '' || right === '' || bottom === '') {
+        setError(true);
+        return;
+      }
+
+      const tempRect = rect(Number(left), Number(top), Number(right), Number(bottom));
+
+      if (isValidRect(tempRect)) {
+        if (selectedArea && !sameRect(tempRect, selectedArea)) {
+          onChange({...selectedArea, ...tempRect});
         }
+        setError(false);
+      } else {
+        setError(true);
       }
     }
-  }, [selectedArea, onChange]);
+  }, [left, right, top, bottom, selectedArea, savedArea]);
+
+  const styles = useMemo( () => error ? {
+    fieldGroup: {
+      backgroundColor: getTheme().semanticColors.errorBackground
+    }
+  }: {}, [error] );
 
   return (
     <div>
@@ -32,17 +65,34 @@ export const AreaSize = ({ selectedArea, onChange }: IAreaSizeProps) => {
           : <Label>Please, select area to adjust its borders.</Label>
       }
       <Stack horizontal tokens={{ childrenGap: 4 }}>
-        {
-          propNames.map( n =>
-            <TextField
-              key={n}
-              label={n}
-              disabled={!selectedArea}
-              defaultValue={selectedArea ? (selectedArea as any)[n.toLowerCase()].toString() : ''}
-              onChange={ getOnChange(n.toLowerCase()) }
-            />
-          )
-        }
+        <TextField
+          label='Left'
+          disabled={!selectedArea}
+          value={left}
+          styles={styles}
+          onChange={ (e, newValue) => newValue !== undefined && setLeft(newValue) }
+        />
+        <TextField
+          label='Top'
+          disabled={!selectedArea}
+          value={top}
+          styles={styles}
+          onChange={ (e, newValue) => newValue !== undefined && setTop(newValue) }
+        />
+        <TextField
+          label='Right'
+          disabled={!selectedArea}
+          value={right}
+          styles={styles}
+          onChange={ (e, newValue) => newValue !== undefined && setRight(newValue) }
+        />
+        <TextField
+          label='Bottom'
+          disabled={!selectedArea}
+          value={bottom}
+          styles={styles}
+          onChange={ (e, newValue) => newValue !== undefined && setBottom(newValue) }
+        />
       </Stack>
     </div>
   );

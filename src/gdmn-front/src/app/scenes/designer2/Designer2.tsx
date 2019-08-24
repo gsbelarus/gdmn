@@ -2,11 +2,12 @@ import React, { useReducer, useMemo, useCallback } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Stack } from "office-ui-fabric-react";
-import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, areas, Objects } from "./types";
-import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style } from "./utils";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow } from "./types";
+import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, sameRect } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Control } from "./Control";
+import { AreaSize } from "./AreaSize";
 
 /**
  *
@@ -66,26 +67,29 @@ const undo: IDesigner2State[] = [];
 const redo: IDesigner2State[] = [];
 
 const getDefaultState = (): IDesigner2State => {
-  const objects: Object[] = [
-    {
-      name: 'Window',
-      type: 'WINDOW'
-    },
-    {
-      name: 'Area1',
-      type: 'AREA',
-      left: 0,
-      top: 0,
-      right: 0,
-      bottom: 0
-    },
-    {
-      name: 'Image1',
-      type: 'IMAGE',
-      parent: 'Area1',
-      url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
-    }
-  ];
+  const window: IWindow = {
+    name: 'Window',
+    type: 'WINDOW'
+  };
+
+  const area1: IArea = {
+    name: 'Area1',
+    type: 'AREA',
+    parent: 'Window',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0
+  };
+
+  const image1: IImage = {
+    name: 'Image1',
+    type: 'IMAGE',
+    parent: 'Area1',
+    url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
+  };
+
+  const objects: Objects = [window, area1, image1];
 
   return {
     grid: {
@@ -93,7 +97,7 @@ const getDefaultState = (): IDesigner2State => {
       rows: [{ unit: 'FR', value: 1 }],
     },
     objects,
-    selectedObject: objects.find( object => isWindow(object) )
+    selectedObject: window
   };
 };
 
@@ -188,12 +192,16 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       return {
         ...state,
         gridMode: action.gridMode,
-        selectedObject: undefined,
+        selectedObject: isArea(state.selectedObject) ? state.selectedObject : undefined,
         gridSelection: undefined
       }
     }
 
     case 'SET_GRID_SELECTION': {
+      if (sameRect(action.gridSelection, state.gridSelection)) {
+        return state;
+      }
+
       if (!action.gridSelection) {
         return {
           ...state,
@@ -201,7 +209,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
         }
       }
 
-      const area = areas(state.objects)
+      const area = getAreas(state.objects)
         .find( area => rectIntersect(area, action.gridSelection) );
 
       return {
@@ -253,6 +261,10 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     }
 
     case 'SELECT_OBJECT': {
+      if (state.selectedObject === action.object) {
+        return state;
+      }
+
       return {
         ...state,
         selectedObject: action.object
@@ -293,7 +305,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
 
       if (!gridMode && isArea(selectedObject)) {
-        if (areas(objects).length === 1) {
+        if (getAreas(objects).length === 1) {
           return state;
         }
       }
@@ -301,7 +313,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       return {
         ...state,
         selectedObject: undefined,
-        objects: objects.filter( object => object !== selectedObject && object.parent !== selectedObject.name )
+        objects: deleteWithChildren(selectedObject, objects)
       }
     }
 
@@ -335,7 +347,11 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       const updatedObject = {...selectedObject, ...newProps} as Object;
 
       if (isArea(updatedObject)) {
-        if (!isValidRect(updatedObject) || outOfBorder(updatedObject, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1))) {
+        if (
+          !isValidRect(updatedObject)
+          || outOfBorder(updatedObject, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1))
+          || getAreas(objects).filter( area => area !== selectedObject ).some( area => rectIntersect(area, updatedObject) )
+        ) {
           return state;
         }
       }
@@ -348,12 +364,23 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
     }
 
     case 'CREATE_AREA': {
-      if (state.gridSelection) {
-        const newArea: IArea = { name: getObjectName('AREA'), type: 'AREA', parent: 'Window', ...state.gridSelection };
+      const { objects, gridSelection, grid } = state;
+
+      if (gridSelection) {
+        const newArea: IArea = { name: getObjectName('AREA'), type: 'AREA', parent: getWindow(objects).name, ...gridSelection };
+
+        if (
+          !isValidRect(newArea)
+          || outOfBorder(newArea, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1))
+          || getAreas(objects).some( area => rectIntersect(area, newArea) )
+        ) {
+          return state;
+        }
+
         return {
           ...state,
           selectedObject: newArea,
-          objects: [...state.objects, newArea],
+          objects: [...objects, newArea],
           gridSelection: undefined
         }
       }
@@ -533,7 +560,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     return res;
   }, [grid, gridSelection]);
 
-  const getAreas = useCallback( () => areas(objects).map( area => {
+  const renderAreas = useCallback( () => getAreas(objects).map( area => {
     const areaStyle = gridMode
       ? {
         borderColor: getTheme().palette.themeDark,
@@ -547,11 +574,11 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
       }
       : previewMode
       ? {
-        ...object2style(area),
+        ...object2style(area, objects),
         padding: '4px'
       }
       : {
-        ...object2style(area),
+        ...object2style(area, objects),
         border: area === selectedObject ? '1px dotted' : '1px dashed',
         borderColor: area === selectedObject ? getTheme().palette.themePrimary : getTheme().palette.themeLight,
         borderRadius: '4px',
@@ -602,6 +629,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
                     <Control
                       key={object.name}
                       object={object}
+                      objects={objects}
                       selected={object === selectedObject}
                       previewMode={previewMode}
                       onSelectObject={ () => designerDispatch({ type: 'SELECT_OBJECT', object }) }
@@ -650,7 +678,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'deleteObject',
-      disabled: previewMode || !selectedObject || isWindow(selectedObject) || (!gridMode && isArea(selectedObject) && areas(objects).length === 1),
+      disabled: previewMode || !selectedObject || isWindow(selectedObject) || (!gridMode && isArea(selectedObject) && getAreas(objects).length === 1),
       text: selectedObject && `Delete "${selectedObject.name}"`,
       iconOnly: true,
       iconProps: { iconName: 'Delete' },
@@ -749,7 +777,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     },
     {
       key: 'createArea',
-      disabled: previewMode || !gridMode || !gridSelection || areas(objects).some( area => rectIntersect(area, gridSelection) ),
+      disabled: previewMode || !gridMode || !gridSelection || getAreas(objects).some( area => rectIntersect(area, gridSelection) ),
       text: 'Create Area',
       iconOnly: true,
       iconProps: { iconName: 'SelectAll' },
@@ -805,7 +833,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         onSelectObject={ object => designerDispatch({ type: 'SELECT_OBJECT', object }) }
       >
         <div
-          style={{...windowStyle, ...object2style(window, !gridMode)}}
+          style={{...windowStyle, ...object2style(window, objects, !gridMode)}}
           onClick={ e => {
             e.stopPropagation();
             e.preventDefault();
@@ -814,10 +842,10 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         >
           {
             previewMode
-              ? getAreas()
+              ? renderAreas()
               : gridMode
-              ? gridCells.concat(getAreas())
-              : getAreas()
+              ? gridCells.concat(renderAreas())
+              : renderAreas()
           }
         </div>
       </WithObjectInspector>

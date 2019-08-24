@@ -89,7 +89,17 @@ export type Object = IWindow | IArea | ILabel | IImage | IField;
 
 export type Objects = Object[];
 
-export const areas = (objects: Objects): IArea[] => objects.filter( object => isArea(object) ) as IArea[];
+export const getAreas = (objects: Objects): IArea[] => objects.filter( object => isArea(object) ) as IArea[];
+export const getWindow = (objects: Objects): IWindow => objects.find( object => isWindow(object) ) as IWindow;
 
 export type OnUpdateSelectedObject = (newProps: Partial<Object>) => void;
+
+export const deleteWithChildren = (deletedObject: Object, objects: Objects) => {
+  let res = objects;
+  let firstChild: Object | undefined;
+  while (firstChild = res.find( object => object.parent === deletedObject.name )) {
+    res = deleteWithChildren(firstChild, res).filter( object => object !== firstChild );
+  }
+  return res.filter( object => object !== deletedObject );
+};
 

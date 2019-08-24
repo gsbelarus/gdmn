@@ -1,21 +1,22 @@
-import { Object } from "./types";
+import { Object, Objects } from "./types";
 import { Label, TextField } from "office-ui-fabric-react";
 import React from "react";
-import { object2IStyle, object2style } from "./utils";
+import { object2IStyle, object2style, object2ITextFieldStyles, object2ILabelStyles } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
 
 interface IInternalControlProps {
   object: Object;
+  objects: Objects;
 };
 
-const InternalControl = ({ object }: IInternalControlProps) => {
+const InternalControl = ({ object, objects }: IInternalControlProps) => {
 
   switch (object.type) {
     case 'LABEL':
       return (
         <Label
           key={object.name}
-          styles={{ root: object2IStyle(object) }}
+          styles={object2ILabelStyles(object, objects)}
         >
           {object.text}
         </Label>
@@ -25,10 +26,7 @@ const InternalControl = ({ object }: IInternalControlProps) => {
       return (
         <div>
           <TextField
-            styles={{
-              root: object2IStyle(object),
-              wrapper: object2IStyle(object)
-            }}
+            styles={object2ITextFieldStyles(object, objects)}
             label={object.label}
           />
         </div>
@@ -40,7 +38,7 @@ const InternalControl = ({ object }: IInternalControlProps) => {
           <img
             src={object.url}
             alt={object.alt}
-            style={object2style(object)}
+            style={object2style(object, objects)}
           />
         </div>
       )
@@ -52,13 +50,14 @@ const InternalControl = ({ object }: IInternalControlProps) => {
 
 interface IControlProps {
   object: Object;
+  objects: Objects;
   selected: boolean;
   previewMode?: boolean;
   onSelectObject: () => void;
 };
 
-export const Control = ({ object, onSelectObject, selected, previewMode }: IControlProps) =>
+export const Control = ({ object, objects, onSelectObject, selected, previewMode }: IControlProps) =>
   <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject}>
-    <InternalControl object={object} />
+    <InternalControl object={object} objects={objects} />
   </WithSelectionFrame>
 
