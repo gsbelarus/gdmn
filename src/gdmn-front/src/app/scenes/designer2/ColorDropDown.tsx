@@ -4,11 +4,11 @@ import React, { useMemo, useCallback } from "react";
 export interface IColorDropDownProps {
   selectedColor?: string;
   label: string;
-  onSelectColor: (color: string) => void;
+  onChange: (event: any, color: string) => void;
 };
 
 export const ColorDropDown = (props: IColorDropDownProps) => {
-  const { label, selectedColor, onSelectColor } = props;
+  const { label, selectedColor, onChange } = props;
 
   const options = useMemo( () =>
     Object.entries(getTheme().palette)
@@ -50,7 +50,7 @@ export const ColorDropDown = (props: IColorDropDownProps) => {
       onRenderOption={onRenderOption}
       options={options}
       selectedKey={selectedColor}
-      onChange={ (_e, option) => option && onSelectColor(option.key as string) }
+      onChange={ (e, option) => option && onChange(e, option.key as string) }
     />
   );
 };

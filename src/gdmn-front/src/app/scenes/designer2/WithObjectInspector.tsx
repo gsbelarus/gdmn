@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { GridInspector, OnUpdateGrid } from "./GridInspector";
-import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage } from "./types";
+import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage } from "./types";
 import { Dropdown, TextField, ChoiceGroup, Stack } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 
@@ -18,6 +18,106 @@ interface IWithObjectInspectorProps {
 
 export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
   const { previewMode, gridMode, children, objects, grid, selectedObject, onUpdateGrid, onUpdateSelectedObject, onSelectObject } = props;
+
+  const propControls = useMemo( () => {
+    const res: JSX.Element[] = [];
+
+    if (!selectedObject) {
+      return res;
+    }
+
+    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField) => (_e: any, newValue?: string) => {
+      if (newValue !== undefined) {
+        onUpdateSelectedObject({ [prop]: newValue })
+      }
+    };
+
+    res.push(
+      <ColorDropDown
+        key="color"
+        selectedColor={selectedObject.color}
+        label="Color"
+        onChange={getOnChange('color')}
+      />
+    );
+
+    res.push(
+      <ColorDropDown
+        key="backgroundColor"
+        selectedColor={selectedObject.backgroundColor}
+        label="Background Color"
+        onChange={getOnChange('backgroundColor')}
+      />
+    );
+
+    if (isLabel(selectedObject)) {
+      res.push(
+        <TextField
+          key="text"
+          label="Text"
+          value={selectedObject.text}
+          onChange={getOnChange('text')}
+        />
+      );
+    }
+
+    if (isImage(selectedObject)) {
+      res.push(
+        <TextField
+          key="imageUrl"
+          label="Image URL"
+          value={selectedObject.url}
+          onChange={getOnChange('url')}
+        />
+      );
+
+      res.push(
+        <TextField
+          key="imageCaption"
+          label="Image caption"
+          value={selectedObject.alt}
+          onChange={getOnChange('alt')}
+        />
+      );
+    }
+
+    if (isField(selectedObject)) {
+      res.push(
+        <TextField
+          key="label"
+          label="Label"
+          value={selectedObject.label}
+          onChange={getOnChange('label')}
+        />
+      );
+
+      res.push(
+        <TextField
+          key="fieldName"
+          label="Field name"
+          value={selectedObject.fieldName}
+          onChange={getOnChange('fieldName')}
+        />
+      );
+    }
+
+    if (isArea(selectedObject)) {
+      res.push(
+        <ChoiceGroup
+          key="direction"
+          label="Direction"
+          selectedKey={ selectedObject.horizontal ? 'h' : 'v' }
+          options={[
+            { key: 'v', text: 'Vertical' },
+            { key: 'h', text: 'Horizontal' }
+          ]}
+          onChange={ (_e, option) => option && onUpdateSelectedObject({ horizontal: option.key === 'h' }) }
+        />
+      );
+    }
+
+    return res.sort( (a, b) => a.key === null ? -1 : b.key === null ? 1 : a.key < b.key ? -1 : a.key === b.key ? 0 : 1 );
+  }, [selectedObject, onUpdateSelectedObject]);
 
   if (previewMode) {
     return children;
@@ -65,88 +165,15 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
                 onChangeArea={onUpdateSelectedObject}
               />
             :
-              <>
+              <Stack>
                 <Dropdown
                   label="Selected object"
                   selectedKey={selectedObject ? selectedObject.name : undefined}
                   onChange={ (_, option) => option && option.data && onSelectObject(option.data) }
                   options={ objects.map( object => ({ key: object.name, text: object.name, data: object }) ) }
                 />
-                {
-                  !selectedObject
-                  ? null
-                  : isLabel(selectedObject)
-                  ?
-                    <TextField
-                      label="Text"
-                      value={selectedObject.text}
-                      onChange={
-                        (e, newValue?: string) => {
-                          if (newValue !== undefined) {
-                            onUpdateSelectedObject({ text: newValue })
-                          }
-                        }
-                      }
-                    />
-                  : isImage(selectedObject)
-                  ?
-                    <Stack>
-                      <TextField
-                        label="Image URL"
-                        value={selectedObject.url}
-                        onChange={
-                          (e, newValue?: string) => {
-                            if (newValue !== undefined) {
-                              onUpdateSelectedObject({ url: newValue })
-                            }
-                          }
-                        }
-                      />
-                      <TextField
-                        label="Image caption"
-                        value={selectedObject.alt}
-                        onChange={
-                          (e, newValue?: string) => {
-                            if (newValue !== undefined) {
-                              onUpdateSelectedObject({ alt: newValue })
-                            }
-                          }
-                        }
-                      />
-                    </Stack>
-                  : isArea(selectedObject)
-                  ? <ChoiceGroup
-                      label="Direction"
-                      selectedKey={ selectedObject.horizontal ? 'h' : 'v' }
-                      options={[
-                        { key: 'v', text: 'Vertical' },
-                        { key: 'h', text: 'Horizontal' }
-                      ]}
-                      onChange={ (_e, option) => option && onUpdateSelectedObject({ horizontal: option.key === 'h' }) }
-                    />
-                  : null
-                }
-                {
-                  !selectedObject
-                  ? null
-                  :
-                    <ColorDropDown
-                      selectedColor={selectedObject.color}
-                      label="Color"
-                      onSelectColor={ color => onUpdateSelectedObject({ color }) }
-                    />
-                }
-                {
-                  !selectedObject
-                  ? null
-                  :
-                    <ColorDropDown
-                      selectedColor={selectedObject.backgroundColor}
-                      label="Background Color"
-                      onSelectColor={ color => onUpdateSelectedObject({ backgroundColor: color }) }
-                    />
-                }
-              </>
+                {propControls}
+              </Stack>
           }
         </div>
       </div>

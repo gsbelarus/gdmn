@@ -7,7 +7,6 @@ import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Control } from "./Control";
-import { AreaSize } from "./AreaSize";
 
 /**
  *
