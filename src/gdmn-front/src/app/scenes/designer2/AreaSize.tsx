@@ -1,14 +1,15 @@
-import React, { useCallback, useState, useEffect, useMemo } from "react";
-import { IArea } from "./types";
+import React, { useState, useEffect, useMemo } from "react";
+import { IArea, IGrid } from "./types";
 import { Label, Stack, TextField, getTheme } from "office-ui-fabric-react";
-import { isValidRect, sameRect, rect } from "./utils";
+import { isValidRect, sameRect, rect, outOfGrid } from "./utils";
 
 interface IAreaSizeProps {
   selectedArea?: IArea;
+  grid: IGrid;
   onChange: (area: IArea) => void;
 };
 
-export const AreaSize = ({ selectedArea, onChange }: IAreaSizeProps) => {
+export const AreaSize = ({ selectedArea, grid, onChange }: IAreaSizeProps) => {
 
   const [left, setLeft] = useState('');
   const [top, setTop] = useState('');
@@ -40,7 +41,7 @@ export const AreaSize = ({ selectedArea, onChange }: IAreaSizeProps) => {
 
       const tempRect = rect(Number(left), Number(top), Number(right), Number(bottom));
 
-      if (isValidRect(tempRect)) {
+      if (isValidRect(tempRect) && !outOfGrid(tempRect, grid)) {
         if (selectedArea && !sameRect(tempRect, selectedArea)) {
           onChange({...selectedArea, ...tempRect});
         }
@@ -54,6 +55,13 @@ export const AreaSize = ({ selectedArea, onChange }: IAreaSizeProps) => {
   const styles = useMemo( () => error ? {
     fieldGroup: {
       backgroundColor: getTheme().semanticColors.errorBackground
+    },
+    subComponentStyles: {
+      label: {
+        root: {
+          color: getTheme().semanticColors.errorText
+        }
+      }
     }
   }: {}, [error] );
 

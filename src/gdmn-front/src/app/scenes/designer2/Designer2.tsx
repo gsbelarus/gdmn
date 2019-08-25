@@ -1,9 +1,9 @@
-import React, { useReducer, useMemo, useCallback } from "react";
+import React, { useReducer, useMemo, useCallback, useEffect } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar, getTheme, Stack } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow } from "./types";
-import { inRect, makeRect, rectIntersect, isValidRect, outOfBorder, rect, object2style, sameRect } from "./utils";
+import { inRect, makeRect, rectIntersect, isValidRect, rect, object2style, sameRect, outOfGrid } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Control } from "./Control";
@@ -65,6 +65,12 @@ interface IDesigner2State {
 const undo: IDesigner2State[] = [];
 const redo: IDesigner2State[] = [];
 
+interface IDesigner2SerializedState {
+  version: string;
+  grid: IGrid;
+  objects: Objects;
+};
+
 const getDefaultState = (): IDesigner2State => {
   const window: IWindow = {
     name: 'Window',
@@ -100,6 +106,22 @@ const getDefaultState = (): IDesigner2State => {
   };
 };
 
+const LOCAL_STORAGE_KEY = 'designer2State';
+
+const loadState = (): IDesigner2State => {
+  const loaded = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+  if (loaded) {
+    const parsed = JSON.parse(loaded) as IDesigner2SerializedState;
+
+    if (parsed.version === '1.0' && Array.isArray(parsed.objects) && parsed.grid instanceof Object) {
+      return parsed;
+    }
+  }
+
+  return getDefaultState();
+};
+
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'SHOW_GRID', gridMode: boolean }
   | { type: 'SET_GRID_SELECTION', gridSelection?: IRectangle }
@@ -108,8 +130,9 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'CREATE_LABEL' }
   | { type: 'CREATE_OBJECT', objectType: TObjectType, newProps?: Partial<Object>, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
-  | { type: 'SELECT_FIELDS', show: boolean }
+  | { type: 'TOGGLE_SELECT_FIELDS' }
   | { type: 'MOVE_OBJECT', delta: number }
+  | { type: 'RESET' }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'CREATE_AREA' }
@@ -180,6 +203,9 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
   };
 
   switch (action.type) {
+    case 'RESET':
+      return getDefaultState();
+
     case 'TOGGLE_PREVIEW_MODE': {
       return {
         ...state,
@@ -252,10 +278,10 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       }
     }
 
-    case 'SELECT_FIELDS': {
+    case 'TOGGLE_SELECT_FIELDS': {
       return {
         ...state,
-        selectFieldsMode: action.show
+        selectFieldsMode: !state.selectFieldsMode
       }
     }
 
@@ -326,7 +352,6 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       return createObject(objectType, newProps, makeSelected);
     }
 
-
     case 'UPDATE_OBJECT': {
       const { selectedObject, grid, objects } = state;
       const { newProps } = action;
@@ -348,11 +373,15 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
       if (isArea(updatedObject)) {
         if (
           !isValidRect(updatedObject)
-          || outOfBorder(updatedObject, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1))
+          || outOfGrid(updatedObject, grid)
           || getAreas(objects).filter( area => area !== selectedObject ).some( area => rectIntersect(area, updatedObject) )
         ) {
           return state;
         }
+      }
+
+      if (!isWindow && !objects.some( object => object.name === updatedObject.parent )) {
+        return state;
       }
 
       return {
@@ -370,7 +399,7 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 
         if (
           !isValidRect(newArea)
-          || outOfBorder(newArea, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1))
+          || outOfGrid(newArea, grid)
           || getAreas(objects).some( area => rectIntersect(area, newArea) )
         ) {
           return state;
@@ -505,10 +534,12 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
 export const Designer2 = (props: IDesigner2Props): JSX.Element => {
 
   const { viewTab, url, dispatch, erModel } = props;
-  const [state, designerDispatch] = useReducer(reducer, getDefaultState());
+  const [state, designerDispatch] = useReducer(reducer, loadState());
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   useTab(viewTab, url, 'Designer2', true, dispatch);
+
+  useEffect( () => () => localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ version: '1.0', grid, objects }) ), [grid, objects]);
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
     display: 'grid',
@@ -547,7 +578,7 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
               if (e.shiftKey && gridSelection) {
                 designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: makeRect(gridSelection, x, y) });
               } else {
-                designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: { left: x, top: y, right: x, bottom: y } });
+                designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: rect(x, y, x, y) });
               }
             }}
           >
@@ -584,13 +615,12 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         padding: '4px'
       };
 
-
     return (
       <div
         key={area.name}
         style={{
           ...areaStyle,
-          gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`,
+          gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`
         }}
         onClick={ previewMode ? undefined :
           e => {
@@ -643,12 +673,37 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
 
   const commandBarItems: ICommandBarItemProps[] = useMemo( () => [
     {
+      key: 'save',
+      disabled: previewMode || gridMode,
+      text: 'Save',
+      iconOnly: true,
+      iconProps: { iconName: 'Save' },
+      onClick: () => localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ version: '1.0', grid, objects }) )
+    },
+    {
+      key: 'reset',
+      disabled: previewMode || gridMode,
+      text: 'Reset',
+      iconOnly: true,
+      iconProps: { iconName: 'Favicon' },
+      onClick: () => designerDispatch({ type: 'RESET' })
+    },
+    {
+      key: 'split0',
+      disabled: true,
+      iconOnly: true,
+      iconProps: {
+        iconName: 'Remove',
+        styles: { root: { transform: 'rotate(90deg)' } }
+      },
+    },
+    {
       key: 'insertField',
       disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject) || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
-      onClick: () => designerDispatch({ type: 'SELECT_FIELDS', show: true })
+      onClick: () => designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' })
     },
     {
       key: 'insertLabel',
@@ -811,14 +866,10 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
         <SelectFields
           entity={erModel.entities['TgdcCompany']}
           onCreate={ fields => {
-            if (fields.length === 1) {
-              designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName: fields[0].fieldName, label: fields[0].label } });
-            } else {
-              fields.forEach( ({ fieldName, label }) => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName, label }, makeSelected: false }) );
-            }
-            designerDispatch({ type: 'SELECT_FIELDS', show: false });
+            fields.forEach( ({ fieldName, label }) => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName, label }, makeSelected: fields.length === 1 }) );
+            designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' });
           } }
-          onCancel={ () => designerDispatch({ type: 'SELECT_FIELDS', show: false }) }
+          onCancel={ () => designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' }) }
         />
       }
       <WithObjectInspector

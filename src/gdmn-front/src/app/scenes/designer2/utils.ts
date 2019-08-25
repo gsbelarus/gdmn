@@ -1,4 +1,4 @@
-import { IRectangle, IObject, Objects } from "./types";
+import { IRectangle, IObject, Objects, IGrid } from "./types";
 import { getTheme, IStyle, ITextFieldStyles, ILabelStyles } from "office-ui-fabric-react";
 
 export const isSingleCell = (rect?: IRectangle) => rect && rect.left === rect.right && rect.top === rect.bottom;
@@ -25,6 +25,8 @@ export const makeRect = (rect: IRectangle, x: number, y: number) => inRect(rect,
       right: Math.max(rect.right, x),
       bottom: Math.max(rect.bottom, y),
     };
+
+export const outOfGrid = (r: IRectangle, grid: IGrid) => outOfBorder(r, rect(0, 0, grid.columns.length - 1, grid.rows.length - 1));
 
 const inheritValue = (object: IObject, valueName: string, objects: Objects): any => {
   const res = (object as any)[valueName];

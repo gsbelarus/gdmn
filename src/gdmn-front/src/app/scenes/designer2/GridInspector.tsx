@@ -16,7 +16,7 @@ export interface IGridInspectorProps {
 export const GridInspector = ({ grid, onUpdateGrid, selectedArea, onChangeArea }: IGridInspectorProps) => {
   return (
     <>
-      <AreaSize selectedArea={selectedArea} onChange={onChangeArea} />
+      <AreaSize selectedArea={selectedArea} grid={grid} onChange={onChangeArea} />
       <Label>Grid size:</Label>
       {grid.columns.map( (column, idx) =>
         <SizeLine

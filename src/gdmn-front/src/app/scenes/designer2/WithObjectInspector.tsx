@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { GridInspector, OnUpdateGrid } from "./GridInspector";
-import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage } from "./types";
+import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage, getAreas, isWindow } from "./types";
 import { Dropdown, TextField, ChoiceGroup, Stack } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 
@@ -49,6 +49,18 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
         onChange={getOnChange('backgroundColor')}
       />
     );
+
+    if (selectedObject && !isWindow(selectedObject) && !isArea(selectedObject)) {
+      res.push(
+        <Dropdown
+          key="parent"
+          label="Parent"
+          selectedKey={selectedObject ? selectedObject.parent : undefined}
+          onChange={ (_, option) => option && onUpdateSelectedObject({ parent: option.key as string }) }
+          options={ getAreas(objects).map( object => ({ key: object.name, text: object.name }) ) }
+        />
+      );
+    }
 
     if (isLabel(selectedObject)) {
       res.push(
