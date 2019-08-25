@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "chevrotain": "^5"
+    "chevrotain": "^6"
   },
   "devDependencies": {
     "@types/jest": "^24",
