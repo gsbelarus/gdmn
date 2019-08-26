@@ -1,12 +1,13 @@
-import React, { useReducer, useMemo, useCallback, useEffect } from "react";
+import React, { useReducer, useMemo, useEffect } from "react";
 import { IDesigner2Props } from "./Designer2.types";
 import { useTab } from "./useTab";
-import { ICommandBarItemProps, CommandBar, getTheme, Stack } from "office-ui-fabric-react";
+import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow } from "./types";
-import { inRect, makeRect, rectIntersect, isValidRect, rect, object2style, sameRect, outOfGrid } from "./utils";
+import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
-import { Control } from "./Control";
+import { Area } from "./Area";
+import { GridCell } from "./GridCell";
 
 /**
  *
@@ -559,117 +560,28 @@ export const Designer2 = (props: IDesigner2Props): JSX.Element => {
     for (let x = 0; x < grid.columns.length; x++) {
       for (let y = 0; y < grid.rows.length; y++) {
         res.push(
-          <div
-            key={`grid_cell_${y + 1} / ${x + 1} / ${y + 2} / ${x + 2}`}
-            style={{
-              gridArea: `${y + 1} / ${x + 1} / ${y + 2} / ${x + 2}`,
-              borderColor: getTheme().palette.neutralTertiary,
-              backgroundColor: inRect(gridSelection, x, y) ? getTheme().palette.red : undefined,
-              border: '1px dotted',
-              borderRadius: '4px',
-              margin: '2px',
-              zIndex: 10,
-              padding: '4px',
-              opacity: 0.6
-            }}
-            onClick={ e => {
-              e.stopPropagation();
-              e.preventDefault();
-              if (e.shiftKey && gridSelection) {
-                designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: makeRect(gridSelection, x, y) });
-              } else {
-                designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: rect(x, y, x, y) });
-              }
-            }}
-          >
-            {`(${x}, ${y})`}
-          </div>
+          <GridCell
+            x={x}
+            y={y}
+            gridSelection={gridSelection}
+            onSetGridSelection={ r => designerDispatch({ type: 'SET_GRID_SELECTION', gridSelection: r }) }
+          />
         )
       }
     }
     return res;
   }, [grid, gridSelection]);
 
-  const renderAreas = useCallback( () => getAreas(objects).map( area => {
-    const areaStyle = gridMode
-      ? {
-        borderColor: getTheme().palette.themeDark,
-        backgroundColor: getTheme().palette.themePrimary,
-        opacity: area === selectedObject ? 0.5 : 0.3,
-        border: '1px solid',
-        borderRadius: '4px',
-        margin: '2px',
-        padding: '4px',
-        zIndex: 1
-      }
-      : previewMode
-      ? {
-        ...object2style(area, objects),
-        padding: '4px'
-      }
-      : {
-        ...object2style(area, objects),
-        border: area === selectedObject ? '1px dotted' : '1px dashed',
-        borderColor: area === selectedObject ? getTheme().palette.themePrimary : getTheme().palette.themeLight,
-        borderRadius: '4px',
-        padding: '4px'
-      };
-
-    return (
-      <div
-        key={area.name}
-        style={{
-          ...areaStyle,
-          gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`
-        }}
-        onClick={ previewMode ? undefined :
-          e => {
-            e.stopPropagation();
-            designerDispatch({ type: 'SELECT_OBJECT', object: area });
-          }
-        }
-      >
-        {
-          gridMode
-          ?
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                fontWeight: 600,
-                fontSize: '48px',
-                color: 'black'
-              }}
-            >
-              <div>
-                {area.name}
-              </div>
-            </div>
-          :
-            <Stack horizontal={area.horizontal}>
-              {
-                objects
-                  .filter( object => object.parent === area.name )
-                  .map( object =>
-                    <Control
-                      key={object.name}
-                      object={object}
-                      objects={objects}
-                      selected={object === selectedObject}
-                      previewMode={previewMode}
-                      onSelectObject={ () => designerDispatch({ type: 'SELECT_OBJECT', object }) }
-                    />
-                  )
-              }
-            </Stack>
-        }
-      </div>
-    )
-  }), [objects, selectedObject, grid, gridSelection, gridMode, previewMode]);
+  const renderAreas = () => getAreas(objects).map( area =>
+    <Area
+      previewMode={previewMode}
+      gridMode={gridMode}
+      selectedObject={selectedObject}
+      objects={objects}
+      area={area}
+      onSelectObject={ object => designerDispatch({ type: 'SELECT_OBJECT', object }) }
+    />
+  );
 
   const commandBarItems: ICommandBarItemProps[] = useMemo( () => [
     {
