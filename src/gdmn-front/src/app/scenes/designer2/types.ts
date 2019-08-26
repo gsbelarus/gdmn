@@ -54,7 +54,7 @@ export function isLabel(x: IObject | undefined): x is ILabel {
 
 export interface IImage extends IObject {
   type: 'IMAGE';
-  url?: string;
+  url: string;
   alt?: string;
   width?: number;
   height?: number;
