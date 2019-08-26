@@ -1,7 +1,7 @@
 import { Object, Objects } from "./types";
 import { Label, TextField } from "office-ui-fabric-react";
 import React from "react";
-import { object2IStyle, object2style, object2ITextFieldStyles, object2ILabelStyles } from "./utils";
+import { object2style, object2ITextFieldStyles, object2ILabelStyles } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
 
 interface IInternalControlProps {

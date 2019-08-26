@@ -478,7 +478,8 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
           rows,
         },
         objects,
-        gridSelection: undefined
+        gridSelection: undefined,
+        selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления строки
       }
     }
 
@@ -524,7 +525,8 @@ function reducer(state: IDesigner2State, action: Action): IDesigner2State {
           columns,
         },
         objects,
-        gridSelection: undefined
+        gridSelection: undefined,
+        selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления колонки
       }
     }
   }

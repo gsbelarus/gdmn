@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Entity } from "gdmn-orm";
-import { Dialog, DialogType, ContextualMenu, DialogFooter, PrimaryButton, DefaultButton, MarqueeSelection, DetailsList, Selection, IColumn, SelectionMode, DetailsListLayoutMode, getTheme, ConstrainMode, ScrollablePane, IDetailsHeaderProps, IRenderFunction, Sticky } from "office-ui-fabric-react";
+import { Dialog, DialogType, ContextualMenu, DialogFooter, PrimaryButton, DefaultButton, MarqueeSelection, DetailsList, Selection, IColumn, SelectionMode, DetailsListLayoutMode, getTheme } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 
 interface ISelectFieldsProps {
