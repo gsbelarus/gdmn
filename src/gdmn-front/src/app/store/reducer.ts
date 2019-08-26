@@ -9,11 +9,11 @@ import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import { recordSetReducer, RecordSetReducerState } from 'gdmn-recordset';
 import { gridReducer, GridReducerState } from 'gdmn-grid';
 import { TActions } from '@src/app/store/TActions';
-import { IAuthState, reducer as authReducer } from '@src/app/scenes/auth/reducer';
+import { IAuthState, reducer as authReducer, _IAuthState } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { reducer as fsmReducer, IFSMState } from '@src/app/fsm/reducer';
-import { authActions } from '@src/app/scenes/auth/actions';
+import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IRsMetaState, rsMetaReducer } from './rsmeta';
 import { themes } from '../scenes/themeeditor/themes';
@@ -25,7 +25,7 @@ export interface IState {
   readonly rootState: IRootState;
   readonly authState: IAuthState;
   readonly gdmnState: TGdmnState;
-    readonly recordSet: RecordSetReducerState;
+  readonly recordSet: RecordSetReducerState;
   readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
   readonly fsm: IFSMState;
@@ -62,7 +62,7 @@ function withReset(reducer: any) {
     );
 }
 
-const reducer = combineReducers<IState>({
+const reducer = combineReducers<IState, TActions>({
   rootState: withReset(rootReducer),
   gdmnState: persistReducer(gdmnStatePersistConfig, withReset(gdmnReducer)),
   authState: persistReducer(authPersistConfig, withReset(authReducer)),

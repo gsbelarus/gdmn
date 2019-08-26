@@ -4,7 +4,6 @@ import { ColumnSelector } from './ColumnSelector';
 import { Columns } from './Grid';
 import './GridPanel.css';
 import { RecordSet } from 'gdmn-recordset';
-import { ParamsDialog } from './ParamsDialog';
 
 export interface IGridPanelEvent {
   rs: RecordSet;
@@ -16,7 +15,6 @@ export type TOnFilter = (event: TOnFilterEvent) => void;
 
 export interface IGDMNGridPanelProps {
   rs: RecordSet;
-  visibleColumns: Columns;
   columns: Columns;
   leftSideColumns: number;
   rightSideColumns: number;
@@ -41,7 +39,6 @@ export interface IGDMNGridPanelProps {
   onCollapseAll: () => void;
   onExpandAll: () => void;
   onParamsDialog: () => void;
-  onToggle: (columnName: string) => void;
   onCancelParamsDialog: () => void;
   onDeleteRow: () => void;
   onRemoveDeleted: () => void;
@@ -80,10 +77,7 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
       onJumpToSearch,
       onCollapseAll,
       onExpandAll,
-      paramsDialog,
       onParamsDialog,
-      onCancelParamsDialog,
-      onToggle,
       onPostAll,
       onCancelAll
     } = this.props;
@@ -130,11 +124,6 @@ export class GDMNGridPanel extends React.Component<IGDMNGridPanelProps, {}> {
         <button onClick={onParamsDialog}>Params dialog</button>
         <button onClick={onPostAll}>Post all</button>
         <button onClick={onCancelAll}>Cancel all</button>
-        {paramsDialog ? (
-          <ParamsDialog onCancel={onCancelParamsDialog} columns={columns} onToggle={onToggle} />
-        ) : (
-          undefined
-        )}
         <div>
           <label htmlFor="filter">Filter:</label>
           <input type="text" onChange={this.handleFilter} value={filter} name="filter" size={40} />

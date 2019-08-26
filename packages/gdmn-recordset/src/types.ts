@@ -1,7 +1,6 @@
 import { List } from "immutable";
-import { INumberFormat, IDateFormat } from "./format";
 import { IEntityQueryResponseFieldAlias } from "gdmn-orm";
-import { ISqlQueryResponseAliasesRdb, ISqlQueryResponseAliasesOrm } from 'gdmn-internals';
+import { ISqlQueryResponseAliasesRdb, ISqlQueryResponseAliasesOrm, INumberFormat, IDateFormat } from 'gdmn-internals';
 
 export enum TStatus {
   PARTIAL,

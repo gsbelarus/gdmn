@@ -1,18 +1,21 @@
 .ColumnsList {
+  width: 70%;
   float: left; 
   max-height: 500px; /*временно*/
   overflow-y: auto;
   padding-top: 12px;
-  padding-right: 12px; 
 }
 
 .Options {
   float: left; 
   padding-left: 20px;
   font-size: 12px;
+  width: 30%;
+  padding-top: 20px;
 }
 
 .OptionsTitle { 
   height: 32px;
   line-height: 32px;
 }
+

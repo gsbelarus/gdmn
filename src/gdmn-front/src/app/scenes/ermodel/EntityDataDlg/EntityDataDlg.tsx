@@ -938,18 +938,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     area.fields.map( f =>
                       {
                         let fd = rs.fieldDefs.find(fieldDef =>
-                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f
+                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
                         )
                         if (fd) {
-                          return <div style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{field({fd: fd, field: f, areaStyle: areaStyle!, areaDirection: area.direction})}</div>
+                          return <div style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{field({fd: fd, field: f.key, areaStyle: areaStyle!, areaDirection: area.direction})}</div>
                         }
-                        const additionallyObject = (localState as IDesignerState).additionallyObject!;
-                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f)
-                          ? <Label key={f} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f}</Label>
-                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f)
-                            ? <Image key={f} height={100} width={100} src={f} alt='Text' />
-                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f)
-                              ? <IconButton key={f} iconProps={{ iconName: f }} />
+                        const additionallyObject = (localState as IDesignerState).additionallyObject;
+                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f.key)
+                          ? <Label key={f.key} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f.key}</Label>
+                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
+                            ? <Image key={f.key} height={100} width={100} src={f.key} alt='Text' />
+                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
+                              ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
                               : undefined
                       }
                     )
