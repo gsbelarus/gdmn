@@ -1,16 +1,20 @@
 import { IViewTab } from "../gdmn/types";
-import { IFieldDef, RecordSet } from 'gdmn-recordset';
-import { Entity } from 'gdmn-orm';
+import { ThunkDispatch } from "redux-thunk";
+import { IState } from "@src/app/store/reducer";
+import { GdmnAction } from "../gdmn/actions";
+import { ERModel } from "gdmn-orm";
+
+export interface IDesignerContainerProps {
+  url: string;
+};
 
 export interface IDesignerStateProps {
   viewTab?: IViewTab;
+  theme: string;
+  erModel?: ERModel;
 };
 
-export interface IDesignerProps {
-  entityName: string;
-  outDesigner: () => void;
-  viewTab?: IViewTab;
-  fields?: IFieldDef[];
-  entity?: Entity;
-  rs?: RecordSet;
+export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateProps {
+  dispatch: ThunkDispatch<IState, never, GdmnAction>;
+  entityName: string,
 };

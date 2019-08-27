@@ -60,4 +60,3 @@ export const Control = ({ object, objects, onSelectObject, selected, previewMode
   <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject}>
     <InternalControl object={object} objects={objects} />
   </WithSelectionFrame>
-

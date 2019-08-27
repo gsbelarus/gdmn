@@ -36,3 +36,4 @@ export const GridCell = ({ x, y, gridSelection, onSetGridSelection }: IGridCellP
   >
     {`(${x}, ${y})`}
   </div>;
+  

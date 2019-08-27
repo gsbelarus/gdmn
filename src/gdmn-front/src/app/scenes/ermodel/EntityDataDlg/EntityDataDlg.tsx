@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Label, IconButton, Image } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -26,7 +26,13 @@ import {
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
-import { Designer, IDesignerState, IStyleFieldsAndAreas, TDirection } from '../../designer/Designer';
+import { DesignerContainer } from '../../designer/DesignerContainer';
+import { IDesignerState, LOCAL_STORAGE_KEY } from '../../designer/Designer';
+import { object2style } from '../../designer/utils';
+import { Area } from '../../designer/Area';
+import { getAreas, isWindow, IWindow, IField, IGrid, Objects, IArea } from '../../designer/types';
+import { WithObjectInspector } from '../../designer/WithObjectInspector';
+import { getLName } from 'gdmn-internals';
 
 interface ILastEdited {
   fieldName: string;
@@ -591,17 +597,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
   
-  const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
+  const localState = localStorage.getItem(LOCAL_STORAGE_KEY) === null ? undefined : JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!);
 
-  const getGridStyle = (): React.CSSProperties => ({
-    display: 'grid',
-    width: '100%',
-    gridTemplateColumns: (localState as IDesignerState).grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
-    gridTemplateRows: (localState as IDesignerState).grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
-    overflow: 'auto',
-  });
-
-  const field = (props: { fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element | undefined => {
+  const field = (props: { fd: IFieldDef, field?: string }): JSX.Element | undefined => {
       if (!props.fd.eqfa) {
         return undefined;
       }
@@ -617,7 +615,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             <SetLookupComboBox
               key={fkFieldName}
               name={fkFieldName}
-              label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+              label={`${getLName(attr.lName, ['by', 'ru', 'en'])}`}
               preSelectedOption={ rs.isNull(refIdFieldAlias)
                 ? undefined
                 : [{
@@ -695,14 +693,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
-              styles={props.areaStyle === undefined ? undefined : {
-                  root: {
-                    background: props.areaStyle!.background
-                  },
-                  input: {
-                    background: props.areaStyle!.background
-                  }
-                }}
             />
           );
         }
@@ -746,15 +736,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
-            styles={props.areaStyle === undefined ? undefined : {
-              root: {
-                background: props.areaStyle!.background
-              },
-              fieldGroup: {
-                background: props.areaStyle!.background
-              }
-            }}
-            styleIcon={props.areaStyle === undefined ? undefined : {
+            styleIcon={undefined/*props.areaStyle === undefined ? undefined : {
               root: {
                 border: '1px solid',
                 borderColor: getTheme().semanticColors.inputBorder,
@@ -775,7 +757,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 borderColor: getTheme().semanticColors.inputBorder,
                 borderLeft: 'none'
               }
-            }}
+            }*/}
         />);
       } else if (props.fd.dataType === TFieldType.Boolean) {
         const subComponentStyle = {
@@ -822,7 +804,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             key={props.fd.fieldName}
             disabled={locked}
             label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            styles={props.areaStyle === undefined ? undefined : {
+            styles={undefined /*props.areaStyle === undefined ? undefined : {
               root: {
                 background: props.areaStyle!.background
               },
@@ -832,7 +814,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               field: {
                 background: props.areaStyle!.background
               }
-            }}
+            }*/}
             defaultValue={
               lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName && typeof lastEdited.current.value === 'string'
               ? lastEdited.current.value
@@ -870,22 +852,69 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       }
     }
 
+    const grid: IGrid = localState !== undefined
+      ? (localState as IDesignerState).grid
+      : {
+        columns: [{ unit: 'PX', value: 320 }],
+        rows: [{ unit: 'FR', value: 1 }],
+      };
+    const fields: Objects = localState !== undefined
+      ? (localState as IDesignerState).objects
+      : entity
+        ? Object.entries(entity.attributes).map(
+          ([name, attr]) => ({
+            type: 'FIELD',
+            parent: 'Area1',
+            fieldName: name,
+            label: getLName(attr.lName, ['by', 'ru', 'en']),
+            name: name
+          } as IField)
+        )
+        : [];
+    const area1: IArea = {
+      name: 'Area1',
+      type: 'AREA',
+      parent: 'Window',
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0
+    };
+    const window: IWindow = localState !== undefined
+      ? (localState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
+      : {
+          name: 'Window',
+          type: 'WINDOW'
+        };
+
+    const objects: Objects = [window, area1, ...fields]
+
+    const windowStyle = (): React.CSSProperties => ({
+      display: 'grid',
+      width: '100%',
+      height: 'calc(100% - 44px)',
+      paddingLeft: '4px',
+      paddingRight: '4px',
+      paddingBottom: '4px',
+      gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
+      gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
+      userSelect: undefined,
+      ...object2style(window, objects, true)
+    });
+
   return (
     <>
       {
         designer
-          ? <Designer
+          ?
+          <DesignerContainer
+            {...props}
+            url={url}
             entityName={entityName}
-            fields={rs.fieldDefs}
-            outDesigner={() => { setDesigner(false); isDesigner.current = false; }}
-            viewTab={viewTab}
-            rs={rs}
-            entity={entity}
           />
           :
           <>
           <CommandBar items={commandBarItems} />
-          
           {
             error
             &&
@@ -900,154 +929,55 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           }
           <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
             {
-              localState !== undefined ?
+              console.log({display: 'grid',
+              width: '100%',
+              height: 'calc(100% - 44px)',
+              paddingLeft: '4px',
+              paddingRight: '4px',
+              paddingBottom: '4px',
+              gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
+              gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
+              overflow: 'auto',
+              userSelect: undefined,
+              ...object2style(window, objects, true)})
+            }
+            {
               <div
-                style={getGridStyle()}
+                style={{
+                  display: 'grid',
+                  width: '100%',
+                  gridTemplateColumns: grid ? grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' ') : '320px',
+                  gridTemplateRows: grid ? grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' ') : '1FR',
+                  overflow: 'auto',
+                }}
                 tabIndex={0}
               >
-                {
-              (localState as IDesignerState).areas.map( (area, idx) =>
-              {
-                const theme = getTheme();
-                const background = Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.background)]
-                const borderColor = Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.border.color)]
-                const areaStyle = (localState as IDesignerState).areas[idx].style;
-                return (
-                <div
-                  key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
-                  className={
-                    "commonStyle"
-                  }
-                  style={{
-                    gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
-                    display: 'flex',
-                    flexDirection: area.direction,
-                    justifyContent: 'flex-start',
-                    flexWrap: 'wrap',
-                    alignContent: 'flex-start',  
-                    background: background,
-                    margin: areaStyle && areaStyle.margin ? `${areaStyle.margin}px` : '1px',
-                    padding: areaStyle && areaStyle.padding ? `${areaStyle.padding}px` : '4px',
-                    border: areaStyle!.border.style === 'none'
-                      ? `1px solid ${areaStyle!.background}`
-                      : `${areaStyle!.border.width}px ${areaStyle!.border.style} ${borderColor}`,
-                    borderRadius: areaStyle && areaStyle.border.radius ? `${areaStyle.border.radius}px` : undefined
-                  }}
+                <WithObjectInspector
+                  previewMode={true}
+                  gridMode={false}
+                  grid={grid}
+                  objects={objects}
+                  onUpdateGrid={() => {}}
+                  onUpdateSelectedObject={() => {}}
+                  onSelectObject={() => {}}
                 >
-                  {
-                    area.fields.map( f =>
-                      {
-                        let fd = rs.fieldDefs.find(fieldDef =>
-                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
-                        )
-                        if (fd) {
-                          return <div style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{field({fd: fd, field: f.key, areaStyle: areaStyle!, areaDirection: area.direction})}</div>
-                        }
-                        const additionallyObject = (localState as IDesignerState).additionallyObject;
-                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f.key)
-                          ? <Label key={f.key} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f.key}</Label>
-                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
-                            ? <Image key={f.key} height={100} width={100} src={f.key} alt='Text' />
-                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
-                              ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
-                              : undefined
-                      }
-                    )
-                  }
-                </div>
-                )})
-                }
-              </div>
-            :
-              <div styleName="FieldsColumn" style={{top: '0px'}}>
-                {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
-                  const attr = entity.attributes[setAttrName] as EntityAttribute;
-                  const linkEntity = attr.entities[0];
-                  return (
-                    <SetLookupComboBox
-                      key={setAttrName}
-                      name={setAttrName}
-                      label={setAttrName}
-                      preSelectedOption={data ? data : undefined}
-                      getSessionData={
-                        () => {
-                          if (!controlsData.current) {
-                            controlsData.current = {};
-                          }
-                          return controlsData.current;
-                        }
-                      }
-                      onChanged={
-                        (option: IComboBoxOption[] | undefined) => {
-                          if (option) {
-                            setSetComboBoxData( {...setComboBoxData,
-                              [setAttrName]: option
-                            });
-                            setChanged(true);
-                            changedFields.current[setAttrName] = true;
-                          }
-                        }
-                      }
-                      onLookup={
-                        (filter: string, limit: number) => {
-                          const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                          const scalarAttrs = Object.values(linkEntity.attributes)
-                            .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
-                          const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                            || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                            || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                            || scalarAttrs.find((attr) => attr.type === "String");
-                          if (presentField) {
-                            linkFields.push(new EntityLinkField(presentField));
-                          }
-                          const linkEq = new EntityQuery(
-                            new EntityLink(linkEntity, 'z', linkFields),
-                            new EntityQueryOptions(
-                              limit + 1,
-                              undefined,
-                              filter ?
-                                [{
-                                  contains: [
-                                    {
-                                      alias: 'z',
-                                      attribute: presentField!,
-                                      value: filter!
-                                    }
-                                  ]
-                                }]
-                              : undefined
-                            )
-                          );
-                          return apiService.query({ query: linkEq.inspect() })
-                            .then( response => {
-                              const result = response.payload.result!;
-                              const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                              const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
-                                && (data.attribute === presentField!.name))![0];
-                              return result.data.map( (r): IComboBoxOption => ({
-                                key: r[idAlias],
-                                text: r[nameAlias]
-                              }));
-                            });
-                        }
-                      }
-                      componentRef={
-                        ref => {
-                          if (ref && lastFocused.current === linkEntity.name) {
-                            needFocus.current = ref;
-                          }
-                        }
-                      }
-                    />
-                  )
-
-                })}
-                {
-                  rs.fieldDefs.map( fd => {
-                    return field({fd})
-                  })
-                }
+                  <div
+                    style={{...windowStyle,
+                    ...object2style(window, objects, true)}}
+                  >
+                    {
+                      getAreas(objects).map( area =>
+                        <Area
+                          previewMode={true}
+                          gridMode={false}
+                          objects={objects}
+                          area={area}
+                          onSelectObject={ object => {} }
+                        />
+                      )
+                    }
+                  </div>
+                </WithObjectInspector>
               </div>
               }
             </div>
