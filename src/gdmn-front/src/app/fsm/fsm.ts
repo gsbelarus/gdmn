@@ -42,18 +42,24 @@ export class FSM {
     return this._params.transition.from;
   }
 
-  run() {
+  isBlockCompleted() {
     const state = store.getState();
 
     switch (this.block.type) {
       case blockTypes.login:
         if (!state.authState.accessToken) {
-          throw new Error('Not logged in');
+          return false;
         }
-        return;
+        return true;
 
       default:
         throw new Error(`Unknown block type ${this.block.type.id}`);
+    }
+  }
+
+  run() {
+    if (this.isBlockCompleted()) {
+
     }
   }
 };

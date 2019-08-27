@@ -44,7 +44,7 @@ export interface ITransitionBase {
   from: IBlock;
 };
 
-export interface ITransition extends ITransitionBase {
+export interface ISimpleTransition extends ITransitionBase {
   to: IBlock;
 };
 
@@ -57,6 +57,10 @@ export interface IDecisionTransition extends ITransitionBase {
   no: IBlock | IBlock[];
 };
 
+export function isSimpleTransition(transition: Transition): transition is ISimpleTransition {
+  return (transition as ISimpleTransition).to instanceof Object;
+};
+
 export function isDecisionTransition(transition: Transition): transition is IDecisionTransition {
   return (transition as IDecisionTransition).yes !== undefined;
 };
@@ -65,7 +69,7 @@ export function isXORTransition(transition: Transition): transition is IXORTrans
   return Array.isArray((transition as IXORTransition).to);
 };
 
-export type Transition = ITransition | IXORTransition | IDecisionTransition;
+export type Transition = ISimpleTransition | IXORTransition | IDecisionTransition;
 
 export interface IFlow {
   [id: string]: Transition;

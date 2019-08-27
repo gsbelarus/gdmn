@@ -26,8 +26,8 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
       return res;
     }
 
-    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField) => (_e: any, newValue?: string) => {
-      if (newValue !== undefined) {
+    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField, required?: boolean) => (_e: any, newValue?: string) => {
+      if (!required || newValue !== undefined) {
         onUpdateSelectedObject({ [prop]: newValue })
       }
     };
@@ -68,7 +68,7 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
           key="text"
           label="Text"
           value={selectedObject.text}
-          onChange={getOnChange('text')}
+          onChange={getOnChange('text', true)}
         />
       );
     }
@@ -79,7 +79,7 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
           key="imageUrl"
           label="Image URL"
           value={selectedObject.url}
-          onChange={getOnChange('url')}
+          onChange={getOnChange('url', true)}
         />
       );
 
@@ -99,7 +99,7 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
           key="label"
           label="Label"
           value={selectedObject.label}
-          onChange={getOnChange('label')}
+          onChange={getOnChange('label', true)}
         />
       );
 
