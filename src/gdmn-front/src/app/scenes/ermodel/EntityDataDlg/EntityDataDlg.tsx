@@ -597,7 +597,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
   
-  const localState = localStorage.getItem(LOCAL_STORAGE_KEY) === null ? undefined : JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!);
+  const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
 
   const field = (props: { fd: IFieldDef, field?: string }): JSX.Element | undefined => {
       if (!props.fd.eqfa) {
@@ -940,6 +940,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               overflow: 'auto',
               userSelect: undefined,
               ...object2style(window, objects, true)})
+            }
+            {
+              console.log(grid)
+            }
+            {
+              console.log(area1)
+            }
+            {
+              console.log(objects)
             }
             {
               <div
