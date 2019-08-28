@@ -56,31 +56,38 @@ export const flowcharts: IFlowcharts = {
     blocks,
     flow: {
       'begin': {
+        id: 'begin',
         from: blocks.login,
         to: blocks.showData
       },
       'ui': {
+        id: 'ui',
         from: blocks.showData,
         to: blocks.chooseUserAction
       },
       'userAction': {
+        id: 'userAction',
         from: blocks.chooseUserAction,
         to: [blocks.addRecord, blocks.decision, blocks.workDone]
       },
       'addRecord': {
+        id: 'addRecord',
         from: blocks.addRecord,
         to: blocks.showData
       },
       'test2hrs': {
+        id: 'test2hrs',
         from: blocks.decision,
         yes: [blocks.deleteRecord, blocks.editRecord],
         no: blocks.showData
       },
       'deleteRecord': {
+        id: 'deleteRecord',
         from: blocks.deleteRecord,
         to: blocks.showData
       },
       'editRecord': {
+        id: 'editRecord',
         from: blocks.editRecord,
         to: blocks.showData
       }
@@ -101,6 +108,7 @@ export const flowcharts: IFlowcharts = {
     blocks: Object.fromEntries(Object.entries(blocks).filter( ([_, b]) => b.id === 'login' || b.id === 'workDone' )),
     flow: {
       'begin': {
+        id: 'begin',
         from: blocks.login,
         to: blocks.workDone
       }

@@ -1,5 +1,25 @@
 import { LName } from "gdmn-internals";
 
+export type ID = string;
+
+export interface IFSMState {
+  id: ID;
+  label?: LName;
+};
+
+export interface IFSMSignal {
+  id: ID;
+  label?: LName;
+};
+
+export interface IFSMRule {
+  id: ID;
+  state: IFSMState;
+  signal: IFSMSignal;
+  nextState: IFSMState;
+};
+
+
 export type Shape = 'PROCESS' | 'START' | 'END' | 'DECISION';
 
 export type BlockTypeParamDataType = 'string' | 'number';
@@ -10,7 +30,6 @@ export interface IBlockTypeParam {
   required?: boolean;
 };
 
-export type ID = string;
 
 export interface IBlockType {
   id: ID;
@@ -41,6 +60,7 @@ export interface IBlocks {
 };
 
 export interface ITransitionBase {
+  id: ID;
   from: IBlock;
 };
 

@@ -1,12 +1,11 @@
 import { IFlowchart, IBlock, Transition } from "./types";
 import { blockTypes } from "./blockTypes";
 import { store } from "..";
-import { ITransaction } from "@stomp/stompjs";
 
 interface IFSMParams {
   flowchart: IFlowchart;
-  path: IBlock[];
-  transition: Transition;
+  path: Transition[];
+  block: IBlock;
 };
 
 export class FSM {
@@ -26,7 +25,7 @@ export class FSM {
     return new FSM({
       flowchart: flowchart,
       path: [],
-      transition
+      block: transition.from
     });
   }
 
@@ -34,12 +33,16 @@ export class FSM {
     return this._params.flowchart;
   }
 
-  get transition() {
-    return this._params.transition;
+  get block() {
+    return this._params.block;
   }
 
-  get block() {
-    return this._params.transition.from;
+  get path() {
+    return this._params.path;
+  }
+
+  newInstance(newParams: Partial<IFSMParams>) {
+    return new FSM({ ...this._params, ...newParams });
   }
 
   isBlockCompleted() {
@@ -60,6 +63,18 @@ export class FSM {
   run() {
     if (this.isBlockCompleted()) {
 
+      /**
+       * Найдем transition из выполненного блока в соответствии
+       * с параметрами блока.
+       */
+
+      const transition = Object.values(this._params.flowchart.flow).find( tr => tr.from === this.block );
+
+      if (transition) {
+        return this.newInstance({ path: [...this.path, transition], })
+      }
     }
+
+    return this;
   }
 };
