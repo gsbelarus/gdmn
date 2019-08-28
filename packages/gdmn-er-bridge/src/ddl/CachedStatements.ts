@@ -70,6 +70,7 @@ interface IStatements {
   triggerExists?: AStatement;
   getDependencies?: AStatement;
   checkDependencies?: AStatement;
+  getFK?: AStatement;
 
   ddlUniqueSequence?: AStatement;
 
@@ -831,8 +832,8 @@ export class CachedStatements {
   }
   public async getFK(tableName: string, fieldName: string): Promise<string[]> {
     this._checkDisposed();
-    if (!this._statements.getDependencies) {
-      this._statements.getDependencies = await this._connection.prepare(this._transaction, `
+    if (!this._statements.getFK) {
+      this._statements.getFK = await this._connection.prepare(this._transaction, `
         SELECT r.RDB$CONSTRAINT_NAME as NAME
         FROM RDB$RELATION_CONSTRAINTS r, RDB$INDEX_SEGMENTS i
         WHERE r.RDB$CONSTRAINT_NAME = i.RDB$INDEX_NAME
@@ -841,7 +842,7 @@ export class CachedStatements {
       `);
     }
     return await AStatement.executeQueryResultSet({
-      statement: this._statements.getDependencies,
+      statement: this._statements.getFK,
       params: {TABLE_NAME: tableName, FIELD_NAME: fieldName},
       callback: async (resultSet) => {
         const result: string[] = [];
