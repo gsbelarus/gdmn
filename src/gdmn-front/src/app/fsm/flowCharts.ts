@@ -1,5 +1,36 @@
-import { IBlocks, IFlowcharts } from "./types";
-import { blockTypes } from "./blockTypes";
+import { IFSMRule, IFSMFlowchart, IFSMFlowcharts } from "./types";
+import { fsmStates } from "./fsmStates";
+import { fsmSignals } from "./fsmSignals";
+
+const beginRule: IFSMRule = {
+  id: 'BEGIN',
+  state: fsmStates.login,
+  signal: fsmSignals.start,
+  nextState: fsmStates.showData
+};
+
+const workTime: IFSMFlowchart = {
+  id: 'workTime',
+  label: {
+    ru: {
+      name: 'Регистрация рабочего времени'
+    }
+  },
+  description: {
+    ru: {
+      name: 'Просмотр, выборка, сортировка таблицы рабочего времени. Внесение, редактирование, удаление записей рабочего времени.'
+    }
+  },
+  rules: {
+    beginRule
+  }
+};
+
+export const flowcharts: IFSMFlowcharts = {
+  workTime
+};
+
+/*
 
 export const blocks: IBlocks = {
   login: {
@@ -115,3 +146,5 @@ export const flowcharts: IFlowcharts = {
     }
   }
 };
+
+*/

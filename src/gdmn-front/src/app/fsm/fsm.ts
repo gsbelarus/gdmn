@@ -1,11 +1,10 @@
-import { IFlowchart, IBlock, Transition } from "./types";
-import { blockTypes } from "./blockTypes";
 import { store } from "..";
+import { IFSMFlowchart, IFSMState } from "./types";
 
 interface IFSMParams {
-  flowchart: IFlowchart;
-  path: Transition[];
-  block: IBlock;
+  flowchart: IFSMFlowchart;
+  path: IFSMState[];
+  state: IFSMState;
 };
 
 export class FSM {
@@ -15,17 +14,17 @@ export class FSM {
     this._params = params;
   }
 
-  static create(flowchart: IFlowchart) {
-    const transition = flowchart.flow['begin'];
+  static create(flowchart: IFSMFlowchart) {
+    const { beginRule } = flowchart.rules;
 
-    if (!transition) {
+    if (!beginRule) {
       throw new Error('No entry point for a chartflow given.');
     }
 
     return new FSM({
       flowchart: flowchart,
       path: [],
-      block: transition.from
+      state: beginRule.state
     });
   }
 
@@ -33,8 +32,8 @@ export class FSM {
     return this._params.flowchart;
   }
 
-  get block() {
-    return this._params.block;
+  get state() {
+    return this._params.state;
   }
 
   get path() {
@@ -45,36 +44,22 @@ export class FSM {
     return new FSM({ ...this._params, ...newParams });
   }
 
-  isBlockCompleted() {
+  isStateCompleted() {
     const state = store.getState();
 
-    switch (this.block.type) {
-      case blockTypes.login:
+    switch (this.state.id) {
+      case 'LOGIN':
         if (!state.authState.accessToken) {
           return false;
         }
         return true;
 
       default:
-        throw new Error(`Unknown block type ${this.block.type.id}`);
+        throw new Error(`Unknown block type ${this.state.id}`);
     }
   }
 
   run() {
-    if (this.isBlockCompleted()) {
-
-      /**
-       * Найдем transition из выполненного блока в соответствии
-       * с параметрами блока.
-       */
-
-      const transition = Object.values(this._params.flowchart.flow).find( tr => tr.from === this.block );
-
-      if (transition) {
-        return this.newInstance({ path: [...this.path, transition], })
-      }
-    }
-
     return this;
   }
 };
