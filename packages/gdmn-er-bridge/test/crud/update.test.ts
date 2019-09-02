@@ -152,40 +152,6 @@ describe("Update", () => {
   afterAll(async () => {
     await connection.dropDatabase();
   });
-  it("Update: two string", async () => {
-
-    const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "TEST_STRING1",
-          value: "asas"
-        },
-        {
-          attribute: "TEST_STRING2",
-          value: "asa"
-        }
-      ],
-      pkValues: [36]
-
-    }));
-
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1," +
-      " P$2 BLOB SUB_TYPE TEXT = :P$2, ParentID INTEGER = :ParentID)\n" +
-      "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "BEGIN\n" +
-      "  UPDATE CHILD_ENTITY SET\n" +
-      "  TEST_STRING1 = :P$1, TEST_STRING2 = :P$2\n" +
-      "  WHERE INHERITEDKEY = :ParentID;\n" +
-      "END");
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
   it("Update: tree ", async () => {
 
     const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
@@ -223,74 +189,6 @@ describe("Update", () => {
     });
   });
 
-  it("Update: LINK ", async () => {
-
-    const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "LINK",
-          value: 36
-        },
-        {
-          attribute: "TEST_STRING2",
-          value: "g,j"
-        }
-
-      ],
-      pkValues: [36]
-    }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1," +
-      " P$2 BLOB SUB_TYPE TEXT = :P$2, ParentID INTEGER = :ParentID)\n" +
-      "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "BEGIN\n" +
-      "  UPDATE CHILD_ENTITY SET\n" +
-      "  LINK = :P$1, TEST_STRING2 = :P$2\n" +
-      "  WHERE INHERITEDKEY = :ParentID;\n" +
-      "END");
-
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
-  it("Update: PARENT ", async () => {
-
-    const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "TEST_STRING1",
-          value: "dfdfd"
-        },
-        {
-          attribute: "PARENT",
-          value: 36
-        }
-      ],
-      pkValues: [36]
-
-    }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1," +
-      " P$2 INTEGER = :P$2, ParentID INTEGER = :ParentID)\n" +
-      "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "BEGIN\n" +
-      "  UPDATE CHILD_ENTITY SET\n" +
-      "  TEST_STRING1 = :P$1, PARENT = :P$2\n" +
-      "  WHERE INHERITEDKEY = :ParentID;\n" +
-      "END");
-
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
   it("Update: Attribute Detail not support yet ", async () => {
 
     expect(() => {
@@ -307,41 +205,6 @@ describe("Update", () => {
 
       }));
     }).toThrowError(new Error("Attribute Detail not support yet"));
-  });
-
-  it("Update: SET_LINK ", async () => {
-
-    const {sql, params} = new Update(EntityUpdate.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "SET_LINK",
-          value: [
-            {
-              pkValues: [childID],
-              setAttributes: [{attribute: "TOTAL", value: "111"}]
-
-            }
-          ]
-        }
-      ],
-      pkValues: [childID]
-    }));
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 VARCHAR(3) = :P$2, ParentID INTEGER = :ParentID)\n" +
-      "AS\n" +
-      "DECLARE Key1Value INTEGER;\n" +
-      "BEGIN\n" +
-      `  DELETE\n` +
-      `  FROM ${setAttributeTableName}\n` +
-      `  WHERE KEY1 = :ParentID;\n` +
-      "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
-      "  VALUES(:ParentID, :P$1, :P$2);\n" +
-      "END");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
   });
 
   it("Update: full ", async () => {

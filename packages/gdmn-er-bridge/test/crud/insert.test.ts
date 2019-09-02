@@ -141,41 +141,6 @@ describe("Insert", () => {
     await connection.dropDatabase();
   });
 
-  it("insert: Two string ", async () => {
-    const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "TEST_STRING1",
-          value: "asas"
-        },
-        {
-          attribute: "TEST_STRING2",
-          value: "g,j"
-        }
-      ]
-    }));
-
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
-      "RETURNS (ID int, ParentID int)\n" +
-      "AS\n" +
-      "BEGIN\n" +
-      "  INSERT INTO MAIN_ENTITY\n" +
-      "  DEFAULT VALUES\n" +
-      "  RETURNING ID INTO :ParentID;\n" +
-      "\n" +
-      "  INSERT INTO CHILD_ENTITY(TEST_STRING1, TEST_STRING2, INHERITEDKEY)\n" +
-      "  VALUES(:P$1, :P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :ID;\n" +
-      "SUSPEND;\n" +
-      "END");
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
   it("insert: INHERITANCE ", async () => {
     const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
       entity: "CHILD_ENTITY",
@@ -211,41 +176,6 @@ describe("Insert", () => {
     });
   });
 
-  it("insert: LINK ", async () => {
-    const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "LINK",
-          value: ParentKey
-        },
-        {
-          attribute: "TEST_STRING2",
-          value: "g,j"
-        }
-      ]
-    }));
-
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
-      "RETURNS (ID int, ParentID int)\n" +
-      "AS\n" +
-      "BEGIN\n" +
-      "  INSERT INTO MAIN_ENTITY\n" +
-      "  DEFAULT VALUES\n" +
-      "  RETURNING ID INTO :ParentID;\n" +
-      "\n" +
-      "  INSERT INTO CHILD_ENTITY(LINK, TEST_STRING2, INHERITEDKEY)\n" +
-      "  VALUES(:P$1, :P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :ID;\n" +
-      "SUSPEND;\n" +
-      "END");
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
   it("insert: DetailAttribute ", async () => {
     expect(() => {
       new Insert(EntityInsert.inspectorToObject(erModel, {
@@ -264,107 +194,7 @@ describe("Insert", () => {
     }).toThrowError(new Error("Attribute Detail not support yet"));
   });
 
-  it("insert: SET_LINK ", async () => {
-    const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "SET_LINK",
-          value: [
-            {
-              pkValues: [ParentKey],
-              setAttributes: [{attribute: "TOTAL", value: "111"}]
-            }
-          ]
-        }
-      ]
-    }));
-
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 INTEGER = :P$1, P$2 BLOB SUB_TYPE TEXT = :P$2)\n" +
-      "RETURNS (ID int, ParentID int)\n" +
-      "AS\n" +
-      "BEGIN\n" +
-      "  INSERT INTO MAIN_ENTITY\n" +
-      "  DEFAULT VALUES\n" +
-      "  RETURNING ID INTO :ParentID;\n" +
-      "\n" +
-      "  INSERT INTO CHILD_ENTITY(INHERITEDKEY)\n" +
-      "  VALUES(:ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :ID;\n" +
-      "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
-      "  VALUES(:ID, :P$1, :P$2);\n" +
-      "SUSPEND;\n" +
-      "END");
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
-  it("insert: string ", async () => {
-    const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
-      entity: "MAIN_ENTITY",
-      fields: [
-        {
-          attribute: "TEST_STRING",
-          value: "ffff"
-        }
-      ]
-    }));
-
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1)\n" +
-      "RETURNS (ID int, ParentID int)\n" +
-      "AS\n" +
-      "BEGIN\n" +
-      "  INSERT INTO MAIN_ENTITY(TEST_STRING)\n" +
-      "  VALUES(:P$1)\n" +
-      "  RETURNING ID INTO :ID;\n" +
-      "SUSPEND;\n" +
-      "END");
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
-  it("insert: PARENT ", async () => {
-    const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
-      entity: "CHILD_ENTITY",
-      fields: [
-        {
-          attribute: "TEST_STRING1",
-          value: "dfdfd"
-        },
-        {
-          attribute: "PARENT",
-          value: linkKey
-        }
-      ]
-    }));
-
-    expect(sql).toEqual("EXECUTE BLOCK(P$1 BLOB SUB_TYPE TEXT = :P$1, P$2 INTEGER = :P$2)\n" +
-      "RETURNS (ID int, ParentID int)\n" +
-      "AS\n" +
-      "BEGIN\n" +
-      "  INSERT INTO MAIN_ENTITY\n" +
-      "  DEFAULT VALUES\n" +
-      "  RETURNING ID INTO :ParentID;\n" +
-      "\n" +
-      "  INSERT INTO CHILD_ENTITY(TEST_STRING1, PARENT, INHERITEDKEY)\n" +
-      "  VALUES(:P$1, :P$2, :ParentID)\n" +
-      "  RETURNING INHERITEDKEY INTO :ID;\n" +
-      "SUSPEND;\n" +
-      "END");
-
-    await AConnection.executeTransaction({
-      connection,
-      callback: (transaction) => connection.execute(transaction, sql, params)
-    });
-  });
-
-  it("insert: full ", async () => {
+ it("insert: full ", async () => {
     const {sql, params} = new Insert(EntityInsert.inspectorToObject(erModel, {
       entity: "CHILD_ENTITY",
       fields: [
