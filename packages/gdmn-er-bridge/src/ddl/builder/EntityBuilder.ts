@@ -283,6 +283,26 @@ export class EntityBuilder extends Builder {
   }
 
   public async deleteAttribute(entity: Entity, attribute: Attribute): Promise<void> {
+
+
+    switch (attribute.type) {
+      case "Set":
+        await this.ddlHelper.cachedStatements.dropATRelationField(attribute.name);
+        await this.ddlHelper.cachedStatements.dropATRelations({relationName: attribute.adapter!.crossRelation});
+        await this.ddlHelper.dropTable(attribute.adapter!.crossRelation);
+        await this.ddlHelper.dropColumns(entity.name, [attribute.name]);
+        break;
+      case "Entity":
+      case "Parent":
+        const arrFF = await this.ddlHelper.cachedStatements.getFK(attribute.adapter!.relation, attribute.adapter!.field);
+        for await (const fk of arrFF) {
+          await this.ddlHelper.dropConstraint(fk, attribute.adapter!.relation);
+        }
+        await this.ddlHelper.dropColumns(attribute.adapter!.relation, [attribute.adapter!.field]);
+        break;
+      default:
+        await this.ddlHelper.dropColumns(attribute.adapter!.relation, [attribute.adapter!.field]);
+    }
     entity.remove(attribute);
   }
 }

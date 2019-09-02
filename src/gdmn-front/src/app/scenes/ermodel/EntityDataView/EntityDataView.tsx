@@ -15,7 +15,7 @@ import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
-import {apiService} from "@src/app/services/apiService";
+import { apiService } from "@src/app/services/apiService";
 
 interface IEntityDataViewState {
   phrase: string;

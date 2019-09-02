@@ -15,17 +15,20 @@ export interface INewEntityRouteProps {
 export interface INewEntityContainerProps extends RouteComponentProps<INewEntityRouteProps> {
   newRecord: boolean;
   url: string;
+  entityName?: string;
 };
 
 export interface INewEntityStateProps {
   erModel?: ERModel;
   viewTab?: IViewTab;
   gcsEntities?: GridComponentState;
+  entities?: RecordSet;
 };
 
 export interface INewEntityProps extends RouteComponentProps<INewEntityRouteProps>, INewEntityStateProps {
-  rs?: RecordSet;
   dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction>;
   url: string;
   viewTab?: IViewTab;
+  entityName?: string;
+  newRecord: boolean;
 };

@@ -227,3 +227,10 @@ export type TAddEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.ADD_ENTITY
 export type TDeleteEntityTaskCmd = TTaskCmd<TTaskActionNames.DELETE_ENTITY>;
 
 export type TDeleteEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_ENTITY>;
+
+// entity: edit
+
+export type TEditEntityTaskCmd = TTaskCmd<TTaskActionNames.EDIT_ENTITY>;
+
+export type TEditEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.EDIT_ENTITY>;
+

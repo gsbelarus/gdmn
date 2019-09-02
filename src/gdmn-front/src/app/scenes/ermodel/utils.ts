@@ -11,9 +11,22 @@ export interface ILastEdited {
   value: string | boolean ;
 };
 
+export interface IChangedFieldStatus{
+  id?: string;
+  fieldName: string;
+  value: string ;
+  status: string;
+}
+
 export interface IChangedFields {
-  [fieldName: string]: boolean;
+  [fieldName: string]: string;
 };
+
+export interface IFieldStatus{
+  fieldName: string;
+  value: string ;
+  status: string;
+}
 
 export interface ISetComboBoxData {
   [setAttrName: string]: IComboBoxOption[];
