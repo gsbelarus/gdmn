@@ -12,15 +12,15 @@ type TBaseFrameHeader<
   Partial<{ [key in Exclude<THeaderKey, TRequiredHeaderKey> | TStandardHeaderKey]: TFrameHeaderValue }> &
   IFrameHeaders;
 
-type TStompFrameHeaders = TBaseFrameHeader<
+export type TStompFrameHeaders = TBaseFrameHeader<
   TStompFrameHeaderKey,
   TStompFrameHeaderKeyRequired,
   TStompFrameHeaderKeyStandard
 >;
 
-type TDisconnectFrameHeaders = TBaseFrameHeader<'', '', TDisconnectFrameHeaderKeyStandard>;
+export type TDisconnectFrameHeaders = TBaseFrameHeader<'', '', TDisconnectFrameHeaderKeyStandard>;
 
-type TSendFrameHeaders = TBaseFrameHeader<
+export type TSendFrameHeaders = TBaseFrameHeader<
   TSendFrameHeaderKey,
   TSendFrameHeaderKeyRequired,
   TSendFrameHeaderKeyStandard
@@ -34,7 +34,7 @@ type TNackFrameHeaders = TBaseFrameHeader<
   TNackFrameHeaderKeyStandard
 >;
 
-type TSubcribeFrameHeaders = TBaseFrameHeader<
+export type TSubcribeFrameHeaders = TBaseFrameHeader<
   TSubcribeFrameHeaderKey,
   TSubcribeFrameHeaderKeyRequired,
   TSubcribeFrameHeaderKeyStandard
@@ -73,11 +73,11 @@ type TFrameHeaderKey = string;
 type TFrameHeaderValue = string; // | undefined;
 // type TFrameHeaderValueAck = 'auto' | 'client' | 'client-individual';
 
-const enum TStandardHeaderKey {
+export const enum TStandardHeaderKey {
   CONTENT_LENGTH = 'content-length',
   CONTENT_TYPE = 'content-type',
   RECEIPT = 'receipt'
-}
+};
 
 /* stomp */
 const enum TStompFrameHeaderKey {
@@ -86,7 +86,8 @@ const enum TStompFrameHeaderKey {
   LOGIN = 'login',
   PASSCODE = 'passcode',
   HEART_BEAT = 'heart-beat'
-}
+};
+
 type TStompFrameHeaderKeyRequired = TStompFrameHeaderKey.ACCEPT_VERSION | TStompFrameHeaderKey.HOST;
 type TStompFrameHeaderKeyStandard = TStandardHeaderKey.CONTENT_LENGTH | TStandardHeaderKey.RECEIPT;
 
@@ -146,5 +147,3 @@ type TCommitFrameHeaderKeyStandard = TBeginFrameHeaderKeyStandard;
 type TAbortFrameHeaderKey = TBeginFrameHeaderKey;
 type TAbortFrameHeaderKeyRequired = TBeginFrameHeaderKeyRequired;
 type TAbortFrameHeaderKeyStandard = TBeginFrameHeaderKeyStandard;
-
-export { TStompFrameHeaders, TDisconnectFrameHeaders, TSubcribeFrameHeaders, TSendFrameHeaders, TStandardHeaderKey };

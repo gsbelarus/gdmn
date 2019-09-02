@@ -3,13 +3,14 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps, Dropdown, getTheme } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, Dropdown, getTheme, Stack } from 'office-ui-fabric-react';
 import { getLName } from 'gdmn-internals';
 import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants } from 'mxgraph/javascript/mxClient';
 import { fsmActions } from '@src/app/fsm/actions';
 import { FSM } from '@src/app/fsm/fsm';
 import { flowcharts } from '@src/app/fsm/flowcharts';
 import { IFSMState } from '@src/app/fsm/types';
+import { fsmSignals } from '@src/app/fsm/fsmSignals';
 
 interface IGraphState{
   graph: any;
@@ -185,7 +186,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       iconProps: {
         iconName: 'Play'
       },
-      onClick: () => dispatch(fsmActions.setFSM(FSM.create(flowchart!)))
+      onClick: () => dispatch(fsmActions.setFSM(FSM.create(flowchart!).processSignal(fsmSignals.start)))
     },
     {
       key: 'stop',
@@ -223,6 +224,11 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
                 {getLName(flowchart.description, ['ru'])}
               </div>
             }
+            <Stack>
+              {
+                fsm && fsm.path.map( s => <div>{s.id}</div> )
+              }
+            </Stack>
           </div>
           <div styleName="BPFlow" ref={graphContainer}>
 

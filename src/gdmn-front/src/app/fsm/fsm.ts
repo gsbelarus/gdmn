@@ -1,5 +1,5 @@
 import { store } from "..";
-import { IFSMFlowchart, IFSMState } from "./types";
+import { IFSMFlowchart, IFSMState, IFSMSignal } from "./types";
 
 interface IFSMParams {
   flowchart: IFSMFlowchart;
@@ -59,7 +59,14 @@ export class FSM {
     }
   }
 
-  run() {
+  processSignal(signal: IFSMSignal) {
+
+    const rules = Object.values(this.flowchart.rules).filter( rule => rule.signal.id === signal.id && rule.state.id === this.state.id );
+
+    if (rules.length === 1) {
+      return this.newInstance({ state: rules[0].nextState, path: [...this.path, this.state] });
+    }
+
     return this;
   }
 };

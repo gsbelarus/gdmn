@@ -2,13 +2,13 @@ import React, { FC } from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';
 import { TUserRoleType } from '@gdmn/server-api';
 
-const enum RouteAccessLevelType {
+export const enum RouteAccessLevelType {
   PUBLIC,
   PRIVATE_ANONYM,
   PROTECTED_USER,
   PROTECTED_ADMIN,
   PROTECTED_DEVELOPER
-}
+};
 
 /**
  * PUBLIC: any role
@@ -30,26 +30,26 @@ const routeAccessLevels = {
 
 function checkAccess(routeAccessLevel: RouteAccessLevelType, userRole: TUserRoleType) {
   return routeAccessLevels[routeAccessLevel].includes(userRole);
-}
+};
 
-interface IProtectedRouteStateProps {
+export interface IProtectedRouteStateProps {
   userRole?: TUserRoleType;
   authenticated?: boolean;
   defaultAnonymPath?: string;
   defaultUserPath?: string;
-}
+};
 
 // interface IProtectedRouteActionsProps {
 //   onNotAuthorizedAccess: (location: string) => void;
 //   onAccessDenied: (location: string) => void;
 // }
 
-interface IProtectedRouteProps extends RouteProps, IProtectedRouteStateProps {
+export interface IProtectedRouteProps extends RouteProps, IProtectedRouteStateProps {
   // , IProtectedRouteActionsProps
   accessLevel: RouteAccessLevelType;
-}
+};
 
-const ProtectedRoute: FC<IProtectedRouteProps> = ({
+export const ProtectedRoute: FC<IProtectedRouteProps> = ({
   accessLevel,
   defaultAnonymPath,
   defaultUserPath,
@@ -94,5 +94,3 @@ const ProtectedRoute: FC<IProtectedRouteProps> = ({
     />
   );
 };
-
-export { ProtectedRoute, IProtectedRouteProps, IProtectedRouteStateProps, RouteAccessLevelType };
