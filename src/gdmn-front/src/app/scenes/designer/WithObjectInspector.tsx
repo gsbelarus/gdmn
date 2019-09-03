@@ -157,7 +157,9 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
       <div
         style={{
           gridArea: '1 2 2 3',
-          paddingRight: '4px'
+          paddingRight: '4px',
+          overflow: 'auto',
+          height: 'calc(100% - 44px)'
         }}
       >
         <div

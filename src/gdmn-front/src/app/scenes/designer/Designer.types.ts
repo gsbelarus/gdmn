@@ -21,4 +21,5 @@ export interface IDesignerStateProps {
 export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateProps {
   dispatch: ThunkDispatch<IState, never, GdmnAction>;
   entityName: string;
+  outDesignerMode: () => void;
 };

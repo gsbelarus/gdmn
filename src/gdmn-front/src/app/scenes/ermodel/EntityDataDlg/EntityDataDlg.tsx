@@ -899,7 +899,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     <>
       {
         designer
-          ? <DesignerContainer {...props} url={url} entityName={entityName} />
+          ? <DesignerContainer {...props} url={url} entityName={entityName} outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }} />
           : <>
             <CommandBar items={commandBarItems} />
             {

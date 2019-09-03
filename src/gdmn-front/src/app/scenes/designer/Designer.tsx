@@ -492,6 +492,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         },
         objects,
         gridSelection: undefined,
+        
         selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления строки
       }
     }
@@ -616,6 +617,14 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       onClick: () => designerDispatch({ type: 'RESET' })
     },
     {
+      key: 'close',
+      disabled: previewMode || gridMode,
+      name: 'Close',
+      iconOnly: true,
+      iconProps: { iconName: 'Cancel' },
+      onClick: () => props.outDesignerMode()
+    },
+    {
       key: 'split0',
       disabled: true,
       iconOnly: true,
@@ -667,7 +676,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'undo',
-      disabled: previewMode || !undo.length,
+      disabled: previewMode || !undo.length || undo.length == 0,
       text: 'Undo',
       iconOnly: true,
       iconProps: { iconName: 'Undo' },
