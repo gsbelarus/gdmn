@@ -27,7 +27,6 @@ import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
 import { NewEntityContainer } from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
 import { themes } from '../themeeditor/themes';
-import { Designer2Container } from '../designer2/Designer2Container';
 import {INewEntityRouteProps} from "@src/app/scenes/ermodel/Entity/new/NewEntity.types";
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
@@ -184,7 +183,7 @@ export function GdmnView (props: IGdmnViewProps) {
           {importantMenu(commandToLink('erModel2', match.url))}
           {importantMenu(commandToLink('internals', match.url))}
           {importantMenu(commandToLink('sql', match.url))}
-          {importantMenu(commandToLink('designer2', match.url))}
+          {importantMenu(commandToLink('designer', match.url))}
           <div className="RightSideHeaderPart">
             <div>
               <span className="BigLogo">
@@ -336,17 +335,6 @@ export function GdmnView (props: IGdmnViewProps) {
               render={props => {
                 return (
                   <ERModelBoxContainer {...props} />
-                );
-              }}
-            />
-            <Route
-              path={`${match.path}/designer2`}
-              render={props => {
-                return (
-                  <Designer2Container
-                    {...props}
-                    url={props.match.url}
-                  />
                 );
               }}
             />
