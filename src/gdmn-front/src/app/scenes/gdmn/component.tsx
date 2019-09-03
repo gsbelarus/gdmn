@@ -183,7 +183,6 @@ export function GdmnView (props: IGdmnViewProps) {
           {importantMenu(commandToLink('erModel2', match.url))}
           {importantMenu(commandToLink('internals', match.url))}
           {importantMenu(commandToLink('sql', match.url))}
-          {importantMenu(commandToLink('designer', match.url))}
           <div className="RightSideHeaderPart">
             <div>
               <span className="BigLogo">

@@ -924,13 +924,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   gridTemplateRows: '1fr'
                 }}
               >
-                <div
-                  style={{
-                    gridArea: '1 1 2 2',
-                    width: '100%',
-                    overflow: 'auto'
-                  }}
-                >
                   <div
                     style={{
                       display: 'grid',
@@ -967,7 +960,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   </div>
                 </div>
               </div>
-            </div>
           </>
       }
     </>
