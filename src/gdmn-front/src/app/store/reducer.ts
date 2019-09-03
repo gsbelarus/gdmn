@@ -12,7 +12,7 @@ import { TActions } from '@src/app/store/TActions';
 import { IAuthState, reducer as authReducer, _IAuthState } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
-import { reducer as fsmReducer, IFSMState } from '@src/app/fsm/reducer';
+import { reducer as fsmReducer, IFSMReduxState } from '@src/app/fsm/reducer';
 import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { IRsMetaState, rsMetaReducer } from './rsmeta';
@@ -28,7 +28,7 @@ export interface IState {
   readonly recordSet: RecordSetReducerState;
   readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
-  readonly fsm: IFSMState;
+  readonly fsm: IFSMReduxState;
 }
 
 const authPersistConfig = {

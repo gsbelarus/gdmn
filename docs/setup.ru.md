@@ -8,16 +8,9 @@
 Дополнительная настройка в зависимости от используемой операционной системы:
 
 ### Windows
+При установке драйвера NODE с версией 12.9 и выше требуется в Tools for Native Modules установить галочку:  
 
-> Возможно, с последней версией драйвера уже не надо ставить старую версию микрософтовского компилятора. В драйвере вроде уже исправлено.
-
-Предварительно, если установлены, удалить Visual Studio Build tools 2017. Это можно сделать через инсталятор Visual Studio Installer в меню приложений Windows.
-
-Выполняем из командной строки с правами Администратора:
-
-        $ npm install --global --production windows-build-tools --vs2015
-      
-Добавить в переменную окружения **PATH** путь к папке с библиотекой `fbclient.dll` (располагается в папке, куда был установлен сервер Firebird, по умолчанию -- c:\Program Files\Firebird).
+        Automatically install the necessary tools. Note that this will also install Chocolatey. The script will pop-up in a new window after the installation completes. 
         
 ### Mac OS
 

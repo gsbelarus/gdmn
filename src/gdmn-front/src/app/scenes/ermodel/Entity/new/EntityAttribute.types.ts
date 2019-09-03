@@ -9,4 +9,6 @@ export interface IEntityAttributeProps extends IEntityAttributeStateProps {
   deleteAttributeData: (idRow: string) => void;
   attributeDataRow:  undefined | IAttribute | IEntityAttribute | ISetAttribute;
   idRow: string;
+  setChangesToRowField: () => void;
+  newRecord: boolean;
 }

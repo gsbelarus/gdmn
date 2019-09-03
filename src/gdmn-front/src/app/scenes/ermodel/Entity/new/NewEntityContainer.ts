@@ -8,5 +8,6 @@ export const NewEntityContainer = connect(
     erModel: state.gdmnState.erModel,
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.match.url ),
     gcsEntities: state.grid.entities,
+    entities: state.recordSet.entities,
   })
 )(NewEntity);

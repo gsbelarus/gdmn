@@ -2,11 +2,11 @@ import { FSM } from "./fsm";
 import { FSMActions, fsmActions } from "./actions";
 import { getType } from "typesafe-actions";
 
-export interface IFSMState {
+export interface IFSMReduxState {
   fsm?: FSM;
 };
 
-export function reducer(state: IFSMState = {}, action: FSMActions) {
+export function reducer(state: IFSMReduxState = {}, action: FSMActions) {
 
   switch (action.type) {
     case getType(fsmActions.setFSM): {

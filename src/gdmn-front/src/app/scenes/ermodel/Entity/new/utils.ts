@@ -1,4 +1,5 @@
-const currentDate = new Date();
+import {Attribute, Entity, EntityUtils, ERModel, IAttribute} from "gdmn-orm";
+
 export const listType = [
   {key: 'Detail', text: 'Detail'},
   {key: 'Parent', text: 'Parent'},
@@ -100,3 +101,79 @@ export const getFieldType = (value: string) => {
       return {fieldType: ""};
   }
 };
+
+export function parseEntity(entityStr: string[], erModel: ERModel): Entity {
+  let entityName = '';
+  let parentName = '';
+  const attrs: IAttribute[] = [];
+  entityStr.forEach((element, index) => {
+    if (index == 0) {
+      const begin = element.indexOf('(');
+      entityName = element.slice(0, begin)
+      if (begin != -1) {
+        parentName = element.slice(begin).replace('(', '').replace(')', '')
+      }
+    }
+    if (index >= 3) {
+      const begin = element.indexOf('*');
+      const attr: any = {};
+
+      if (begin != -1) {
+        attr["required"] = true;
+        attr["name"] = element.slice(0, begin).replace('    ', '');
+      } else {
+        attr["name"] = element.slice(0, element.indexOf('-') - 1).replace('    ', '');
+        ;
+      }
+
+      const beginLname = element.indexOf('-');
+      const endLname = element.indexOf(':');
+
+      attr["lname"] = {ru: element.slice(beginLname + 2, endLname)};
+      const endType = element.indexOf(',');
+
+
+      const strType = element.slice(endLname + 2, endType);
+      const findLink = strType.indexOf('[');
+
+      if (findLink != -1) {
+        attr["type"] = sn.get(strType.slice(0, findLink - 1));
+        attr["references"] = [strType.slice(findLink + 1, strType.indexOf(']'))];
+      } else {
+        attr["type"] = sn.get(strType);
+      }
+      attrs.push(attr as IAttribute)
+    }
+  });
+  const newEntity = new Entity({
+    name: entityName,
+    lName: {ru: {name: entityName}},
+    parent: parentName ? erModel.entity(parentName) : undefined
+  });
+  erModel.add(newEntity)
+
+  attrs.forEach((attr) => {
+    if (attr.type !== "Sequence"){
+      const attr2 = EntityUtils.createAttribute(attr, newEntity, erModel);
+      newEntity.add(attr2)
+    }
+  });
+
+  return newEntity
+}
+
+const sn = new Map();
+sn.set("->", "Entity");
+sn.set("S", "String");
+sn.set("<->", "Set");
+sn.set("-^", "Parent");
+sn.set("Seq", "Sequence");
+sn.set("I", "Integer");
+sn.set("N", "Numeric");
+sn.set("F", "Float");
+sn.set("B", "Boolean");
+sn.set("DT", "Date");
+sn.set("TS", "TimeStamp");
+sn.set("TM", "Time");
+sn.set("BLOB", "Blob");
+sn.set("E", "Enum");

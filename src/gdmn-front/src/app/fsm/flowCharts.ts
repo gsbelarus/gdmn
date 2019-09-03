@@ -1,5 +1,36 @@
-import { IBlocks, IFlowcharts } from "./types";
-import { blockTypes } from "./blockTypes";
+import { IFSMRule, IFSMFlowchart, IFSMFlowcharts } from "./types";
+import { fsmStates } from "./fsmStates";
+import { fsmSignals } from "./fsmSignals";
+
+const beginRule: IFSMRule = {
+  id: 'BEGIN',
+  state: fsmStates.login,
+  signal: fsmSignals.start,
+  nextState: fsmStates.showData
+};
+
+const workTime: IFSMFlowchart = {
+  id: 'workTime',
+  label: {
+    ru: {
+      name: 'Регистрация рабочего времени'
+    }
+  },
+  description: {
+    ru: {
+      name: 'Просмотр, выборка, сортировка таблицы рабочего времени. Внесение, редактирование, удаление записей рабочего времени.'
+    }
+  },
+  rules: {
+    beginRule
+  }
+};
+
+export const flowcharts: IFSMFlowcharts = {
+  workTime
+};
+
+/*
 
 export const blocks: IBlocks = {
   login: {
@@ -56,31 +87,38 @@ export const flowcharts: IFlowcharts = {
     blocks,
     flow: {
       'begin': {
+        id: 'begin',
         from: blocks.login,
         to: blocks.showData
       },
       'ui': {
+        id: 'ui',
         from: blocks.showData,
         to: blocks.chooseUserAction
       },
       'userAction': {
+        id: 'userAction',
         from: blocks.chooseUserAction,
         to: [blocks.addRecord, blocks.decision, blocks.workDone]
       },
       'addRecord': {
+        id: 'addRecord',
         from: blocks.addRecord,
         to: blocks.showData
       },
       'test2hrs': {
+        id: 'test2hrs',
         from: blocks.decision,
         yes: [blocks.deleteRecord, blocks.editRecord],
         no: blocks.showData
       },
       'deleteRecord': {
+        id: 'deleteRecord',
         from: blocks.deleteRecord,
         to: blocks.showData
       },
       'editRecord': {
+        id: 'editRecord',
         from: blocks.editRecord,
         to: blocks.showData
       }
@@ -101,9 +139,12 @@ export const flowcharts: IFlowcharts = {
     blocks: Object.fromEntries(Object.entries(blocks).filter( ([_, b]) => b.id === 'login' || b.id === 'workDone' )),
     flow: {
       'begin': {
+        id: 'begin',
         from: blocks.login,
         to: blocks.workDone
       }
     }
   }
 };
+
+*/

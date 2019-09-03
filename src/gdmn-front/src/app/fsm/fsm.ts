@@ -1,12 +1,10 @@
-import { IFlowchart, IBlock, Transition } from "./types";
-import { blockTypes } from "./blockTypes";
 import { store } from "..";
-import { ITransaction } from "@stomp/stompjs";
+import { IFSMFlowchart, IFSMState, IFSMSignal } from "./types";
 
 interface IFSMParams {
-  flowchart: IFlowchart;
-  path: IBlock[];
-  transition: Transition;
+  flowchart: IFSMFlowchart;
+  path: IFSMState[];
+  state: IFSMState;
 };
 
 export class FSM {
@@ -16,17 +14,17 @@ export class FSM {
     this._params = params;
   }
 
-  static create(flowchart: IFlowchart) {
-    const transition = flowchart.flow['begin'];
+  static create(flowchart: IFSMFlowchart) {
+    const { beginRule } = flowchart.rules;
 
-    if (!transition) {
+    if (!beginRule) {
       throw new Error('No entry point for a chartflow given.');
     }
 
     return new FSM({
       flowchart: flowchart,
       path: [],
-      transition
+      state: beginRule.state
     });
   }
 
@@ -34,32 +32,41 @@ export class FSM {
     return this._params.flowchart;
   }
 
-  get transition() {
-    return this._params.transition;
+  get state() {
+    return this._params.state;
   }
 
-  get block() {
-    return this._params.transition.from;
+  get path() {
+    return this._params.path;
   }
 
-  isBlockCompleted() {
+  newInstance(newParams: Partial<IFSMParams>) {
+    return new FSM({ ...this._params, ...newParams });
+  }
+
+  isStateCompleted() {
     const state = store.getState();
 
-    switch (this.block.type) {
-      case blockTypes.login:
+    switch (this.state.id) {
+      case 'LOGIN':
         if (!state.authState.accessToken) {
           return false;
         }
         return true;
 
       default:
-        throw new Error(`Unknown block type ${this.block.type.id}`);
+        throw new Error(`Unknown block type ${this.state.id}`);
     }
   }
 
-  run() {
-    if (this.isBlockCompleted()) {
+  processSignal(signal: IFSMSignal) {
 
+    const rules = Object.values(this.flowchart.rules).filter( rule => rule.signal.id === signal.id && rule.state.id === this.state.id );
+
+    if (rules.length === 1) {
+      return this.newInstance({ state: rules[0].nextState, path: [...this.path, this.state] });
     }
+
+    return this;
   }
 };
