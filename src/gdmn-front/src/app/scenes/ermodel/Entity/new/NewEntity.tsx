@@ -19,7 +19,7 @@ import {gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/utils";
 import {ISessionData} from "@src/app/scenes/gdmn/types";
 import {apiService} from "@src/app/services/apiService";
-import {IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
+import {EntityUtils, IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
 import {EntityAttributeContainer} from "@src/app/scenes/ermodel/Entity/new/EntityAttributeContainer";
 import {
   prepareDefaultEntityQuery,
@@ -170,7 +170,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             attributes: refAttribute.current
           });
 
-          if(!result.error){
+          if (!result.error) {
             parseEntity(result.payload.result!, erModel!)
           }
 
@@ -180,19 +180,19 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             attributes: refAttribute.current
           });
 
-          if(!result.error){
+          if (!result.error) {
             parseEntity(result.payload.result!, erModel!)
           }
         }
       });
 
       if (entities) {
-        dispatch( async (dispatch, getState) => {
-        dispatch(rsActions.setRecordSet(
-          entities.set({
-            name: name.value.toUpperCase(),
-            description: name.value.toUpperCase()
-          } as IDataRow)))
+        dispatch(async (dispatch, getState) => {
+          dispatch(rsActions.setRecordSet(
+            entities.set({
+              name: name.value.toUpperCase(),
+              description: name.value.toUpperCase()
+            } as IDataRow)))
         })
       }
     } else {
@@ -209,6 +209,25 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             changedFields: changedFields.current,
             attributes: refAttribute.current
           })
+        }
+
+        const attr = erModel!.entity(name.value.toUpperCase()).attributes
+        const chfields = Object.entries(changedFields.current);
+        for await (const [key, value] of chfields) {
+          const result = Object.keys(attr).map((attrKey) => {
+            return attrKey;
+          });
+          const findAttr = result.find((r) => r === key);
+          if (findAttr && value === "delete") {
+            erModel!.entity(name.value.toUpperCase()).remove(erModel!.entity(name.value.toUpperCase()).attribute(findAttr))
+          } else {
+            const editAttr = refAttribute.current.find((at) => at.id === key);
+
+            if (editAttr) {
+              const newAttr = EntityUtils.createAttribute(editAttr, erModel!.entity(name.value.toUpperCase()), erModel!);
+              erModel!.entity(name.value.toUpperCase()).add(newAttr)
+            }
+          }
         }
       });
     }
