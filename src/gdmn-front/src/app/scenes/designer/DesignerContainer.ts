@@ -7,6 +7,8 @@ export const DesignerContainer = connect(
   (state: IState, ownProps: IDesignerContainerProps): IDesignerStateProps => ({
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
     theme: state.gdmnState.theme,
-    erModel: state.gdmnState.erModel
+    erModel: state.gdmnState.erModel,
+    entity: state.gdmnState.erModel.entities[ownProps.entityName],
+    rs: state.recordSet[ownProps.url]
   })
 )(Designer);

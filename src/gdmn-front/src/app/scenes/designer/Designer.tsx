@@ -1,6 +1,5 @@
 import React, { useReducer, useMemo, useEffect } from "react";
 import { IDesignerProps } from "./Designer.types";
-import { useTab } from "./useTab";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField } from "./types";
 import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
@@ -97,7 +96,8 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
   };
 
-  const fields1: IField[] = entity ? Object.entries(entity.attributes).map(
+  const fields1: IField[] = entity
+    ? Object.entries(entity.attributes).map(
       ([name, attr]) => ({
         type: 'FIELD',
         parent: 'Area1',
@@ -549,7 +549,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { viewTab, url, dispatch, erModel } = props;
+  const { viewTab, url, dispatch, erModel, rs, entity } = props;
   const [state, designerDispatch] = useReducer(reducer, loadState(url.split('/')[4], erModel ? erModel.entities[url.split('/')[4]] : undefined));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
@@ -590,6 +590,8 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       selectedObject={selectedObject}
       objects={objects}
       area={area}
+      rs={rs}
+      entity={entity}
       onSelectObject={ object => designerDispatch({ type: 'SELECT_OBJECT', object }) }
     />
   );
@@ -789,7 +791,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       {
         selectFieldsMode && erModel &&
         <SelectFields
-          entity={erModel.entities['TgdcCompany']}
+          entity={entity ? entity : erModel.entities[url.split('/')[4]]}
           onCreate={ fields => {
             fields.forEach( ({ fieldName, label }) => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName, label }, makeSelected: fields.length === 1 }) );
             designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' });
