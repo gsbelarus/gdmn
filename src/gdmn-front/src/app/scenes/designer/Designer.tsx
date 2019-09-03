@@ -124,7 +124,6 @@ export const LOCAL_STORAGE_KEY = 'designerState';
 
 const loadState = (entityName?: string, erModel?: Entity): IDesignerState => {
   const loaded = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${entityName}`);
-  console.log(loaded)
 
   if (loaded && entityName !== undefined) {
     const parsed = JSON.parse(loaded) as IDesignerSerializedState;
@@ -555,10 +554,6 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
   const [state, designerDispatch] = useReducer(reducer, loadState(url.split('/')[4], erModel ? erModel.entities[url.split('/')[4]] : undefined));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
-  useTab(viewTab, url, 'Designer', true, dispatch);
-
-  useEffect( () => () => localStorage.setItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`, JSON.stringify({ version: '1.0', grid, objects }) ), [grid, objects]);
-
   const windowStyle = useMemo( (): React.CSSProperties => ({
     display: 'grid',
     width: '100%',
@@ -607,7 +602,9 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       text: 'Save',
       iconOnly: true,
       iconProps: { iconName: 'Save' },
-      onClick: () => localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ version: '1.0', grid, objects }) )
+      onClick: () => {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`, JSON.stringify({ version: '1.0', grid, objects }) )
+      }
     },
     {
       key: 'reset',

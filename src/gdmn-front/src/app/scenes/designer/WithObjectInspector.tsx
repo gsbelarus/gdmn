@@ -145,7 +145,6 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
         gridTemplateRows: '1fr'
       }}
     >
-      {console.log(objects)}
       <div
         style={{
           gridArea: '1 1 2 2',

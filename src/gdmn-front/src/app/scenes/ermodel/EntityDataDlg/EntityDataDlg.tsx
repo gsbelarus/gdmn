@@ -28,7 +28,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState, LOCAL_STORAGE_KEY } from '../../designer/Designer';
-import { object2style } from '../../designer/utils';
+import { object2style, getColor } from '../../designer/utils';
 import { Area } from '../../designer/Area';
 import { getAreas, isWindow, IWindow, IField, IGrid, Objects, IArea } from '../../designer/types';
 import { WithObjectInspector } from '../../designer/WithObjectInspector';
@@ -597,8 +597,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
   
-  const localState = localStorage.getItem(LOCAL_STORAGE_KEY) === null ? undefined : JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)!);
-
+  const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
   const field = (props: { fd: IFieldDef, field?: string }): JSX.Element | undefined => {
       if (!props.fd.eqfa) {
         return undefined;
@@ -858,9 +857,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         columns: [{ unit: 'PX', value: 320 }],
         rows: [{ unit: 'FR', value: 1 }],
       };
-    const fields: Objects = localState !== undefined
-      ? (localState as IDesignerState).objects
-      : entity
+    const fields: Objects = localState === undefined
+      ? entity
         ? Object.entries(entity.attributes).map(
           ([name, attr]) => ({
             type: 'FIELD',
@@ -870,8 +868,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             name: name
           } as IField)
         )
-        : [];
-    const area1: IArea = {
+        : []
+      : [];
+    const area1: IArea[] = localState === undefined ? [{
       name: 'Area1',
       type: 'AREA',
       parent: 'Window',
@@ -879,15 +878,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       top: 0,
       right: 0,
       bottom: 0
-    };
+    }]
+    : getAreas((localState as IDesignerState).objects);
     const window: IWindow = localState !== undefined
       ? (localState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
       : {
           name: 'Window',
           type: 'WINDOW'
         };
-
-    const objects: Objects = [window, area1, ...fields]
+    const objects: Objects = localState ? (localState as IDesignerState).objects : [window, ...area1, ...fields];
 
     const windowStyle = (): React.CSSProperties => ({
       display: 'grid',
@@ -929,60 +928,43 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             </MessageBar>
           }
           <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
-            {
-              console.log({display: 'grid',
-              width: '100%',
-              height: 'calc(100% - 44px)',
-              paddingLeft: '4px',
-              paddingRight: '4px',
-              paddingBottom: '4px',
-              gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
-              gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
-              overflow: 'auto',
-              userSelect: undefined,
-              ...object2style(window, objects, true)})
-            }
-            {
+            <WithObjectInspector
+              previewMode={true}
+              gridMode={false}
+              grid={grid}
+              objects={objects}
+              onUpdateGrid={() => {}}
+              onUpdateSelectedObject={() => {}}
+              onSelectObject={() => {}}
+            >
               <div
                 style={{
                   display: 'grid',
                   width: '100%',
-                  gridTemplateColumns: grid ? grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' ') : '320px',
-                  gridTemplateRows: grid ? grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' ') : '1FR',
-                  overflow: 'auto',
+                  paddingLeft: '4px',
+                  paddingRight: '4px',
+                  paddingBottom: '4px',
+                  gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
+                  gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
+                  userSelect: undefined,
+                  ...object2style(window, objects, true)
                 }}
-                tabIndex={0}
               >
-                <WithObjectInspector
-                  previewMode={true}
-                  gridMode={false}
-                  grid={grid}
-                  objects={objects}
-                  onUpdateGrid={() => {}}
-                  onUpdateSelectedObject={() => {}}
-                  onSelectObject={() => {}}
-                >
-                  <div
-                    style={{...windowStyle,
-                    ...object2style(window, objects, true)}}
-                  >
-                    {
-                      getAreas(objects).map( area =>
-                        <Area
-                          previewMode={true}
-                          gridMode={false}
-                          objects={objects}
-                          area={area}
-                          onSelectObject={ object => {} }
-                        />
-                      )
-                    }
-                  </div>
-                </WithObjectInspector>
+                {
+                  getAreas(objects).map( area =>
+                    <Area
+                      previewMode={true}
+                      gridMode={false}
+                      objects={objects}
+                      area={area}
+                      onSelectObject={ object => {} }
+                    />
+                  )
+                }
               </div>
-              }
-            </div>
-          </>
+            </WithObjectInspector>
+          </div>
+        </>
       }
     </>
   );
