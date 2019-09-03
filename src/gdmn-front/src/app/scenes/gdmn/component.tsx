@@ -103,26 +103,26 @@ export function GdmnView (props: IGdmnViewProps) {
       return {
         stackStyles: {
           root: {
-            //backgroundColor: getTheme().palette.themeLight,
+            //backgroundColor: 'transparent',
             color: getTheme().semanticColors.bodyText,
           }
         },
         iconButtonStyles: {
           menuIcon: { display: 'none' },
           rootHovered: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().palette.themeTertiary
           },
           rootExpanded: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().palette.neutralLight
           },
           rootPressed: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().palette.themeTertiary
           },
           root: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().semanticColors.bodyText
           }
         } as IButtonStyles
