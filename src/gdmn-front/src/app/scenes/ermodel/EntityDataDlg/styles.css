@@ -1,7 +1,6 @@
 .ScrollableDlg {
   width: 100%;
   overflow: auto;
-  /*height: 92%;*/
   margin: 1px;
   padding: 4px;
 }

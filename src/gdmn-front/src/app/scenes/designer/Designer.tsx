@@ -550,7 +550,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { viewTab, url, dispatch, erModel, rs, entity } = props;
+  const { url, erModel, rs, entity } = props;
   const [state, designerDispatch] = useReducer(reducer, loadState(url.split('/')[4], erModel ? erModel.entities[url.split('/')[4]] : undefined));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 

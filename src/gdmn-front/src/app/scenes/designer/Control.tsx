@@ -25,10 +25,6 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
       const fkFieldName = fd.eqfa!.linkAlias;
       const attr = props.entity!.attributes[fkFieldName] as EntityAttribute;
 
-      const refIdFieldAlias = fd.fieldName;
-      const refNameFieldDef = props.rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
-      const refNameFieldAlias = refNameFieldDef ? refNameFieldDef.fieldName : '';
-      const linkEntity = attr.entities[0];
       if (attr instanceof EntityAttribute) {
         return (
           <SetLookupComboBox
