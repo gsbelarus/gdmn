@@ -911,6 +911,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             {...props}
             url={url}
             entityName={entityName}
+            outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }}
           />
           :
           <>

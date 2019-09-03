@@ -10,3 +10,4 @@ export const DesignerContainer = connect(
     erModel: state.gdmnState.erModel
   })
 )(Designer);
+
