@@ -46,7 +46,7 @@
     "react-router-dom": "^5",
     "recompose": "^0",
     "redux": "^4",
-    "redux-persist": "^5.11.0-alpha",
+    "redux-persist": "^6",
     "redux-thunk": "^2",
     "rxjs": "^6",
     "typesafe-actions": "^4"
@@ -57,7 +57,7 @@
     "@types/jest": "^24",
     "@types/jwt-decode": "^2",
     "@types/mini-css-extract-plugin": "^0",
-    "@types/optimize-css-assets-webpack-plugin": "^1",
+    "@types/optimize-css-assets-webpack-plugin": "^5",
     "@types/react": "^16",
     "@types/react-color": "^3.0.1",
     "@types/react-content-loader": "^3",
