@@ -3,7 +3,7 @@ import { getType } from 'typesafe-actions';
 // @ts-ignore
 import persistLocalStorage from 'redux-persist/lib/storage';
 // @ts-ignore
-import { PersistPartial, persistReducer } from 'redux-persist';
+import { PersistPartial, persistReducer, PersistConfig } from 'redux-persist';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 
 import { recordSetReducer, RecordSetReducerState } from 'gdmn-recordset';
@@ -14,7 +14,7 @@ import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
 import { reducer as fsmReducer, IFSMReduxState } from '@src/app/fsm/reducer';
 import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
-import { gdmnActions } from '@src/app/scenes/gdmn/actions';
+import { gdmnActions, GdmnAction } from '@src/app/scenes/gdmn/actions';
 import { IRsMetaState, rsMetaReducer } from './rsmeta';
 import { themes } from '../scenes/themeeditor/themes';
 import { loadTheme } from 'office-ui-fabric-react';
@@ -31,18 +31,18 @@ export interface IState {
   readonly fsm: IFSMReduxState;
 }
 
-const authPersistConfig = {
+const authPersistConfig: PersistConfig<IAuthState> = {
   key: 'gdmn::root::authState',
   storage: persistLocalStorage,
   whitelist: ['application', 'authenticated', 'accessTokenPayload', 'refreshTokenPayload', 'accessToken', 'refreshToken']
 };
 
-const gdmnStatePersistConfig = {
+const gdmnStatePersistConfig: PersistConfig<TGdmnState> = {
   key: 'gdmn::root::gdmnState',
   storage: persistLocalStorage,
   whitelist: ['theme'],
-  migrate: (state: TGdmnState) => {
-    const namedTheme = themes.find( t => t.name === state.theme );
+  migrate: (state: any) => {
+    const namedTheme = state && themes.find( t => t.name === state.theme );
 
     if (namedTheme) {
       loadTheme(namedTheme.theme);

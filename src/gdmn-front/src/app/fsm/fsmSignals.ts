@@ -4,6 +4,11 @@ const start: IFSMSignal = {
   id: 'START'
 };
 
+const finish: IFSMSignal = {
+  id: 'FINISH'
+};
+
 export const fsmSignals = {
-  start
+  start,
+  finish
 };
