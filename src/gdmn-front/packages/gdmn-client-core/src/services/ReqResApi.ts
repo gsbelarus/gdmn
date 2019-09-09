@@ -10,27 +10,27 @@ import { FetchError } from '../errors/FetchError';
 import { HttpStatusError } from '../errors/HttpStatusError';
 import { Auth } from './Auth';
 
-const enum THttpMethod {
+export const enum THttpMethod {
   POST = 'POST',
   GET = 'GET',
   DELETE = 'DELETE'
   // UPDATE,
   // PUT
-}
+};
 
-const enum TAuthScheme {
+export const enum TAuthScheme {
   BEARER = 'bearer',
   BASIC = 'basic',
   DIGEST = 'digest'
-}
+};
 
-interface IApiEndpoints {
+export interface IApiEndpoints {
   signUp: string;
   signIn: string;
   refreshAccessToken: string;
-}
+};
 
-class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IApiEndpoints> {
+export class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IApiEndpoints> {
   public readonly apiEndpoints: TApiEndpoints;
   protected readonly authService: Auth;
   protected readonly authScheme: TAuthScheme;
@@ -188,6 +188,4 @@ class ReqResApi<TSignInRequestFormData extends object, TApiEndpoints extends IAp
 
     return httpErrorFactory(error.response.status, responseErrorBody);
   }
-}
-
-export { ReqResApi, IApiEndpoints, THttpMethod, TAuthScheme };
+};

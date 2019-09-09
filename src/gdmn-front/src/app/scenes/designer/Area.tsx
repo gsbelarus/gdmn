@@ -3,18 +3,22 @@ import { Object, IArea, Objects } from "./types";
 import { object2style } from "./utils";
 import React from "react";
 import { Control } from "./Control";
+import { RecordSet } from 'gdmn-recordset';
+import { Entity } from 'gdmn-orm';
 
 interface IAreaProps {
   gridMode?: boolean;
   previewMode?: boolean;
   selectedObject?: Object;
   area: IArea;
+  rs?: RecordSet;
+  entity?: Entity;
   objects: Objects;
   onSelectObject: (object: Object) => void;
 };
 
 export const Area = (props: IAreaProps) => {
-  const { gridMode, selectedObject, previewMode, area, objects, onSelectObject } = props;
+  const { gridMode, selectedObject, previewMode, area, objects, rs, entity, onSelectObject } = props;
 
   const areaStyle = gridMode
     ? {
@@ -84,6 +88,8 @@ export const Area = (props: IAreaProps) => {
                     key={object.name}
                     object={object}
                     objects={objects}
+                    rs={rs}
+                    entity={entity}
                     selected={object === selectedObject}
                     previewMode={previewMode}
                     onSelectObject={ () => onSelectObject(object) }

@@ -4,23 +4,23 @@ import { debugFnType } from '@stomp/stompjs';
 
 import { IPubSubMessage, IPubSubMessageMeta } from '../PubSubClient';
 
-const enum TPubSubConnectStatus {
+export const enum TPubSubConnectStatus {
   CONNECTED,
   CONNECTING, // todo: set on stomp.beforeconnect
   DISCONNECTING,
   DISCONNECTED
   // todo: RECONNECTING
-}
+};
 
-const enum TPubSubMsgPublishStatus {
+export const enum TPubSubMsgPublishStatus {
   PUBLISHING /* sent*/,
   PUBLISHED /* receipted*/
-}
+};
 
-interface IPubSubMsgPublishState {
+export interface IPubSubMsgPublishState {
   status: TPubSubMsgPublishStatus;
   meta?: IPubSubMessageMeta;
-}
+};
 
 abstract class BasePubSubBridge<
   TErrorMessage extends IPubSubMessage = IPubSubMessage,
@@ -60,6 +60,6 @@ abstract class BasePubSubBridge<
   public isConnected(): boolean {
     return this.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED;
   }
-}
+};
 
-export { BasePubSubBridge, TPubSubConnectStatus, IPubSubMsgPublishState, TPubSubMsgPublishStatus };
+export { BasePubSubBridge };

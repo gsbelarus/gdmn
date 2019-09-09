@@ -1,28 +1,28 @@
 import { bytesToMb } from '../utils/helpers';
 
-interface IWebStorage {
+export interface IWebStorage {
   get(key: string): Promise<any>;
   set(key: string, value: any): any;
   remove(key: string): any;
   clear(): void;
-}
+};
 
-interface IWebStorageOptions {
+export interface IWebStorageOptions {
   namespace: string;
   caseSensitive?: boolean;
-}
+};
 
-const enum WebStorageType {
+export const enum WebStorageType {
   local = 'localStorage',
   session = 'sessionStorage' // cookies, // cache
-}
+};
 
 // TODO test safari in private mode (Safari sets quota to 0 bytes)
 // TODO window['caches'];
 // TODO window[storageType][namespace] || "{}";
 // inject = ['$window', '$cookies', '$cacheFactory'];
 
-class WebStorage implements IWebStorage {
+export class WebStorage implements IWebStorage {
   public failSilently?: boolean;
 
   private storage: Storage;
@@ -154,6 +154,4 @@ class WebStorage implements IWebStorage {
   // public isDBSupported(): boolean {
   //   return !!window.indexedDB;
   // }
-}
-
-export { WebStorage, IWebStorage, WebStorageType, IWebStorageOptions };
+};

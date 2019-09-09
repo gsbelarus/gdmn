@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Label, IconButton, Image } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import {
@@ -21,12 +21,16 @@ import {
   SetAttribute,
   EntityAttribute,
   EntityLinkField,
-  IEntityQueryResponse
+  IEntityQueryResponse,
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
-import { Designer, IDesignerState, IField, IStyleFieldsAndAreas, TDirection } from '../../designer/Designer';
+import { DesignerContainer } from '../../designer/DesignerContainer';
+import { IDesignerState, LOCAL_STORAGE_KEY } from '../../designer/Designer';
+import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
+import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
+import { getLName } from 'gdmn-internals';
 
 interface ILastEdited {
   fieldName: string;
@@ -590,25 +594,57 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       }
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
+
+  const internalControl = (props: { object: Object, objects: Objects }): JSX.Element | undefined => {
+
+    switch (props.object.type) {
+      case 'LABEL':
+        return (
+          <Label
+            key={props.object.name}
+            styles={object2ILabelStyles(props.object, objects)}
+          >
+            {props.object.text}
+          </Label>
+        );
   
-  const localState = localStorage.getItem(`des-${entityName}`) === null ? undefined : JSON.parse(localStorage.getItem(`des-${entityName}`)!);
+      case 'FIELD':
+        const style = object2ITextFieldStyles(props.object, props.objects)
+        return (
+          <div>
+            {
+              field({styles: style, label: props.object.fieldName, fieldName: props.object.fieldName})
+            }
+          </div>
+        )
+  
+      case 'IMAGE':
+        return (
+          <div>
+            <img
+              src={props.object.url}
+              alt={props.object.alt}
+              style={object2style(props.object, objects)}
+            />
+          </div>
+        )
+  
+      default:
+        return undefined;
+    }
+  };
+  
+  const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
+    const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
+    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
 
-  const getGridStyle = (): React.CSSProperties => ({
-    display: 'grid',
-    width: '100%',
-    gridTemplateColumns: (localState as IDesignerState).grid.columns.map( c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}` ).join(' '),
-    gridTemplateRows: (localState as IDesignerState).grid.rows.map( r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}` ).join(' '),
-    overflow: 'auto',
-  });
-
-  const field = (props: { fd: IFieldDef, field?: IField, areaStyle?: IStyleFieldsAndAreas, areaDirection?: TDirection }): JSX.Element | undefined => {
-      if (!props.fd.eqfa) {
+      if (!fd || !fd.eqfa) {
         return undefined;
       }
-      if (props.fd.eqfa.linkAlias !== rs.eq!.link.alias && props.fd.eqfa.attribute === 'ID') {
-        const fkFieldName = props.fd.eqfa.linkAlias;
-        const refIdFieldAlias = props.fd.fieldName;
-        const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === props.fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
+      if (fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID') {
+        const fkFieldName = fd.eqfa.linkAlias;
+        const refIdFieldAlias = fd.fieldName;
+        const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
         const refNameFieldAlias = refNameFieldDef ? refNameFieldDef.fieldName : '';
         const attr = entity.attributes[fkFieldName] as EntityAttribute;
         const linkEntity = attr.entities[0];
@@ -617,7 +653,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             <SetLookupComboBox
               key={fkFieldName}
               name={fkFieldName}
-              label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
+              label={`${getLName(attr.lName, ['by', 'ru', 'en'])}`}
               preSelectedOption={ rs.isNull(refIdFieldAlias)
                 ? undefined
                 : [{
@@ -643,15 +679,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     changedFields.current[fkFieldName] = true;
                   }
                 }
-              }/*
-              onFocus={
-                () => {
-                  lastFocused.current = props.fd.fieldName;
-                  if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
-                    applyLastEdited();
-                  }
-                }
-              }*/
+              }
               onLookup={
                 (filter: string, limit: number) => {
                   const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
@@ -698,137 +726,87 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               }
               componentRef={
                 ref => {
-                  if (ref && lastFocused.current === props.fd.fieldName) {
+                  if (ref && lastFocused.current === fd.fieldName) {
                     needFocus.current = ref;
                   }
                 }
               }
-              styles={props.areaStyle === undefined ? undefined : {
-                  root: {
-                    background: props.areaStyle!.background
-                  },
-                  input: {
-                    background: props.areaStyle!.background
-                  }
-                }}
-              /*caretDownButtonStyles={props.areaStyle === undefined ? undefined : {
-                rootHovered: {
-                  color: `#474747`,
-                  backgroundColor: props.areaStyle.font.color,
-                  borderColor: `${props.areaStyle.font.color}99`
-                },
-                rootChecked: {
-                  color: props.areaStyle!.font.color,
-                  backgroundColor: `#474747`,
-                  borderColor: `${props.areaStyle.font.color}99`
-                }
-              }}*/
             />
           );
         }
       }
 
-      if (props.fd.eqfa.linkAlias !== rs.eq!.link.alias) {
+      if (fd.eqfa.linkAlias !== rs.eq!.link.alias) {
         return undefined;
       }
 
-      if (props.fd.dataType === TFieldType.Date) {
+      if (fd.dataType === TFieldType.Date) {
         return (
           <DatepickerJSX
-            key={`${props.fd.fieldName}`}
-            fieldName={`${props.fd.fieldName}`}
-            label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            value={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? String(lastEdited.current.value) : rs.getString(props.fd.fieldName)}
+            key={`${fd.fieldName}`}
+            label={props.label}
+            fieldName={`${fd.fieldName}`}
+            value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? String(lastEdited.current.value) : rs.getString(fd.fieldName)}
             onChange={
               (newValue?: string) => {
                 if (newValue !== undefined) {
                   lastEdited.current = {
-                    fieldName: props.fd.fieldName,
+                    fieldName: fd.fieldName,
                     value: newValue
                   };
-                  changedFields.current[props.fd.fieldName] = true;
+                  changedFields.current[fd.fieldName] = true;
                   setChanged(true);
                 }
               }
             }
             onFocus={
               () => {
-                lastFocused.current = props.fd.fieldName;
-                if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
+                lastFocused.current = fd.fieldName;
+                if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
                   applyLastEdited();
                 }
               }
             }
             componentRef={
               ref => {
-                if (ref && lastFocused.current === props.fd.fieldName) {
+                if (ref && lastFocused.current === fd.fieldName) {
                   needFocus.current = ref;
                 }
               }
             }
-            styles={props.areaStyle === undefined ? undefined : {
-              root: {
-                background: props.areaStyle!.background
-              },
-              fieldGroup: {
-                background: props.areaStyle!.background
-              }
-            }}
-            styleIcon={props.areaStyle === undefined ? undefined : {
-              root: {
-                border: '1px solid',
-                borderColor: getTheme().semanticColors.inputBorder,
-                borderLeft: 'none'
-              },
-              rootHovered: {
-                border: '1px solid',
-                borderColor: getTheme().semanticColors.inputBorder,
-                borderLeft: 'none'
-              },
-              rootChecked: {
-                border: '1px solid',
-                borderColor: getTheme().semanticColors.inputBorder,
-                borderLeft: 'none'
-              },
-              rootCheckedHovered: {
-                border: '1px solid',
-                borderColor: getTheme().semanticColors.inputBorder,
-                borderLeft: 'none'
-              }
-            }}
         />);
-      } else if (props.fd.dataType === TFieldType.Boolean) {
+      } else if (fd.dataType === TFieldType.Boolean) {
         const subComponentStyle = {
           root: {marginTop: '10px'},
           borderWidth: '1px'
         };
         return (
           <Checkbox
-            key={props.fd.fieldName}
+            key={fd.fieldName}
             disabled={locked}
-            label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            defaultChecked={lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName ? !!lastEdited.current.value : rs.getBoolean(props.fd.fieldName)}
+            label={props.label}
+            defaultChecked={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? !!lastEdited.current.value : rs.getBoolean(fd.fieldName)}
             onChange={  (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
               if (isChecked !== undefined) {
                 lastEdited.current = {
-                  fieldName: props.fd.fieldName,
+                  fieldName: fd.fieldName,
                   value: isChecked
                 };
-                changedFields.current[props.fd.fieldName] = true;
+                changedFields.current[fd.fieldName] = true;
                 setChanged(true);
               }
             }}
             onFocus={
               () => {
-                lastFocused.current = props.fd.fieldName;
-                if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
+                lastFocused.current = fd.fieldName;
+                if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
                   applyLastEdited();
                 }
               }
             }
             componentRef={
               ref => {
-                if (ref && lastFocused.current === props.fd.fieldName) {
+                if (ref && lastFocused.current === fd.fieldName) {
                   needFocus.current = ref;
                 }
               }
@@ -839,48 +817,37 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       } else {
         return (
           <TextField
-            key={props.fd.fieldName}
+            key={fd.fieldName}
             disabled={locked}
-            label={`${props.fd.caption}-${props.fd.fieldName}-${props.fd.eqfa.attribute}`}
-            styles={props.areaStyle === undefined ? undefined : {
-              root: {
-                background: props.areaStyle!.background
-              },
-              fieldGroup: {
-                background: props.areaStyle!.background
-              },
-              field: {
-                background: props.areaStyle!.background
-              }
-            }}
+            label={props.label}
             defaultValue={
-              lastEdited.current && lastEdited.current.fieldName === props.fd.fieldName && typeof lastEdited.current.value === 'string'
+              lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'string'
               ? lastEdited.current.value
-              : rs.getString(props.fd.fieldName)
+              : rs.getString(fd.fieldName)
             }
             onChange={
               (_e, newValue?: string) => {
                 if (newValue !== undefined) {
                   lastEdited.current = {
-                    fieldName: props.fd.fieldName,
+                    fieldName: fd.fieldName,
                     value: newValue
                   };
-                  changedFields.current[props.fd.fieldName] = true;
+                  changedFields.current[fd.fieldName] = true;
                   setChanged(true);
                 }
               }
             }
             onFocus={
               () => {
-                lastFocused.current = props.fd.fieldName;
-                if (lastEdited.current && lastEdited.current.fieldName !== props.fd.fieldName) {
+                lastFocused.current = fd.fieldName;
+                if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
                   applyLastEdited();
                 }
               }
             }
             componentRef={
               ref => {
-                if (ref && lastFocused.current === props.fd.fieldName) {
+                if (ref && lastFocused.current === fd.fieldName) {
                   needFocus.current = ref;
                 }
               }
@@ -890,186 +857,116 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       }
     }
 
+    const grid: IGrid = localState !== undefined
+      ? (localState as IDesignerState).grid
+      : {
+        columns: [{ unit: 'PX', value: 320 }],
+        rows: [{ unit: 'FR', value: 1 }],
+      };
+    const fields: Objects = localState === undefined
+      ? rs
+        ? rs.fieldDefs.map(fd => {
+          const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
+          return ({
+            type: 'FIELD',
+            parent: 'Area1',
+            fieldName: fd.caption,
+            label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
+            name: fd.caption
+          } as IField)
+        })
+        : []
+      : [];
+    const area1: IArea[] = localState === undefined ? [{
+      name: 'Area1',
+      type: 'AREA',
+      parent: 'Window',
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0
+    }]
+    : getAreas((localState as IDesignerState).objects);
+    const window: IWindow = localState !== undefined
+      ? (localState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
+      : {
+          name: 'Window',
+          type: 'WINDOW'
+        };
+    const objects: Objects = localState ? (localState as IDesignerState).objects : [window, ...area1, ...fields];
+
   return (
     <>
       {
         designer
-          ? <Designer
-            entityName={entityName}
-            fields={rs.fieldDefs}
-            outDesigner={() => { setDesigner(false); isDesigner.current = false; }}
-            viewTab={viewTab}
-            rs={rs}
-            entity={entity}
-          />
-          :
-          <>
-          <CommandBar items={commandBarItems} />
-          
-          {
-            error
-            &&
-            <MessageBar
-              messageBarType={MessageBarType.error}
-              isMultiline={false}
-              onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
-              dismissButtonAriaLabel="Close"
-            >
-              {error}
-            </MessageBar>
-          }
-          <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground }}>
+          ? <DesignerContainer {...props} url={url} entityName={entityName} outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }} />
+          : <>
+            <CommandBar items={commandBarItems} />
             {
-              localState !== undefined ?
-              <div
-                style={getGridStyle()}
-                tabIndex={0}
+              error
+              &&
+              <MessageBar
+                messageBarType={MessageBarType.error}
+                isMultiline={false}
+                onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
+                dismissButtonAriaLabel="Close"
               >
-                {
-              (localState as IDesignerState).areas.map( (area, idx) =>
-              {
-                const theme = getTheme();
-                const background = Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.background)]
-                const borderColor = Object.values(theme.palette)[Object.keys(theme.palette).findIndex(color => color === (localState as IDesignerState).areas[idx].style!.border.color)]
-                const areaStyle = (localState as IDesignerState).areas[idx].style;
-                return (
+                {error}
+              </MessageBar>
+            }
+            <div styleName="ScrollableDlg" style={{ backgroundColor: getTheme().semanticColors.bodyBackground, height: 'calc(100% - 44px)' }}>
+              <div
+                style = {{
+                  display: 'grid',
+                  width: '100%',
+                  height: '100%',
+                  gridTemplateColumns: '1fr 320px',
+                  gridTemplateRows: '1fr'
+                }}
+              >
                 <div
-                  key={`${area.rect.top}-${area.rect.left}-${area.rect.bottom}-${area.rect.right}`}
-                  className={
-                    "commonStyle"
-                  }
                   style={{
-                    gridArea: `${area.rect.top + 1} / ${area.rect.left + 1} / ${area.rect.bottom + 2} / ${area.rect.right + 2}`,
-                    display: 'flex',
-                    flexDirection: area.direction,
-                    justifyContent: 'flex-start',
-                    flexWrap: 'wrap',
-                    alignContent: 'flex-start',  
-                    background: background,
-                    margin: areaStyle && areaStyle.margin ? `${areaStyle.margin}px` : '1px',
-                    padding: areaStyle && areaStyle.padding ? `${areaStyle.padding}px` : '4px',
-                    border: areaStyle!.border.style === 'none'
-                      ? `1px solid ${areaStyle!.background}`
-                      : `${areaStyle!.border.width}px ${areaStyle!.border.style} ${borderColor}`,
-                    borderRadius: areaStyle && areaStyle.border.radius ? `${areaStyle.border.radius}px` : undefined
+                    gridArea: '1 1 2 2',
+                    width: '100%',
+                    overflow: 'auto'
                   }}
                 >
-                  {
-                    area.fields.map( f =>
-                      {
-                        let fd = rs.fieldDefs.find(fieldDef =>
-                          `${fieldDef.caption}-${fieldDef.fieldName}-${fieldDef.eqfa!.attribute}` === f.key
-                        )
-                        if (fd) {
-                          return <div style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{field({fd: fd, field: f, areaStyle: areaStyle!, areaDirection: area.direction})}</div>
-                        }
-                        const additionallyObject = (localState as IDesignerState).additionallyObject;
-                        return additionallyObject!.texts && additionallyObject!.texts.find(text => text === f.key)
-                          ? <Label key={f.key} style={{minWidth: '64px', width: area.direction === 'row' ? undefined : '100%'}}>{f.key}</Label>
-                          : additionallyObject!.images && additionallyObject!.images.find(image => image === f.key)
-                            ? <Image key={f.key} height={100} width={100} src={f.key} alt='Text' />
-                            : additionallyObject!.icons && additionallyObject!.icons.find(icon => icon === f.key)
-                              ? <IconButton key={f.key} iconProps={{ iconName: f.key }} />
-                              : undefined
-                      }
-                    )
-                  }
+                  <div
+                    style={{
+                      display: 'grid',
+                      width: '100%',
+                      paddingLeft: '4px',
+                      paddingRight: '4px',
+                      paddingBottom: '4px',
+                      gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
+                      gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
+                      userSelect: undefined,
+                      ...object2style(window, objects, true)
+                    }}
+                  >
+                    {
+                      getAreas(objects).map( area =>
+                        <div
+                          key={area.name}
+                          style={{
+                            gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`
+                          }}
+                        >
+                          <Stack horizontal={area.horizontal}>
+                            {
+                              objects
+                                .filter( object => object.parent === area.name )
+                                .map( object =>
+                                  internalControl({object: object, objects: objects})
+                                )
+                            }
+                          </Stack>
+                        </div>
+                      )
+                    }
+                  </div>
                 </div>
-                )})
-                }
               </div>
-            :
-              <div styleName="FieldsColumn" style={{top: '0px'}}>
-                {Object.entries(setComboBoxData).map( ([setAttrName, data], idx) => {
-                  const attr = entity.attributes[setAttrName] as EntityAttribute;
-                  const linkEntity = attr.entities[0];
-                  return (
-                    <SetLookupComboBox
-                      key={setAttrName}
-                      name={setAttrName}
-                      label={setAttrName}
-                      preSelectedOption={data ? data : undefined}
-                      getSessionData={
-                        () => {
-                          if (!controlsData.current) {
-                            controlsData.current = {};
-                          }
-                          return controlsData.current;
-                        }
-                      }
-                      onChanged={
-                        (option: IComboBoxOption[] | undefined) => {
-                          if (option) {
-                            setSetComboBoxData( {...setComboBoxData,
-                              [setAttrName]: option
-                            });
-                            setChanged(true);
-                            changedFields.current[setAttrName] = true;
-                          }
-                        }
-                      }
-                      onLookup={
-                        (filter: string, limit: number) => {
-                          const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                          const scalarAttrs = Object.values(linkEntity.attributes)
-                            .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
-                          const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                            || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                            || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                            || scalarAttrs.find((attr) => attr.type === "String");
-                          if (presentField) {
-                            linkFields.push(new EntityLinkField(presentField));
-                          }
-                          const linkEq = new EntityQuery(
-                            new EntityLink(linkEntity, 'z', linkFields),
-                            new EntityQueryOptions(
-                              limit + 1,
-                              undefined,
-                              filter ?
-                                [{
-                                  contains: [
-                                    {
-                                      alias: 'z',
-                                      attribute: presentField!,
-                                      value: filter!
-                                    }
-                                  ]
-                                }]
-                              : undefined
-                            )
-                          );
-                          return apiService.query({ query: linkEq.inspect() })
-                            .then( response => {
-                              const result = response.payload.result!;
-                              const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                              const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
-                                && (data.attribute === presentField!.name))![0];
-                              return result.data.map( (r): IComboBoxOption => ({
-                                key: r[idAlias],
-                                text: r[nameAlias]
-                              }));
-                            });
-                        }
-                      }
-                      componentRef={
-                        ref => {
-                          if (ref && lastFocused.current === linkEntity.name) {
-                            needFocus.current = ref;
-                          }
-                        }
-                      }
-                    />
-                  )
-
-                })}
-                {
-                  rs.fieldDefs.map( fd => {
-                    return field({fd})
-                  })
-                }
-              </div>
-              }
             </div>
           </>
       }
