@@ -28,7 +28,7 @@
     "office-ui-fabric-react": "^7",
     "react": "^16",
     "react-dom": "^16",
-    "react-draggable": "^3",
+    "react-draggable": "^4",
     "react-redux": "^7",
     "react-virtualized": "9.21.0",
     "redux": "^4",
