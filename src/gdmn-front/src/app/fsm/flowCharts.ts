@@ -7,7 +7,12 @@ const login: IFSMState = {
 };
 
 const showData: IFSMState = {
-  type: fsmStateTypes.showData
+  type: fsmStateTypes.showData,
+  inParams: [
+    {
+      queryPhrase: 'Покажи все TgdcCompany'
+    }
+  ]
 };
 
 const workDone: IFSMState = {
