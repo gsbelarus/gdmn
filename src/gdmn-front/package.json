@@ -85,7 +85,6 @@
     "optimize-css-assets-webpack-plugin": "^5",
     "prettier": "^1",
     "react-hot-loader": "^4",
-    "redux-logger": "^3",
     "shx": "^0",
     "style-loader": "^1",
     "terser-webpack-plugin": "^2",

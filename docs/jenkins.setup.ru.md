@@ -76,3 +76,11 @@
 
 После настройки и запуска сервера он будет запукать процесс сборки и тестирования после каждого коммита в нужные ветки.
 Так же можно запустить процесс сборки в ручную `Build now`.
+
+## Запуск, остановка и перезапуск Jenkins
+
+```
+C:\Program Files (x86)\Jenkins>jenkins.exe start
+C:\Program Files (x86)\Jenkins>jenkins.exe stop
+C:\Program Files (x86)\Jenkins>jenkins.exe restart
+```
