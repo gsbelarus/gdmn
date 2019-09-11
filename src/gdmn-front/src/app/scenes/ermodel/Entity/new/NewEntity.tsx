@@ -211,11 +211,10 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
           })
         }
 
-        const attr = erModel!.entity(name.value.toUpperCase()).attributes
+        const attr = erModel!.entity(name.value.toUpperCase()).attributes;
         const chfields = Object.entries(changedFields.current);
-        for await (const [key, value] of chfields) {
-          const result = Object.keys(attr);
-          const findAttr = result.find((r) => r === key);
+        for (const [key, value] of chfields) {
+          const findAttr =  Object.keys(attr).find((r) => r === key);
           if (findAttr && value === "delete") {
             erModel!.entity(name.value.toUpperCase()).remove(erModel!.entity(name.value.toUpperCase()).attribute(findAttr))
           } else {
