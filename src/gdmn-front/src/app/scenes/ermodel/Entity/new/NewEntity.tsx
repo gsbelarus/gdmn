@@ -217,26 +217,23 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
          *  */
 
         if (erModel) {
-          const entityName = name.value.toUpperCase();
+          const entityName = name.value;
           const entity = erModel.entity(entityName);
-          const attr = entity.attributes;
 
-          const chfields = Object.entries(changedFields.current);
-          for (const [key, value] of chfields) {
-            const findAttr = Object.keys(attr).find((r) => r === key);
+          Object.entries(changedFields.current).forEach(([key, value]) => {
+            const findAttr = entity.attributes[key];
 
             if (findAttr) {
               if (value === "delete") {
-                entity.remove(entity.attribute(findAttr))
+                entity.remove(entity.attribute(findAttr.name))
               }
-            }
-            if (!findAttr && value === "add") {
+            } else if (value === "add") {
               const addAttr = refAttribute.current.find((at) => at.id === key);
               if (addAttr) {
                 entity.add(EntityUtils.createAttribute(addAttr, entity, erModel))
               }
             }
-          }
+          });
         }
       });
     }
