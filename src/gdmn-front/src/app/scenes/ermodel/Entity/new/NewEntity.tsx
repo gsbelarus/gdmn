@@ -210,19 +210,31 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             attributes: refAttribute.current
           })
         }
+        /**
+         *  в данной части мы сравниваем список изменных полей (changedFields) и аттрибуты Entity
+         *  далее если мы нашли соответствии атррибута и статус его delete  то удаляем его из Entity
+         *  если же мы не нашли соотвествия т.к он новый и он имеет соотвествующий статус add то добавляем его
+         *  */
 
-        const attr = erModel!.entity(name.value.toUpperCase()).attributes;
-        const chfields = Object.entries(changedFields.current);
-        for (const [key, value] of chfields) {
-          const findAttr =  Object.keys(attr).find((r) => r === key);
-          if (findAttr && value === "delete") {
-            erModel!.entity(name.value.toUpperCase()).remove(erModel!.entity(name.value.toUpperCase()).attribute(findAttr))
-          } else {
-            const editAttr = refAttribute.current.find((at) => at.id === key);
+        if (erModel) {
+          const entityName = name.value.toUpperCase();
+          const entity = erModel.entity(entityName);
+          const attr = entity.attributes;
 
-            if (editAttr) {
-              const newAttr = EntityUtils.createAttribute(editAttr, erModel!.entity(name.value.toUpperCase()), erModel!);
-              erModel!.entity(name.value.toUpperCase()).add(newAttr)
+          const chfields = Object.entries(changedFields.current);
+          for (const [key, value] of chfields) {
+            const findAttr = Object.keys(attr).find((r) => r === key);
+
+            if (findAttr) {
+              if (value === "delete") {
+                entity.remove(entity.attribute(findAttr))
+              }
+            }
+            if (!findAttr && value === "add") {
+              const addAttr = refAttribute.current.find((at) => at.id === key);
+              if (addAttr) {
+                entity.add(EntityUtils.createAttribute(addAttr, entity, erModel))
+              }
             }
           }
         }
