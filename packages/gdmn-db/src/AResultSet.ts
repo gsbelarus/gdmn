@@ -1,7 +1,7 @@
 import {Semaphore} from "gdmn-internals";
 import {ABlobLink} from "./ABlobLink";
+import {AMetadata} from "./AMetadata";
 import {AResult} from "./AResult";
-import {AResultMetadata} from "./AResultMetadata";
 import {AStatement} from "./AStatement";
 import {TExecutor} from "./types";
 
@@ -33,7 +33,7 @@ export abstract class AResultSet extends AResult {
         return this._statement;
     }
 
-    get metadata(): AResultMetadata {
+    get metadata(): AMetadata {
         return this._result.metadata;
     }
 
