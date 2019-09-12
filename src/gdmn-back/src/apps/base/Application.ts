@@ -45,6 +45,7 @@ export type AppAction =
   | "SQL_QUERY"
   | "PREPARE_QUERY"
   | "PREPARE_SQL_QUERY"
+  | "GET_SQL_PLAN"
   | "FETCH_QUERY"
   | "FETCH_SQL_QUERY"
   | "INSERT"
@@ -71,6 +72,7 @@ export type QuerySetCmd = AppCmd<"QUERY_SET", { querySet: IEntityQuerySetInspect
 export type SqlQueryCmd = AppCmd<"SQL_QUERY", { select: string, params: IParams }>;
 export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
 export type PrepareSqlQueryCmd = AppCmd<"PREPARE_SQL_QUERY", { select: string, params: IParams }>;
+export type GetSqlPlanCmd = AppCmd<"GET_SQL_PLAN", { select: string }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 export type FetchSqlQueryCmd = AppCmd<"FETCH_SQL_QUERY", { taskKey: string, rowsCount: number }>;
 export type InsertCmd = AppCmd<"INSERT", { insert: IEntityInsertInspector }>;
@@ -678,6 +680,56 @@ export class Application extends ADatabase {
                 await cursor.close();
               }
             }
+          });
+        } catch (error) {
+          cursorEmitter.emit("error", error);
+        } finally {
+          context.session.cursorsPromises.delete(task.id);
+        }
+        await context.checkStatus();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushGetSqlPlanCmd(session: Session, command: GetSqlPlanCmd): Task<GetSqlPlanCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      unlimited: true,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        const {select} = context.command.payload;
+
+        const cursorEmitter = new EventEmitter();
+        const cursorPromise = new Promise<SqlQueryCursor>((resolve, reject) => {
+          cursorEmitter.once("cursor", resolve);
+          cursorEmitter.once("error", reject);
+        });
+        context.session.cursorsPromises.set(task.id, cursorPromise);
+        try {
+          await this.waitUnlock();
+          this.checkSession(context.session);
+
+          await context.session.executeConnection(async (connection) => {
+           /*  const cursor = await ERBridge.openSqlQueryCursor(connection, connection.readTransaction, this.erModel,
+              select, params);
+            try {
+              cursorEmitter.emit("cursor", cursor);
+              await new Promise((resolve, reject) => {
+                // wait for closing cursor
+                cursor.waitForClosing().then(() => resolve()).catch(reject);
+                // or wait for interrupt task
+                task.emitter.on("change", (t) => t.status === TaskStatus.INTERRUPTED ? resolve() : undefined);
+              });
+            } finally {
+              if (!cursor.closed) {
+                await cursor.close();
+              }
+            } */
           });
         } catch (error) {
           cursorEmitter.emit("error", error);

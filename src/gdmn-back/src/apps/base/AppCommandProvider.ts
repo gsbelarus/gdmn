@@ -22,7 +22,8 @@ import {
   QuerySetCmd,
   AddEntityCmd,
   DeleteEntityCmd,
-  EditEntityCmd
+  EditEntityCmd,
+  GetSqlPlanCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -107,6 +108,10 @@ export class AppCommandProvider {
       && typeof command.payload.select === "string"
       && "params" in command.payload
       && typeof command.payload.params === "object";
+  }
+
+  private static _verifyGetSqlPlanCmd(command: ICmd<AppAction, any>): command is GetSqlPlanCmd {
+    return typeof command.payload === "string";
   }
 
   private static _verifyFetchQueryCmd(command: ICmd<AppAction, any>): command is FetchQueryCmd {
@@ -261,6 +266,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushPrepareSqlQueryCmd(session, command);
+      }
+      case "GET_SQL_PLAN": {
+        if (!AppCommandProvider._verifyGetSqlPlanCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushGetSqlPlanCmd(session, command);
       }
       case "FETCH_QUERY": {
         if (!AppCommandProvider._verifyFetchQueryCmd(command)) {
