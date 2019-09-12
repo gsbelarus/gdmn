@@ -1,4 +1,5 @@
 import {Semaphore} from "gdmn-internals";
+import { AMetadata } from "./AMetadata";
 import {AResult} from "./AResult";
 import {AResultSet, CursorType} from "./AResultSet";
 import {ATransaction} from "./ATransaction";
@@ -33,6 +34,8 @@ export abstract class AStatement {
         this._transaction = transaction;
         this._sql = sql;
     }
+
+    abstract get metadata(): AMetadata;
 
     get transaction(): ATransaction {
         return this._transaction;
@@ -145,6 +148,8 @@ export abstract class AStatement {
             this._lock.release();
         }
     }
+
+    public abstract async getPlan(): Promise<string | undefined>;
 
     protected async _executeWithLock<R>(callback: TExecutor<void, R>): Promise<R> {
         await this._lock.acquire();

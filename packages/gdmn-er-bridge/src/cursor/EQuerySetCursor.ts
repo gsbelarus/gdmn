@@ -1,4 +1,4 @@
-import {AConnection, AResultMetadata, AResultSet, ATransaction} from "gdmn-db";
+import {AConnection, AMetadata, AResultSet, ATransaction} from "gdmn-db";
 import {
   EntityQuerySet,
   IEntityQuerySetResponse,
@@ -51,7 +51,7 @@ export class EQuerySetCursor extends ACursor {
     };
   }
 
-  protected _getFieldAlias(metadata: AResultMetadata, index: number): string {
+  protected _getFieldAlias(metadata: AMetadata, index: number): string {
     return metadata.getColumnLabel(index)!;
   }
 }
