@@ -206,6 +206,27 @@ export const Sql = CSSModules(
       dispatch(async (dispatch, getState) => {
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
+        const result = apiService
+          .sqlPrepare({
+            sql: state.expression
+          })
+          .subscribe(async value => {
+            switch (value.payload.status) {
+              case TTaskStatus.RUNNING: {
+                const taskKey = value.meta!.taskKey!;
+
+                if (!getState().rsMeta[id]) {
+                  console.warn('ViewTab was closing, interrupt task');
+                  apiService.interruptTask({ taskKey }).catch(console.error);
+                  return;
+                }
+                dispatch(rsMetaActions.setRsMeta(id, { taskKey }));
+              }
+            }
+          });
+
+          console.log(result);
+
         const params = state.params.map(i => ({ [i.name]: i.value }));
 
         apiService

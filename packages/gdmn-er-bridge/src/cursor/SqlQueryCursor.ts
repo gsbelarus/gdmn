@@ -26,11 +26,6 @@ export interface ISqlQueryResponse {
   aliases: ISqlQueryResponseAliases;
 }
 
-export interface ISqlPrepareResponse {
-  plan?: string;
-  paramNames: IParams[];
-}
-
 export class SqlQueryCursor extends ACursor {
 
   public erModel: ERModel;

@@ -201,9 +201,7 @@ export const gdmnActions = {
     return (uid: string, application: IApplicationInfo & {loading?: boolean}) => resolve({uid, application});
   }),
 
-  deleteApp: createAction('gdmn/DELETE_APP', resolve => {
-    return (uid: string) => resolve(uid);
-  }),
+  deleteApp: createAction('gdmn/DELETE_APP', resolve => (uid: string) => resolve(uid)),
 
   setApps: createAction('gdmn/SET_APPS', resolve => {
     return (apps: Array<IApplicationInfo & {loading?: boolean}>) => resolve(apps);
