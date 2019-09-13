@@ -142,6 +142,14 @@ export class ERBridge {
     return await SqlQueryCursor.open(connection, transaction, erModel, select, params);
   }
 
+  public static async SqlPrepare(connection: AConnection,
+    transaction: ATransaction,
+    erModel: ERModel,
+    select: string,
+    params: IParams): Promise<SqlQueryCursor> {
+    return await SqlQueryCursor.open(connection, transaction, erModel, select, params);
+  }
+
   public static async sqlQuery(connection: AConnection,
                                transaction: ATransaction,
                                erModel: ERModel,

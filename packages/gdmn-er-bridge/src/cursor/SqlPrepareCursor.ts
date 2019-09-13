@@ -2,36 +2,12 @@ import {AConnection, AMetadata, AResultSet, ATransaction, IParams, Types} from "
 import {Attribute, AttributeTypes, Entity, EntityAttribute, ERModel, ScalarAttribute} from "gdmn-orm";
 import {ACursor, IFetchResponseDataItem} from "./ACursor";
 
-export interface ISqlQueryResponseAliasesRdb {
-  type: Types;
-  label?: string;
-  field?: string;
-  relation?: string;
-}
-
-export interface ISqlQueryResponseAliasesOrm {
-  type: AttributeTypes;
-  entity?: string;
-}
-
-export interface ISqlQueryResponseAliases {
-  [alias: string]: {
-    rdb: ISqlQueryResponseAliasesRdb,
-    orm?: ISqlQueryResponseAliasesOrm;
-  }
-}
-
-export interface ISqlQueryResponse {
-  data: IFetchResponseDataItem[];
-  aliases: ISqlQueryResponseAliases;
-}
-
 export interface ISqlPrepareResponse {
   plan?: string;
   paramNames: IParams[];
 }
 
-export class SqlQueryCursor extends ACursor {
+export class SqlPrepareCursor extends ACursor {
 
   public erModel: ERModel;
 
@@ -44,9 +20,9 @@ export class SqlQueryCursor extends ACursor {
                            transaction: ATransaction,
                            erModel: ERModel,
                            sql: string,
-                           params: IParams): Promise<SqlQueryCursor> {
-    const resultSet = await connection.executeQuery(transaction, sql, params);
-    return new SqlQueryCursor(resultSet, erModel);
+                           params: IParams): Promise<SqlPrepareCursor> {
+    const resultSet = await connection.prepare(transaction, sql);
+    return new SqlPrepareCursor(resultSet, erModel);
   }
 
   private static _getAlias(index: number): string {

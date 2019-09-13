@@ -45,7 +45,7 @@ export type AppAction =
   | "SQL_QUERY"
   | "PREPARE_QUERY"
   | "PREPARE_SQL_QUERY"
-  | "GET_SQL_PLAN"
+  | "SQL_PREPARE"
   | "FETCH_QUERY"
   | "FETCH_SQL_QUERY"
   | "INSERT"
@@ -72,7 +72,7 @@ export type QuerySetCmd = AppCmd<"QUERY_SET", { querySet: IEntityQuerySetInspect
 export type SqlQueryCmd = AppCmd<"SQL_QUERY", { select: string, params: IParams }>;
 export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
 export type PrepareSqlQueryCmd = AppCmd<"PREPARE_SQL_QUERY", { select: string, params: IParams }>;
-export type GetSqlPlanCmd = AppCmd<"GET_SQL_PLAN", { select: string }>;
+export type SqlPrepareCmd = AppCmd<"SQL_PREPARE", { select: string }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 export type FetchSqlQueryCmd = AppCmd<"FETCH_SQL_QUERY", { taskKey: string, rowsCount: number }>;
 export type InsertCmd = AppCmd<"INSERT", { insert: IEntityInsertInspector }>;
@@ -694,7 +694,7 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushGetSqlPlanCmd(session: Session, command: GetSqlPlanCmd): Task<GetSqlPlanCmd, void> {
+  public pushSqlPrepareCmd(session: Session, command: SqlPrepareCmd): Task<SqlPrepareCmd, void> {
     const task = new Task({
       session,
       command,
