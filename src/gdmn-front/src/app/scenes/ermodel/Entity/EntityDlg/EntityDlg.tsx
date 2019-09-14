@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
 import { IEntity } from "gdmn-orm";
+import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
+import { getLName } from "gdmn-internals";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -49,6 +51,15 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }, [viewTab, entityName, createEntity]);
 
   useEffect( () => {
+    return () => {
+      dispatch(gdmnActions.saveSessionData({
+        viewTabURL: url,
+        sessionData: entityData
+      }));
+    };
+  }, [entityData, url]);
+
+  useEffect( () => {
     if (!entityData && erModel) {
       if (viewTab && viewTab.sessionData) {
         setEntityData(viewTab.sessionData as IEntity);
@@ -58,7 +69,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         } else {
           setEntityData({
             name: '',
-            lName: { en: { name: '' }},
+            lName: { ru: { name: '' }},
             isAbstract: false,
             semCategories: '',
             unique: [[]],
@@ -69,9 +80,65 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     }
   }, [entityData, viewTab, erModel, entity]);
 
-  if (!entityData) {
+  if (!entityData || !erModel) {
     return <div>Loading...</div>;
   }
 
-  return <div>{entityData.name}</div>;
+  const changed = true;
+  const commandBarItems: ICommandBarItemProps[] = [
+    {
+      key: 'saveAndClose',
+      disabled: !changed,
+      text: 'Сохранить',
+      iconProps: {
+        iconName: 'Save'
+      }
+    },
+    {
+      key: 'cancelAndClose',
+      text: changed ? 'Отменить' : 'Закрыть',
+      iconProps: {
+        iconName: 'Cancel'
+      }
+    },
+    {
+      key: 'apply',
+      disabled: !changed,
+      text: 'Применить',
+      iconProps: {
+        iconName: 'CheckMark'
+      },
+    }
+  ];
+
+  return (
+    <Stack>
+      <CommandBar items={commandBarItems} />
+      <Stack>
+        <TextField
+          label="Name:"
+          value={entityData.name}
+          disabled={!createEntity}
+          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, name: newValue }) }
+        />
+        <Dropdown
+          label="Parent:"
+          options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
+          selectedKey={entityData.parent}
+          disabled={!createEntity}
+          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, parent: newValue.key as string }) }
+        />
+        <TextField
+          label="Description:"
+          value={getLName(entityData.lName, ['ru'])}
+          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, lName: { ru: { name: newValue } } }) }
+        />
+        <TextField
+          label="Semantic categories:"
+          value={entityData.semCategories}
+          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, semCategories: newValue }) }
+        />
+      </Stack>
+    </Stack>
+  );
 };
