@@ -2464,12 +2464,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*":
-  version "12.7.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.4.tgz#64db61e0359eb5a8d99b55e05c729f130a678b04"
-  integrity sha512-W0+n1Y+gK/8G2P/piTkBBN38Qc5Q1ZSO6B5H3QmPCUewaiXOo2GCAWZ4ElZCcNhjJuBSUSLGFUJnmlCn5+nxOQ==
-
-"@types/node@^12":
+"@types/node@*", "@types/node@^12":
   version "12.7.5"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.5.tgz#e19436e7f8e9b4601005d73673b6dc4784ffcc2f"
   integrity sha512-9fq4jZVhPNW8r+UYKnxF1e2HkDWOWKM5bC2/7c9wPV835I0aOrVbS/Hw/pWPk2uKrNXQqg9Z959Kz+IYDd5p3w==
@@ -2590,6 +2585,11 @@
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
 
+"@types/source-list-map@*":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@types/source-list-map/-/source-list-map-0.1.2.tgz#0078836063ffaf17412349bba364087e0ac02ec9"
+  integrity sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==
+
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-1.0.1.tgz#0a851d3bd96498fa25c33ab7278ed3bd65f06c3e"
@@ -2673,6 +2673,15 @@
   dependencies:
     "@types/webpack" "*"
 
+"@types/webpack-sources@*":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@types/webpack-sources/-/webpack-sources-0.1.5.tgz#be47c10f783d3d6efe1471ff7f042611bd464a92"
+  integrity sha512-zfvjpp7jiafSmrzJ2/i3LqOyTYTuJ7u1KOXlKgDlvsj9Rr0x7ZiYu5lZbXwobL7lmsRNtPXlBfmaUD8eU2Hu8w==
+  dependencies:
+    "@types/node" "*"
+    "@types/source-list-map" "*"
+    source-map "^0.6.1"
+
 "@types/webpack@*":
   version "4.32.1"
   resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.32.1.tgz#6e95010e806f808abd6551c112097ac09035aacf"
@@ -2696,14 +2705,15 @@
     source-map "^0.6.0"
 
 "@types/webpack@^4.4.32":
-  version "4.32.2"
-  resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.32.2.tgz#e0f1ce77b2f13fe5d9cfd3fcf4b99aee3f92ac51"
-  integrity sha512-KZyRrE2XxE/buUNKFhSxqCqLQ+QMCe/AX/edeQtnFuSCucxPkb8cVgmPecGdOIgoL1Z7KgCgrwVg0BMJbZr5aw==
+  version "4.39.1"
+  resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.39.1.tgz#d76cd551cc851198f67f75ff3e26551d204530e9"
+  integrity sha512-rgO9ihNu/l72Sjx3shqwc9r6gi+tOMsqxhMEZhOEVIZt82GFOeUyEdpTk1BO2HqEHLS/XJW8ldUTIIfIMMyYFQ==
   dependencies:
     "@types/anymatch" "*"
     "@types/node" "*"
     "@types/tapable" "*"
     "@types/uglify-js" "*"
+    "@types/webpack-sources" "*"
     source-map "^0.6.0"
 
 "@types/ws@^6":
