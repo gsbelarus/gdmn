@@ -35,7 +35,8 @@ export interface ISQLParam {
 
 interface ISQLViewState {
   expression: string;
-  params: ISQLParam[];
+  paramList: ISQLParam[];
+  params: {[name: string]: any} | null;
   plan: string;
   viewMode: 'hor' | 'ver';
   showParams: boolean;
@@ -59,11 +60,11 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
     case 'INIT':
       return action.state;
     case 'SET_EXPRESSION':
-      return { ...state, expression: action.expression, params: [] };
+      return { ...state, expression: action.expression, paramList: [], params: null };
     case 'SET_PLAN':
       return { ...state, plan: action.plan};
     case 'CLEAR_EXPRESSION':
-      return { ...state, expression: '', params: [] };
+      return { ...state, expression: '', paramList: [], params: null };
     case 'SHOW_PARAMS':
       return { ...state, showParams: action.showParams };
     case 'SET_PARAMS':
@@ -82,7 +83,8 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
 const initialState: ISQLViewState = {
   expression: 'select * from gd_good where id = :id and  name = :name',
   plan: '',
-  params: [],
+  params: null,
+  paramList: [],
   viewMode: 'hor',
   showPlan: false,
   showParams: false,
@@ -182,6 +184,10 @@ export const Sql = CSSModules(
       }
     }, [rs]);
 
+    useEffect(()=>{
+      if (state.params) handleExecuteQuery();
+    }, [state.params])
+
     const handleClosePlan = () => setState({ type: 'SHOW_PLAN', showPlan: false });
 
     const handleCloseParams = () => setState({ type: 'SHOW_PARAMS', showParams: false });
@@ -220,7 +226,6 @@ export const Sql = CSSModules(
 
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
-        if (state.params.length === 0) {
         apiService
           .sqlPrepare({
             sql: state.expression
@@ -248,18 +253,29 @@ export const Sql = CSSModules(
                 const params = (value.payload.result!.placeholderList || [])
                   .map(i => sqlParams2params({name: i.name, type: i.type}))
 
-                setState({ type: 'SET_PARAMS', params});
-                setState({ type: 'SET_PLAN', plan: value.payload.result!.plan || '' });
-
                 if (getState().rsMeta[id]) {
                   dispatch(rsMetaActions.setRsMeta(id, {}));
                 }
+                setState({ type: 'SET_PLAN', plan: value.payload.result!.plan || '' });
+                setState({ type: 'SET_PARAMS', params});
+                if (params.length === 0) {
+                  handleExecuteQuery();
+                } else {
+                  setState({ type: 'SHOW_PARAMS', showParams: true});
+                }
+
                 break;
               }
             }
           });
           return;
-        };
+      })
+    }, [state]);
+
+    const handleExecuteQuery = useCallback(() => {
+      dispatch(async (dispatch, getState) => {
+
+        dispatch(rsMetaActions.setRsMeta(id, {}));
 
         const params = state.params.reduce((map, obj) => { map[obj.name] = obj.value; return map }, {} as {[x:string]: any});
 
@@ -412,7 +428,7 @@ export const Sql = CSSModules(
           },
           onClick: handleExecuteSql
         },
-        {
+      /*   {
           key: 'params',
           text: 'Параметры',
           disabled: !state.params.length,
@@ -420,7 +436,7 @@ export const Sql = CSSModules(
             iconName: 'ThumbnailView'
           },
           onClick: () => setState({ type: 'SHOW_PARAMS', showParams: true })
-        },
+        }, */
         {
           key: 'plan',
           text: 'План запроса',

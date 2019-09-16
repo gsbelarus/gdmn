@@ -39,8 +39,12 @@ export const ParamsDialog = (props: ISQLFormProps) => {
 
   const [ paramList, setParamList ]  = useState<ISQLParam[]>([]);
 
-  const handleChangeValue = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newVal: any) => {
-    const [name, value] = [(event.target as HTMLInputElement).name, newVal];
+  const handleChangeValue = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const inputEl = (event.target as HTMLInputElement);
+    const name = inputEl.name;
+
+    const value = (inputEl.validity.valid) ? inputEl.value : paramList.find(i => i.name === name)!.value || '';
+
     setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i))
   };
 
@@ -64,11 +68,11 @@ export const ParamsDialog = (props: ISQLFormProps) => {
         isBlocking: false
       }}
     >
-      <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 600 } }}>
+      <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: "65vh" } }}>
         {paramList.map(i => {
           switch (i.type) {
             case TFieldType.Integer:
-              return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
+              return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>;
             default:
               return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
           }
