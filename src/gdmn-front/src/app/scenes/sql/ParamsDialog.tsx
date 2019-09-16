@@ -1,18 +1,17 @@
-import React, { PureComponent } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   mergeStyleSets,
   DialogType,
-  Pivot,
-  PivotItem,
   DialogFooter,
   PrimaryButton,
   getTheme,
-  TextField
+  TextField,
+  Stack,
+  DefaultButton
 } from 'office-ui-fabric-react';
-
-import { ISQLParam } from './Sql';
 import { TFieldType } from 'gdmn-recordset';
+import { ISQLParam } from './Sql';
 
 const theme = getTheme();
 const classNames = mergeStyleSets({
@@ -32,14 +31,25 @@ const classNames = mergeStyleSets({
 export interface ISQLFormProps {
   params: ISQLParam[];
   onClose: () => void;
+  onSave: (params: ISQLParam[]) => void;
 }
 
 export const ParamsDialog = (props: ISQLFormProps) => {
-  const { params, onClose } = props;
+  const { params, onClose, onSave } = props;
+
+  const [ paramList, setParamList ]  = useState<ISQLParam[]>([]);
+
+  const handleChangeValue = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newVal: any) => {
+    const [name, value] = [(event.target as HTMLInputElement).name, newVal];
+    setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i))
+  };
+
+  useEffect(() => {
+    setParamList(params);
+  }, [params])
 
   return (
     <Dialog
-      className={classNames.wrapper}
       minWidth="70vh"
       hidden={false}
       onDismiss={onClose}
@@ -48,24 +58,25 @@ export const ParamsDialog = (props: ISQLFormProps) => {
         title: 'SQL params'
       }}
       modalProps={{
+        className: classNames.wrapper,
         titleAriaId: 'showSQLTitleID',
         subtitleAriaId: 'showSQLSubTitleID',
         isBlocking: false
       }}
     >
-      <div>
-        {params.map(i => {
+      <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: 600 } }}>
+        {paramList.map(i => {
           switch (i.type) {
             case TFieldType.Integer:
-                return( <TextField label={i.name} key={i.name} value={i.value} />)
-
+              return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
             default:
-                return(<TextField label={i.name} key={i.name} value={i.value} />);
+              return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
           }
         })}
-      </div>
+      </Stack>
       <DialogFooter>
-        <PrimaryButton onClick={onClose} text="Close" />
+        <PrimaryButton onClick={() => onSave(paramList)} text="OK" />
+        <DefaultButton onClick={onClose} text="Close" />
       </DialogFooter>
     </Dialog>
   );

@@ -21,20 +21,22 @@ import { rsMetaActions } from '@src/app/store/rsmeta';
 import { gdmnActions } from '../gdmn/actions';
 import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
-import { sql2fd } from './utils';
+import { sql2fd, sqlParams2params } from './utils';
 import { ParamsDialog } from './ParamsDialog';
 import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
 import { IEntityInsertFieldInspector } from 'gdmn-orm';
+import { PlanDialog } from './PlanDialog';
 
 export interface ISQLParam {
   name: string;
   type: TFieldType;
-  value: any;
+  value?: any;
 }
 
 interface ISQLViewState {
   expression: string;
   params: ISQLParam[];
+  plan: string;
   viewMode: 'hor' | 'ver';
   showParams: boolean;
   showPlan: boolean;
@@ -44,6 +46,7 @@ interface ISQLViewState {
 type Action =
   | { type: 'INIT'; state: ISQLViewState }
   | { type: 'SET_EXPRESSION'; expression: string }
+  | { type: 'SET_PLAN'; plan: string }
   | { type: 'CLEAR_EXPRESSION' }
   | { type: 'CHANGE_VIEW' }
   | { type: 'SHOW_PARAMS'; showParams: boolean }
@@ -57,6 +60,8 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
       return action.state;
     case 'SET_EXPRESSION':
       return { ...state, expression: action.expression, params: [] };
+    case 'SET_PLAN':
+      return { ...state, plan: action.plan};
     case 'CLEAR_EXPRESSION':
       return { ...state, expression: '', params: [] };
     case 'SHOW_PARAMS':
@@ -75,7 +80,8 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
 }
 
 const initialState: ISQLViewState = {
-  expression: 'select * from gd_good',
+  expression: 'select * from gd_good where id = :id and  name = :name',
+  plan: '',
   params: [],
   viewMode: 'hor',
   showPlan: false,
@@ -85,7 +91,7 @@ const initialState: ISQLViewState = {
 
 export const Sql = CSSModules(
   (props: ISQLProps): JSX.Element => {
-    const { url, viewTab, dispatch, rs, gcs, id, history, erModel } = props;
+    const { url, viewTab, dispatch, rs, gcs, id, history } = props;
 
     const [state, setState] = useReducer(reducer, initialState);
 
@@ -176,7 +182,14 @@ export const Sql = CSSModules(
       }
     }, [rs]);
 
+    const handleClosePlan = () => setState({ type: 'SHOW_PLAN', showPlan: false });
+
     const handleCloseParams = () => setState({ type: 'SHOW_PARAMS', showParams: false });
+
+    const handleSaveParams = (params: ISQLParam[]) => {
+      setState({ type: 'SHOW_PARAMS', showParams: false});
+      setState({ type: 'SET_PARAMS', params });
+    }
 
     const handleCloseHistory = () => setState({ type: 'SHOW_HISTORY', showHistory: false });
 
@@ -204,9 +217,11 @@ export const Sql = CSSModules(
 
     const handleExecuteSql = useCallback(() => {
       dispatch(async (dispatch, getState) => {
+
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
-        const result = apiService
+        if (state.params.length === 0) {
+        apiService
           .sqlPrepare({
             sql: state.expression
           })
@@ -222,12 +237,31 @@ export const Sql = CSSModules(
                 }
                 dispatch(rsMetaActions.setRsMeta(id, { taskKey }));
               }
+              case TTaskStatus.INTERRUPTED:
+              case TTaskStatus.FAILED: {
+                if (getState().rsMeta[id]) {
+                  dispatch(rsMetaActions.setRsMeta(id, {}));
+                }
+                break;
+              }
+              case TTaskStatus.SUCCESS: {
+                const params = (value.payload.result!.placeholderList || [])
+                  .map(i => sqlParams2params({name: i.name, type: i.type}))
+
+                setState({ type: 'SET_PARAMS', params});
+                setState({ type: 'SET_PLAN', plan: value.payload.result!.plan || '' });
+
+                if (getState().rsMeta[id]) {
+                  dispatch(rsMetaActions.setRsMeta(id, {}));
+                }
+                break;
+              }
             }
           });
+          return;
+        };
 
-          console.log(result);
-
-        const params = state.params.map(i => ({ [i.name]: i.value }));
+        const params = state.params.reduce((map, obj) => { map[obj.name] = obj.value; return map }, {} as {[x:string]: any});
 
         apiService
           .prepareSqlQuery({
@@ -347,6 +381,7 @@ export const Sql = CSSModules(
             }
           });
       });
+
     }, [state]);
 
     const commandBarItems: ICommandBarItemProps[] = useMemo(
@@ -380,7 +415,7 @@ export const Sql = CSSModules(
         {
           key: 'params',
           text: 'Параметры',
-          disabled: !state.expression || !state.expression.length,
+          disabled: !state.params.length,
           iconProps: {
             iconName: 'ThumbnailView'
           },
@@ -389,7 +424,7 @@ export const Sql = CSSModules(
         {
           key: 'plan',
           text: 'План запроса',
-          disabled: !rs,
+          disabled: state.plan === '',
           iconProps: {
             iconName: 'OpenSource'
           },
@@ -422,7 +457,10 @@ export const Sql = CSSModules(
         <div styleName="top-container">
           <CommandBar items={commandBarItems} />
           {state.showParams && state.expression.length > 0 && (
-            <ParamsDialog params={state.params} onClose={handleCloseParams} />
+            <ParamsDialog params={state.params} onClose={handleCloseParams} onSave={handleSaveParams}/>
+          )}
+          {state.showPlan && state.plan.length > 0 && (
+            <PlanDialog plan={state.plan} onClose={handleClosePlan} />
           )}
           {state.showHistory && (
             <HistoryDialogContainer

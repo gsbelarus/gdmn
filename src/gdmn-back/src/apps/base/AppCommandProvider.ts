@@ -111,7 +111,10 @@ export class AppCommandProvider {
   }
 
   private static _verifySqlPrepareCmd(command: ICmd<AppAction, any>): command is SqlPrepareCmd {
-    return typeof command.payload === "string";
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "sql" in command.payload
+      && typeof command.payload.sql === "string";
   }
 
   private static _verifyFetchQueryCmd(command: ICmd<AppAction, any>): command is FetchQueryCmd {
