@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
 import { IEntity } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
+import { EntityAttribute } from "./EntityAttribute";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -30,6 +31,48 @@ import { getLName } from "gdmn-internals";
  *
  */
 
+interface IEntityDlgState {
+  initialData?: IEntity;
+  entityData?: IEntity;
+  changed?: boolean;
+};
+
+type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
+  | { type: 'SET_STATE', state: IEntityDlgState }
+  | { type: 'REVERT' };
+
+function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
+
+  switch (action.type) {
+    case 'SET_ENTITY_DATA': {
+      const initialData = state.initialData ? state.initialData : action.entityData;
+      const entityData = action.entityData;
+
+      return {
+        ...state,
+        initialData,
+        entityData,
+        changed: JSON.stringify(initialData) !== JSON.stringify(entityData)
+      };
+    }
+
+    case 'SET_STATE':
+      return action.state;
+
+    case 'REVERT': {
+      if (state.initialData) {
+        return {
+          ...state,
+          entityData: state.initialData,
+          changed: false
+        }
+      }
+    }
+  }
+
+  return state;
+};
+
 export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID } = props;
 
@@ -38,7 +81,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }
 
   const entity = erModel && entityName && erModel.entities[entityName];
-  const [entityData, setEntityData] = useState<IEntity | undefined>();
+  const [state, dlgDispatch] = useReducer(reducer, {});
+  const { entityData, changed } = state;
 
   useEffect( () => {
     if (!viewTab) {
@@ -54,26 +98,29 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     return () => {
       dispatch(gdmnActions.saveSessionData({
         viewTabURL: url,
-        sessionData: entityData
+        sessionData: state
       }));
     };
-  }, [entityData, url]);
+  }, [state, url]);
 
   useEffect( () => {
     if (!entityData && erModel) {
       if (viewTab && viewTab.sessionData) {
-        setEntityData(viewTab.sessionData as IEntity);
+        dlgDispatch({ type: 'SET_STATE', state: viewTab.sessionData });
       } else {
         if (entity) {
-          setEntityData(entity.serialize(false));
+          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(false) });
         } else {
-          setEntityData({
-            name: '',
-            lName: { ru: { name: '' }},
-            isAbstract: false,
-            semCategories: '',
-            unique: [[]],
-            attributes: []
+          dlgDispatch({
+            type: 'SET_ENTITY_DATA',
+            entityData: {
+              name: '',
+              lName: { ru: { name: '' }},
+              isAbstract: false,
+              semCategories: '',
+              unique: [[]],
+              attributes: []
+            }
           });
         }
       }
@@ -84,7 +131,6 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     return <div>Loading...</div>;
   }
 
-  const changed = true;
   const commandBarItems: ICommandBarItemProps[] = [
     {
       key: 'saveAndClose',
@@ -108,6 +154,15 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       iconProps: {
         iconName: 'CheckMark'
       },
+    },
+    {
+      key: 'revert',
+      disabled: !changed,
+      text: 'Вернуть',
+      iconProps: {
+        iconName: 'Undo'
+      },
+      onClick: () => dlgDispatch({ type: 'REVERT' })
     }
   ];
 
@@ -119,25 +174,30 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
           label="Name:"
           value={entityData.name}
           disabled={!createEntity}
-          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, name: newValue }) }
+          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
         />
         <Dropdown
           label="Parent:"
           options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
           selectedKey={entityData.parent}
           disabled={!createEntity}
-          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, parent: newValue.key as string }) }
+          onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
         />
         <TextField
           label="Description:"
           value={getLName(entityData.lName, ['ru'])}
-          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, lName: { ru: { name: newValue } } }) }
+          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
         />
         <TextField
           label="Semantic categories:"
           value={entityData.semCategories}
-          onChange={ (_, newValue) => newValue && setEntityData({ ...entityData, semCategories: newValue }) }
+          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
         />
+      </Stack>
+      <Stack>
+        {
+          entityData.attributes.map( attr => <EntityAttribute attr={attr} /> )
+        }
       </Stack>
     </Stack>
   );
