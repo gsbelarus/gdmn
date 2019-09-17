@@ -19,7 +19,7 @@ import { TextCellEditor } from './editors/TextCellEditor';
 import { ParamsDialog } from './GridParams/ParamsDialog';
 import { applyUserSettings, IUserColumnsSettings } from './applyUserSettings';
 import { numberFormats } from 'gdmn-internals';
-import { IGridColors, getClassNames, IComponentClassNames } from './ClassNames';
+import { IGridColors, getClassNames, IGridCSSClassNames } from './ClassNames';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
@@ -37,10 +37,6 @@ const MIN_GRID_COLUMN_WIDTH = 20;
  * and not a reference of a corresponding FieldDef
  * of related RecordSet.
  */
-
-export interface IGridStyles {
-  [name: string]: {};
-}
 
 export interface IColumn {
   name: string;
@@ -158,7 +154,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _columnMovingDeltaX: number = 0;
   private _columnSizingDeltaX: number = 0;
   private _scrollIntoView?: ScrollIntoView = undefined;
-  private _styles: IComponentClassNames;
+  private _styles: IGridCSSClassNames;
   private _containerRef: React.RefObject<HTMLDivElement> = React.createRef();
   private _captureFocus: boolean = false;
 
@@ -1109,7 +1105,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         const classNames = cn(
           styles.CellRow,
           styles.HeaderCell,
-          sortOrder === 'ASC' || sortOrder === 'DESC' ? styles.GridColumnSort : '',
+          sortOrder !== 'UNDEFINED' ? styles.GridColumnSort : '',
           columnBeingResized ? styles.ResizingColumn : ''
         );
 
@@ -1145,16 +1141,19 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         const classNames = cn(
           styles.CellColumn,
           styles.HeaderCell,
-          sortOrder === 'ASC' || sortOrder === 'DESC' ? styles.GridColumnSort : '',
+          sortOrder !== 'UNDEFINED' ? styles.GridColumnSort : '',
           columnBeingResized ? styles.ResizingColumn : ''
         );
 
-        const gridColumnSortClassName = sortOrder === 'ASC' || sortOrder === 'DESC' ? styles.GridColumnSortCode : styles.DisplayNone;
-        const gridColumnSortCode =  sortOrder === 'ASC' ? '\u2193' : sortOrder === 'DESC' ? "\u2191" : '';
+        const sortIndicator = sortOrder === 'ASC'
+          ? <div className={styles.GridColumnSortCode}>{'\u2193'}</div>
+          : sortOrder === 'DESC'
+          ? <div className={styles.GridColumnSortCode}>{'\u2191'}</div>
+          : null;
 
         innerCell = (
           <div key={key} className={classNames} style={style}>
-            <div className={gridColumnSortClassName}>{gridColumnSortCode}</div>
+            {sortIndicator}
             <div
               className={styles.CellCaption}
               onClick={onSortColumnClick}
