@@ -18,7 +18,7 @@ import {SelectSet} from "../../src/crud/query/SelectSet";
 const dbOptions: IConnectionOptions = {
   username: "SYSDBA",
   password: "masterkey",
-  path: resolve("./GDMN_ER_BRIDGE_QUERY.FDB"),
+  path: resolve("./GDMN_ER_BRIDGE_SET_QUERY.FDB"),
   readTransaction: true
 };
 

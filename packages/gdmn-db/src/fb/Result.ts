@@ -1,11 +1,11 @@
 import {AResult} from "../AResult";
 import {BlobLink} from "./BlobLink";
-import {ResultMetadata} from "./ResultMetadata";
-import {Statement} from "./Statement";
+import {OutputMetadata} from "./OutputMetadata";
+import {IStatementSource, Statement} from "./Statement";
 import {bufferToValue, dataWrite, IDescriptor} from "./utils/fb-utils";
 
 export interface IResultSource {
-    metadata: ResultMetadata;
+    metadata: OutputMetadata;
     buffer: Uint8Array;
 }
 
@@ -18,7 +18,7 @@ export class Result extends AResult {
         this.source = source;
     }
 
-    get metadata(): ResultMetadata {
+    get metadata(): OutputMetadata {
         return this.source.metadata;
     }
 
@@ -27,7 +27,7 @@ export class Result extends AResult {
     public static async get(statement: Statement, source: any): Promise<Result> {
         if (Array.isArray(source)) {
             source = await statement.transaction.connection.client.statusAction(async (status) => {
-                const {inMetadata, outMetadata, inDescriptors} = statement.source!;
+                const {inMetadata, outMetadata, inDescriptors}: IStatementSource = statement.source!;
                 const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
                 const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
 
@@ -40,7 +40,7 @@ export class Result extends AResult {
                     //// FIXME: newTransaction.releaseSync();
                 }
 
-                const metadata = await ResultMetadata.getMetadata(statement);
+                const metadata = await OutputMetadata.getMetadata(statement);
 
                 return {
                     metadata,

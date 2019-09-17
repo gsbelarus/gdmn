@@ -1,4 +1,4 @@
-import {AResultMetadata, AResultSet, TExecutor, Types} from "gdmn-db";
+import {AMetadata, AResultSet, TExecutor, Types} from "gdmn-db";
 import {Semaphore} from "gdmn-internals";
 
 export interface IFetchResponseDataItem {
@@ -95,6 +95,6 @@ export abstract class ACursor {
     }
   }
 
-  protected abstract _getFieldAlias(metadata: AResultMetadata, index: number): string;
+  protected abstract _getFieldAlias(metadata: AMetadata, index: number): string;
 }
 

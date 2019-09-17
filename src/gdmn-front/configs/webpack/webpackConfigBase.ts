@@ -34,7 +34,7 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
         appMountNodeId: config.webpack.appMountNodeId,
         description: pkg.description,
         mobile: true
-      }) as Plugin,
+      }) as any,
       new NoEmitOnErrorsPlugin() // fixme deprecated
     ],
     resolve: {

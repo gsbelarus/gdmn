@@ -1,7 +1,7 @@
 import {ResultSet as NativeResultSet, Statement as NativeStatement, Status} from "node-firebird-native-api";
 import {AResultSet, CursorType} from "../AResultSet";
+import {OutputMetadata} from "./OutputMetadata";
 import {Result} from "./Result";
-import {ResultMetadata} from "./ResultMetadata";
 import {IStatementSource, Statement} from "./Statement";
 import {dataWrite} from "./utils/fb-utils";
 
@@ -35,8 +35,8 @@ export class ResultSet extends AResultSet {
         return super.result as Result;
     }
 
-    get metadata(): ResultMetadata {
-        return super.metadata as ResultMetadata;
+    get metadata(): OutputMetadata {
+        return super.metadata as OutputMetadata;
     }
 
     public static async open(statement: Statement, params: any[], type?: CursorType): Promise<ResultSet> {
@@ -52,7 +52,7 @@ export class ResultSet extends AResultSet {
                 inMetadata, inBuffer, outMetadata, type || AResultSet.DEFAULT_TYPE === CursorType.SCROLLABLE
                     ? NativeStatement.CURSOR_TYPE_SCROLLABLE : 0);
 
-            const metadata = await ResultMetadata.getMetadata(statement);
+            const metadata = await OutputMetadata.getMetadata(statement);
             const result = await Result.get(statement, {metadata, buffer});
 
             return {

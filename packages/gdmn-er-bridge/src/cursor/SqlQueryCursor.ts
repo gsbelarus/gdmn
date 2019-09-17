@@ -1,4 +1,4 @@
-import {AConnection, AResultMetadata, AResultSet, ATransaction, IParams, Types} from "gdmn-db";
+import {AConnection, AMetadata, AResultSet, ATransaction, IParams, Types} from "gdmn-db";
 import {Attribute, AttributeTypes, Entity, EntityAttribute, ERModel, ScalarAttribute} from "gdmn-orm";
 import {ACursor, IFetchResponseDataItem} from "./ACursor";
 
@@ -88,7 +88,7 @@ export class SqlQueryCursor extends ACursor {
     };
   }
 
-  protected _getFieldAlias(metadata: AResultMetadata, index: number): string {
+  protected _getFieldAlias(metadata: AMetadata, index: number): string {
     return SqlQueryCursor._getAlias(index);
   }
 

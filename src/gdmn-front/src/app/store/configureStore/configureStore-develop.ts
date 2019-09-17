@@ -1,5 +1,5 @@
 import { applyMiddleware, compose, createStore, Middleware, Store } from 'redux';
-import { createLogger } from 'redux-logger';
+//import { createLogger } from 'redux-logger';
 // @ts-ignore
 import { persistReducer } from 'redux-persist';
 // @ts-ignore
@@ -16,6 +16,7 @@ const devCompose =
     : compose;
 
 const devMiddlewares: Middleware[] = [
+  /*
   createLogger({
     collapsed: () => true,
     predicate: (getState, action) =>
@@ -25,6 +26,7 @@ const devMiddlewares: Middleware[] = [
         action.type.slice(0, 'root/stompLogPanel/ADD_MESSAGE'.length) === 'root/stompLogPanel/ADD_MESSAGE'
       )
   })
+  */
 ];
 
 function configureStore(persistedReducer: TReducer, middlewares: Middleware[] = [], initialState?: IState) {

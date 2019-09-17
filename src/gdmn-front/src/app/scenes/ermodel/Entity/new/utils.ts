@@ -142,6 +142,9 @@ export function parseEntity(entityStr: string[], erModel: ERModel): Entity {
       } else {
         attr["type"] = sn.get(strType);
       }
+      if  (attr["type"] === "Set"){
+        attr["attributes"] = [];
+      }
       attrs.push(attr as IAttribute)
     }
   });
