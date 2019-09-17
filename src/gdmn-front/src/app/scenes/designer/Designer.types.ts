@@ -14,7 +14,7 @@ export interface IDesignerStateProps {
   viewTab?: IViewTab;
   theme: string;
   erModel?: ERModel;
-  entity?: Entity;
+  entity: Entity;
   rs?: RecordSet;
 };
 
