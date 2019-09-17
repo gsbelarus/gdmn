@@ -263,7 +263,16 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       iconProps: {
         iconName: 'Add'
       },
-      commandBarButtonAs: linkCommandBarButton(`addEntity`)
+      commandBarButtonAs: linkCommandBarButton(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
+    },
+    {
+      key: 'editEntity',
+      disabled: !entities || !entities.size,
+      text: 'Edit',
+      iconProps: {
+        iconName: 'Edit'
+      },
+      commandBarButtonAs: entities && linkCommandBarButton(`entityDlg/${entities.getString('name')}`)
     },
     {
       key: 'deleteEntity',
@@ -273,15 +282,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'Delete'
       },
       onClick: deleteRecord
-    },
-    {
-      key: 'editEntity',
-      disabled: !entities || !entities.size,
-      text: 'Edit',
-      iconProps: {
-        iconName: 'Edit'
-      },
-      commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`${entities.getString('name')}/edit`) : undefined
     }
   ];
 

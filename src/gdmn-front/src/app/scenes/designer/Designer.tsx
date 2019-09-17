@@ -551,7 +551,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
   const { url, erModel, rs, entity } = props;
-  const [state, designerDispatch] = useReducer(reducer, loadState(url.split('/')[4], erModel ? erModel.entities[url.split('/')[4]] : undefined));
+  const [state, designerDispatch] = useReducer(reducer, loadState(entity.name, erModel ? erModel.entities[entity.name] : undefined));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
@@ -800,7 +800,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       {
         selectFieldsMode && erModel &&
         <SelectFields
-          entity={entity ? entity : erModel.entities[url.split('/')[4]]}
+          entity={entity}
           onCreate={ fields => {
             fields.forEach( ({ fieldName, label }) => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName, label }, makeSelected: fields.length === 1 }) );
             designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' });

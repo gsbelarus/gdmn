@@ -9,7 +9,6 @@ import {
   InfiniteLoaderChildProps,
   SectionRenderedParams
 } from 'react-virtualized';
-import './Grid.css';
 import scrollbarSize from 'dom-helpers/util/scrollbarSize';
 import cn from 'classnames';
 import Draggable, { DraggableCore, DraggableEventHandler } from 'react-draggable';
@@ -20,21 +19,22 @@ import { TextCellEditor } from './editors/TextCellEditor';
 import { ParamsDialog } from './GridParams/ParamsDialog';
 import { applyUserSettings, IUserColumnsSettings } from './applyUserSettings';
 import { numberFormats } from 'gdmn-internals';
+import { IGridColors, getClassNames, IGridCSSClassNames } from './types';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
 /**
  * We format display values of number and date types
  * in following order:
- * 
+ *
  * 1. Use format at Column level, if defined
  * 2. Use format at Recordset level, if defined
  * 3. Use system wide default format values
- * 
+ *
  * We store column level format values in a fields
  * property of IColumn object. Take care that FieldDef
- * object at column level *must be* a copy 
- * and not a reference of a corresponding FieldDef 
+ * object at column level *must be* a copy
+ * and not a reference of a corresponding FieldDef
  * of related RecordSet.
  */
 
@@ -98,6 +98,7 @@ export interface IGridProps {
   loadMoreRsData?: TEventCallback<TLoadMoreRsDataEvent, Promise<any>>;
   loadMoreThresholdPages?: number;
   loadMoreMinBatchPagesRatio?: number;
+  colors?: IGridColors;
 }
 
 export interface IGridState {
@@ -113,60 +114,8 @@ export interface IGridState {
   displayColumns: Columns;
   userSettings?: IUserColumnsSettings;
   prevColumns: Columns;
+  deltaWidth: number;
 }
-
-export const styles = {
-  GridContainer: 'GridContainer',
-  SideContainer: 'SideContainer',
-  SideHeader: 'SideHeader',
-  SideRows: 'SideRows',
-  SideFooter: 'SideFooter',
-  BodyContainer: 'BodyContainer',
-  BodyHeader: 'BodyHeader',
-  BodyRows: 'BodyRows',
-  HeaderGrid: 'HeaderGrid',
-  BodyGrid: 'BodyGrid',
-  BodyGridNoVScroll: 'BodyGridNoVScroll',
-  BodyGridNoHScroll: 'BodyGridNoHScroll',
-  BodyGridVScroll: 'BodyGridVScroll',
-  BodyGridHScroll: 'BodyGridHScroll',
-  BodyFooter: 'BodyFooter',
-  SideFooterGrid: 'SideFooterGrid',
-  BodyFooterGrid: 'BodyFooterGrid',
-  CurrentCellBackground: 'CurrentCellBackground',
-  CurrentRowBackground: 'CurrentRowBackground',
-  EvenRowBackground: 'EvenRowBackground',
-  OddRowBackground: 'OddRowBackground',
-  SelectedBackground: 'SelectedBackground',
-  CellColumn: 'CellColumn',
-  CellRow: 'CellRow',
-  CellMarkArea: 'CellMarkArea',
-  HeaderCell: 'HeaderCell',
-  FooterCell: 'FooterCell',
-  FixedCell: 'FixedCell',
-  FixedBackground: 'FixedBackground',
-  CellCaption: 'CellCaption',
-  DataCellLeft: 'DataCellLeft',
-  DataCellCenter: 'DataCellCenter',
-  DataCellRight: 'DataCellRight',
-  LeftSideGrid: 'LeftSideGrid',
-  RightSideCellFooter: 'RightSideCellFooter',
-  LeftSideCellFooter: 'LeftSideCellFooter',
-  RightSideGrid: 'RightSideGrid',
-  ResizingColumn: 'ResizingColumn',
-  GridColumnSortAsc: 'GridColumnSortAsc',
-  GridColumnSortDesc: 'GridColumnSortDesc',
-  GridColumnDragging: 'GridColumnDragging',
-  DragHandleIcon: 'DragHandleIcon',
-  GroupHeaderBackground: 'GroupHeaderBackground',
-  BorderBottom: 'BorderBottom',
-  BorderRight: 'BorderRight',
-  FixedBorder: 'FixedBorder',
-  BlackText: 'BlackText',
-  GrayText: 'GrayText',
-  Deleted: 'RowDeleted',
-  Edited: 'RowEdited'
-};
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
   let vi = -1;
@@ -205,7 +154,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   private _columnMovingDeltaX: number = 0;
   private _columnSizingDeltaX: number = 0;
   private _scrollIntoView?: ScrollIntoView = undefined;
-  private _deltaWidth: number = 0;
+  private _styles: IGridCSSClassNames;
   private _containerRef: React.RefObject<HTMLDivElement> = React.createRef();
   private _captureFocus: boolean = false;
 
@@ -217,17 +166,20 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     loadMoreRsData: () => Promise.resolve(),
     loadMoreThresholdPages: 2,
     loadMoreMinBatchPagesRatio: 2
-  }; 
+  };
 
   constructor(props: IGridProps) {
     super(props);
+
+    this._styles = getClassNames(props.colors);
+
     const maxCountFieldInCell = props.columns.reduce((max, c) => (c.fields.length > max ? c.fields.length : max), 0);
     const inCellRowHeight = 18;
     const totalCellVertPadding = 2;
 
-    const userItem = localStorage.getItem(props.rs.name); 
+    const userItem = localStorage.getItem(props.rs.name);
     const userColumnsSettings = userItem ? JSON.parse(userItem) : {} as IUserColumnsSettings;
-    const newColumns = applyUserSettings(props.columns, userColumnsSettings); 
+    const newColumns = applyUserSettings(props.columns, userColumnsSettings);
     this.state = props.savedState || {
       columnWidth: 125,
       overscanColumnCount: 5,
@@ -243,30 +195,31 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       fieldEditor: false,
       displayColumns: newColumns,
       userSettings: userColumnsSettings,
-      prevColumns: []
-    };    
+      prevColumns: [],
+      deltaWidth: 0
+    };
   }
 /**
  * При изменении props.columns запишем в state.columns новый объект колонок, учитывая пользовательские настройки,
  * и будем его использовать для отображения в гриде
- * @param props 
- * @param state 
+ * @param props
+ * @param state
  */
   static getDerivedStateFromProps(props: IGridProps, state: IGridState) {
     if (state.prevColumns !== props.columns) {
-      const userItem = localStorage.getItem(props.rs.name); 
+      const userItem = localStorage.getItem(props.rs.name);
       const userColumnSettings = userItem ? JSON.parse(userItem) : {} as IUserColumnsSettings;
-      const comboColumns = applyUserSettings(props.columns, userColumnSettings); 
+      const comboColumns = applyUserSettings(props.columns, userColumnSettings);
       return {
         ...state,
         displayColumns: comboColumns.filter(c => !c.hidden),
         userColumnSettings,
-        prevColumns: props.columns          
+        prevColumns: props.columns
       }
     }
 
     return null;
-  }  
+  }
 
   public shouldComponentUpdate(
     nextProps: Readonly<IGridProps>,
@@ -281,7 +234,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             c.width !== nextProps.columns[idx].width ||
             c.name !== nextProps.columns[idx].name)
       ) ||
-      this.state.columnBeingResized !== nextState.columnBeingResized;
+      this.state.columnBeingResized !== nextState.columnBeingResized ||
+      this.state.deltaWidth !== nextState.deltaWidth;
 
     if (changed) {
       const recompute = (g: Grid | undefined) => {
@@ -351,6 +305,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       currentCol
     } = this.props;
     const { displayColumns, rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
+    const styles = this._styles;
 
     if (!rs) {
       return <div>No data!</div>;
@@ -362,10 +317,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       return undefined;
     }
 
-    const composeGrid = (width: number, height: number, scrollLeft: number, sTop: number, onScroll: OnScroll) => {
+    const composeGrid = (width: number, height: number, scrollLeft: number, sTop: number, deltaWidth: number, onScroll: OnScroll) => {
       const getLeftSideColumnWidth = this._getColumnMeasurer(this._adjustLeftSideColumnIndex, true);
       const getBodyColumnWidth = this._getColumnMeasurer(this._adjustBodyColumnIndex, false);
       const getRightSideColumnWidth = this._getColumnMeasurer(this._adjustRightSideColumnIndex, true);
+      const styles = this._styles;
 
       let leftSideColumnsWidth = 0;
       for (let index = 0; index < leftSideColumns; index++) {
@@ -735,13 +691,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.HeaderGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (this._deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
               height={headerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getHeaderCellRenderer(
                 this._adjustBodyColumnIndex,
                 true,
-                bodyColumns + (this._deltaWidth ? 1 : 0),
+                bodyColumns + (deltaWidth ? 1 : 0),
                 false
               )}
               rowHeight={rowHeight}
@@ -764,7 +720,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                   borderLeft: 'none'
                 }}
               >
-                {/* <div className={cn(styles.CellColumn, styles.HeaderCell)} /> */}
               </div>
             )}
           </div>
@@ -812,7 +767,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                       !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
                     )}
                     columnWidth={getBodyColumnWidth}
-                    columnCount={bodyColumns + (this._deltaWidth ? 1 : 0)}
+                    columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
                     height={bodyHeight}
                     overscanColumnCount={overscanColumnCount}
                     overscanRowCount={overscanRowCount}
@@ -850,7 +805,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.BodyFooterGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (this._deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
               height={footerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getFooterCellRenderer(this._adjustBodyColumnIndex, false)}
@@ -986,21 +941,24 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     };
 
     return (
-      <div className="GridBody">
+      <div className={styles.GridBody}>
         <AutoSizer>
           {({ width, height }) => {
-            this._deltaWidth =
+            let deltaWidthColumn =
               width -
               displayColumns.reduce((w, c) => (c.width ? w + c.width : w + this.state.columnWidth), 0) -
               scrollbarSize() - 1;
 
-            if (this._deltaWidth < 0) {
-              this._deltaWidth = 0;
+            if (deltaWidthColumn < 0) {
+              deltaWidthColumn = 0;
             }
 
-            const { scrollLeft, scrollTop } = this.state;
+            const { scrollLeft, scrollTop, deltaWidth } = this.state;
+            if (deltaWidth !== deltaWidthColumn) {
+              this.setState({deltaWidth: deltaWidthColumn})
+            };
 
-            return composeGrid(width, height, scrollLeft, scrollTop, (params: OnScrollParams) =>
+            return composeGrid(width, height, scrollLeft, scrollTop, deltaWidthColumn, (params: OnScrollParams) =>
               this.setState({ ...params })
             );
           }}
@@ -1017,9 +975,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         }
         {showDialogParams ?
           <ParamsDialog
-            onRevert={() => {   
+            onRevert={() => {
               localStorage.removeItem(rs.name);
-              this.setState({ 
+              this.setState({
                 ...this.state,
                 displayColumns: this.props.columns.filter(c => !c.hidden),
                 userSettings: undefined
@@ -1028,34 +986,34 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             onChanged={
               (userColumnsSettings: IUserColumnsSettings | undefined) => {
                 if (userColumnsSettings && Object.getOwnPropertyNames(userColumnsSettings).length !== 0) {
-                  const newColumns = applyUserSettings(this.props.columns, userColumnsSettings); 
-                  this.setState({ 
+                  const newColumns = applyUserSettings(this.props.columns, userColumnsSettings);
+                  this.setState({
                     ...this.state,
                     displayColumns: newColumns.filter(c => !c.hidden),
                     userSettings: userColumnsSettings
                   });
                   //удаляем настройки колонок, которые пустые
                   for (const columnName in userColumnsSettings) {
-                    if (userColumnsSettings && Object.getOwnPropertyNames(userColumnsSettings[columnName]).length === 0) 
-                      delete userColumnsSettings[columnName];  
-                  }              
+                    if (userColumnsSettings && Object.getOwnPropertyNames(userColumnsSettings[columnName]).length === 0)
+                      delete userColumnsSettings[columnName];
+                  }
                   localStorage.setItem(rs.name, JSON.stringify(userColumnsSettings));
 
-                  if (Object.getOwnPropertyNames(userColumnsSettings).length == 0) 
+                  if (Object.getOwnPropertyNames(userColumnsSettings).length == 0)
                     localStorage.removeItem(rs.name);
                 } else {
-                  this.setState({ 
+                  this.setState({
                     ...this.state,
                     displayColumns: this.props.columns.filter(c => !c.hidden),
-                    userSettings: undefined 
+                    userSettings: undefined
                   });
                   localStorage.removeItem(rs.name);
-                }  
+                }
               }
             }
             onDismiss={this._onCloseSetParamsDialog}
             columns={this.props.columns}
-            userSettings={this.state.userSettings}          
+            userSettings={this.state.userSettings}
           />
         :
           undefined
@@ -1093,7 +1051,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     columnsCount: number,
     fixed: boolean
   ) => ({ style, columnIndex, key }: GridCellProps) => {
-    const { columnBeingResized, displayColumns } = this.state;
+    const { columnBeingResized, displayColumns, deltaWidth } = this.state;
     const {
       onColumnResize,
       onSort,
@@ -1103,6 +1061,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       rightSideColumns,
       leftSideColumns
     } = this.props;
+    const styles = this._styles;
 
     const adjustedColumnIndex = adjustFunc(columnIndex);
     const getColumnWidth = this._getColumnMeasurer(adjustFunc, fixed);
@@ -1146,7 +1105,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         const classNames = cn(
           styles.CellRow,
           styles.HeaderCell,
-          sortOrder === 'ASC' ? styles.GridColumnSortAsc : sortOrder === 'DESC' ? styles.GridColumnSortDesc : '',
+          sortOrder !== 'UNDEFINED' ? styles.GridColumnSort : '',
           columnBeingResized ? styles.ResizingColumn : ''
         );
 
@@ -1182,14 +1141,21 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         const classNames = cn(
           styles.CellColumn,
           styles.HeaderCell,
-          sortOrder === 'ASC' ? styles.GridColumnSortAsc : sortOrder === 'DESC' ? styles.GridColumnSortDesc : '',
+          sortOrder !== 'UNDEFINED' ? styles.GridColumnSort : '',
           columnBeingResized ? styles.ResizingColumn : ''
         );
 
+        const sortIndicator = sortOrder === 'ASC'
+          ? <div className={styles.GridColumnSortCode}>{'\u2193'}</div>
+          : sortOrder === 'DESC'
+          ? <div className={styles.GridColumnSortCode}>{'\u2191'}</div>
+          : null;
+
         innerCell = (
           <div key={key} className={classNames} style={style}>
+            {sortIndicator}
             <div
-              className="CellCaption"
+              className={styles.CellCaption}
               onClick={onSortColumnClick}
             >
               {this._getColumnLabel(adjustedColumnIndex).map((l, idx) => (
@@ -1209,7 +1175,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         <Draggable
           key={key}
           axis="x"
-          handle=".CellCaption"
+          handle={styles.CellCaption}
           position={{ x: 0, y: 0 }}
           disabled={this.state.fieldEditor}
           defaultClassNameDragging={styles.GridColumnDragging}
@@ -1234,7 +1200,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
               }
               if (
                 columnIndex !== ec &&
-                !(ec === displayColumns.length - rightSideColumns - leftSideColumns && this._deltaWidth > 0)
+                !(ec === displayColumns.length - rightSideColumns - leftSideColumns && deltaWidth > 0)
               ) {
                 onColumnMove({ref: this, rs, oldIndex: adjustedColumnIndex, newIndex: adjustFunc(ec)});
               }
@@ -1286,6 +1252,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const {displayColumns} = this.state;
     const currentRow = rs.currentRow;
     const adjustedColumnIndex = adjustFunc(columnIndex);
+    const styles = this._styles;
 
     if (rowIndex >= rs.size) {
       // draw fake row
@@ -1332,7 +1299,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       : styles.OddRowBackground;
 
     const borderClass = fixed ? styles.FixedBorder : groupHeader ? styles.BorderBottom : styles.BorderRight;
-    const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText : styles.BlackText;
+    const textClass = !groupHeader && rowData.group && adjustedColumnIndex <= rowData.group.level ? styles.GrayText : styles.TextColor;
     const { fieldEditor } = this.state;
 
     if (
@@ -1347,7 +1314,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         <TextCellEditor
           key={key}
           style={style}
-          value={rs.getString(fieldName)}  
+          value={rs.getString(fieldName)}
           onSave={
             (value: string) => {
               onSetFieldValue({ ref: this, rs, fieldName, value });
@@ -1387,7 +1354,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       ) : (
         undefined
       );
-  
+
     const cellText =
       (fixed || adjustedColumnIndex !== displayColumns.length - rightSideColumns) ? (
         displayColumns[adjustedColumnIndex].fields.map((fld, fldidx) => {
@@ -1507,6 +1474,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
   }: GridCellProps) => {
     const { rs, rightSideColumns, leftSideColumns } = this.props;
     const {displayColumns} = this.state;
+    const styles = this._styles;
     const column = displayColumns[adjustFunc(columnIndex)];
     const classNames = cn(styles.CellColumn, styles.FooterCell, fixed ? styles.FixedCell : '');
     const cellText =
@@ -1541,9 +1509,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     index: number;
   }): number => {
     const { rightSideColumns } = this.props;
-    const { displayColumns, columnWidth } = this.state;
+    const { displayColumns, columnWidth, deltaWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
-    return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex) ? this._deltaWidth
+    return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex) ? deltaWidth
       : displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width ? displayColumns[adjustedIndex].width!
       : columnWidth;
   };
