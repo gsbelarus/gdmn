@@ -8,8 +8,9 @@ import {
   getTheme,
   TextField,
   Stack,
-  DefaultButton
+  DefaultButton,
 } from 'office-ui-fabric-react';
+import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
 import { TFieldType } from 'gdmn-recordset';
 import { ISQLParam } from './Sql';
 
@@ -34,6 +35,34 @@ export interface ISQLFormProps {
   onSave: (params: ISQLParam[]) => void;
 }
 
+const DayPickerStrings: IDatePickerStrings = {
+  months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+
+  shortMonths: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+
+  days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+
+  shortDays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+
+  goToToday: 'Go to today',
+  prevMonthAriaLabel: 'Go to previous month',
+  nextMonthAriaLabel: 'Go to next month',
+  prevYearAriaLabel: 'Go to previous year',
+  nextYearAriaLabel: 'Go to next year',
+  closeButtonAriaLabel: 'Close date picker',
+
+  isRequiredErrorMessage: 'Start date is required.',
+
+  invalidInputErrorMessage: 'Invalid date format.'
+};
+
+export interface IDatePickerInputExampleState {
+  firstDayOfWeek?: DayOfWeek;
+  value?: Date | null;
+}
+
+const firstDayOfWeek = DayOfWeek.Monday;
+
 export const ParamsDialog = (props: ISQLFormProps) => {
   const { params, onClose, onSave } = props;
 
@@ -46,6 +75,10 @@ export const ParamsDialog = (props: ISQLFormProps) => {
     const value = (inputEl.validity.valid) ? inputEl.value : paramList.find(i => i.name === name)!.value || '';
 
     setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i))
+  };
+
+  const handleSelectDate = (date: Date | null | undefined, name: string): void => {
+    setParamList(paramList.map(i => i.name === name ? {...i, value: date} : i))
   };
 
   useEffect(() => {
@@ -73,6 +106,17 @@ export const ParamsDialog = (props: ISQLFormProps) => {
           switch (i.type) {
             case TFieldType.Integer:
               return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>;
+            case TFieldType.Date:
+                return <DatePicker
+                label={i.name}
+                isRequired={false}
+                allowTextInput={true}
+                ariaLabel={i.name}
+                firstDayOfWeek={firstDayOfWeek}
+                strings={DayPickerStrings}
+                value={i.value}
+                onSelectDate={(date) => handleSelectDate(date, i.name)}
+              />
             default:
               return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
           }

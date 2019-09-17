@@ -201,7 +201,7 @@ export const Sql = CSSModules(
     const handleSaveParams = (paramList: ISQLParam[]) => {
       setState({ type: 'SHOW_PARAMS', showParams: false});
       setState({ type: 'LOAD_PARAMS', paramList });
-      const params = paramList.reduce((map, obj) => { map[obj.name] = obj.value; return map }, {} as {[x:string]: any});
+      const params = paramList.reduce((map, obj) => { map[obj.name] = obj.value || ''; return map }, {} as {[x:string]: any});
       setState({ type: 'SET_PARAMS', params });
     }
 
@@ -255,6 +255,7 @@ export const Sql = CSSModules(
                 if (getState().rsMeta[id]) {
                   dispatch(rsMetaActions.setRsMeta(id, {}));
                 }
+                setState({ type: 'SET_PLAN', plan: '' });
                 break;
               }
               case TTaskStatus.SUCCESS: {
@@ -285,8 +286,7 @@ export const Sql = CSSModules(
 
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
-        // const params = state.params.reduce((map, obj) => { map[obj.name] = obj.value; return map }, {} as {[x:string]: any});
-
+        // console.log(state.expression, state.params)
         apiService
           .prepareSqlQuery({
             select: state.expression,
