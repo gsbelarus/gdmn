@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, ThemeGenerator, getTheme } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -9,13 +9,14 @@ import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IGridColors } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue } from 'gdmn-grid';
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
+import { useGridColors } from './useGridColors';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -63,14 +64,13 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
-  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history } = props;
+  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, theme } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
-
-  const theme = getTheme();
+  const colors = useGridColors(theme);
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -247,36 +247,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
-
-  const colors: IGridColors = {
-    currentCellBackground: theme.palette.themeSecondary,
-    currentRowBackground: theme.palette.themeTertiary,
-    currentRowBackgroundColor: theme.semanticColors.bodyBackground,
-    fixedBackground: theme.semanticColors.primaryButtonBackground,
-    oddRowBackground: theme.semanticColors.bodyStandoutBackground,
-    evenRowBackground: theme.semanticColors.buttonBackground,
-    gridColumnDraggingBackground: theme.semanticColors.primaryButtonBackground,
-    headerCell: theme.semanticColors.bodyStandoutBackground,
-    headerGrid: theme.semanticColors.bodyBackground,
-    rightSideCellFooter: theme.semanticColors.bodyBackground,
-    bodyGrid: theme.semanticColors.bodyBackground,
-    sideFooterGrid: theme.semanticColors.bodyBackground,
-    bodyFooter: theme.semanticColors.bodyBackground,
-    footerCell: theme.semanticColors.buttonBackgroundChecked,
-    gridColumnSortCodeColor: theme.semanticColors.buttonText,
-    gridColumnSortColor: theme.semanticColors.buttonText,
-    gridColumnSort: theme.semanticColors.variantBorderHovered,
-    bodyHeaderColor: theme.semanticColors.buttonText,
-    sideFooterGridColor: theme.semanticColors.buttonText,
-    bodyFooterColor: theme.semanticColors.buttonText,
-    dragHandleIconColor: theme.semanticColors.buttonText,
-    footerCellColor: theme.semanticColors.buttonTextChecked,
-    textColor: theme.semanticColors.buttonText,
-    fixedBorderBottomRight: theme.semanticColors.buttonBorder,
-    fixedBorderTopLeft: theme.semanticColors.variantBorder,
-    borderBottom: theme.semanticColors.buttonBorder,
-    fixedCellColor: theme.semanticColors.buttonText
-  };
 
   return (
       <div styleName="SGrid">
