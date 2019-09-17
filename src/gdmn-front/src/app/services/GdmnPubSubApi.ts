@@ -686,14 +686,10 @@ export class GdmnPubSubApi {
               meta
             }))
           );
-          console.log(taskActionResult)
-          console.log(taskProgressResult)
-          console.log(taskStatusResult)
 
           return merge(taskActionResult, taskProgressResult, taskStatusResult);
         })
       );
-    console.log(observ)
     return replyMode ? observ.pipe(first()).toPromise() : observ;
   }
 }
