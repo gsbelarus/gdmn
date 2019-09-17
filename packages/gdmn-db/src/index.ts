@@ -4,7 +4,7 @@ export * from "./AConnection";
 export * from "./AService";
 export * from "./ATransaction";
 export * from "./AStatement";
-export * from "./AResultMetadata";
+export * from "./AMetadata";
 export * from "./AResult";
 export * from "./AResultSet";
 export * from "./ABlobLink";

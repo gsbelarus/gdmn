@@ -19,7 +19,7 @@ import {gdmnActions} from "@src/app/scenes/gdmn/actions";
 import {IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/utils";
 import {ISessionData} from "@src/app/scenes/gdmn/types";
 import {apiService} from "@src/app/services/apiService";
-import {IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
+import {EntityUtils, IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
 import {EntityAttributeContainer} from "@src/app/scenes/ermodel/Entity/new/EntityAttributeContainer";
 import {
   prepareDefaultEntityQuery,
@@ -170,7 +170,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             attributes: refAttribute.current
           });
 
-          if(!result.error){
+          if (!result.error) {
             parseEntity(result.payload.result!, erModel!)
           }
 
@@ -180,19 +180,19 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             attributes: refAttribute.current
           });
 
-          if(!result.error){
+          if (!result.error) {
             parseEntity(result.payload.result!, erModel!)
           }
         }
       });
 
       if (entities) {
-        dispatch( async (dispatch, getState) => {
-        dispatch(rsActions.setRecordSet(
-          entities.set({
-            name: name.value.toUpperCase(),
-            description: name.value.toUpperCase()
-          } as IDataRow)))
+        dispatch(async (dispatch, getState) => {
+          dispatch(rsActions.setRecordSet(
+            entities.set({
+              name: name.value.toUpperCase(),
+              description: name.value.toUpperCase()
+            } as IDataRow)))
         })
       }
     } else {
@@ -209,6 +209,31 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             changedFields: changedFields.current,
             attributes: refAttribute.current
           })
+        }
+        /**
+         *  в данной части мы сравниваем список изменных полей (changedFields) и аттрибуты Entity
+         *  далее если мы нашли соответствии атррибута и статус его delete  то удаляем его из Entity
+         *  если же мы не нашли соотвествия т.к он новый и он имеет соотвествующий статус add то добавляем его
+         *  */
+
+        if (erModel) {
+          const entityName = name.value;
+          const entity = erModel.entity(entityName);
+
+          Object.entries(changedFields.current).forEach(([key, value]) => {
+            const findAttr = entity.attributes[key];
+
+            if (findAttr) {
+              if (value === "delete") {
+                entity.remove(entity.attribute(findAttr.name))
+              }
+            } else if (value === "add") {
+              const addAttr = refAttribute.current.find((at) => at.id === key);
+              if (addAttr) {
+                entity.add(EntityUtils.createAttribute(addAttr, entity, erModel))
+              }
+            }
+          });
         }
       });
     }

@@ -40,6 +40,10 @@ export class CommonParamsAnalyzer {
         return this._sql;
     }
 
+    get paramNameList(): string[] {
+        return this._placeholdersNames;
+    }
+
     public prepareParams(params?: IParams): any[] {
         if (!params) {
             return [];

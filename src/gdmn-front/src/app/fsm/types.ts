@@ -10,12 +10,24 @@ export interface IParam {
   required?: boolean;
 };
 
-export interface IFSMState {
+export interface IFSMStateType {
   id: ID;
   label?: LName;
   inParams?: IParam[];
   outParams?: IParam[];
   params?: IParam[];
+};
+
+export interface IParamsValues {
+  [name: string]: any;
+};
+
+export interface IFSMState {
+  type: IFSMStateType;
+  label?: LName;
+  inParams?: IParamsValues;
+  outParams?: IParamsValues;
+  params?: IParamsValues;
 };
 
 export interface IFSMSignal {

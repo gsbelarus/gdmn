@@ -33,7 +33,7 @@
     "@types/jest": "^24",
     "@types/node": "^12",
     "jest": "^24",
-    "jest-junit": "^7",
+    "jest-junit": "^8",
     "line-by-line": "^0",
     "n-readlines": "^1",
     "shx": "^0",

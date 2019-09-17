@@ -25,9 +25,8 @@ import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataVie
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
-import { NewEntityContainer } from "@src/app/scenes/ermodel/Entity/new/NewEntityContainer";
 import { themes } from '../themeeditor/themes';
-import {INewEntityRouteProps} from "@src/app/scenes/ermodel/Entity/new/NewEntity.types";
+import { EntityDlgContainer } from '../ermodel/Entity/EntityDlg/EntityDlg2Container';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -102,26 +101,26 @@ export function GdmnView (props: IGdmnViewProps) {
       return {
         stackStyles: {
           root: {
-            //backgroundColor: getTheme().palette.themeLight,
+            //backgroundColor: 'transparent',
             color: getTheme().semanticColors.bodyText,
           }
         },
         iconButtonStyles: {
           menuIcon: { display: 'none' },
           rootHovered: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().palette.themeTertiary
           },
           rootExpanded: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().palette.neutralLight
           },
           rootPressed: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().palette.themeTertiary
           },
           root: {
-            backgroundColor: 'transparent',
+            //backgroundColor: 'transparent',
             color: getTheme().semanticColors.bodyText
           }
         } as IButtonStyles
@@ -272,137 +271,157 @@ export function GdmnView (props: IGdmnViewProps) {
               ? <Redirect exact={true} from={`${match.path}`} to={`${match.path}/applications`} />
               : <Redirect exact={true} from={`${match.path}/applications`} to={`${match.path}`} />
             }
-            <Route
-              path={`${match.path}/account`}
-              render={props => (
-                <AccountViewContainer
-                  {...props}
-                  url={props.match.url}
-                />
-              )}
-            />
-            <Route
-              path={`${match.path}/applications`}
-              render={props => {
-                return (
-                  <ApplicationsViewContainer
-                  {...props}
-                  />
-                );
-              }}
-            />
-            <Route
-              path={`${match.path}/web-stomp`}
-              render={props => {
-                return (
-                  <StompDemoViewContainer
-                    {...props}
-                  />
-                );
-              }}
-            />
-            <Route
-              path={`${match.path}/bp`}
-              render={props => {
-                return (
-                  <BPContainer
+              <Route
+                path={`${match.path}/account`}
+                render={props => (
+                  <AccountViewContainer
                     {...props}
                     url={props.match.url}
                   />
-                );
-              }}
-            />
-            <Route
-              path={`${match.path}/internals`}
-              render={props => {
-                return (
-                  <InternalsContainer {...props} />
-                );
-              }}
-            />
-            <Route
-              path={`${match.path}/er-model`}
-              render={props => {
-                return (
-                  //<ERModelViewContainer {...props} />
-                  <ERModelView2Container {...props} />
-                );
-              }}
-            />
-            <Route
-              path={`${match.path}/er-model2`}
-              render={props => {
-                return (
-                  <ERModelBoxContainer {...props} />
-                );
-              }}
-            />
-            <Route
-              exact={true}
-              path={`${match.path}/sql`}
-              render={props => {
-                return (
-                  <SqlContainer
+                )}
+              />
+              <Route
+                path={`${match.path}/applications`}
+                render={props => {
+                  return (
+                    <ApplicationsViewContainer
+                    {...props}
+                    />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/web-stomp`}
+                render={props => {
+                  return (
+                    <StompDemoViewContainer
+                      {...props}
+                    />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/bp`}
+                render={props => {
+                  return (
+                    <BPContainer
+                      {...props}
+                      url={props.match.url}
+                    />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/internals`}
+                render={props => {
+                  return (
+                    <InternalsContainer {...props} />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/er-model`}
+                render={props => {
+                  return (
+                    //<ERModelViewContainer {...props} />
+                    <ERModelView2Container {...props} />
+                  );
+                }}
+              />
+              <Route
+                path={`${match.path}/er-model2`}
+                render={props => {
+                  return (
+                    <ERModelBoxContainer {...props} />
+                  );
+                }}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/sql`}
+                render={props => {
+                  return (
+                    <SqlContainer
+                      {...props}
+                      url={props.match.url}
+                      id="SQL"
+                      key="SQL"
+                    />
+                  );
+                }}
+              />
+              <Route
+                exact={false}
+                path={`${match.path}/sql/:id`}
+                render={props => {
+                  return (
+                    <SqlContainer
+                      {...props}
+                      key={props.match.url}
+                      url={props.match.url}
+                      id={props.match.params.id}
+                    />
+                  );
+                }}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/themeEditor`}
+                render={props => (
+                  <ThemeEditorContainer
                     {...props}
                     url={props.match.url}
-                    id="SQL"
-                    key="SQL"
                   />
-                );
-              }}
-            />
-            <Route
-              exact={false}
-              path={`${match.path}/sql/:id`}
-              render={props => {
-                return (
-                  <SqlContainer
+                )}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/entityDlg/:entityName`}
+                render={props => (
+                  <EntityDlgContainer
+                    {...props}
+                    entityName={props.match.params.entityName}
+                    url={props.match.url}
+                  />
+                )}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/entityDlg/create/:uniqueID`}
+                render={props => (
+                  <EntityDlgContainer
+                    {...props}
+                    uniqueID={props.match.params.uniqueID}
+                    url={props.match.url}
+                    createEntity
+                  />
+                )}
+              />
+              <Route
+                exact={true}
+                path={`${match.path}/entity/:entityName`}
+                render={props => (
+                  <EntityDataViewContainer
                     {...props}
                     key={props.match.url}
+                    entityName={props.match.params.entityName}
                     url={props.match.url}
-                    id={props.match.params.id}
                   />
-                );
-              }}
-            />
-            <Route
-              exact={true}
-              path={`${match.path}/themeEditor`}
-              render={props => (
-                <ThemeEditorContainer
-                  {...props}
-                  url={props.match.url}
-                />
-              )}
-            />
-            <Route
-              exact={true}
-              path={`${match.path}/entity/:entityName`}
-              render={props => (
-                <EntityDataViewContainer
-                  {...props}
-                  key={props.match.url}
-                  entityName={props.match.params.entityName}
-                  url={props.match.url}
-                />
-              )}
-            />
-            {
-            <Route
-              path={`${match.path}/entity/:entityName/add/:id`}
-              render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
-                <EntityDataDlgContainer
-                  {...props}
-                  key={props.match.url}
-                  entityName={props.match.params.entityName}
-                  id={props.match.params.id}
-                  url={props.match.url}
-                  newRecord={true}
-                />
-              )}
-            />
-            }
-            {
+                )}
+              />
+              <Route
+                path={`${match.path}/entity/:entityName/add/:id`}
+                render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                  <EntityDataDlgContainer
+                    {...props}
+                    key={props.match.url}
+                    entityName={props.match.params.entityName}
+                    id={props.match.params.id}
+                    url={props.match.url}
+                    newRecord={true}
+                  />
+                )}
+              />
               <Route
                 path={`${match.path}/entity/:entityName/edit/:id`}
                 render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
@@ -416,36 +435,10 @@ export function GdmnView (props: IGdmnViewProps) {
                   />
                 )}
               />
-              }
-              {
-                <Route
-                  path={`${match.path}/addEntity`}
-                  render={(props: RouteComponentProps<INewEntityRouteProps>)  => (
-                    <NewEntityContainer
-                      {...props}
-                      newRecord={true}
-                      url={props.match.url}
-                    />
-                  )}
-                />
-              }
-            {
-              <Route
-                path={`${match.path}/:entityName/edit`}
-                render={(props: RouteComponentProps<INewEntityRouteProps>)  => (
-                  <NewEntityContainer
-                    {...props}
-                    newRecord={false}
-                    url={props.match.url}
-                    entityName={props.match.params.entityName}
-                  />
-                )}
-              />
-            }
               <Route path={`${match.path}/*`} component={NotFoundView} />
             </Switch>
           </ErrBoundary>
-        </main>
-      </>
-    );
+      </main>
+    </>
+  );
 }

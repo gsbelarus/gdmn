@@ -169,6 +169,34 @@ export function createDescriptors(status: Status, metadata?: MessageMetadata): I
     return ret;
 }
 
+export function createInDescriptors(status: Status, metadata?: MessageMetadata, params?: string[]): IDescriptor[] {
+    if (!metadata) {
+        return [];
+    }
+
+    const count = metadata.getCountSync(status);
+    const ret: IDescriptor[] = [];
+
+    for (let i = 0; i < count; ++i) {
+        ret.push({
+            alias: params![i],
+            field: metadata.getFieldSync(status, i),
+            relation: metadata.getRelationSync(status, i),
+            owner: metadata.getOwnerSync(status, i),
+            type: metadata.getTypeSync(status, i),
+            subType: metadata.getSubTypeSync(status, i),
+            length: metadata.getLengthSync(status, i),
+            scale: metadata.getScaleSync(status, i),
+            charset: metadata.getCharSetSync(status, i),
+            offset: metadata.getOffsetSync(status, i),
+            nullOffset: metadata.getNullOffsetSync(status, i),
+            isNullable: metadata.isNullableSync(status, i)
+        });
+    }
+
+    return ret;
+}
+
 export function bufferToValue(outDescriptor: IDescriptor,
                               outBuffer: Uint8Array): any {
     const dataView = new DataView(outBuffer.buffer);

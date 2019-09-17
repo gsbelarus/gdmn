@@ -1,6 +1,6 @@
-import { IFSMState } from "./types";
+import { IFSMStateType } from "./types";
 
-const login: IFSMState = {
+const login: IFSMStateType = {
   id: 'LOGIN',
   label: { ru: { name: 'Вход в систему' } },
   outParams: [
@@ -12,12 +12,17 @@ const login: IFSMState = {
   ]
 };
 
-const showData: IFSMState = {
+const showData: IFSMStateType = {
   id: 'SHOW_DATA',
   label: { ru: { name: 'Отображение данных' } },
   inParams: [
     {
       name: 'userName',
+      dataType: 'string',
+      required: true
+    },
+    {
+      name: 'queryPhrase',
       dataType: 'string',
       required: true
     }
@@ -37,12 +42,12 @@ const showData: IFSMState = {
   ]
 };
 
-const workDone: IFSMState = {
+const workDone: IFSMStateType = {
   id: 'WORK_DONE',
   label: { ru: { name: 'Завершение' } }
 };
 
-export const fsmStates = {
+export const fsmStateTypes = {
   login,
   showData,
   workDone

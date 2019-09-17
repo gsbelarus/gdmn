@@ -1,9 +1,9 @@
 import {ABlobLink} from "./ABlobLink";
-import {AResultMetadata} from "./AResultMetadata";
+import {AMetadata} from "./AMetadata";
 
 export abstract class AResult {
 
-    abstract get metadata(): AResultMetadata;
+    abstract get metadata(): AMetadata;
 
     /**
      * Retrieves the value of the designated column in the current

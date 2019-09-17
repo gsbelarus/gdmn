@@ -1,12 +1,22 @@
-import { IFSMRule, IFSMFlowchart, IFSMFlowcharts } from "./types";
-import { fsmStates } from "./fsmStates";
+import { IFSMFlowchart, IFSMFlowcharts, IFSMState } from "./types";
+import { fsmStateTypes } from "./fsmStateTypes";
 import { fsmSignals } from "./fsmSignals";
 
-const beginRule: IFSMRule = {
-  id: 'BEGIN',
-  state: fsmStates.login,
-  signal: fsmSignals.start,
-  nextState: fsmStates.showData
+const login: IFSMState = {
+  type: fsmStateTypes.login
+};
+
+const showData: IFSMState = {
+  type: fsmStateTypes.showData,
+  inParams: [
+    {
+      queryPhrase: 'Покажи все TgdcCompany'
+    }
+  ]
+};
+
+const workDone: IFSMState = {
+  type: fsmStateTypes.workDone
 };
 
 const workTime: IFSMFlowchart = {
@@ -22,7 +32,18 @@ const workTime: IFSMFlowchart = {
     }
   },
   rules: {
-    beginRule
+    beginRule: {
+      id: 'BEGIN',
+      state: login,
+      signal: fsmSignals.start,
+      nextState: showData
+    },
+    endRule: {
+      id: 'END',
+      state: showData,
+      signal: fsmSignals.finish,
+      nextState: workDone
+    }
   }
 };
 

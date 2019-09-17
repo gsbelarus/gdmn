@@ -3,7 +3,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { gdmnActions } from '../gdmn/actions';
 import { IBPProps } from './BP.types';
-import { CommandBar, ICommandBarItemProps, Dropdown, getTheme, Stack } from 'office-ui-fabric-react';
+import { CommandBar, ICommandBarItemProps, Dropdown, getTheme, Stack, Label } from 'office-ui-fabric-react';
 import { getLName } from 'gdmn-internals';
 import { mxEvent, mxGraph, mxRubberband, mxHierarchicalLayout, mxConstants } from 'mxgraph/javascript/mxClient';
 import { fsmActions } from '@src/app/fsm/actions';
@@ -109,7 +109,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
         const v = graph.insertVertex(
           parent,
           null,
-          label ? label : fsmState.id,
+          label ? label : fsmState.type.id,
           0,
           0,
           w,
@@ -224,9 +224,11 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
                 {getLName(flowchart.description, ['ru'])}
               </div>
             }
+            <Label>Current state: {fsm && fsm.state.type.id}</Label>
+            <Label>Path:</Label>
             <Stack>
               {
-                fsm && fsm.path.map( s => <div>{s.id}</div> )
+                fsm && fsm.path.map( s => <div>{s.type.id}</div> )
               }
             </Stack>
           </div>
