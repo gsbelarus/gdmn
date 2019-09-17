@@ -920,7 +920,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   display: 'grid',
                   width: '100%',
                   height: '100%',
-                  gridTemplateColumns: '1fr 320px',
+                  gridTemplateColumns: '1fr',
                   gridTemplateRows: '1fr'
                 }}
               >
@@ -934,7 +934,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                       gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
                       gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
                       userSelect: undefined,
-                      ...object2style(window, objects, true)
+                      ...object2style(window, objects)
                     }}
                   >
                     {
@@ -942,7 +942,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                         <div
                           key={area.name}
                           style={{
-                            gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`
+                            ...object2style(area, objects),
+                            borderRadius: '4px',
+                            padding: '4px'
                           }}
                         >
                           <Stack horizontal={area.horizontal}>
