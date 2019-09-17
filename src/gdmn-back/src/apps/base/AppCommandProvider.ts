@@ -22,7 +22,8 @@ import {
   QuerySetCmd,
   AddEntityCmd,
   DeleteEntityCmd,
-  EditEntityCmd
+  EditEntityCmd,
+  QuerySettingCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -197,6 +198,11 @@ export class AppCommandProvider {
     // TODO
   }
 
+  private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {
+    return typeof command.payload === "object"
+      && !!command.payload;
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -327,6 +333,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushEditEntityCmd(session, command);
+      }
+      case "QUERY_SETTING": {
+        if (!AppCommandProvider._verifyQuerySettingCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushQuerySettingCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");
