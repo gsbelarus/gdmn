@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
-import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
+import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor, ISqlPrepareResponse} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   Entity,
@@ -45,6 +45,7 @@ export type AppAction =
   | "SQL_QUERY"
   | "PREPARE_QUERY"
   | "PREPARE_SQL_QUERY"
+  | "SQL_PREPARE"
   | "FETCH_QUERY"
   | "FETCH_SQL_QUERY"
   | "INSERT"
@@ -71,6 +72,7 @@ export type QuerySetCmd = AppCmd<"QUERY_SET", { querySet: IEntityQuerySetInspect
 export type SqlQueryCmd = AppCmd<"SQL_QUERY", { select: string, params: IParams }>;
 export type PrepareQueryCmd = AppCmd<"PREPARE_QUERY", { query: IEntityQueryInspector }>;
 export type PrepareSqlQueryCmd = AppCmd<"PREPARE_SQL_QUERY", { select: string, params: IParams }>;
+export type SqlPrepareCmd = AppCmd<"SQL_PREPARE", { sql: string }>;
 export type FetchQueryCmd = AppCmd<"FETCH_QUERY", { taskKey: string, rowsCount: number }>;
 export type FetchSqlQueryCmd = AppCmd<"FETCH_SQL_QUERY", { taskKey: string, rowsCount: number }>;
 export type InsertCmd = AppCmd<"INSERT", { insert: IEntityInsertInspector }>;
@@ -685,6 +687,29 @@ export class Application extends ADatabase {
           context.session.cursorsPromises.delete(task.id);
         }
         await context.checkStatus();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushSqlPrepareCmd(session: Session, command: SqlPrepareCmd): Task<SqlPrepareCmd, ISqlPrepareResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const { sql } = context.command.payload;
+
+        const result = await context.session.executeConnection((connection) =>
+            ERBridge.sqlPrepare(connection, connection.readTransaction, sql)
+        );
+        return result;
       }
     });
     session.taskManager.add(task);

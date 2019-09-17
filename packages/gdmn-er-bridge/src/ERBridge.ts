@@ -1,4 +1,4 @@
-import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams} from "gdmn-db";
+import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams, Types} from "gdmn-db";
 import {
   Entity,
   EntityDelete,
@@ -22,9 +22,17 @@ import {DDLHelper} from "./ddl/DDLHelper";
 import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
 import {EntityDefiner} from "./EntityDefiner";
-import {GetSequence } from "./crud/query/Sequence";
+import {GetSequence} from "./crud/query/Sequence";
 import {EQuerySetCursor} from "./cursor/EQuerySetCursor";
 
+export interface ISqlPrepareResponse {
+  plan?: string;
+  placeholderList?: {
+      name: string,
+      type: Types
+  }[];
+}
+    
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
   transaction: ATransaction;
@@ -140,6 +148,22 @@ export class ERBridge {
                                          select: string,
                                          params: IParams): Promise<SqlQueryCursor> {
     return await SqlQueryCursor.open(connection, transaction, erModel, select, params);
+  }
+
+  public static async sqlPrepare(connection: AConnection,
+                                transaction: ATransaction,
+                                sql: string): Promise<ISqlPrepareResponse> {
+
+    const sqlPrepare = await connection.prepare(transaction, sql);
+    const sqlPlan = await sqlPrepare.getPlan();
+
+    const paramNameList: any = [];
+    for(let i = 0; i < sqlPrepare.metadata.columnCount; i += 1){
+        paramNameList.push({name: sqlPrepare.metadata.getColumnLabel(i), type: sqlPrepare.metadata.getColumnType(i)});
+    };
+
+
+    return { plan: sqlPlan, placeholderList: paramNameList };
   }
 
   public static async sqlQuery(connection: AConnection,
