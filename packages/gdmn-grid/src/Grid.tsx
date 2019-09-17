@@ -19,7 +19,7 @@ import { TextCellEditor } from './editors/TextCellEditor';
 import { ParamsDialog } from './GridParams/ParamsDialog';
 import { applyUserSettings, IUserColumnsSettings } from './applyUserSettings';
 import { numberFormats } from 'gdmn-internals';
-import { IGridColors, getClassNames, IGridCSSClassNames } from './ClassNames';
+import { IGridColors, getClassNames, IGridCSSClassNames } from './types';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 

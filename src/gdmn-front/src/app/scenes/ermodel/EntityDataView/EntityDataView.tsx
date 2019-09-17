@@ -9,7 +9,7 @@ import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IGridColors } from 'gdmn-grid';
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
@@ -248,7 +248,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
-  const colors = {
+  const colors: IGridColors = {
     currentCellBackground: theme.palette.themeSecondary,
     currentRowBackground: theme.palette.themeTertiary,
     currentRowBackgroundColor: theme.semanticColors.bodyBackground,
