@@ -62,7 +62,9 @@ import {
   TQuerySetTaskCmdResult,
   TAddEntityTaskCmdResult,
   TDeleteEntityTaskCmdResult,
-  TEditEntityTaskCmdResult, TQuerySettingTaskCmdResult
+  TQuerySettingTaskCmdResult,
+  TEditEntityTaskCmdResult,
+  TSqlPrepareTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -269,6 +271,15 @@ export class GdmnPubSubApi {
     return this.runTaskCmd({
       payload: {
         action: TTaskActionNames.PREPARE_SQL_QUERY,
+        payload
+      }
+    });
+  }
+
+  public sqlPrepare(payload: TTaskActionPayloadTypes[TTaskActionNames.SQL_PREPARE]): Observable<TSqlPrepareTaskCmdResult> {
+    return this.runTaskCmd({
+      payload: {
+        action: TTaskActionNames.SQL_PREPARE,
         payload
       }
     });

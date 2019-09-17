@@ -9,6 +9,7 @@ export const EntityDataViewContainer = connect(
     entity: state.gdmnState.erModel.entities[ownProps.entityName],
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
     erModel: state.gdmnState.erModel,
-    gcs: state.grid[ownProps.entityName]
+    gcs: state.grid[ownProps.entityName],
+    theme: state.gdmnState.theme
   })
 )(EntityDataView);

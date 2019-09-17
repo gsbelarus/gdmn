@@ -23,7 +23,8 @@ import {
   AddEntityCmd,
   DeleteEntityCmd,
   EditEntityCmd,
-  QuerySettingCmd
+  QuerySettingCmd,
+  SqlPrepareCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -108,6 +109,13 @@ export class AppCommandProvider {
       && typeof command.payload.select === "string"
       && "params" in command.payload
       && typeof command.payload.params === "object";
+  }
+
+  private static _verifySqlPrepareCmd(command: ICmd<AppAction, any>): command is SqlPrepareCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "sql" in command.payload
+      && typeof command.payload.sql === "string";
   }
 
   private static _verifyFetchQueryCmd(command: ICmd<AppAction, any>): command is FetchQueryCmd {
@@ -267,6 +275,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushPrepareSqlQueryCmd(session, command);
+      }
+      case "SQL_PREPARE": {
+        if (!AppCommandProvider._verifySqlPrepareCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushSqlPrepareCmd(session, command);
       }
       case "FETCH_QUERY": {
         if (!AppCommandProvider._verifyFetchQueryCmd(command)) {

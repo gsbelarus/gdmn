@@ -23,6 +23,7 @@ export interface IEntityDataViewStateProps {
   viewTab?: IViewTab;
   erModel?: ERModel;
   gcs: GridComponentState;
+  theme: string;
 };
 
 export interface IEntityDataViewProps extends IEntityDataViewContainerProps, IEntityDataViewStateProps {

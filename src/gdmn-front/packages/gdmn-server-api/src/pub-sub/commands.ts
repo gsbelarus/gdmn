@@ -139,6 +139,8 @@ export type TPrepareSqlQueryTaskCmd = TTaskCmd<TTaskActionNames.PREPARE_SQL_QUER
 
 export type TPrepareSqlQueryTaskCmdResult = TTaskCmdResult<TTaskActionNames.PREPARE_SQL_QUERY>;
 
+export type TSqlPrepareTaskCmdResult = TTaskCmdResult<TTaskActionNames.SQL_PREPARE>;
+
 // fetch query
 
 export type TFetchQueryTaskCmd = TTaskCmd<TTaskActionNames.FETCH_QUERY>;

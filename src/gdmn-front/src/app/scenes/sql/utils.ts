@@ -1,5 +1,7 @@
 import { Types, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from 'gdmn-internals';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
+import { AttributeTypes } from 'gdmn-orm';
+import { ISQLParam } from './Sql';
 
 export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliasesRdb, orm?: ISqlQueryResponseAliasesOrm} ): IFieldDef {
 
@@ -29,7 +31,6 @@ export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliases
     case Types.BOOLEAN:
       dataType = TFieldType.Boolean;
     default:
-      console.log(sqlfa.rdb);
       throw new Error(`Unsupported attribute type ${sqlfa.rdb.type} of ${sqlfa.rdb.field!}`);
   }
 
@@ -41,5 +42,41 @@ export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliases
     size,
     caption,
     sqlfa
+  };
+}
+
+export function sqlParams2params(params: {name: string, type: Types} ): ISQLParam {
+  const {name, type } = params;
+  let dataType;
+
+  switch(type) {
+    case Types.CHAR:
+    case Types.VARCHAR:
+    case Types.BLOB:
+      dataType = TFieldType.String;
+      break;
+    case Types.SMALLINT:
+    case Types.BIGINT:
+    case Types.INTEGER:
+      dataType = TFieldType.Integer;
+      break;
+    case Types.DOUBLE:
+    case Types.FLOAT:
+      dataType = TFieldType.Float;
+      break;
+    case Types.DATE:
+    case Types.TIME:
+    case Types.TIMESTAMP:
+      dataType = TFieldType.Date;
+      break;
+    case Types.BOOLEAN:
+      dataType = TFieldType.Boolean;
+    default:
+      throw new Error(`Unsupported attribute type ${params.type} of ${params.type}`);
+  }
+
+  return {
+    name,
+    type: dataType
   };
 }

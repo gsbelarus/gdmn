@@ -9,11 +9,12 @@ import {
   ISequenceQueryResponse,
   IEntityQuerySetInspector,
   IEntityQuerySetResponse,
-  IAttribute
+  IAttribute,
+  AttributeTypes
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases,  ISettingParams} from 'gdmn-internals';
+import { ISqlQueryResponseAliases, Types,  ISettingParams } from 'gdmn-internals';
 import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
@@ -44,6 +45,7 @@ export const enum TTaskActionNames {
   QUERY = 'QUERY',
   QUERY_SET = 'QUERY_SET',
   SQL_QUERY = 'SQL_QUERY',
+  SQL_PREPARE = 'SQL_PREPARE',
   PREPARE_QUERY = 'PREPARE_QUERY',
   PREPARE_SQL_QUERY = 'PREPARE_SQL_QUERY',
   FETCH_QUERY = 'FETCH_QUERY',
@@ -106,6 +108,9 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.SQL_QUERY]: {
     select: string;
     params: {[alias: string]: any}
+  };
+  [TTaskActionNames.SQL_PREPARE]: {
+    sql: string;
   };
   [TTaskActionNames.PREPARE_QUERY]: {
     query: IEntityQueryInspector;
@@ -197,6 +202,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.QUERY]: IEntityQueryResponse;
   [TTaskActionNames.QUERY_SET]: IEntityQuerySetResponse;
   [TTaskActionNames.SQL_QUERY]: ISqlQueryResponse;
+  [TTaskActionNames.SQL_PREPARE]: ISqlPrepareResponse;
   [TTaskActionNames.PREPARE_QUERY]: undefined;
   [TTaskActionNames.PREPARE_SQL_QUERY]: undefined;
   [TTaskActionNames.FETCH_QUERY]: IEntityQueryResponse;
@@ -264,6 +270,7 @@ export type AppAction =
   | "QUERY"
   | "QUERY_SET"
   | "SQL_QUERY"
+  | "SQL_PREPARE"
   | "PREPARE_QUERY"
   | "PREPARE_SQL_QUERY"
   | "FETCH_QUERY"
@@ -278,6 +285,14 @@ export type AppAction =
   | "DELETE_ENTITY"
   | "EDIT_ENTITY"
   | "QUERY_SETTING";
+
+export interface ISqlPrepareResponse {
+  plan?: string;
+  placeholderList?: {
+      name: string,
+      type: Types
+  }[];
+}
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];
