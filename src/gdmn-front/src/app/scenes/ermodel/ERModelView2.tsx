@@ -15,7 +15,7 @@ import {apiService} from "@src/app/services/apiService";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
-  const { entities, attributes, viewTab, erModel, dispatch, gcsEntities, gcsAttributes, match } = props;
+  const { entities, attributes, viewTab, erModel, dispatch, gcsEntities, gcsAttributes, match, gridColors } = props;
   const [showInspector, setShowInspector] = useState(false);
   const entitiesFilter = entities && entities.filter && entities.filter.conditions.length ? entities.filter.conditions[0].value : '';
   const attributesFilter = attributes && attributes.filter && attributes.filter.conditions.length ? attributes.filter.conditions[0].value : '';
@@ -317,6 +317,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             {...gridActions}
             ref={ grid => grid && (gridRefEntities.current = grid) }
             savedState={getSavedStateEntities()}
+            colors={gridColors}
           />
         }
       </div>
@@ -337,6 +338,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             {...gridActions}
             ref={ grid => grid && (gridRefAttributes.current = grid) }
             savedState={getSavedStateAttributes()}
+            colors={gridColors}
           />
         }
       </div>

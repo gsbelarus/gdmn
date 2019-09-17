@@ -1,5 +1,5 @@
 import { RecordSet, RSAction } from "gdmn-recordset";
-import { GridComponentState, GridAction } from "gdmn-grid";
+import { GridComponentState, GridAction, IGridColors } from "gdmn-grid";
 import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "../gdmn/actions";
@@ -16,6 +16,7 @@ export interface IERModelView2StateProps {
   gcsAttributes?: GridComponentState;
   viewTab?: IViewTab;
   erModel?: ERModel;
+  gridColors: IGridColors;
 };
 
 export interface IERModelView2Props extends IERModelView2ContainerProps, IERModelView2StateProps {

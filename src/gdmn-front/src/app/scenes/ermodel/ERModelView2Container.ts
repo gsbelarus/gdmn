@@ -11,5 +11,6 @@ export const ERModelView2Container = connect(
     erModel: state.gdmnState.erModel,
     gcsEntities: state.grid.entities,
     gcsAttributes: state.grid.attributes,
+    gridColors: state.gdmnState.gridColors
   })
 )(ERModelView2);

@@ -8,6 +8,7 @@ import { authActionsAsync, authActions } from '@src/app/scenes/auth/actions';
 import { rootActions } from '@src/app/scenes/root/actions';
 import { IViewTab, ISessionData } from './types';
 import { ISignInBoxData } from '../auth/components/SignInBox';
+import { IGridColors } from 'gdmn-grid';
 
 export const gdmnActionsAsync = {
   apiActivate: (): TThunkAction => async (dispatch, getState, { apiService }) => {
@@ -197,9 +198,7 @@ export const gdmnActions = {
     return (application: IApplicationInfo & {loading?: boolean}) => resolve(application);
   }),
 
-  updateApp: createAction('gdmn/UPDATE_APP', resolve => {
-    return (uid: string, application: IApplicationInfo & {loading?: boolean}) => resolve({uid, application});
-  }),
+  updateApp: createAction('gdmn/UPDATE_APP', resolve => (uid: string, application: IApplicationInfo & {loading?: boolean}) => resolve({uid, application}) ),
 
   deleteApp: createAction('gdmn/DELETE_APP', resolve => (uid: string) => resolve(uid)),
 
@@ -221,12 +220,11 @@ export const gdmnActions = {
 
   saveSessionData: createAction('gdmn/SAVE_SESSION_DATA', resolve => (params: { viewTabURL: string, merge?: boolean, sessionData?: ISessionData }) => resolve(params) ),
 
-  getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => {
-    return (sessionInfo: any[]) => resolve(sessionInfo)
-  }),
+  getSessionInfo: createAction('gdmn/GET_SESSION_INFO', resolve => (sessionInfo: any[]) => resolve(sessionInfo) ),
 
-  selectTheme: createAction('gdmn/SELECT_THEME', resolve => (theme: string) => resolve(theme) )
+  selectTheme: createAction('gdmn/SELECT_THEME', resolve => (theme: string) => resolve(theme) ),
+
+  setThemeAndGridColors: createAction('gdmn/SET_THEME_AND_GRID_COLORS', resolve => (theme: string, gridColors: IGridColors) => resolve({ theme, gridColors }) )
 };
 
 export type GdmnAction = ActionType<typeof gdmnActions>;
-

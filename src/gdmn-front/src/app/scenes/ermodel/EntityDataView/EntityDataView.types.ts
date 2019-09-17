@@ -6,7 +6,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "../../gdmn/actions";
 import { LoadRSActions } from "@src/app/store/loadRSActions";
-import { GridComponentState, GridAction } from "gdmn-grid";
+import { GridComponentState, GridAction, IGridColors } from "gdmn-grid";
 
 export interface IEntityDataViewRouteProps {
   entityName: string
@@ -23,7 +23,7 @@ export interface IEntityDataViewStateProps {
   viewTab?: IViewTab;
   erModel?: ERModel;
   gcs: GridComponentState;
-  theme: string;
+  gridColors: IGridColors;
 };
 
 export interface IEntityDataViewProps extends IEntityDataViewContainerProps, IEntityDataViewStateProps {
