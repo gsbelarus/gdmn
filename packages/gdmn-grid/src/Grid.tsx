@@ -955,8 +955,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
             const { scrollLeft, scrollTop, deltaWidth } = this.state;
             if (deltaWidth !== deltaWidthColumn) {
-              this.setState({deltaWidth: deltaWidthColumn})
-            };
+              setTimeout(() => this.setState({ deltaWidth: deltaWidthColumn }), 5)
+            }
 
             return composeGrid(width, height, scrollLeft, scrollTop, deltaWidthColumn, (params: OnScrollParams) =>
               this.setState({ ...params })
@@ -1175,7 +1175,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         <Draggable
           key={key}
           axis="x"
-          handle={styles.CellCaption}
+          handle={'.' + styles.CellCaption}
           position={{ x: 0, y: 0 }}
           disabled={this.state.fieldEditor}
           defaultClassNameDragging={styles.GridColumnDragging}
