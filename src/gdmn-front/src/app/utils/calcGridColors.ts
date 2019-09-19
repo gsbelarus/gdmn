@@ -1,9 +1,7 @@
 import { IGridColors } from "gdmn-grid";
-import { useState, useEffect } from "react";
-import { getTheme } from "office-ui-fabric-react";
+import { ITheme, getTheme } from "office-ui-fabric-react";
 
-const calcGridColors = (): IGridColors => {
-  const theme = getTheme();
+export const calcGridColors = (theme: ITheme = getTheme()): IGridColors => {
   return {
     currentCellBackground: theme.palette.themeSecondary,
     currentRowBackground: theme.palette.themeTertiary,
@@ -37,10 +35,4 @@ const calcGridColors = (): IGridColors => {
     deleted: theme.palette.red,
     edited: theme.palette.green
   };
-};
-
-export const useGridColors = (theme: string): IGridColors => {
-  const [gridColors, setGridColors] = useState(calcGridColors());
-  useEffect( () => setGridColors(calcGridColors()), [theme]);
-  return gridColors;
 };

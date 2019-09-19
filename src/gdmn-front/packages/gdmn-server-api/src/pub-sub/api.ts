@@ -14,7 +14,7 @@ import {
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases, Types,  ISettingParams } from 'gdmn-internals';
+import { ISqlQueryResponseAliases, Types,  ISettingParams, ISettingData } from 'gdmn-internals';
 import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
@@ -226,7 +226,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.ADD_ENTITY]: string[];
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
-  [TTaskActionNames.QUERY_SETTING]: {params: ISettingParams[]};
+  [TTaskActionNames.QUERY_SETTING]: ISettingData[];
 }
 
 export interface ISqlQueryResponseDataItem {

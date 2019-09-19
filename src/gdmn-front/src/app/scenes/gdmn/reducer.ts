@@ -4,6 +4,8 @@ import { gdmnActions, GdmnAction } from '@src/app/scenes/gdmn/actions';
 import { IViewTab } from './types';
 import { IApplicationInfo, ITemplateApplication } from '@gdmn/server-api';
 import { themes } from '../themeeditor/themes';
+import { IGridColors } from 'gdmn-grid';
+import { calcGridColors } from '@src/app/utils/calcGridColors';
 
 export type TGdmnState = {
   erModel: ERModel;
@@ -11,10 +13,11 @@ export type TGdmnState = {
   loadingCounter: number;
   loadingMessage?: string;
   viewTabs: IViewTab[];
-  apps: Array<IApplicationInfo & {loading: boolean}>;
+  apps: Array<IApplicationInfo & {loading?: boolean}>;
   templates?: ITemplateApplication[];
   sessionInfo: any[];
   theme: string;
+  gridColors: IGridColors;
 };
 
 const initialState: TGdmnState = {
@@ -24,10 +27,11 @@ const initialState: TGdmnState = {
   viewTabs: [],
   apps: [],
   sessionInfo: [],
-  theme: themes[0].name
+  theme: themes[0].name,
+  gridColors: calcGridColors()
 };
 
-export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
+export function reducer(state: TGdmnState = initialState, action: GdmnAction): TGdmnState {
   switch (action.type) {
     case getType(gdmnActions.setSchema): {
       return {
@@ -183,10 +187,11 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction) {
       };
     }
 
-    case getType(gdmnActions.selectTheme): {
+    case getType(gdmnActions.setThemeAndGridColors): {
       return {
         ...state,
-        theme: action.payload
+        theme: action.payload.theme,
+        gridColors: action.payload.gridColors
       };
     }
 

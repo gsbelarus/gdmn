@@ -14,6 +14,7 @@ import { TThunkMiddleware } from '@src/app/store/middlewares';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { themes } from '../themeeditor/themes';
 import { loadTheme } from '@uifabric/styling';
+import { calcGridColors } from '@src/app/utils/calcGridColors';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
@@ -291,17 +292,17 @@ const selectThemeMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next
     }
 
     loadTheme(namedTheme.theme);
+
+    return next(gdmnActions.setThemeAndGridColors(action.payload, calcGridColors()));
   }
 
   return next(action);
 };
 
-const getGdmnMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
+export const getGdmnMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
   abortNetReconnectMiddleware,
   getApiMiddleware(apiService),
   loadingMiddleware,
   viewTabMiddleware,
   selectThemeMiddleware
 ];
-
-export { getGdmnMiddlewares };
