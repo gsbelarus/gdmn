@@ -35,10 +35,13 @@ interface IEntityDlgState {
   initialData?: IEntity;
   entityData?: IEntity;
   changed?: boolean;
+  selectedAttr?: number;
 };
 
 type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'SET_STATE', state: IEntityDlgState }
+  | { type: 'ADD_ATTR' }
+  | { type: 'DELETE_ATTR' }
   | { type: 'REVERT' };
 
 function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
@@ -52,7 +55,33 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         ...state,
         initialData,
         entityData,
+        selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
         changed: JSON.stringify(initialData) !== JSON.stringify(entityData)
+      };
+    }
+
+    case 'ADD_ATTR': {
+      const { entityData, selectedAttr } = state;
+
+      if (!entityData) {
+        return state;
+      }
+
+      const newIdx = selectedAttr === undefined ? 0 : selectedAttr;
+      const newAttributes = [...entityData.attributes];
+      newAttributes.splice(newIdx, 0, {
+        name: '',
+        type: 'String',
+        lName: { en: { name: '' } },
+        required: false,
+        semCategories: ''
+      });
+
+      return {
+        ...state,
+        entityData: {...entityData, attributes: newAttributes },
+        selectedAttr: newIdx,
+        changed: true
       };
     }
 
@@ -64,6 +93,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         return {
           ...state,
           entityData: state.initialData,
+          selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
           changed: false
         }
       }
@@ -82,7 +112,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   const entity = erModel && entityName && erModel.entities[entityName];
   const [state, dlgDispatch] = useReducer(reducer, {});
-  const { entityData, changed } = state;
+  const { entityData, changed, selectedAttr } = state;
 
   useEffect( () => {
     if (!viewTab) {
@@ -163,6 +193,24 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         iconName: 'Undo'
       },
       onClick: () => dlgDispatch({ type: 'REVERT' })
+    },
+    {
+      key: 'addAttr',
+      disabled: false,
+      text: 'Добавить атрибут',
+      iconProps: {
+        iconName: 'Add'
+      },
+      onClick: () => dlgDispatch({ type: 'ADD_ATTR' })
+    },
+    {
+      key: 'deleteAttr',
+      disabled: !selectedAttr,
+      text: 'Удалить атрибут',
+      iconProps: {
+        iconName: 'Delete'
+      },
+      onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
     }
   ];
 
@@ -196,7 +244,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       </Stack>
       <Stack>
         {
-          entityData.attributes.map( attr => <EntityAttribute attr={attr} /> )
+          entityData.attributes.map( attr => <EntityAttribute attr={attr} createAttribute={true} /> )
         }
       </Stack>
     </Stack>
