@@ -26,6 +26,7 @@ import { ParamsDialog } from './ParamsDialog';
 import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
 import { IEntityInsertFieldInspector } from 'gdmn-orm';
 import { PlanDialog } from './PlanDialog';
+import { bindGridActions } from '../ermodel/utils';
 
 export interface ISQLParam {
   name: string;
@@ -99,7 +100,7 @@ const initialState: ISQLViewState = {
 
 export const Sql = CSSModules(
   (props: ISQLProps): JSX.Element => {
-    const { url, viewTab, dispatch, rs, gcs, id, history } = props;
+    const { url, viewTab, dispatch, rs, gcs, id, history, gridColors } = props;
 
     const [state, setState] = useReducer(reducer, initialState);
 
@@ -476,6 +477,8 @@ export const Sql = CSSModules(
       [state, rs]
     );
 
+    const { ...gridActions } = bindGridActions(dispatch);
+
     return (
       <div styleName="main-container">
         <div styleName="top-container">
@@ -511,7 +514,7 @@ export const Sql = CSSModules(
             </div>
             <div>
               {rs && gcs && (
-                <GDMNGrid {...gcs} rs={rs} onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize} />
+                <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors}/* onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize}  *//>
               )}
             </div>
           </div>

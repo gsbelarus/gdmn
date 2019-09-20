@@ -3,7 +3,7 @@ import { GdmnAction } from "../gdmn/actions";
 import { IState } from "@src/app/store/reducer";
 import { ThunkDispatch } from "redux-thunk";
 import { RecordSet, RSAction } from "gdmn-recordset";
-import { GridComponentState, GridAction } from "gdmn-grid";
+import { GridComponentState, GridAction, IGridColors } from "gdmn-grid";
 import { TRsMetaActions } from "@src/app/store/rsmeta";
 import { RouteComponentProps } from "react-router";
 import { ERModel } from "gdmn-orm";
@@ -17,6 +17,7 @@ export interface ISQLStateProps {
   erModel: ERModel;
   rs?: RecordSet;
   gcs: GridComponentState;
+  gridColors: IGridColors;
   viewTab?: IViewTab;
 };
 
