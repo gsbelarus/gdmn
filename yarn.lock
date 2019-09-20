@@ -2357,9 +2357,9 @@
     "@types/jest-diff" "*"
 
 "@types/jsonwebtoken@^8":
-  version "8.3.3"
-  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-8.3.3.tgz#eafeea8239c74b02263d204c0e1175d5cd0bb85f"
-  integrity sha512-mofwpvFbm2AUxD5mg4iQPc2o/+ubM200R/L86kR17SeC99jM3gEnB9hy16ln3kZkxM5LnGpDJclxeUNEHhehng==
+  version "8.3.4"
+  resolved "https://registry.yarnpkg.com/@types/jsonwebtoken/-/jsonwebtoken-8.3.4.tgz#93c10c3d0a04bf31a507f89803e7df90a7a90889"
+  integrity sha512-R0eiYPpbo6Jl/XtGwpg7vQlapd7D38gp0g9WMKOSFr/e2NUTN9Udd3ty7n+2yUpmHr2Fti+/BSc+KSQ8zPN+vg==
   dependencies:
     "@types/node" "*"
 
@@ -2642,9 +2642,9 @@
     "@types/vfile-message" "*"
 
 "@types/webpack-bundle-analyzer@^2":
-  version "2.13.2"
-  resolved "https://registry.yarnpkg.com/@types/webpack-bundle-analyzer/-/webpack-bundle-analyzer-2.13.2.tgz#d5183ae083b29b8cd0dc7352eaf008ed220c13d9"
-  integrity sha512-DcTExvdZusgPRVL3cbqdiqyo8YNYxDqMctymmBZ0dgjRnu6PpAJ494q6mKtCOwT9GRWqPZBm52Y9JbQo7NVzXg==
+  version "2.13.3"
+  resolved "https://registry.yarnpkg.com/@types/webpack-bundle-analyzer/-/webpack-bundle-analyzer-2.13.3.tgz#820c8f734e171f081cbf02d889b9cda687cc89dd"
+  integrity sha512-p8EXyKfq311FFFfRuAR9tOHFFTQ9DqGrjRQYXbjjEMfl9pKGaTtRy1zFJtPMyZHfRoqh5rsYPVSVknkl004M7A==
   dependencies:
     "@types/webpack" "*"
 
@@ -2675,18 +2675,7 @@
     "@types/source-list-map" "*"
     source-map "^0.6.1"
 
-"@types/webpack@*":
-  version "4.32.1"
-  resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.32.1.tgz#6e95010e806f808abd6551c112097ac09035aacf"
-  integrity sha512-9n38CBx9uga1FEAdTipnt0EkbKpsCJFh7xJb1LE65FFb/A6OOLFX022vYsGC1IyVCZ/GroNg9u/RMmlDxGcLIw==
-  dependencies:
-    "@types/anymatch" "*"
-    "@types/node" "*"
-    "@types/tapable" "*"
-    "@types/uglify-js" "*"
-    source-map "^0.6.0"
-
-"@types/webpack@^4.39.1":
+"@types/webpack@*", "@types/webpack@^4.39.1":
   version "4.39.1"
   resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.39.1.tgz#d76cd551cc851198f67f75ff3e26551d204530e9"
   integrity sha512-rgO9ihNu/l72Sjx3shqwc9r6gi+tOMsqxhMEZhOEVIZt82GFOeUyEdpTk1BO2HqEHLS/XJW8ldUTIIfIMMyYFQ==
@@ -11079,10 +11068,10 @@ node-fetch@^2.3.0, node-fetch@^2.5.0, node-fetch@^2.6.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
 
-node-firebird-native-api@^1.0.1-beta.1:
-  version "1.0.1-beta.1"
-  resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-1.0.1-beta.1.tgz#5735c076bc37f31de2f10a0cb46a03c17bb6731d"
-  integrity sha512-TozHczai5CemKKV6UVErRcxtIFu56w1XT8Q0nPv5ljgtHeyyHw00y6vrLH0MJ1emLs+aU2pWaOaN4AaVTj7hjw==
+node-firebird-native-api@^1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-1.0.1.tgz#e8348bfe584f200ad7a5a8a3664e768d5ee02ddb"
+  integrity sha512-y9ZWPDQ+GqomGisRw6THKERKU9/9qoVrlOzChUpLmQN2ZhUe30sLk1Y8UgrdixN9c0BtBId7HbmABTssMau42Q==
   dependencies:
     "@types/node" "^12.6.9"
     bindings "^1.5.0"
@@ -11487,9 +11476,9 @@ octokit-pagination-methods@^1.1.0:
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
 office-ui-fabric-react@^7:
-  version "7.35.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.35.0.tgz#7132cf94bffcf9a9da310bff0e48f63717ae00d9"
-  integrity sha512-0pk3nYxEyzVl/kATmTxVrnBiUSYT1c/0yEl3R+xzguwEU+lqvWT7gT5YyesX5LuDGCQ+GFMhnKCTveZayt4ktQ==
+  version "7.36.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.36.0.tgz#5e7a4f194f93c36c662bef4f02cdce9cf462d7c2"
+  integrity sha512-k1N0xSfvadCs5jSpTx9hXznEnz1b+t0mVtWhpUU2q+RzdlhK0uiVWNnG0AlydRUQiYGU76rrQD29yvc8OVlAtw==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/example-data" "^7.0.1"
@@ -15443,9 +15432,9 @@ ts-jest@^24:
     yargs-parser "10.x"
 
 ts-loader@^6:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/ts-loader/-/ts-loader-6.1.0.tgz#999cb0a7644f9c7c6c0901802dce50ceb0a76e5b"
-  integrity sha512-7JedeOu2rsYHQDEr2fwmMozABwbQTZXEaEMZPSIWG7gpzRefOLJCqwdazcegHtyaxp04PeEgs/b0m08WMpnIzQ==
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/ts-loader/-/ts-loader-6.1.1.tgz#f30c68aa1ce59fa266f0bb70a36959ca68f40ddc"
+  integrity sha512-AoOek8ZWJlWwTRH5ttNmZPBRcASUJZc8wc8E/2PGOXef96H97J8KaLXaW/zUnvyFjvCoRBhTGh9ZIMKL1arcCA==
   dependencies:
     chalk "^2.3.0"
     enhanced-resolve "^4.0.0"
