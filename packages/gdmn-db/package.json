@@ -29,7 +29,7 @@
   "dependencies": {
     "gdmn-internals": "^1",
     "generic-pool": "^3",
-    "node-firebird-native-api": "^1.0.1-beta.1"
+    "node-firebird-native-api": "^1.0.1"
   },
   "devDependencies": {
     "@types/generic-pool": "^3",
