@@ -1,16 +1,9 @@
-import {
-  createGrid,
-  deleteGrid,
-  GDMNGrid,
-  setCursorCol,
-  TSetCursorPosEvent,
-  TColumnResizeEvent,
-  resizeColumn
-} from 'gdmn-grid';
+import { createGrid, deleteGrid, GDMNGrid } from 'gdmn-grid';
+import { IEntityInsertFieldInspector } from 'gdmn-orm';
 import { IDataRow, RecordSet, rsActions, TFieldType } from 'gdmn-recordset';
 import { List } from 'immutable';
-import { CommandBar, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { CommandBar, ICommandBarItemProps, TextField, Text } from 'office-ui-fabric-react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import CSSModules from 'react-css-modules';
 import { v1 } from 'uuid';
 
@@ -18,15 +11,14 @@ import { TTaskStatus } from '@gdmn/server-api';
 import { apiService } from '@src/app/services/apiService';
 import { rsMetaActions } from '@src/app/store/rsmeta';
 
+import { bindGridActions } from '../ermodel/utils';
 import { gdmnActions } from '../gdmn/actions';
+import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
+import { ParamsDialog } from './ParamsDialog';
+import { PlanDialog } from './PlanDialog';
 import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd, sqlParams2params } from './utils';
-import { ParamsDialog } from './ParamsDialog';
-import { HistoryDialogContainer } from './HistoryDialog/HistoryDialogContainer';
-import { IEntityInsertFieldInspector } from 'gdmn-orm';
-import { PlanDialog } from './PlanDialog';
-import { bindGridActions } from '../ermodel/utils';
 
 export interface ISQLParam {
   name: string;
@@ -37,6 +29,7 @@ export interface ISQLParam {
 export interface INamedParams {
   [alias: string]: any;
 }
+
 interface ISQLViewState {
   expression: string;
   paramList: ISQLParam[];
@@ -88,10 +81,10 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
 }
 
 const initialState: ISQLViewState = {
-  expression: 'select * from gd_good where id = :id and  name = :name',
+  expression: 'select * from gd_good where name = :name',
   plan: '',
-  params: {},
-  paramList: [],
+  params: {name: 'Золото'},
+  paramList: [{name: 'name', type: TFieldType.String, value: 'Зотоло'}],
   viewMode: 'hor',
   showPlan: false,
   showParams: false,
@@ -192,7 +185,7 @@ export const Sql = CSSModules(
     }, [rs]);
 
     useEffect(()=>{
-      if (!(Object.entries(state.params).length === 0 && state.params.constructor === Object)) handleExecuteQuery();
+      if (!(Object.entries(state.params).length === 0 && state.params.constructor === Object)) executeSql();
     }, [state.params])
 
     const handleClosePlan = () => setState({ type: 'SHOW_PLAN', showPlan: false });
@@ -213,24 +206,7 @@ export const Sql = CSSModules(
       setState({ type: 'SET_EXPRESSION', expression });
     };
 
-    const handleGridSelect = (event: TSetCursorPosEvent) => {
-      dispatch(dispatch => {
-        dispatch(rsActions.setCurrentRow({ name: id, currentRow: event.cursorRow }));
-        dispatch(setCursorCol({ name: id, cursorCol: event.cursorCol }));
-      });
-    };
-
-    const handleColumnResize = (event: TColumnResizeEvent) => {
-      dispatch(
-        resizeColumn({
-          name: event.rs.name,
-          columnIndex: event.columnIndex,
-          newWidth: event.newWidth
-        })
-      );
-    };
-
-    const handleExecuteSql = useCallback(() => {
+    const handleRunExecuteSql = useCallback(() => {
       dispatch(async (dispatch, getState) => {
 
         dispatch(rsMetaActions.setRsMeta(id, {}));
@@ -269,7 +245,8 @@ export const Sql = CSSModules(
                 setState({ type: 'SET_PLAN', plan: value.payload.result!.plan || '' });
                 setState({ type: 'LOAD_PARAMS', paramList});
                 if (paramList.length === 0) {
-                  handleExecuteQuery();
+                  // Если нет параметров в запросе то сразу выполняем sql зпрос
+                  executeSql();
                 } else {
                   setState({ type: 'SHOW_PARAMS', showParams: true});
                 }
@@ -282,7 +259,7 @@ export const Sql = CSSModules(
       })
     }, [state]);
 
-    const handleExecuteQuery = useCallback(() => {
+    const executeSql = useCallback(() => {
       dispatch(async (dispatch, getState) => {
 
         dispatch(rsMetaActions.setRsMeta(id, {}));
@@ -435,17 +412,8 @@ export const Sql = CSSModules(
           iconProps: {
             iconName: 'Play'
           },
-          onClick: handleExecuteSql
+          onClick: handleRunExecuteSql
         },
-      /*   {
-          key: 'params',
-          text: 'Параметры',
-          disabled: !state.params.length,
-          iconProps: {
-            iconName: 'ThumbnailView'
-          },
-          onClick: () => setState({ type: 'SHOW_PARAMS', showParams: true })
-        }, */
         {
           key: 'plan',
           text: 'План запроса',
@@ -501,9 +469,10 @@ export const Sql = CSSModules(
           <div styleName={`sql-container ${state.viewMode}`}>
             <div>
               <TextField
+                name="sql-expression"
                 resizable={false}
                 multiline
-                rows={8}
+                rows={10}
                 value={state.expression}
                 onChange={(_e, newValue?: string) => {
                   if (newValue !== undefined) {
@@ -511,11 +480,10 @@ export const Sql = CSSModules(
                   }
                 }}
               />
+              <Text block>{state.plan}</Text>
             </div>
             <div>
-              {rs && gcs && (
-                <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors}/* onSetCursorPos={handleGridSelect} onColumnResize={handleColumnResize}  *//>
-              )}
+              {rs && gcs && <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors} />}
             </div>
           </div>
         </div>
