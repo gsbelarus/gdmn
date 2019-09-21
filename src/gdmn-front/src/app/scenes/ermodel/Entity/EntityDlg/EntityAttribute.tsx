@@ -1,6 +1,6 @@
 import { IAttribute, attributeTypeNames } from "gdmn-orm";
 import React from "react";
-import { Stack, TextField, Dropdown, Checkbox } from "office-ui-fabric-react";
+import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 
 interface IEntityAttributeProps {
@@ -10,11 +10,16 @@ interface IEntityAttributeProps {
 
 export const EntityAttribute = ({ attr, createAttribute }: IEntityAttributeProps) => {
   return (
-    <Stack horizontal>
+    <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
       <TextField
         label="Name:"
         value={attr.name}
         disabled={!createAttribute}
+        styles={{
+          root: {
+            width: '240px'
+          }
+        }}
       />
       <Dropdown
         label="Type:"
@@ -23,23 +28,36 @@ export const EntityAttribute = ({ attr, createAttribute }: IEntityAttributeProps
           attributeTypeNames.map( n => ({ key: n, text: n }) )
         }
         disabled={!createAttribute}
+        styles={{
+          root: {
+            width: '120px'
+          }
+        }}
       />
-      <Checkbox
-        label="Required:"
-        checked={attr.required}
-        disabled={!createAttribute}
-        boxSide="end"
-      />
-      <TextField
-        label="Description:"
-        value={getLName(attr.lName)}
-        disabled={!createAttribute}
-      />
+      <div>
+        <Label>Required:</Label>
+        <Checkbox
+          checked={attr.required}
+          disabled={!createAttribute}
+        />
+      </div>
       <TextField
         label="Sem categories:"
         value={attr.semCategories}
         disabled={!createAttribute}
+        styles={{
+          root: {
+            width: '240px'
+          }
+        }}
       />
+      <Stack.Item grow>
+        <TextField
+          label="Description:"
+          value={getLName(attr.lName, ['ru'])}
+          disabled={!createAttribute}
+        />
+      </Stack.Item>
     </Stack>
   );
 };

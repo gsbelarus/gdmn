@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useReducer } from "react";
+import React, { useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
 import { IEntity } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
+import { Frame } from "@src/app/scenes/gdmn/components/Frame";
+
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -215,38 +217,65 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   ];
 
   return (
-    <Stack>
+    <>
       <CommandBar items={commandBarItems} />
-      <Stack>
-        <TextField
-          label="Name:"
-          value={entityData.name}
-          disabled={!createEntity}
-          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
-        />
-        <Dropdown
-          label="Parent:"
-          options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
-          selectedKey={entityData.parent}
-          disabled={!createEntity}
-          onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
-        />
-        <TextField
-          label="Description:"
-          value={getLName(entityData.lName, ['ru'])}
-          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
-        />
-        <TextField
-          label="Semantic categories:"
-          value={entityData.semCategories}
-          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
-        />
-      </Stack>
-      <Stack>
-        {
-          entityData.attributes.map( attr => <EntityAttribute attr={attr} createAttribute={true} /> )
-        }
-      </Stack>
-    </Stack>
+      <Frame border marginLeft marginRight>
+        <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
+          <Stack.Item>
+            <TextField
+              label="Name:"
+              value={entityData.name}
+              disabled={!createEntity}
+              onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
+              styles={{
+                root: {
+                  width: '240px'
+                }
+              }}
+            />
+          </Stack.Item>
+          <Stack.Item>
+            <Dropdown
+              label="Parent:"
+              options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
+              selectedKey={entityData.parent}
+              disabled={!createEntity}
+              onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
+              styles={{
+                root: {
+                  width: '240px'
+                }
+              }}
+            />
+          </Stack.Item>
+          <Stack.Item>
+            <TextField
+              label="Semantic categories:"
+              value={entityData.semCategories}
+              onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
+              styles={{
+                root: {
+                  width: '240px'
+                }
+              }}
+            />
+          </Stack.Item>
+          <Stack.Item grow={1}>
+            <TextField
+              label="Description:"
+              value={getLName(entityData.lName, ['ru'])}
+              onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
+            />
+          </Stack.Item>
+        </Stack>
+      </Frame>
+      <Frame border marginTop marginLeft marginRight scroll height='calc(100% - 168px)'>
+        <Stack>
+          {
+            entityData.attributes.map( attr => <EntityAttribute key={attr.name} attr={attr} createAttribute={true} /> )
+          }
+        </Stack>
+      </Frame>
+    </>
   );
 };

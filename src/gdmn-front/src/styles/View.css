@@ -18,11 +18,21 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  /*height: 80vh;*/
 }
 
 .ViewBody > * {
   margin-bottom: 8px;
+}
+
+.DangerZone {
+  border: 1px solid red;
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.DangerZone > div {
+  margin-bottom: 16px;
 }
 
 .ViewWide {
@@ -48,17 +58,6 @@
   height: 100%;
   display: flex;
   flex-direction: row;
-}
-
-.DangerZone {
-  border: 1px solid red;
-  border-radius: 8px;
-  margin-top: 16px;
-  padding: 16px;
-}
-
-.DangerZone > div {
-  margin-bottom: 16px;
 }
 
 .GridFilter {

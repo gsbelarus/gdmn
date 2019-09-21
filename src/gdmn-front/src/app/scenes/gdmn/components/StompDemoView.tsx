@@ -11,7 +11,7 @@ import { NumberTextField } from '@src/app/components/NumberTextField';
 import { IViewProps, View } from '@src/app/components/View';
 import { apiService } from '@src/app/services/apiService';
 
-interface IStompDemoViewState {
+export interface IStompDemoViewState {
   stressStarted: boolean;
   stressResultTime: number;
   stressResultRequestsCount: number;
@@ -24,13 +24,13 @@ interface IStompDemoViewState {
   };
 }
 
-interface IStompDemoViewProps extends IViewProps {
+export interface IStompDemoViewProps extends IViewProps {
   erModel?: ERModel;
   apiPing: (cmd: TPingTaskCmd) => void;
   onError: (error: Error, meta?: any) => void;
 }
 
-class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
+export class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
   initPingDelay: number = 0;
   initPingSteps: number = 0;
 
@@ -420,5 +420,3 @@ class StompDemoView extends View<IStompDemoViewProps, IStompDemoViewState> {
     );
   }
 }
-
-export { StompDemoView, IStompDemoViewProps, IStompDemoViewState };
