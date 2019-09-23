@@ -8,14 +8,16 @@ interface IFrameProps {
   marginBottom?: boolean;
   border?: boolean;
   attention?: boolean;
+  selected?: boolean;
   subTitle?: string;
   scroll?: boolean;
   height?: string;
   children: ReactNode;
+  onClick?: () => void;
 };
 
 export const Frame = (props: IFrameProps): JSX.Element => {
-  const { marginTop, marginRight, marginBottom, marginLeft, border, attention, subTitle, children, scroll, height } = props;
+  const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle, children, scroll, height, onClick } = props;
 
   const ifMargin = (m?: boolean) => m ? '16px' : 'none';
   const ifBorder = (defPadding = '16px') => border ? defPadding : 'inherit';
@@ -29,14 +31,16 @@ export const Frame = (props: IFrameProps): JSX.Element => {
           marginRight: ifMargin(marginRight),
           marginBottom: ifMargin(marginBottom),
           height,
-          border: ifBorder('1px solid ' + (attention ? getTheme().palette.red : getTheme().palette.themeDarker)),
+          border: ifBorder('1px solid ' + (attention ? getTheme().palette.red : getTheme().palette.themeDark)),
           borderRadius: ifBorder('4px'),
           paddingLeft: ifBorder(),
           paddingTop: ifBorder(subTitle ? '8px' : '16px'),
           paddingRight: ifBorder(),
           paddingBottom: ifBorder(),
           overflowY: scroll ? 'auto' : 'hidden',
+          backgroundColor: selected ? getTheme().palette.themeLight : getTheme().semanticColors.bodyBackground
         }}
+        onClick={onClick}
       >
         {ch}
       </div>
