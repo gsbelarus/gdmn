@@ -39,3 +39,14 @@ export interface ISqlQueryResponseAliases {
     orm?: ISqlQueryResponseAliasesOrm;
   }
 }
+
+export interface IFieldDescription {
+  name: string,
+  type: Types
+}
+
+export interface ISqlPrepareResponse {
+  plan?: string;
+  fieldList?: IFieldDescription[],
+  paramList?: IFieldDescription[];
+}
