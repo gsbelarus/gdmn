@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
-import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor, ISqlPrepareResponse} from "gdmn-er-bridge";
+import {EQueryCursor, ERBridge, ISqlPrepareResponse, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   Entity,
@@ -32,8 +32,8 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import { ISettingData,  ISettingParams} from "gdmn-internals";
-import { readFile } from 'fs';
+import {ISettingData, ISettingParams} from "gdmn-internals";
+import {readFile} from "fs";
 
 export type AppAction =
   "DEMO"
@@ -93,7 +93,7 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   attributes: IAttribute[];
 }>;
 
-export type QuerySettingCmd = AppCmd<"QUERY_SETTING", {params: ISettingParams[]}>;
+export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { params: ISettingParams[] }>;
 
 export class Application extends ADatabase {
 
@@ -709,10 +709,10 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const { sql } = context.command.payload;
+        const {sql} = context.command.payload;
 
         const result = await context.session.executeConnection((connection) =>
-            ERBridge.sqlPrepare(connection, connection.readTransaction, sql)
+          ERBridge.sqlPrepare(connection, connection.readTransaction, sql)
         );
         return result;
       }
@@ -949,33 +949,41 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
-        
+
         const readFileAsSync = (filename: string): Promise<string> => {
           return new Promise((resolve, reject) => {
-            readFile(filename, "utf8", function(err, data) {
-              if (err) throw err;
-              resolve(data);
+            readFile(filename, "utf8", (err, currentData: any) => {
+              if (err) {throw err; }
+              resolve(currentData);
             });
           });
-        }
+        };
 
         const path = this.dbDetail.connectionOptions.path;
-        const result: ISettingData[] = [];
-        payload.params
-          .map(item => {return `${path.substring(0,path.lastIndexOf("\\"))}\\${item.objectID}\\type.${item.objectID}.json`})
-          .reduce((namesFile, newNameFile) => {
-            return namesFile.find(nameFile => nameFile === newNameFile) !== undefined ? [...namesFile, newNameFile] : namesFile;
-          }, [] as string[]).forEach(async (nameFile) =>
-            result.push(...JSON.parse(await readFileAsSync(nameFile)))
-          )
-        
-        const data = result.reduce((newResult, setting) => {
-          return payload.params.some(parameter => setting.type === parameter.type && setting.objectID === parameter.objectID)
-            ? [...newResult, setting] : newResult;
-        }, [] as ISettingData[])
-
+        /**
+         * 1. обходим payload.params и создаем новый массив через reduce
+         * 2. dynamicPath - генерируем путь расположения  файла изходя из БД
+         * 3. data - парсим файл
+         * 4. Проверяем подходит ли данный файл под условия переданных  с клиента параметров
+         */
+        const getNonSemverPatchPRs = async () => {
+          return payload.params.reduce(async (previousPromise, currentItem) => {
+            // TODO GUID BD
+            const dynamicPath = `${path.substring(0,
+              path.lastIndexOf("\\"))}\\${currentItem.objectID}\\type.${currentItem.type}.json`;
+            console.log(dynamicPath)
+            const data = JSON.parse(await readFileAsSync(dynamicPath));
+            const findData = data.find((f: any) => f.type === currentItem.type && f.objectID === currentItem.objectID);
+            const collection = await previousPromise;
+            if (findData) {
+              await collection.push(findData);
+            }
+            return collection;
+          }, Promise.resolve([] as ISettingData[]));
+        };
         await context.checkStatus();
-        return data;
+        const result = await getNonSemverPatchPRs();
+        return result as ISettingData[];
       }
     });
     session.taskManager.add(task);
