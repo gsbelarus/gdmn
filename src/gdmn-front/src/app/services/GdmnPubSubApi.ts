@@ -62,6 +62,7 @@ import {
   TQuerySetTaskCmdResult,
   TAddEntityTaskCmdResult,
   TDeleteEntityTaskCmdResult,
+  TQuerySettingTaskCmdResult,
   TEditEntityTaskCmdResult,
   TSqlPrepareTaskCmdResult
 } from "@gdmn/server-api";
@@ -428,6 +429,15 @@ export class GdmnPubSubApi {
     });
   }
 
+  public querySetting(payload: TTaskActionPayloadTypes[TTaskActionNames.QUERY_SETTING]): Promise<TQuerySettingTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.QUERY_SETTING,
+        payload
+      }
+    });
+  }
+
   public async auth(cmd: TAuthCmd | TDeleteAccountCmd, reconnect: boolean = false): Promise<TAuthCmdResult> {
     // todo: tmp if !disconnected
     if (
@@ -691,7 +701,6 @@ export class GdmnPubSubApi {
           return merge(taskActionResult, taskProgressResult, taskStatusResult);
         })
       );
-
     return replyMode ? observ.pipe(first()).toPromise() : observ;
   }
 }

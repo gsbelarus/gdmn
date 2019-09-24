@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useReducer } from "react";
+import React, { useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity } from "gdmn-orm";
+import { IEntity, IAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
+import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -35,10 +36,15 @@ interface IEntityDlgState {
   initialData?: IEntity;
   entityData?: IEntity;
   changed?: boolean;
+  selectedAttr?: number;
 };
 
 type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'SET_STATE', state: IEntityDlgState }
+  | { type: 'SELECT_ATTR', selectedAttr: number }
+  | { type: 'UPDATE_ATTR', newAttr: IAttribute }
+  | { type: 'ADD_ATTR' }
+  | { type: 'DELETE_ATTR' }
   | { type: 'REVERT' };
 
 function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
@@ -52,7 +58,82 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         ...state,
         initialData,
         entityData,
+        selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
         changed: JSON.stringify(initialData) !== JSON.stringify(entityData)
+      };
+    }
+
+    case 'SELECT_ATTR': {
+      return {
+        ...state,
+        selectedAttr: action.selectedAttr
+      };
+    }
+
+    case 'UPDATE_ATTR': {
+      const { entityData, selectedAttr } = state;
+
+      if (!entityData || selectedAttr === undefined) {
+        return state;
+      }
+
+      const newAttributes = [...entityData.attributes];
+
+      newAttributes[selectedAttr] = action.newAttr;
+
+      return {
+        ...state,
+        entityData: {...entityData, attributes: newAttributes },
+        changed: true
+      };
+    }
+
+    case 'ADD_ATTR': {
+      const { entityData, selectedAttr } = state;
+
+      if (!entityData) {
+        return state;
+      }
+
+      const newIdx = selectedAttr === undefined ? entityData.attributes.length : (selectedAttr + 1);
+      const newAttributes = [...entityData.attributes];
+      newAttributes.splice(newIdx, 0, {
+        name: '',
+        type: 'String',
+        lName: { en: { name: '' } },
+        required: false,
+        semCategories: ''
+      });
+
+      return {
+        ...state,
+        entityData: {...entityData, attributes: newAttributes },
+        selectedAttr: newIdx,
+        changed: true
+      };
+    }
+
+    case 'DELETE_ATTR': {
+      const { entityData, selectedAttr, initialData } = state;
+
+      if (!entityData || selectedAttr === undefined) {
+        return state;
+      }
+
+      const newAttributes = [...entityData.attributes];
+      newAttributes.splice(selectedAttr, 1);
+
+      const newEntityData = {...entityData, attributes: newAttributes };
+
+      return {
+        ...state,
+        entityData: newEntityData,
+        selectedAttr: !newAttributes.length
+          ? undefined
+          : selectedAttr >= newAttributes.length
+          ? newAttributes.length - 1
+          : selectedAttr,
+        changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData)
       };
     }
 
@@ -64,6 +145,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         return {
           ...state,
           entityData: state.initialData,
+          selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
           changed: false
         }
       }
@@ -82,7 +164,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   const entity = erModel && entityName && erModel.entities[entityName];
   const [state, dlgDispatch] = useReducer(reducer, {});
-  const { entityData, changed } = state;
+  const { entityData, changed, selectedAttr } = state;
 
   useEffect( () => {
     if (!viewTab) {
@@ -163,42 +245,98 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         iconName: 'Undo'
       },
       onClick: () => dlgDispatch({ type: 'REVERT' })
+    },
+    {
+      key: 'addAttr',
+      disabled: false,
+      text: 'Добавить атрибут',
+      iconProps: {
+        iconName: 'Add'
+      },
+      onClick: () => dlgDispatch({ type: 'ADD_ATTR' })
+    },
+    {
+      key: 'deleteAttr',
+      disabled: selectedAttr === undefined,
+      text: 'Удалить атрибут',
+      iconProps: {
+        iconName: 'Delete'
+      },
+      onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
     }
   ];
 
   return (
-    <Stack>
+    <>
       <CommandBar items={commandBarItems} />
-      <Stack>
-        <TextField
-          label="Name:"
-          value={entityData.name}
-          disabled={!createEntity}
-          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
-        />
-        <Dropdown
-          label="Parent:"
-          options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
-          selectedKey={entityData.parent}
-          disabled={!createEntity}
-          onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
-        />
-        <TextField
-          label="Description:"
-          value={getLName(entityData.lName, ['ru'])}
-          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
-        />
-        <TextField
-          label="Semantic categories:"
-          value={entityData.semCategories}
-          onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
-        />
-      </Stack>
-      <Stack>
-        {
-          entityData.attributes.map( attr => <EntityAttribute attr={attr} /> )
-        }
-      </Stack>
-    </Stack>
+      <Frame scroll height='calc(100% - 42px)'>
+        <Frame border marginLeft marginRight>
+          <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
+            <Stack.Item>
+              <TextField
+                label="Name:"
+                value={entityData.name}
+                readOnly={!createEntity}
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
+                styles={{
+                  root: {
+                    width: '240px'
+                  }
+                }}
+              />
+            </Stack.Item>
+            <Stack.Item>
+              <Dropdown
+                label="Parent:"
+                options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
+                selectedKey={entityData.parent}
+                disabled={!createEntity}
+                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
+                styles={{
+                  root: {
+                    width: '240px'
+                  }
+                }}
+              />
+            </Stack.Item>
+            <Stack.Item>
+              <TextField
+                label="Semantic categories:"
+                value={entityData.semCategories}
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
+                styles={{
+                  root: {
+                    width: '240px'
+                  }
+                }}
+              />
+            </Stack.Item>
+            <Stack.Item grow={1}>
+              <TextField
+                label="Description:"
+                value={getLName(entityData.lName, ['ru'])}
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
+              />
+            </Stack.Item>
+          </Stack>
+        </Frame>
+        <Frame marginTop marginLeft marginRight>
+          <Stack>
+            {
+              entityData.attributes.map( (attr, idx) =>
+                <EntityAttribute
+                  key={idx}
+                  attr={attr}
+                  createAttribute={true}
+                  selected={idx === selectedAttr}
+                  onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
+                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) }
+                />
+              )
+            }
+          </Stack>
+        </Frame>
+      </Frame>
+    </>
   );
 };

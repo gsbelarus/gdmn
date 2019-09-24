@@ -952,7 +952,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
             const { scrollLeft, scrollTop, deltaWidth } = this.state;
             if (deltaWidth !== deltaWidthColumn) {
-              setTimeout(() => this.setState({ deltaWidth: deltaWidthColumn }), 5)
+              setTimeout(() => this.setState({ deltaWidth: deltaWidthColumn }), 0);
             }
 
             return composeGrid(width, height, scrollLeft, scrollTop, deltaWidthColumn, (params: OnScrollParams) =>

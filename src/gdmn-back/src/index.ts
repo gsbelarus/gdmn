@@ -77,8 +77,11 @@ async function serverErrorHandler(error: NodeJS.ErrnoException): Promise<void> {
   }
 }
 
-async function logShutdown(): Promise<void> {
-  await new Promise((resolve, reject) =>
-    log4js.shutdown((error) => (error ? reject(error) : resolve()))
-  );
-}
+const logShutdown = () => new Promise<void>(
+  resolve => log4js.shutdown( error => {
+    if (error) {
+      console.log(error);
+    }
+    resolve();
+  })
+);
