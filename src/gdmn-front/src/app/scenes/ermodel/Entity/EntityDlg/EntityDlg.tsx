@@ -6,6 +6,7 @@ import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "of
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
+import { initAttr } from "./utils";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -97,13 +98,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
       const newIdx = selectedAttr === undefined ? entityData.attributes.length : (selectedAttr + 1);
       const newAttributes = [...entityData.attributes];
-      newAttributes.splice(newIdx, 0, {
-        name: '',
-        type: 'String',
-        lName: { en: { name: '' } },
-        required: false,
-        semCategories: ''
-      });
+      newAttributes.splice(newIdx, 0, initAttr('String'));
 
       return {
         ...state,

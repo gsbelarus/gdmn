@@ -1,84 +1,17 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IEnumValue, IStringAttribute, AttributeTypes } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, AttributeTypes } from "gdmn-orm";
 import React from "react";
-import { Stack, TextField, Dropdown, Checkbox, Label, getTheme } from "office-ui-fabric-react";
+import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
+import { EnumEditor } from "./EnumEditor";
+import { StringEditor } from "./StringEditor";
+import { initAttr } from "./utils";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
 
-const EnumValue = ({ v }: { v: IEnumValue }) =>
-  <div
-    style={{
-      backgroundColor: getTheme().semanticColors.primaryButtonBackground,
-      color: getTheme().semanticColors.primaryButtonText,
-      borderRadius: '2px',
-      padding: '4px'
-    }}
-  >
-    {v.value}
-    {v.lName ? ('=' + getLName(v.lName, ['ru'])) : null }
-  </div>
-
-const EnumEditor = ({ attr }: { attr: IEnumAttribute, createAttribute: boolean }) =>
-  <Frame border marginTop subTitle="Enum values">
-    <Stack horizontal tokens={{ childrenGap: '8px' }}>
-      {
-        attr.values && attr.values.map( v => <EnumValue v={v}/> )
-      }
-    </Stack>
-  </Frame>
-
-const StringEditor = ({ attr, createAttribute }: { attr: IStringAttribute, createAttribute: boolean }) =>
-  <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
-    <TextField
-      label="Min length:"
-      value={attr.minLength === undefined ? '' : attr.minLength.toString()}
-      styles={{
-        root: {
-          width: '180px'
-        }
-      }}
-    />
-    <TextField
-      label="Max length:"
-      value={attr.maxLength === undefined ? '' : attr.maxLength.toString()}
-      styles={{
-        root: {
-          width: '180px'
-        }
-      }}
-    />
-    <div>
-      <Label>Auto trim:</Label>
-      <Checkbox
-        checked={attr.autoTrim}
-        styles={{
-          root: {
-            width: '64px'
-          }
-        }}
-      />
-    </div>
-    <TextField
-      label="Mask:"
-      value={attr.mask ? attr.mask.source : ''}
-      styles={{
-        root: {
-          width: '240px'
-        }
-      }}
-    />
-    <Stack.Item grow={1}>
-      <TextField
-        label="Default value:"
-        value={attr.defaultValue}
-      />
-    </Stack.Item>
-  </Stack>
-
-const DumbEditor = ({ attr, createAttribute }: { attr: IAttribute, createAttribute: boolean }) => null;
+const DumbEditor = ({ attr, createAttribute, onChange }: { attr: IAttribute, createAttribute: boolean, onChange: OnChange }) => null;
 
 const mapEditor = {
  'Entity': DumbEditor,
@@ -124,7 +57,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onS
                 width: '240px'
               }
             }}
-            onChange={ (_, newValue) => newValue !== undefined && onChange({...attr, name: newValue }) }
+            onChange={ (_, name) => name !== undefined && onChange({...attr, name }) }
           />
           <Dropdown
             label="Type:"
@@ -138,9 +71,9 @@ export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onS
                 width: '120px'
               }
             }}
-            onChange={ (_, newValue) => newValue && onChange({...attr, type: newValue.key as AttributeTypes}) }
+            onChange={ (_, attrType) => attrType && attrType.key !== attr.type && onChange(initAttr(attrType.key as AttributeTypes, attr)) }
           />
-          <div>
+          <Stack.Item>
             <Label>Required:</Label>
             <Checkbox
               checked={attr.required}
@@ -150,9 +83,9 @@ export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onS
                   width: '64px'
                 }
               }}
-              onChange={ (_, newValue) => newValue !== undefined && onChange({...attr, required: newValue }) }
+              onChange={ (_, required) => required !== undefined && onChange({...attr, required }) }
             />
-          </div>
+          </Stack.Item>
           <TextField
             label="Sem categories:"
             value={attr.semCategories}
@@ -162,18 +95,18 @@ export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onS
                 width: '240px'
               }
             }}
-            onChange={ (_, newValue) => newValue !== undefined && onChange({...attr, semCategories: newValue }) }
+            onChange={ (_, semCategories) => semCategories !== undefined && onChange({...attr, semCategories }) }
           />
           <Stack.Item grow>
             <TextField
               label="Description:"
               value={getLName(attr.lName, ['ru'])}
               disabled={!createAttribute}
-              onChange={ (_, newValue) => newValue !== undefined && onChange({...attr, lName: { ru: { name: newValue } } }) }
+              onChange={ (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) }
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} />
+        <AttrEditor attr={attr as any} createAttribute={createAttribute} onChange={onChange} />
       </Stack>
     </Frame>
   );
