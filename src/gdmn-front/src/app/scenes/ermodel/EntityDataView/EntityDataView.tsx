@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
@@ -9,7 +9,7 @@ import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
 import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
@@ -69,6 +69,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
+  const userItem = localStorage.getItem(`userID/grid/${entityName}`);
+  const [userColumnsSettings, setUserColumnsSettings] = useState(userItem ? JSON.parse(userItem).data : {} as IUserColumnsSettings);
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -315,6 +317,14 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               ref={ grid => grid && (gridRef.current = grid) }
               savedState={getSavedState()}
               colors={gridColors}
+              userColumnsSettings={userColumnsSettings}
+              onSetUserColumnsSettings={(userSettings: IUserColumnsSettings | undefined) => {
+                if (!userSettings || (userSettings && Object.getOwnPropertyNames(userSettings).length == 0))
+                  localStorage.removeItem(`userID/grid/${entityName}`)
+                else
+                  localStorage.setItem(`userID/grid/${entityName}`, JSON.stringify({_changed: new Date(new Date().toUTCString()), data: userSettings}));
+                setUserColumnsSettings(userSettings);
+              }}
             />
             : null
           }
