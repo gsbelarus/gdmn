@@ -971,7 +971,6 @@ export class Application extends ADatabase {
             // TODO GUID BD
             const dynamicPath = `${path.substring(0,
               path.lastIndexOf("\\"))}\\${currentItem.objectID}\\type.${currentItem.type}.json`;
-            console.log(dynamicPath)
             const data = JSON.parse(await readFileAsSync(dynamicPath));
             const findData = data.find((f: any) => f.type === currentItem.type && f.objectID === currentItem.objectID);
             const collection = await previousPromise;
