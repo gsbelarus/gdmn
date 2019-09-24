@@ -339,6 +339,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   }, [rs]);
 
+  useEffect( () => {
+    if(entityName) {
+      apiService.querySetting({params: [{type: 'DESIGNER', objectID: entityName ? entityName : ''}]}).then((response)=> console.log(response))
+    }
+  }, [])
+
   const mapData = (result: IEntityQueryResponse, fieldDefs: IFieldDef[]): IDataRow => Object.entries(result.aliases).reduce(
     (p, [resultAlias, eqrfa]) => {
       const fieldDef = fieldDefs.find( fd => fd.eqfa!.linkAlias === eqrfa.linkAlias && fd.eqfa!.attribute === eqrfa.attribute );
