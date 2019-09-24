@@ -33,6 +33,7 @@ import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import { ISettingData,  ISettingParams} from "gdmn-internals";
+import { readFile } from 'fs';
 
 export type AppAction =
   "DEMO"
@@ -947,10 +948,34 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const params = context.command.payload;
-        console.log(params);
+        const payload = context.command.payload;
+        
+        const readFileAsSync = (filename: string): Promise<string> => {
+          return new Promise((resolve, reject) => {
+            readFile(filename, "utf8", function(err, data) {
+              if (err) throw err;
+              resolve(data);
+            });
+          });
+        }
+
+        const path = this.dbDetail.connectionOptions.path;
+        const result: ISettingData[] = [];
+        payload.params
+          .map(item => {return `${path.substring(0,path.lastIndexOf("\\"))}\\${item.objectID}\\type.${item.objectID}.json`})
+          .reduce((namesFile, newNameFile) => {
+            return namesFile.find(nameFile => nameFile === newNameFile) !== undefined ? [...namesFile, newNameFile] : namesFile;
+          }, [] as string[]).forEach(async (nameFile) =>
+            result.push(...JSON.parse(await readFileAsSync(nameFile)))
+          )
+        
+        const data = result.reduce((newResult, setting) => {
+          return payload.params.some(parameter => setting.type === parameter.type && setting.objectID === parameter.objectID)
+            ? [...newResult, setting] : newResult;
+        }, [] as ISettingData[])
+
         await context.checkStatus();
-        return [{data: 0} as ISettingData];
+        return data;
       }
     });
     session.taskManager.add(task);
