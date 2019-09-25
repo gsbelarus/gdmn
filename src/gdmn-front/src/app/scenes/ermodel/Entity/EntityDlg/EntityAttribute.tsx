@@ -5,7 +5,7 @@ import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
-import { initAttr } from "./utils";
+import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute;
 type OnChange = (newAttr: Attr) => void;
@@ -35,11 +35,12 @@ interface IEntityAttributeProps {
   attr: Attr;
   selected?: boolean;
   createAttribute: boolean;
+  errorLinks?: ErrorLinks;
   onChange: OnChange;
   onSelect: OnSelect;
 };
 
-export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onSelect }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
@@ -51,6 +52,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onS
             label="Name:"
             value={attr.name}
             disabled={!createAttribute}
+            errorMessage={getErrorMessage('name', errorLinks)}
             autoFocus
             styles={{
               root: {
@@ -106,7 +108,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, onChange, onS
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} onChange={onChange} />
+        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} />
       </Stack>
     </Frame>
   );

@@ -6,7 +6,7 @@ import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "of
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
-import { initAttr } from "./utils";
+import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -38,6 +38,7 @@ interface IEntityDlgState {
   entityData?: IEntity;
   changed?: boolean;
   selectedAttr?: number;
+  errorLinks?: ErrorLinks;
 };
 
 type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
@@ -60,7 +61,8 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         initialData,
         entityData,
         selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
-        changed: JSON.stringify(initialData) !== JSON.stringify(entityData)
+        changed: JSON.stringify(initialData) !== JSON.stringify(entityData),
+        errorLinks: validateAttributes(entityData)
       };
     }
 
@@ -79,13 +81,14 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       }
 
       const newAttributes = [...entityData.attributes];
-
       newAttributes[selectedAttr] = action.newAttr;
+      const newEntityData = {...entityData, attributes: newAttributes };
 
       return {
         ...state,
-        entityData: {...entityData, attributes: newAttributes },
-        changed: true
+        entityData: newEntityData,
+        changed: true,
+        errorLinks: validateAttributes(newEntityData)
       };
     }
 
@@ -99,12 +102,14 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       const newIdx = selectedAttr === undefined ? entityData.attributes.length : (selectedAttr + 1);
       const newAttributes = [...entityData.attributes];
       newAttributes.splice(newIdx, 0, initAttr('String'));
+      const newEntityData = {...entityData, attributes: newAttributes };
 
       return {
         ...state,
-        entityData: {...entityData, attributes: newAttributes },
+        entityData: newEntityData,
         selectedAttr: newIdx,
-        changed: true
+        changed: true,
+        errorLinks: validateAttributes(newEntityData)
       };
     }
 
@@ -128,7 +133,8 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           : selectedAttr >= newAttributes.length
           ? newAttributes.length - 1
           : selectedAttr,
-        changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData)
+        changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData),
+        errorLinks: validateAttributes(newEntityData)
       };
     }
 
@@ -141,7 +147,8 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           ...state,
           entityData: state.initialData,
           selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
-          changed: false
+          changed: false,
+          errorLinks: validateAttributes(state.initialData)
         }
       }
     }
@@ -158,8 +165,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }
 
   const entity = erModel && entityName && erModel.entities[entityName];
-  const [state, dlgDispatch] = useReducer(reducer, {});
-  const { entityData, changed, selectedAttr } = state;
+  const [state, dlgDispatch] = useReducer(reducer, { });
+  const { entityData, changed, selectedAttr, errorLinks } = state;
 
   useEffect( () => {
     if (!viewTab) {
@@ -211,7 +218,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const commandBarItems: ICommandBarItemProps[] = [
     {
       key: 'saveAndClose',
-      disabled: !changed,
+      disabled: !changed || (errorLinks && !!errorLinks.length),
       text: 'Сохранить',
       iconProps: {
         iconName: 'Save'
@@ -226,7 +233,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     },
     {
       key: 'apply',
-      disabled: !changed,
+      disabled: !changed || (errorLinks && !!errorLinks.length),
       text: 'Применить',
       iconProps: {
         iconName: 'CheckMark'
@@ -271,6 +278,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Name:"
                 value={entityData.name}
+                errorMessage={getErrorMessage('entityName', errorLinks)}
                 readOnly={!createEntity}
                 onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
                 styles={{
@@ -324,6 +332,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                   attr={attr}
                   createAttribute={true}
                   selected={idx === selectedAttr}
+                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === idx )}
                   onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
                   onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) }
                 />

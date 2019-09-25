@@ -1,18 +1,21 @@
 import { IStringAttribute } from "gdmn-orm";
 import { Stack, TextField, Label, Checkbox } from "office-ui-fabric-react";
 import React from "react";
+import { getErrorMessage, ErrorLinks } from "./utils";
 
 interface IStringEditorProps {
   attr: IStringAttribute,
   createAttribute: boolean,
+  errorLinks?: ErrorLinks;
   onChange: (newAttr: IStringAttribute) => void
 };
 
-export const StringEditor = ({ attr, onChange }: IStringEditorProps) =>
+export const StringEditor = ({ attr, errorLinks, onChange }: IStringEditorProps) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
     <TextField
       label="Min length:"
       value={attr.minLength === undefined ? '' : attr.minLength.toString()}
+      errorMessage={getErrorMessage('minLength', errorLinks)}
       styles={{
         root: {
           width: '180px'
@@ -33,6 +36,7 @@ export const StringEditor = ({ attr, onChange }: IStringEditorProps) =>
     <TextField
       label="Max length:"
       value={attr.maxLength === undefined ? '' : attr.maxLength.toString()}
+      errorMessage={getErrorMessage('maxLength', errorLinks)}
       styles={{
         root: {
           width: '180px'
