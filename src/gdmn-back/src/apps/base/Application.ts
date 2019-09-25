@@ -950,10 +950,12 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
 
-        const readFileAsSync = (filename: string): Promise<string> => {
+        const readFileAsync = (filename: string): Promise<string> => {
           return new Promise((resolve, reject) => {
             readFile(filename, "utf8", (err, currentData: any) => {
-              if (err) {throw err; }
+              if (err) {
+                reject(err);
+              }
               resolve(currentData);
             });
           });
@@ -971,7 +973,7 @@ export class Application extends ADatabase {
             // TODO GUID BD
             const dynamicPath = `${path.substring(0,
               path.lastIndexOf("\\"))}\\${currentItem.objectID}\\type.${currentItem.type}.json`;
-            const data = JSON.parse(await readFileAsSync(dynamicPath));
+            const data = JSON.parse(await readFileAsync(dynamicPath));
             const findData = data.find((f: any) => f.type === currentItem.type && f.objectID === currentItem.objectID);
             const collection = await previousPromise;
             if (findData) {
