@@ -16,6 +16,7 @@ import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
+import { getCurrentSettings } from '../GetCurrentSettings';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -70,7 +71,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const userItem = localStorage.getItem(`userID/grid/${entityName}`);
-  const [userColumnsSettings, setUserColumnsSettings] = useState(userItem ? JSON.parse(userItem).data : {} as IUserColumnsSettings);
+  const localSettings = userItem ? JSON.parse(userItem) : undefined as IUserColumnsSettings | undefined;
+  const columnsSettings = getCurrentSettings([{type: 'grid', objectID: 'USR$TEST', userID: '1'}], [{type: 'grid', objectID: entityName, ...localSettings}])
+
+  const [userColumnsSettings, setUserColumnsSettings] = useState(columnsSettings ? columnsSettings[0] ? columnsSettings[0].data : undefined : undefined);
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -317,13 +321,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               ref={ grid => grid && (gridRef.current = grid) }
               savedState={getSavedState()}
               colors={gridColors}
-              userColumnsSettings={userColumnsSettings}
+              userColumnsSettings={userColumnsSettings ? userColumnsSettings : undefined}
               onSetUserColumnsSettings={(userSettings: IUserColumnsSettings | undefined) => {
                 if (!userSettings || (userSettings && Object.getOwnPropertyNames(userSettings).length == 0))
                   localStorage.removeItem(`userID/grid/${entityName}`)
                 else
                   localStorage.setItem(`userID/grid/${entityName}`, JSON.stringify({_changed: new Date(new Date().toUTCString()), data: userSettings}));
-                setUserColumnsSettings(userSettings);
+                setUserColumnsSettings(userSettings ? userSettings : undefined);
               }}
             />
             : null
