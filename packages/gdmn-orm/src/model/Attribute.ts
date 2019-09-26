@@ -3,6 +3,23 @@ import {IAttribute} from "../serialize";
 import {AttributeTypes, IBaseSemOptions} from "../types";
 import {LName} from "gdmn-internals";
 
+const sn: { [name: string]: string } = {
+  "Entity": "->",
+  "String": "S",
+  "Set": "<->",
+  "Parent": "-^",
+  "Sequence": "Seq",
+  "Integer": "I",
+  "Numeric": "N",
+  "Float": "F",
+  "Boolean": "B",
+  "Date": "DT",
+  "TimeStamp": "TS",
+  "Time": "TM",
+  "Blob": "BLOB",
+  "Enum": "E"
+}
+
 export interface IAttributeOptions<Adapter> extends IBaseSemOptions<Adapter> {
   required?: boolean;
 }
@@ -37,23 +54,7 @@ export abstract class Attribute<Adapter = any> {
   }
 
   public inspectDataType(): string {
-    const sn = new Map<AttributeTypes, string>();
-    sn.set("Entity", "->");
-    sn.set("String", "S");
-    sn.set("Set", "<->");
-    sn.set("Parent", "-^");
-    sn.set("Sequence", "Seq");
-    sn.set("Integer", "I");
-    sn.set("Numeric", "N");
-    sn.set("Float", "F");
-    sn.set("Boolean", "B");
-    sn.set("Date", "DT");
-    sn.set("TimeStamp", "TS");
-    sn.set("Time", "TM");
-    sn.set("Blob", "BLOB");
-    sn.set("Enum", "E");
-
-    const i = sn.get(this.type);
+    const i = sn[this.type];
     return i ? i : this.constructor.name;
   }
 

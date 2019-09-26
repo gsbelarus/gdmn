@@ -14,7 +14,7 @@ import {
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases, Types, ISqlPrepareResponse } from 'gdmn-internals';
+import { ISqlQueryResponseAliases, Types, ISqlPrepareResponse, ISettingParams, ISettingData } from 'gdmn-internals';
 import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
@@ -68,7 +68,8 @@ export const enum TTaskActionNames {
   GET_NEXT_ID = 'GET_NEXT_ID',
   ADD_ENTITY = 'ADD_ENTITY',
   DELETE_ENTITY = 'DELETE_ENTITY',
-  EDIT_ENTITY = 'EDIT_ENTITY'
+  EDIT_ENTITY = 'EDIT_ENTITY',
+  QUERY_SETTING = 'QUERY_SETTING'
 }
 
 // MESSAGES DATA
@@ -183,6 +184,7 @@ export interface TTaskActionPayloadTypes {
     changedFields: IChangedFields;
     attributes: IAttribute[]
   };
+  [TTaskActionNames.QUERY_SETTING]: {params: ISettingParams[]};
 }
 
 // -- TASK-RESULT
@@ -224,6 +226,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.ADD_ENTITY]: string[];
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
+  [TTaskActionNames.QUERY_SETTING]: ISettingData[];
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -280,7 +283,8 @@ export type AppAction =
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
-  | "EDIT_ENTITY";
+  | "EDIT_ENTITY"
+  | "QUERY_SETTING";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];

@@ -33,6 +33,7 @@ import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import { ISqlPrepareResponse } from "gdmn-internals";
+import { ISettingData,  ISettingParams} from "gdmn-internals";
 
 export type AppAction =
   "DEMO"
@@ -58,7 +59,8 @@ export type AppAction =
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
-  | "EDIT_ENTITY";
+  | "EDIT_ENTITY"
+  | "QUERY_SETTING";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -90,6 +92,8 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   changedFields: { [fieldName: string]: string },
   attributes: IAttribute[];
 }>;
+
+export type QuerySettingCmd = AppCmd<"QUERY_SETTING", {params: ISettingParams[]}>;
 
 export class Application extends ADatabase {
 
@@ -927,6 +931,27 @@ export class Application extends ADatabase {
         });
         await context.checkStatus();
         return {id: nextId};
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushQuerySettingCmd(session: Session,
+                             command: QuerySettingCmd): Task<QuerySettingCmd, ISettingData[]> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const params = context.command.payload;
+        console.log(params);
+        await context.checkStatus();
+        return [{data: 0} as ISettingData];
       }
     });
     session.taskManager.add(task);

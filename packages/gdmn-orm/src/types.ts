@@ -26,6 +26,22 @@ export type AttributeTypes = "Entity"
   | "Blob"
   | "Enum";
 
+export const attributeTypeNames = ["Entity"
+  , "String"
+  , "Set"
+  , "Parent"
+  , "Detail"
+  , "Sequence"
+  , "Integer"
+  , "Numeric"
+  , "Float"
+  , "Boolean"
+  , "Date"
+  , "TimeStamp"
+  , "Time"
+  , "Blob"
+  , "Enum"];
+
 export interface IBaseOptions<Adapter = any> {
   name: string;
   adapter?: Adapter;

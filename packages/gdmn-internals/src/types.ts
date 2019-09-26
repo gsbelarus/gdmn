@@ -50,3 +50,22 @@ export interface ISqlPrepareResponse {
   fieldList?: IFieldDescription[],
   paramList?: IFieldDescription[];
 }
+
+export interface ISettingParams {
+  type: string;
+  objectID: string;
+  userID?: string;
+  userGroupsIDs?: string[];
+  appID?: string;
+  organizationID?: string;
+  mediaQuery?: string;
+};
+
+export interface ISettingData extends ISettingParams {
+  data: any;
+}
+
+export interface ISettingEnvelope extends ISettingData {
+  _changed: Date;
+  _accessed: Date;
+};
