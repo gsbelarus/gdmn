@@ -33,7 +33,7 @@ import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingData, ISettingParams} from "gdmn-internals";
-import {readFile} from "fs";
+import fs from "fs";
 
 export type AppAction =
   "DEMO"
@@ -950,41 +950,35 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
 
-        const readFileAsync = (filename: string): Promise<string> => {
-          return new Promise((resolve, reject) => {
-            readFile(filename, "utf8", (err, currentData: any) => {
-              if (err) {
-                reject(err);
-              }
-              resolve(currentData);
-            });
-          });
-        };
-
         const path = this.dbDetail.connectionOptions.path;
-        /**
-         * 1. обходим payload.params и создаем новый массив через reduce
-         * 2. dynamicPath - генерируем путь расположения  файла изходя из БД
-         * 3. data - парсим файл
-         * 4. Проверяем подходит ли данный файл под условия переданных  с клиента параметров
-         */
-        const getNonSemverPatchPRs = async () => {
-          return payload.params.reduce(async (previousPromise, currentItem) => {
-            // TODO GUID BD
-            const dynamicPath = `${path.substring(0,
-              path.lastIndexOf("\\"))}\\${currentItem.objectID}\\type.${currentItem.type}.json`;
-            const data = JSON.parse(await readFileAsync(dynamicPath));
-            const findData = data.find((f: any) => f.type === currentItem.type && f.objectID === currentItem.objectID);
-            const collection = await previousPromise;
-            if (findData) {
-              await collection.push(findData);
+
+        const promises = payload.params.map((param) => {
+          const dynamicPath = `${path.substring(0,
+            path.lastIndexOf("\\"))}\\${param.objectID}\\type.${param.type}.json`;
+          return fs.promises.readFile(dynamicPath, "utf8").then((value) => {
+            return JSON.parse(value);
+          }, (error) => {
+            // выводит сообщение если файл не найден
+            console.log(error);
+          }).then((data) => {
+            const find = data.find((f: any) => f.type === param.type && f.objectID === param.objectID);
+            if (find) {
+              return Promise.resolve(find);
+            } else {
+              return Promise.reject(new Error(" data not find"));
             }
-            return collection;
-          }, Promise.resolve([] as ISettingData[]));
-        };
+          }, (error) => {
+            // выводит сообщение возникла ошибка при парсинге
+            console.log(error);
+          });
+        });
+
         await context.checkStatus();
-        const result = await getNonSemverPatchPRs();
-        return result as ISettingData[];
+        Promise.all(promises).then((values) => {
+          return values as ISettingData[];
+        });
+
+        return [] as ISettingData[];
       }
     });
     session.taskManager.add(task);
