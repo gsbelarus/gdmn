@@ -1,7 +1,7 @@
 import { store } from "..";
 import { IFSMFlowchart, IFSMSignal, IFSMState, IFSMStateType } from "./types";
 
-export type FSMPlugin = (fsm: FSM, state: IFSMState) => boolean;
+export type FSMPlugin = (fsm: FSM, nextState: IFSMState) => boolean;
 
 interface IFSMParams {
   flowchart: IFSMFlowchart;
@@ -91,4 +91,3 @@ export class FSM {
     return this;
   }
 };
-
