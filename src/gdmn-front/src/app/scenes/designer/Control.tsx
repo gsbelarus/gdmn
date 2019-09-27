@@ -99,7 +99,7 @@ const InternalControl = ({ object, objects, rs, entity }: IInternalControlProps)
         <div>
           <Field
             styles={object2ITextFieldStyles(object, objects)}
-            label={object.label}
+            label={object.label !== "" ? object.label : object.fieldName}
             fieldName={object.fieldName}
             rs={rs}
             entity={entity}
