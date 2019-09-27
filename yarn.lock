@@ -11579,11 +11579,7 @@ node-fetch@^2.3.0, node-fetch@^2.5.0, node-fetch@^2.6.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
 
-<<<<<<< HEAD
-node-firebird-native-api@^1.0.1:
-=======
 node-firebird-native-api@^1:
->>>>>>> master
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-1.0.1.tgz#e8348bfe584f200ad7a5a8a3664e768d5ee02ddb"
   integrity sha512-y9ZWPDQ+GqomGisRw6THKERKU9/9qoVrlOzChUpLmQN2ZhUe30sLk1Y8UgrdixN9c0BtBId7HbmABTssMau42Q==
