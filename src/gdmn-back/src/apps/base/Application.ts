@@ -32,8 +32,8 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingData, ISettingParams} from "gdmn-internals";
-import fs from "fs";
+import {ISettingData, ISettingParams, isISettingData} from "gdmn-internals";
+import { promises } from "fs";
 
 export type AppAction =
   "DEMO"
@@ -60,7 +60,8 @@ export type AppAction =
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
   | "EDIT_ENTITY"
-  | "QUERY_SETTING";
+  | "QUERY_SETTING"
+  | "SAVE_SETTING";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -93,7 +94,8 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   attributes: IAttribute[];
 }>;
 
-export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { params: ISettingParams[] }>;
+export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { querysSettings: ISettingParams[] }>;
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingData, newData: ISettingData }>;
 
 export class Application extends ADatabase {
 
@@ -949,36 +951,88 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
+        const pathFromDB = this.dbDetail.connectionOptions.path;
+        const pathForFileType =`${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${payload.querysSettings[0].type}.json`;
 
-        const path = this.dbDetail.connectionOptions.path;
-
-        const promises = payload.params.map((param) => {
-          const dynamicPath = `${path.substring(0,
-            path.lastIndexOf("\\"))}\\${param.objectID}\\type.${param.type}.json`;
-          return fs.promises.readFile(dynamicPath, "utf8").then((value) => {
-            return JSON.parse(value);
-          }, (error) => {
-            // выводит сообщение если файл не найден
-            console.log(error);
-          }).then((data) => {
-            const find = data.find((f: any) => f.type === param.type && f.objectID === param.objectID);
-            if (find) {
-              return Promise.resolve(find);
+        let data = await promises.readFile(pathForFileType, { encoding: 'utf8', flag: 'r' })
+          .then( text => JSON.parse(text) )
+          .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              return arr as ISettingData[];
             } else {
-              return Promise.reject(new Error(" data not find"));
+              console.log('unknown data type');
+              return undefined;
             }
-          }, (error) => {
-            // выводит сообщение возникла ошибка при парсинге
-            console.log(error);
+          })
+          .catch( err => {
+            console.log(err);
+            return undefined;
           });
-        });
+        await context.checkStatus();
+        return data ? data.filter( s => isISettingData(s) && s.type === payload.querysSettings[0].type && s.objectID === payload.querysSettings[0].objectID) as ISettingData[] : [];
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushSaveSettingCmd(session: Session,
+                            command: SaveSettingCmd): Task<SaveSettingCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const { newData } = context.command.payload;
+        //Получаем путь, где храниться база данных
+        const pathFromDB = `${this.dbDetail.connectionOptions.path}`;
+        //Путь, по которому необходимо сохранить новые настройки
+        const pathForFileType =`${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${newData.type}.json`;
+
+        // читаем массив настроек из файла, если файла нет
+        // или возникла ошибка, то пишем ее в лог и игнорируем
+        // в этом случае data === undefined
+        // минимально проверяем тип данных
+        let data = await promises.readFile(pathForFileType, { encoding: 'utf8', flag: 'r' })
+          .then( text => JSON.parse(text) )
+          .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              return arr as ISettingData[];
+            } else {
+              console.log('unknown data type');
+              return undefined;
+            }
+          })
+          .catch( err => {
+            console.log(err);
+            return undefined;
+          });
+
+        if (data) {
+          const idx = data.findIndex( s => isISettingData(s) && s.type === newData.type && s.objectID === newData.objectID );
+          if (idx === -1) {
+            data.push(newData);
+          } else {
+            data[idx] = newData;
+          }
+        } else {
+          data = [newData];
+        }
+
+        // записываем файл. если будет ошибка, то выведем ее в лог,
+        // но не будем прерывать выполнение задачи
+        try {
+          await promises.writeFile(pathForFileType, JSON.stringify(data), { encoding: 'utf8', flag: 'w' });
+        }
+        catch (e) {
+          console.log(e);
+        }
 
         await context.checkStatus();
-        Promise.all(promises).then((values) => {
-          return values as ISettingData[];
-        });
-
-        return [] as ISettingData[];
       }
     });
     session.taskManager.add(task);

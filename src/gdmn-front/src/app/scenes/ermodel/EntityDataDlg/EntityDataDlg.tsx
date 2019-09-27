@@ -27,7 +27,7 @@ import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
-import { IDesignerState, LOCAL_STORAGE_KEY } from '../../designer/Designer';
+import { IDesignerState/*, LOCAL_STORAGE_KEY */} from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
@@ -109,6 +109,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
+  const [localState, setLocalState] = useState<IDesignerState | undefined>();
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -317,6 +318,55 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   useEffect( () => {
+ 
+    // задача: при загрузке формы запросить настройки с сервера и
+    // записать их в стэйт компонента, откуда дизайнер будет их брать и 
+    // применять для отрисовки на экране. 
+
+    // почему массив в объекте, а не просто массив?
+    apiService.querySetting({
+      querysSettings: [
+        {
+          type: 'DESIGNER', 
+          objectID: entityName
+        }
+      ]
+    })
+    .then( response => {
+      if (response.error) {
+        console.log(response.error);
+      } else if (!response.payload.result) {
+        console.log('Not find settings');
+      } else {
+        // подумать, надо ли тут проверка что за объект нам пришел
+        setLocalState(response.payload.result[0].data as IDesignerState);
+      }
+    });
+
+    // а вот так с async
+    /*
+    (async () => {
+      const response = await apiService.querySetting({
+        params: [
+          {
+            type: 'DESIGNER', 
+            objectID: entityName ? entityName : ''
+          }
+        ]
+      });
+
+      if (response.error) {
+        console.log(response.error);
+      } else if (!response.payload.result) {
+        console.log('Not find settings');
+      } else {
+        console.log(response.payload.result[0].data);
+        // подумать, надо ли тут проверка что за объект нам пришел
+        setLocalState(response.payload.result[0].data as IDesignerState);
+      } 
+    })();
+    */
+
     return () => {
       dispatch(gdmnActions.saveSessionData({
         viewTabURL: url,
@@ -338,12 +388,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       needFocus.current = undefined;
     }
   }, [rs]);
-
-  useEffect( () => {
-    if(entityName) {
-      apiService.querySetting({params: [{type: 'DESIGNER', objectID: entityName ? entityName : ''}]}).then((response)=> console.log(response))
-    }
-  }, [])
 
   const mapData = (result: IEntityQueryResponse, fieldDefs: IFieldDef[]): IDataRow => Object.entries(result.aliases).reduce(
     (p, [resultAlias, eqrfa]) => {
@@ -640,9 +684,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
   
-  const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
+  //const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
     const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
-    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
+      const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
 
       if (!fd || !fd.eqfa) {
         return undefined;
@@ -737,6 +781,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
+              styles={props.styles}
             />
           );
         }
@@ -780,6 +825,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
+            styles={props.styles}
         />);
       } else if (fd.dataType === TFieldType.Boolean) {
         const subComponentStyle = {
@@ -858,6 +904,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
+            styles={props.styles}
           />
         )
       }
@@ -905,7 +952,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     <>
       {
         designer
-          ? <DesignerContainer {...props} url={url} entityName={entityName} outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }} />
+          ? <DesignerContainer {...props} url={url} entityName={entityName} grid={grid} objects={objects} outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }} applaySetting={ (settings) => setLocalState(settings)} />
           : <>
             <CommandBar items={commandBarItems} />
             {

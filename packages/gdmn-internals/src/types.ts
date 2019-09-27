@@ -52,7 +52,17 @@ export interface ISettingParams {
 
 export interface ISettingData extends ISettingParams {
   data: any;
-}
+};
+
+export function isISettingData(data: any): data is ISettingData {
+  return (
+    data instanceof Object
+    &&
+    typeof data.type === 'string'
+    &&
+    typeof data.objectID === 'string'
+  )
+};
 
 export interface ISettingEnvelope extends ISettingData {
   _changed: Date;

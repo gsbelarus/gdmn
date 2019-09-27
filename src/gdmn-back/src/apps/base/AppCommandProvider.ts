@@ -24,6 +24,7 @@ import {
   DeleteEntityCmd,
   EditEntityCmd,
   QuerySettingCmd,
+  SaveSettingCmd,
   SqlPrepareCmd
 } from "./Application";
 import {Session} from "./session/Session";
@@ -211,6 +212,13 @@ export class AppCommandProvider {
       && !!command.payload;
   }
 
+  private static _verifySaveSettingCmd(command: ICmd<AppAction, any>): command is SaveSettingCmd {
+    return typeof command.payload === "object"
+      && !!command.payload
+      && "newData" in command.payload
+      && typeof command.payload.newData === "object";
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -353,6 +361,12 @@ export class AppCommandProvider {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushQuerySettingCmd(session, command);
+      }
+      case "SAVE_SETTING": {
+        if (!AppCommandProvider._verifySaveSettingCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushSaveSettingCmd(session, command);
       }
       default: {
         throw new Error("Unsupported action");
