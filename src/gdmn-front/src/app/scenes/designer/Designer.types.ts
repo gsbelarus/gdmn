@@ -25,6 +25,5 @@ export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateP
   entityName: string;
   grid: IGrid;
   objects: IObject[];
-  outDesignerMode: () => void;
-  applaySetting: (settings: IDesignerState | undefined) => void;
+  onExit: (newSettings?: IDesignerState) => void;
 };

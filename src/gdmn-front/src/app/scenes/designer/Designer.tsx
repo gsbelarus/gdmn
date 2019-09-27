@@ -632,10 +632,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       name: 'Close',
       iconOnly: true,
       iconProps: { iconName: 'Cancel' },
-      onClick: () => {
-        props.outDesignerMode();
-        props.applaySetting({grid: grid, objects: objects});
-      }
+      onClick: () => props.onExit({ grid, objects })
     },
     {
       key: 'split0',

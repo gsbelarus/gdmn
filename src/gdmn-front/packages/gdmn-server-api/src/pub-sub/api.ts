@@ -185,7 +185,7 @@ export interface TTaskActionPayloadTypes {
     changedFields: IChangedFields;
     attributes: IAttribute[]
   };
-  [TTaskActionNames.QUERY_SETTING]: {querysSettings: ISettingParams[]};
+  [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
   [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingData, newData: ISettingData};
 }
 

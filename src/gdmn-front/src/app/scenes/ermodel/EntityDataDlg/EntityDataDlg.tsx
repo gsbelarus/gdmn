@@ -109,7 +109,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
-  const [localState, setLocalState] = useState<IDesignerState | undefined>();
+  const [designerState, setDesignerState] = useState<IDesignerState | undefined>();
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -323,9 +323,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     // записать их в стэйт компонента, откуда дизайнер будет их брать и 
     // применять для отрисовки на экране. 
 
-    // почему массив в объекте, а не просто массив?
     apiService.querySetting({
-      querysSettings: [
+      query: [
         {
           type: 'DESIGNER', 
           objectID: entityName
@@ -336,36 +335,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       if (response.error) {
         console.log(response.error);
       } else if (!response.payload.result) {
-        console.log('Not find settings');
+        console.log('Settings are not found');
       } else {
         // подумать, надо ли тут проверка что за объект нам пришел
-        setLocalState(response.payload.result[0].data as IDesignerState);
+        setDesignerState(response.payload.result[0].data as IDesignerState);
       }
     });
-
-    // а вот так с async
-    /*
-    (async () => {
-      const response = await apiService.querySetting({
-        params: [
-          {
-            type: 'DESIGNER', 
-            objectID: entityName ? entityName : ''
-          }
-        ]
-      });
-
-      if (response.error) {
-        console.log(response.error);
-      } else if (!response.payload.result) {
-        console.log('Not find settings');
-      } else {
-        console.log(response.payload.result[0].data);
-        // подумать, надо ли тут проверка что за объект нам пришел
-        setLocalState(response.payload.result[0].data as IDesignerState);
-      } 
-    })();
-    */
 
     return () => {
       dispatch(gdmnActions.saveSessionData({
@@ -910,13 +885,13 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       }
     }
 
-    const grid: IGrid = localState !== undefined
-      ? (localState as IDesignerState).grid
+    const grid: IGrid = designerState !== undefined
+      ? (designerState as IDesignerState).grid
       : {
         columns: [{ unit: 'PX', value: 320 }],
         rows: [{ unit: 'FR', value: 1 }],
       };
-    const fields: Objects = localState === undefined
+    const fields: Objects = designerState === undefined
       ? rs
         ? rs.fieldDefs.map(fd => {
           const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
@@ -930,7 +905,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         })
         : []
       : [];
-    const area1: IArea[] = localState === undefined ? [{
+    const area1: IArea[] = designerState === undefined ? [{
       name: 'Area1',
       type: 'AREA',
       parent: 'Window',
@@ -939,20 +914,31 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       right: 0,
       bottom: 0
     }]
-    : getAreas((localState as IDesignerState).objects);
-    const window: IWindow = localState !== undefined
-      ? (localState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
+    : getAreas((designerState as IDesignerState).objects);
+    const window: IWindow = designerState !== undefined
+      ? (designerState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
       : {
           name: 'Window',
           type: 'WINDOW'
         };
-    const objects: Objects = localState ? (localState as IDesignerState).objects : [window, ...area1, ...fields];
+    const objects: Objects = designerState ? (designerState as IDesignerState).objects : [window, ...area1, ...fields];
 
   return (
     <>
       {
         designer
-          ? <DesignerContainer {...props} url={url} entityName={entityName} grid={grid} objects={objects} outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }} applaySetting={ (settings) => setLocalState(settings)} />
+          ? <DesignerContainer 
+              url={url} 
+              entityName={entityName} 
+              grid={grid} 
+              objects={objects} 
+              onExit={ newSettings => { 
+                setDesigner(false); 
+                if (newSettings) {
+                  setDesignerState(newSettings);
+                }
+              } }
+            />
           : <>
             <CommandBar items={commandBarItems} />
             {

@@ -997,27 +997,25 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const { newData } = context.command.payload;
-        //Получаем путь, где храниться база данных
-        const pathFromDB = `${this.dbDetail.connectionOptions.path}`;
-        //Путь, по которому необходимо сохранить новые настройки
-        const pathForFileType =`${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${newData.type}.json`;
+        const fileName = this._getSettingFileName(newData.type);
 
         // читаем массив настроек из файла, если файла нет
         // или возникла ошибка, то пишем ее в лог и игнорируем
         // в этом случае data === undefined
         // минимально проверяем тип данных
-        let data = await promises.readFile(pathForFileType, { encoding: 'utf8', flag: 'r' })
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
           .then( text => JSON.parse(text) )
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              console.log(`Read data from file ${fileName}`);
               return arr as ISettingData[];
             } else {
-              console.log('unknown data type');
+              console.log(`Unknown data in file ${fileName}`);
               return undefined;
             }
           })
           .catch( err => {
-            console.log(err);
+            console.log(`Error reading data from file ${fileName} - ${err}`);
             return undefined;
           });
 
@@ -1035,10 +1033,10 @@ export class Application extends ADatabase {
         // записываем файл. если будет ошибка, то выведем ее в лог,
         // но не будем прерывать выполнение задачи
         try {
-          await promises.writeFile(pathForFileType, JSON.stringify(data), { encoding: 'utf8', flag: 'w' });
+          await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), { encoding: 'utf8', flag: 'w' });
         }
         catch (e) {
-          console.log(e);
+          console.log(`Error writing data to file ${fileName} - ${e}`);
         }
 
         await context.checkStatus();
