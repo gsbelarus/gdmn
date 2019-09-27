@@ -94,7 +94,7 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   attributes: IAttribute[];
 }>;
 
-export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { querysSettings: ISettingParams[] }>;
+export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingData, newData: ISettingData }>;
 
 export class Application extends ADatabase {
@@ -129,6 +129,11 @@ export class Application extends ADatabase {
     };
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
+  }
+
+  private _getSettingFileName(type: string) {
+    const pathFromDB = this.dbDetail.connectionOptions.path;
+    return `${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${type}.json`;    
   }
 
   public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
@@ -940,6 +945,7 @@ export class Application extends ADatabase {
     return task;
   }
 
+  // TODO: пока обрабатываем только первый объект из массива, из запроса с клиента
   public pushQuerySettingCmd(session: Session,
                              command: QuerySettingCmd): Task<QuerySettingCmd, ISettingData[]> {
     const task = new Task({
@@ -951,27 +957,30 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
-        const pathFromDB = this.dbDetail.connectionOptions.path;
-        const pathForFileType =`${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${payload.querysSettings[0].type}.json`;
-
-        let data = await promises.readFile(pathForFileType, { encoding: 'utf8', flag: 'r' })
+        const fileName = this._getSettingFileName(payload.query[0].type);
+        
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
           .then( text => JSON.parse(text) )
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              console.log(`Read data from file ${fileName}`);
               return arr as ISettingData[];
             } else {
-              console.log('unknown data type');
+              console.log(`Unknown data type in file ${fileName}`);
               return undefined;
             }
           })
           .catch( err => {
-            console.log(err);
+            console.log(`Error reading file ${fileName} - ${err}`);
             return undefined;
           });
+
         await context.checkStatus();
-        return data ? data.filter( s => isISettingData(s) && s.type === payload.querysSettings[0].type && s.objectID === payload.querysSettings[0].objectID) as ISettingData[] : [];
+
+        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingData[] : [];
       }
     });
+
     session.taskManager.add(task);
     this.sessionManager.syncTasks();
     return task;

@@ -208,15 +208,11 @@ export class AppCommandProvider {
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {
-    return typeof command.payload === "object"
-      && !!command.payload;
+    return command.payload instanceof Object && Array.isArray(command.payload.query) && command.payload.query.length;
   }
 
   private static _verifySaveSettingCmd(command: ICmd<AppAction, any>): command is SaveSettingCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "newData" in command.payload
-      && typeof command.payload.newData === "object";
+    return command.payload instanceof Object && command.payload.newData instanceof Object;
   }
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
@@ -357,16 +353,16 @@ export class AppCommandProvider {
         return this._application.pushEditEntityCmd(session, command);
       }
       case "QUERY_SETTING": {
-        if (!AppCommandProvider._verifyQuerySettingCmd(command)) {
-          throw new Error(`Incorrect ${command.action} command`);
+        if (AppCommandProvider._verifyQuerySettingCmd(command)) {
+          return this._application.pushQuerySettingCmd(session, command);
         }
-        return this._application.pushQuerySettingCmd(session, command);
+        throw new Error(`Incorrect ${command.action} command`);
       }
       case "SAVE_SETTING": {
-        if (!AppCommandProvider._verifySaveSettingCmd(command)) {
-          throw new Error(`Incorrect ${command.action} command`);
+        if (AppCommandProvider._verifySaveSettingCmd(command)) {
+          return this._application.pushSaveSettingCmd(session, command);
         }
-        return this._application.pushSaveSettingCmd(session, command);
+        throw new Error(`Incorrect ${command.action} command`);
       }
       default: {
         throw new Error("Unsupported action");
