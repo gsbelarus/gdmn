@@ -4,6 +4,8 @@ import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "../gdmn/actions";
 import { ERModel, Entity } from "gdmn-orm";
 import { RecordSet } from 'gdmn-recordset';
+import { IDesignerState } from './Designer';
+import { IGrid, IObject } from './types';
 
 export interface IDesignerContainerProps {
   url: string;
@@ -21,5 +23,7 @@ export interface IDesignerStateProps {
 export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateProps {
   dispatch: ThunkDispatch<IState, never, GdmnAction>;
   entityName: string;
-  outDesignerMode: () => void;
+  grid: IGrid;
+  objects: IObject[];
+  onExit: (newSettings?: IDesignerState) => void;
 };

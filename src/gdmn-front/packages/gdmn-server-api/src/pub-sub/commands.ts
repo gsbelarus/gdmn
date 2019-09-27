@@ -239,3 +239,9 @@ export type TEditEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.EDIT_ENTI
 // setting: query
 
 export type TQuerySettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY_SETTING>;
+
+//setting: save
+
+export type TSaveSettingTaskCmd = TTaskCmd<TTaskActionNames.SAVE_SETTING>;
+
+export type TSaveSettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.SAVE_SETTING>;
