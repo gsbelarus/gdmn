@@ -8,6 +8,10 @@ export interface IResultSetMetadataSource {
     fixedDescriptors: IDescriptor[];
 }
 
+function instanceOfResultSet(object: any): object is IResultSetMetadataSource {
+    return "descriptors" in object && "fixedDescriptors" in object;
+}
+
 export class OutputMetadata extends AMetadata {
 
     private _source?: IResultSetMetadataSource;
@@ -25,22 +29,30 @@ export class OutputMetadata extends AMetadata {
         return this._source!.descriptors.length;
     }
 
-    public static async getMetadata(statement: Statement): Promise<OutputMetadata> {
-        const result: IResultSetMetadataSource = await statement.transaction.connection.client
-            .statusAction(async (status) => {
-                const metadata = await statement.source!.handler.getOutputMetadataAsync(status);
-                try {
-                    const descriptors = createDescriptors(status, metadata!);
+    public static async getMetadata(
+        params: Statement | IResultSetMetadataSource): Promise<OutputMetadata> {
+        if (params instanceof Statement) {
+            const statement = params;
+            const result: IResultSetMetadataSource = await statement.transaction.connection.client
+                .statusAction(async (status) => {
+                    const metadata = await statement.source!.handler.getOutputMetadataAsync(status);
+                    try {
+                        const descriptors = createDescriptors(status, metadata!);
 
-                    return {
-                        descriptors,
-                        fixedDescriptors: statement.source!.outDescriptors
-                    };
-                } finally {
-                    await metadata!.releaseAsync();
-                }
-            });
-        return new OutputMetadata(result);
+                        return {
+                            descriptors,
+                            fixedDescriptors: statement.source!.outDescriptors
+                        };
+                    } finally {
+                        await metadata!.releaseAsync();
+                    }
+                });
+            return new OutputMetadata(result);
+        }
+
+        if (instanceOfResultSet(params)) { return new OutputMetadata(params); }
+
+        throw new Error("Invalid params");
     }
 
     protected _getColumnLabel(i: number): string | undefined {

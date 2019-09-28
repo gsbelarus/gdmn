@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
-import {EQueryCursor, ERBridge, ISqlPrepareResponse, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
+import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   Entity,
@@ -32,7 +32,7 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingData, ISettingParams, isISettingData} from "gdmn-internals";
+import {ISettingData, ISettingParams, isISettingData, ISqlPrepareResponse} from "gdmn-internals";
 import { promises } from "fs";
 
 export type AppAction =
