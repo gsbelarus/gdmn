@@ -40,6 +40,17 @@ export interface ISqlQueryResponseAliases {
   }
 }
 
+export interface IFieldDescription {
+  name: string,
+  type: Types
+}
+
+export interface ISqlPrepareResponse {
+  plan?: string;
+  fieldList?: IFieldDescription[],
+  paramList?: IFieldDescription[];
+}
+
 export interface ISettingParams {
   type: string;
   objectID: string;
@@ -52,7 +63,17 @@ export interface ISettingParams {
 
 export interface ISettingData extends ISettingParams {
   data: any;
-}
+};
+
+export function isISettingData(data: any): data is ISettingData {
+  return (
+    data instanceof Object
+    &&
+    typeof data.type === 'string'
+    &&
+    typeof data.objectID === 'string'
+  )
+};
 
 export interface ISettingEnvelope extends ISettingData {
   _changed: Date;

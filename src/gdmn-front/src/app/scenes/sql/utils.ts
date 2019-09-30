@@ -1,7 +1,7 @@
 import { Types, ISqlQueryResponseAliasesOrm, ISqlQueryResponseAliasesRdb } from 'gdmn-internals';
 import { IFieldDef, TFieldType } from 'gdmn-recordset';
-import { AttributeTypes } from 'gdmn-orm';
-import { ISQLParam } from './Sql';
+// import { AttributeTypes } from 'gdmn-orm';
+import { ISQLField } from './Sql';
 
 export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliasesRdb, orm?: ISqlQueryResponseAliasesOrm} ): IFieldDef {
 
@@ -45,7 +45,7 @@ export function sql2fd(fieldAlias: string, sqlfa: {rdb: ISqlQueryResponseAliases
   };
 }
 
-export function sqlParams2params(params: {name: string, type: Types} ): ISQLParam {
+export function sqlParams2params(params: {name: string, type: Types} ): ISQLField {
   const {name, type } = params;
   let dataType;
 

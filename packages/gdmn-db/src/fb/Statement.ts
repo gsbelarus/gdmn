@@ -3,16 +3,18 @@ import { CursorType } from "../AResultSet";
 import { AStatement, IParams } from "../AStatement";
 import { CommonParamsAnalyzer } from "../common/CommonParamsAnalyzer";
 import { InputMetadata } from "./InputMetadata";
+import { OutputMetadata } from "./OutputMetadata";
 import { Result } from "./Result";
 import { ResultSet } from "./ResultSet";
 import { Transaction } from "./Transaction";
 import { createDescriptors, createInDescriptors, dataWrite, fixMetadata, IDescriptor } from "./utils/fb-utils";
 
 export interface IStatementSource {
-    metadata: InputMetadata;
+    inMetadata: InputMetadata;
+    outMetadata: OutputMetadata;
     handler: NativeStatement;
-    inMetadata: MessageMetadata;
-    outMetadata: MessageMetadata;
+    inMetadataMsg: MessageMetadata;
+    outMetadataMsg: MessageMetadata;
     inDescriptors: IDescriptor[];
     outDescriptors: IDescriptor[];
 }
@@ -45,8 +47,12 @@ export class Statement extends AStatement {
         return super.transaction as Transaction;
     }
 
-    get metadata(): InputMetadata {
-        return this.source!.metadata;
+    get inMetadata(): InputMetadata {
+        return this.source!.inMetadata;
+    }
+
+    get outMetadata(): OutputMetadata {
+        return this.source!.outMetadata;
     }
 
     public static async prepare(transaction: Transaction,
@@ -60,22 +66,31 @@ export class Statement extends AStatement {
             const rawInMetadata = await handler!.getInputMetadataAsync(status);
             const rawInDescriptors = createInDescriptors(status, rawInMetadata, paramsAnalyzer.paramNameList);
 
-            const inMetadata = fixMetadata(status, await handler!.getInputMetadataAsync(status))!;
-            const outMetadata = fixMetadata(status, await handler!.getOutputMetadataAsync(status))!;
+            const rawOutMetadata = await handler!.getOutputMetadataAsync(status);
+            const rawOutDescriptors = createDescriptors(status, rawOutMetadata);
 
-            const inDescriptors = createInDescriptors(status, inMetadata, paramsAnalyzer.paramNameList);
-            const outDescriptors = createDescriptors(status, outMetadata);
+            const inMetadataMsg = fixMetadata(status, await handler!.getInputMetadataAsync(status))!;
+            const outMetadataMsg = fixMetadata(status, await handler!.getOutputMetadataAsync(status))!;
 
-            const metadata = await InputMetadata.getMetadata({
+            const inDescriptors = createInDescriptors(status, inMetadataMsg, paramsAnalyzer.paramNameList);
+            const outDescriptors = createDescriptors(status, outMetadataMsg);
+
+            const inMetadata = await InputMetadata.getMetadata({
                 descriptors: rawInDescriptors,
                 fixedDescriptors: inDescriptors
             });
 
+            const outMetadata = await OutputMetadata.getMetadata({
+                descriptors: rawOutDescriptors,
+                fixedDescriptors: outDescriptors
+            });
+
             return {
-                metadata: metadata as InputMetadata,
-                handler: handler!,
                 inMetadata,
                 outMetadata,
+                handler: handler!,
+                inMetadataMsg,
+                outMetadataMsg,
                 inDescriptors,
                 outDescriptors
             };
@@ -93,8 +108,8 @@ export class Statement extends AStatement {
             throw new Error("Not all resultSets closed");
         }
 
-        this.source!.outMetadata.releaseSync();
-        this.source!.inMetadata.releaseSync();
+        this.source!.outMetadataMsg.releaseSync();
+        this.source!.inMetadataMsg.releaseSync();
 
         await this.transaction.connection.client.statusAction((status) => this.source!.handler.freeAsync(status));
         this.source = undefined;
@@ -111,14 +126,14 @@ export class Statement extends AStatement {
 
     protected async _execute(params?: IParams): Promise<void> {
         await this.transaction.connection.client.statusAction(async (status) => {
-            const { inMetadata, outMetadata, inDescriptors }: IStatementSource = this.source!;
-            const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
-            const outBuffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
+            const { inMetadataMsg, outMetadataMsg, inDescriptors }: IStatementSource = this.source!;
+            const inBuffer = new Uint8Array(inMetadataMsg.getMessageLengthSync(status));
+            const outBuffer = new Uint8Array(outMetadataMsg.getMessageLengthSync(status));
 
             await dataWrite(this.transaction, inDescriptors, inBuffer, this._paramsAnalyzer.prepareParams(params));
 
             const newTransaction = await this.source!.handler.executeAsync(status, this.transaction.handler,
-                inMetadata, inBuffer, outMetadata, outBuffer);
+                inMetadataMsg, inBuffer, outMetadataMsg, outBuffer);
 
             if (newTransaction && this.transaction.handler !== newTransaction) {
                 //// FIXME: newTransaction.releaseSync();

@@ -143,5 +143,13 @@ export function statementTest(driver: ADriver, dbOptions: IConnectionOptions): v
                 }
             });
         });
+
+        it("preparation sql and returning plan (getPlan)", async () => {
+            const statement = await globalConnection
+                .prepare(globalTransaction, "SELECT * FROM STATEMENT_TABLE WHERE ID = ?");
+            const result = await statement.getPlan();
+            expect(result).not.toBeNull();
+            await statement.dispose();
+        });
     });
 }

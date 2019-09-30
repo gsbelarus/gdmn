@@ -7,6 +7,7 @@ import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
+import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -158,7 +159,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 };
 
 export function EntityDlg(props: IEntityDlgProps): JSX.Element {
-  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID } = props;
+  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID, history } = props;
 
   if ((createEntity && entityName) || (!createEntity && !entityName) || (createEntity && !uniqueID)) {
     throw new Error('Invalid EntityDlg props');
@@ -166,7 +167,14 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   const entity = erModel && entityName && erModel.entities[entityName];
   const [state, dlgDispatch] = useReducer(reducer, { });
+  const [MessageBox, messageBox] = useMessageBox();
   const { entityData, changed, selectedAttr, errorLinks } = state;
+
+  const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
+    viewTabURL: url,
+    locationPath: location.pathname,
+    historyPush: history.push
+  }))};
 
   useEffect( () => {
     if (!viewTab) {
@@ -193,7 +201,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         dlgDispatch({ type: 'SET_STATE', state: viewTab.sessionData });
       } else {
         if (entity) {
-          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(false) });
+          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(true) });
         } else {
           dlgDispatch({
             type: 'SET_ENTITY_DATA',
@@ -229,7 +237,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       text: changed ? 'Отменить' : 'Закрыть',
       iconProps: {
         iconName: 'Cancel'
-      }
+      },
+      onClick: deleteViewTab
     },
     {
       key: 'apply',
@@ -265,12 +274,26 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         iconName: 'Delete'
       },
       onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
+    },
+    {
+      key: 'showAdapter',
+      disabled: !entityData || !entityData.adapter,
+      text: 'Показать адаптер',
+      iconProps: {
+        iconName: 'PageData'
+      },
+      onClick: () => messageBox({
+        title: 'Adapter',
+        message: JSON.stringify(entityData.adapter, undefined, 2),
+        code: true
+      })
     }
   ];
 
   return (
     <>
       <CommandBar items={commandBarItems} />
+      <MessageBox />
       <Frame scroll height='calc(100% - 42px)'>
         <Frame border marginLeft marginRight>
           <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>

@@ -1,6 +1,6 @@
 import {EventEmitter} from "events";
 import {AConnection, IParams} from "gdmn-db";
-import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor, ISqlPrepareResponse} from "gdmn-er-bridge";
+import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
   Entity,
@@ -32,7 +32,8 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import { ISettingData,  ISettingParams} from "gdmn-internals";
+import {ISettingData, ISettingParams, isISettingData, ISqlPrepareResponse} from "gdmn-internals";
+import { promises } from "fs";
 
 export type AppAction =
   "DEMO"
@@ -59,7 +60,8 @@ export type AppAction =
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
   | "EDIT_ENTITY"
-  | "QUERY_SETTING";
+  | "QUERY_SETTING"
+  | "SAVE_SETTING";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -92,7 +94,8 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   attributes: IAttribute[];
 }>;
 
-export type QuerySettingCmd = AppCmd<"QUERY_SETTING", {params: ISettingParams[]}>;
+export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingData, newData: ISettingData }>;
 
 export class Application extends ADatabase {
 
@@ -126,6 +129,11 @@ export class Application extends ADatabase {
     };
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
+  }
+
+  private _getSettingFileName(type: string) {
+    const pathFromDB = this.dbDetail.connectionOptions.path;
+    return `${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${type}.json`;    
   }
 
   public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
@@ -708,10 +716,10 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const { sql } = context.command.payload;
+        const {sql} = context.command.payload;
 
         const result = await context.session.executeConnection((connection) =>
-            ERBridge.sqlPrepare(connection, connection.readTransaction, sql)
+          ERBridge.sqlPrepare(connection, connection.readTransaction, sql)
         );
         return result;
       }
@@ -937,6 +945,7 @@ export class Application extends ADatabase {
     return task;
   }
 
+  // TODO: пока обрабатываем только первый объект из массива, из запроса с клиента
   public pushQuerySettingCmd(session: Session,
                              command: QuerySettingCmd): Task<QuerySettingCmd, ISettingData[]> {
     const task = new Task({
@@ -947,10 +956,90 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const params = context.command.payload;
-        console.log(params);
+        const payload = context.command.payload;
+        const fileName = this._getSettingFileName(payload.query[0].type);
+        
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
+          .then( text => JSON.parse(text) )
+          .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              console.log(`Read data from file ${fileName}`);
+              return arr as ISettingData[];
+            } else {
+              console.log(`Unknown data type in file ${fileName}`);
+              return undefined;
+            }
+          })
+          .catch( err => {
+            console.log(`Error reading file ${fileName} - ${err}`);
+            return undefined;
+          });
+
         await context.checkStatus();
-        return [{data: 0} as ISettingData];
+
+        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingData[] : [];
+      }
+    });
+
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushSaveSettingCmd(session: Session,
+                            command: SaveSettingCmd): Task<SaveSettingCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const { newData } = context.command.payload;
+        const fileName = this._getSettingFileName(newData.type);
+
+        // читаем массив настроек из файла, если файла нет
+        // или возникла ошибка, то пишем ее в лог и игнорируем
+        // в этом случае data === undefined
+        // минимально проверяем тип данных
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
+          .then( text => JSON.parse(text) )
+          .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              console.log(`Read data from file ${fileName}`);
+              return arr as ISettingData[];
+            } else {
+              console.log(`Unknown data in file ${fileName}`);
+              return undefined;
+            }
+          })
+          .catch( err => {
+            console.log(`Error reading data from file ${fileName} - ${err}`);
+            return undefined;
+          });
+
+        if (data) {
+          const idx = data.findIndex( s => isISettingData(s) && s.type === newData.type && s.objectID === newData.objectID );
+          if (idx === -1) {
+            data.push(newData);
+          } else {
+            data[idx] = newData;
+          }
+        } else {
+          data = [newData];
+        }
+
+        // записываем файл. если будет ошибка, то выведем ее в лог,
+        // но не будем прерывать выполнение задачи
+        try {
+          await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), { encoding: 'utf8', flag: 'w' });
+        }
+        catch (e) {
+          console.log(`Error writing data to file ${fileName} - ${e}`);
+        }
+
+        await context.checkStatus();
       }
     });
     session.taskManager.add(task);

@@ -15,6 +15,7 @@
 @import "DlgView.css";
 @import "../app/scenes/ermodel2/ERModelBox.css";
 @import "BP.css";
+@import "NLPDialogScroll.css";
 
 /*************************************************
  * VARIABLES
@@ -63,4 +64,3 @@ code, pre {
   -webkit-flex-flow: row wrap;
   flex-flow: row wrap;
 }
-

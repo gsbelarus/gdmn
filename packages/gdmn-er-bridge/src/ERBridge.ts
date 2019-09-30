@@ -1,4 +1,4 @@
-import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams, Types} from "gdmn-db";
+import {AccessMode, AConnection, AConnectionPool, ATransaction, Factory, IBaseExecuteOptions, IParams, Types, IFields} from "gdmn-db";
 import {
   Entity,
   EntityDelete,
@@ -18,21 +18,14 @@ import {EQueryCursor} from "./cursor/EQueryCursor";
 import {ISqlQueryResponse, SqlQueryCursor} from "./cursor/SqlQueryCursor";
 import {EntityBuilder} from "./ddl/builder/EntityBuilder";
 import {ERModelBuilder} from "./ddl/builder/ERModelBuilder";
-import {DDLHelper} from "./ddl/DDLHelper";
+import {DDLHelper, IFieldProps} from "./ddl/DDLHelper";
 import {ERExport} from "./ddl/export/ERExport";
 import {DBSchemaUpdater} from "./ddl/updates/DBSchemaUpdater";
 import {EntityDefiner} from "./EntityDefiner";
 import {GetSequence} from "./crud/query/Sequence";
 import {EQuerySetCursor} from "./cursor/EQuerySetCursor";
+import { ISqlPrepareResponse, IFieldDescription } from "gdmn-internals";
 
-export interface ISqlPrepareResponse {
-  plan?: string;
-  placeholderList?: {
-      name: string,
-      type: Types
-  }[];
-}
-    
 export interface IExecuteERBridgeOptions<R> extends IBaseExecuteOptions<ERBridge, R> {
   connection: AConnection;
   transaction: ATransaction;
@@ -155,15 +148,19 @@ export class ERBridge {
                                 sql: string): Promise<ISqlPrepareResponse> {
 
     const sqlPrepare = await connection.prepare(transaction, sql);
-    const sqlPlan = await sqlPrepare.getPlan();
+    const plan = await sqlPrepare.getPlan();
 
-    const paramNameList: any = [];
-    for(let i = 0; i < sqlPrepare.metadata.columnCount; i += 1){
-        paramNameList.push({name: sqlPrepare.metadata.getColumnLabel(i), type: sqlPrepare.metadata.getColumnType(i)});
+    const paramList: IFieldDescription[] = [];
+    for(let i = 0; i < sqlPrepare.inMetadata.columnCount; i += 1){
+        paramList.push({name: sqlPrepare.inMetadata.getColumnLabel(i) || '', type: sqlPrepare.inMetadata.getColumnType(i)});
     };
 
+    const fieldList: IFieldDescription[] = [];
+    for(let i = 0; i < sqlPrepare.outMetadata.columnCount; i += 1){
+        fieldList.push({name: sqlPrepare.outMetadata.getColumnLabel(i) || '', type: sqlPrepare.outMetadata.getColumnType(i)});
+    };
 
-    return { plan: sqlPlan, placeholderList: paramNameList };
+    return { plan, paramList, fieldList };
   }
 
   public static async sqlQuery(connection: AConnection,

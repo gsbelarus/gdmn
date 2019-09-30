@@ -3,19 +3,21 @@ import { fsmStateTypes } from "./fsmStateTypes";
 import { fsmSignals } from "./fsmSignals";
 
 const login: IFSMState = {
+  id: 'LOGIN_STATE',
   type: fsmStateTypes.login
 };
 
 const showData: IFSMState = {
+  id: 'SHOW_DATA_STATE',
   type: fsmStateTypes.showData,
-  inParams: [
-    {
-      queryPhrase: 'Покажи все TgdcCompany'
-    }
-  ]
+  inParams: {
+    entityName: 'TgdcCompany',
+    queryPhrase: 'Покажи все TgdcCompany'
+  }
 };
 
 const workDone: IFSMState = {
+  id: 'WORK_DONE',
   type: fsmStateTypes.workDone
 };
 

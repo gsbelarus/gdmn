@@ -16,9 +16,21 @@ export interface IRelation2Entity {
 
 export class ERModel {
 
-  private _entities: IEntities = {};
-  private _sequencies: ISequencies = {};
-  private _relation2Entity: IRelation2Entity = {};
+  private _entities: IEntities;
+  private _sequencies: ISequencies;
+  private _relation2Entity: IRelation2Entity;
+
+  constructor(erModel?: ERModel) {
+    if (erModel) {
+      this._entities = erModel._entities;
+      this._sequencies = erModel._sequencies;
+      this._relation2Entity = erModel._relation2Entity;
+    } else {
+      this._entities = {};
+      this._sequencies = {};
+      this._relation2Entity = {};
+    }
+  }
 
   get sequencies(): ISequencies {
     return this._sequencies;
