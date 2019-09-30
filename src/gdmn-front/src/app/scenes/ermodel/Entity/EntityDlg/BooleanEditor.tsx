@@ -1,5 +1,5 @@
 import { IBooleanAttribute } from "gdmn-orm";
-import { Stack, Checkbox } from "office-ui-fabric-react";
+import { Stack, Checkbox, Label } from "office-ui-fabric-react";
 import React from "react";
 
 interface IBooleanEditorProps {
@@ -8,12 +8,10 @@ interface IBooleanEditorProps {
 };
 
 export const BooleanEditor = ({ attr, onChange }: IBooleanEditorProps) =>
-  <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
-    <Stack.Item grow={1}>
-      <Checkbox
-        label="Default value:"
-        checked={attr.defaultValue}
-        onChange={ (_, defaultValue) => defaultValue !== undefined && onChange({ ...attr, defaultValue }) }
-      />
-    </Stack.Item>
-  </Stack>
+  <div>
+    <Label>Default value:</Label>
+    <Checkbox
+      checked={attr.defaultValue}
+      onChange={ (_, defaultValue) => defaultValue !== undefined && onChange({ ...attr, defaultValue }) }
+    />
+  </div>
