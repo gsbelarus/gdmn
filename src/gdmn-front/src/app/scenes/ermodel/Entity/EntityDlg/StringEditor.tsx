@@ -19,6 +19,7 @@ export const StringEditor = ({ attr, errorLinks, onChange, onError, onClearError
       label="Min length:"
       value={attr.minLength}
       errorMessage={getErrorMessage('minLength', errorLinks)}
+      width="180px"
       onlyInteger
       noNegative
       onChange={ minLength => { onChange({ ...attr, minLength }); onClearError && onClearError('minLength'); } }
@@ -28,6 +29,7 @@ export const StringEditor = ({ attr, errorLinks, onChange, onError, onClearError
       label="Max length:"
       value={attr.maxLength}
       errorMessage={getErrorMessage('maxLength', errorLinks)}
+      width="180px"
       onlyInteger
       noNegative
       onChange={ maxLength => { onChange({ ...attr, maxLength }); onClearError && onClearError('maxLength'); } }

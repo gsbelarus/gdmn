@@ -7,11 +7,12 @@ interface INumberFieldProps {
   errorMessage?: string;
   noNegative?: boolean;
   onlyInteger? : boolean;
+  width?: string;
   onChange: (newValue: number | undefined) => void;
   onInvalidValue: () => void;
 };
 
-export const NumberField = ({ label, value, errorMessage, onChange, onlyInteger, noNegative, onInvalidValue }: INumberFieldProps) => {
+export const NumberField = ({ label, value, errorMessage, width, onChange, onlyInteger, noNegative, onInvalidValue }: INumberFieldProps) => {
 
   const [text, setText] = useState( value === undefined ? '' : value.toString() );
 
@@ -20,11 +21,7 @@ export const NumberField = ({ label, value, errorMessage, onChange, onlyInteger,
       label={label}
       value={text}
       errorMessage={errorMessage}
-      styles={{
-        root: {
-          width: '180px'
-        }
-      }}
+      styles={ width ? { root: { width } } : undefined }
       onChange={
         (_, newValue) => {
           if (newValue !== undefined) {

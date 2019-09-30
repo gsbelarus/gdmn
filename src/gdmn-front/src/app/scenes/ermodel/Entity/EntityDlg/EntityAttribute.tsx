@@ -1,15 +1,15 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
-import { IntegerEditor} from "./IntegerEditor"
+import { NumberEditor} from "./NumberEditor"
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
 import { BooleanEditor } from "./BooleanEditor";
 
-type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute;
+type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number>;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
 type OnError = (fieldName: string, errorMessage: string) => void;
@@ -32,9 +32,9 @@ const mapEditor = {
  'Parent': DumbEditor,
  'Detail': DumbEditor,
  'Sequence': DumbEditor,
- 'Integer': IntegerEditor,
- 'Numeric': DumbEditor,
- 'Float': DumbEditor,
+ 'Integer': NumberEditor,
+ 'Numeric': NumberEditor,
+ 'Float': NumberEditor,
  'Boolean': BooleanEditor,
  'Date': DumbEditor,
  'TimeStamp': DumbEditor,

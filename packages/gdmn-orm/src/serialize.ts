@@ -51,6 +51,10 @@ export interface INumericAttribute extends INumberAttribute<number> {
   scale: number;
 }
 
+export function isINumericAttribute(attr: IAttribute): attr is INumericAttribute {
+  return attr.type === 'Numeric' && typeof (attr as any).precision === 'number' && typeof (attr as any).scale === 'number';
+}
+
 export interface IDateAttribute extends INumberAttribute<Date, ContextVariables> {
 }
 
