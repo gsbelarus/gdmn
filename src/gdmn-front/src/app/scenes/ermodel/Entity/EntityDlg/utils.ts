@@ -1,4 +1,4 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute } from "gdmn-orm";
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -94,7 +94,8 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
         }
 
         case 'Integer':
-        case 'Float': {
+        case 'Float':
+        case 'Numeric': {
           const i = attr as INumberAttribute<number>;
 
           if (i.minValue !== undefined && i.maxValue !== undefined && i.minValue > i.maxValue) {
@@ -105,28 +106,16 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
               internal: false
             });
           }
-          break;
-        }
 
-        case 'Numeric': {
-          const i = attr as INumericAttribute;
-
-          if (i.minValue !== undefined && i.maxValue !== undefined && i.minValue > i.maxValue) {
-            p.push({
-              attrIdx,
-              field: 'minValue',
-              message: "Min Value > Max Value",
-              internal: false
-            });
-          }
-
-          if (i.precision >= i.scale) {
-            p.push({
-              attrIdx,
-              field: 'precision',
-              message: "Precision must be less than scale",
-              internal: false
-            });
+          if (isINumericAttribute(attr)) {
+            if (attr.precision >= attr.scale) {
+              p.push({
+                attrIdx,
+                field: 'precision',
+                message: "Precision must be less than scale",
+                internal: false
+              });
+            }
           }
 
           break;
