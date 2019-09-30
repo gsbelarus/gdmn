@@ -5,12 +5,12 @@ import { getErrorMessage, ErrorLinks } from "./utils";
 import { NumberField } from "./NumberField";
 
 interface IIntegerEditorProps {
-  attr:  INumberAttribute<number>,
+  attr: INumberAttribute<number>,
   createAttribute: boolean,
   errorLinks?: ErrorLinks;
   onChange: (newAttr: INumberAttribute<number>) => void;
-  onError?: (fieldName: string, errorMessage: string) => void;
-  onClearError?: (fieldName: string) => void;
+  onError?: (field: string, message: string) => void;
+  onClearError?: (field: string) => void;
 };
 
 export const IntegerEditor = ({ attr, errorLinks, onChange, onError, onClearError }: IIntegerEditorProps) =>

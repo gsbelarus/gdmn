@@ -2,57 +2,36 @@ import { IStringAttribute } from "gdmn-orm";
 import { Stack, TextField, Label, Checkbox } from "office-ui-fabric-react";
 import React from "react";
 import { getErrorMessage, ErrorLinks } from "./utils";
+import { NumberField } from "./NumberField";
 
 interface IStringEditorProps {
   attr: IStringAttribute,
   createAttribute: boolean,
   errorLinks?: ErrorLinks;
-  onChange: (newAttr: IStringAttribute) => void
+  onChange: (newAttr: IStringAttribute) => void;
+  onError?: (field: string, message: string) => void;
+  onClearError?: (field: string) => void;
 };
 
-export const StringEditor = ({ attr, errorLinks, onChange }: IStringEditorProps) =>
+export const StringEditor = ({ attr, errorLinks, onChange, onError, onClearError }: IStringEditorProps) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
-    <TextField
+    <NumberField
       label="Min length:"
-      value={attr.minLength === undefined ? '' : attr.minLength.toString()}
+      value={attr.minLength}
       errorMessage={getErrorMessage('minLength', errorLinks)}
-      styles={{
-        root: {
-          width: '180px'
-        }
-      }}
-      onChange={ (_, minLength) => {
-        if (minLength !== undefined) {
-          if (!minLength.trim()) {
-            onChange({ ...attr, minLength: undefined });
-          } else {
-            if (parseInt(minLength) >= 0) {
-              onChange({ ...attr, minLength: parseInt(minLength) });
-            }
-          }
-        }
-      } }
+      onlyInteger
+      noNegative
+      onChange={ minLength => { onChange({ ...attr, minLength }); onClearError && onClearError('minLength'); } }
+      onInvalidValue={ () => onError && onError('minLength', 'Invalid value') }
     />
-    <TextField
+    <NumberField
       label="Max length:"
-      value={attr.maxLength === undefined ? '' : attr.maxLength.toString()}
+      value={attr.maxLength}
       errorMessage={getErrorMessage('maxLength', errorLinks)}
-      styles={{
-        root: {
-          width: '180px'
-        }
-      }}
-      onChange={ (_, maxLength) => {
-        if (maxLength !== undefined) {
-          if (!maxLength.trim()) {
-            onChange({ ...attr, maxLength: undefined });
-          } else {
-            if (parseInt(maxLength) >= 0) {
-              onChange({ ...attr, maxLength: parseInt(maxLength) });
-            }
-          }
-        }
-      } }
+      onlyInteger
+      noNegative
+      onChange={ maxLength => { onChange({ ...attr, maxLength }); onClearError && onClearError('maxLength'); } }
+      onInvalidValue={ () => onError && onError('maxLength', 'Invalid value') }
     />
     <Stack.Item>
       <Label>Auto trim:</Label>
