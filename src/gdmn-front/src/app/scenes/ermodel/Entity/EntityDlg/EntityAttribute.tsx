@@ -12,8 +12,18 @@ import { BooleanEditor } from "./BooleanEditor";
 type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
+type OnError = (fieldName: string, errorMessage: string) => void;
+type OnClearError = (fieldName: string) => void;
 
-const DumbEditor = ({ attr, createAttribute, onChange }: { attr: IAttribute, createAttribute: boolean, onChange: OnChange }) => null;
+interface IDumbEditorProps {
+  attr: IAttribute,
+  createAttribute: boolean,
+  onChange: OnChange
+  onError?: OnError;
+  onClearError?: OnClearError;
+};
+
+const DumbEditor = ({ attr, createAttribute, onChange }: IDumbEditorProps) => null;
 
 const mapEditor = {
  'Entity': DumbEditor,
@@ -40,9 +50,11 @@ interface IEntityAttributeProps {
   errorLinks?: ErrorLinks;
   onChange: OnChange;
   onSelect: OnSelect;
+  onError?: OnError;
+  onClearError?: OnClearError;
 };
 
-export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
@@ -110,7 +122,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} />
+        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} />
       </Stack>
     </Frame>
   );

@@ -48,6 +48,8 @@ type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
   | { type: 'ADD_ATTR' }
   | { type: 'DELETE_ATTR' }
+  | { type: 'CLEAR_ERROR', attrIdx: number, field: string }
+  | { type: 'ADD_ERROR', attrIdx: number, field: string, message: string }
   | { type: 'REVERT' };
 
 function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
@@ -71,6 +73,26 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       return {
         ...state,
         selectedAttr: action.selectedAttr
+      };
+    }
+
+    case 'ADD_ERROR': {
+      const { attrIdx, field, message } = action;
+      const { errorLinks } = state;
+      return {
+        ...state,
+        errorLinks: errorLinks === undefined
+          ? undefined
+          : errorLinks.find( l => l.attrIdx === attrIdx && l.field === field )
+          ? errorLinks
+          : [...errorLinks, { attrIdx, field, message }]
+      };
+    }
+
+    case 'CLEAR_ERROR': {
+      return {
+        ...state,
+        errorLinks: state.errorLinks === undefined ? undefined : state.errorLinks.filter( l => l.attrIdx !== action.attrIdx || l.field !== action.field )
       };
     }
 
@@ -349,15 +371,17 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         <Frame marginTop marginLeft marginRight>
           <Stack>
             {
-              entityData.attributes.map( (attr, idx) =>
+              entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={idx}
+                  key={attrIdx}
                   attr={attr}
                   createAttribute={true}
-                  selected={idx === selectedAttr}
-                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === idx )}
+                  selected={attrIdx === selectedAttr}
+                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}
                   onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
-                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) } 
+                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
+                  onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }
+                  onClearError={ field => dlgDispatch({ type: 'CLEAR_ERROR', attrIdx, field }) }
                 />
               )
             }

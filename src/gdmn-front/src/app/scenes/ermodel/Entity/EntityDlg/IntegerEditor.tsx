@@ -1,77 +1,44 @@
 import { INumberAttribute } from "gdmn-orm";
-import { Stack, TextField, Label, Checkbox } from "office-ui-fabric-react";
+import { Stack } from "office-ui-fabric-react";
 import React from "react";
 import { getErrorMessage, ErrorLinks } from "./utils";
-import { NumberField, NumberFieldError } from "./NumberField";
+import { NumberField } from "./NumberField";
 
 interface IIntegerEditorProps {
   attr:  INumberAttribute<number>,
   createAttribute: boolean,
   errorLinks?: ErrorLinks;
-  onChange: (newAttr: INumberAttribute<number>) => void
+  onChange: (newAttr: INumberAttribute<number>) => void;
+  onError?: (fieldName: string, errorMessage: string) => void;
+  onClearError?: (fieldName: string) => void;
 };
 
-export const IntegerEditor = ({ attr, errorLinks, onChange }: IIntegerEditorProps) =>
+export const IntegerEditor = ({ attr, errorLinks, onChange, onError, onClearError }: IIntegerEditorProps) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
     <NumberField
       label="Min value:"
       value={attr.minValue}
-      onlyInteger = {true}
-      noNegative = {false}
-      onError={ (error: NumberFieldError) => { if (error === 'INVALID')  getErrorMessage('minValue', errorLinks) } }
-      // styles={{
-      //   root: {
-      //     width: '180px'
-      //   }
-      // }}
-      onChanged={ (minValue) => {
-        if (minValue !== undefined) {
-          onChange({ ...attr, minValue: minValue });
-        } else {
-          onChange({ ...attr, minValue: undefined });
-        }  
-      }   
-      } 
+      errorMessage={getErrorMessage('minValue', errorLinks)}
+      onlyInteger
+      onChange={ minValue => { onChange({ ...attr, minValue }); onClearError && onClearError('minValue'); } }
+      onInvalidValue={ () => onError && onError('minValue', 'Invalid value') }
     />
-    <TextField
+    <NumberField
       label="Max value:"
-      value={attr.maxValue === undefined ? '' : attr.maxValue.toString()}
+      value={attr.maxValue}
       errorMessage={getErrorMessage('maxValue', errorLinks)}
-      styles={{
-        root: {
-          width: '180px'
-        }
-      }}
-      onChange={ (_, maxValue) => {
-        if (maxValue !== undefined) {
-          if (!maxValue.trim()) {
-            onChange({ ...attr,maxValue: undefined });
-          } else {
-            const parsedValue = parseInt(maxValue);
-            if (!isNaN(parsedValue)) {
-              onChange({ ...attr, maxValue: parsedValue });
-            }
-          }
-        }
-      } }
+      onlyInteger
+      onChange={ maxValue => { onChange({ ...attr, maxValue }); onClearError && onClearError('maxValue'); } }
+      onInvalidValue={ () => onError && onError('maxValue', 'Invalid value') }
     />
-   
     <Stack.Item grow={1}>
-      <TextField
+      <NumberField
         label="Default value:"
-        value={attr.defaultValue === undefined? '' : attr.defaultValue.toString()}
-        onChange={ (_, defaultValue) => {
-          if (defaultValue !== undefined){
-            if (!defaultValue.trim()) {
-                onChange({ ...attr,defaultValue: undefined });
-                } else {
-                  if (defaultValue === parseInt(defaultValue).toString()) {
-                     onChange({ ...attr, defaultValue: parseInt(defaultValue) });
-                  }
-                }
-              }  
-          } 
-        }
+        value={attr.defaultValue}
+        errorMessage={getErrorMessage('defaultValue', errorLinks)}
+        onlyInteger
+        onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
+        onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }
       />
     </Stack.Item>
 </Stack>

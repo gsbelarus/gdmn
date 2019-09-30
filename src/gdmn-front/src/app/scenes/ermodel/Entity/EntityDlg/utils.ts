@@ -85,44 +85,13 @@ export const validateAttributes = (entity: IEntity) => {
 
         case 'Integer': {
           const i = attr as INumberAttribute<number>;
-          if (i.minValue !== undefined) {
-            if (i.minValue > Number.MAX_SAFE_INTEGER) {
-              p.push({
-                attrIdx,
-                field: 'minValue',
-                message: "Min Value > MAX_SAFE_INTEGER"
-              });
-            }
-          }
 
-          if (i.maxValue !== undefined) {
-            if (i.maxValue > Number.MAX_SAFE_INTEGER) {
-              p.push({
-                attrIdx,
-                field: 'maxValue',
-                message: "Max Value > MAX_SAFE_INTEGER"
-              });
-            }
-          }
-
-          if (i.defaultValue !== undefined) {
-            if (i.defaultValue > Number.MAX_SAFE_INTEGER) {
-              p.push({
-                attrIdx,
-                field: 'defaultValue',
-                message: "Default Value > MAX_SAFE_INTEGER"
-              });
-            }
-          }
-
-          if (i.minValue !== undefined && i.maxValue !== undefined) {
-            if (i.minValue > i.maxValue) {
-              p.push({
-                attrIdx,
-                field: 'minValue',
-                message: "Min Value > Max Value"
-              });
-            }
+          if (i.minValue !== undefined && i.maxValue !== undefined && i.minValue > i.maxValue) {
+            p.push({
+              attrIdx,
+              field: 'minValue',
+              message: "Min Value > Max Value"
+            });
           }
           break;
         }
@@ -147,4 +116,14 @@ export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
     return el && el.message;
   }
   return undefined;
- };
+};
+
+/*
+export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
+  if (errorLinks) {
+    const el = errorLinks.find( l => l.field === field );
+    return el && el.message;
+  }
+  return undefined;
+};
+*/

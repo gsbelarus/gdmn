@@ -1,101 +1,51 @@
 import { TextField } from "office-ui-fabric-react";
-import React, { useState, useEffect } from "react";
-
-export type NumberFieldError = 'EMPTY' | 'INVALID' | 'OUT_OF_RANGE';
+import React, { useState } from "react";
 
 interface INumberFieldProps {
   label: string;
   value: number | undefined;
-  errorMessage?: string; 
+  errorMessage?: string;
   noNegative?: boolean;
   onlyInteger? : boolean;
-  onChanged: (newValue: number | undefined) => void;
-  onError: (error: NumberFieldError) => void;
+  onChange: (newValue: number | undefined) => void;
+  onInvalidValue: () => void;
 };
 
-interface INumberFieldState {
-  text: string;
-  error?: string;
-};
+export const NumberField = ({ label, value, errorMessage, onChange, onlyInteger, noNegative, onInvalidValue }: INumberFieldProps) => {
 
-export const NumberField = ({ label, value, onChanged, onlyInteger, noNegative, onError }: INumberFieldProps) => {
-
-  const [state, setState] = useState<INumberFieldState>( { text: value === undefined ? '' : value.toString() } );
-
-  useEffect( () => {
-    const { text } = state;
-    const trimmedText = text.trim();
-
-    if (trimmedText === '') {
-      if (value !== undefined) {
-        onChanged(undefined);
-      }
-      if (state.error) {
-        setState({ ...state, error: undefined });
-      }
-    }
-    else 
-      if (!trimmedText.includes('-')) {
-        if (!isNaN(Number(trimmedText))) {
-          if (onlyInteger && (trimmedText.includes('.') || trimmedText.includes(','))) {
-            if (!state.error) {
-              setState({ ...state, error: 'Введите целое число!' });
-              onError('INVALID');
-            }    
-          } else {
-            const parsedValue = onlyInteger ? parseInt(trimmedText) : parseFloat(trimmedText);
-            if (parsedValue !== value) {
-              onChanged(parsedValue);
-            }
-            if (state.error) {
-              setState({ ...state, error: undefined });
-            }
-          } 
-        } else {
-          if (!state.error) {
-            setState({ ...state, error: 'Введите число!' });
-            onError('INVALID');
-          }
-        }
-      } else {
-        if (noNegative) {
-          if (!state.error) {
-            setState({ ...state, error: 'Введите положительное число!' });
-            onError('INVALID');
-          }
-        } else {
-          if (!isNaN(Number(trimmedText.slice(1)))) {
-            if (onlyInteger && (trimmedText.includes('.') || trimmedText.includes(','))) {
-              if (!state.error) {
-                setState({ ...state, error: 'Введите целое число!' });
-                onError('INVALID');
-              }    
-            } else {
-              if (state.error) {
-                setState({ ...state, error: undefined });
-              }
-            }
-          } else {
-            if (!state.error) {
-              setState({ ...state, error: 'Введите число!' });
-              onError('INVALID');
-            }
-          }
-        }
-      }
-  }, [value, state]);
+  const [text, setText] = useState( value === undefined ? '' : value.toString() );
 
   return (
     <TextField
       label={label}
-      value={state.text}
-      errorMessage={state.error}
+      value={text}
+      errorMessage={errorMessage}
       styles={{
         root: {
           width: '180px'
         }
       }}
-      onChange={ (_, newValue) => newValue !== undefined && setState({ ...state, text: newValue }) }
+      onChange={
+        (_, newValue) => {
+          if (newValue !== undefined) {
+            const trimmedValue = newValue.trim();
+
+            if (!trimmedValue) {
+              onChange(undefined);
+            } else {
+              const v = Number(trimmedValue);
+
+              if (isNaN(v) || (v < 0 && noNegative) || (onlyInteger && (v % 1))) {
+                onInvalidValue();
+              } else {
+                onChange(v);
+              }
+            }
+
+            setText(newValue);
+          }
+        }
+      }
     />
   );
 };
