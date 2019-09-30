@@ -357,7 +357,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                   selected={idx === selectedAttr}
                   errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === idx )}
                   onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
-                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) }
+                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) } 
                 />
               )
             }

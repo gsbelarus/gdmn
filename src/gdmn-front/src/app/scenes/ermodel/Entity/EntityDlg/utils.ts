@@ -1,4 +1,4 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IBooleanAttribute, IEntity } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute } from "gdmn-orm";
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -24,12 +24,12 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
         defaultValue: undefined
       } as IEnumAttribute;
 
-      case 'Boolean':
+    case 'Integer':
       return {
         ...attr,
-        type: 'Boolean',
-        defaultValue: false
-      } as IBooleanAttribute;
+        type: 'Integer',
+        defaultValue:undefined
+      } as INumberAttribute<number>;
   }
 
   throw new Error(`Unsupported type ${type}`);
@@ -82,8 +82,51 @@ export const validateAttributes = (entity: IEntity) => {
           }
           break;
         }
-      }
 
+        case 'Integer': {
+          const i = attr as INumberAttribute<number>;
+          if (i.minValue !== undefined) {
+            if (i.minValue > Number.MAX_SAFE_INTEGER) {
+              p.push({
+                attrIdx,
+                field: 'minValue',
+                message: "Min Value > MAX_SAFE_INTEGER"
+              });
+            }
+          }
+
+          if (i.maxValue !== undefined) {
+            if (i.maxValue > Number.MAX_SAFE_INTEGER) {
+              p.push({
+                attrIdx,
+                field: 'maxValue',
+                message: "Max Value > MAX_SAFE_INTEGER"
+              });
+            }
+          }
+
+          if (i.defaultValue !== undefined) {
+            if (i.defaultValue > Number.MAX_SAFE_INTEGER) {
+              p.push({
+                attrIdx,
+                field: 'defaultValue',
+                message: "Default Value > MAX_SAFE_INTEGER"
+              });
+            }
+          }
+
+          if (i.minValue !== undefined && i.maxValue !== undefined) {
+            if (i.minValue > i.maxValue) {
+              p.push({
+                attrIdx,
+                field: 'minValue',
+                message: "Min Value > Max Value"
+              });
+            }
+          }
+          break;
+        }
+      }
       return p;
     }, [] as ErrorLinks
   );

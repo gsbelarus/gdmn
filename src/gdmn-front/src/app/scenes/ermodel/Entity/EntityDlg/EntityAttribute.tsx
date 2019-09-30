@@ -5,8 +5,9 @@ import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
-import { BooleanEditor } from "./BooleanEditor";
+import { IntegerEditor} from "./IntegerEditor"
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
+import { BooleanEditor } from "./BooleanEditor";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute;
 type OnChange = (newAttr: Attr) => void;
@@ -21,7 +22,7 @@ const mapEditor = {
  'Parent': DumbEditor,
  'Detail': DumbEditor,
  'Sequence': DumbEditor,
- 'Integer': DumbEditor,
+ 'Integer': IntegerEditor,
  'Numeric': DumbEditor,
  'Float': DumbEditor,
  'Boolean': BooleanEditor,
