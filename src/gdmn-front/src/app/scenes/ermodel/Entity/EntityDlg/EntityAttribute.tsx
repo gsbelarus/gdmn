@@ -1,13 +1,14 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, AttributeTypes } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
+import { BooleanEditor } from "./BooleanEditor";
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
 
-type Attr = IAttribute | IEnumAttribute | IStringAttribute;
+type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
 
@@ -23,7 +24,7 @@ const mapEditor = {
  'Integer': DumbEditor,
  'Numeric': DumbEditor,
  'Float': DumbEditor,
- 'Boolean': DumbEditor,
+ 'Boolean': BooleanEditor,
  'Date': DumbEditor,
  'TimeStamp': DumbEditor,
  'Time': DumbEditor,
