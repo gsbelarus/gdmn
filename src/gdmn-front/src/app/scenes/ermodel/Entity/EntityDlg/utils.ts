@@ -143,13 +143,3 @@ export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
   }
   return undefined;
 };
-
-/*
-export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
-  if (errorLinks) {
-    const el = errorLinks.find( l => l.field === field );
-    return el && el.message;
-  }
-  return undefined;
-};
-*/
