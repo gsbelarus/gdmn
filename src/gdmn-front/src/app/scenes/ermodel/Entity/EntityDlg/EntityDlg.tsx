@@ -375,7 +375,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             {
               entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={attrIdx}
+                  key={`${attrIdx}-${attr.type}`}
                   attr={attr}
                   createAttribute={true}
                   selected={attrIdx === selectedAttr}
