@@ -8,7 +8,7 @@ import { WithObjectInspector } from "./WithObjectInspector";
 import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
-import { getLName } from "gdmn-internals";
+import { getLName, ISettingEnvelope } from "gdmn-internals";
 import { apiService } from '@src/app/services/apiService';
 
 /**
@@ -615,11 +615,18 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       iconOnly: true,
       iconProps: { iconName: 'Save' },
       onClick: () => {
-        const today = new Date();
-        const dateSave = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds(), today.getMilliseconds()).toString();
-        const saveData = {type: 'DESIGNER', _changed: dateSave, _accessed: dateSave, objectID: entity.name, data: {grid: grid, objects: objects}};
-        localStorage.setItem(`designerState/${props.entityName}`, JSON.stringify(saveData) )
-        apiService.saveSetting({newData: saveData})
+        const date = new Date();
+        const dateInUTC = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 
+          date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());
+        const newData: ISettingEnvelope = {
+          type: 'DESIGNER', 
+          _changed: dateInUTC, 
+          _accessed: dateInUTC, 
+          objectID: entity.name, 
+          data: { grid, objects }
+        };
+        localStorage.setItem(`designerState/${props.entityName}`, JSON.stringify(newData) );
+        apiService.saveSetting({ newData });
       }
     },
     {
@@ -636,7 +643,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       name: 'Close',
       iconOnly: true,
       iconProps: { iconName: 'Cancel' },
-      onClick: () => props.onExit()
+      onClick: props.onExit
     },
     {
       key: 'split0',

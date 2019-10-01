@@ -30,7 +30,7 @@ import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
-import { getLName, ISettingEnvelope } from 'gdmn-internals';
+import { getLName, ISettingEnvelope, isISettingData, isISettingEnvelope } from 'gdmn-internals';
 
 interface ILastEdited {
   fieldName: string;
@@ -323,7 +323,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     // записать их в стэйт компонента, откуда дизайнер будет их брать и 
     // применять для отрисовки на экране. 
     const ls = localStorage.getItem(`designerState/${entityName}`);
-    const dataFromLS = ls !== null ? JSON.parse(ls) as ISettingEnvelope : undefined;
+    const dataFromLS = ls ? JSON.parse(ls) as ISettingEnvelope : undefined;
     dataFromLS ? setDesignerState(dataFromLS.data as IDesignerState) : undefined;
           
     apiService.querySetting({
@@ -951,7 +951,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               onExit={ () => { 
                 setDesigner(false); 
                 const ls = localStorage.getItem(`designerState/${entityName}`);
-                ls !== null ? setDesignerState((JSON.parse(ls) as ISettingEnvelope).data as IDesignerState) : undefined;
+                if (ls) {
+                  const settingEnvelope = isISettingEnvelope(JSON.parse(ls)) ? JSON.parse(ls) as ISettingEnvelope : undefined;
+                  settingEnvelope ? setDesignerState(settingEnvelope.data as IDesignerState) : undefined;
+                }
+                
               } }
             />
           : <>
