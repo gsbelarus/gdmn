@@ -1,9 +1,8 @@
 import { TextField } from "office-ui-fabric-react";
 import React, { useState } from "react";
+import { AttributeDateTimeTypes } from "gdmn-orm";
 
-type DateFieldType = 'Date' | 'Time' | 'TimeStamp';
-
-const date2str = (value: Date, dateFieldType: DateFieldType): string => {
+const date2str = (value: Date, dateFieldType: AttributeDateTimeTypes): string => {
   switch (dateFieldType) {
     case 'Date':
       return `${value.getDate().toString().padStart(2, '0')}.${(value.getMonth() + 1).toString().padStart(2, '0')}.${value.getFullYear().toString()}`
@@ -14,7 +13,7 @@ const date2str = (value: Date, dateFieldType: DateFieldType): string => {
   }
 };
 
-const str2date = (value: string, dateFieldType: DateFieldType): Date => {
+const str2date = (value: string, dateFieldType: AttributeDateTimeTypes): Date => {
   switch (dateFieldType) {
     case 'Date': {
       const parts = value.split('.').map( s => s ? parseInt(s) : 0);
@@ -52,7 +51,7 @@ const str2date = (value: string, dateFieldType: DateFieldType): Date => {
 };
 
 interface IDateFieldProps {
-  dateFieldType: DateFieldType;
+  dateFieldType: AttributeDateTimeTypes;
   label: string;
   value: Date | undefined;
   errorMessage?: string;

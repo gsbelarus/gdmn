@@ -1,8 +1,8 @@
-import { Stack, TextField, ComboBox, Dropdown } from "office-ui-fabric-react";
+import { Stack, TextField, Dropdown } from "office-ui-fabric-react";
 import React, { useState } from "react";
 import { getErrorMessage, ErrorLinks } from "./utils";
 import { IDateAttribute } from "gdmn-orm/dist/definitions/serialize";
-import { ContextVariables, AttributeTypes } from "gdmn-orm";
+import { ContextVariables, AttributeDateTimeTypes } from "gdmn-orm";
 import { DateField } from "./DateField";
 
 interface IDateEditorProps {
@@ -12,7 +12,7 @@ interface IDateEditorProps {
   onChange: (newAttr: IDateAttribute) => void
 };
 
-const getOptions = (type: AttributeTypes) => {
+const getOptions = (type: AttributeDateTimeTypes) => {
   switch (type) {
     case 'Date':
       return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_DATE", text: "CURRENT_DATE"}];
@@ -20,14 +20,12 @@ const getOptions = (type: AttributeTypes) => {
       return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_TIME", text: "CURRENT_TIME"}];
     case 'TimeStamp':
       return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_TIMESTAMP", text: "CURRENT_TIMESTAMP"}, {key: "CURRENT_TIMESTAMP(0)", text: "CURRENT_TIMESTAMP(0)"}];
-    default:
-      return []
   }
 }
 
 export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => {
 
-  const options = getOptions(attr.type);
+  const options = getOptions(attr.type as AttributeDateTimeTypes);
   const [selectedOption, setSelectedOption] = useState("VALUE" as string | undefined);
 
   return (
@@ -47,7 +45,7 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
       <Dropdown
-        label="Type of value"
+        label="Default value type:"
         selectedKey={selectedOption}
         options={options}
         onChanged={ newValue => {
