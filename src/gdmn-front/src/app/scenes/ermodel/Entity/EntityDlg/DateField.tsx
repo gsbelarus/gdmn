@@ -18,35 +18,41 @@ const str2date = (value: string, dateFieldType: DateFieldType): Date => {
   switch (dateFieldType) {
     case 'DATE': {
       const parts = value.split('.').map( s => s ? parseInt(s) : 0);
-      try {
-        return new Date(parts[0], parts[1] - 1, parts[2] < 100 ? parts[2] + 2000 : parts[2]);
+      if (parts.length === 3 && parts[0] >= 1 && parts[0] <= 31 && parts[1] >= 1 && parts[1] <= 12 && parts[2] > 0) {
+        const d = new Date(parts[2] < 100 ? parts[2] + 2000 : parts[2], parts[1] - 1, parts[0]);
+        if (!isNaN(d.getTime())) {
+          return d;
+        }
       }
-      catch {
-        throw new Error('Используйте формат даты dd.mm.yyyy');
-      }
+      throw new Error('Используйте формат даты dd.mm.yyyy');
     }
 
     case 'TIME': {
       const currDate = new Date();
       const parts = value.split(':').map( s => s ? parseInt(s) : 0);
-      try {
-        return new Date(currDate.getFullYear(), currDate.getMonth(), currDate.getDate(), parts[0], parts[1], parts[2] ? parts[2] : 0);
+      if (parts.length === 2) {
+        parts.push(0);
       }
-      catch {
-        throw new Error('Используйте формат времени hh:mm:ss');
+      if (parts.length === 3 && parts[0] >= 0 && parts[0] <= 23 && parts[1] >= 0 && parts[1] <= 59 && parts[3] >= 0 && parts[3] <= 59) {
+        const d = new Date(currDate.getFullYear(), currDate.getMonth(), currDate.getDate(), parts[0], parts[1], parts[2]);
+        if (!isNaN(d.getTime())) {
+          return d;
+        }
       }
+      throw new Error('Используйте формат времени hh:mm:ss');
     }
 
     case 'TIMESTAMP': {
       const parts = value.split(' ').map( s => s.trim() ).filter( s => s );
-      try {
+      if (parts.length > 0) {
         const date = str2date(parts[0], 'DATE');
-        const time = str2date(parts[1], 'TIME');
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), time.getSeconds());
+        if (parts.length > 1) {
+          const time = str2date(parts[1], 'TIME');
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), time.getSeconds());
+        }
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
       }
-      catch {
-        throw new Error('Используйте формат даты и времени dd.mm.yyyy hh:mm:ss');
-      }
+      throw new Error('Используйте формат даты и времени dd.mm.yyyy hh:mm:ss');
     }
   }
 };
@@ -82,10 +88,12 @@ export const DateField = ({ dateFieldType, label, value, errorMessage, onChange 
         (_, newValue) => {
           if (newValue !== undefined) {
             try {
+
               const trimmedValue = newValue.trim();
 
               if (trimmedValue) {
                 const d = str2date(newValue, dateFieldType);
+                console.log(d);
                 if (value === undefined || date2str(d, dateFieldType) !== date2str(value, dateFieldType)) {
                   onChange(d);
                 }

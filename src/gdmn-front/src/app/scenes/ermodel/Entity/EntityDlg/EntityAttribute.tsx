@@ -6,6 +6,8 @@ import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
+import { DateEditor } from "./DateEditor";
+import { NumericEditor } from "./NumericEditor";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute;
 type OnChange = (newAttr: Attr) => void;
@@ -21,10 +23,10 @@ const mapEditor = {
  'Detail': DumbEditor,
  'Sequence': DumbEditor,
  'Integer': DumbEditor,
- 'Numeric': DumbEditor,
+ 'Numeric': NumericEditor,
  'Float': DumbEditor,
  'Boolean': DumbEditor,
- 'Date': DumbEditor,
+ 'Date': DateEditor,
  'TimeStamp': DumbEditor,
  'Time': DumbEditor,
  'Blob': DumbEditor,
