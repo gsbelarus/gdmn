@@ -1,5 +1,5 @@
 import { IBooleanAttribute } from "gdmn-orm";
-import { Stack, Checkbox, Label } from "office-ui-fabric-react";
+import { Checkbox, Label } from "office-ui-fabric-react";
 import React from "react";
 
 interface IBooleanEditorProps {

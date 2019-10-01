@@ -1,4 +1,4 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute } from "gdmn-orm";
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -10,6 +10,11 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   };
 
   switch (type) {
+    case 'Date':
+      return {
+        ...attr
+      } as IDateAttribute;
+
     case 'String':
       return {
         ...attr,
@@ -62,6 +67,34 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
       }
 
       switch (attr.type) {
+        case 'Date': {
+          const s = attr as IDateAttribute;
+          if (s.minValue !== undefined && s.maxValue !== undefined) {
+            if (s.minValue > s.maxValue) {
+              p.push({
+                attrIdx,
+                field: 'minValue',
+                message: "Min value > max value",
+                internal: false
+              });
+            } else if (s.defaultValue !== undefined && s.defaultValue < s.minValue) {
+              p.push({
+                attrIdx,
+                field: 'defaultValue',
+                message: "Default value < min value",
+                internal: false
+              });
+            } else if (s.defaultValue !== undefined && s.defaultValue > s.maxValue) {
+              p.push({
+                attrIdx,
+                field: 'defaultValue',
+                message: "Default value > max value",
+                internal: false
+              });
+            }
+          }
+          break;
+        }
         case 'String': {
           const s = attr as IStringAttribute;
           if (s.minLength !== undefined && s.minLength > 32000) {

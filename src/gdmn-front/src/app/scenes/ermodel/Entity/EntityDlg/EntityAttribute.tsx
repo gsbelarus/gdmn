@@ -1,4 +1,4 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -7,9 +7,10 @@ import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
 import { NumberEditor} from "./NumberEditor"
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
+import { DateEditor } from "./DateEditor";
 import { BooleanEditor } from "./BooleanEditor";
 
-type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number>;
+type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
 type OnError = (fieldName: string, errorMessage: string) => void;
@@ -36,7 +37,7 @@ const mapEditor = {
  'Numeric': NumberEditor,
  'Float': NumberEditor,
  'Boolean': BooleanEditor,
- 'Date': DumbEditor,
+ 'Date': DateEditor,
  'TimeStamp': DumbEditor,
  'Time': DumbEditor,
  'Blob': DumbEditor,
