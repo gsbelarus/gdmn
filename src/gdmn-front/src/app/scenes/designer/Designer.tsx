@@ -10,7 +10,6 @@ import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { getLName } from "gdmn-internals";
 import { apiService } from '@src/app/services/apiService';
-import moment from 'moment';
 
 /**
  *
@@ -616,7 +615,8 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       iconOnly: true,
       iconProps: { iconName: 'Save' },
       onClick: () => {
-        const dateSave = moment.utc(new Date()).format("DD.MM.YYYY HH:mm:ss.SSS");
+        const today = new Date();
+        const dateSave = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds(), today.getMilliseconds()).toString();
         const saveData = {type: 'DESIGNER', _changed: dateSave, _accessed: dateSave, objectID: entity.name, data: {grid: grid, objects: objects}};
         localStorage.setItem(`designerState/${props.entityName}`, JSON.stringify(saveData) )
         apiService.saveSetting({newData: saveData})
