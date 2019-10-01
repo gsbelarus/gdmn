@@ -478,7 +478,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         },
         objects,
         gridSelection: undefined,
-        
+
         selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления строки
       }
     }
@@ -545,7 +545,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     apiService.querySetting({
       params: [
         {
-          type: 'DESIGNER', 
+          type: 'DESIGNER',
           objectID: entity.name
         }
       ]
@@ -582,6 +582,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       for (let y = 0; y < grid.rows.length; y++) {
         res.push(
           <GridCell
+            key={`${x}-${y}`}
             x={x}
             y={y}
             gridSelection={gridSelection}

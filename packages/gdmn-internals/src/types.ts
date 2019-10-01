@@ -40,6 +40,17 @@ export interface ISqlQueryResponseAliases {
   }
 }
 
+export interface IFieldDescription {
+  name: string,
+  type: Types
+}
+
+export interface ISqlPrepareResponse {
+  plan?: string;
+  fieldList?: IFieldDescription[],
+  paramList?: IFieldDescription[];
+}
+
 export interface ISettingParams {
   type: string;
   objectID: string;

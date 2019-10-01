@@ -7,6 +7,7 @@ import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
+import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -38,7 +39,11 @@ interface IEntityDlgState {
   entityData?: IEntity;
   changed?: boolean;
   selectedAttr?: number;
-  errorLinks?: ErrorLinks;
+  errorLinks: ErrorLinks;
+};
+
+function isIEntityDlgState(obj: any): obj is IEntityDlgState {
+  return obj instanceof Object && Array.isArray(obj.errorLinks);
 };
 
 type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
@@ -47,6 +52,8 @@ type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
   | { type: 'ADD_ATTR' }
   | { type: 'DELETE_ATTR' }
+  | { type: 'CLEAR_ERROR', attrIdx: number, field: string }
+  | { type: 'ADD_ERROR', attrIdx: number, field: string, message: string }
   | { type: 'REVERT' };
 
 function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
@@ -62,7 +69,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData,
         selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
         changed: JSON.stringify(initialData) !== JSON.stringify(entityData),
-        errorLinks: validateAttributes(entityData)
+        errorLinks: validateAttributes(entityData, state.errorLinks)
       };
     }
 
@@ -70,6 +77,24 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       return {
         ...state,
         selectedAttr: action.selectedAttr
+      };
+    }
+
+    case 'ADD_ERROR': {
+      const { attrIdx, field, message } = action;
+      const { errorLinks } = state;
+      return {
+        ...state,
+        errorLinks: errorLinks.find( l => l.attrIdx === attrIdx && l.field === field )
+          ? errorLinks
+          : [...errorLinks, { attrIdx, field, message, internal: true }]
+      };
+    }
+
+    case 'CLEAR_ERROR': {
+      return {
+        ...state,
+        errorLinks: state.errorLinks.filter( l => !l.internal || l.attrIdx !== action.attrIdx || l.field !== action.field )
       };
     }
 
@@ -88,7 +113,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         ...state,
         entityData: newEntityData,
         changed: true,
-        errorLinks: validateAttributes(newEntityData)
+        errorLinks: validateAttributes(newEntityData, state.errorLinks)
       };
     }
 
@@ -109,7 +134,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData: newEntityData,
         selectedAttr: newIdx,
         changed: true,
-        errorLinks: validateAttributes(newEntityData)
+        errorLinks: validateAttributes(newEntityData, state.errorLinks)
       };
     }
 
@@ -134,7 +159,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           ? newAttributes.length - 1
           : selectedAttr,
         changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData),
-        errorLinks: validateAttributes(newEntityData)
+        errorLinks: validateAttributes(newEntityData, state.errorLinks)
       };
     }
 
@@ -148,7 +173,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           entityData: state.initialData,
           selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
           changed: false,
-          errorLinks: validateAttributes(state.initialData)
+          errorLinks: validateAttributes(state.initialData, state.errorLinks)
         }
       }
     }
@@ -158,15 +183,22 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 };
 
 export function EntityDlg(props: IEntityDlgProps): JSX.Element {
-  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID } = props;
+  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID, history } = props;
 
   if ((createEntity && entityName) || (!createEntity && !entityName) || (createEntity && !uniqueID)) {
     throw new Error('Invalid EntityDlg props');
   }
 
   const entity = erModel && entityName && erModel.entities[entityName];
-  const [state, dlgDispatch] = useReducer(reducer, { });
+  const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [] });
+  const [MessageBox, messageBox] = useMessageBox();
   const { entityData, changed, selectedAttr, errorLinks } = state;
+
+  const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
+    viewTabURL: url,
+    locationPath: location.pathname,
+    historyPush: history.push
+  }))};
 
   useEffect( () => {
     if (!viewTab) {
@@ -189,11 +221,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   useEffect( () => {
     if (!entityData && erModel) {
-      if (viewTab && viewTab.sessionData) {
+      if (viewTab && isIEntityDlgState(viewTab.sessionData)) {
         dlgDispatch({ type: 'SET_STATE', state: viewTab.sessionData });
       } else {
         if (entity) {
-          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(false) });
+          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(true) });
         } else {
           dlgDispatch({
             type: 'SET_ENTITY_DATA',
@@ -229,7 +261,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       text: changed ? 'Отменить' : 'Закрыть',
       iconProps: {
         iconName: 'Cancel'
-      }
+      },
+      onClick: deleteViewTab
     },
     {
       key: 'apply',
@@ -265,12 +298,26 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         iconName: 'Delete'
       },
       onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
+    },
+    {
+      key: 'showAdapter',
+      disabled: !entityData || !entityData.adapter,
+      text: 'Показать адаптер',
+      iconProps: {
+        iconName: 'PageData'
+      },
+      onClick: () => messageBox({
+        title: 'Adapter',
+        message: JSON.stringify(entityData.adapter, undefined, 2),
+        code: true
+      })
     }
   ];
 
   return (
     <>
       <CommandBar items={commandBarItems} />
+      <MessageBox />
       <Frame scroll height='calc(100% - 42px)'>
         <Frame border marginLeft marginRight>
           <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
@@ -326,15 +373,17 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         <Frame marginTop marginLeft marginRight>
           <Stack>
             {
-              entityData.attributes.map( (attr, idx) =>
+              entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={idx}
+                  key={attrIdx}
                   attr={attr}
                   createAttribute={true}
-                  selected={idx === selectedAttr}
-                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === idx )}
+                  selected={attrIdx === selectedAttr}
+                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}
                   onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
-                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) }
+                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
+                  onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }
+                  onClearError={ field => dlgDispatch({ type: 'CLEAR_ERROR', attrIdx, field }) }
                 />
               )
             }

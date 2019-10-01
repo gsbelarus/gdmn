@@ -318,7 +318,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   useEffect( () => {
- 
+
     // задача: при загрузке формы запросить настройки с сервера и
     // записать их в стэйт компонента, откуда дизайнер будет их брать и 
     // применять для отрисовки на экране. 
@@ -329,7 +329,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     apiService.querySetting({
       query: [
         {
-          type: 'DESIGNER', 
+          type: 'DESIGNER',
           objectID: entityName
         }
       ]
@@ -337,7 +337,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     .then( response => {
       if (response.error) {
         console.log(response.error);
-      } else if (!response.payload.result) {
+      } else if (!response.payload.result || !response.payload.result.length) {
         console.log('Settings are not found');
       } else {
         // подумать, надо ли тут проверка что за объект нам пришел
@@ -630,52 +630,52 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       iconProps: {
         iconName: 'Design'
       },
-      onClick: () => { 
+      onClick: () => {
         setDesigner(true);
         isDesigner.current = true;
       }
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
 
-  const internalControl = (props: { object: Object, objects: Objects }): JSX.Element | undefined => {
+  const internalControl = ({ object, objects }: { object: Object, objects: Objects }): JSX.Element | undefined => {
 
-    switch (props.object.type) {
+    switch (object.type) {
       case 'LABEL':
         return (
           <Label
-            key={props.object.name}
-            styles={object2ILabelStyles(props.object, objects)}
+            key={object.name}
+            styles={object2ILabelStyles(object, objects)}
           >
-            {props.object.text}
+            {object.text}
           </Label>
         );
-  
+
       case 'FIELD':
-        const style = object2ITextFieldStyles(props.object, props.objects)
+        const style = object2ITextFieldStyles(object, objects)
         return (
-          <div>
+          <div key={object.name}>
             {
-              field({styles: style, label: props.object.fieldName, fieldName: props.object.fieldName})
+              field({styles: style, label: object.fieldName, fieldName: object.fieldName})
             }
           </div>
         )
-  
+
       case 'IMAGE':
         return (
-          <div>
+          <div key={object.name}>
             <img
-              src={props.object.url}
-              alt={props.object.alt}
-              style={object2style(props.object, objects)}
+              src={object.url}
+              alt={object.alt}
+              style={object2style(object, objects)}
             />
           </div>
         )
-  
+
       default:
         return undefined;
     }
   };
-  
+
     const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
       const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
 

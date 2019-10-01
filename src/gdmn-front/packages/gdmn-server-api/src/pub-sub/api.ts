@@ -14,7 +14,7 @@ import {
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases, Types,  ISettingParams, ISettingData, ISettingEnvelope } from 'gdmn-internals';
+import { ISqlQueryResponseAliases, ISettingParams, ISettingEnvelope, ISqlPrepareResponse } from 'gdmn-internals';
 import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
@@ -289,14 +289,6 @@ export type AppAction =
   | "EDIT_ENTITY"
   | "QUERY_SETTING"
   | "SAVE_SETTING";
-
-export interface ISqlPrepareResponse {
-  plan?: string;
-  placeholderList?: {
-      name: string,
-      type: Types
-  }[];
-}
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];

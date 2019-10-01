@@ -84,3 +84,5 @@ jspm_packages/
 testConfig.json.old
 _testConfig.json
 src/gdmn-back/src/test_fb.js
+
+type.*.json

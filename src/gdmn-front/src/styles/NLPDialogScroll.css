@@ -1,0 +1,196 @@
+.NLPDialog {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto 120px;
+  grid-gap: 0;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+}
+
+.NLPItems {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-color: aquamarine;
+  position: relative;
+  overflow: hidden;
+}
+
+.NLPItem {
+  width: 100%;
+  margin-left: 4px;
+  margin-bottom: 12px;
+  vertical-align: bottom;
+}
+
+.NLPItemLeft {
+  text-align: left;
+}
+
+.NLPItemRight {
+  text-align: right;
+  padding-right: 12px;
+}
+
+.NLPItem .Circle {
+  display: inline-block;
+  background-color: blueviolet;
+  border-radius: 50%;
+  width: 1.6em;
+  line-height: 1.6em;
+  text-align: center;
+  vertical-align: middle;
+  color: white;
+  font-size: 12px;
+  padding: 4px;
+  margin-right: 8px;
+  box-sizing: initial;
+}
+
+.NLPItem .MessageLeft {
+  position: relative;
+  display: inline-block;
+  background-color: antiquewhite;
+  border-radius: 6px 6px 6px 0;
+  padding: 4px 8px;
+  box-shadow: 0 2px 1px 0 rgba(93,196,82,.5);
+  max-width: calc(100% - 4em);
+}
+
+.NLPItem .MessageRight {
+  position: relative;
+  display: inline-block;
+  background-color: antiquewhite;
+  border-radius: 6px 6px 6px 0;
+  padding: 4px 8px;
+  box-shadow: 2px 2px 1px 0 rgba(93,196,82,.5);
+  max-width: calc(100% - 4em);
+  margin-right: 8px;
+}
+
+.NLPItem .MessageLeft::before {
+  position: absolute;
+  content: '';
+  bottom: -2px;
+  left: -8px;
+  width: 8px;
+  height: 2px;
+  background-color: rgba(93,196,82,.4);
+  z-index: 1;
+}
+
+.NLPItem .MessageRight::before {
+  position: absolute;
+  content: '';
+  bottom: -2px;
+  right: -8px;
+  width: 10px;
+  height: 2px;
+  background-color: rgba(93,196,82,.4);
+  z-index: 1;
+}
+
+.NLPItem .MessageLeft::after {
+  position: absolute;
+  content: '';
+  bottom: 0;
+  left: -10px;
+  width: 16px;
+  height: 10px;
+  clip-path: url(#left-droplet);
+  background-color: inherit;
+  z-index: 1;
+}
+
+.NLPItem .MessageRight::after {
+  position: absolute;
+  content: '';
+  bottom: 0;
+  right: -10px;
+  width: 16px;
+  height: 10px;
+  clip-path: url(#right-droplet);
+  background-color: inherit;
+  z-index: 1;
+}
+
+.NLPInput {
+  grid-column: 1;
+  grid-row: 2;
+  background-color: white;
+  padding-left: 2px;
+  padding-top: 2px;
+  overflow: hidden;
+  border: 1px gray solid;
+}
+
+.NLPInput textarea {
+  border: none;
+  min-width: calc(100% - 4px);
+  resize: none;
+  font-family: inherit;
+  font-size: 12px;
+  min-height: 120px;
+}
+
+.NLPScrollBar {
+  z-index: 10;
+  display: block;
+  position: absolute;
+  height: 100%;
+  width: 12px;
+  top: 0;
+  right: 0;
+  background: inherit;
+}
+
+.NLPScrollBar:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.5s;
+}
+
+.NLPScrollBarVisible {
+  z-index: 10;
+  display: block;
+  position: absolute;
+  height: 100%;
+  width: 12px;
+  top: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.5s;
+}
+
+.NLPScrollBarThumb {
+  display: block;
+  position: absolute;
+  width: 100%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.NLPScrollBar:hover .NLPScrollBarThumb::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.5s;
+  border-radius: 5px;
+}
+
+.NLPScrollBarVisible .NLPScrollBarThumb::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.5s;
+  border-radius: 5px;
+}

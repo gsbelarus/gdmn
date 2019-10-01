@@ -28,6 +28,10 @@
   margin: 0px;
 }
 
+.ver textarea {
+  height: calc(100vh - 180px)
+}
+
 .hor {
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr;

@@ -8,6 +8,7 @@ export const SqlContainer = connect(
     erModel: state.gdmnState.erModel,
     rs: state.recordSet[ownProps.id],
     gcs: state.grid[ownProps.id],
-    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url )
+    viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
+    gridColors: state.gdmnState.gridColors
   })
 )(Sql);

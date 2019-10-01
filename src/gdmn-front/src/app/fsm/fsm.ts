@@ -1,13 +1,14 @@
 import { store } from "..";
 import { IFSMFlowchart, IFSMSignal, IFSMState, IFSMStateType } from "./types";
 
-export type FSMPlugin = (fsm: FSM, state: IFSMState) => boolean;
+export type FSMPlugin = (fsm: FSM, nextState: IFSMState) => boolean;
+export type Plugins = Map<IFSMStateType, FSMPlugin>;
 
 interface IFSMParams {
   flowchart: IFSMFlowchart;
   path: IFSMState[];
   state: IFSMState;
-  plugins: Map<IFSMStateType, FSMPlugin>;
+  plugins: Plugins;
 };
 
 export class FSM {
@@ -17,7 +18,7 @@ export class FSM {
     this._params = params;
   }
 
-  static create(flowchart: IFSMFlowchart) {
+  static create(flowchart: IFSMFlowchart, plugins: Plugins) {
     const { beginRule } = flowchart.rules;
 
     if (!beginRule) {
@@ -28,7 +29,7 @@ export class FSM {
       flowchart: flowchart,
       path: [],
       state: beginRule.state,
-      plugins: new Map()
+      plugins
     });
   }
 
@@ -91,4 +92,3 @@ export class FSM {
     return this;
   }
 };
-
