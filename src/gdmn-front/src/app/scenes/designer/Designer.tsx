@@ -1,5 +1,5 @@
-import React, { useReducer, useMemo, useEffect } from "react";
-import { IDesignerProps } from "./Designer.types";
+import React, { useReducer, useMemo } from "react";
+import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField } from "./types";
 import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
@@ -8,8 +8,7 @@ import { WithObjectInspector } from "./WithObjectInspector";
 import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
-import { getLName, ISettingEnvelope } from "gdmn-internals";
-import { apiService } from '@src/app/services/apiService';
+import { getLName } from "gdmn-internals";
 
 /**
  *
@@ -68,12 +67,6 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-interface IDesignerSerializedState {
-  version: string;
-  grid: IGrid;
-  objects: Objects;
-};
-
 const getDefaultState = (entity?: Entity): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
@@ -119,6 +112,18 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     objects,
     selectedObject: window
   };
+};
+
+const getStateFromSetting = (setting?: IDesignerSetting): IDesignerState => {
+  if (setting) {
+    const selectedObject = setting.objects.find( object => isWindow(object) );
+    return {
+      ...setting,
+      selectedObject
+    };
+  } else {
+    return getDefaultState();
+  }  
 };
 
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
@@ -535,32 +540,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { url, erModel, rs, entity } = props;
-  const [state, designerDispatch] = useReducer(reducer, props.grid && props.objects ? { grid: props.grid, objects: props.objects, selectedObject: props.objects.find( object => isWindow(object) ) } as IDesignerState : getDefaultState(entity));
+  const { erModel, rs, entity, setting, onSaveSetting } = props;
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting));     
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
-
-/*
-  useEffect( () => {
-    apiService.querySetting({
-      params: [
-        {
-          type: 'DESIGNER',
-          objectID: entity.name
-        }
-      ]
-    })
-    .then( response => {
-      if (response.error) {
-        console.log(response.error);
-      } else if (!response.payload.result) {
-        console.log('Not find settings');
-      } else {
-        console.log(response.payload.result[0].data);
-        // подумать, надо ли тут проверка что за объект нам пришел
-        designerDispatch(response.payload.result[0].data as IDesignerState);
-      }
-    });
-  }, [])*/
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
     display: 'grid',
@@ -614,20 +596,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       text: 'Save',
       iconOnly: true,
       iconProps: { iconName: 'Save' },
-      onClick: () => {
-        const date = new Date();
-        const dateInUTC = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 
-          date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds());
-        const newData: ISettingEnvelope = {
-          type: 'DESIGNER', 
-          _changed: dateInUTC, 
-          _accessed: dateInUTC, 
-          objectID: entity.name, 
-          data: { grid, objects }
-        };
-        localStorage.setItem(`designerState/${props.entityName}`, JSON.stringify(newData) );
-        apiService.saveSetting({ newData });
-      }
+      onClick: () => onSaveSetting({ grid, objects })
     },
     {
       key: 'reset',
