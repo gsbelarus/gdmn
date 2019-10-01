@@ -1,13 +1,16 @@
-import React, { useEffect, useReducer } from "react";
+import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute } from "gdmn-orm";
+import {IEntity, IAttribute, Entity, EntityUtils} from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
+import {apiService} from "@src/app/services/apiService";
+import {str2SemCategories} from "gdmn-nlp";
+import {IDataRow, rsActions} from "gdmn-recordset";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -183,7 +186,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 };
 
 export function EntityDlg(props: IEntityDlgProps): JSX.Element {
-  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID, history } = props;
+  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID, history, entities } = props;
 
   if ((createEntity && entityName) || (!createEntity && !entityName) || (createEntity && !uniqueID)) {
     throw new Error('Invalid EntityDlg props');
@@ -199,6 +202,45 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     locationPath: location.pathname,
     historyPush: history.push
   }))};
+
+  const postChanges = useCallback(async (close: boolean) => {
+    const {entityData} = state;
+    if (createEntity && entityData && erModel) {
+
+      const result = await apiService.AddEntity({
+        entityName: entityData.name,
+        attributes: entityData.attributes,
+        parentName: entityData.parent ? erModel.entity(entityData.parent).name : undefined,
+      });
+
+      if (!result.error && result.payload.result) {
+        const iEntity = result.payload.result;
+
+        const entity = new Entity({
+          name: iEntity.name,
+          lName: iEntity.lName,
+          parent: iEntity.parent ? erModel.entity(iEntity.parent) : undefined,
+          isAbstract: iEntity.isAbstract,
+          semCategories: str2SemCategories(iEntity.semCategories),
+          adapter: iEntity.adapter
+        });
+        iEntity.attributes.forEach((attr) => {
+          entity.add(EntityUtils.createAttribute(attr, entity, erModel))
+        });
+        if (entities) {
+          dispatch(rsActions.setRecordSet(
+            entities.set({
+              name: iEntity.name,
+              description: iEntity.name
+            } as IDataRow)))
+        }
+      }
+
+    }
+    if (close) {
+      deleteViewTab();
+    }
+  }, [changed, entityData, entities]);
 
   useEffect( () => {
     if (!viewTab) {
@@ -254,7 +296,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       text: 'Сохранить',
       iconProps: {
         iconName: 'Save'
-      }
+      },
+      onClick: () => postChanges(true)
     },
     {
       key: 'cancelAndClose',
