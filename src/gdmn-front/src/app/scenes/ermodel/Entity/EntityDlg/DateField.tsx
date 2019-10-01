@@ -29,11 +29,8 @@ const str2date = (value: string, dateFieldType: DateFieldType): Date => {
 
     case 'TIME': {
       const currDate = new Date();
-      const parts = value.split(':').map( s => s ? parseInt(s) : 0);
-      if (parts.length === 2) {
-        parts.push(0);
-      }
-      if (parts.length === 3 && parts[0] >= 0 && parts[0] <= 23 && parts[1] >= 0 && parts[1] <= 59 && parts[3] >= 0 && parts[3] <= 59) {
+      const parts = value.split(':').map( s => s ? parseInt(s) : -1);
+      if (parts.length === 3 && parts[0] >= 0 && parts[0] <= 23 && parts[1] >= 0 && parts[1] <= 59 && parts[2] >= 0 && parts[2] <= 59) {
         const d = new Date(currDate.getFullYear(), currDate.getMonth(), currDate.getDate(), parts[0], parts[1], parts[2]);
         if (!isNaN(d.getTime())) {
           return d;
@@ -44,13 +41,10 @@ const str2date = (value: string, dateFieldType: DateFieldType): Date => {
 
     case 'TIMESTAMP': {
       const parts = value.split(' ').map( s => s.trim() ).filter( s => s );
-      if (parts.length > 0) {
+      if (parts.length === 2) {
         const date = str2date(parts[0], 'DATE');
-        if (parts.length > 1) {
-          const time = str2date(parts[1], 'TIME');
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), time.getSeconds());
-        }
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const time = str2date(parts[1], 'TIME');
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), time.getSeconds());
       }
       throw new Error('Используйте формат даты и времени dd.mm.yyyy hh:mm:ss');
     }
