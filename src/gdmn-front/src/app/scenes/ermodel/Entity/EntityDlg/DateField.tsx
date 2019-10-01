@@ -92,8 +92,7 @@ export const DateField = ({ dateFieldType, label, value, errorMessage, onChange 
               const trimmedValue = newValue.trim();
 
               if (trimmedValue) {
-                const d = str2date(newValue, dateFieldType);
-                console.log(d);
+                const d = str2date(trimmedValue, dateFieldType);
                 if (value === undefined || date2str(d, dateFieldType) !== date2str(value, dateFieldType)) {
                   onChange(d);
                 }
@@ -105,7 +104,7 @@ export const DateField = ({ dateFieldType, label, value, errorMessage, onChange 
 
               setState({
                 ...state,
-                text: newValue,
+                text: trimmedValue,
                 error: undefined
               });
             } catch (e) {

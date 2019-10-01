@@ -1,4 +1,4 @@
-import { Stack, TextField, ComboBox } from "office-ui-fabric-react";
+import { Stack, TextField, ComboBox, Dropdown } from "office-ui-fabric-react";
 import React, { useState } from "react";
 import { getErrorMessage, ErrorLinks } from "./utils";
 import { IDateAttribute } from "gdmn-orm/dist/definitions/serialize";
@@ -33,13 +33,18 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
         errorMessage={getErrorMessage('maxValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
-      <ComboBox
+      <Dropdown
         label="Type of value"
         selectedKey={selectedOption}
         options={options}
-        onChange={ (e, option) => {
-          setSelectedOption(option ? option.key as string : undefined);
-          onChange({ ...attr, defaultValue: option && option.key !== "VALUE" ? option.text as ContextVariables : undefined})
+        onChanged={ newValue => {
+          setSelectedOption(newValue ? newValue.key as string : undefined);
+          onChange({ ...attr, defaultValue: newValue && newValue.key !== "VALUE" ? newValue.text as ContextVariables : undefined})
+        }}
+        styles={{
+          root: {
+            width: '180px'
+          }
         }}
       />
       { selectedOption === 'VALUE'
