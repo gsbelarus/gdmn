@@ -32,7 +32,7 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingData, ISettingParams, isISettingData} from "gdmn-internals";
+import {ISettingData, ISettingParams, isISettingData, ISettingEnvelope} from "gdmn-internals";
 import { promises } from "fs";
 
 export type AppAction =
@@ -95,7 +95,7 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
 }>;
 
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
-export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingData, newData: ISettingData }>;
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingEnvelope, newData: ISettingEnvelope }>;
 
 export class Application extends ADatabase {
 
@@ -947,7 +947,7 @@ export class Application extends ADatabase {
 
   // TODO: пока обрабатываем только первый объект из массива, из запроса с клиента
   public pushQuerySettingCmd(session: Session,
-                             command: QuerySettingCmd): Task<QuerySettingCmd, ISettingData[]> {
+                             command: QuerySettingCmd): Task<QuerySettingCmd, ISettingEnvelope[]> {
     const task = new Task({
       session,
       command,
@@ -964,7 +964,7 @@ export class Application extends ADatabase {
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
               console.log(`Read data from file ${fileName}`);
-              return arr as ISettingData[];
+              return arr as ISettingEnvelope[];
             } else {
               console.log(`Unknown data type in file ${fileName}`);
               return undefined;
@@ -977,7 +977,7 @@ export class Application extends ADatabase {
 
         await context.checkStatus();
 
-        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingData[] : [];
+        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingEnvelope[] : [];
       }
     });
 
@@ -1008,7 +1008,7 @@ export class Application extends ADatabase {
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
               console.log(`Read data from file ${fileName}`);
-              return arr as ISettingData[];
+              return arr as ISettingEnvelope[];
             } else {
               console.log(`Unknown data in file ${fileName}`);
               return undefined;

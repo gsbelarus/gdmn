@@ -27,10 +27,10 @@ import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
-import { IDesignerState/*, LOCAL_STORAGE_KEY */} from '../../designer/Designer';
+import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
-import { getLName } from 'gdmn-internals';
+import { getLName, ISettingEnvelope } from 'gdmn-internals';
 
 interface ILastEdited {
   fieldName: string;
@@ -322,7 +322,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     // задача: при загрузке формы запросить настройки с сервера и
     // записать их в стэйт компонента, откуда дизайнер будет их брать и 
     // применять для отрисовки на экране. 
-
+    const ls = localStorage.getItem(`designerState/${entityName}`);
+    const dataFromLS = ls !== null ? JSON.parse(ls) as ISettingEnvelope : undefined;
+    dataFromLS ? setDesignerState(dataFromLS.data as IDesignerState) : undefined;
+          
     apiService.querySetting({
       query: [
         {
@@ -338,7 +341,21 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         console.log('Settings are not found');
       } else {
         // подумать, надо ли тут проверка что за объект нам пришел
-        setDesignerState(response.payload.result[0].data as IDesignerState);
+        const result = response.payload.result[0];
+        if(ls !== null) {
+          if(dataFromLS) {
+            if(dataFromLS._changed < result._changed) {
+              //изменяем настройки в localStorage
+              localStorage.setItem(`designerState/${entityName}`, JSON.stringify(result));
+              setDesignerState(result.data as IDesignerState);
+            } else if (dataFromLS._changed > result._changed) {
+              //сохраняем изменения на сервере
+              apiService.saveSetting({newData: dataFromLS})
+            }
+          } else {
+            setDesignerState(result.data as IDesignerState);
+          }
+        }
       }
     });
 
@@ -659,7 +676,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
   
-  //const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
     const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
       const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
 
@@ -932,11 +948,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               entityName={entityName} 
               grid={grid} 
               objects={objects} 
-              onExit={ newSettings => { 
+              onExit={ () => { 
                 setDesigner(false); 
-                if (newSettings) {
-                  setDesignerState(newSettings);
-                }
+                const ls = localStorage.getItem(`designerState/${entityName}`);
+                ls !== null ? setDesignerState((JSON.parse(ls) as ISettingEnvelope).data as IDesignerState) : undefined;
               } }
             />
           : <>

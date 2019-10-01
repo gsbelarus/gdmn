@@ -10,6 +10,7 @@ import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { getLName } from "gdmn-internals";
 import { apiService } from '@src/app/services/apiService';
+import moment from 'moment';
 
 /**
  *
@@ -614,8 +615,10 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       iconOnly: true,
       iconProps: { iconName: 'Save' },
       onClick: () => {
-        //localStorage.setItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`, JSON.stringify({ version: '1.0', grid, objects }) )
-        apiService.saveSetting({newData: {type: 'DESIGNER', objectID: entity.name, data: {grid: grid, objects: objects}}})
+        const dateSave = moment.utc(new Date()).format("DD.MM.YYYY HH:mm:ss.SSS");
+        const saveData = {type: 'DESIGNER', _changed: dateSave, _accessed: dateSave, objectID: entity.name, data: {grid: grid, objects: objects}};
+        localStorage.setItem(`designerState/${props.entityName}`, JSON.stringify(saveData) )
+        apiService.saveSetting({newData: saveData})
       }
     },
     {
@@ -632,7 +635,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       name: 'Close',
       iconOnly: true,
       iconProps: { iconName: 'Cancel' },
-      onClick: () => props.onExit({ grid, objects })
+      onClick: () => props.onExit()
     },
     {
       key: 'split0',

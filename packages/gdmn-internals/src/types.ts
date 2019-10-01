@@ -65,6 +65,6 @@ export function isISettingData(data: any): data is ISettingData {
 };
 
 export interface ISettingEnvelope extends ISettingData {
-  _changed: Date;
-  _accessed: Date;
+  _changed: string;
+  _accessed: string;
 };

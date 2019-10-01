@@ -14,7 +14,7 @@ import {
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases, Types,  ISettingParams, ISettingData } from 'gdmn-internals';
+import { ISqlQueryResponseAliases, Types,  ISettingParams, ISettingData, ISettingEnvelope } from 'gdmn-internals';
 import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
@@ -186,7 +186,7 @@ export interface TTaskActionPayloadTypes {
     attributes: IAttribute[]
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
-  [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingData, newData: ISettingData};
+  [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingEnvelope, newData: ISettingEnvelope};
 }
 
 // -- TASK-RESULT
@@ -228,7 +228,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.ADD_ENTITY]: string[];
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
-  [TTaskActionNames.QUERY_SETTING]: ISettingData[];
+  [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
   [TTaskActionNames.SAVE_SETTING]: void;
 }
 
