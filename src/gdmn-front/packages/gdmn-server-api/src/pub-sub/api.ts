@@ -10,7 +10,7 @@ import {
   IEntityQuerySetInspector,
   IEntityQuerySetResponse,
   IAttribute,
-  AttributeTypes
+  IEntity
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
@@ -225,7 +225,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
-  [TTaskActionNames.ADD_ENTITY]: string[];
+  [TTaskActionNames.ADD_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];

@@ -38,8 +38,8 @@ const mapEditor = {
  'Float': NumberEditor,
  'Boolean': BooleanEditor,
  'Date': DateEditor,
- 'TimeStamp': DumbEditor,
- 'Time': DumbEditor,
+ 'TimeStamp': DateEditor,
+ 'Time': DateEditor,
  'Blob': DumbEditor,
  'Enum': EnumEditor
 };

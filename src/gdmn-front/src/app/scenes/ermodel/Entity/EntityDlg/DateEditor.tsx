@@ -1,8 +1,8 @@
-import { Stack, TextField, ComboBox, Dropdown } from "office-ui-fabric-react";
+import { Stack, TextField, Dropdown } from "office-ui-fabric-react";
 import React, { useState } from "react";
 import { getErrorMessage, ErrorLinks } from "./utils";
 import { IDateAttribute } from "gdmn-orm/dist/definitions/serialize";
-import { ContextVariables } from "gdmn-orm";
+import { ContextVariables, AttributeDateTimeTypes } from "gdmn-orm";
 import { DateField } from "./DateField";
 
 interface IDateEditorProps {
@@ -12,29 +12,40 @@ interface IDateEditorProps {
   onChange: (newAttr: IDateAttribute) => void
 };
 
+const getOptions = (type: AttributeDateTimeTypes) => {
+  switch (type) {
+    case 'Date':
+      return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_DATE", text: "CURRENT_DATE"}];
+    case 'Time':
+      return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_TIME", text: "CURRENT_TIME"}];
+    case 'TimeStamp':
+      return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_TIMESTAMP", text: "CURRENT_TIMESTAMP"}, {key: "CURRENT_TIMESTAMP(0)", text: "CURRENT_TIMESTAMP(0)"}];
+  }
+}
+
 export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => {
 
-  const options = [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_DATE", text: "CURRENT_DATE"}];
-  const [selectedOption, setSelectedOption] = useState("VALUE" as string | undefined)
+  const options = getOptions(attr.type as AttributeDateTimeTypes);
+  const [selectedOption, setSelectedOption] = useState("VALUE" as string | undefined);
 
   return (
     <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
       <DateField
-        dateFieldType="DATE"
+        dateFieldType={attr.type as any}
         label="Min value:"
         value={attr.minValue as Date}
         errorMessage={getErrorMessage('minValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, minValue: newValue}) }
       />
       <DateField
-        dateFieldType="DATE"
+        dateFieldType={attr.type as any}
         label="Max value:"
         value={attr.maxValue as Date}
         errorMessage={getErrorMessage('maxValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
       <Dropdown
-        label="Type of value"
+        label="Default value type:"
         selectedKey={selectedOption}
         options={options}
         onChanged={ newValue => {
@@ -50,7 +61,7 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
       { selectedOption === 'VALUE'
         ?
         <DateField
-          dateFieldType="DATE"
+          dateFieldType={attr.type as any}
           label="Default value:"
           value={attr.defaultValue as Date}
           errorMessage={getErrorMessage('defaultValue', errorLinks)}

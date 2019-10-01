@@ -11,8 +11,13 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
 
   switch (type) {
     case 'Date':
+    case 'Time':
+    case 'TimeStamp':
       return {
-        ...attr
+        ...attr,
+        minValue: undefined,
+        maxValue: undefined,
+        defaultValue: undefined
       } as IDateAttribute;
 
     case 'String':
@@ -67,31 +72,31 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
       }
 
       switch (attr.type) {
-        case 'Date': {
+        case 'Date':
+        case 'Time':
+        case 'TimeStamp': {
           const s = attr as IDateAttribute;
-          if (s.minValue !== undefined && s.maxValue !== undefined) {
-            if (s.minValue > s.maxValue) {
-              p.push({
-                attrIdx,
-                field: 'minValue',
-                message: "Min value > max value",
-                internal: false
-              });
-            } else if (s.defaultValue !== undefined && s.defaultValue < s.minValue) {
-              p.push({
-                attrIdx,
-                field: 'defaultValue',
-                message: "Default value < min value",
-                internal: false
-              });
-            } else if (s.defaultValue !== undefined && s.defaultValue > s.maxValue) {
-              p.push({
-                attrIdx,
-                field: 'defaultValue',
-                message: "Default value > max value",
-                internal: false
-              });
-            }
+          if (s.minValue !== undefined && s.maxValue !== undefined && s.minValue > s.maxValue) {
+            p.push({
+              attrIdx,
+              field: 'minValue',
+              message: "Min value > max value",
+              internal: false
+            });
+          } else if (s.minValue !== undefined && s.defaultValue !== undefined && s.defaultValue < s.minValue) {
+            p.push({
+              attrIdx,
+              field: 'defaultValue',
+              message: "Default value < min value",
+              internal: false
+            });
+          } else if (s.maxValue && s.defaultValue !== undefined && s.defaultValue > s.maxValue) {
+            p.push({
+              attrIdx,
+              field: 'defaultValue',
+              message: "Default value > max value",
+              internal: false
+            });
           }
           break;
         }

@@ -22,7 +22,8 @@ import {
   IERModel,
   ISequenceQueryInspector,
   ISequenceQueryResponse,
-  SequenceQuery
+  SequenceQuery,
+  IEntity
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -366,7 +367,7 @@ export class Application extends ADatabase {
 
   public pushAddEntityCmd(session: Session,
                           command: AddEntityCmd
-  ): Task<AddEntityCmd, string[]> {
+  ): Task<AddEntityCmd, IEntity> {
     const task = new Task({
       session,
       command,
@@ -411,7 +412,7 @@ export class Application extends ADatabase {
             }
           })
         }));
-        return this.erModel.entity(entityName).inspect();
+        return this.erModel.entity(entityName).serialize(true);
       }
     });
     session.taskManager.add(task);
