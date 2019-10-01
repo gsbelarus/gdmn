@@ -1,16 +1,16 @@
 import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import {IEntity, IAttribute, Entity, EntityUtils} from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
-import {apiService} from "@src/app/services/apiService";
-import {str2SemCategories} from "gdmn-nlp";
-import {IDataRow, rsActions} from "gdmn-recordset";
+import { apiService } from "@src/app/services/apiService";
+import { str2SemCategories } from "gdmn-nlp";
+import { IDataRow, rsActions } from "gdmn-recordset";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -204,17 +204,19 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }))};
 
   const postChanges = useCallback(async (close: boolean) => {
-    const {entityData} = state;
     if (createEntity && entityData && erModel) {
-
+      // FIXME: а почему не передаются lName, semCategories, isAbstract......
       const result = await apiService.AddEntity({
         entityName: entityData.name,
         attributes: entityData.attributes,
-        parentName: entityData.parent ? erModel.entity(entityData.parent).name : undefined,
+        parentName: entityData.parent,
       });
 
-      if (!result.error && result.payload.result) {
-        const iEntity = result.payload.result;
+      // FIXME: а если ошибка? ее надо как-то вывести в окне
+      // например, предусмотреть для нее стейт и панель
+
+      if (!result.error && isIEntity(result.payload.result)) {
+        const iEntity = result.payload.result as IEntity;
 
         const entity = new Entity({
           name: iEntity.name,
@@ -224,23 +226,25 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
           semCategories: str2SemCategories(iEntity.semCategories),
           adapter: iEntity.adapter
         });
-        iEntity.attributes.forEach((attr) => {
-          entity.add(EntityUtils.createAttribute(attr, entity, erModel))
-        });
+        iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
+
+        // FIXME: так а где собственно добавление новой entity в ERModel?
+
+        // entities -- recordset, который нужен нам только для отображения
+        // erModel в гриде на соответствующей вкладке.
+        // просто удалим его. он пересоздастся, когда будет надо.
         if (entities) {
-          dispatch(rsActions.setRecordSet(
-            entities.set({
-              name: iEntity.name,
-              description: iEntity.name
-            } as IDataRow)))
+          dispatch(rsActions.deleteRecordSet({ name: entities.name }));
+        }
+
+        // закрывать вкладку имеет смысл, только если все прошло успешно
+        // если ошибка -- мы должны остаться на вкладке
+        if (close) {
+          deleteViewTab();
         }
       }
-
     }
-    if (close) {
-      deleteViewTab();
-    }
-  }, [changed, entityData, entities]);
+  }, [changed, entityData, entities, createEntity, erModel]);
 
   useEffect( () => {
     if (!viewTab) {

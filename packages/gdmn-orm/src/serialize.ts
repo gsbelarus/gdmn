@@ -90,6 +90,15 @@ export interface IEntity {
   adapter?: any;
 }
 
+export function isIEntity(e: any): e is IEntity {
+  return e instanceof Object
+    && typeof e.name === 'string'
+    && e.lName instanceof Object
+    && typeof e.isAbstract === 'boolean'
+    && typeof e.semCategories === 'string'
+    && Array.isArray(e.attributes);
+}
+
 export interface ISequence {
   name: string;
   adapter?: any;
