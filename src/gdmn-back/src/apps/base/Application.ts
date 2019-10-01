@@ -12,6 +12,7 @@ import {
   EntityUtils,
   ERModel,
   IAttribute,
+  IEntity,
   IEntityDeleteInspector,
   IEntityInsertInspector,
   IEntityQueryInspector,
@@ -22,8 +23,7 @@ import {
   IERModel,
   ISequenceQueryInspector,
   ISequenceQueryResponse,
-  SequenceQuery,
-  IEntity
+  SequenceQuery
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -34,7 +34,8 @@ import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingData, ISettingParams, isISettingData, ISqlPrepareResponse} from "gdmn-internals";
-import { promises } from "fs";
+import {promises} from "fs";
+import {SemCategory, str2SemCategories} from "gdmn-nlp";
 
 export type AppAction =
   "DEMO"
@@ -86,7 +87,7 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, parentName?: string, attributes?: IAttribute[] }>;
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
 export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   entityName: string,
@@ -130,11 +131,6 @@ export class Application extends ADatabase {
     };
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
-  }
-
-  private _getSettingFileName(type: string) {
-    const pathFromDB = this.dbDetail.connectionOptions.path;
-    return `${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${type}.json`;    
   }
 
   public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
@@ -376,32 +372,24 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const {entityName, parentName, attributes} = context.command.payload;
-
-        const getNewEntity = () => {
-          if (parentName) {
-            try {
-              return new Entity({
-                parent: this.erModel.entity(parentName),
-                name: entityName,
-                lName: {}
-              });
-            } catch (error) {
-              throw error;
-            }
-          }
-          return new Entity({
-            name: entityName,
-            lName: {}
-          });
-        };
+        const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel, getNewEntity());
+              const entity = await erBuilder.create(this.erModel,
+                new Entity({
+                  parent: parent ? this.erModel.entity(parent) : undefined,
+                  name,
+                  lName,
+                  adapter,
+                  isAbstract,
+                  unique,
+                  semCategories: semCategories ? str2SemCategories(semCategories) : undefined
+                })
+              );
               if (attributes) {
                 const lengthArr = attributes.length;
                 for (let i = 0; i < lengthArr; i++) {
@@ -412,7 +400,7 @@ export class Application extends ADatabase {
             }
           })
         }));
-        return this.erModel.entity(entityName).serialize(true);
+        return this.erModel.entity(name).serialize(true);
       }
     });
     session.taskManager.add(task);
@@ -959,10 +947,10 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
         const fileName = this._getSettingFileName(payload.query[0].type);
-        
-        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
-          .then( text => JSON.parse(text) )
-          .then( arr => {
+
+        let data = await promises.readFile(fileName, {encoding: 'utf8', flag: 'r'})
+          .then(text => JSON.parse(text))
+          .then(arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
               console.log(`Read data from file ${fileName}`);
               return arr as ISettingData[];
@@ -971,14 +959,14 @@ export class Application extends ADatabase {
               return undefined;
             }
           })
-          .catch( err => {
+          .catch(err => {
             console.log(`Error reading file ${fileName} - ${err}`);
             return undefined;
           });
 
         await context.checkStatus();
 
-        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingData[] : [];
+        return data ? data.filter(s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingData[] : [];
       }
     });
 
@@ -997,16 +985,16 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const { newData } = context.command.payload;
+        const {newData} = context.command.payload;
         const fileName = this._getSettingFileName(newData.type);
 
         // читаем массив настроек из файла, если файла нет
         // или возникла ошибка, то пишем ее в лог и игнорируем
         // в этом случае data === undefined
         // минимально проверяем тип данных
-        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
-          .then( text => JSON.parse(text) )
-          .then( arr => {
+        let data = await promises.readFile(fileName, {encoding: 'utf8', flag: 'r'})
+          .then(text => JSON.parse(text))
+          .then(arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
               console.log(`Read data from file ${fileName}`);
               return arr as ISettingData[];
@@ -1015,13 +1003,13 @@ export class Application extends ADatabase {
               return undefined;
             }
           })
-          .catch( err => {
+          .catch(err => {
             console.log(`Error reading data from file ${fileName} - ${err}`);
             return undefined;
           });
 
         if (data) {
-          const idx = data.findIndex( s => isISettingData(s) && s.type === newData.type && s.objectID === newData.objectID );
+          const idx = data.findIndex(s => isISettingData(s) && s.type === newData.type && s.objectID === newData.objectID);
           if (idx === -1) {
             data.push(newData);
           } else {
@@ -1034,9 +1022,8 @@ export class Application extends ADatabase {
         // записываем файл. если будет ошибка, то выведем ее в лог,
         // но не будем прерывать выполнение задачи
         try {
-          await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), { encoding: 'utf8', flag: 'w' });
-        }
-        catch (e) {
+          await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), {encoding: 'utf8', flag: 'w'});
+        } catch (e) {
           console.log(`Error writing data to file ${fileName} - ${e}`);
         }
 
@@ -1121,6 +1108,11 @@ export class Application extends ADatabase {
 
     await this.sessionManager.forceCloseAll();
     this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
+  }
+
+  private _getSettingFileName(type: string) {
+    const pathFromDB = this.dbDetail.connectionOptions.path;
+    return `${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${type}.json`;
   }
 
   private async _readERModel(): Promise<ERModel> {

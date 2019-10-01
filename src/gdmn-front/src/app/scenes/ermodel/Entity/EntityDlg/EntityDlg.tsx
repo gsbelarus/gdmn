@@ -10,7 +10,7 @@ import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./uti
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
-import { IDataRow, rsActions } from "gdmn-recordset";
+import { rsActions } from "gdmn-recordset";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -205,12 +205,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   const postChanges = useCallback(async (close: boolean) => {
     if (createEntity && entityData && erModel) {
-      // FIXME: а почему не передаются lName, semCategories, isAbstract......
-      const result = await apiService.AddEntity({
-        entityName: entityData.name,
-        attributes: entityData.attributes,
-        parentName: entityData.parent,
-      });
+      const result = await apiService.AddEntity({...entityData});
+
 
       // FIXME: а если ошибка? ее надо как-то вывести в окне
       // например, предусмотреть для нее стейт и панель
@@ -224,9 +220,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
           parent: iEntity.parent ? erModel.entity(iEntity.parent) : undefined,
           isAbstract: iEntity.isAbstract,
           semCategories: str2SemCategories(iEntity.semCategories),
-          adapter: iEntity.adapter
+          adapter: iEntity.adapter,
+          unique: iEntity.unique,
         });
-        iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
+        iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)));
+        //const newErModel =  erModel.add(entity);
 
         // FIXME: так а где собственно добавление новой entity в ERModel?
 
