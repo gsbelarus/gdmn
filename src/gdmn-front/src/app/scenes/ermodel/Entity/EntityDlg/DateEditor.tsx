@@ -33,14 +33,14 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
   return (
     <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
       <DateField
-        dateFieldType={attr.type.toUpperCase() as any}
+        dateFieldType={attr.type as any}
         label="Min value:"
         value={attr.minValue as Date}
         errorMessage={getErrorMessage('minValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, minValue: newValue}) }
       />
       <DateField
-        dateFieldType={attr.type.toUpperCase() as any}
+        dateFieldType={attr.type as any}
         label="Max value:"
         value={attr.maxValue as Date}
         errorMessage={getErrorMessage('maxValue', errorLinks)}
@@ -63,7 +63,7 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
       { selectedOption === 'VALUE'
         ?
         <DateField
-          dateFieldType={attr.type.toUpperCase() as any}
+          dateFieldType={attr.type as any}
           label="Default value:"
           value={attr.defaultValue as Date}
           errorMessage={getErrorMessage('defaultValue', errorLinks)}

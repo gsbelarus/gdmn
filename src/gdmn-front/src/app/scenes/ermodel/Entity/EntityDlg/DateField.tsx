@@ -1,22 +1,22 @@
 import { TextField } from "office-ui-fabric-react";
 import React, { useState } from "react";
 
-type DateFieldType = 'DATE' | 'TIME' | 'TIMESTAMP';
+type DateFieldType = 'Date' | 'Time' | 'TimeStamp';
 
 const date2str = (value: Date, dateFieldType: DateFieldType): string => {
   switch (dateFieldType) {
-    case 'DATE':
+    case 'Date':
       return `${value.getDate().toString().padStart(2, '0')}.${(value.getMonth() + 1).toString().padStart(2, '0')}.${value.getFullYear().toString()}`
-    case 'TIME':
+    case 'Time':
       return `${value.getHours().toString().padStart(2, '0')}:${value.getMinutes().toString().padStart(2, '0')}:${value.getSeconds().toString().padStart(2, '0')}`
-    case 'TIMESTAMP':
-      return `${date2str(value, 'DATE')} ${date2str(value, 'TIME')}`;
+    case 'TimeStamp':
+      return `${date2str(value, 'Date')} ${date2str(value, 'Time')}`;
   }
 };
 
 const str2date = (value: string, dateFieldType: DateFieldType): Date => {
   switch (dateFieldType) {
-    case 'DATE': {
+    case 'Date': {
       const parts = value.split('.').map( s => s ? parseInt(s) : 0);
       if (parts.length === 3 && parts[0] >= 1 && parts[0] <= 31 && parts[1] >= 1 && parts[1] <= 12 && parts[2] > 0) {
         const d = new Date(parts[2] < 100 ? parts[2] + 2000 : parts[2], parts[1] - 1, parts[0]);
@@ -27,7 +27,7 @@ const str2date = (value: string, dateFieldType: DateFieldType): Date => {
       throw new Error('Используйте формат даты dd.mm.yyyy');
     }
 
-    case 'TIME': {
+    case 'Time': {
       const currDate = new Date();
       const parts = value.split(':').map( s => s ? parseInt(s) : -1);
       if (parts.length === 3 && parts[0] >= 0 && parts[0] <= 23 && parts[1] >= 0 && parts[1] <= 59 && parts[2] >= 0 && parts[2] <= 59) {
@@ -39,11 +39,11 @@ const str2date = (value: string, dateFieldType: DateFieldType): Date => {
       throw new Error('Используйте формат времени hh:mm:ss');
     }
 
-    case 'TIMESTAMP': {
+    case 'TimeStamp': {
       const parts = value.split(' ').map( s => s.trim() ).filter( s => s );
       if (parts.length === 2) {
-        const date = str2date(parts[0], 'DATE');
-        const time = str2date(parts[1], 'TIME');
+        const date = str2date(parts[0], 'Date');
+        const time = str2date(parts[1], 'Time');
         return new Date(date.getFullYear(), date.getMonth(), date.getDate(), time.getHours(), time.getMinutes(), time.getSeconds());
       }
       throw new Error('Используйте формат даты и времени dd.mm.yyyy hh:mm:ss');
