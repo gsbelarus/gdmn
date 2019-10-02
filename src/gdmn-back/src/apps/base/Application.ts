@@ -36,6 +36,7 @@ import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingParams, isISettingData, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
 import { promises } from "fs";
 import {str2SemCategories} from "gdmn-nlp";
+import path from "path";
 
 export type AppAction =
   "DEMO"
@@ -135,7 +136,8 @@ export class Application extends ADatabase {
 
   private _getSettingFileName(type: string) {
     const pathFromDB = this.dbDetail.connectionOptions.path;
-    return `${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${type}.json`;    
+    const extLen = path.extname(pathFromDB).length;
+    return `${pathFromDB.slice(0, -extLen)}\\type.${type}.json`;
   }
 
   public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
@@ -954,20 +956,20 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
         const fileName = this._getSettingFileName(payload.query[0].type);
-        
+
         let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
           .then( text => JSON.parse(text) )
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              console.log(`Read data from file ${fileName}`);
+              this.taskLogger.log(`Read data from file ${fileName}`);
               return arr as ISettingEnvelope[];
             } else {
-              console.log(`Unknown data type in file ${fileName}`);
+              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
               return undefined;
             }
           })
           .catch( err => {
-            console.log(`Error reading file ${fileName} - ${err}`);
+            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
             return undefined;
           });
 
@@ -1003,15 +1005,15 @@ export class Application extends ADatabase {
           .then( text => JSON.parse(text) )
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              console.log(`Read data from file ${fileName}`);
+              this.taskLogger.log(`Read data from file ${fileName}`);
               return arr as ISettingEnvelope[];
             } else {
-              console.log(`Unknown data in file ${fileName}`);
+              this.taskLogger.warn(`Unknown data in file ${fileName}`);
               return undefined;
             }
           })
           .catch( err => {
-            console.log(`Error reading data from file ${fileName} - ${err}`);
+            this.taskLogger.warn(`Error reading data from file ${fileName} - ${err}`);
             return undefined;
           });
 
@@ -1029,10 +1031,11 @@ export class Application extends ADatabase {
         // записываем файл. если будет ошибка, то выведем ее в лог,
         // но не будем прерывать выполнение задачи
         try {
+          await promises.mkdir(path.dirname(fileName), { recursive: true });
           await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), { encoding: 'utf8', flag: 'w' });
         }
         catch (e) {
-          console.log(`Error writing data to file ${fileName} - ${e}`);
+          this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
         }
 
         await context.checkStatus();
