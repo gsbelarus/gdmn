@@ -27,10 +27,12 @@ import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
-import { IDesignerState, LOCAL_STORAGE_KEY } from '../../designer/Designer';
+import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
-import { getLName } from 'gdmn-internals';
+import { getLName, ISettingEnvelope, isISettingData, isISettingEnvelope } from 'gdmn-internals';
+import { useSettings } from '@src/app/hooks/useSettings';
+import { IDesignerSetting } from '../../designer/Designer.types';
 
 interface ILastEdited {
   fieldName: string;
@@ -316,6 +318,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
 
+  const [setting, setSetting] = useSettings<IDesignerSetting>({ type: 'DESIGNER', objectID: entityName });
+
   useEffect( () => {
     return () => {
       dispatch(gdmnActions.saveSessionData({
@@ -588,55 +592,54 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       iconProps: {
         iconName: 'Design'
       },
-      onClick: () => { 
+      onClick: () => {
         setDesigner(true);
         isDesigner.current = true;
       }
     },
   ].map( i => (locked || error) ? {...i, disabled: true} : i );
 
-  const internalControl = (props: { object: Object, objects: Objects }): JSX.Element | undefined => {
+  const internalControl = ({ object, objects }: { object: Object, objects: Objects }): JSX.Element | undefined => {
 
-    switch (props.object.type) {
+    switch (object.type) {
       case 'LABEL':
         return (
           <Label
-            key={props.object.name}
-            styles={object2ILabelStyles(props.object, objects)}
+            key={object.name}
+            styles={object2ILabelStyles(object, objects)}
           >
-            {props.object.text}
+            {object.text}
           </Label>
         );
-  
+
       case 'FIELD':
-        const style = object2ITextFieldStyles(props.object, props.objects)
+        const style = object2ITextFieldStyles(object, objects)
         return (
-          <div>
+          <div key={object.name}>
             {
-              field({styles: style, label: props.object.fieldName, fieldName: props.object.fieldName})
+              field({styles: style, label: object.fieldName, fieldName: object.fieldName})
             }
           </div>
         )
-  
+
       case 'IMAGE':
         return (
-          <div>
+          <div key={object.name}>
             <img
-              src={props.object.url}
-              alt={props.object.alt}
-              style={object2style(props.object, objects)}
+              src={object.url}
+              alt={object.alt}
+              style={object2style(object, objects)}
             />
           </div>
         )
-  
+
       default:
         return undefined;
     }
   };
-  
-  const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
+
     const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
-    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
+      const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
 
       if (!fd || !fd.eqfa) {
         return undefined;
@@ -731,6 +734,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   }
                 }
               }
+              styles={props.styles}
             />
           );
         }
@@ -774,6 +778,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
+            styles={props.styles}
         />);
       } else if (fd.dataType === TFieldType.Boolean) {
         const subComponentStyle = {
@@ -852,18 +857,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
             }
+            styles={props.styles}
           />
         )
       }
     }
 
-    const grid: IGrid = localState !== undefined
-      ? (localState as IDesignerState).grid
-      : {
-        columns: [{ unit: 'PX', value: 320 }],
-        rows: [{ unit: 'FR', value: 1 }],
-      };
-    const fields: Objects = localState === undefined
+    const grid: IGrid = setting ? setting.grid : {
+      columns: [{ unit: 'PX', value: 320 }],
+      rows: [{ unit: 'FR', value: 1 }],
+    };
+
+    const fields: Objects = !setting
       ? rs
         ? rs.fieldDefs.map(fd => {
           const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
@@ -877,7 +882,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         })
         : []
       : [];
-    const area1: IArea[] = localState === undefined ? [{
+
+    const area1: IArea[] = !setting ? [{
       name: 'Area1',
       type: 'AREA',
       parent: 'Window',
@@ -886,20 +892,28 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       right: 0,
       bottom: 0
     }]
-    : getAreas((localState as IDesignerState).objects);
-    const window: IWindow = localState !== undefined
-      ? (localState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
+    : getAreas(setting.objects);
+
+    const window: IWindow = setting
+      ? setting.objects.find(obj => isWindow(obj)) as IWindow
       : {
           name: 'Window',
           type: 'WINDOW'
         };
-    const objects: Objects = localState ? (localState as IDesignerState).objects : [window, ...area1, ...fields];
+        
+    const objects: Objects = setting ? setting.objects : [window, ...area1, ...fields];
 
   return (
     <>
       {
         designer
-          ? <DesignerContainer {...props} url={url} entityName={entityName} outDesignerMode={() => { setDesigner(false); isDesigner.current = false; }} />
+          ? <DesignerContainer 
+              url={url} 
+              entityName={entityName} 
+              setting={setting}
+              onSaveSetting={ setting => setSetting(setting) }
+              onExit={ () => { setDesigner(false); } }
+            />
           : <>
             <CommandBar items={commandBarItems} />
             {

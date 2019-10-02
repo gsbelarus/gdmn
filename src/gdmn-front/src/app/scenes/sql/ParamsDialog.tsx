@@ -12,7 +12,7 @@ import {
 } from 'office-ui-fabric-react';
 import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
 import { TFieldType } from 'gdmn-recordset';
-import { ISQLParam } from './Sql';
+import { ISQLField } from './Sql';
 
 const theme = getTheme();
 const classNames = mergeStyleSets({
@@ -30,9 +30,9 @@ const classNames = mergeStyleSets({
 });
 
 export interface ISQLFormProps {
-  params: ISQLParam[];
+  params: ISQLField[];
   onClose: () => void;
-  onSave: (params: ISQLParam[]) => void;
+  onSave: (params: ISQLField[]) => void;
 }
 
 const DayPickerStrings: IDatePickerStrings = {
@@ -66,7 +66,7 @@ const firstDayOfWeek = DayOfWeek.Monday;
 export const ParamsDialog = (props: ISQLFormProps) => {
   const { params, onClose, onSave } = props;
 
-  const [ paramList, setParamList ]  = useState<ISQLParam[]>([]);
+  const [ paramList, setParamList ]  = useState<ISQLField[]>([]);
 
   const handleChangeValue = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const inputEl = (event.target as HTMLInputElement);
@@ -105,9 +105,10 @@ export const ParamsDialog = (props: ISQLFormProps) => {
         {paramList.map(i => {
           switch (i.type) {
             case TFieldType.Integer:
-              return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>;
+              return <TextField label={`${i.name} (${i.type})`} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>;
+              break;
             case TFieldType.Date:
-                return <DatePicker
+              return <DatePicker
                 label={i.name}
                 isRequired={false}
                 allowTextInput={true}
@@ -115,10 +116,12 @@ export const ParamsDialog = (props: ISQLFormProps) => {
                 firstDayOfWeek={firstDayOfWeek}
                 strings={DayPickerStrings}
                 value={i.value}
+                key={i.name}
                 onSelectDate={(date) => handleSelectDate(date, i.name)}
               />
+              break;
             default:
-              return <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
+              return <TextField label={`${i.name} (${i.type})`} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
           }
         })}
       </Stack>

@@ -51,6 +51,10 @@ export interface INumericAttribute extends INumberAttribute<number> {
   scale: number;
 }
 
+export function isINumericAttribute(attr: IAttribute): attr is INumericAttribute {
+  return attr.type === 'Numeric' && typeof (attr as any).precision === 'number' && typeof (attr as any).scale === 'number';
+}
+
 export interface IDateAttribute extends INumberAttribute<Date, ContextVariables> {
 }
 
@@ -84,6 +88,15 @@ export interface IEntity {
   unique: string[][];
   attributes: IAttribute[];
   adapter?: any;
+}
+
+export function isIEntity(e: any): e is IEntity {
+  return e instanceof Object
+    && typeof e.name === 'string'
+    && e.lName instanceof Object
+    && typeof e.isAbstract === 'boolean'
+    && typeof e.semCategories === 'string'
+    && Array.isArray(e.attributes);
 }
 
 export interface ISequence {

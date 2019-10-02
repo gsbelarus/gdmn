@@ -22,6 +22,11 @@ const showData: IFSMStateType = {
       required: true
     },
     {
+      name: 'entityName',
+      dataType: 'string',
+      required: true
+    },
+    {
       name: 'queryPhrase',
       dataType: 'string',
       required: true

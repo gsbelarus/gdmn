@@ -1,11 +1,16 @@
-import React, { useEffect, useReducer } from "react";
+import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute } from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
+import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
+import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
+import { apiService } from "@src/app/services/apiService";
+import { str2SemCategories } from "gdmn-nlp";
+import { rsActions } from "gdmn-recordset";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -37,6 +42,11 @@ interface IEntityDlgState {
   entityData?: IEntity;
   changed?: boolean;
   selectedAttr?: number;
+  errorLinks: ErrorLinks;
+};
+
+function isIEntityDlgState(obj: any): obj is IEntityDlgState {
+  return obj instanceof Object && Array.isArray(obj.errorLinks);
 };
 
 type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
@@ -45,6 +55,8 @@ type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
   | { type: 'ADD_ATTR' }
   | { type: 'DELETE_ATTR' }
+  | { type: 'CLEAR_ERROR', attrIdx: number, field: string }
+  | { type: 'ADD_ERROR', attrIdx: number, field: string, message: string }
   | { type: 'REVERT' };
 
 function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
@@ -59,7 +71,8 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         initialData,
         entityData,
         selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
-        changed: JSON.stringify(initialData) !== JSON.stringify(entityData)
+        changed: JSON.stringify(initialData) !== JSON.stringify(entityData),
+        errorLinks: validateAttributes(entityData, state.errorLinks)
       };
     }
 
@@ -67,6 +80,24 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       return {
         ...state,
         selectedAttr: action.selectedAttr
+      };
+    }
+
+    case 'ADD_ERROR': {
+      const { attrIdx, field, message } = action;
+      const { errorLinks } = state;
+      return {
+        ...state,
+        errorLinks: errorLinks.find( l => l.attrIdx === attrIdx && l.field === field )
+          ? errorLinks
+          : [...errorLinks, { attrIdx, field, message, internal: true }]
+      };
+    }
+
+    case 'CLEAR_ERROR': {
+      return {
+        ...state,
+        errorLinks: state.errorLinks.filter( l => !l.internal || l.attrIdx !== action.attrIdx || l.field !== action.field )
       };
     }
 
@@ -78,13 +109,14 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       }
 
       const newAttributes = [...entityData.attributes];
-
       newAttributes[selectedAttr] = action.newAttr;
+      const newEntityData = {...entityData, attributes: newAttributes };
 
       return {
         ...state,
-        entityData: {...entityData, attributes: newAttributes },
-        changed: true
+        entityData: newEntityData,
+        changed: true,
+        errorLinks: validateAttributes(newEntityData, state.errorLinks)
       };
     }
 
@@ -97,19 +129,15 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
       const newIdx = selectedAttr === undefined ? entityData.attributes.length : (selectedAttr + 1);
       const newAttributes = [...entityData.attributes];
-      newAttributes.splice(newIdx, 0, {
-        name: '',
-        type: 'String',
-        lName: { en: { name: '' } },
-        required: false,
-        semCategories: ''
-      });
+      newAttributes.splice(newIdx, 0, initAttr('String'));
+      const newEntityData = {...entityData, attributes: newAttributes };
 
       return {
         ...state,
-        entityData: {...entityData, attributes: newAttributes },
+        entityData: newEntityData,
         selectedAttr: newIdx,
-        changed: true
+        changed: true,
+        errorLinks: validateAttributes(newEntityData, state.errorLinks)
       };
     }
 
@@ -133,7 +161,8 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           : selectedAttr >= newAttributes.length
           ? newAttributes.length - 1
           : selectedAttr,
-        changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData)
+        changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData),
+        errorLinks: validateAttributes(newEntityData, state.errorLinks)
       };
     }
 
@@ -146,7 +175,8 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           ...state,
           entityData: state.initialData,
           selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
-          changed: false
+          changed: false,
+          errorLinks: validateAttributes(state.initialData, state.errorLinks)
         }
       }
     }
@@ -156,15 +186,62 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 };
 
 export function EntityDlg(props: IEntityDlgProps): JSX.Element {
-  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID } = props;
+  const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID, history, entities } = props;
+  const en = Object.keys(erModel!.entities);
 
   if ((createEntity && entityName) || (!createEntity && !entityName) || (createEntity && !uniqueID)) {
     throw new Error('Invalid EntityDlg props');
   }
 
   const entity = erModel && entityName && erModel.entities[entityName];
-  const [state, dlgDispatch] = useReducer(reducer, {});
-  const { entityData, changed, selectedAttr } = state;
+  const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [] });
+  const [MessageBox, messageBox] = useMessageBox();
+  const { entityData, changed, selectedAttr, errorLinks } = state;
+
+  const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
+    viewTabURL: url,
+    locationPath: location.pathname,
+    historyPush: history.push
+  }))};
+
+  const postChanges = useCallback(async (close: boolean) => {
+    if (createEntity && entityData && erModel) {
+      const result = await apiService.AddEntity(entityData);
+
+      // FIXME: а если ошибка? ее надо как-то вывести в окне
+      // например, предусмотреть для нее стейт и панель
+
+      if (!result.error && isIEntity(result.payload.result)) {
+        const iEntity = result.payload.result as IEntity;
+
+        const entity = new Entity({
+          name: iEntity.name,
+          lName: iEntity.lName,
+          parent: iEntity.parent ? erModel.entity(iEntity.parent) : undefined,
+          isAbstract: iEntity.isAbstract,
+          semCategories: str2SemCategories(iEntity.semCategories),
+          adapter: iEntity.adapter,
+          unique: iEntity.unique
+        });
+        iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
+
+        // FIXME: так а где собственно добавление новой entity в ERModel?
+
+        // entities -- recordset, который нужен нам только для отображения
+        // erModel в гриде на соответствующей вкладке.
+        // просто удалим его. он пересоздастся, когда будет надо.
+        if (entities) {
+          dispatch(rsActions.deleteRecordSet({ name: entities.name }));
+        }
+
+        // закрывать вкладку имеет смысл, только если все прошло успешно
+        // если ошибка -- мы должны остаться на вкладке
+        if (close) {
+          deleteViewTab();
+        }
+      }
+    }
+  }, [changed, entityData, entities, createEntity, erModel]);
 
   useEffect( () => {
     if (!viewTab) {
@@ -187,11 +264,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   useEffect( () => {
     if (!entityData && erModel) {
-      if (viewTab && viewTab.sessionData) {
+      if (viewTab && isIEntityDlgState(viewTab.sessionData)) {
         dlgDispatch({ type: 'SET_STATE', state: viewTab.sessionData });
       } else {
         if (entity) {
-          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(false) });
+          dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: entity.serialize(true) });
         } else {
           dlgDispatch({
             type: 'SET_ENTITY_DATA',
@@ -216,22 +293,24 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const commandBarItems: ICommandBarItemProps[] = [
     {
       key: 'saveAndClose',
-      disabled: !changed,
+      disabled: !changed || (errorLinks && !!errorLinks.length),
       text: 'Сохранить',
       iconProps: {
         iconName: 'Save'
-      }
+      },
+      onClick: () => postChanges(true)
     },
     {
       key: 'cancelAndClose',
       text: changed ? 'Отменить' : 'Закрыть',
       iconProps: {
         iconName: 'Cancel'
-      }
+      },
+      onClick: deleteViewTab
     },
     {
       key: 'apply',
-      disabled: !changed,
+      disabled: !changed || (errorLinks && !!errorLinks.length),
       text: 'Применить',
       iconProps: {
         iconName: 'CheckMark'
@@ -263,12 +342,26 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         iconName: 'Delete'
       },
       onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
+    },
+    {
+      key: 'showAdapter',
+      disabled: !entityData || !entityData.adapter,
+      text: 'Показать адаптер',
+      iconProps: {
+        iconName: 'PageData'
+      },
+      onClick: () => messageBox({
+        title: 'Adapter',
+        message: JSON.stringify(entityData.adapter, undefined, 2),
+        code: true
+      })
     }
   ];
 
   return (
     <>
       <CommandBar items={commandBarItems} />
+      <MessageBox />
       <Frame scroll height='calc(100% - 42px)'>
         <Frame border marginLeft marginRight>
           <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
@@ -276,6 +369,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Name:"
                 value={entityData.name}
+                errorMessage={getErrorMessage('entityName', errorLinks)}
                 readOnly={!createEntity}
                 onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
                 styles={{
@@ -323,14 +417,18 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         <Frame marginTop marginLeft marginRight>
           <Stack>
             {
-              entityData.attributes.map( (attr, idx) =>
+              entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={idx}
+                  key={`${attrIdx}-${attr.type}`}
                   attr={attr}
                   createAttribute={true}
-                  selected={idx === selectedAttr}
+                  selected={attrIdx === selectedAttr}
+                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}
                   onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
-                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: idx }) }
+                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
+                  onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }
+                  onClearError={ field => dlgDispatch({ type: 'CLEAR_ERROR', attrIdx, field }) }
+                  erModel={erModel}
                 />
               )
             }

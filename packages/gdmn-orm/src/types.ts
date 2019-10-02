@@ -10,7 +10,12 @@ export interface IEnumValue {
 
 export type ContextVariables = "CURRENT_TIMESTAMP" | "CURRENT_TIMESTAMP(0)" | "CURRENT_DATE" | "CURRENT_TIME";
 
-export type AttributeTypes = "Entity"
+export type AttributeDateTimeTypes = "Date"
+  | "TimeStamp"
+  | "Time";
+
+export type AttributeTypes = AttributeDateTimeTypes
+  | "Entity"
   | "String"
   | "Set"
   | "Parent"
@@ -20,9 +25,6 @@ export type AttributeTypes = "Entity"
   | "Numeric"
   | "Float"
   | "Boolean"
-  | "Date"
-  | "TimeStamp"
-  | "Time"
   | "Blob"
   | "Enum";
 

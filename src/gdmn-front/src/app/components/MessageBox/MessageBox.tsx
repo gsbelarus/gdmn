@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogType, DialogFooter, PrimaryButton, ContextualMenu, DefaultButton, Icon, Stack } from "office-ui-fabric-react";
 import React from "react";
+import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 
 type MBType = 'MB_OK'| 'MB_OKCANCEL' | 'MB_YESNO' | 'MB_YESNOCANCEL' | 'MB_ABORTRETRY' | 'MB_ABORTRETRYIGNORE';
 type MBIcon = 'Information' | 'Warning' | 'Error' | 'Attention' | 'Question';
@@ -14,6 +15,7 @@ interface IMessageBoxParams {
   icon?: MBIcon;
   type?: MBType;
   defButton?: number;
+  code?: boolean;
 };
 
 type MessageBoxComponent = (props: IMessageBoxProps) => JSX.Element | null;
@@ -52,6 +54,16 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
     }
   };
 
+  const message = params
+    ? params.code
+      ? <Frame border>
+          <pre>
+            {params.message}
+          </pre>
+        </Frame>
+      : <span>{params.message}</span>
+    : null;
+
   const MessageBox = (props: IMessageBoxProps) => {
     return params
       ?
@@ -63,7 +75,7 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
               ? params.title
               : params.icon
               ? params.icon
-              : 'Information'
+              : 'Information',
           }}
           modalProps={{
             isBlocking: true,
@@ -71,17 +83,18 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
               moveMenuItemText: 'Move',
               closeMenuItemText: 'Close',
               menu: ContextualMenu
-            }
+            },
           }}
+          minWidth={params.code ? '680px' : undefined}
         >
           {
             params && params.icon
             ?
               <Stack horizontal disableShrink verticalAlign="start">
                 <Icon iconName={getIconName()} styles={{ root: { fontSize: '32px', marginRight: '16px' }}} />
-                {params.message}
+                {message}
               </Stack>
-            : params.message
+            : message
           }
           {
             params.type === undefined || params.type === 'MB_OK'

@@ -11,15 +11,12 @@
     "clean": "shx rm -rf ./dist",
     "rebuild": "yarn clean && yarn build",
     "download-data": "ts-node ./src/util/downloadData.ts",
-    "postinstall": "yarn download-data"
+    "-postinstall": "yarn download-data"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/classnames": "^2",
-    "@types/react-redux": "^7",
-    "@types/react-virtualized": "^9",
     "classnames": "^2",
     "express": "^4",
     "gdmn-grid": "^1",
@@ -37,9 +34,12 @@
     "typescript": "^3"
   },
   "devDependencies": {
+    "@types/classnames": "^2",
     "@types/node": "^12",
     "@types/react": "^16",
     "@types/react-dom": "^16",
+    "@types/react-redux": "^7",
+    "@types/react-virtualized": "^9",
     "css-loader": "^3",
     "html-webpack-plugin": "^3",
     "node-fetch": "^2.6.0",

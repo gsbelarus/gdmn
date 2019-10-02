@@ -35,7 +35,8 @@ export abstract class AStatement {
         this._sql = sql;
     }
 
-    abstract get metadata(): AMetadata;
+    abstract get inMetadata(): AMetadata;
+    abstract get outMetadata(): AMetadata;
 
     get transaction(): ATransaction {
         return this._transaction;

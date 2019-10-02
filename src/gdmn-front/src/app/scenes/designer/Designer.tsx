@@ -1,5 +1,5 @@
-import React, { useReducer, useMemo, useEffect } from "react";
-import { IDesignerProps } from "./Designer.types";
+import React, { useReducer, useMemo } from "react";
+import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField } from "./types";
 import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
@@ -67,12 +67,6 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-interface IDesignerSerializedState {
-  version: string;
-  grid: IGrid;
-  objects: Objects;
-};
-
 const getDefaultState = (entity?: Entity): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
@@ -120,20 +114,16 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
   };
 };
 
-export const LOCAL_STORAGE_KEY = 'designerState';
-
-const loadState = (entityName?: string, erModel?: Entity): IDesignerState => {
-  const loaded = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${entityName}`);
-
-  if (loaded && entityName !== undefined) {
-    const parsed = JSON.parse(loaded) as IDesignerSerializedState;
-
-    if (parsed.version === '1.0' && Array.isArray(parsed.objects) && parsed.grid instanceof Object) {
-      return parsed;
-    }
-  }
-
-  return getDefaultState(erModel);
+const getStateFromSetting = (setting?: IDesignerSetting): IDesignerState => {
+  if (setting) {
+    const selectedObject = setting.objects.find( object => isWindow(object) );
+    return {
+      ...setting,
+      selectedObject
+    };
+  } else {
+    return getDefaultState();
+  }  
 };
 
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
@@ -492,7 +482,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         },
         objects,
         gridSelection: undefined,
-        
+
         selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления строки
       }
     }
@@ -550,8 +540,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { url, erModel, rs, entity } = props;
-  const [state, designerDispatch] = useReducer(reducer, loadState(entity.name, erModel ? erModel.entities[entity.name] : undefined));
+  const { erModel, rs, entity, setting, onSaveSetting } = props;
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting));     
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
@@ -573,6 +563,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       for (let y = 0; y < grid.rows.length; y++) {
         res.push(
           <GridCell
+            key={`${x}-${y}`}
             x={x}
             y={y}
             gridSelection={gridSelection}
@@ -586,6 +577,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
 
   const renderAreas = () => getAreas(objects).map( area =>
     <Area
+      key={area.name}
       previewMode={previewMode}
       gridMode={gridMode}
       selectedObject={selectedObject}
@@ -604,9 +596,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       text: 'Save',
       iconOnly: true,
       iconProps: { iconName: 'Save' },
-      onClick: () => {
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`, JSON.stringify({ version: '1.0', grid, objects }) )
-      }
+      onClick: () => onSaveSetting({ grid, objects })
     },
     {
       key: 'reset',
@@ -622,7 +612,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       name: 'Close',
       iconOnly: true,
       iconProps: { iconName: 'Cancel' },
-      onClick: () => props.outDesignerMode()
+      onClick: props.onExit
     },
     {
       key: 'split0',

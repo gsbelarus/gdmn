@@ -10,11 +10,11 @@ import {
   IEntityQuerySetInspector,
   IEntityQuerySetResponse,
   IAttribute,
-  AttributeTypes
+  IEntity
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases, Types,  ISettingParams, ISettingData } from 'gdmn-internals';
+import { ISqlQueryResponseAliases, ISettingParams, ISettingEnvelope, ISqlPrepareResponse } from 'gdmn-internals';
 import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
@@ -69,7 +69,8 @@ export const enum TTaskActionNames {
   ADD_ENTITY = 'ADD_ENTITY',
   DELETE_ENTITY = 'DELETE_ENTITY',
   EDIT_ENTITY = 'EDIT_ENTITY',
-  QUERY_SETTING = 'QUERY_SETTING'
+  QUERY_SETTING = 'QUERY_SETTING',
+  SAVE_SETTING = 'SAVE_SETTING'
 }
 
 // MESSAGES DATA
@@ -170,11 +171,7 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.GET_NEXT_ID]: {
   };
-  [TTaskActionNames.ADD_ENTITY]: {
-    entityName: string;
-    parentName?: string;
-    attributes?: IAttribute[]
-  };
+  [TTaskActionNames.ADD_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: {
     entityName: string;
   };
@@ -184,7 +181,8 @@ export interface TTaskActionPayloadTypes {
     changedFields: IChangedFields;
     attributes: IAttribute[]
   };
-  [TTaskActionNames.QUERY_SETTING]: {params: ISettingParams[]};
+  [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
+  [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingEnvelope, newData: ISettingEnvelope};
 }
 
 // -- TASK-RESULT
@@ -223,10 +221,11 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_SESSIONS_INFO]: ISessionInfo[];
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
-  [TTaskActionNames.ADD_ENTITY]: string[];
+  [TTaskActionNames.ADD_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
-  [TTaskActionNames.QUERY_SETTING]: ISettingData[];
+  [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
+  [TTaskActionNames.SAVE_SETTING]: void;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -284,15 +283,8 @@ export type AppAction =
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
   | "EDIT_ENTITY"
-  | "QUERY_SETTING";
-
-export interface ISqlPrepareResponse {
-  plan?: string;
-  placeholderList?: {
-      name: string,
-      type: Types
-  }[];
-}
+  | "QUERY_SETTING"
+  | "SAVE_SETTING";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];

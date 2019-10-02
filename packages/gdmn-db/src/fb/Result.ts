@@ -27,14 +27,14 @@ export class Result extends AResult {
     public static async get(statement: Statement, source: any): Promise<Result> {
         if (Array.isArray(source)) {
             source = await statement.transaction.connection.client.statusAction(async (status) => {
-                const {inMetadata, outMetadata, inDescriptors}: IStatementSource = statement.source!;
-                const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
-                const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
+                const {inMetadataMsg, outMetadataMsg, inDescriptors}: IStatementSource = statement.source!;
+                const inBuffer = new Uint8Array(inMetadataMsg.getMessageLengthSync(status));
+                const buffer = new Uint8Array(outMetadataMsg.getMessageLengthSync(status));
 
                 await dataWrite(statement.transaction, inDescriptors, inBuffer, source);
 
                 const newTransaction = await statement.source!.handler.executeAsync(status,
-                    statement.transaction.handler, inMetadata, inBuffer, outMetadata, buffer);
+                    statement.transaction.handler, inMetadataMsg, inBuffer, outMetadataMsg, buffer);
 
                 if (newTransaction && statement.transaction.handler !== newTransaction) {
                     //// FIXME: newTransaction.releaseSync();

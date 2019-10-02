@@ -1,3 +1,5 @@
+import { isValidDate } from "./utils"
+
 export enum Types {
   BIGINT,
   INTEGER,
@@ -40,6 +42,17 @@ export interface ISqlQueryResponseAliases {
   }
 }
 
+export interface IFieldDescription {
+  name: string,
+  type: Types
+}
+
+export interface ISqlPrepareResponse {
+  plan?: string;
+  fieldList?: IFieldDescription[],
+  paramList?: IFieldDescription[];
+}
+
 export interface ISettingParams {
   type: string;
   objectID: string;
@@ -52,9 +65,29 @@ export interface ISettingParams {
 
 export interface ISettingData extends ISettingParams {
   data: any;
-}
+};
+
+export function isISettingData(data: any): data is ISettingData {
+  return (
+    data instanceof Object
+    &&
+    typeof data.type === 'string'
+    &&
+    typeof data.objectID === 'string'
+  )
+};
 
 export interface ISettingEnvelope extends ISettingData {
-  _changed: Date;
-  _accessed: Date;
+  _changed: number;
+  _accessed: number;
+};
+
+export function isISettingEnvelope(data: any): data is ISettingEnvelope {
+  return (
+    isISettingData(data)
+    &&
+    typeof (data as any)._changed === 'number'
+    &&
+    typeof (data as any)._accessed === 'number'
+  )
 };

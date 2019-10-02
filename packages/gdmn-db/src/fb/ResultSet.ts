@@ -42,14 +42,14 @@ export class ResultSet extends AResultSet {
     public static async open(statement: Statement, params: any[], type?: CursorType): Promise<ResultSet> {
         const source: IResultSetSource & { result: Result }
             = await statement.transaction.connection.client.statusAction(async (status) => {
-            const {inMetadata, outMetadata, inDescriptors}: IStatementSource = statement.source!;
-            const inBuffer = new Uint8Array(inMetadata.getMessageLengthSync(status));
-            const buffer = new Uint8Array(outMetadata.getMessageLengthSync(status));
+            const {inMetadataMsg, outMetadataMsg, inDescriptors}: IStatementSource = statement.source!;
+            const inBuffer = new Uint8Array(inMetadataMsg.getMessageLengthSync(status));
+            const buffer = new Uint8Array(outMetadataMsg.getMessageLengthSync(status));
 
             await dataWrite(statement.transaction, inDescriptors, inBuffer, params);
 
             const handler = await statement.source!.handler.openCursorAsync(status, statement.transaction.handler,
-                inMetadata, inBuffer, outMetadata, type || AResultSet.DEFAULT_TYPE === CursorType.SCROLLABLE
+                inMetadataMsg, inBuffer, outMetadataMsg, type || AResultSet.DEFAULT_TYPE === CursorType.SCROLLABLE
                     ? NativeStatement.CURSOR_TYPE_SCROLLABLE : 0);
 
             const metadata = await OutputMetadata.getMetadata(statement);

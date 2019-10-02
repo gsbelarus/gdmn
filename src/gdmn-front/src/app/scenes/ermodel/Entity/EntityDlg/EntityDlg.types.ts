@@ -4,6 +4,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "@src/app/scenes/gdmn/actions";
 import { ERModel } from "gdmn-orm";
+import {RecordSet, RSAction} from "gdmn-recordset";
 
 export interface IEntityDlgRouteProps {
   entityName: string;
@@ -19,10 +20,11 @@ export interface IEntityDlgContainerProps extends RouteComponentProps<IEntityDlg
 export interface IEntityDlgStateProps {
   erModel?: ERModel;
   viewTab?: IViewTab;
+  entities?: RecordSet;
 };
 
 export interface IEntityDlgProps extends RouteComponentProps<IEntityDlgRouteProps>, IEntityDlgStateProps {
-  dispatch: ThunkDispatch<IState, never, GdmnAction>;
+  dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction>;
   url: string;
   viewTab?: IViewTab;
   entityName?: string;
