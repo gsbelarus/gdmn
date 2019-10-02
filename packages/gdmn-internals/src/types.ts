@@ -79,3 +79,13 @@ export interface ISettingEnvelope extends ISettingData {
   _changed: Date;
   _accessed: Date;
 };
+
+export function isISettingEnvelope(data: any): data is ISettingEnvelope {
+  return (
+    isISettingData(data)
+    &&
+    (data as any)._changed instanceof Date
+    &&
+    (data as any)._accessed instanceof Date
+  )
+};
