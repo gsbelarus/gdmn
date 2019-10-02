@@ -186,8 +186,7 @@ export class AppCommandProvider {
   private static _verifyAddEntityCmd(command: ICmd<AppAction, any>): command is AddEntityCmd {
     return typeof command.payload === "object"
       && !!command.payload
-      && "entityName" in command.payload
-      && typeof command.payload.entityName === "string";
+      && typeof command.payload.name === "string";
     // TODO
   }
 
