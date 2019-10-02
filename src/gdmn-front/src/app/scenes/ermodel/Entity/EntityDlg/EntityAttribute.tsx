@@ -10,6 +10,7 @@ import { DateEditor } from "./DateEditor";
 import { BooleanEditor } from "./BooleanEditor";
 import { EntityEditor } from "./EntityEditor";
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
+import { BlobEditor } from "./BlobEditor";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute;
 type OnChange = (newAttr: Attr) => void;
@@ -42,7 +43,7 @@ const mapEditor = {
  'Date': DateEditor,
  'TimeStamp': DateEditor,
  'Time': DateEditor,
- 'Blob': DumbEditor,
+ 'Blob': BlobEditor,
  'Enum': EnumEditor
 };
 

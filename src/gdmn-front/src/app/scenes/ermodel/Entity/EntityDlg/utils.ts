@@ -51,6 +51,10 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
         ...attr,
         references: []
       } as IEntityAttribute; 
+    case 'Blob' :
+      return {
+        ...attr
+      } as IAttribute;
   }
 
   throw new Error(`Unsupported type ${type}`);
