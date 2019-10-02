@@ -205,7 +205,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   const postChanges = useCallback(async (close: boolean) => {
     if (createEntity && entityData && erModel) {
-      const result = await apiService.AddEntity({...entityData});
+      const result = await apiService.AddEntity(entityData);
 
       // FIXME: а если ошибка? ее надо как-то вывести в окне
       // например, предусмотреть для нее стейт и панель
