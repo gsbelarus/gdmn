@@ -35,6 +35,7 @@ import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingData, ISettingParams, isISettingData, ISqlPrepareResponse} from "gdmn-internals";
 import { promises } from "fs";
+import {str2SemCategories} from "gdmn-nlp";
 
 export type AppAction =
   "DEMO"
@@ -86,7 +87,7 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, parentName?: string, attributes?: IAttribute[] }>;
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
 export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
   entityName: string,
@@ -376,32 +377,26 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const {entityName, parentName, attributes} = context.command.payload;
+        const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
 
-        const getNewEntity = () => {
-          if (parentName) {
-            try {
-              return new Entity({
-                parent: this.erModel.entity(parentName),
-                name: entityName,
-                lName: {}
-              });
-            } catch (error) {
-              throw error;
-            }
-          }
-          return new Entity({
-            name: entityName,
-            lName: {}
-          });
-        };
+
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel, getNewEntity());
+              const entity = await erBuilder.create(this.erModel,
+                new Entity({
+                  parent: parent ? this.erModel.entity(parent) : undefined,
+                  name,
+                  lName,
+                  adapter,
+                  isAbstract,
+                  unique,
+                  semCategories: semCategories ? str2SemCategories(semCategories) : undefined
+                })
+              );
               if (attributes) {
                 const lengthArr = attributes.length;
                 for (let i = 0; i < lengthArr; i++) {
@@ -412,7 +407,7 @@ export class Application extends ADatabase {
             }
           })
         }));
-        return this.erModel.entity(entityName).serialize(true);
+        return this.erModel.entity(name).serialize(true);
       }
     });
     session.taskManager.add(task);

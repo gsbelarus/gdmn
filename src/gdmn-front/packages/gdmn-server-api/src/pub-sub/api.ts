@@ -171,11 +171,7 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.GET_NEXT_ID]: {
   };
-  [TTaskActionNames.ADD_ENTITY]: {
-    entityName: string;
-    parentName?: string;
-    attributes?: IAttribute[]
-  };
+  [TTaskActionNames.ADD_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: {
     entityName: string;
   };
