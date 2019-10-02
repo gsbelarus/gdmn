@@ -428,7 +428,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                   onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
                   onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }
                   onClearError={ field => dlgDispatch({ type: 'CLEAR_ERROR', attrIdx, field }) }
-                  entityNames={en}
+                  erModel={erModel}
                 />
               )
             }

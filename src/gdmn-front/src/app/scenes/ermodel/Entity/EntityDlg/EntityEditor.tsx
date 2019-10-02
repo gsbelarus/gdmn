@@ -55,7 +55,7 @@ export const EntityEditor = ({ attr, onChange, erModel }: IEntityEditorProps) =>
   const [state, setState] = useState<IEntityEditorState | undefined>();
 
   return (
-    <Frame border marginTop subTitle={state === undefined ? "Entity values:" : state.idx >= attr.references.length ? "New value:" : "Edit value:"}>
+    <Frame border marginTop>
       {
         <Stack horizontal verticalAlign="end" tokens={{ childrenGap: '8px' }}>
           {
@@ -106,7 +106,7 @@ export const EntityEditor = ({ attr, onChange, erModel }: IEntityEditorProps) =>
                     />
                 )}
                 <DefaultButton
-                  text="Add value"
+                  text="Add entity"
                   onClick={ () => setState({ idx: attr.references.length, entityName: '' }) }
                 />
               </>
