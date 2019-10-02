@@ -1,4 +1,4 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -6,28 +6,30 @@ import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
 import { NumberEditor} from "./NumberEditor"
-import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
 import { DateEditor } from "./DateEditor";
 import { BooleanEditor } from "./BooleanEditor";
+import { EntityEditor } from "./EntityEditor";
+import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
 
-type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute;
+type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
 type OnError = (fieldName: string, errorMessage: string) => void;
 type OnClearError = (fieldName: string) => void;
 
 interface IDumbEditorProps {
-  attr: IAttribute,
-  createAttribute: boolean,
-  onChange: OnChange
+  attr: IAttribute;
+  createAttribute: boolean;
+  onChange: OnChange;
   onError?: OnError;
   onClearError?: OnClearError;
+  entityNames?: string[];
 };
 
-const DumbEditor = ({ attr, createAttribute, onChange }: IDumbEditorProps) => null;
+const DumbEditor = ({ attr, createAttribute, onChange, entityNames }: IDumbEditorProps) => null;
 
 const mapEditor = {
- 'Entity': DumbEditor,
+ 'Entity': EntityEditor,
  'String': StringEditor,
  'Set': DumbEditor,
  'Parent': DumbEditor,
@@ -53,9 +55,10 @@ interface IEntityAttributeProps {
   onSelect: OnSelect;
   onError?: OnError;
   onClearError?: OnClearError;
+  entityNames?: string[];
 };
 
-export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError, entityNames }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
@@ -123,7 +126,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} />
+        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} entityNames={entityNames} />
       </Stack>
     </Frame>
   );
