@@ -1,4 +1,4 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -23,10 +23,10 @@ interface IDumbEditorProps {
   onChange: OnChange;
   onError?: OnError;
   onClearError?: OnClearError;
-  entityNames?: string[];
+  erModel?: ERModel;
 };
 
-const DumbEditor = ({ attr, createAttribute, onChange, entityNames }: IDumbEditorProps) => null;
+const DumbEditor = ({ attr, createAttribute, onChange, erModel }: IDumbEditorProps) => null;
 
 const mapEditor = {
  'Entity': EntityEditor,
@@ -55,10 +55,10 @@ interface IEntityAttributeProps {
   onSelect: OnSelect;
   onError?: OnError;
   onClearError?: OnClearError;
-  entityNames?: string[];
+  erModel?: ERModel;
 };
 
-export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError, entityNames }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
@@ -126,7 +126,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} entityNames={entityNames} />
+        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
       </Stack>
     </Frame>
   );
