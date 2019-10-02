@@ -12,7 +12,7 @@ import styles from './EntityDataView/styles.css';
 import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
-import { getCurrentSettings } from "./GetCurrentSettings";
+import { useSettings } from "@src/app/hooks/useSettings";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -23,21 +23,12 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
 
-  const userItem = localStorage.getItem(`userID/grid/entities`);
-  const localSettings = userItem ? JSON.parse(userItem) : undefined as IUserColumnsSettings | undefined;
+  const [userColumnsSettingsEntity, setUserColumnsSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
+  const [userColumnsSettingsAttr, setUserColumnsSettingsAttr] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
 
-  const userItem1 = localStorage.getItem(`userID/grid/attributes`);
-  const localSettings1 = userItem ? JSON.parse(userItem) : undefined as IUserColumnsSettings | undefined;
-
-  const columnsSettings = getCurrentSettings([{type: 'grid', objectID: 'entities', userID: '1'}, {type: 'grid', objectID: 'attributes', userID: '1'}],
-  [{type: 'grid', objectID: 'entities', ...localSettings}, {type: 'grid', objectID: 'attributes', ...localSettings1}])
-  console.log(columnsSettings);
-  const [userColumnsSettings, setUserColumnsSettings] = useState(columnsSettings ? columnsSettings : undefined);
-  console.log(userColumnsSettings ? userColumnsSettings : 'ytn');
-
-  const deleteRecord = useCallback(() => {
+  const deleteRecord = useCallback( () => {
     if (entities && entities.size) {
-      dispatch(async (dispatch, getState) => {
+      dispatch(async dispatch => {
 
         const result = await apiService.deleteEntity({
           entityName: entities.getString('name')
@@ -50,6 +41,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       });
     }
   }, [entities, viewTab]);
+
   useEffect(() => {
     if (!erModel || !Object.keys(erModel.entities).length) {
       return;
@@ -331,18 +323,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             ref={ grid => grid && (gridRefEntities.current = grid) }
             savedState={getSavedStateEntities()}
             colors={gridColors}
-            userColumnsSettings={userColumnsSettings ? userColumnsSettings.find(s => s && s.objectID === 'entities')!.data : undefined}
-            onSetUserColumnsSettings={(userSettings: IUserColumnsSettings | undefined) => {
-
-              if (!userSettings || (userSettings && Object.getOwnPropertyNames(userSettings).length == 0))
-                localStorage.removeItem(`userID/grid/entities`)
-              else
-                console.log('setItem');
-                console.log(userSettings);
-                localStorage.setItem(`userID/grid/entities`, JSON.stringify({_changed: new Date(new Date().toUTCString()), data: userSettings}));
-                setUserColumnsSettings(userColumnsSettings ? userColumnsSettings.map(s => s && s.objectID === 'entities' ? {...s, data: userSettings} : s ) : undefined);
-
-            }}
+            userColumnsSettings={userColumnsSettingsEntity}
+            onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsEntity(userSettings) }
           />
         }
       </div>
@@ -364,14 +346,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             ref={ grid => grid && (gridRefAttributes.current = grid) }
             savedState={getSavedStateAttributes()}
             colors={gridColors}
-            userColumnsSettings={userColumnsSettings ? userColumnsSettings.find(s => s && s.objectID === 'attributes')!.data : undefined}
-            onSetUserColumnsSettings={(userSettings: IUserColumnsSettings | undefined) => {
-              if (!userSettings || (userSettings && Object.getOwnPropertyNames(userSettings).length == 0))
-                localStorage.removeItem(`userID/grid/attributes`)
-              else
-                localStorage.setItem(`userID/grid/attributes`, JSON.stringify({_changed: new Date(new Date().toUTCString()), data: userSettings}));
-                setUserColumnsSettings(userColumnsSettings ? userColumnsSettings.map(s => s && s.objectID === 'attributes' ? {...s, data: userSettings} : s ) : undefined);
-            }}
+            userColumnsSettings={userColumnsSettingsAttr}
+            onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsAttr(userSettings) }
           />
         }
       </div>

@@ -30,7 +30,7 @@ import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
-import { getLName, ISettingEnvelope, isISettingData, isISettingEnvelope } from 'gdmn-internals';
+import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
 import { IDesignerSetting } from '../../designer/Designer.types';
 
@@ -717,8 +717,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   return apiService.query({ query: linkEq.inspect() })
                     .then( response => {
                       const result = response.payload.result!;
-                      const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                      const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                      const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                      const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
                         && (data.attribute === presentField!.name))![0];
                       return result.data.map( (r): IComboBoxOption => ({
                         key: r[idAlias],
@@ -900,16 +900,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           name: 'Window',
           type: 'WINDOW'
         };
-        
+
     const objects: Objects = setting ? setting.objects : [window, ...area1, ...fields];
 
   return (
     <>
       {
         designer
-          ? <DesignerContainer 
-              url={url} 
-              entityName={entityName} 
+          ? <DesignerContainer
+              url={url}
+              entityName={entityName}
               setting={setting}
               onSaveSetting={ setting => setSetting(setting) }
               onExit={ () => { setDesigner(false); } }
