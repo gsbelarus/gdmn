@@ -1,4 +1,4 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute } from "gdmn-orm";
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -45,6 +45,12 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
         ...attr,
         defaultValue: false
       } as IBooleanAttribute;
+
+    case 'Entity':
+      return {
+        ...attr,
+        references: []
+      } as IEntityAttribute; 
   }
 
   throw new Error(`Unsupported type ${type}`);
