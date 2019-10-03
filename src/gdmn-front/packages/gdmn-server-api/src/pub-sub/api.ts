@@ -228,6 +228,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
   [TTaskActionNames.SAVE_SETTING]: void;
+  [TTaskActionNames.DELETE_SETTING]: void;
 }
 
 export interface ISqlQueryResponseDataItem {
