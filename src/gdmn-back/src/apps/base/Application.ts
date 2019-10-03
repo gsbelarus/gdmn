@@ -62,7 +62,7 @@ export type AppAction =
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
-  | "EDIT_ENTITY"
+  | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
   | "SAVE_SETTING";
 
@@ -90,7 +90,7 @@ export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolea
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
 export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
-export type EditEntityCmd = AppCmd<"EDIT_ENTITY", { entityData: IEntity, deletedAttr: IAttribute }>;
+export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: IAttribute }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingEnvelope, newData: ISettingEnvelope }>;
 
@@ -443,9 +443,9 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushEditEntityCmd(session: Session,
-                           command: EditEntityCmd
-  ): Task<EditEntityCmd, void> {
+  public pushDeleteAttributeCmd(session: Session,
+                                command: DeleteAttributeCmd
+  ): Task<DeleteAttributeCmd, void> {
     const task = new Task({
       session,
       command,
@@ -455,7 +455,7 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {entityData, deletedAttr} = context.command.payload;
+        const {entityData, attrName} = context.command.payload;
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
@@ -463,7 +463,7 @@ export class Application extends ADatabase {
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
               const entity = this.erModel.entity(entityData.name);
-              const attr = EntityUtils.createAttribute(deletedAttr, entity, this.erModel, true);
+              const attr = EntityUtils.createAttribute(attrName, entity, this.erModel, true);
               await erBuilder.eBuilder.deleteAttribute(entity, attr);
             }
           })

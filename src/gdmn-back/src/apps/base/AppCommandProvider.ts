@@ -22,7 +22,7 @@ import {
   QuerySetCmd,
   AddEntityCmd,
   DeleteEntityCmd,
-  EditEntityCmd,
+  DeleteAttributeCmd,
   QuerySettingCmd,
   SaveSettingCmd,
   SqlPrepareCmd
@@ -199,7 +199,7 @@ export class AppCommandProvider {
     // TODO
   }
 
-  private static _verifyEditEntityCmd(command: ICmd<AppAction, any>): command is EditEntityCmd {
+  private static _verifyDeleteAttributeCmd(command: ICmd<AppAction, any>): command is DeleteAttributeCmd {
     return typeof command.payload === "object"
       && !!command.payload
       && instanceOfIEntity(command.payload.entityData);
@@ -345,11 +345,11 @@ export class AppCommandProvider {
         }
         return this._application.pushDeleteEntityCmd(session, command);
       }
-      case "EDIT_ENTITY": {
-        if (!AppCommandProvider._verifyEditEntityCmd(command)) {
+      case "DELETE_ATTRIBUTE": {
+        if (!AppCommandProvider._verifyDeleteAttributeCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
-        return this._application.pushEditEntityCmd(session, command);
+        return this._application.pushDeleteAttributeCmd(session, command);
       }
       case "QUERY_SETTING": {
         if (AppCommandProvider._verifyQuerySettingCmd(command)) {
@@ -371,5 +371,5 @@ export class AppCommandProvider {
 }
 
 function instanceOfIEntity(object: any): object is IEntity {
-  return 'name' in object;
+  return typeof object === "object" && "name" in object;
 }

@@ -233,14 +233,10 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         if (entities) {
           dispatch(rsActions.deleteRecordSet({ name: entities.name }));
         }
-
-        // закрывать вкладку имеет смысл, только если все прошло успешно
-        // если ошибка -- мы должны остаться на вкладке
-        if (close) {
-          deleteViewTab();
-        }
       }
     }
+    // закрывать вкладку имеет смысл, только если все прошло успешно
+    // если ошибка -- мы должны остаться на вкладке
     if (close) {
       deleteViewTab();
     }
@@ -347,7 +343,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       onClick: async () => {
         const { entityData, selectedAttr } = state;
         if (entityData && selectedAttr && entityName){
-        const result =  await apiService.editEntity({entityData, deletedAttr: entityData.attributes[selectedAttr]});
+        const result =  await apiService.deleteAttribute({entityData, attrName: entityData.attributes[selectedAttr]});
 
           if(result.error){
            //TODO инструмент с обработкой ошибок
