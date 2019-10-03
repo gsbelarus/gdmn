@@ -29,6 +29,7 @@ import {
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
+import {IEntity} from "gdmn-orm/dist/definitions/serialize";
 
 export class AppCommandProvider {
 
@@ -201,7 +202,8 @@ export class AppCommandProvider {
   private static _verifyEditEntityCmd(command: ICmd<AppAction, any>): command is EditEntityCmd {
     return typeof command.payload === "object"
       && !!command.payload
-      && "entityData" in command.payload
+      && instanceOfIEntity(command.payload.entityData);
+
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {
@@ -366,4 +368,8 @@ export class AppCommandProvider {
       }
     }
   }
+}
+
+function instanceOfIEntity(object: any): object is IEntity {
+  return 'name' in object;
 }
