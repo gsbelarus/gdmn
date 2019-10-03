@@ -1,8 +1,7 @@
-import { INumberAttribute, INumericAttribute, isINumericAttribute, entityTypeNames, IEntity, ERModel } from "gdmn-orm";
-import { Stack, Dropdown, ChoiceGroup, TextField, PrimaryButton } from "office-ui-fabric-react";
+import { entityTypeNames, ERModel } from "gdmn-orm";
+import { Stack, Dropdown, ChoiceGroup, PrimaryButton } from "office-ui-fabric-react";
 import React, { useState } from "react";
-import { getErrorMessage, ErrorLinks } from "./utils";
-import { NumberField } from "./NumberField";
+
 
 interface IEntityInitialDataProps {
   erModel: ERModel;

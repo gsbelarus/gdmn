@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useReducer, useState} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
 import { IEntity, IAttribute, Entity, EntityUtils, isIEntity } from "gdmn-orm";
-import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
+import { Stack, TextField, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
