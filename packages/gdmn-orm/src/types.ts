@@ -55,3 +55,8 @@ export interface IBaseSemOptions<Adapter = any> extends IBaseOptions<Adapter> {
   lName: LName;
   semCategories?: SemCategory[];
 }
+
+export const entityTypeNames = ["Simple table"
+    , "Simple tree"
+    , "Internal tree"
+    , "Inherited"];

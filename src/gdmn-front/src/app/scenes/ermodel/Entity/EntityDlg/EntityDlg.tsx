@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useReducer} from "react";
+import React, {useCallback, useEffect, useReducer, useState} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
 import { IEntity, IAttribute, Entity, EntityUtils, isIEntity } from "gdmn-orm";
@@ -11,6 +11,7 @@ import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
 import { rsActions } from "gdmn-recordset";
+import { EntityInitialData } from "./EntityInitialData";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -197,6 +198,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [] });
   const [MessageBox, messageBox] = useMessageBox();
   const { entityData, changed, selectedAttr, errorLinks } = state;
+  const [entityType, setEntityType] = useState();
 
   const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
     viewTabURL: url,
@@ -327,7 +329,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     },
     {
       key: 'addAttr',
-      disabled: false,
+      disabled: !entityType,
       text: 'Добавить атрибут',
       iconProps: {
         iconName: 'Add'
@@ -364,55 +366,53 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       <MessageBox />
       <Frame scroll height='calc(100% - 42px)'>
         <Frame border marginLeft marginRight>
-          <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
-            <Stack.Item>
-              <TextField
-                label="Name:"
-                value={entityData.name}
-                errorMessage={getErrorMessage('entityName', errorLinks)}
-                readOnly={!createEntity}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
-                styles={{
-                  root: {
-                    width: '240px'
-                  }
-                }}
-              />
-            </Stack.Item>
-            <Stack.Item>
-              <Dropdown
-                label="Parent:"
-                options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
-                selectedKey={entityData.parent}
-                disabled={!createEntity}
-                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
-                styles={{
-                  root: {
-                    width: '240px'
-                  }
-                }}
-              />
-            </Stack.Item>
-            <Stack.Item>
-              <TextField
-                label="Semantic categories:"
-                value={entityData.semCategories}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
-                styles={{
-                  root: {
-                    width: '240px'
-                  }
-                }}
-              />
-            </Stack.Item>
-            <Stack.Item grow={1}>
-              <TextField
-                label="Description:"
-                value={getLName(entityData.lName, ['ru'])}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
-              />
-            </Stack.Item>
-          </Stack>
+          {!entityType
+            ?
+            <EntityInitialData
+              erModel={erModel}
+              createEntity={createEntity}
+              onSetType={(entityType: string, parent?: string) => {
+                setEntityType(entityType)
+                parent && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: {...entityData, parent}});
+              }}
+            />
+            :
+            <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
+              <Stack.Item>
+                <TextField
+                  label="Name:"
+                  value={entityData.name}
+                  errorMessage={getErrorMessage('entityName', errorLinks)}
+                  readOnly={!createEntity}
+                  onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
+                  styles={{
+                    root: {
+                      width: '240px'
+                    }
+                  }}
+                />
+              </Stack.Item>
+              <Stack.Item>
+                <TextField
+                  label="Semantic categories:"
+                  value={entityData.semCategories}
+                  onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
+                  styles={{
+                    root: {
+                      width: '240px'
+                    }
+                  }}
+                />
+              </Stack.Item>
+              <Stack.Item grow={1}>
+                <TextField
+                  label="Description:"
+                  value={getLName(entityData.lName, ['ru'])}
+                  onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
+                />
+              </Stack.Item>
+            </Stack>
+          }
         </Frame>
         <Frame marginTop marginLeft marginRight>
           <Stack>
