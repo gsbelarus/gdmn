@@ -50,7 +50,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
       return {
         ...attr,
         references: []
-      } as IEntityAttribute; 
+      } as IEntityAttribute;
     case 'Blob' :
       return {
         ...attr
@@ -69,7 +69,9 @@ export interface IErrorLink {
 
 export type ErrorLinks = IErrorLink[];
 
-export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) => {
+export type EntityType = 'SIMPLE' | 'TREE' | 'LBRBTREE' | 'INHERITED';
+
+export const validateAttributes = (entity: IEntity, requiredEntityType: EntityType, prevErrorLinks: ErrorLinks) => {
   const errorLinks = entity.attributes.reduce(
     (p, attr, attrIdx) => {
       if (!attr.name) {
@@ -177,6 +179,14 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
     errorLinks.push({
       field: 'entityName',
       message: "Name can't be empty",
+      internal: false
+    });
+  }
+
+  if (!entity.parent && requiredEntityType === 'INHERITED') {
+    errorLinks.push({
+      field: 'entityParent',
+      message: "Enter ancestor entity",
       internal: false
     });
   }
