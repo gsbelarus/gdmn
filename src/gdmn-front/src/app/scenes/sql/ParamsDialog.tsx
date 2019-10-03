@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   Dialog,
   mergeStyleSets,
@@ -9,6 +9,8 @@ import {
   TextField,
   Stack,
   DefaultButton,
+  Checkbox,
+  Label,
 } from 'office-ui-fabric-react';
 import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
 import { TFieldType } from 'gdmn-recordset';
@@ -85,6 +87,18 @@ export const ParamsDialog = (props: ISQLFormProps) => {
     setParamList(params);
   }, [params])
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    switch (e.key) {
+      case 'Enter':
+          onSave(paramList);
+        break;
+      default:
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+  }
+
   return (
     <Dialog
       minWidth="70vh"
@@ -101,12 +115,16 @@ export const ParamsDialog = (props: ISQLFormProps) => {
         isBlocking: false
       }}
     >
-      <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: "65vh" } }}>
+      <Stack tokens={{ childrenGap: 15 }} styles={{ root: { width: "65vh" } }} onKeyDown={handleKeyDown}>
         {paramList.map(i => {
           switch (i.type) {
             case TFieldType.Integer:
-              return <TextField label={`${i.name} (${i.type})`} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>;
-              break;
+              return (
+              <>
+                <Label>{i.name}</Label>
+                <Checkbox label="NULL" />
+                <TextField key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*" styles={{ fieldGroup: { width: 300 } }}/>
+              </>);
             case TFieldType.Date:
               return <DatePicker
                 label={i.name}
@@ -119,9 +137,13 @@ export const ParamsDialog = (props: ISQLFormProps) => {
                 key={i.name}
                 onSelectDate={(date) => handleSelectDate(date, i.name)}
               />
-              break;
-            default:
-              return <TextField label={`${i.name} (${i.type})`} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
+            default:              
+              return (
+                <Stack tokens={{ childrenGap: 15 }} styles={{ root: { width: "65vh" } }} onKeyDown={handleKeyDown} horizontal>
+                  <Label>{i.name}</Label>
+                  <Checkbox label="NULL" />                  
+                  <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
+                </Stack>);
           }
         })}
       </Stack>
