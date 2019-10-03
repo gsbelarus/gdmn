@@ -65,8 +65,8 @@ import {
   TQuerySettingTaskCmdResult,
   TEditEntityTaskCmdResult,
   TSqlPrepareTaskCmdResult,
-  TSaveSettingTaskCmd,
-  TSaveSettingTaskCmdResult
+  TSaveSettingTaskCmdResult,
+  TDeleteSettingTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -444,6 +444,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.SAVE_SETTING,
+        payload
+      }
+    });
+  }
+
+  public deleteSetting(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE_SETTING]): Promise<TDeleteSettingTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.DELETE_SETTING,
         payload
       }
     });

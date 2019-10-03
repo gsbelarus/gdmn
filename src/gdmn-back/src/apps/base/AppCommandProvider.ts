@@ -25,6 +25,7 @@ import {
   EditEntityCmd,
   QuerySettingCmd,
   SaveSettingCmd,
+  DeleteSettingCmd,
   SqlPrepareCmd
 } from "./Application";
 import {Session} from "./session/Session";
@@ -214,6 +215,10 @@ export class AppCommandProvider {
     return command.payload instanceof Object && command.payload.newData instanceof Object;
   }
 
+  private static _verifyDeleteSettingCmd(command: ICmd<AppAction, any>): command is DeleteSettingCmd {
+    return command.payload instanceof Object && command.payload.data instanceof Object;
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -360,6 +365,12 @@ export class AppCommandProvider {
       case "SAVE_SETTING": {
         if (AppCommandProvider._verifySaveSettingCmd(command)) {
           return this._application.pushSaveSettingCmd(session, command);
+        }
+        throw new Error(`Incorrect ${command.action} command`);
+      }
+      case "DELETE_SETTING": {
+        if (AppCommandProvider._verifyDeleteSettingCmd(command)) {
+          return this._application.pushDeleteSettingCmd(session, command);
         }
         throw new Error(`Incorrect ${command.action} command`);
       }

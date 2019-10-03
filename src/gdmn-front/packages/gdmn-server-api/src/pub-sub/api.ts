@@ -70,7 +70,8 @@ export const enum TTaskActionNames {
   DELETE_ENTITY = 'DELETE_ENTITY',
   EDIT_ENTITY = 'EDIT_ENTITY',
   QUERY_SETTING = 'QUERY_SETTING',
-  SAVE_SETTING = 'SAVE_SETTING'
+  SAVE_SETTING = 'SAVE_SETTING',
+  DELETE_SETTING = 'DELETE_SETTING'
 }
 
 // MESSAGES DATA
@@ -182,7 +183,8 @@ export interface TTaskActionPayloadTypes {
     attributes: IAttribute[]
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
-  [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingEnvelope, newData: ISettingEnvelope};
+  [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope};
+  [TTaskActionNames.DELETE_SETTING]: {data: ISettingParams};
 }
 
 // -- TASK-RESULT

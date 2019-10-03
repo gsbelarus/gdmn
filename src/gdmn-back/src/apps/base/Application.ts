@@ -64,7 +64,8 @@ export type AppAction =
   | "DELETE_ENTITY"
   | "EDIT_ENTITY"
   | "QUERY_SETTING"
-  | "SAVE_SETTING";
+  | "SAVE_SETTING"
+  | "DELETE_SETTING";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -98,7 +99,8 @@ export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
 }>;
 
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
-export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingEnvelope, newData: ISettingEnvelope }>;
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
+export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
 
 export class Application extends ADatabase {
 
@@ -1036,6 +1038,55 @@ export class Application extends ADatabase {
         }
         catch (e) {
           this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
+        }
+
+        await context.checkStatus();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushDeleteSettingCmd(session: Session, command: DeleteSettingCmd): Task<DeleteSettingCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const payload = context.command.payload;
+        const fileName = this._getSettingFileName(payload.data.type);
+
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
+          .then( text => JSON.parse(text) )
+          .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              this.taskLogger.log(`Read data from file ${fileName}`);
+              return arr as ISettingEnvelope[];
+            } else {
+              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
+              return undefined;
+            }
+          })
+          .catch( err => {
+            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
+            return undefined;
+          });
+        
+        const indexDeleteItem = data ? data.findIndex(item => item.objectID === payload.data.objectID) : -1;
+        
+        if( data && indexDeleteItem >= 0 ) {
+          try {
+            await promises.mkdir(path.dirname(fileName), { recursive: true });
+            const newData = [...data.slice(0, indexDeleteItem), ...data.slice(indexDeleteItem + 1)];
+            await promises.writeFile(fileName, JSON.stringify(newData, undefined, 2), { encoding: 'utf8', flag: 'w' });
+          }
+          catch (e) {
+            this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
+          }
         }
 
         await context.checkStatus();
