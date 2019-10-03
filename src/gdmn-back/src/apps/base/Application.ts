@@ -465,7 +465,6 @@ export class Application extends ADatabase {
               const entity = this.erModel.entity(entityData.name);
               const attr = EntityUtils.createAttribute(deletedAttr, entity, this.erModel, true);
               await erBuilder.eBuilder.deleteAttribute(entity, attr);
-              console.log(this.erModel.entity("TEST5").attributes)
             }
           })
         }));
