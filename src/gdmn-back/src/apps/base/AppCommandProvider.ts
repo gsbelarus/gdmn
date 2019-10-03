@@ -201,9 +201,7 @@ export class AppCommandProvider {
   private static _verifyEditEntityCmd(command: ICmd<AppAction, any>): command is EditEntityCmd {
     return typeof command.payload === "object"
       && !!command.payload
-      && "entityName" in command.payload
-      && typeof command.payload.entityName === "string";
-    // TODO
+      && "entityData" in command.payload
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {

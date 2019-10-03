@@ -176,10 +176,8 @@ export interface TTaskActionPayloadTypes {
     entityName: string;
   };
   [TTaskActionNames.EDIT_ENTITY]: {
-    entityName: string;
-    parentName?: string;
-    changedFields: IChangedFields;
-    attributes: IAttribute[]
+    entityData: IEntity;
+    deletedAttr: IAttribute;
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
   [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingEnvelope, newData: ISettingEnvelope};
@@ -223,7 +221,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_NEXT_ID]: INextId;
   [TTaskActionNames.ADD_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
-  [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
+  [TTaskActionNames.EDIT_ENTITY]: void;
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
   [TTaskActionNames.SAVE_SETTING]: void;
 }

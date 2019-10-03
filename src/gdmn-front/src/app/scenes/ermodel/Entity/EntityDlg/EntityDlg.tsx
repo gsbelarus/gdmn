@@ -241,6 +241,9 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         }
       }
     }
+    if (close) {
+      deleteViewTab();
+    }
   }, [changed, entityData, entities, createEntity, erModel]);
 
   useEffect( () => {
@@ -341,7 +344,17 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       iconProps: {
         iconName: 'Delete'
       },
-      onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
+      onClick: async () => {
+        const { entityData, selectedAttr } = state;
+        if (entityData && selectedAttr && entityName){
+        const result =  await apiService.editEntity({entityData, deletedAttr: entityData.attributes[selectedAttr]});
+
+          if(result.error){
+           //TODO инструмент с обработкой ошибок
+          }
+        }
+        dlgDispatch({type: 'DELETE_ATTR'});
+      }
     },
     {
       key: 'showAdapter',

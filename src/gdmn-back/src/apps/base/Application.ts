@@ -90,13 +90,7 @@ export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolea
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
 export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
-export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
-  entityName: string,
-  parentName?: string,
-  changedFields: { [fieldName: string]: string },
-  attributes: IAttribute[];
-}>;
-
+export type EditEntityCmd = AppCmd<"EDIT_ENTITY", { entityData: IEntity, deletedAttr: IAttribute }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingEnvelope, newData: ISettingEnvelope }>;
 
@@ -451,7 +445,7 @@ export class Application extends ADatabase {
 
   public pushEditEntityCmd(session: Session,
                            command: EditEntityCmd
-  ): Task<EditEntityCmd, { entityName: string }> {
+  ): Task<EditEntityCmd, void> {
     const task = new Task({
       session,
       command,
@@ -461,39 +455,19 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {entityName, parentName, changedFields, attributes} = context.command.payload;
+        const {entityData, deletedAttr} = context.command.payload;
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = this.erModel.entity(entityName);
-              const attr = entity.attributes;
-
-              const chfields = Object.entries(changedFields);
-              for await (const [key, value] of chfields) {
-                const result = Object.keys(attr).map((attrKey) => {
-                  return attrKey;
-                });
-                const findAttr = result.find((r) => r === key);
-
-                if (findAttr && value === "delete") {
-                  await erBuilder.eBuilder.deleteAttribute(
-                    this.erModel.entity(entityName),
-                    entity.attribute(key));
-                } else {
-                  const editAttr = attributes.find((at) => at.id === key);
-                  if (editAttr) {
-                    const newAttr = EntityUtils.createAttribute(editAttr, entity, this.erModel);
-                    await eBuilder.createAttribute(entity, newAttr);
-                  }
-                }
-              }
+              const entity = this.erModel.entity(entityData.name);
+              const attr = EntityUtils.createAttribute(deletedAttr, entity, this.erModel, true);
+              await erBuilder.eBuilder.deleteAttribute(entity, attr);
             }
           })
         }));
-        return {entityName};
       }
     });
     session.taskManager.add(task);
