@@ -73,7 +73,7 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     type: 'WINDOW'
   };
 
-  const area1: IArea = {
+  const area: IArea = {
     name: 'Area1',
     type: 'AREA',
     parent: 'Window',
@@ -83,14 +83,14 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     bottom: 0
   };
 
-  const image1: IImage = {
+  const image: IImage = {
     name: 'Image1',
     type: 'IMAGE',
     parent: 'Area1',
     url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
   };
 
-  const fields1: IField[] = entity
+  const fields: IField[] = entity
     ? Object.entries(entity.attributes).map(
       ([name, attr]) => ({
         type: 'FIELD',
@@ -102,7 +102,7 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     )
     : [];
 
-  const objects: Objects = [window, area1, image1, ...fields1];
+  const objects: Objects = [window, area, image, ...fields];
 
   return {
     grid: {
@@ -604,7 +604,10 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       text: 'Reset',
       iconOnly: true,
       iconProps: { iconName: 'Favicon' },
-      onClick: () => designerDispatch({ type: 'RESET' })
+      onClick: () =>  {
+        props.onDeleteSetting();
+        designerDispatch({ type: 'RESET' });
+      }
     },
     {
       key: 'close',

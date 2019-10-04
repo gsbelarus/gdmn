@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, Entity, EntityUtils, isIEntity } from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -11,6 +11,7 @@ import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
 import { rsActions } from "gdmn-recordset";
+import assert from "http-assert";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -37,12 +38,62 @@ import { rsActions } from "gdmn-recordset";
  *
  */
 
+function adjustEntityAttributes(entity: IEntity, newEntityType: GedeminEntityType): IEntity {
+  if (getGedeminEntityType(entity) === newEntityType) {
+    return entity;
+  }
+
+  const newEntity = {
+    ...entity,
+    attributes: entity.attributes.filter( attr => attr.name !== 'PARENT' && attr.name !== 'LB' && attr.name !== 'RB' )
+  };
+
+  switch (newEntityType) {
+    case 'INHERITED':
+      break;
+
+    case 'LBRBTREE':
+      newEntity.attributes = [
+        {
+          name: 'LB',
+          type: 'Integer',
+          required: true,
+          lName: { ru: { name: 'Левая граница интервала' }},
+          semCategories: ''
+        },
+        {
+          name: 'RB',
+          type: 'Integer',
+          required: true,
+          lName: { ru: { name: 'Правая граница интервала' }},
+          semCategories: ''
+        },
+        ...newEntity.attributes
+      ];
+
+    case 'TREE':
+      newEntity.attributes = [
+        {
+          name: 'PARENT',
+          type: 'Parent',
+          required: false,
+          lName: { ru: { name: 'Ссылка на родительский уровень' }},
+          semCategories: ''
+        },
+        ...newEntity.attributes
+      ];
+  }
+
+  return newEntity;
+};
+
 interface IEntityDlgState {
   initialData?: IEntity;
   entityData?: IEntity;
   changed?: boolean;
   selectedAttr?: number;
   errorLinks: ErrorLinks;
+  entityType: GedeminEntityType;
 };
 
 function isIEntityDlgState(obj: any): obj is IEntityDlgState {
@@ -55,6 +106,7 @@ type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
   | { type: 'ADD_ATTR' }
   | { type: 'DELETE_ATTR' }
+  | { type: 'SET_ENTITY_TYPE', entityType: GedeminEntityType }
   | { type: 'CLEAR_ERROR', attrIdx: number, field: string }
   | { type: 'ADD_ERROR', attrIdx: number, field: string, message: string }
   | { type: 'REVERT' };
@@ -63,8 +115,21 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
   switch (action.type) {
     case 'SET_ENTITY_DATA': {
-      const initialData = state.initialData ? state.initialData : action.entityData;
-      const entityData = action.entityData;
+      const entityData = {
+        ...action.entityData,
+        attributes: action.entityData.attributes.map(
+          attr => attr.id ? attr : { ...attr, id: Math.random().toString() }
+        )
+      };
+
+      entityData.attributes.forEach(
+        (attr1, idx1) => entityData.attributes.forEach(
+          (attr2, idx2) => console.assert(idx1 !== idx2 && attr1.id === attr2.id, `Duplicate attr ID: ${attr1.id}`)
+        )
+      );
+
+      const initialData = state.initialData ? state.initialData : entityData;
+      const entityType = getGedeminEntityType(entityData);
 
       return {
         ...state,
@@ -72,7 +137,23 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData,
         selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
         changed: JSON.stringify(initialData) !== JSON.stringify(entityData),
-        errorLinks: validateAttributes(entityData, state.errorLinks)
+        errorLinks: validateAttributes(entityData, entityType, state.errorLinks),
+        entityType
+      };
+    }
+
+    case 'SET_ENTITY_TYPE': {
+      if (!state.entityData) {
+        return state;
+      }
+
+      const entityData = adjustEntityAttributes(state.entityData, action.entityType);
+
+      return {
+        ...state,
+        entityData,
+        entityType: action.entityType,
+        errorLinks: validateAttributes(entityData, action.entityType, state.errorLinks)
       };
     }
 
@@ -116,7 +197,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         ...state,
         entityData: newEntityData,
         changed: true,
-        errorLinks: validateAttributes(newEntityData, state.errorLinks)
+        errorLinks: validateAttributes(newEntityData, state.entityType, state.errorLinks)
       };
     }
 
@@ -137,7 +218,13 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData: newEntityData,
         selectedAttr: newIdx,
         changed: true,
-        errorLinks: validateAttributes(newEntityData, state.errorLinks)
+        errorLinks: validateAttributes(
+          newEntityData,
+          state.entityType,
+          state.errorLinks.map(
+            l => l.internal && l.attrIdx !== undefined && l.attrIdx >= newIdx ? {...l, attrIdx: l.attrIdx + 1} : l
+          )
+        )
       };
     }
 
@@ -162,7 +249,13 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           ? newAttributes.length - 1
           : selectedAttr,
         changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData),
-        errorLinks: validateAttributes(newEntityData, state.errorLinks)
+        errorLinks: validateAttributes(
+          newEntityData,
+          state.entityType,
+          state.errorLinks
+            .filter( l => l.attrIdx === undefined || l.attrIdx !== selectedAttr )
+            .map( l => l.internal && l.attrIdx !== undefined && l.attrIdx > selectedAttr ? {...l, attrIdx: l.attrIdx - 1} : l )
+        )
       };
     }
 
@@ -176,7 +269,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           entityData: state.initialData,
           selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
           changed: false,
-          errorLinks: validateAttributes(state.initialData, state.errorLinks)
+          errorLinks: validateAttributes(state.initialData, getGedeminEntityType(state.initialData), state.errorLinks)
         }
       }
     }
@@ -187,16 +280,15 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
 export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const { entityName, erModel, viewTab, createEntity, dispatch, url, uniqueID, history, entities } = props;
-  const en = Object.keys(erModel!.entities);
 
   if ((createEntity && entityName) || (!createEntity && !entityName) || (createEntity && !uniqueID)) {
     throw new Error('Invalid EntityDlg props');
   }
 
   const entity = erModel && entityName && erModel.entities[entityName];
-  const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [] });
+  const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [], entityType: 'SIMPLE' });
   const [MessageBox, messageBox] = useMessageBox();
-  const { entityData, changed, selectedAttr, errorLinks } = state;
+  const { entityData, changed, selectedAttr, errorLinks, entityType } = state;
 
   const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
     viewTabURL: url,
@@ -390,10 +482,30 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             </Stack.Item>
             <Stack.Item>
               <Dropdown
+                label="Type:"
+                options={[
+                  { key: 'SIMPLE', text: 'Simple' },
+                  { key: 'TREE', text: 'Tree' },
+                  { key: 'LBRBTREE', text: 'LB-RB Tree' },
+                  { key: 'INHERITED', text: 'Inherited' }
+                ]}
+                selectedKey={entityType}
+                disabled={!createEntity}
+                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_TYPE', entityType: newValue.key as GedeminEntityType }) }
+                styles={{
+                  root: {
+                    width: '240px'
+                  }
+                }}
+              />
+            </Stack.Item>
+            <Stack.Item>
+              <Dropdown
                 label="Parent:"
                 options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
                 selectedKey={entityData.parent}
-                disabled={!createEntity}
+                errorMessage={getErrorMessage('entityParent', errorLinks)}
+                disabled={!createEntity || entityType !== 'INHERITED'}
                 onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
                 styles={{
                   root: {
@@ -428,7 +540,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             {
               entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={`${attrIdx}-${attr.type}`}
+                  key={attr.id}
                   attr={attr}
                   createAttribute={true}
                   selected={attrIdx === selectedAttr}

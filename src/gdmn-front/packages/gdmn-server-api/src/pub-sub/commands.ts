@@ -245,3 +245,9 @@ export type TQuerySettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY_S
 export type TSaveSettingTaskCmd = TTaskCmd<TTaskActionNames.SAVE_SETTING>;
 
 export type TSaveSettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.SAVE_SETTING>;
+
+//setting: delete
+
+export type TDeleteSettingTaskCmd = TTaskCmd<TTaskActionNames.DELETE_SETTING>;
+
+export type TDeleteSettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_SETTING>;

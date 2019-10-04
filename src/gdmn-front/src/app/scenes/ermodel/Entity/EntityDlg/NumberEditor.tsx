@@ -41,7 +41,7 @@ export const NumberEditor = ({ attr, errorLinks, onChange, onError, onClearError
             selectedKey={attr.scale}
             errorMessage={getErrorMessage('scale', errorLinks)}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx + 1, text: (idx + 1).toString() }) ) }
-            onChanged={ newValue => onChange({ ...attr, scale: newValue.key as number }) }
+            onChange={ (_, newValue) => newValue && onChange({ ...attr, scale: newValue.key as number }) }
             styles={{
               root: {
                 width: '180px'
@@ -53,7 +53,7 @@ export const NumberEditor = ({ attr, errorLinks, onChange, onError, onClearError
             selectedKey={attr.precision}
             errorMessage={getErrorMessage('precision', errorLinks)}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx, text: idx.toString() }) ).filter( i => i.key <= attr.scale ) }
-            onChanged={ newValue => onChange({ ...attr, precision: newValue.key as number }) }
+            onChange={ (_, newValue) => newValue && onChange({ ...attr, precision: newValue.key as number }) }
             styles={{
               root: {
                 width: '180px'
