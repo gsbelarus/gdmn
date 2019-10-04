@@ -14,6 +14,8 @@ export type AttributeDateTimeTypes = "Date"
   | "TimeStamp"
   | "Time";
 
+export type BlobSubTypes = "Text" | "Binary"
+
 export type AttributeTypes = AttributeDateTimeTypes
   | "Entity"
   | "String"

@@ -19,7 +19,7 @@ import {TimeStampAttribute} from "./model/scalar/number/TimeStampAttribute";
 import {SequenceAttribute} from "./model/scalar/SequenceAttribute";
 import {StringAttribute} from "./model/scalar/StringAttribute";
 import {Sequence} from "./model/Sequence";
-import {AttributeTypes, ContextVariables, IEnumValue} from "./types";
+import {AttributeTypes, ContextVariables, IEnumValue, BlobSubTypes} from "./types";
 
 export interface IAttribute {
   name: string;
@@ -70,6 +70,9 @@ export interface IStringAttribute extends IAttribute {
   autoTrim: boolean;
 }
 
+export interface IBlobAttribute extends IAttribute {
+  subType: BlobSubTypes;
+}
 export interface IEntityAttribute extends IAttribute {
   references: string[];
 }
@@ -249,7 +252,8 @@ export function deserializeERModel(serialized: IERModel, withAdapter?: boolean):
       }
 
       case "Blob": {
-        return new BlobAttribute({name, lName, required, semCategories, adapter});
+        const {subType} = _attr as IBlobAttribute;
+        return new BlobAttribute({name, lName, required, subType, semCategories, adapter});
       }
 
       case "Enum": {
