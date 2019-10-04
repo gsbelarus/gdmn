@@ -1061,8 +1061,8 @@ export class Application extends ADatabase {
         const fileName = this._getSettingFileName(payload.data.type);
 
         let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
-          .then( text => JSON.parse(text) )
-          .then( arr => {
+        .then( text => JSON.parse(text) )
+        .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
               this.taskLogger.log(`Read data from file ${fileName}`);
               return arr as ISettingEnvelope[];
@@ -1076,12 +1076,14 @@ export class Application extends ADatabase {
             return undefined;
           });
         
-        const indexDeleteItem = data ? data.findIndex(item => item.objectID === payload.data.objectID) : -1;
-        
-        if( data && indexDeleteItem >= 0 ) {
+        // мы исходим из оптимистичного сценария
+        // раз с клиента нам пришла команда на удаление объекта
+        // с некоторым ИД, то такой объект СКОРЕЕ ВСЕГО есть в файле  
+        const newData = data && data.filter( item => item.objectID !== payload.data.objectID );  
+
+        if( data && newData && data.length > newData.length ) {
           try {
             await promises.mkdir(path.dirname(fileName), { recursive: true });
-            const newData = [...data.slice(0, indexDeleteItem), ...data.slice(indexDeleteItem + 1)];
             await promises.writeFile(fileName, JSON.stringify(newData, undefined, 2), { encoding: 'utf8', flag: 'w' });
           }
           catch (e) {

@@ -30,6 +30,7 @@ import {
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
+import { isISettingData, isISettingEnvelope } from 'gdmn-internals';
 
 export class AppCommandProvider {
 
@@ -208,15 +209,19 @@ export class AppCommandProvider {
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {
-    return command.payload instanceof Object && Array.isArray(command.payload.query) && command.payload.query.length;
+    return command.payload instanceof Object && Array.isArray(command.payload.query)
+      && command.payload.query.length && isISettingData(command.payload.query[0]);
   }
 
   private static _verifySaveSettingCmd(command: ICmd<AppAction, any>): command is SaveSettingCmd {
-    return command.payload instanceof Object && command.payload.newData instanceof Object;
+    return command.payload instanceof Object && command.payload.newData instanceof Object
+      && isISettingEnvelope(command.payload.newData);
   }
 
   private static _verifyDeleteSettingCmd(command: ICmd<AppAction, any>): command is DeleteSettingCmd {
-    return command.payload instanceof Object && command.payload.data instanceof Object;
+    return command.payload instanceof Object 
+      && command.payload.data instanceof Object
+      && isISettingData(command.payload.data);
   }
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
