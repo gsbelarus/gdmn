@@ -78,8 +78,6 @@ export class DomainResolver {
           return `BLOB`;
         }
       }
-      default:
-        return `BLOB SUB_TYPE TEXT`;
     }
   }
 
