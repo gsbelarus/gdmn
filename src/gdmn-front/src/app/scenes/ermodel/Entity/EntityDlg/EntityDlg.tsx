@@ -118,7 +118,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       const entityData = {
         ...action.entityData,
         attributes: action.entityData.attributes.map(
-          attr => attr.id ? attr : { ...attr, id: Math.random().toString() }
+          attr => attr.id ? attr : { ...attr, id: 'temp-' + Math.random().toString() }
         )
       };
 
@@ -288,7 +288,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const entity = erModel && entityName && erModel.entities[entityName];
   const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [], entityType: 'SIMPLE' });
   const [MessageBox, messageBox] = useMessageBox();
-  const { entityData, changed, selectedAttr, errorLinks, entityType } = state;
+  const { entityData, changed, selectedAttr, errorLinks, entityType, initialData } = state;
 
   const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
     viewTabURL: url,
@@ -297,42 +297,71 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }))};
 
   const postChanges = useCallback(async (close: boolean) => {
-    if (createEntity && entityData && erModel) {
-      const result = await apiService.AddEntity(entityData);
 
-      // FIXME: а если ошибка? ее надо как-то вывести в окне
-      // например, предусмотреть для нее стейт и панель
-
-      if (!result.error && isIEntity(result.payload.result)) {
-        const iEntity = result.payload.result as IEntity;
-
-        const entity = new Entity({
-          name: iEntity.name,
-          lName: iEntity.lName,
-          parent: iEntity.parent ? erModel.entity(iEntity.parent) : undefined,
-          isAbstract: iEntity.isAbstract,
-          semCategories: str2SemCategories(iEntity.semCategories),
-          adapter: iEntity.adapter,
-          unique: iEntity.unique
+    if (entityData && erModel) {
+      if (createEntity) {
+        // временные ID атрибутов надо убрать перед отсылкой на сервер!
+        const result = await apiService.AddEntity({
+          ...entityData,
+          attributes: entityData.attributes.map( attr => attr.name.substring(0, 5) === 'temp-' ? {...attr, id: undefined} : attr )
         });
-        iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
 
-        // FIXME: так а где собственно добавление новой entity в ERModel?
+        // FIXME: а если ошибка? ее надо как-то вывести в окне
+        // например, предусмотреть для нее стейт и панель
 
-        // entities -- recordset, который нужен нам только для отображения
-        // erModel в гриде на соответствующей вкладке.
-        // просто удалим его. он пересоздастся, когда будет надо.
-        if (entities) {
-          dispatch(rsActions.deleteRecordSet({ name: entities.name }));
+        if (!result.error && isIEntity(result.payload.result)) {
+          const iEntity = result.payload.result as IEntity;
+
+          const entity = new Entity({
+            name: iEntity.name,
+            lName: iEntity.lName,
+            parent: iEntity.parent ? erModel.entity(iEntity.parent) : undefined,
+            isAbstract: iEntity.isAbstract,
+            semCategories: str2SemCategories(iEntity.semCategories),
+            adapter: iEntity.adapter,
+            unique: iEntity.unique
+          });
+          iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
+
+          // FIXME: так а где собственно добавление новой entity в ERModel?
+
+          // entities -- recordset, который нужен нам только для отображения
+          // erModel в гриде на соответствующей вкладке.
+          // просто удалим его. он пересоздастся, когда будет надо.
+          if (entities) {
+            dispatch(rsActions.deleteRecordSet({ name: entities.name }));
+          }
+
+          // закрывать вкладку имеет смысл, только если все прошло успешно
+          // если ошибка -- мы должны остаться на вкладке
+          if (close) {
+            deleteViewTab();
+          }
+        }
+      }
+      else if (initialData) {
+        // TODO: мы никак пока не отображаем ошибки при удалении атрибута
+        // TODO: после удаления атрибута надо обновить ERModel
+
+        const r = initialData.attributes.every( async attr => {
+          if (!entityData.attributes.find( attr2 => attr2.name === attr.name )) {
+            const result = await apiService.deleteAttribute({
+              entityData: initialData,
+              attrName: attr.name
+            });
+
+            return !result.error;
+          } else {
+            return true;
+          }
+        });
+
+        if (r && close) {
+          deleteViewTab();
         }
       }
     }
-    // закрывать вкладку имеет смысл, только если все прошло успешно
-    // если ошибка -- мы должны остаться на вкладке
-    if (close) {
-      deleteViewTab();
-    }
-  }, [changed, entityData, entities, createEntity, erModel]);
+  }, [changed, entityData, entities, createEntity, erModel, initialData]);
 
   useEffect( () => {
     if (!viewTab) {
@@ -432,17 +461,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       iconProps: {
         iconName: 'Delete'
       },
-      onClick: async () => {
-        const { entityData, selectedAttr } = state;
-        if (entityData && selectedAttr && entityName){
-        const result =  await apiService.deleteAttribute({entityData, attrName: entityData.attributes[selectedAttr].name});
-
-          if(result.error){
-           //TODO инструмент с обработкой ошибок
-          }
-        }
-        dlgDispatch({type: 'DELETE_ATTR'});
-      }
+      onClick: async () => dlgDispatch({type: 'DELETE_ATTR'})
     },
     {
       key: 'showAdapter',

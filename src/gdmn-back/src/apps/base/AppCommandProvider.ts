@@ -194,18 +194,14 @@ export class AppCommandProvider {
   }
 
   private static _verifyDeleteEntityCmd(command: ICmd<AppAction, any>): command is DeleteEntityCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "entityName" in command.payload
+    return command.payload instanceof Object
       && typeof command.payload.entityName === "string";
     // TODO
   }
 
   private static _verifyDeleteAttributeCmd(command: ICmd<AppAction, any>): command is DeleteAttributeCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
+    return command.payload instanceof Object
       && instanceOfIEntity(command.payload.entityData);
-
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {

@@ -1,5 +1,5 @@
 import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute,
-  IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute, GedeminEntityType } from "gdmn-orm";
+  IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute, GedeminEntityType, ERModel } from "gdmn-orm";
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -8,7 +8,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
     lName: prevAttr && prevAttr.lName ? prevAttr.lName : { ru: { name: 'Описание' }},
     required: prevAttr ? prevAttr.required : false,
     semCategories: prevAttr ? prevAttr.semCategories : '',
-    id: prevAttr && prevAttr.id ? prevAttr.id : Math.random().toString()
+    id: prevAttr && prevAttr.id ? prevAttr.id : ('temp-' + Math.random().toString())
   };
 
   switch (type) {
@@ -190,6 +190,36 @@ export const validateAttributes = (entity: IEntity, requiredEntityType: GedeminE
       internal: false
     });
   }
+
+  // check for duplicate names
+  entity.attributes.forEach(
+    (attr1, idx1) => entity.attributes.forEach(
+      (attr2, idx2) => {
+        if (idx1 !== idx2 && attr1.name && attr1.name === attr2.name) {
+          errorLinks.push({
+            attrIdx: idx1,
+            field: 'name',
+            message: 'Duplicate attribute name',
+            internal: false
+          });
+        }
+      }
+    )
+  );
+
+  /*
+  const entityName = erModel ? Object.keys(erModel.entities) : undefined;
+
+  if(entityName) {
+    if(entityName.find(item => item === entity.name)) {
+      errorLinks.push({
+        field: 'entityName',
+        message: 'Duplicated entity name',
+        internal: false
+      });
+    }
+  }
+  */
 
   return errorLinks;
 };

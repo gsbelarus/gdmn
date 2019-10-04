@@ -11,7 +11,7 @@
     "clean": "shx rm -rf ./dist",
     "rebuild": "yarn clean && yarn build",
     "download-data": "ts-node ./src/util/downloadData.ts",
-    "-postinstall": "yarn download-data"
+    "postinstall": "yarn download-data"
   },
   "keywords": [],
   "author": "",
