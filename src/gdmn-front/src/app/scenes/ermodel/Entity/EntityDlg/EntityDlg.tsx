@@ -435,7 +435,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       onClick: async () => {
         const { entityData, selectedAttr } = state;
         if (entityData && selectedAttr && entityName){
-        const result =  await apiService.deleteAttribute({entityData, attrName: entityData.attributes[selectedAttr]});
+        const result =  await apiService.deleteAttribute({entityData, attrName: entityData.attributes[selectedAttr].name);
 
           if(result.error){
            //TODO инструмент с обработкой ошибок

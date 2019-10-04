@@ -177,7 +177,7 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.DELETE_ATTRIBUTE]: {
     entityData: IEntity;
-    attrName: IAttribute;
+    attrName: string;
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
   [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope};

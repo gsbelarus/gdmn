@@ -91,7 +91,7 @@ export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolea
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
 export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
-export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: IAttribute }>;
+export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: string }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
 export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
@@ -465,8 +465,8 @@ export class Application extends ADatabase {
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
               const entity = this.erModel.entity(entityData.name);
-              const attr = EntityUtils.createAttribute(attrName, entity, this.erModel, true);
-              await erBuilder.eBuilder.deleteAttribute(entity, attr);
+              const attribute = entity.attribute(attrName);
+              await erBuilder.eBuilder.deleteAttribute(entity, attribute);
             }
           })
         }));
