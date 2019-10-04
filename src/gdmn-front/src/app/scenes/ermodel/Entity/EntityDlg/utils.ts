@@ -1,6 +1,9 @@
 import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute,
   IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute, GedeminEntityType, ERModel } from "gdmn-orm";
 
+export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
+export const getTempID = () => 'temp-' + Math.random().toString();
+
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
     type,
@@ -8,7 +11,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
     lName: prevAttr && prevAttr.lName ? prevAttr.lName : { ru: { name: 'Описание' }},
     required: prevAttr ? prevAttr.required : false,
     semCategories: prevAttr ? prevAttr.semCategories : '',
-    id: prevAttr && prevAttr.id ? prevAttr.id : ('temp-' + Math.random().toString())
+    id: prevAttr && prevAttr.id ? prevAttr.id : getTempID()
   };
 
   switch (type) {

@@ -6,12 +6,11 @@ import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "of
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
-import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
+import { initAttr, ErrorLinks, validateAttributes, getErrorMessage, getTempID, isTempID } from "./utils";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
 import { rsActions } from "gdmn-recordset";
-import assert from "http-assert";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -118,7 +117,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       const entityData = {
         ...action.entityData,
         attributes: action.entityData.attributes.map(
-          attr => attr.id ? attr : { ...attr, id: 'temp-' + Math.random().toString() }
+          attr => attr.id ? attr : { ...attr, id: getTempID() }
         )
       };
 
@@ -303,7 +302,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         // временные ID атрибутов надо убрать перед отсылкой на сервер!
         const result = await apiService.AddEntity({
           ...entityData,
-          attributes: entityData.attributes.map( attr => attr.name.substring(0, 5) === 'temp-' ? {...attr, id: undefined} : attr )
+          attributes: entityData.attributes.map( attr => isTempID(attr.id) ? {...attr, id: undefined} : attr )
         });
 
         // FIXME: а если ошибка? ее надо как-то вывести в окне
