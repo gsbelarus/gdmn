@@ -1,4 +1,5 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute,
+  IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute, GedeminEntityType } from "gdmn-orm";
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -69,9 +70,7 @@ export interface IErrorLink {
 
 export type ErrorLinks = IErrorLink[];
 
-export type EntityType = 'SIMPLE' | 'TREE' | 'LBRBTREE' | 'INHERITED';
-
-export const validateAttributes = (entity: IEntity, requiredEntityType: EntityType, prevErrorLinks: ErrorLinks) => {
+export const validateAttributes = (entity: IEntity, requiredEntityType: GedeminEntityType, prevErrorLinks: ErrorLinks) => {
   const errorLinks = entity.attributes.reduce(
     (p, attr, attrIdx) => {
       if (!attr.name) {

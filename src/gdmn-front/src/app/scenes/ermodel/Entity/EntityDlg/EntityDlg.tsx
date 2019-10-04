@@ -1,12 +1,12 @@
 import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, Entity, EntityUtils, isIEntity } from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
-import { initAttr, ErrorLinks, validateAttributes, getErrorMessage, EntityType } from "./utils";
+import { initAttr, ErrorLinks, validateAttributes, getErrorMessage } from "./utils";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
@@ -37,24 +37,8 @@ import { rsActions } from "gdmn-recordset";
  *
  */
 
-function getEntityType(entity: IEntity): EntityType {
-  if (entity.parent) {
-    return 'INHERITED';
-  }
-
-  if (entity.attributes.find( attr => attr.name === 'PARENT' )) {
-    if (entity.attributes.find( attr => attr.name === 'LB' ) && entity.attributes.find( attr => attr.name === 'RB' )) {
-      return 'LBRBTREE';
-    } else {
-      return 'TREE';
-    }
-  }
-
-  return 'SIMPLE';
-};
-
-function adjustEntityAttributes(entity: IEntity, newEntityType: EntityType): IEntity {
-  if (getEntityType(entity) === newEntityType) {
+function adjustEntityAttributes(entity: IEntity, newEntityType: GedeminEntityType): IEntity {
+  if (getGedeminEntityType(entity) === newEntityType) {
     return entity;
   }
 
@@ -108,7 +92,7 @@ interface IEntityDlgState {
   changed?: boolean;
   selectedAttr?: number;
   errorLinks: ErrorLinks;
-  entityType: EntityType;
+  entityType: GedeminEntityType;
 };
 
 function isIEntityDlgState(obj: any): obj is IEntityDlgState {
@@ -121,7 +105,7 @@ type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
   | { type: 'ADD_ATTR' }
   | { type: 'DELETE_ATTR' }
-  | { type: 'SET_ENTITY_TYPE', entityType: EntityType }
+  | { type: 'SET_ENTITY_TYPE', entityType: GedeminEntityType }
   | { type: 'CLEAR_ERROR', attrIdx: number, field: string }
   | { type: 'ADD_ERROR', attrIdx: number, field: string, message: string }
   | { type: 'REVERT' };
@@ -132,7 +116,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     case 'SET_ENTITY_DATA': {
       const initialData = state.initialData ? state.initialData : action.entityData;
       const entityData = action.entityData;
-      const entityType = getEntityType(entityData);
+      const entityType = getGedeminEntityType(entityData);
 
       return {
         ...state,
@@ -260,7 +244,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           entityData: state.initialData,
           selectedAttr: state.initialData && state.initialData.attributes && state.initialData.attributes.length ? 0 : undefined,
           changed: false,
-          errorLinks: validateAttributes(state.initialData, getEntityType(state.initialData), state.errorLinks)
+          errorLinks: validateAttributes(state.initialData, getGedeminEntityType(state.initialData), state.errorLinks)
         }
       }
     }
@@ -473,7 +457,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 ]}
                 selectedKey={entityType}
                 disabled={!createEntity}
-                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_TYPE', entityType: newValue.key as EntityType }) }
+                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_TYPE', entityType: newValue.key as GedeminEntityType }) }
                 styles={{
                   root: {
                     width: '240px'
