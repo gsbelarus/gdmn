@@ -63,7 +63,7 @@ import {
   TAddEntityTaskCmdResult,
   TDeleteEntityTaskCmdResult,
   TQuerySettingTaskCmdResult,
-  TEditEntityTaskCmdResult,
+  TDeleteAttributeTaskCmdResult,
   TSqlPrepareTaskCmdResult,
   TSaveSettingTaskCmdResult,
   TDeleteSettingTaskCmdResult
@@ -422,10 +422,10 @@ export class GdmnPubSubApi {
     });
   }
 
-  public editEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.EDIT_ENTITY]): Promise<TEditEntityTaskCmdResult> {
+  public deleteAttribute(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE_ATTRIBUTE]): Promise<TDeleteAttributeTaskCmdResult> {
     return this.runTaskRequestCmd({
       payload: {
-        action: TTaskActionNames.EDIT_ENTITY,
+        action: TTaskActionNames.DELETE_ATTRIBUTE,
         payload
       }
     });

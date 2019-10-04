@@ -325,13 +325,12 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         if (entities) {
           dispatch(rsActions.deleteRecordSet({ name: entities.name }));
         }
-
-        // закрывать вкладку имеет смысл, только если все прошло успешно
-        // если ошибка -- мы должны остаться на вкладке
-        if (close) {
-          deleteViewTab();
-        }
       }
+    }
+    // закрывать вкладку имеет смысл, только если все прошло успешно
+    // если ошибка -- мы должны остаться на вкладке
+    if (close) {
+      deleteViewTab();
     }
   }, [changed, entityData, entities, createEntity, erModel]);
 
@@ -433,7 +432,17 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       iconProps: {
         iconName: 'Delete'
       },
-      onClick: () => dlgDispatch({ type: 'DELETE_ATTR' })
+      onClick: async () => {
+        const { entityData, selectedAttr } = state;
+        if (entityData && selectedAttr && entityName){
+        const result =  await apiService.deleteAttribute({entityData, attrName: entityData.attributes[selectedAttr].name});
+
+          if(result.error){
+           //TODO инструмент с обработкой ошибок
+          }
+        }
+        dlgDispatch({type: 'DELETE_ATTR'});
+      }
     },
     {
       key: 'showAdapter',

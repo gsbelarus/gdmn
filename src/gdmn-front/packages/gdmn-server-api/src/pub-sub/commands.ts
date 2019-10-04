@@ -232,9 +232,9 @@ export type TDeleteEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_
 
 // entity: edit
 
-export type TEditEntityTaskCmd = TTaskCmd<TTaskActionNames.EDIT_ENTITY>;
+export type TDeleteAttributeTaskCmd = TTaskCmd<TTaskActionNames.DELETE_ATTRIBUTE>;
 
-export type TEditEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.EDIT_ENTITY>;
+export type TDeleteAttributeTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_ATTRIBUTE>;
 
 // setting: query
 

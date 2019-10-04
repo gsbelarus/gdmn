@@ -22,7 +22,7 @@ import {
   QuerySetCmd,
   AddEntityCmd,
   DeleteEntityCmd,
-  EditEntityCmd,
+  DeleteAttributeCmd,
   QuerySettingCmd,
   SaveSettingCmd,
   DeleteSettingCmd,
@@ -31,6 +31,7 @@ import {
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
 import { isISettingData, isISettingEnvelope } from 'gdmn-internals';
+import {IEntity} from "gdmn-orm/dist/definitions/serialize";
 
 export class AppCommandProvider {
 
@@ -200,12 +201,11 @@ export class AppCommandProvider {
     // TODO
   }
 
-  private static _verifyEditEntityCmd(command: ICmd<AppAction, any>): command is EditEntityCmd {
+  private static _verifyDeleteAttributeCmd(command: ICmd<AppAction, any>): command is DeleteAttributeCmd {
     return typeof command.payload === "object"
       && !!command.payload
-      && "entityName" in command.payload
-      && typeof command.payload.entityName === "string";
-    // TODO
+      && instanceOfIEntity(command.payload.entityData);
+
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {
@@ -219,7 +219,7 @@ export class AppCommandProvider {
   }
 
   private static _verifyDeleteSettingCmd(command: ICmd<AppAction, any>): command is DeleteSettingCmd {
-    return command.payload instanceof Object 
+    return command.payload instanceof Object
       && command.payload.data instanceof Object
       && isISettingData(command.payload.data);
   }
@@ -355,11 +355,11 @@ export class AppCommandProvider {
         }
         return this._application.pushDeleteEntityCmd(session, command);
       }
-      case "EDIT_ENTITY": {
-        if (!AppCommandProvider._verifyEditEntityCmd(command)) {
+      case "DELETE_ATTRIBUTE": {
+        if (!AppCommandProvider._verifyDeleteAttributeCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
-        return this._application.pushEditEntityCmd(session, command);
+        return this._application.pushDeleteAttributeCmd(session, command);
       }
       case "QUERY_SETTING": {
         if (AppCommandProvider._verifyQuerySettingCmd(command)) {
@@ -384,4 +384,8 @@ export class AppCommandProvider {
       }
     }
   }
+}
+
+function instanceOfIEntity(object: any): object is IEntity {
+  return typeof object === "object" && "name" in object;
 }
