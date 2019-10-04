@@ -72,7 +72,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             value={attr.name}
             disabled={!createAttribute}
             errorMessage={getErrorMessage('name', errorLinks)}
-            autoFocus
+            autoFocus={selected}
             styles={{
               root: {
                 width: '240px'
