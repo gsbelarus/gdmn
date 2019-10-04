@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType } from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType, ERModel } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -100,7 +100,7 @@ function isIEntityDlgState(obj: any): obj is IEntityDlgState {
   return obj instanceof Object && Array.isArray(obj.errorLinks);
 };
 
-type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity }
+type Action = { type: 'SET_ENTITY_DATA', entityData: IEntity, erModel?: ERModel }
   | { type: 'SET_STATE', state: IEntityDlgState }
   | { type: 'SELECT_ATTR', selectedAttr: number }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
@@ -130,6 +130,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
       const initialData = state.initialData ? state.initialData : entityData;
       const entityType = getGedeminEntityType(entityData);
+      const erModel = action.erModel;
 
       return {
         ...state,
@@ -137,7 +138,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData,
         selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
         changed: JSON.stringify(initialData) !== JSON.stringify(entityData),
-        errorLinks: validateAttributes(entityData, entityType, state.errorLinks),
+        errorLinks: erModel ? validateAttributes(entityData, entityType, state.errorLinks, erModel): validateAttributes(entityData, entityType, state.errorLinks, erModel),
         entityType
       };
     }
@@ -450,6 +451,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     }
   ];
 
+  const attrNames = entityData.attributes.reduce( (names, item) => { return [...names, item.name] }, [] as string[] );
+
   return (
     <>
       <CommandBar items={commandBarItems} />
@@ -460,10 +463,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             <Stack.Item>
               <TextField
                 label="Name:"
-                value={entityData.name}
+                value={entityData.name.startsWith('USR$', 0) ? entityData.name.substring(4) : entityData.name}
                 errorMessage={getErrorMessage('entityName', errorLinks)}
                 readOnly={!createEntity}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
+                prefix="USR$"
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: `USR$${newValue.toUpperCase()}` }, erModel }) }
                 styles={{
                   root: {
                     width: '240px'
@@ -531,8 +535,9 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             {
               entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={attr.id}
+                  key={`${attrIdx}-${attr.type}`}
                   attr={attr}
+                  attrNames={attrNames}
                   createAttribute={true}
                   selected={attrIdx === selectedAttr}
                   errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}

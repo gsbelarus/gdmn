@@ -1,4 +1,4 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel, Attribute } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -49,6 +49,7 @@ const mapEditor = {
 
 interface IEntityAttributeProps {
   attr: Attr;
+  attrNames: string[];
   selected?: boolean;
   createAttribute: boolean;
   errorLinks?: ErrorLinks;
@@ -56,29 +57,36 @@ interface IEntityAttributeProps {
   onSelect: OnSelect;
   onError?: OnError;
   onClearError?: OnClearError;
+  entityNames?: string[];
   erModel?: ERModel;
 };
 
 export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
-
+  
   return (
     <Frame border marginBottom selected={selected} onClick={onSelect} >
       <Stack>
         <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
           <TextField
             label="Name:"
-            value={attr.name}
+            value={attr.name.startsWith('USR$', 0) ? attr.name.substring(4) : attr.name}
             disabled={!createAttribute}
             errorMessage={getErrorMessage('name', errorLinks)}
             autoFocus
+            prefix="USR$"
             styles={{
               root: {
                 width: '240px'
               }
             }}
-            onChange={ (_, name) => name !== undefined && onChange({...attr, name }) }
+            onChange={ (_, name) => {
+              if(name !== undefined) {
+                const newAttrName = `USR$${name.toUpperCase()}`
+                onChange({...attr, name: newAttrName });
+              }
+            }}
           />
           <Dropdown
             label="Type:"
