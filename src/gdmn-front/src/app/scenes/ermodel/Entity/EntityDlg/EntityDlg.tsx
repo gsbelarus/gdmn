@@ -11,6 +11,7 @@ import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
 import { rsActions } from "gdmn-recordset";
+import assert from "http-assert";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -114,8 +115,20 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
   switch (action.type) {
     case 'SET_ENTITY_DATA': {
-      const initialData = state.initialData ? state.initialData : action.entityData;
-      const entityData = action.entityData;
+      const entityData = {
+        ...action.entityData,
+        attributes: action.entityData.attributes.map(
+          attr => attr.id ? attr : { ...attr, id: Math.random().toString() }
+        )
+      };
+
+      entityData.attributes.forEach(
+        (attr1, idx1) => entityData.attributes.forEach(
+          (attr2, idx2) => console.assert(idx1 !== idx2 && attr1.id === attr2.id, `Duplicate attr ID: ${attr1.id}`)
+        )
+      );
+
+      const initialData = state.initialData ? state.initialData : entityData;
       const entityType = getGedeminEntityType(entityData);
 
       return {
@@ -205,7 +218,13 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData: newEntityData,
         selectedAttr: newIdx,
         changed: true,
-        errorLinks: validateAttributes(newEntityData, state.entityType, state.errorLinks)
+        errorLinks: validateAttributes(
+          newEntityData,
+          state.entityType,
+          state.errorLinks.map(
+            l => l.internal && l.attrIdx !== undefined && l.attrIdx >= newIdx ? {...l, attrIdx: l.attrIdx + 1} : l
+          )
+        )
       };
     }
 
@@ -230,7 +249,13 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           ? newAttributes.length - 1
           : selectedAttr,
         changed: JSON.stringify(initialData) !== JSON.stringify(newEntityData),
-        errorLinks: validateAttributes(newEntityData, state.entityType, state.errorLinks)
+        errorLinks: validateAttributes(
+          newEntityData,
+          state.entityType,
+          state.errorLinks
+            .filter( l => l.attrIdx === undefined || l.attrIdx !== selectedAttr )
+            .map( l => l.internal && l.attrIdx !== undefined && l.attrIdx > selectedAttr ? {...l, attrIdx: l.attrIdx - 1} : l )
+        )
       };
     }
 
@@ -506,7 +531,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             {
               entityData.attributes.map( (attr, attrIdx) =>
                 <EntityAttribute
-                  key={`${attrIdx}-${attr.type}`}
+                  key={attr.id}
                   attr={attr}
                   createAttribute={true}
                   selected={attrIdx === selectedAttr}

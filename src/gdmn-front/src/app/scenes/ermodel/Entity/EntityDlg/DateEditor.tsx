@@ -44,7 +44,7 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
         label="Default value type:"
         selectedKey={typeof attr.defaultValue === 'string' ? attr.defaultValue : 'VALUE'}
         options={getOptions(attr.type as AttributeDateTimeTypes)}
-        onChanged={ newValue => newValue && onChange({ ...attr, defaultValue: newValue.key === "VALUE" ? undefined : newValue.key as any}) }
+        onChange={ (_, newValue) => newValue && onChange({ ...attr, defaultValue: newValue.key === "VALUE" ? undefined : newValue.key as any}) }
         styles={{
           root: {
             width: '180px'
@@ -56,7 +56,7 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
         <TextField
           label="Default value:"
           value={attr.defaultValue}
-          disabled={true}
+          disabled
           styles={{
             root: {
               width: '180px'

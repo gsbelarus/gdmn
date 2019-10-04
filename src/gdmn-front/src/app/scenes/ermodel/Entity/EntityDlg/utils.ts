@@ -8,6 +8,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
     lName: prevAttr && prevAttr.lName ? prevAttr.lName : { ru: { name: 'Описание' }},
     required: prevAttr ? prevAttr.required : false,
     semCategories: prevAttr ? prevAttr.semCategories : '',
+    id: prevAttr && prevAttr.id ? prevAttr.id : Math.random().toString()
   };
 
   switch (type) {
