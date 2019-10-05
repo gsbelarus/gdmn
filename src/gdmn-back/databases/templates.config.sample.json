@@ -1,0 +1,22 @@
+[
+  {
+    "name": "BUSINESS.FDB",
+    "description": "Комплексная автоматизация"
+  },
+  {
+    "name": "CASH.FDB",
+    "description": "Касса"
+  },
+  {
+    "name": "DEVEL.FDB",
+    "description": "Разработчик"
+  },
+  {
+    "name": "MENUBACK.FDB",
+    "description": "Ресторан бэк-офис"
+  },
+  {
+    "name": "PLAT.FDB",
+    "description": "Платежные документы"
+  }
+]
