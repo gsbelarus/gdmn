@@ -123,7 +123,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
 
       entityData.attributes.forEach(
         (attr1, idx1) => entityData.attributes.forEach(
-          (attr2, idx2) => console.assert(idx1 !== idx2 && attr1.id === attr2.id, `Duplicate attr ID: ${attr1.id}`)
+          (attr2, idx2) => console.assert(idx1 === idx2 || (idx1 !== idx2 && attr1.id !== attr2.id), `Duplicate attr ID: ${attr1.id}`)
         )
       );
 
