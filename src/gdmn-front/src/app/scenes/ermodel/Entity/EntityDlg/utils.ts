@@ -1,4 +1,9 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
+  INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
+  IDateAttribute, IEntityAttribute, GedeminEntityType, isUserDefined } from "gdmn-orm";
+
+export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
+export const getTempID = () => 'temp-' + Math.random().toString();
 
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
@@ -7,6 +12,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
     lName: prevAttr && prevAttr.lName ? prevAttr.lName : { ru: { name: 'Описание' }},
     required: prevAttr ? prevAttr.required : false,
     semCategories: prevAttr ? prevAttr.semCategories : '',
+    id: prevAttr && prevAttr.id ? prevAttr.id : getTempID()
   };
 
   switch (type) {
@@ -50,7 +56,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
       return {
         ...attr,
         references: []
-      } as IEntityAttribute; 
+      } as IEntityAttribute;
     case 'Blob' :
       return {
         ...attr
@@ -69,7 +75,7 @@ export interface IErrorLink {
 
 export type ErrorLinks = IErrorLink[];
 
-export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) => {
+export const validateAttributes = (entity: IEntity, requiredEntityType: GedeminEntityType, prevErrorLinks: ErrorLinks) => {
   const errorLinks = entity.attributes.reduce(
     (p, attr, attrIdx) => {
       if (!attr.name) {
@@ -110,6 +116,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
           }
           break;
         }
+
         case 'String': {
           const s = attr as IStringAttribute;
           if (s.minLength !== undefined && s.minLength > 32000) {
@@ -181,6 +188,44 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
     });
   }
 
+  if (!entity.parent && requiredEntityType === 'INHERITED') {
+    errorLinks.push({
+      field: 'entityParent',
+      message: "Enter ancestor entity",
+      internal: false
+    });
+  }
+
+  // check for duplicate names
+  entity.attributes.forEach(
+    (attr1, idx1) => entity.attributes.forEach(
+      (attr2, idx2) => {
+        if (idx1 !== idx2 && attr1.name && attr1.name === attr2.name) {
+          errorLinks.push({
+            attrIdx: idx1,
+            field: 'name',
+            message: 'Duplicate attribute name',
+            internal: false
+          });
+        }
+      }
+    )
+  );
+
+  /*
+  const entityName = erModel ? Object.keys(erModel.entities) : undefined;
+
+  if(entityName) {
+    if(entityName.find(item => item === entity.name)) {
+      errorLinks.push({
+        field: 'entityName',
+        message: 'Duplicated entity name',
+        internal: false
+      });
+    }
+  }
+  */
+
   return errorLinks;
 };
 
@@ -190,4 +235,26 @@ export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
     return el && el.message;
   }
   return undefined;
+};
+
+/**
+ * Функция возвращает имя без префикса.
+ */
+export function stripUserPrefix(name: string) {
+  if (isUserDefined(name)) {
+    return name.substring(4);
+  } else {
+    return name;
+  }
+};
+
+/**
+ * Функция добавляет префикс.
+ */
+export function addUserPrefix(name: string) {
+  if (isUserDefined(name)) {
+    return name;
+  } else {
+    return 'USR$'.concat(name);
+  }
 };

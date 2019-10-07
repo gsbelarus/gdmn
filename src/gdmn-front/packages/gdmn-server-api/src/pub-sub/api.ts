@@ -15,7 +15,6 @@ import {
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
 import { ISqlQueryResponseAliases, ISettingParams, ISettingEnvelope, ISqlPrepareResponse } from 'gdmn-internals';
-import {IChangedFields} from "@src/app/scenes/ermodel/utils";
 
 export enum TGdmnTopic {
   TASK = '/task',
@@ -68,9 +67,10 @@ export const enum TTaskActionNames {
   GET_NEXT_ID = 'GET_NEXT_ID',
   ADD_ENTITY = 'ADD_ENTITY',
   DELETE_ENTITY = 'DELETE_ENTITY',
-  EDIT_ENTITY = 'EDIT_ENTITY',
+  DELETE_ATTRIBUTE = 'DELETE_ATTRIBUTE',
   QUERY_SETTING = 'QUERY_SETTING',
-  SAVE_SETTING = 'SAVE_SETTING'
+  SAVE_SETTING = 'SAVE_SETTING',
+  DELETE_SETTING = 'DELETE_SETTING'
 }
 
 // MESSAGES DATA
@@ -175,14 +175,13 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.DELETE_ENTITY]: {
     entityName: string;
   };
-  [TTaskActionNames.EDIT_ENTITY]: {
-    entityName: string;
-    parentName?: string;
-    changedFields: IChangedFields;
-    attributes: IAttribute[]
+  [TTaskActionNames.DELETE_ATTRIBUTE]: {
+    entityData: IEntity;
+    attrName: string;
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
-  [TTaskActionNames.SAVE_SETTING]: {oldData?: ISettingEnvelope, newData: ISettingEnvelope};
+  [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope};
+  [TTaskActionNames.DELETE_SETTING]: {data: ISettingParams};
 }
 
 // -- TASK-RESULT
@@ -223,9 +222,10 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_NEXT_ID]: INextId;
   [TTaskActionNames.ADD_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
-  [TTaskActionNames.EDIT_ENTITY]: IEditEntity;
+  [TTaskActionNames.DELETE_ATTRIBUTE]: void;
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
   [TTaskActionNames.SAVE_SETTING]: void;
+  [TTaskActionNames.DELETE_SETTING]: void;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -282,7 +282,7 @@ export type AppAction =
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
-  | "EDIT_ENTITY"
+  | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
   | "SAVE_SETTING";
 
@@ -299,13 +299,6 @@ export interface IAddEntity {
 
 export interface IDeleteEntity {
   entityName: string;
-}
-
-export interface IEditEntity {
-  entityName: string;
-  parentName?: string;
-  changedFields: IChangedFields;
-  attributes: IAttribute[]
 }
 
 export interface IDefinedEntity {

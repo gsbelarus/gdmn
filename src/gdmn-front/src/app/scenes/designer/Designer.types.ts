@@ -33,5 +33,6 @@ export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateP
   entityName: string;
   setting?: IDesignerSetting;
   onSaveSetting: (setting: IDesignerSetting) => void;
+  onDeleteSetting: () => void;
   onExit: () => void;
 };

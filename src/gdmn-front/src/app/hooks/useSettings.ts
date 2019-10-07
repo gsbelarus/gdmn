@@ -2,7 +2,10 @@ import { ISettingParams, isISettingEnvelope, ISettingEnvelope } from 'gdmn-inter
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 
-export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data: ST) => void] {
+/**
+ * Возвращает массив из трех элементов: данные, функция обновления и функция удаления.
+ */
+export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data: ST) => void, () => void] {
 
   const saveToLocaStorage = (se: ISettingEnvelope) => {
     localStorage.setItem(`setting/${type}/${objectID}`, JSON.stringify(se));
@@ -58,6 +61,11 @@ export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data:
       setSettingEnvelope(se);
       apiService.saveSetting({ newData: se });
       saveToLocaStorage(se);
+    },
+    () => {
+      localStorage.removeItem(`setting/${type}/${objectID}`);
+      setSettingEnvelope(undefined);
+      apiService.deleteSetting({ data: {type, objectID} });
     }
   ];
 };

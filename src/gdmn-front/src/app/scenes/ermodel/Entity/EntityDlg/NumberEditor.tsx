@@ -1,35 +1,29 @@
-import { INumberAttribute, INumericAttribute, isINumericAttribute } from "gdmn-orm";
+import { INumberAttribute, isINumericAttribute, INumericAttribute } from "gdmn-orm";
 import { Stack, Dropdown } from "office-ui-fabric-react";
 import React from "react";
-import { getErrorMessage, ErrorLinks } from "./utils";
+import { getErrorMessage } from "./utils";
 import { NumberField } from "./NumberField";
+import { IAttributeEditorProps } from "./EntityAttribute";
 
-interface INumberEditorProps {
-  attr: INumberAttribute<number> | INumericAttribute,
-  createAttribute: boolean,
-  errorLinks?: ErrorLinks;
-  onChange: (newAttr: INumberAttribute<number> | INumericAttribute) => void;
-  onError?: (field: string, message: string) => void;
-  onClearError?: (field: string) => void;
-};
-
-export const NumberEditor = ({ attr, errorLinks, onChange, onError, onClearError }: INumberEditorProps) =>
+export const NumberEditor = ({ attr, errorLinks, onChange, createAttr, userDefined, onError, onClearError }: IAttributeEditorProps<INumberAttribute<number> | INumericAttribute>) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
     <NumberField
       label="Min value:"
+      onlyInteger={attr.type === 'Integer'}
       value={attr.minValue}
+      readOnly={!userDefined}
       errorMessage={getErrorMessage('minValue', errorLinks)}
       width="180px"
-      onlyInteger={attr.type === 'Integer'}
       onChange={ minValue => { onChange({ ...attr, minValue }); onClearError && onClearError('minValue'); } }
       onInvalidValue={ () => onError && onError('minValue', 'Invalid value') }
     />
     <NumberField
       label="Max value:"
+      onlyInteger={attr.type === 'Integer'}
       value={attr.maxValue}
+      readOnly={!userDefined}
       errorMessage={getErrorMessage('maxValue', errorLinks)}
       width="180px"
-      onlyInteger={attr.type === 'Integer'}
       onChange={ maxValue => { onChange({ ...attr, maxValue }); onClearError && onClearError('maxValue'); } }
       onInvalidValue={ () => onError && onError('maxValue', 'Invalid value') }
     />
@@ -39,26 +33,30 @@ export const NumberEditor = ({ attr, errorLinks, onChange, onError, onClearError
           <Dropdown
             label="Scale:"
             selectedKey={attr.scale}
-            errorMessage={getErrorMessage('scale', errorLinks)}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx + 1, text: (idx + 1).toString() }) ) }
-            onChanged={ newValue => onChange({ ...attr, scale: newValue.key as number }) }
+            errorMessage={getErrorMessage('scale', errorLinks)}
             styles={{
               root: {
                 width: '180px'
               }
             }}
+            onChange={
+              createAttr ? (_, newValue) => newValue && onChange({ ...attr, scale: newValue.key as number }) : undefined
+            }
           />
           <Dropdown
             label="Precision:"
             selectedKey={attr.precision}
-            errorMessage={getErrorMessage('precision', errorLinks)}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx, text: idx.toString() }) ).filter( i => i.key <= attr.scale ) }
-            onChanged={ newValue => onChange({ ...attr, precision: newValue.key as number }) }
+            errorMessage={getErrorMessage('precision', errorLinks)}
             styles={{
               root: {
                 width: '180px'
               }
             }}
+            onChange={
+              createAttr ? (_, newValue) => newValue && onChange({ ...attr, precision: newValue.key as number }) : undefined
+            }
           />
         </>
       : null
@@ -66,9 +64,10 @@ export const NumberEditor = ({ attr, errorLinks, onChange, onError, onClearError
     <Stack.Item grow={1}>
       <NumberField
         label="Default value:"
-        value={attr.defaultValue}
-        errorMessage={getErrorMessage('defaultValue', errorLinks)}
         onlyInteger={attr.type === 'Integer'}
+        value={attr.defaultValue}
+        readOnly={!userDefined}
+        errorMessage={getErrorMessage('defaultValue', errorLinks)}
         onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
         onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }
       />

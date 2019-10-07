@@ -1,16 +1,10 @@
 import { Stack, TextField, Dropdown } from "office-ui-fabric-react";
-import React, { useState } from "react";
-import { getErrorMessage, ErrorLinks } from "./utils";
+import React from "react";
+import { getErrorMessage } from "./utils";
 import { IDateAttribute } from "gdmn-orm/dist/definitions/serialize";
-import { ContextVariables, AttributeDateTimeTypes } from "gdmn-orm";
+import { AttributeDateTimeTypes, isUserDefined } from "gdmn-orm";
 import { DateField } from "./DateField";
-
-interface IDateEditorProps {
-  attr: IDateAttribute,
-  createAttribute: boolean,
-  errorLinks?: ErrorLinks;
-  onChange: (newAttr: IDateAttribute) => void
-};
+import { IAttributeEditorProps } from "./EntityAttribute";
 
 const getOptions = (type: AttributeDateTimeTypes) => {
   switch (type) {
@@ -21,62 +15,60 @@ const getOptions = (type: AttributeDateTimeTypes) => {
     case 'TimeStamp':
       return [{key: "VALUE", text: "Enter value..." }, {key: "CURRENT_TIMESTAMP", text: "CURRENT_TIMESTAMP"}, {key: "CURRENT_TIMESTAMP(0)", text: "CURRENT_TIMESTAMP(0)"}];
   }
-}
+};
 
-export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => {
-
-  const options = getOptions(attr.type as AttributeDateTimeTypes);
-  const [selectedOption, setSelectedOption] = useState("VALUE" as string | undefined);
-
+export const DateEditor = ({ attr, userDefined, errorLinks, onChange }: IAttributeEditorProps<IDateAttribute>) => {
   return (
     <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
       <DateField
-        dateFieldType={attr.type as any}
+        dateFieldType={attr.type as AttributeDateTimeTypes}
         label="Min value:"
-        value={attr.minValue as Date}
+        value={attr.minValue}
+        readOnly={!userDefined}
         errorMessage={getErrorMessage('minValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, minValue: newValue}) }
       />
       <DateField
-        dateFieldType={attr.type as any}
+        dateFieldType={attr.type as AttributeDateTimeTypes}
         label="Max value:"
-        value={attr.maxValue as Date}
+        value={attr.maxValue}
+        readOnly={!userDefined}
         errorMessage={getErrorMessage('maxValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
       <Dropdown
         label="Default value type:"
-        selectedKey={selectedOption}
-        options={options}
-        onChanged={ newValue => {
-          setSelectedOption(newValue ? newValue.key as string : undefined);
-          onChange({ ...attr, defaultValue: newValue && newValue.key !== "VALUE" ? newValue.text as ContextVariables : undefined})
-        }}
+        selectedKey={typeof attr.defaultValue === 'string' ? attr.defaultValue : 'VALUE'}
+        options={getOptions(attr.type as AttributeDateTimeTypes)}
+        onChange={
+          userDefined ? (_, newValue) => newValue && onChange({ ...attr, defaultValue: newValue.key === "VALUE" ? undefined : newValue.key as any}) : undefined
+        }
         styles={{
           root: {
             width: '180px'
           }
         }}
       />
-      { selectedOption === 'VALUE'
+      { typeof attr.defaultValue === 'string'
         ?
-        <DateField
-          dateFieldType={attr.type as any}
-          label="Default value:"
-          value={attr.defaultValue as Date}
-          errorMessage={getErrorMessage('defaultValue', errorLinks)}
-          onChange={ newValue => onChange({ ...attr, defaultValue: newValue}) }
-        />
-        :
         <TextField
           label="Default value:"
-          value={attr.defaultValue ? attr.defaultValue.toString() : undefined}
-          disabled={true}
+          value={attr.defaultValue}
+          disabled
           styles={{
             root: {
               width: '180px'
             }
           }}
+        />
+        :
+        <DateField
+          label="Default value:"
+          dateFieldType={attr.type as AttributeDateTimeTypes}
+          value={attr.defaultValue}
+          readOnly={!userDefined}
+          errorMessage={getErrorMessage('defaultValue', errorLinks)}
+          onChange={ defaultValue => onChange({ ...attr, defaultValue }) }
         />
       }
     </Stack>

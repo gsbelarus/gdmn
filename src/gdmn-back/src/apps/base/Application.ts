@@ -62,9 +62,10 @@ export type AppAction =
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
-  | "EDIT_ENTITY"
+  | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
-  | "SAVE_SETTING";
+  | "SAVE_SETTING"
+  | "DELETE_SETTING";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -90,15 +91,10 @@ export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolea
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
 export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
-export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
-  entityName: string,
-  parentName?: string,
-  changedFields: { [fieldName: string]: string },
-  attributes: IAttribute[];
-}>;
-
+export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: string }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
-export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingEnvelope, newData: ISettingEnvelope }>;
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
+export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
 
 export class Application extends ADatabase {
 
@@ -449,9 +445,9 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushEditEntityCmd(session: Session,
-                           command: EditEntityCmd
-  ): Task<EditEntityCmd, { entityName: string }> {
+  public pushDeleteAttributeCmd(session: Session,
+                                command: DeleteAttributeCmd
+  ): Task<DeleteAttributeCmd, void> {
     const task = new Task({
       session,
       command,
@@ -461,39 +457,19 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {entityName, parentName, changedFields, attributes} = context.command.payload;
+        const {entityData, attrName} = context.command.payload;
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = this.erModel.entity(entityName);
-              const attr = entity.attributes;
-
-              const chfields = Object.entries(changedFields);
-              for await (const [key, value] of chfields) {
-                const result = Object.keys(attr).map((attrKey) => {
-                  return attrKey;
-                });
-                const findAttr = result.find((r) => r === key);
-
-                if (findAttr && value === "delete") {
-                  await erBuilder.eBuilder.deleteAttribute(
-                    this.erModel.entity(entityName),
-                    entity.attribute(key));
-                } else {
-                  const editAttr = attributes.find((at) => at.id === key);
-                  if (editAttr) {
-                    const newAttr = EntityUtils.createAttribute(editAttr, entity, this.erModel);
-                    await eBuilder.createAttribute(entity, newAttr);
-                  }
-                }
-              }
+              const entity = this.erModel.entity(entityData.name);
+              const attribute = entity.attribute(attrName);
+              await erBuilder.eBuilder.deleteAttribute(entity, attribute);
             }
           })
         }));
-        return {entityName};
       }
     });
     session.taskManager.add(task);
@@ -1036,6 +1012,57 @@ export class Application extends ADatabase {
         }
         catch (e) {
           this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
+        }
+
+        await context.checkStatus();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushDeleteSettingCmd(session: Session, command: DeleteSettingCmd): Task<DeleteSettingCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const payload = context.command.payload;
+        const fileName = this._getSettingFileName(payload.data.type);
+
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
+        .then( text => JSON.parse(text) )
+        .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              this.taskLogger.log(`Read data from file ${fileName}`);
+              return arr as ISettingEnvelope[];
+            } else {
+              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
+              return undefined;
+            }
+          })
+          .catch( err => {
+            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
+            return undefined;
+          });
+        
+        // мы исходим из оптимистичного сценария
+        // раз с клиента нам пришла команда на удаление объекта
+        // с некоторым ИД, то такой объект СКОРЕЕ ВСЕГО есть в файле  
+        const newData = data && data.filter( item => item.objectID !== payload.data.objectID );  
+
+        if( data && newData && data.length > newData.length ) {
+          try {
+            await promises.mkdir(path.dirname(fileName), { recursive: true });
+            await promises.writeFile(fileName, JSON.stringify(newData, undefined, 2), { encoding: 'utf8', flag: 'w' });
+          }
+          catch (e) {
+            this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
+          }
         }
 
         await context.checkStatus();

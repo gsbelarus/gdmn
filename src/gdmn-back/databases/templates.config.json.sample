@@ -1,0 +1,10 @@
+[
+  {
+    "name": "BUSINESS.FDB",
+    "description": "Комплексная автоматизация"
+  },
+  {
+    "name": "DEVEL.FDB",
+    "description": "Разработчик"
+  }
+]

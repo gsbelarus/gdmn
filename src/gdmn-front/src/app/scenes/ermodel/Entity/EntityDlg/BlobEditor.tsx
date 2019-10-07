@@ -1,25 +1,27 @@
-import { IAttribute } from "gdmn-orm";
-import { ChoiceGroup, IChoiceGroupOption } from "office-ui-fabric-react";
+import { IBlobAttribute, BlobSubTypes } from "gdmn-orm";
+import { ChoiceGroup } from "office-ui-fabric-react";
 import React from "react";
+import { IAttributeEditorProps } from "./EntityAttribute";
 
-interface IBlobEditorProps {
-    attr: IAttribute;
-    onChange: (newAttr: IAttribute) => void;
-  };
-  
-  export const BlobEditor = ({ attr, onChange }: IBlobEditorProps) => 
-    <ChoiceGroup
-      defaultSelectedKey = 'Text'
-      options = {[
-        {
-            key: 'Binary',
-            text: 'Binary'
-        },
-        {
-            key: 'Text',
-            text: 'Text'
-        },
-      ]}
-      onChanged = { () => onChange(attr) }
-      label = "Blob type:"
-    />
+// тип БЛОБ поля можно менять только при его создании
+
+export const BlobEditor = ({ attr, createAttr, onChange }: IAttributeEditorProps<IBlobAttribute>) =>
+  <ChoiceGroup
+    label = "Blob type:"
+    selectedKey = {attr.subType}
+    options = {[
+      {
+          key: 'Binary',
+          text: 'Binary'
+      },
+      {
+          key: 'Text',
+          text: 'Text'
+      },
+    ]}
+    onChange = {
+      createAttr
+      ? (_, newValue) => newValue && onChange({ ...attr, subType: newValue.key as BlobSubTypes })
+      : undefined
+    }
+  />

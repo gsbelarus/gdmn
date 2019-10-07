@@ -10,7 +10,7 @@
         },
         "username": "SYSDBA",
         "password": "masterkey",
-        "path": "..."
+        "path": "c:\\gdmn\\src\\gdmn-back\\databases\\test\\TEST.FDB"
       }
     }
   ]

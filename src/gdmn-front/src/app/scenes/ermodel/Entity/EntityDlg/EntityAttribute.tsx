@@ -1,4 +1,4 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel, isUserDefined } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -9,25 +9,29 @@ import { NumberEditor} from "./NumberEditor"
 import { DateEditor } from "./DateEditor";
 import { BooleanEditor } from "./BooleanEditor";
 import { EntityEditor } from "./EntityEditor";
-import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
+import { initAttr, ErrorLinks, getErrorMessage, stripUserPrefix, addUserPrefix } from "./utils";
 import { BlobEditor } from "./BlobEditor";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute;
-type OnChange = (newAttr: Attr) => void;
+type OnChange<T> = (newAttr: T) => void;
 type OnSelect = () => void;
 type OnError = (fieldName: string, errorMessage: string) => void;
 type OnClearError = (fieldName: string) => void;
 
-interface IDumbEditorProps {
-  attr: IAttribute;
-  createAttribute: boolean;
-  onChange: OnChange;
+export interface IAttributeEditorProps<T> {
+  attr: T;
+  createAttr: boolean;
+  userDefined: boolean;
+  errorLinks?: ErrorLinks;
+  onChange: OnChange<T>;
   onError?: OnError;
   onClearError?: OnClearError;
   erModel?: ERModel;
 };
 
-const DumbEditor = ({ attr, createAttribute, onChange, erModel }: IDumbEditorProps) => null;
+type IDumbEditorProps = IAttributeEditorProps<Attr>;
+
+const DumbEditor = (_: IDumbEditorProps) => null;
 
 const mapEditor = {
  'Entity': EntityEditor,
@@ -47,19 +51,12 @@ const mapEditor = {
  'Enum': EnumEditor
 };
 
-interface IEntityAttributeProps {
-  attr: Attr;
+interface IEntityAttributeProps extends IAttributeEditorProps<Attr> {
   selected?: boolean;
-  createAttribute: boolean;
-  errorLinks?: ErrorLinks;
-  onChange: OnChange;
   onSelect: OnSelect;
-  onError?: OnError;
-  onClearError?: OnClearError;
-  erModel?: ERModel;
 };
 
-export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, createAttr, userDefined, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
@@ -69,16 +66,17 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
         <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
           <TextField
             label="Name:"
-            value={attr.name}
-            disabled={!createAttribute}
+            value={stripUserPrefix(attr.name)}
+            prefix={userDefined ? 'USR$' : undefined}
+            readOnly={!userDefined}
+            autoFocus={selected}
             errorMessage={getErrorMessage('name', errorLinks)}
-            autoFocus
             styles={{
               root: {
                 width: '240px'
               }
             }}
-            onChange={ (_, name) => name !== undefined && onChange({...attr, name }) }
+            onChange={ (_, name) => name !== undefined && onChange({...attr, name: userDefined ? addUserPrefix(name) : name }) }
           />
           <Dropdown
             label="Type:"
@@ -86,31 +84,32 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             options={
               attributeTypeNames.map( n => ({ key: n, text: n }) )
             }
-            disabled={!createAttribute}
             styles={{
               root: {
                 width: '120px'
               }
             }}
-            onChange={ (_, attrType) => attrType && attrType.key !== attr.type && onChange(initAttr(attrType.key as AttributeTypes, attr)) }
+            onChange={
+              createAttr ? (_, attrType) => attrType && attrType.key !== attr.type && onChange(initAttr(attrType.key as AttributeTypes, attr)) : undefined
+            }
           />
           <Stack.Item>
             <Label>Required:</Label>
             <Checkbox
               checked={attr.required}
-              disabled={!createAttribute}
               styles={{
                 root: {
                   width: '64px'
                 }
               }}
-              onChange={ (_, required) => required !== undefined && onChange({...attr, required }) }
+              onChange={
+                userDefined ? (_, required) => required !== undefined && onChange({...attr, required }) : undefined
+              }
             />
           </Stack.Item>
           <TextField
             label="Sem categories:"
             value={attr.semCategories}
-            disabled={!createAttribute}
             styles={{
               root: {
                 width: '240px'
@@ -122,12 +121,13 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             <TextField
               label="Description:"
               value={getLName(attr.lName, ['ru'])}
-              disabled={!createAttribute}
-              onChange={ (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) }
+              onChange={
+                userDefined ? (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) : undefined
+              }
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
+        <AttrEditor attr={attr as any} createAttr={createAttr} userDefined={userDefined} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
       </Stack>
     </Frame>
   );

@@ -318,7 +318,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
 
-  const [setting, setSetting] = useSettings<IDesignerSetting>({ type: 'DESIGNER', objectID: entityName });
+  const [setting, setSetting, deleteSetting] = useSettings<IDesignerSetting>({ type: 'DESIGNER', objectID: entityName });
 
   useEffect( () => {
     return () => {
@@ -912,7 +912,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               entityName={entityName}
               setting={setting}
               onSaveSetting={ setting => setSetting(setting) }
-              onExit={ () => { setDesigner(false); } }
+              onDeleteSetting={ () => deleteSetting() }
+              onExit={ () => setDesigner(false) }
             />
           : <>
             <CommandBar items={commandBarItems} />
