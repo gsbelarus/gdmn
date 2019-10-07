@@ -101,6 +101,7 @@ export interface IGridProps {
   colors?: IGridColors;
   userColumnsSettings?: IUserColumnsSettings;
   onSetUserColumnsSettings?: (userSettings: IUserColumnsSettings | undefined ) => void;
+  onDelUserColumnsSettings: () => void;
 }
 
 export interface IGridState {
@@ -299,6 +300,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       loadMoreMinBatchPagesRatio,
       currentCol,
       onSetUserColumnsSettings,
+      onDelUserColumnsSettings,
       columns
     } = this.props;
     const { displayColumns, rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
@@ -973,13 +975,11 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         {showDialogParams ?
           <ParamsDialog
             onRevert={() => {
-              if (onSetUserColumnsSettings) {
-                onSetUserColumnsSettings(undefined);
-                this.setState({
-                  ...this.state,
-                  displayColumns: columns.filter(c => !c.hidden)
-                });
-              }
+              onDelUserColumnsSettings();
+              this.setState({
+                ...this.state,
+                displayColumns: columns.filter(c => !c.hidden)
+              });
             }}
             onChanged={
               (userSettings: IUserColumnsSettings | undefined) => {

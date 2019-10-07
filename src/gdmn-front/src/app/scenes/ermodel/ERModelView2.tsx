@@ -23,8 +23,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
 
-  const [userColumnsSettingsEntity, setUserColumnsSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
-  const [userColumnsSettingsAttr, setUserColumnsSettingsAttr] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
+  const [userColumnsSettingsEntity, setUserColumnsSettingsEntity, delUserColumnSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
+  const [userColumnsSettingsAttr, setUserColumnsSettingsAttr, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
 
   const deleteRecord = useCallback( () => {
     if (entities && entities.size) {
@@ -325,6 +325,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             colors={gridColors}
             userColumnsSettings={userColumnsSettingsEntity}
             onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsEntity(userSettings) }
+            onDelUserColumnsSettings={ () => delUserColumnSettingsEntity() }
           />
         }
       </div>
@@ -348,6 +349,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             colors={gridColors}
             userColumnsSettings={userColumnsSettingsAttr}
             onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsAttr(userSettings) }
+            onDelUserColumnsSettings={ () => delUserColumnSettings() }
           />
         }
       </div>
