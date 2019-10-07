@@ -16,6 +16,7 @@ testConfig.json
 # Firebird
 *.fdb
 *.fbk
+*.bk
 
 # VS Code
 .vscode
