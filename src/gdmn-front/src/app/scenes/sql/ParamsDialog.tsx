@@ -119,31 +119,30 @@ export const ParamsDialog = (props: ISQLFormProps) => {
         {paramList.map(i => {
           switch (i.type) {
             case TFieldType.Integer:
-              return (
-              <>
-                <Label>{i.name}</Label>
-                <Checkbox label="NULL" />
-                <TextField key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*" styles={{ fieldGroup: { width: 300 } }}/>
-              </>);
+              return withNull(
+                i.name,
+                <TextField key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>
+              );
             case TFieldType.Date:
-              return <DatePicker
-                label={i.name}
-                isRequired={false}
-                allowTextInput={true}
-                ariaLabel={i.name}
-                firstDayOfWeek={firstDayOfWeek}
-                strings={DayPickerStrings}
-                value={i.value}
-                key={i.name}
-                onSelectDate={(date) => handleSelectDate(date, i.name)}
-              />
-            default:              
-              return (
-                <Stack tokens={{ childrenGap: 15 }} styles={{ root: { width: "65vh" } }} onKeyDown={handleKeyDown} horizontal>
-                  <Label>{i.name}</Label>
-                  <Checkbox label="NULL" />                  
-                  <TextField label={i.name} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
-                </Stack>);
+              return withNull(
+                i.name,
+                <DatePicker
+                  label={i.name}
+                  isRequired={false}
+                  allowTextInput={true}
+                  ariaLabel={i.name}
+                  firstDayOfWeek={firstDayOfWeek}
+                  strings={DayPickerStrings}
+                  value={i.value}
+                  key={i.name}
+                  onSelectDate={(date) => handleSelectDate(date, i.name)}
+                />
+              );
+            default:
+                return withNull(
+                  i.name,
+                  <TextField key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
+                );
           }
         })}
       </Stack>
@@ -153,4 +152,20 @@ export const ParamsDialog = (props: ISQLFormProps) => {
       </DialogFooter>
     </Dialog>
   );
+};
+
+const withNull = (name: string, ch: ReactNode) => {
+  return (
+    <Stack>
+      <Stack.Item>
+        <Label>{name.toUpperCase()}</Label>
+      </Stack.Item>
+      <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 15 }}>
+        <Checkbox label="NULL" />
+        <Stack.Item grow>
+          {ch}
+        </Stack.Item>
+      </Stack>
+    </Stack>
+  )
 };
