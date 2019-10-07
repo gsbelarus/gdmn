@@ -55,6 +55,8 @@ $ ln -s /Library/Frameworks/Firebird.framework/Versions/A/Firebird /usr/local/li
 
 Выдать пользователю `Firebird Database` права на директорию где локально лежат базы данных Firebird.
 
+> Внимание! Так как для Mac OS нет библиотеки `GUDF.DLL`, нельзя будет восстановить из архива шаблонные базы данных и тестовую базу данных, как указано ниже.
+
 ## Устанавливаем Git
 
 Дистрибутив [Git](https://git-scm.com/downloads) на официальном сайте.
