@@ -3,12 +3,13 @@ import { IEnumValue, IEnumAttribute } from "gdmn-orm";
 import { getTheme, TextField, Stack, Icon, Checkbox, Label, DefaultButton, PrimaryButton } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
+import { IAttributeEditorProps } from "./EntityAttribute";
 
 interface IEnumValueProps {
   v: IEnumValue,
   isDefault: boolean,
-  onEdit: () => void,
-  onDelete: () => void
+  onEdit?: () => void,
+  onDelete?: () => void
 };
 
 const EnumValue = ({ v, isDefault, onEdit, onDelete }: IEnumValueProps) =>
@@ -39,27 +40,26 @@ const EnumValue = ({ v, isDefault, onEdit, onDelete }: IEnumValueProps) =>
         {v.value}
         {v.lName ? ('=' + getLName(v.lName, ['ru'])) : null }
       </span>
-      <Icon
-        iconName='Cancel'
-        styles={{
-          root: {
-            marginBottom: -3,
-            borderRadius: '50%',
-            border: '1px solid ' + getTheme().semanticColors.primaryButtonText,
-            padding: '2px',
-            fontSize: '6px'
-          }
-        }}
-        onClick={onDelete}
-      />
+      {
+        onDelete ?
+          <Icon
+            iconName='Cancel'
+            styles={{
+              root: {
+                marginBottom: -3,
+                borderRadius: '50%',
+                border: '1px solid ' + getTheme().semanticColors.primaryButtonText,
+                padding: '2px',
+                fontSize: '6px'
+              }
+            }}
+            onClick={onDelete}
+          />
+        :
+          null
+      }
     </Stack>
   </div>
-
-interface IEnumEditorProps {
-  attr: IEnumAttribute,
-  createAttribute: boolean,
-  onChange: (newAttr: IEnumAttribute) => void
-};
 
 interface IEnumEditorState {
   idx: number;
@@ -68,7 +68,7 @@ interface IEnumEditorState {
   isDefault: boolean;
 };
 
-export const EnumEditor = ({ attr, onChange }: IEnumEditorProps) => {
+export const EnumEditor = ({ attr, userDefined, onChange }: IAttributeEditorProps<IEnumAttribute>) => {
   const [state, setState] = useState<IEnumEditorState | undefined>();
 
   return (
@@ -125,23 +125,36 @@ export const EnumEditor = ({ attr, onChange }: IEnumEditorProps) => {
                       key={v.value}
                       v={v}
                       isDefault={attr.defaultValue === v.value}
-                      onEdit={ () => setState({
-                        idx,
-                        value: v.value.toString(),
-                        caption: v.lName ? getLName(v.lName, ['ru']) : '',
-                        isDefault: v.value === attr.defaultValue
-                      }) }
-                      onDelete={ () => onChange({
-                        ...attr,
-                        values: attr.values.filter( fv => fv !== v ),
-                        defaultValue: attr.defaultValue === v.value ? undefined : attr.defaultValue
-                      }) }
+                      onEdit={
+                        userDefined ?
+                          () => setState({
+                            idx,
+                            value: v.value.toString(),
+                            caption: v.lName ? getLName(v.lName, ['ru']) : '',
+                            isDefault: v.value === attr.defaultValue
+                          })
+                        : undefined
+                      }
+                      onDelete={
+                        userDefined ?
+                          () => onChange({
+                            ...attr,
+                            values: attr.values.filter( fv => fv !== v ),
+                            defaultValue: attr.defaultValue === v.value ? undefined : attr.defaultValue
+                          })
+                        : undefined
+                      }
                     />
                 )}
-                <DefaultButton
-                  text="Add value"
-                  onClick={ () => setState({ idx: attr.values.length, value: '', caption: '', isDefault: false }) }
-                />
+                {
+                  userDefined ?
+                    <DefaultButton
+                      text="Add value"
+                      onClick={ () => setState({ idx: attr.values.length, value: '', caption: '', isDefault: false }) }
+                    />
+                  :
+                    null
+                }
               </>
           }
         </Stack>

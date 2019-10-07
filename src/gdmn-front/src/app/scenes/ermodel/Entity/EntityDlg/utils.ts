@@ -1,5 +1,6 @@
-import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity, INumberAttribute,
-  IBooleanAttribute, INumericAttribute, isINumericAttribute, IDateAttribute, IEntityAttribute, GedeminEntityType, ERModel } from "gdmn-orm";
+import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
+  INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
+  IDateAttribute, IEntityAttribute, GedeminEntityType, isUserDefined } from "gdmn-orm";
 
 export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
 export const getTempID = () => 'temp-' + Math.random().toString();
@@ -115,6 +116,7 @@ export const validateAttributes = (entity: IEntity, requiredEntityType: GedeminE
           }
           break;
         }
+
         case 'String': {
           const s = attr as IStringAttribute;
           if (s.minLength !== undefined && s.minLength > 32000) {
@@ -233,4 +235,26 @@ export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
     return el && el.message;
   }
   return undefined;
+};
+
+/**
+ * Функция возвращает имя без префикса.
+ */
+export function stripUserPrefix(name: string) {
+  if (isUserDefined(name)) {
+    return name.substring(4);
+  } else {
+    return name;
+  }
+};
+
+/**
+ * Функция добавляет префикс.
+ */
+export function addUserPrefix(name: string) {
+  if (isUserDefined(name)) {
+    return name;
+  } else {
+    return 'USR$'.concat(name);
+  }
 };

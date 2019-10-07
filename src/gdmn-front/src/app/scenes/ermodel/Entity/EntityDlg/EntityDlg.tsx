@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useReducer} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType } from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType, isUserDefined } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -556,20 +556,24 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         <Frame marginTop marginLeft marginRight>
           <Stack>
             {
-              entityData.attributes.map( (attr, attrIdx) =>
-                <EntityAttribute
-                  key={attr.id}
-                  attr={attr}
-                  createAttribute={true}
-                  selected={attrIdx === selectedAttr}
-                  errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}
-                  onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
-                  onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
-                  onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }
-                  onClearError={ field => dlgDispatch({ type: 'CLEAR_ERROR', attrIdx, field }) }
-                  erModel={erModel}
-                />
-              )
+              entityData.attributes.map( (attr, attrIdx) => {
+                const createAttr = !attr.name || !initialData || !initialData.attributes.find( prevAttr => prevAttr.name === attr.name );
+                return (
+                  <EntityAttribute
+                    key={attr.id}
+                    attr={attr}
+                    createAttr={createAttr}
+                    userDefined={createAttr || isUserDefined(attr.name)}
+                    selected={attrIdx === selectedAttr}
+                    errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}
+                    onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
+                    onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
+                    onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }
+                    onClearError={ field => dlgDispatch({ type: 'CLEAR_ERROR', attrIdx, field }) }
+                    erModel={erModel}
+                  />
+                );
+              } )
             }
           </Stack>
         </Frame>

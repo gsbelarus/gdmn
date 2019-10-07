@@ -1,14 +1,13 @@
 import { IBlobAttribute, BlobSubTypes } from "gdmn-orm";
 import { ChoiceGroup } from "office-ui-fabric-react";
-import React  from "react";
+import React from "react";
+import { IAttributeEditorProps } from "./EntityAttribute";
 
-interface IBlobEditorProps {
-  attr: IBlobAttribute;
-  onChange: (newAttr: IBlobAttribute) => void;
-};
-  
-export const BlobEditor = ({ attr, onChange }: IBlobEditorProps) => 
+// тип БЛОБ поля можно менять только при его создании
+
+export const BlobEditor = ({ attr, createAttr, onChange }: IAttributeEditorProps<IBlobAttribute>) =>
   <ChoiceGroup
+    label = "Blob type:"
     selectedKey = {attr.subType}
     options = {[
       {
@@ -20,6 +19,9 @@ export const BlobEditor = ({ attr, onChange }: IBlobEditorProps) =>
           text: 'Text'
       },
     ]}
-    onChange = { (_, newValue) => newValue && onChange({ ...attr, subType: newValue.key as BlobSubTypes}) }
-    label = "Blob type:"
+    onChange = {
+      createAttr
+      ? (_, newValue) => newValue && onChange({ ...attr, subType: newValue.key as BlobSubTypes })
+      : undefined
+    }
   />
