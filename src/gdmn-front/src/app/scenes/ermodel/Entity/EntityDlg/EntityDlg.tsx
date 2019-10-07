@@ -11,7 +11,6 @@ import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
 import { str2SemCategories } from "gdmn-nlp";
 import { rsActions } from "gdmn-recordset";
-import { EntityInitialData } from "./EntityInitialData";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -288,12 +287,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const entity = erModel && entityName && erModel.entities[entityName];
   const [state, dlgDispatch] = useReducer(reducer, { errorLinks: [], entityType: 'SIMPLE' });
   const [MessageBox, messageBox] = useMessageBox();
-<<<<<<< HEAD
-  const { entityData, changed, selectedAttr, errorLinks } = state;
-  const [entityType, setEntityType] = useState();
-=======
   const { entityData, changed, selectedAttr, errorLinks, entityType, initialData } = state;
->>>>>>> master
 
   const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
     viewTabURL: url,
@@ -489,55 +483,6 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       <MessageBox />
       <Frame scroll height='calc(100% - 42px)'>
         <Frame border marginLeft marginRight>
-<<<<<<< HEAD
-          {!entityType
-            ?
-            <EntityInitialData
-              erModel={erModel}
-              createEntity={createEntity}
-              onSetType={(entityType: string, parent?: string) => {
-                setEntityType(entityType)
-                parent && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: {...entityData, parent}});
-              }}
-            />
-            :
-            <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
-              <Stack.Item>
-                <TextField
-                  label="Name:"
-                  value={entityData.name}
-                  errorMessage={getErrorMessage('entityName', errorLinks)}
-                  readOnly={!createEntity}
-                  onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
-                  styles={{
-                    root: {
-                      width: '240px'
-                    }
-                  }}
-                />
-              </Stack.Item>
-              <Stack.Item>
-                <TextField
-                  label="Semantic categories:"
-                  value={entityData.semCategories}
-                  onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
-                  styles={{
-                    root: {
-                      width: '240px'
-                    }
-                  }}
-                />
-              </Stack.Item>
-              <Stack.Item grow={1}>
-                <TextField
-                  label="Description:"
-                  value={getLName(entityData.lName, ['ru'])}
-                  onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'SET_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
-                />
-              </Stack.Item>
-            </Stack>
-          }
-=======
           <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
             <Stack.Item>
               <TextField
@@ -607,7 +552,6 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               />
             </Stack.Item>
           </Stack>
->>>>>>> master
         </Frame>
         <Frame marginTop marginLeft marginRight>
           <Stack>
