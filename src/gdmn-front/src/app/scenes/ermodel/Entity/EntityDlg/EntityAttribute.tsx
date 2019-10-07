@@ -90,7 +90,7 @@ export const EntityAttribute = ({ attr, createAttr, userDefined, selected, error
               }
             }}
             onChange={
-              userDefined ? (_, attrType) => attrType && attrType.key !== attr.type && onChange(initAttr(attrType.key as AttributeTypes, attr)) : undefined
+              createAttr ? (_, attrType) => attrType && attrType.key !== attr.type && onChange(initAttr(attrType.key as AttributeTypes, attr)) : undefined
             }
           />
           <Stack.Item>

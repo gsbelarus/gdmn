@@ -1,21 +1,47 @@
-## Предварительно устанавливаем
+Установка и запуск сервера и клиента платформы GDMN.
 
-1. [Node 12 или новее.](https://nodejs.org/en/download/)
-2. [Yarn.](https://yarnpkg.com/en/docs/install)
-3. [Firebird 3. Проект не будет работать с более ранними версиями Firebird!](https://www.firebirdsql.org/en/server-packages/)
+## Устанавливаем Node
+
+Необходима версия [Node 12 или новее.](https://nodejs.org/en/download/)
+
+Мы не рекомендуем устанавливать `npm` так как проект `gdmn` использует менеджер пакетов `yarn`:
+
+![](setup.ru.node1.jpg)
+
+Для компиляции нативного драйвера Firebird в Node необходимо установить `Windows Studio Build Tools`:
+
+![](setup.ru.node2.jpg)
+
+## Устанавливаем Yarn
+
+Инстолятор [Yarn](https://yarnpkg.com/en/docs/install) на официальном сайте.
+
+## Устанавливаем Firebird 3
+
+Берем инстолятор [Firebird 3](https://www.firebirdsql.org/en/server-packages/). GDMN не будет работать с более ранними версиями Firebird!
+
+Устанавливаем серверную и клиентскую части:
+
+![](setup.ru.fb1.jpg)
+
+Установите флаги, как показано на скриншоте ниже:
+
+![](setup.ru.fb2.jpg)
+
+Пароль для учетной записи `SYSDBA`. Во всех более ранних версиях Firebird пароль по-умолчанию был `masterkey`. Мы используем его на последующих шагах инстоляции и в файлах настроек. Если вы здесь укажете другой пароль, не забудьте прописать его в нужных файлах, которые будут указаны далее.
+
+![](setup.ru.fb3.jpg)
+
+....
+PATH
+....
+
 4. [Git](https://git-scm.com/downloads)
 
 Дополнительная настройка в зависимости от используемой операционной системы:
 
 ### Windows
 
-Мы не рекомендуем устанавливать `npm` так как проект `gdmn` использует менеджер `yarn`:
-
-![](setup.ru.node1.jpg)
-
-Для компиляции нативного драйвера Firebird в node необходимо установить `Windows Studio Build Tools`:
-
-![](setup.ru.node2.jpg)
       
 ### Mac OS
 
