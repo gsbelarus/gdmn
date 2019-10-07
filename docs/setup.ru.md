@@ -99,8 +99,10 @@ $ cd gdmn
             "port": 3050
           },
           "username": "SYSDBA",
-          "password": "masterkey",  <--укажите другой пароль, есливы меняли его
-          "path": "c:\\gdmn\\src\\gdmn-back\\databases\\test\\TEST.FDB" <--укажите другую папку, если исходники GDMN установлены не в корне диска c:\
+          // укажите другой пароль, есливы меняли его
+          "password": "masterkey",  
+          // укажите другую папку, если исходники GDMN установлены не в корне диска c:\
+          "path": "c:\\gdmn\\src\\gdmn-back\\databases\\test\\TEST.FDB" 
         }
       }
     ]
