@@ -27,7 +27,8 @@ import {
   INumericAttribute,
   IBooleanAttribute,
   IDateAttribute,
-  IEnumAttribute
+  IEnumAttribute,
+  IBlobAttribute
 } from "./serialize";
 
 export class EntityUtils {
@@ -122,7 +123,8 @@ export class EntityUtils {
       }
 
       case "Blob": {
-        return new BlobAttribute({name, lName, required, semCategories, adapter});
+        const {subType} = _attr as IBlobAttribute;
+        return new BlobAttribute({name, lName, required, subType, semCategories, adapter});
       }
 
       case "Enum": {

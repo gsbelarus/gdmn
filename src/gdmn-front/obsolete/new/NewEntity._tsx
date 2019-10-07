@@ -20,12 +20,12 @@ import {IChangedFields, IEntityName, ILastEdited} from "@src/app/scenes/ermodel/
 import {ISessionData} from "@src/app/scenes/gdmn/types";
 import {apiService} from "@src/app/services/apiService";
 import {EntityUtils, IAttribute, IEntityAttribute, ISetAttribute} from "gdmn-orm";
-import {EntityAttributeContainer} from "@src/app/scenes/ermodel/Entity/new/EntityAttributeContainer";
+import {EntityAttributeContainer} from "obsolete/new/EntityAttributeContainer";
 import {
   prepareDefaultEntityQuery,
   prepareDefaultEntityQuerySetAttr
 } from "@src/app/scenes/ermodel/EntityDataView/utils";
-import {parseEntity} from "@src/app/scenes/ermodel/Entity/new/utils";
+import {parseEntity} from "obsolete/new/utils";
 
 
 export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {

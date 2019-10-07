@@ -22,13 +22,16 @@ import {
   QuerySetCmd,
   AddEntityCmd,
   DeleteEntityCmd,
-  EditEntityCmd,
+  DeleteAttributeCmd,
   QuerySettingCmd,
   SaveSettingCmd,
+  DeleteSettingCmd,
   SqlPrepareCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
+import { isISettingData, isISettingEnvelope } from 'gdmn-internals';
+import {IEntity} from "gdmn-orm/dist/definitions/serialize";
 
 export class AppCommandProvider {
 
@@ -186,33 +189,35 @@ export class AppCommandProvider {
   private static _verifyAddEntityCmd(command: ICmd<AppAction, any>): command is AddEntityCmd {
     return typeof command.payload === "object"
       && !!command.payload
-      && "entityName" in command.payload
-      && typeof command.payload.entityName === "string";
+      && typeof command.payload.name === "string";
     // TODO
   }
 
   private static _verifyDeleteEntityCmd(command: ICmd<AppAction, any>): command is DeleteEntityCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "entityName" in command.payload
+    return command.payload instanceof Object
       && typeof command.payload.entityName === "string";
     // TODO
   }
 
-  private static _verifyEditEntityCmd(command: ICmd<AppAction, any>): command is EditEntityCmd {
-    return typeof command.payload === "object"
-      && !!command.payload
-      && "entityName" in command.payload
-      && typeof command.payload.entityName === "string";
-    // TODO
+  private static _verifyDeleteAttributeCmd(command: ICmd<AppAction, any>): command is DeleteAttributeCmd {
+    return command.payload instanceof Object
+      && instanceOfIEntity(command.payload.entityData);
   }
 
   private static _verifyQuerySettingCmd(command: ICmd<AppAction, any>): command is QuerySettingCmd {
-    return command.payload instanceof Object && Array.isArray(command.payload.query) && command.payload.query.length;
+    return command.payload instanceof Object && Array.isArray(command.payload.query)
+      && command.payload.query.length && isISettingData(command.payload.query[0]);
   }
 
   private static _verifySaveSettingCmd(command: ICmd<AppAction, any>): command is SaveSettingCmd {
-    return command.payload instanceof Object && command.payload.newData instanceof Object;
+    return command.payload instanceof Object && command.payload.newData instanceof Object
+      && isISettingEnvelope(command.payload.newData);
+  }
+
+  private static _verifyDeleteSettingCmd(command: ICmd<AppAction, any>): command is DeleteSettingCmd {
+    return command.payload instanceof Object
+      && command.payload.data instanceof Object
+      && isISettingData(command.payload.data);
   }
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
@@ -346,11 +351,11 @@ export class AppCommandProvider {
         }
         return this._application.pushDeleteEntityCmd(session, command);
       }
-      case "EDIT_ENTITY": {
-        if (!AppCommandProvider._verifyEditEntityCmd(command)) {
+      case "DELETE_ATTRIBUTE": {
+        if (!AppCommandProvider._verifyDeleteAttributeCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
-        return this._application.pushEditEntityCmd(session, command);
+        return this._application.pushDeleteAttributeCmd(session, command);
       }
       case "QUERY_SETTING": {
         if (AppCommandProvider._verifyQuerySettingCmd(command)) {
@@ -364,9 +369,19 @@ export class AppCommandProvider {
         }
         throw new Error(`Incorrect ${command.action} command`);
       }
+      case "DELETE_SETTING": {
+        if (AppCommandProvider._verifyDeleteSettingCmd(command)) {
+          return this._application.pushDeleteSettingCmd(session, command);
+        }
+        throw new Error(`Incorrect ${command.action} command`);
+      }
       default: {
         throw new Error("Unsupported action");
       }
     }
   }
+}
+
+function instanceOfIEntity(object: any): object is IEntity {
+  return typeof object === "object" && "name" in object;
 }

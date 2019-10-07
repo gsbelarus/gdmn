@@ -232,9 +232,9 @@ export type TDeleteEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_
 
 // entity: edit
 
-export type TEditEntityTaskCmd = TTaskCmd<TTaskActionNames.EDIT_ENTITY>;
+export type TDeleteAttributeTaskCmd = TTaskCmd<TTaskActionNames.DELETE_ATTRIBUTE>;
 
-export type TEditEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.EDIT_ENTITY>;
+export type TDeleteAttributeTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_ATTRIBUTE>;
 
 // setting: query
 
@@ -245,3 +245,9 @@ export type TQuerySettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY_S
 export type TSaveSettingTaskCmd = TTaskCmd<TTaskActionNames.SAVE_SETTING>;
 
 export type TSaveSettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.SAVE_SETTING>;
+
+//setting: delete
+
+export type TDeleteSettingTaskCmd = TTaskCmd<TTaskActionNames.DELETE_SETTING>;
+
+export type TDeleteSettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_SETTING>;

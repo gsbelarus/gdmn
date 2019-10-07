@@ -1,5 +1,5 @@
-import React, { useReducer, useMemo, useEffect } from "react";
-import { IDesignerProps } from "./Designer.types";
+import React, { useReducer, useMemo } from "react";
+import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField } from "./types";
 import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
@@ -9,7 +9,6 @@ import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { getLName } from "gdmn-internals";
-import { apiService } from '@src/app/services/apiService';
 
 /**
  *
@@ -68,19 +67,13 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-interface IDesignerSerializedState {
-  version: string;
-  grid: IGrid;
-  objects: Objects;
-};
-
 const getDefaultState = (entity?: Entity): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
     type: 'WINDOW'
   };
 
-  const area1: IArea = {
+  const area: IArea = {
     name: 'Area1',
     type: 'AREA',
     parent: 'Window',
@@ -90,14 +83,14 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     bottom: 0
   };
 
-  const image1: IImage = {
+  const image: IImage = {
     name: 'Image1',
     type: 'IMAGE',
     parent: 'Area1',
     url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
   };
 
-  const fields1: IField[] = entity
+  const fields: IField[] = entity
     ? Object.entries(entity.attributes).map(
       ([name, attr]) => ({
         type: 'FIELD',
@@ -109,7 +102,7 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     )
     : [];
 
-  const objects: Objects = [window, area1, image1, ...fields1];
+  const objects: Objects = [window, area, image, ...fields];
 
   return {
     grid: {
@@ -119,6 +112,18 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     objects,
     selectedObject: window
   };
+};
+
+const getStateFromSetting = (setting?: IDesignerSetting): IDesignerState => {
+  if (setting) {
+    const selectedObject = setting.objects.find( object => isWindow(object) );
+    return {
+      ...setting,
+      selectedObject
+    };
+  } else {
+    return getDefaultState();
+  }  
 };
 
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
@@ -477,7 +482,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         },
         objects,
         gridSelection: undefined,
-        
+
         selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления строки
       }
     }
@@ -535,32 +540,9 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { url, erModel, rs, entity } = props;
-  const [state, designerDispatch] = useReducer(reducer, props.grid && props.objects ? { grid: props.grid, objects: props.objects, selectedObject: props.objects.find( object => isWindow(object) ) } as IDesignerState : getDefaultState(entity));
+  const { erModel, rs, entity, setting, onSaveSetting } = props;
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting));     
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
-
-/*
-  useEffect( () => {
-    apiService.querySetting({
-      params: [
-        {
-          type: 'DESIGNER', 
-          objectID: entity.name
-        }
-      ]
-    })
-    .then( response => {
-      if (response.error) {
-        console.log(response.error);
-      } else if (!response.payload.result) {
-        console.log('Not find settings');
-      } else {
-        console.log(response.payload.result[0].data);
-        // подумать, надо ли тут проверка что за объект нам пришел
-        designerDispatch(response.payload.result[0].data as IDesignerState);
-      }
-    });
-  }, [])*/
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
     display: 'grid',
@@ -581,6 +563,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       for (let y = 0; y < grid.rows.length; y++) {
         res.push(
           <GridCell
+            key={`${x}-${y}`}
             x={x}
             y={y}
             gridSelection={gridSelection}
@@ -613,10 +596,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       text: 'Save',
       iconOnly: true,
       iconProps: { iconName: 'Save' },
-      onClick: () => {
-        //localStorage.setItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`, JSON.stringify({ version: '1.0', grid, objects }) )
-        apiService.saveSetting({newData: {type: 'DESIGNER', objectID: entity.name, data: {grid: grid, objects: objects}}})
-      }
+      onClick: () => onSaveSetting({ grid, objects })
     },
     {
       key: 'reset',
@@ -624,7 +604,10 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       text: 'Reset',
       iconOnly: true,
       iconProps: { iconName: 'Favicon' },
-      onClick: () => designerDispatch({ type: 'RESET' })
+      onClick: () =>  {
+        props.onDeleteSetting();
+        designerDispatch({ type: 'RESET' });
+      }
     },
     {
       key: 'close',
@@ -632,7 +615,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       name: 'Close',
       iconOnly: true,
       iconProps: { iconName: 'Cancel' },
-      onClick: () => props.onExit({ grid, objects })
+      onClick: props.onExit
     },
     {
       key: 'split0',
