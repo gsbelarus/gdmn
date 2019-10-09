@@ -13,11 +13,12 @@ interface IFrameProps {
   scroll?: boolean;
   height?: string;
   children: ReactNode;
+  readOnly?: boolean;
   onClick?: () => void;
 };
 
 export const Frame = (props: IFrameProps): JSX.Element => {
-  const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle, children, scroll, height, onClick } = props;
+  const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle, children, scroll, height, onClick, readOnly } = props;
 
   const ifMargin = (m?: boolean) => m ? '16px' : 'none';
   const ifBorder = (defPadding = '16px') => border ? defPadding : 'inherit';
@@ -38,7 +39,7 @@ export const Frame = (props: IFrameProps): JSX.Element => {
           paddingRight: ifBorder(),
           paddingBottom: ifBorder(),
           overflowY: scroll ? 'auto' : 'hidden',
-          backgroundColor: selected ? getTheme().palette.themeLight : getTheme().semanticColors.bodyBackground
+          backgroundColor: selected ? getTheme().palette.themeLight : readOnly ? getTheme().palette.neutralLight : getTheme().semanticColors.bodyBackground,
         }}
         onClick={onClick}
       >

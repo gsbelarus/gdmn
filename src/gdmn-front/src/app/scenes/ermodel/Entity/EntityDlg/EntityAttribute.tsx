@@ -61,8 +61,8 @@ export const EntityAttribute = ({ attr, createAttr, userDefined, selected, error
   const AttrEditor = mapEditor[attr.type];
 
   return (
-    <Frame border marginBottom selected={selected} onClick={onSelect} >
-      <Stack>
+    <Frame border marginBottom selected={selected} onClick={onSelect} readOnly={!userDefined}>
+      <Stack styles={{root: {pointerEvents: !userDefined ? 'none' : 'auto'}}}>
         <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
           <TextField
             label="Name:"

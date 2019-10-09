@@ -1,6 +1,6 @@
 import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
   INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
-  IDateAttribute, IEntityAttribute, GedeminEntityType, isUserDefined } from "gdmn-orm";
+  IDateAttribute, IEntityAttribute, GedeminEntityType, isUserDefined, getGedeminEntityType } from "gdmn-orm";
 
 export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
 export const getTempID = () => 'temp-' + Math.random().toString();
@@ -8,7 +8,7 @@ export const getTempID = () => 'temp-' + Math.random().toString();
 export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
   const attr: Partial<IAttribute> = {
     type,
-    name: prevAttr ? prevAttr.name : '',
+    name: prevAttr ? prevAttr.name : 'USR$',
     lName: prevAttr && prevAttr.lName ? prevAttr.lName : { ru: { name: 'Описание' }},
     required: prevAttr ? prevAttr.required : false,
     semCategories: prevAttr ? prevAttr.semCategories : '',
@@ -75,7 +75,8 @@ export interface IErrorLink {
 
 export type ErrorLinks = IErrorLink[];
 
-export const validateAttributes = (entity: IEntity, requiredEntityType: GedeminEntityType, prevErrorLinks: ErrorLinks) => {
+export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) => {
+  const requiredEntityType = getGedeminEntityType(entity);
   const errorLinks = entity.attributes.reduce(
     (p, attr, attrIdx) => {
       if (!attr.name) {
