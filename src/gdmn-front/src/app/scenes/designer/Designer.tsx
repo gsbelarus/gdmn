@@ -9,6 +9,7 @@ import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { getLName } from "gdmn-internals";
+import { RecordSet } from "gdmn-recordset";
 
 /**
  *
@@ -67,7 +68,7 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-const getDefaultState = (entity?: Entity): IDesignerState => {
+const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
     type: 'WINDOW'
@@ -83,26 +84,20 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
     bottom: 0
   };
 
-  const image: IImage = {
-    name: 'Image1',
-    type: 'IMAGE',
-    parent: 'Area1',
-    url: 'http://gsbelarus.com/gs/images/gs/2006/ged_logo.png'
-  };
+  const fields: IField[] =  rs && entity 
+  ? rs.fieldDefs.map(fd => {
+    const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
+    return ({
+      type: 'FIELD',
+      parent: 'Area1',
+      fieldName: fd.caption,
+      label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
+      name: fd.caption
+    } as IField)
+  })
+  : [];
 
-  const fields: IField[] = entity
-    ? Object.entries(entity.attributes).map(
-      ([name, attr]) => ({
-        type: 'FIELD',
-        parent: 'Area1',
-        fieldName: name,
-        label: getLName(attr.lName, ['by', 'ru', 'en']),
-        name: name
-      } as IField)
-    )
-    : [];
-
-  const objects: Objects = [window, area, image, ...fields];
+  const objects: Objects = [window, area, ...fields];
 
   return {
     grid: {
@@ -114,7 +109,7 @@ const getDefaultState = (entity?: Entity): IDesignerState => {
   };
 };
 
-const getStateFromSetting = (setting?: IDesignerSetting): IDesignerState => {
+const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?: Entity): IDesignerState => {
   if (setting) {
     const selectedObject = setting.objects.find( object => isWindow(object) );
     return {
@@ -122,7 +117,7 @@ const getStateFromSetting = (setting?: IDesignerSetting): IDesignerState => {
       selectedObject
     };
   } else {
-    return getDefaultState();
+    return getDefaultState(entity, rs);
   }  
 };
 
@@ -541,7 +536,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
   const { erModel, rs, entity, setting, onSaveSetting } = props;
-  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting));     
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity));     
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
