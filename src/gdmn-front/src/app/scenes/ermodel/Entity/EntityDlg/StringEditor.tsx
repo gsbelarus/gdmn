@@ -5,7 +5,7 @@ import { getErrorMessage } from "./utils";
 import { NumberField } from "./NumberField";
 import { IAttributeEditorProps } from "./EntityAttribute";
 
-export const StringEditor = ({ attr, errorLinks, createAttr, userDefined, onChange, onError, onClearError }: IAttributeEditorProps<IStringAttribute>) =>
+export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange, onError, onClearError }: IAttributeEditorProps<IStringAttribute>) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
     <NumberField
       label="Min length:"
@@ -13,7 +13,7 @@ export const StringEditor = ({ attr, errorLinks, createAttr, userDefined, onChan
       noNegative
       value={attr.minLength}
       readOnly={!userDefined}
-      errorMessage={getErrorMessage('minLength', errorLinks)}
+      errorMessage={getErrorMessage(attrIdx, 'minLength', errorLinks)}
       width="180px"
       onChange={ minLength => { onChange({ ...attr, minLength }); onClearError && onClearError('minLength'); } }
       onInvalidValue={ () => onError && onError('minLength', 'Invalid value') }
@@ -24,7 +24,7 @@ export const StringEditor = ({ attr, errorLinks, createAttr, userDefined, onChan
       noNegative
       value={attr.maxLength}
       readOnly={!userDefined}
-      errorMessage={getErrorMessage('maxLength', errorLinks)}
+      errorMessage={getErrorMessage(attrIdx, 'maxLength', errorLinks)}
       width="180px"
       onChange={ maxLength => { onChange({ ...attr, maxLength }); onClearError && onClearError('maxLength'); } }
       onInvalidValue={ () => onError && onError('maxLength', 'Invalid value') }

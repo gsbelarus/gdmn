@@ -547,7 +547,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Name:"
                 value={entityData.name}
-                errorMessage={getErrorMessage('entityName', errorLinks)}
+                errorMessage={getErrorMessage(undefined, 'entityName', errorLinks)}
                 readOnly={!createEntity}
                 onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
                 styles={{
@@ -581,7 +581,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 label="Parent:"
                 options={Object.keys(erModel.entities).map( name => ({ key: name, text: name }) )}
                 selectedKey={entityData.parent}
-                errorMessage={getErrorMessage('entityParent', errorLinks)}
+                errorMessage={getErrorMessage(undefined, 'entityParent', errorLinks)}
                 disabled={!createEntity || entityType !== 'INHERITED'}
                 onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
                 styles={{
@@ -621,10 +621,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                   <EntityAttribute
                     key={attr.id}
                     attr={attr}
+                    attrIdx={attrIdx}
                     createAttr={createAttr}
                     userDefined={isUserDefined(attr.name)}
                     selected={attrIdx === selectedAttr}
-                    errorLinks={errorLinks && errorLinks.filter( l => l.attrIdx === attrIdx )}
+                    errorLinks={errorLinks}
                     onChange={ newAttr => dlgDispatch({ type: 'UPDATE_ATTR', newAttr }) }
                     onSelect={ () => dlgDispatch({ type: 'SELECT_ATTR', selectedAttr: attrIdx }) }
                     onError={ (field, message) => dlgDispatch({ type: 'ADD_ERROR', attrIdx, field, message }) }

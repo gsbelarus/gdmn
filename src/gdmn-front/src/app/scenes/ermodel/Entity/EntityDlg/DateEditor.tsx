@@ -17,7 +17,7 @@ const getOptions = (type: AttributeDateTimeTypes) => {
   }
 };
 
-export const DateEditor = ({ attr, userDefined, errorLinks, onChange }: IAttributeEditorProps<IDateAttribute>) => {
+export const DateEditor = ({ attr, attrIdx, userDefined, errorLinks, onChange }: IAttributeEditorProps<IDateAttribute>) => {
   return (
     <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
       <DateField
@@ -25,7 +25,7 @@ export const DateEditor = ({ attr, userDefined, errorLinks, onChange }: IAttribu
         label="Min value:"
         value={attr.minValue}
         readOnly={!userDefined}
-        errorMessage={getErrorMessage('minValue', errorLinks)}
+        errorMessage={getErrorMessage(attrIdx, 'minValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, minValue: newValue}) }
       />
       <DateField
@@ -33,7 +33,7 @@ export const DateEditor = ({ attr, userDefined, errorLinks, onChange }: IAttribu
         label="Max value:"
         value={attr.maxValue}
         readOnly={!userDefined}
-        errorMessage={getErrorMessage('maxValue', errorLinks)}
+        errorMessage={getErrorMessage(attrIdx, 'maxValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
       <Dropdown
@@ -53,7 +53,7 @@ export const DateEditor = ({ attr, userDefined, errorLinks, onChange }: IAttribu
         ?
         <TextField
           label="Default value:"
-          value={attr.defaultValue}
+          defaultValue={attr.defaultValue}
           disabled
           styles={{
             root: {
@@ -67,7 +67,7 @@ export const DateEditor = ({ attr, userDefined, errorLinks, onChange }: IAttribu
           dateFieldType={attr.type as AttributeDateTimeTypes}
           value={attr.defaultValue}
           readOnly={!userDefined}
-          errorMessage={getErrorMessage('defaultValue', errorLinks)}
+          errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
           onChange={ defaultValue => onChange({ ...attr, defaultValue }) }
         />
       }

@@ -79,7 +79,7 @@ export type ErrorLinks = IErrorLink[];
 export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) => {
   const errorLinks = entity.attributes.reduce(
     (p, attr, attrIdx) => {
-      if (!attr.name) {
+      if (!stripUserPrefix(attr.name)) {
         p.push({
           attrIdx,
           field: 'name',
@@ -181,7 +181,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
     }, [...prevErrorLinks.filter( l => l.internal )]
   );
 
-  if (!entity.name) {
+  if (!stripUserPrefix(entity.name)) {
     errorLinks.push({
       field: 'entityName',
       message: "Name can't be empty",
@@ -201,7 +201,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
   entity.attributes.forEach(
     (attr1, idx1) => entity.attributes.forEach(
       (attr2, idx2) => {
-        if (idx1 !== idx2 && attr1.name && attr1.name === attr2.name) {
+        if (idx1 < idx2 && attr1.name === attr2.name && stripUserPrefix(attr1.name) && stripUserPrefix(attr2.name)) {
           errorLinks.push({
             attrIdx: idx1,
             field: 'name',
@@ -230,20 +230,22 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
   return equal(errorLinks, prevErrorLinks) ? prevErrorLinks : errorLinks;
 };
 
-export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
+export const getErrorMessage = (attrIdx: number | undefined, field: string, errorLinks?: ErrorLinks) => {
   if (errorLinks) {
-    const el = errorLinks.find( l => l.field === field );
+    const el = errorLinks.find( l => l.attrIdx === attrIdx && l.field === field );
     return el && el.message;
   }
   return undefined;
 };
+
+export const userPrefix = 'USR$';
 
 /**
  * Функция возвращает имя без префикса.
  */
 export function stripUserPrefix(name: string) {
   if (isUserDefined(name)) {
-    return name.substring(4);
+    return name.substring(userPrefix.length);
   } else {
     return name;
   }
@@ -256,6 +258,6 @@ export function addUserPrefix(name: string) {
   if (isUserDefined(name)) {
     return name;
   } else {
-    return 'USR$'.concat(name);
+    return userPrefix.concat(name);
   }
 };
