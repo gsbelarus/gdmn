@@ -11,7 +11,6 @@ import {
   EntityUpdate,
   EntityUtils,
   ERModel,
-  IAttribute,
   IEntityDeleteInspector,
   IEntityInsertInspector,
   IEntityQueryInspector,
@@ -34,9 +33,9 @@ import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingParams, isISettingData, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
-import { promises } from "fs";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
+import { SettingSaveInMemory } from './SettingSaveInMemory';
 
 export type AppAction =
   "DEMO"
@@ -106,8 +105,11 @@ export class Application extends ADatabase {
 
   public erModel: ERModel = new ERModel();
 
+  public settingsInMemory: SettingSaveInMemory;
+
   constructor(dbDetail: IDBDetail) {
     super(dbDetail);
+    this.settingsInMemory = new SettingSaveInMemory(dbDetail);
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
@@ -932,22 +934,7 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
         const fileName = this._getSettingFileName(payload.query[0].type);
-
-        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
-          .then( text => JSON.parse(text) )
-          .then( arr => {
-            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              this.taskLogger.log(`Read data from file ${fileName}`);
-              return arr as ISettingEnvelope[];
-            } else {
-              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
-              return undefined;
-            }
-          })
-          .catch( err => {
-            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
-            return undefined;
-          });
+        const data = await this.settingsInMemory.readFileWithSettings(fileName);
 
         await context.checkStatus();
 
@@ -973,46 +960,7 @@ export class Application extends ADatabase {
         const { newData } = context.command.payload;
         const fileName = this._getSettingFileName(newData.type);
 
-        // читаем массив настроек из файла, если файла нет
-        // или возникла ошибка, то пишем ее в лог и игнорируем
-        // в этом случае data === undefined
-        // минимально проверяем тип данных
-        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
-          .then( text => JSON.parse(text) )
-          .then( arr => {
-            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              this.taskLogger.log(`Read data from file ${fileName}`);
-              return arr as ISettingEnvelope[];
-            } else {
-              this.taskLogger.warn(`Unknown data in file ${fileName}`);
-              return undefined;
-            }
-          })
-          .catch( err => {
-            this.taskLogger.warn(`Error reading data from file ${fileName} - ${err}`);
-            return undefined;
-          });
-
-        if (data) {
-          const idx = data.findIndex( s => isISettingData(s) && s.type === newData.type && s.objectID === newData.objectID );
-          if (idx === -1) {
-            data.push(newData);
-          } else {
-            data[idx] = newData;
-          }
-        } else {
-          data = [newData];
-        }
-
-        // записываем файл. если будет ошибка, то выведем ее в лог,
-        // но не будем прерывать выполнение задачи
-        try {
-          await promises.mkdir(path.dirname(fileName), { recursive: true });
-          await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), { encoding: 'utf8', flag: 'w' });
-        }
-        catch (e) {
-          this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
-        }
+        this.settingsInMemory.newData(fileName, newData);
 
         await context.checkStatus();
       }
@@ -1034,36 +982,7 @@ export class Application extends ADatabase {
         const payload = context.command.payload;
         const fileName = this._getSettingFileName(payload.data.type);
 
-        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
-        .then( text => JSON.parse(text) )
-        .then( arr => {
-            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              this.taskLogger.log(`Read data from file ${fileName}`);
-              return arr as ISettingEnvelope[];
-            } else {
-              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
-              return undefined;
-            }
-          })
-          .catch( err => {
-            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
-            return undefined;
-          });
-        
-        // мы исходим из оптимистичного сценария
-        // раз с клиента нам пришла команда на удаление объекта
-        // с некоторым ИД, то такой объект СКОРЕЕ ВСЕГО есть в файле  
-        const newData = data && data.filter( item => item.objectID !== payload.data.objectID );  
-
-        if( data && newData && data.length > newData.length ) {
-          try {
-            await promises.mkdir(path.dirname(fileName), { recursive: true });
-            await promises.writeFile(fileName, JSON.stringify(newData, undefined, 2), { encoding: 'utf8', flag: 'w' });
-          }
-          catch (e) {
-            this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
-          }
-        }
+        this.settingsInMemory.deleteSettingFromData(fileName, payload.data);
 
         await context.checkStatus();
       }
@@ -1136,8 +1055,8 @@ export class Application extends ADatabase {
   }
 
   protected async _onDisconnect(): Promise<void> {
+    await this.settingsInMemory.writeFileSettings();
     await super._onDisconnect();
-
     if (!ApplicationProcess.isProcess) {
       await this.processPool.destroy();
     }
