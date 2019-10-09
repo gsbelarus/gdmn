@@ -62,7 +62,7 @@ export const EntityAttribute = ({ attr, createAttr, userDefined, selected, error
 
   return (
     <Frame border marginBottom selected={selected} onClick={onSelect} readOnly={!userDefined}>
-      <Stack styles={{root: {pointerEvents: !userDefined ? 'none' : 'auto'}}}>
+      <Stack styles={{root: {pointerEvents: userDefined ? 'auto' : 'none'}}}>
         <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
           <TextField
             label="Name:"

@@ -45,7 +45,7 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     required: false,
     lName: { ru: { name: 'Идентификатор' }},
     semCategories: '',
-    id: getTempID(),
+    id: getTempID()
   };
 
   const inheritedKey: IAttribute = {
@@ -53,7 +53,8 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     type: 'Integer',
     required: false,
     lName: { ru: { name: 'Идентификатор' }},
-    semCategories: ''
+    semCategories: '',
+    id: getTempID()
   };
 
   const lb: IAttribute = {
@@ -61,7 +62,8 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     type: 'Integer',
     required: true,
     lName: { ru: { name: 'Левая граница интервала' }},
-    semCategories: ''
+    semCategories: '',
+    id: getTempID()
   };
 
   const rb: IAttribute = {
@@ -69,7 +71,8 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     type: 'Integer',
     required: true,
     lName: { ru: { name: 'Правая граница интервала' }},
-    semCategories: ''
+    semCategories: '',
+    id: getTempID()
   };
 
   const parent: IAttribute = {
@@ -77,7 +80,8 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     type: 'Parent',
     required: false,
     lName: { ru: { name: 'Ссылка на родительский уровень' }},
-    semCategories: ''
+    semCategories: '',
+    id: getTempID()
   };
 
   const editionDate: IAttribute = {
@@ -85,7 +89,8 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     type: 'Date',
     required: false,
     lName: { ru: { name: 'Дата модификации' }},
-    semCategories: ''
+    semCategories: '',
+    id: getTempID()
   };
 
   const temp = attributes.filter( attr => attr.name !== 'PARENT' && attr.name !== 'LB' && attr.name !== 'RB' && attr.name !== 'ID' && attr.name !== 'EDITIONDATE');
@@ -262,7 +267,6 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       const newAttributes = [...entityData.attributes];
       newAttributes[selectedAttr] = action.newAttr;
       const newEntityData = {...entityData, attributes: newAttributes };
-      console.log(newEntityData);
       return {
         ...state,
         entityData: newEntityData,
@@ -281,7 +285,6 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       const newAttributes = [...entityData.attributes];
       newAttributes.splice(newIdx, 0, initAttr('String'));
       const newEntityData = {...entityData, attributes: newAttributes };
-      console.log(newEntityData);
       return {
         ...state,
         entityData: newEntityData,
@@ -364,11 +367,10 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }))};
 
   const postChanges = useCallback(async (close: boolean) => {
-    console.log(initialData);
     if (entityData && erModel) {
       if (createEntity) {
         // временные ID атрибутов надо убрать перед отсылкой на сервер!
-        const result = await apiService.addEntity({
+        const result = await apiService.AddEntity({
           ...entityData,
           attributes: entityData.attributes.filter(a => a.name !== 'ID').map( attr => isTempID(attr.id) ? {...attr, id: undefined} : attr )
         });
@@ -408,7 +410,6 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       else if (initialData) {
         // TODO: мы никак пока не отображаем ошибки при удалении атрибута
         // TODO: после удаления атрибута надо обновить ERModel
-        console.log(initialData);
         const r = initialData.attributes.every( async attr => {
           if (!entityData.attributes.find( attr2 => attr2.name === attr.name )) {
             const result = await apiService.deleteAttribute({

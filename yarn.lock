@@ -2472,10 +2472,15 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
-"@types/node@*", "@types/node@^12":
+"@types/node@*":
   version "12.7.11"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.11.tgz#be879b52031cfb5d295b047f5462d8ef1a716446"
   integrity sha512-Otxmr2rrZLKRYIybtdG/sgeO+tHY20GxeDjcGmUnmmlCWyEnv2a2x1ZXBo3BTec4OiTXMQCiazB8NMBf0iRlFw==
+
+"@types/node@^12":
+  version "12.7.12"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.7.12.tgz#7c6c571cc2f3f3ac4a59a5f2bd48f5bdbc8653cc"
+  integrity sha512-KPYGmfD0/b1eXurQ59fXD1GBzhSQfz6/lKBxkaHX9dKTzjXbK68Zt7yGUxUsCS1jeTy/8aL+d9JEr+S54mpkWQ==
 
 "@types/node@^12.6.9":
   version "12.6.9"
@@ -7120,6 +7125,11 @@ fast-deep-equal@^2, fast-deep-equal@^2.0.1:
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-2.0.1.tgz#7b05218ddf9667bf7f370bf7fdb2cb15fdd0aa49"
   integrity sha1-ewUhjd+WZ79/Nwv3/bLLFf3Qqkk=
 
+fast-deep-equal@^3.0.0-beta.2:
+  version "3.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.0.0-beta.2.tgz#a479f3ff9c18e08c5a13b9ac42f53c021bdda9fd"
+  integrity sha512-/1ttQLbtYMjR0n+pR0dIuYELUJ4QMhT7sqatQBY+ux4snfkGS9gG/bDQq7i94IeNn3XUO2sVw5/EuxKzFEHWGw==
+
 fast-glob@^2.0.2, fast-glob@^2.2.6:
   version "2.2.7"
   resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-2.2.7.tgz#6953857c3afa475fff92ee6015d52da70a4cd39d"
@@ -10860,15 +10870,15 @@ log-symbols@^2.1.0, log-symbols@^2.2.0:
     chalk "^2.0.1"
 
 log4js@^5:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/log4js/-/log4js-5.1.0.tgz#3fa5372055a4c2611ab92d80496bffc100841508"
-  integrity sha512-QtXrBGZiIwfwBrH9zF2uQarvBuJ5+Icqx9fW+nQL4pnmPITJw8n6kh3bck5IkcTDBQatDeKqUMXXX41fp0TIqw==
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/log4js/-/log4js-5.2.1.tgz#6f1fb8678f47dc3cc8f865ba978727cecc2dc1de"
+  integrity sha512-ON64KPqPO6njBKKJereIUJw7UdGXq8VZ+LOrokbENxQPENDeq0kUif1kMlTcsYdclRPK/9BB6w+82TTS51ICaA==
   dependencies:
     date-format "^2.1.0"
     debug "^4.1.1"
     flatted "^2.0.1"
     rfdc "^1.1.4"
-    streamroller "^2.1.0"
+    streamroller "^2.2.1"
 
 loglevel@^1.4.1:
   version "1.6.1"
@@ -12102,9 +12112,9 @@ octokit-pagination-methods@^1.1.0:
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
 office-ui-fabric-react@^7:
-  version "7.45.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.45.0.tgz#01565d479660256886a05c50232442e463fe3867"
-  integrity sha512-pI8fYE64OSV8ip1CSx2sk5TkjJ5Hu43hrH3y0GyuEwdfF+etGaqNegRTdgjPmZm6OOBJ8HDR6Cpr7fBQwCdfpg==
+  version "7.46.0"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.46.0.tgz#f29f75192241a592feb5ada787318f84fb392c50"
+  integrity sha512-cu12Ln+enhHk9W9YoPE1QfdvNx1VG+V+znO/LPo6mNktmYhBhfUOLWVeubRqTS5cLBE0ksA9HhHqJQeIUhrC+g==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/example-data" "^7.0.1"
@@ -13873,9 +13883,9 @@ react-color@^2.17.3:
     tinycolor2 "^1.4.1"
 
 react-content-loader@^4:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/react-content-loader/-/react-content-loader-4.3.0.tgz#c607cbe4415f7d9136c23f27c8505d1c5fbc3982"
-  integrity sha512-AoAuLwtkuswMLaAMdPnhsWJ1KuwXUZSxlR09bg5kxKEnQuCSPMjC20MILSnU+Htj+7m0NjFNQlqcarqMadAcMQ==
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/react-content-loader/-/react-content-loader-4.3.1.tgz#edeee346499fb629928f4e17b899af5403c911ac"
+  integrity sha512-K8QZq3B+MQXuzbz10cujfHWr8wmhpSjZsBswFJJpBnp5L5jR+QBVRjroPfUtdXLcbdeNDD2j9VS00a1fs3jQjg==
   dependencies:
     react-native-svg "9.6.4"
 
@@ -15588,10 +15598,10 @@ stream-shift@^1.0.0:
   resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.0.tgz#d5c752825e5367e786f78e18e445ea223a155952"
   integrity sha1-1cdSgl5TZ+eG944Y5EXqIjoVWVI=
 
-streamroller@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/streamroller/-/streamroller-2.1.0.tgz#702de4dbba428c82ed3ffc87a75a21a61027e461"
-  integrity sha512-Ps7CuQL0RRG0YAigxNehrGfHrLu+jKSSnhiZBwF8uWi62WmtHDQV1OG5gVgV5SAzitcz1GrM3QVgnRO0mXV2hg==
+streamroller@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/streamroller/-/streamroller-2.2.1.tgz#c10e03e1c9601a3a1462ae00842ee5e443d79805"
+  integrity sha512-LkKpmGNQwHWGqvG4h6v/IEz3s+EoR/0PSX8q5Mv4yXlFWxxp3I6zGv/maCSzyFzbfWmm5HQdoZvrrPyHjxzg1Q==
   dependencies:
     date-format "^2.1.0"
     debug "^4.1.1"

@@ -1,6 +1,7 @@
 import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
   INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
-  IDateAttribute, IEntityAttribute, GedeminEntityType, isUserDefined, getGedeminEntityType } from "gdmn-orm";
+  IDateAttribute, IEntityAttribute, isUserDefined, getGedeminEntityType } from "gdmn-orm";
+import equal from "fast-deep-equal";
 
 export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
 export const getTempID = () => 'temp-' + Math.random().toString();
@@ -76,7 +77,6 @@ export interface IErrorLink {
 export type ErrorLinks = IErrorLink[];
 
 export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) => {
-  const requiredEntityType = getGedeminEntityType(entity);
   const errorLinks = entity.attributes.reduce(
     (p, attr, attrIdx) => {
       if (!attr.name) {
@@ -189,7 +189,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
     });
   }
 
-  if (!entity.parent && requiredEntityType === 'INHERITED') {
+  if (!entity.parent && getGedeminEntityType(entity) === 'INHERITED') {
     errorLinks.push({
       field: 'entityParent',
       message: "Enter ancestor entity",
@@ -227,7 +227,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
   }
   */
 
-  return errorLinks;
+  return equal(errorLinks, prevErrorLinks) ? prevErrorLinks : errorLinks;
 };
 
 export const getErrorMessage = (field: string, errorLinks?: ErrorLinks) => {
