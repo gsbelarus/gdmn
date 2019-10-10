@@ -1048,7 +1048,7 @@ export class Application extends ADatabase {
   }
 
   protected async _onDisconnect(): Promise<void> {
-    await this.settingsCache.flush();
+    await this.settingsCache.flush(true);
     await super._onDisconnect();
     if (!ApplicationProcess.isProcess) {
       await this.processPool.destroy();

@@ -24,7 +24,7 @@ export class SettingsCache {
     return `${this._folder}\\type.${type}.json`;
   }
 
-  public async flush() {
+  public async flush(clear?: boolean) {
     Object.entries(this._cachedData).forEach( async ([type, data]) => {
       if (data.changed) {
         const fileName = this._getSettingFileName(type);
@@ -37,7 +37,11 @@ export class SettingsCache {
           console.log(`Error writing data to file ${fileName} - ${e}`);
         }
       }
-    })
+    });
+
+    if (clear) {
+      this._cachedData = {};
+    }
   }
 
   private async _loadFromFile(type: string) {
