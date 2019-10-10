@@ -9,6 +9,7 @@ export const BlobEditor = ({ attr, createAttr, onChange }: IAttributeEditorProps
   <ChoiceGroup
     label = "Blob type:"
     selectedKey = {attr.subType}
+    defaultSelectedKey = 'Text'
     options = {[
       {
           key: 'Binary',
