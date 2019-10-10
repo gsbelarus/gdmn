@@ -1,33 +1,49 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, AttributeTypes } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel } from "gdmn-orm";
 import React from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { EnumEditor } from "./EnumEditor";
 import { StringEditor } from "./StringEditor";
+import { NumberEditor} from "./NumberEditor"
+import { DateEditor } from "./DateEditor";
+import { BooleanEditor } from "./BooleanEditor";
+import { EntityEditor } from "./EntityEditor";
 import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
+import { BlobEditor } from "./BlobEditor";
 
-type Attr = IAttribute | IEnumAttribute | IStringAttribute;
+type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute;
 type OnChange = (newAttr: Attr) => void;
 type OnSelect = () => void;
+type OnError = (fieldName: string, errorMessage: string) => void;
+type OnClearError = (fieldName: string) => void;
 
-const DumbEditor = ({ attr, createAttribute, onChange }: { attr: IAttribute, createAttribute: boolean, onChange: OnChange }) => null;
+interface IDumbEditorProps {
+  attr: IAttribute;
+  createAttribute: boolean;
+  onChange: OnChange;
+  onError?: OnError;
+  onClearError?: OnClearError;
+  erModel?: ERModel;
+};
+
+const DumbEditor = ({ attr, createAttribute, onChange, erModel }: IDumbEditorProps) => null;
 
 const mapEditor = {
- 'Entity': DumbEditor,
+ 'Entity': EntityEditor,
  'String': StringEditor,
  'Set': DumbEditor,
  'Parent': DumbEditor,
  'Detail': DumbEditor,
  'Sequence': DumbEditor,
- 'Integer': DumbEditor,
- 'Numeric': DumbEditor,
- 'Float': DumbEditor,
- 'Boolean': DumbEditor,
- 'Date': DumbEditor,
- 'TimeStamp': DumbEditor,
- 'Time': DumbEditor,
- 'Blob': DumbEditor,
+ 'Integer': NumberEditor,
+ 'Numeric': NumberEditor,
+ 'Float': NumberEditor,
+ 'Boolean': BooleanEditor,
+ 'Date': DateEditor,
+ 'TimeStamp': DateEditor,
+ 'Time': DateEditor,
+ 'Blob': BlobEditor,
  'Enum': EnumEditor
 };
 
@@ -38,9 +54,12 @@ interface IEntityAttributeProps {
   errorLinks?: ErrorLinks;
   onChange: OnChange;
   onSelect: OnSelect;
+  onError?: OnError;
+  onClearError?: OnClearError;
+  erModel?: ERModel;
 };
 
-export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
@@ -53,7 +72,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             value={attr.name}
             disabled={!createAttribute}
             errorMessage={getErrorMessage('name', errorLinks)}
-            autoFocus
+            autoFocus={selected}
             styles={{
               root: {
                 width: '240px'
@@ -108,7 +127,7 @@ export const EntityAttribute = ({ attr, createAttribute, selected, errorLinks, o
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} />
+        <AttrEditor attr={attr as any} createAttribute={createAttribute} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
       </Stack>
     </Frame>
   );

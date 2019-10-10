@@ -7,9 +7,9 @@ import {
   TextField,
   Selection
 } from 'office-ui-fabric-react';
-import { Columns } from '..';
 import { OptionsPanel } from "./OptionsPanel";
-import { IUserColumnsSettings } from '../applyUserSettings';
+import { Columns } from '../Grid';
+import { IUserColumnsSettings } from '../types';
 
 export interface IParamsPanelProps {
   columns: Columns;
@@ -20,7 +20,7 @@ export interface IParamsPanelProps {
 export interface IParamsField {
   key: string;
   fieldname: string;
-  columnname: string; 
+  columnname: string;
 }
 
 export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
@@ -45,24 +45,24 @@ export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
       maxWidth: 150,
       isResizable: true,
       isMultiline: true,
-      data: 'string'       
-    }    
-  ];    
+      data: 'string'
+    }
+  ];
 
-  const [selectedItems, setSelectedItems] = useState([] as string[]);   
+  const [selectedItems, setSelectedItems] = useState([] as string[]);
   const [filterText, setFilterText] = useState('');
 
   const selection = useRef(new Selection({
-    onSelectionChanged: () => {  
+    onSelectionChanged: () => {
       const newSelection = selection.current.getSelection().map( s => s.key ).filter( s => typeof s === 'string' ) as typeof selectedItems;
       setSelectedItems(newSelection);
     }
-  }));   
+  }));
 
-  /** 
-   * Cоздаем items - массив полей для отображения в DetailsList, учитывая фильтр 
+  /**
+   * Cоздаем items - массив полей для отображения в DetailsList, учитывая фильтр
   */
-  const items: IParamsField[] = columns 
+  const items: IParamsField[] = columns
     ? columns.map(c => {
         const columnname = c.caption ? c.caption.join('; ') : (c.fields.map(f => f.caption).join('; ') && c.name);
         return {
@@ -71,22 +71,22 @@ export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
           fieldname: c.name
         };
       })
-      .filter(i => 
-        filterText === '' 
-          || i.fieldname.toUpperCase().indexOf(filterText.toUpperCase()) > -1 
+      .filter(i =>
+        filterText === ''
+          || i.fieldname.toUpperCase().indexOf(filterText.toUpperCase()) > -1
           || i.columnname.toUpperCase().indexOf(filterText.toUpperCase()) > -1
-      ) 
-    : [];  
-  
-  return (   
+      )
+    : [];
+
+  return (
     <div>
       <div className="ColumnsPanel">
-        <TextField 
-          label="Filter by name:"             
+        <TextField
+          label="Filter by name:"
           onChange={(ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, text?: string): void => {
-            setFilterText(text!);              
-          }} 
-          styles={{ root: { maxWidth: '300px' }}} 
+            setFilterText(text!);
+          }}
+          styles={{ root: { maxWidth: '300px' }}}
         />
         <div className="ColumnsList">
           <DetailsList
@@ -102,16 +102,16 @@ export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
             checkboxVisibility={1}
             layoutMode={DetailsListLayoutMode.fixedColumns}
             compact={true}
-            isHeaderVisible={true}  
+            isHeaderVisible={true}
           />
-        </div>  
-      </div> 
+        </div>
+      </div>
       <OptionsPanel
         columns={columns}
         onChanged={onChanged}
-        userSettings={userSettings}   
-        selectedItems={selectedItems} 
+        userSettings={userSettings}
+        selectedItems={selectedItems}
       />
-    </div>    
+    </div>
   )
 }

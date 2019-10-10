@@ -6,6 +6,7 @@ import { IApplicationInfo, ITemplateApplication } from '@gdmn/server-api';
 import { themes } from '../themeeditor/themes';
 import { IGridColors } from 'gdmn-grid';
 import { calcGridColors } from '@src/app/utils/calcGridColors';
+import { NLPDialog } from 'gdmn-nlp-agent';
 
 export type TGdmnState = {
   erModel: ERModel;
@@ -18,6 +19,7 @@ export type TGdmnState = {
   sessionInfo: any[];
   theme: string;
   gridColors: IGridColors;
+  nlpDialog: NLPDialog;
 };
 
 const initialState: TGdmnState = {
@@ -28,7 +30,8 @@ const initialState: TGdmnState = {
   apps: [],
   sessionInfo: [],
   theme: themes[0].name,
-  gridColors: calcGridColors()
+  gridColors: calcGridColors(),
+  nlpDialog: []
 };
 
 export function reducer(state: TGdmnState = initialState, action: GdmnAction): TGdmnState {
@@ -37,6 +40,20 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction): T
       return {
         ...state,
         erModel: action.payload
+      };
+    }
+
+    case getType(gdmnActions.clearNLPDialog): {
+      return {
+        ...state,
+        nlpDialog: []
+      };
+    }
+
+    case getType(gdmnActions.addNLPItem): {
+      return {
+        ...state,
+        nlpDialog: [...state.nlpDialog, action.payload.item]
       };
     }
 

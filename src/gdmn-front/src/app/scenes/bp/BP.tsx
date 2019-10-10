@@ -11,6 +11,7 @@ import { FSM } from '@src/app/fsm/fsm';
 import { flowcharts } from '@src/app/fsm/flowcharts';
 import { IFSMState } from '@src/app/fsm/types';
 import { fsmSignals } from '@src/app/fsm/fsmSignals';
+import { getPlugins } from '@src/app/fsm/plugins';
 
 interface IGraphState{
   graph: any;
@@ -18,7 +19,7 @@ interface IGraphState{
 
 export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
-  const { url, viewTab, dispatch, fsm, theme } = props;
+  const { url, viewTab, dispatch, fsm, theme, history } = props;
   const [flowchart, setFlowchart] = useState( fsm ? fsm.flowchart : Object.values(flowcharts).length ? Object.values(flowcharts)[0] : null );
   const [graphState, setGraphState] = useState<IGraphState | null>(null);
   const graphContainer = useRef(null);
@@ -75,6 +76,15 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       edgeStyle[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = getTheme().semanticColors.bodyBackground;
 
       graph.gridSize = 20;
+
+      graph.addListener(mxEvent.CLICK, (_sender: any, evt: any) => {
+        var cell = evt.getProperty("cell"); // cell may be null
+        if (cell != null) {
+          console.log(cell);
+          graph.setSelectionCell(cell);
+        }
+        evt.consume();
+      });
     }
 
     // Gets the default parent for inserting new cells. This
@@ -108,7 +118,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
 
         const v = graph.insertVertex(
           parent,
-          null,
+          fsmState.id,
           label ? label : fsmState.type.id,
           0,
           0,
@@ -186,7 +196,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
       iconProps: {
         iconName: 'Play'
       },
-      onClick: () => dispatch(fsmActions.setFSM(FSM.create(flowchart!).processSignal(fsmSignals.start)))
+      onClick: () => dispatch(fsmActions.setFSM(FSM.create(flowchart!, getPlugins(history)).processSignal(fsmSignals.start)))
     },
     {
       key: 'stop',

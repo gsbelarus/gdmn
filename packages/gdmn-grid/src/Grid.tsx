@@ -17,9 +17,9 @@ import GDMNSortDialog from './SortDialog';
 import { OnScroll, OnScrollParams } from './SyncScroll';
 import { TextCellEditor } from './editors/TextCellEditor';
 import { ParamsDialog } from './GridParams/ParamsDialog';
-import { applyUserSettings, IUserColumnsSettings } from './applyUserSettings';
+import { applyUserSettings } from './applyUserSettings';
 import { numberFormats } from 'gdmn-internals';
-import { IGridColors, getClassNames, IGridCSSClassNames } from './types';
+import { IGridColors, getClassNames, IGridCSSClassNames, IUserColumnsSettings } from './types';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
@@ -99,6 +99,8 @@ export interface IGridProps {
   loadMoreThresholdPages?: number;
   loadMoreMinBatchPagesRatio?: number;
   colors?: IGridColors;
+  userColumnsSettings?: IUserColumnsSettings;
+  onSetUserColumnsSettings?: (userSettings: IUserColumnsSettings | undefined ) => void;
 }
 
 export interface IGridState {
@@ -112,7 +114,6 @@ export interface IGridState {
   showDialogParams: boolean;
   fieldEditor: boolean;
   displayColumns: Columns;
-  userSettings?: IUserColumnsSettings;
   prevColumns: Columns;
   deltaWidth: number;
 }
@@ -177,9 +178,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const inCellRowHeight = 18;
     const totalCellVertPadding = 2;
 
-    const userItem = localStorage.getItem(props.rs.name);
-    const userColumnsSettings = userItem ? JSON.parse(userItem) : {} as IUserColumnsSettings;
-    const newColumns = applyUserSettings(props.columns, userColumnsSettings);
+    const newColumns = props.userColumnsSettings ? applyUserSettings(props.columns, props.userColumnsSettings) : props.columns;
     this.state = props.savedState || {
       columnWidth: 125,
       overscanColumnCount: 5,
@@ -194,7 +193,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       showDialogParams: false,
       fieldEditor: false,
       displayColumns: newColumns,
-      userSettings: userColumnsSettings,
       prevColumns: [],
       deltaWidth: 0
     };
@@ -207,13 +205,10 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
  */
   static getDerivedStateFromProps(props: IGridProps, state: IGridState) {
     if (state.prevColumns !== props.columns) {
-      const userItem = localStorage.getItem(props.rs.name);
-      const userColumnSettings = userItem ? JSON.parse(userItem) : {} as IUserColumnsSettings;
-      const comboColumns = applyUserSettings(props.columns, userColumnSettings);
+      const comboColumns = props.userColumnsSettings ? applyUserSettings(props.columns, props.userColumnsSettings) : props.columns;
       return {
         ...state,
         displayColumns: comboColumns.filter(c => !c.hidden),
-        userColumnSettings,
         prevColumns: props.columns
       }
     }
@@ -302,7 +297,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       loadMoreRsData,
       loadMoreThresholdPages,
       loadMoreMinBatchPagesRatio,
-      currentCol
+      currentCol,
+      onSetUserColumnsSettings,
+      columns
     } = this.props;
     const { displayColumns, rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
     const styles = this._styles;
@@ -976,44 +973,42 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
         {showDialogParams ?
           <ParamsDialog
             onRevert={() => {
-              localStorage.removeItem(rs.name);
-              this.setState({
-                ...this.state,
-                displayColumns: this.props.columns.filter(c => !c.hidden),
-                userSettings: undefined
-              });
+              if (onSetUserColumnsSettings) {
+                onSetUserColumnsSettings(undefined);
+                this.setState({
+                  ...this.state,
+                  displayColumns: columns.filter(c => !c.hidden)
+                });
+              }
             }}
             onChanged={
-              (userColumnsSettings: IUserColumnsSettings | undefined) => {
-                if (userColumnsSettings && Object.getOwnPropertyNames(userColumnsSettings).length !== 0) {
-                  const newColumns = applyUserSettings(this.props.columns, userColumnsSettings);
-                  this.setState({
-                    ...this.state,
-                    displayColumns: newColumns.filter(c => !c.hidden),
-                    userSettings: userColumnsSettings
-                  });
-                  //удаляем настройки колонок, которые пустые
-                  for (const columnName in userColumnsSettings) {
-                    if (userColumnsSettings && Object.getOwnPropertyNames(userColumnsSettings[columnName]).length === 0)
-                      delete userColumnsSettings[columnName];
+              (userSettings: IUserColumnsSettings | undefined) => {
+                if (onSetUserColumnsSettings) {
+                  if (userSettings && Object.getOwnPropertyNames(userSettings).length !== 0) {
+                    const newColumns = applyUserSettings(columns, userSettings);
+                    this.setState({
+                      ...this.state,
+                      displayColumns: newColumns.filter(c => !c.hidden)
+                    });
+                    //удаляем настройки колонок, которые пустые
+                    for (const columnName in userSettings) {
+                      if (userSettings && Object.getOwnPropertyNames(userSettings[columnName]).length === 0)
+                        delete userSettings[columnName];
+                    }
+                    onSetUserColumnsSettings(userSettings);
+                  } else {
+                    onSetUserColumnsSettings(undefined);
+                    this.setState({
+                      ...this.state,
+                      displayColumns: columns.filter(c => !c.hidden)
+                    });
                   }
-                  localStorage.setItem(rs.name, JSON.stringify(userColumnsSettings));
-
-                  if (Object.getOwnPropertyNames(userColumnsSettings).length == 0)
-                    localStorage.removeItem(rs.name);
-                } else {
-                  this.setState({
-                    ...this.state,
-                    displayColumns: this.props.columns.filter(c => !c.hidden),
-                    userSettings: undefined
-                  });
-                  localStorage.removeItem(rs.name);
                 }
               }
             }
             onDismiss={this._onCloseSetParamsDialog}
-            columns={this.props.columns}
-            userSettings={this.state.userSettings}
+            columns={columns}
+            userSettings={this.props.userColumnsSettings}
           />
         :
           undefined

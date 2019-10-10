@@ -1,64 +1,48 @@
 import { TextField } from "office-ui-fabric-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 interface INumberFieldProps {
   label: string;
   value: number | undefined;
+  errorMessage?: string;
+  noNegative?: boolean;
+  onlyInteger? : boolean;
+  width?: string;
   onChange: (newValue: number | undefined) => void;
+  onInvalidValue: () => void;
 };
 
-interface INumberFieldState {
-  text: string;
-  error?: string;
-};
+export const NumberField = ({ label, value, errorMessage, width, onChange, onlyInteger, noNegative, onInvalidValue }: INumberFieldProps) => {
 
-export const NumberField = ({ label, value, onChange }: INumberFieldProps) => {
-
-  const [state, setState] = useState<INumberFieldState>( { text: value === undefined ? '' : value.toString() } );
-
-  useEffect( () => {
-    const { text } = state;
-    const trimmedText = text.trim();
-
-    if (trimmedText === '') {
-      if (value !== undefined) {
-        onChange(undefined);
-      }
-      if (state.error) {
-        setState({ ...state, error: undefined });
-      }
-    }
-    else if (trimmedText !== '-') {
-      const parsedValue = parseInt(trimmedText);
-
-      if (isNaN(parsedValue)) {
-        if (!state.error) {
-          setState({ ...state, error: 'Введите число!' });
-        }
-      } else {
-        if (parsedValue !== value) {
-          onChange(parsedValue);
-        }
-
-        if (state.error) {
-          setState({ ...state, error: undefined });
-        }
-      }
-
-    }
-  }, [value, state]);
+  const [text, setText] = useState( value === undefined ? '' : value.toString() );
 
   return (
     <TextField
       label={label}
-      value={state.text}
-      errorMessage={state.error}
-      styles={{
-        root: {
-          width: '180px'
+      value={text}
+      errorMessage={errorMessage}
+      styles={ width ? { root: { width } } : undefined }
+      onChange={
+        (_, newValue) => {
+          if (newValue !== undefined) {
+            const trimmedValue = newValue.trim();
+
+            if (!trimmedValue) {
+              onChange(undefined);
+            } else {
+              const v = Number(trimmedValue);
+
+              if (isNaN(v) || (v < 0 && noNegative) || (onlyInteger && (v % 1))) {
+                onInvalidValue();
+              } else {
+                onChange(v);
+              }
+            }
+
+            setText(newValue);
+          }
         }
-      }}
-      onChange={ (_, newValue) => newValue !== undefined && setState({ ...state, text: newValue }) }
+      }
     />
   );
 };

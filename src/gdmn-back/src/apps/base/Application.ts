@@ -1,5 +1,5 @@
 import {EventEmitter} from "events";
-import {AConnection, IParams} from "gdmn-db";
+import {AConnection, IParams, INamedParams} from "gdmn-db";
 import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
@@ -22,7 +22,8 @@ import {
   IERModel,
   ISequenceQueryInspector,
   ISequenceQueryResponse,
-  SequenceQuery
+  SequenceQuery,
+  IEntity
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -32,8 +33,10 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingData, ISettingParams, isISettingData, ISqlPrepareResponse} from "gdmn-internals";
+import {ISettingParams, isISettingData, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
 import { promises } from "fs";
+import {str2SemCategories} from "gdmn-nlp";
+import path from "path";
 
 export type AppAction =
   "DEMO"
@@ -59,9 +62,10 @@ export type AppAction =
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
   | "DELETE_ENTITY"
-  | "EDIT_ENTITY"
+  | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
-  | "SAVE_SETTING";
+  | "SAVE_SETTING"
+  | "DELETE_SETTING";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -85,17 +89,12 @@ export type DeleteCmd = AppCmd<"DELETE", { delete: IEntityDeleteInspector }>;
 export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryInspector }>;
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
-export type AddEntityCmd = AppCmd<"ADD_ENTITY", { entityName: string, parentName?: string, attributes?: IAttribute[] }>;
+export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
-export type EditEntityCmd = AppCmd<"EDIT_ENTITY", {
-  entityName: string,
-  parentName?: string,
-  changedFields: { [fieldName: string]: string },
-  attributes: IAttribute[];
-}>;
-
+export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: string }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
-export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { oldData?: ISettingData, newData: ISettingData }>;
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
+export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
 
 export class Application extends ADatabase {
 
@@ -133,7 +132,8 @@ export class Application extends ADatabase {
 
   private _getSettingFileName(type: string) {
     const pathFromDB = this.dbDetail.connectionOptions.path;
-    return `${pathFromDB.substring(0, pathFromDB.lastIndexOf("\\"))}\\type.${type}.json`;    
+    const extLen = path.extname(pathFromDB).length;
+    return `${pathFromDB.slice(0, -extLen)}\\type.${type}.json`;
   }
 
   public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
@@ -366,7 +366,7 @@ export class Application extends ADatabase {
 
   public pushAddEntityCmd(session: Session,
                           command: AddEntityCmd
-  ): Task<AddEntityCmd, string[]> {
+  ): Task<AddEntityCmd, IEntity> {
     const task = new Task({
       session,
       command,
@@ -375,32 +375,26 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const {entityName, parentName, attributes} = context.command.payload;
+        const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
 
-        const getNewEntity = () => {
-          if (parentName) {
-            try {
-              return new Entity({
-                parent: this.erModel.entity(parentName),
-                name: entityName,
-                lName: {}
-              });
-            } catch (error) {
-              throw error;
-            }
-          }
-          return new Entity({
-            name: entityName,
-            lName: {}
-          });
-        };
+
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel, getNewEntity());
+              const entity = await erBuilder.create(this.erModel,
+                new Entity({
+                  parent: parent ? this.erModel.entity(parent) : undefined,
+                  name,
+                  lName,
+                  adapter,
+                  isAbstract,
+                  unique,
+                  semCategories: semCategories ? str2SemCategories(semCategories) : undefined
+                })
+              );
               if (attributes) {
                 const lengthArr = attributes.length;
                 for (let i = 0; i < lengthArr; i++) {
@@ -411,7 +405,7 @@ export class Application extends ADatabase {
             }
           })
         }));
-        return this.erModel.entity(entityName).inspect();
+        return this.erModel.entity(name).serialize(true);
       }
     });
     session.taskManager.add(task);
@@ -451,9 +445,9 @@ export class Application extends ADatabase {
     return task;
   }
 
-  public pushEditEntityCmd(session: Session,
-                           command: EditEntityCmd
-  ): Task<EditEntityCmd, { entityName: string }> {
+  public pushDeleteAttributeCmd(session: Session,
+                                command: DeleteAttributeCmd
+  ): Task<DeleteAttributeCmd, void> {
     const task = new Task({
       session,
       command,
@@ -463,39 +457,19 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {entityName, parentName, changedFields, attributes} = context.command.payload;
+        const {entityData, attrName} = context.command.payload;
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = this.erModel.entity(entityName);
-              const attr = entity.attributes;
-
-              const chfields = Object.entries(changedFields);
-              for await (const [key, value] of chfields) {
-                const result = Object.keys(attr).map((attrKey) => {
-                  return attrKey;
-                });
-                const findAttr = result.find((r) => r === key);
-
-                if (findAttr && value === "delete") {
-                  await erBuilder.eBuilder.deleteAttribute(
-                    this.erModel.entity(entityName),
-                    entity.attribute(key));
-                } else {
-                  const editAttr = attributes.find((at) => at.id === key);
-                  if (editAttr) {
-                    const newAttr = EntityUtils.createAttribute(editAttr, entity, this.erModel);
-                    await eBuilder.createAttribute(entity, newAttr);
-                  }
-                }
-              }
+              const entity = this.erModel.entity(entityData.name);
+              const attribute = entity.attribute(attrName);
+              await erBuilder.eBuilder.deleteAttribute(entity, attribute);
             }
           })
         }));
-        return {entityName};
       }
     });
     session.taskManager.add(task);
@@ -656,6 +630,11 @@ export class Application extends ADatabase {
     return task;
   }
 
+  private isNamedParams(s: any): s is INamedParams {
+    return s instanceof Object && !Array.isArray(s);
+  }
+
+  // tslint:disable-next-line: member-ordering
   public pushPrepareSqlQueryCmd(session: Session, command: PrepareSqlQueryCmd): Task<PrepareSqlQueryCmd, void> {
     const task = new Task({
       session,
@@ -664,7 +643,17 @@ export class Application extends ADatabase {
       unlimited: true,
       logger: this.taskLogger,
       worker: async (context) => {
-        const {select, params} = context.command.payload;
+        const {select, params: preParams} = context.command.payload;
+
+        const dateFormat = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
+        const params = this.isNamedParams(preParams) ?
+          Object.keys(preParams).reduce((map, obj: keyof INamedParams) => {
+            const value = (preParams as INamedParams)[obj];
+            map[obj] = (typeof value === "string" && value.length >= 24
+             && dateFormat.test(value)) ? new Date(value) : value;
+            return map;
+          }, {} as INamedParams)
+        : preParams;
 
         const cursorEmitter = new EventEmitter();
         const cursorPromise = new Promise<SqlQueryCursor>((resolve, reject) => {
@@ -947,7 +936,7 @@ export class Application extends ADatabase {
 
   // TODO: пока обрабатываем только первый объект из массива, из запроса с клиента
   public pushQuerySettingCmd(session: Session,
-                             command: QuerySettingCmd): Task<QuerySettingCmd, ISettingData[]> {
+                             command: QuerySettingCmd): Task<QuerySettingCmd, ISettingEnvelope[]> {
     const task = new Task({
       session,
       command,
@@ -958,26 +947,26 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
         const fileName = this._getSettingFileName(payload.query[0].type);
-        
+
         let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
           .then( text => JSON.parse(text) )
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              console.log(`Read data from file ${fileName}`);
-              return arr as ISettingData[];
+              this.taskLogger.log(`Read data from file ${fileName}`);
+              return arr as ISettingEnvelope[];
             } else {
-              console.log(`Unknown data type in file ${fileName}`);
+              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
               return undefined;
             }
           })
           .catch( err => {
-            console.log(`Error reading file ${fileName} - ${err}`);
+            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
             return undefined;
           });
 
         await context.checkStatus();
 
-        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingData[] : [];
+        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingEnvelope[] : [];
       }
     });
 
@@ -1007,15 +996,15 @@ export class Application extends ADatabase {
           .then( text => JSON.parse(text) )
           .then( arr => {
             if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-              console.log(`Read data from file ${fileName}`);
-              return arr as ISettingData[];
+              this.taskLogger.log(`Read data from file ${fileName}`);
+              return arr as ISettingEnvelope[];
             } else {
-              console.log(`Unknown data in file ${fileName}`);
+              this.taskLogger.warn(`Unknown data in file ${fileName}`);
               return undefined;
             }
           })
           .catch( err => {
-            console.log(`Error reading data from file ${fileName} - ${err}`);
+            this.taskLogger.warn(`Error reading data from file ${fileName} - ${err}`);
             return undefined;
           });
 
@@ -1033,10 +1022,62 @@ export class Application extends ADatabase {
         // записываем файл. если будет ошибка, то выведем ее в лог,
         // но не будем прерывать выполнение задачи
         try {
+          await promises.mkdir(path.dirname(fileName), { recursive: true });
           await promises.writeFile(fileName, JSON.stringify(data, undefined, 2), { encoding: 'utf8', flag: 'w' });
         }
         catch (e) {
-          console.log(`Error writing data to file ${fileName} - ${e}`);
+          this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
+        }
+
+        await context.checkStatus();
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushDeleteSettingCmd(session: Session, command: DeleteSettingCmd): Task<DeleteSettingCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const payload = context.command.payload;
+        const fileName = this._getSettingFileName(payload.data.type);
+
+        let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
+        .then( text => JSON.parse(text) )
+        .then( arr => {
+            if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
+              this.taskLogger.log(`Read data from file ${fileName}`);
+              return arr as ISettingEnvelope[];
+            } else {
+              this.taskLogger.warn(`Unknown data type in file ${fileName}`);
+              return undefined;
+            }
+          })
+          .catch( err => {
+            this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
+            return undefined;
+          });
+        
+        // мы исходим из оптимистичного сценария
+        // раз с клиента нам пришла команда на удаление объекта
+        // с некоторым ИД, то такой объект СКОРЕЕ ВСЕГО есть в файле  
+        const newData = data && data.filter( item => item.objectID !== payload.data.objectID );  
+
+        if( data && newData && data.length > newData.length ) {
+          try {
+            await promises.mkdir(path.dirname(fileName), { recursive: true });
+            await promises.writeFile(fileName, JSON.stringify(newData, undefined, 2), { encoding: 'utf8', flag: 'w' });
+          }
+          catch (e) {
+            this.taskLogger.warn(`Error writing data to file ${fileName} - ${e}`);
+          }
         }
 
         await context.checkStatus();

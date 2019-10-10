@@ -63,10 +63,10 @@ import {
   TAddEntityTaskCmdResult,
   TDeleteEntityTaskCmdResult,
   TQuerySettingTaskCmdResult,
-  TEditEntityTaskCmdResult,
+  TDeleteAttributeTaskCmdResult,
   TSqlPrepareTaskCmdResult,
-  TSaveSettingTaskCmd,
-  TSaveSettingTaskCmdResult
+  TSaveSettingTaskCmdResult,
+  TDeleteSettingTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -422,10 +422,10 @@ export class GdmnPubSubApi {
     });
   }
 
-  public editEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.EDIT_ENTITY]): Promise<TEditEntityTaskCmdResult> {
+  public deleteAttribute(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE_ATTRIBUTE]): Promise<TDeleteAttributeTaskCmdResult> {
     return this.runTaskRequestCmd({
       payload: {
-        action: TTaskActionNames.EDIT_ENTITY,
+        action: TTaskActionNames.DELETE_ATTRIBUTE,
         payload
       }
     });
@@ -444,6 +444,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.SAVE_SETTING,
+        payload
+      }
+    });
+  }
+
+  public deleteSetting(payload: TTaskActionPayloadTypes[TTaskActionNames.DELETE_SETTING]): Promise<TDeleteSettingTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.DELETE_SETTING,
         payload
       }
     });
@@ -582,6 +591,7 @@ export class GdmnPubSubApi {
     taskCmd: TTaskCmd<TActionName>,
     replyMode: boolean = false
   ) {
+    console.log('our params',JSON.stringify({payload: taskCmd.payload.payload}));
     const observ = this.pubSubClient
       .publish<IPubSubMessage<TGdmnPublishMessageMeta>>(TGdmnTopic.TASK, {
         meta: {

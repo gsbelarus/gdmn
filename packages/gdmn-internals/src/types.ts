@@ -1,3 +1,5 @@
+import { isValidDate } from "./utils"
+
 export enum Types {
   BIGINT,
   INTEGER,
@@ -76,6 +78,16 @@ export function isISettingData(data: any): data is ISettingData {
 };
 
 export interface ISettingEnvelope extends ISettingData {
-  _changed: Date;
-  _accessed: Date;
+  _changed: number;
+  _accessed: number;
+};
+
+export function isISettingEnvelope(data: any): data is ISettingEnvelope {
+  return (
+    isISettingData(data)
+    &&
+    typeof (data as any)._changed === 'number'
+    &&
+    typeof (data as any)._accessed === 'number'
+  )
 };

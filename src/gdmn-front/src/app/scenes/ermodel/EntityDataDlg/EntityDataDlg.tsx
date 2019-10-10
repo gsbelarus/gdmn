@@ -27,10 +27,12 @@ import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
-import { IDesignerState/*, LOCAL_STORAGE_KEY */} from '../../designer/Designer';
+import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
+import { useSettings } from '@src/app/hooks/useSettings';
+import { IDesignerSetting } from '../../designer/Designer.types';
 
 interface ILastEdited {
   fieldName: string;
@@ -109,7 +111,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
-  const [designerState, setDesignerState] = useState<IDesignerState | undefined>();
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     dispatch(gdmnActions.addViewTab({
@@ -317,31 +318,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
 
+  const [setting, setSetting, deleteSetting] = useSettings<IDesignerSetting>({ type: 'DESIGNER', objectID: entityName });
+
   useEffect( () => {
-
-    // задача: при загрузке формы запросить настройки с сервера и
-    // записать их в стэйт компонента, откуда дизайнер будет их брать и
-    // применять для отрисовки на экране.
-
-    apiService.querySetting({
-      query: [
-        {
-          type: 'DESIGNER',
-          objectID: entityName
-        }
-      ]
-    })
-    .then( response => {
-      if (response.error) {
-        console.log(response.error);
-      } else if (!response.payload.result || !response.payload.result.length) {
-        console.log('Settings are not found');
-      } else {
-        // подумать, надо ли тут проверка что за объект нам пришел
-        setDesignerState(response.payload.result[0].data as IDesignerState);
-      }
-    });
-
     return () => {
       dispatch(gdmnActions.saveSessionData({
         viewTabURL: url,
@@ -659,7 +638,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
 
-  //const localState = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`) === null ? undefined : JSON.parse(localStorage.getItem(`${LOCAL_STORAGE_KEY}/${url.split('/')[4]}`)!);
     const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
       const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
 
@@ -739,8 +717,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   return apiService.query({ query: linkEq.inspect() })
                     .then( response => {
                       const result = response.payload.result!;
-                      const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                      const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
+                      const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                      const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
                         && (data.attribute === presentField!.name))![0];
                       return result.data.map( (r): IComboBoxOption => ({
                         key: r[idAlias],
@@ -885,13 +863,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       }
     }
 
-    const grid: IGrid = designerState !== undefined
-      ? (designerState as IDesignerState).grid
-      : {
-        columns: [{ unit: 'PX', value: 320 }],
-        rows: [{ unit: 'FR', value: 1 }],
-      };
-    const fields: Objects = designerState === undefined
+    const grid: IGrid = setting ? setting.grid : {
+      columns: [{ unit: 'PX', value: 320 }],
+      rows: [{ unit: 'FR', value: 1 }],
+    };
+
+    const fields: Objects = !setting
       ? rs
         ? rs.fieldDefs.map(fd => {
           const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
@@ -905,7 +882,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         })
         : []
       : [];
-    const area1: IArea[] = designerState === undefined ? [{
+
+    const area1: IArea[] = !setting ? [{
       name: 'Area1',
       type: 'AREA',
       parent: 'Window',
@@ -914,14 +892,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       right: 0,
       bottom: 0
     }]
-    : getAreas((designerState as IDesignerState).objects);
-    const window: IWindow = designerState !== undefined
-      ? (designerState as IDesignerState).objects.find(obj => isWindow(obj)) as IWindow
+    : getAreas(setting.objects);
+
+    const window: IWindow = setting
+      ? setting.objects.find(obj => isWindow(obj)) as IWindow
       : {
           name: 'Window',
           type: 'WINDOW'
         };
-    const objects: Objects = designerState ? (designerState as IDesignerState).objects : [window, ...area1, ...fields];
+
+    const objects: Objects = setting ? setting.objects : [window, ...area1, ...fields];
 
   return (
     <>
@@ -930,14 +910,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           ? <DesignerContainer
               url={url}
               entityName={entityName}
-              grid={grid}
-              objects={objects}
-              onExit={ newSettings => {
-                setDesigner(false);
-                if (newSettings) {
-                  setDesignerState(newSettings);
-                }
-              } }
+              setting={setting}
+              onSaveSetting={ setting => setSetting(setting) }
+              onDeleteSetting={ () => deleteSetting() }
+              onExit={ () => setDesigner(false) }
             />
           : <>
             <CommandBar items={commandBarItems} />

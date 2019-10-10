@@ -13,7 +13,8 @@ import {
   NumericAttribute,
   ScalarAttribute,
   SetAttribute,
-  StringAttribute
+  StringAttribute,
+  BlobAttribute
 } from "gdmn-orm";
 import moment from "moment";
 import {Constants} from "../Constants";
@@ -69,10 +70,14 @@ export class DomainResolver {
         return `DOUBLE PRECISION`;
       case "Boolean":
         return `SMALLINT`;
-      case "Blob":
-        return `BLOB`;
-      default:
-        return `BLOB SUB_TYPE TEXT`;
+      case "Blob": {
+        const _attr = attr as BlobAttribute;
+        if(_attr.subType === "Text") {
+          return `BLOB SUB_TYPE TEXT`;
+        } else {
+          return `BLOB`;
+        }
+      }
     }
   }
 

@@ -1,4 +1,22 @@
 import { mergeStyleSets } from '@uifabric/merge-styles';
+import { IDateFormat } from 'gdmn-internals';
+
+export interface IUserColumnSetting {
+  hidden?: boolean;
+  caption?: string[];
+  width?: number;
+  numberFormatName?: string;
+  dateFormat?: IDateFormat;
+}
+
+export interface IUserColumnsSettings {
+  [columnName: string]: IUserColumnSetting;
+}
+
+export interface IUserColumnsSettingsEnvelope {
+  _changed: Date;
+  data: IUserColumnsSettings;
+};
 
 export interface IGridColors {
   currentCellBackground: string;

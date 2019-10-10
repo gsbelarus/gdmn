@@ -19,7 +19,7 @@ import {TimeStampAttribute} from "./model/scalar/number/TimeStampAttribute";
 import {SequenceAttribute} from "./model/scalar/SequenceAttribute";
 import {StringAttribute} from "./model/scalar/StringAttribute";
 import {Sequence} from "./model/Sequence";
-import {AttributeTypes, ContextVariables, IEnumValue} from "./types";
+import {AttributeTypes, ContextVariables, IEnumValue, BlobSubTypes} from "./types";
 
 export interface IAttribute {
   name: string;
@@ -51,6 +51,10 @@ export interface INumericAttribute extends INumberAttribute<number> {
   scale: number;
 }
 
+export function isINumericAttribute(attr: IAttribute): attr is INumericAttribute {
+  return attr.type === 'Numeric' && typeof (attr as any).precision === 'number' && typeof (attr as any).scale === 'number';
+}
+
 export interface IDateAttribute extends INumberAttribute<Date, ContextVariables> {
 }
 
@@ -66,6 +70,9 @@ export interface IStringAttribute extends IAttribute {
   autoTrim: boolean;
 }
 
+export interface IBlobAttribute extends IAttribute {
+  subType: BlobSubTypes;
+}
 export interface IEntityAttribute extends IAttribute {
   references: string[];
 }
@@ -84,6 +91,15 @@ export interface IEntity {
   unique: string[][];
   attributes: IAttribute[];
   adapter?: any;
+}
+
+export function isIEntity(e: any): e is IEntity {
+  return e instanceof Object
+    && typeof e.name === 'string'
+    && e.lName instanceof Object
+    && typeof e.isAbstract === 'boolean'
+    && typeof e.semCategories === 'string'
+    && Array.isArray(e.attributes);
 }
 
 export interface ISequence {
@@ -236,7 +252,8 @@ export function deserializeERModel(serialized: IERModel, withAdapter?: boolean):
       }
 
       case "Blob": {
-        return new BlobAttribute({name, lName, required, semCategories, adapter});
+        const {subType} = _attr as IBlobAttribute;
+        return new BlobAttribute({name, lName, required, subType, semCategories, adapter});
       }
 
       case "Enum": {

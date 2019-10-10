@@ -199,7 +199,10 @@ export const Sql = CSSModules(
       setState({ type: 'SHOW_PARAMS', showParams: false});
       setState({ type: 'LOAD_PARAMS', ...state, paramList });
 
-      const params = paramList.reduce((map, obj) => { map[obj.name] = obj.value || ''; return map }, {} as {[x:string]: any});
+      const params = paramList.reduce((map, obj) => {
+        map[obj.name] = obj.type = 5 ? new Date(obj.value) : obj.value || '';
+        return map
+      }, {} as {[x:string]: any});
       setState({ type: 'SET_PARAMS', params });
     }
 
@@ -299,7 +302,6 @@ export const Sql = CSSModules(
 
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
-        console.log('run', state.params)
         apiService
           .prepareSqlQuery({
             select: state.expression,

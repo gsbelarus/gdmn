@@ -34,4 +34,9 @@ describe("ERModel", () => {
     expect(erModel).toEqual(erModel2);
     expect(erModel2.entities.Test.isTree).toBeFalsy();
   });
+
+  it("copy", async () => {
+    const erModel2 = new ERModel(erModel);
+    expect(erModel).toEqual(erModel2);
+  });
 });

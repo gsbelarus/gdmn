@@ -1,26 +1,16 @@
 import { Columns } from "./Grid";
-import { IDateFormat } from "gdmn-internals";
+import { IUserColumnsSettings } from "./types";
 
-export interface IUserColumnSetting {
-  hidden?: boolean;
-  caption?: string[];
-  width?: number;
-  numberFormatName?: string;
-  dateFormat?: IDateFormat;
-}
 
-export interface IUserColumnsSettings {
-  [columnName: string]: IUserColumnSetting;
-}
 /**
- * 
+ *
  * @param columns - колонки с глобальными настройками
  * @param userSettings - настройки пользователя
- * 
+ *
  * Возвращаем объединенные настройки колонок, глобальные с настройками пользователя
  */
 export function applyUserSettings(columns: Columns, userSettings: IUserColumnsSettings): Columns {
- 
+
   return columns.map(c => {
 
     const userColumnSettings = userSettings[c.name];
@@ -39,7 +29,7 @@ export function applyUserSettings(columns: Columns, userSettings: IUserColumnsSe
           numberFormat: userColumnSettings.numberFormatName !== undefined ? {name: userColumnSettings.numberFormatName} : f.numberFormat,
           dateFormat:  userColumnSettings.dateFormat !== undefined ? userColumnSettings.dateFormat : f.dateFormat
         }
-        : f        
+        : f
       )
     };
   });
