@@ -1,16 +1,10 @@
 import { Stack, TextField, Dropdown } from "office-ui-fabric-react";
 import React from "react";
-import { getErrorMessage, ErrorLinks } from "./utils";
+import { getErrorMessage } from "./utils";
 import { IDateAttribute } from "gdmn-orm/dist/definitions/serialize";
-import { AttributeDateTimeTypes } from "gdmn-orm";
+import { AttributeDateTimeTypes, isUserDefined } from "gdmn-orm";
 import { DateField } from "./DateField";
-
-interface IDateEditorProps {
-  attr: IDateAttribute,
-  createAttribute: boolean,
-  errorLinks?: ErrorLinks;
-  onChange: (newAttr: IDateAttribute) => void
-};
+import { IAttributeEditorProps } from "./EntityAttribute";
 
 const getOptions = (type: AttributeDateTimeTypes) => {
   switch (type) {
@@ -23,28 +17,32 @@ const getOptions = (type: AttributeDateTimeTypes) => {
   }
 };
 
-export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => {
+export const DateEditor = ({ attr, attrIdx, userDefined, errorLinks, onChange }: IAttributeEditorProps<IDateAttribute>) => {
   return (
     <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
       <DateField
         dateFieldType={attr.type as AttributeDateTimeTypes}
         label="Min value:"
         value={attr.minValue}
-        errorMessage={getErrorMessage('minValue', errorLinks)}
+        readOnly={!userDefined}
+        errorMessage={getErrorMessage(attrIdx, 'minValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, minValue: newValue}) }
       />
       <DateField
         dateFieldType={attr.type as AttributeDateTimeTypes}
         label="Max value:"
         value={attr.maxValue}
-        errorMessage={getErrorMessage('maxValue', errorLinks)}
+        readOnly={!userDefined}
+        errorMessage={getErrorMessage(attrIdx, 'maxValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
       <Dropdown
         label="Default value type:"
         selectedKey={typeof attr.defaultValue === 'string' ? attr.defaultValue : 'VALUE'}
         options={getOptions(attr.type as AttributeDateTimeTypes)}
-        onChange={ (_, newValue) => newValue && onChange({ ...attr, defaultValue: newValue.key === "VALUE" ? undefined : newValue.key as any}) }
+        onChange={
+          userDefined ? (_, newValue) => newValue && onChange({ ...attr, defaultValue: newValue.key === "VALUE" ? undefined : newValue.key as any}) : undefined
+        }
         styles={{
           root: {
             width: '180px'
@@ -55,7 +53,7 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
         ?
         <TextField
           label="Default value:"
-          value={attr.defaultValue}
+          defaultValue={attr.defaultValue}
           disabled
           styles={{
             root: {
@@ -65,10 +63,11 @@ export const DateEditor = ({ attr, errorLinks, onChange }: IDateEditorProps) => 
         />
         :
         <DateField
-          dateFieldType={attr.type as AttributeDateTimeTypes}
           label="Default value:"
+          dateFieldType={attr.type as AttributeDateTimeTypes}
           value={attr.defaultValue}
-          errorMessage={getErrorMessage('defaultValue', errorLinks)}
+          readOnly={!userDefined}
+          errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
           onChange={ defaultValue => onChange({ ...attr, defaultValue }) }
         />
       }

@@ -8,11 +8,12 @@ interface INumberFieldProps {
   noNegative?: boolean;
   onlyInteger? : boolean;
   width?: string;
+  readOnly?: boolean;
   onChange: (newValue: number | undefined) => void;
   onInvalidValue: () => void;
 };
 
-export const NumberField = ({ label, value, errorMessage, width, onChange, onlyInteger, noNegative, onInvalidValue }: INumberFieldProps) => {
+export const NumberField = ({ label, value, errorMessage, width, onChange, onlyInteger, noNegative, onInvalidValue, readOnly }: INumberFieldProps) => {
 
   const [text, setText] = useState( value === undefined ? '' : value.toString() );
 
@@ -20,6 +21,7 @@ export const NumberField = ({ label, value, errorMessage, width, onChange, onlyI
     <TextField
       label={label}
       value={text}
+      readOnly={readOnly}
       errorMessage={errorMessage}
       styles={ width ? { root: { width } } : undefined }
       onChange={
