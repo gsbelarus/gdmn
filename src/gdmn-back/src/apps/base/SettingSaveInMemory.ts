@@ -18,7 +18,6 @@ export class SettingSaveInMemory {
   }
 
   private _getSettingFileName(type: string, dbName: string) {
-    console.log(`${path.parse(this.pathFromFolderDB).dir}\\${dbName}\\type.${type}.json`)
     return `${path.parse(this.pathFromFolderDB).dir}\\${dbName}\\type.${type}.json`;
   }
 
