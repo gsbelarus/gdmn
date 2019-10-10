@@ -47,7 +47,7 @@ export class SettingSaveInMemory {
     return this.getData(fileName);
   }
 
-  private async writeFileSettings() {
+  public async writeFileSettings() {
     this.dataFromFiles.forEach(async (item, idx) => {
       if(item.isChangedData) {
         const data = this.getData(item.fileName);
@@ -71,10 +71,14 @@ export class SettingSaveInMemory {
     return findData ? findData.data : undefined;
   }
 //
-  public findSetting(type: string, objectID: string, dbName: string): ISettingEnvelope[] | undefined {
+  public async findSetting(type: string, objectID: string, dbName: string): Promise<ISettingEnvelope[] | undefined> {
     const fileName = this._getSettingFileName(type, dbName);
     const findData = this.getData(fileName);
-    return findData ? findData.filter( s => isISettingData(s) && s.type === type && s.objectID === objectID) as ISettingEnvelope[]: undefined;
+    let data;
+    if (findData) {
+      data = await this.readFileWithSettings(type, dbName);
+    }
+    return data ? data.filter( s => isISettingData(s) && s.type === type && s.objectID === objectID) as ISettingEnvelope[]: undefined;
   }
 //
   public newData(newData: ISettingEnvelope, dbName: string) {
