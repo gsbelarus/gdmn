@@ -62,7 +62,7 @@ export const ParamsDialog = (props: ISQLFormProps) => {
     } else {
       date = undefined;
     }
-    setParamList(paramList.map(i => i.name === name ? {...i, value: date} : i))
+    setParamList(paramList.map(i => i.name === name ? {...i, value: newDate} : i))
   };
 
   useEffect(() => {
