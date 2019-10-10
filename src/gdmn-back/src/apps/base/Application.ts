@@ -640,6 +640,7 @@ export class Application extends ADatabase {
       worker: async (context) => {
         const {select, params} = context.command.payload;
 
+        console.log('params:', params);
         const cursorEmitter = new EventEmitter();
         const cursorPromise = new Promise<SqlQueryCursor>((resolve, reject) => {
           cursorEmitter.once("cursor", resolve);
