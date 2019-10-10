@@ -32,7 +32,7 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingParams, isISettingData, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
+import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
 import { SettingSaveInMemory } from './SettingSaveInMemory';
@@ -109,7 +109,7 @@ export class Application extends ADatabase {
 
   constructor(dbDetail: IDBDetail) {
     super(dbDetail);
-    this.settingsInMemory = new SettingSaveInMemory(dbDetail);
+    this.settingsInMemory = new SettingSaveInMemory(this.dbDetail.connectionOptions.path);
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
@@ -933,12 +933,12 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
-        const fileName = this._getSettingFileName(payload.query[0].type);
-        const data = await this.settingsInMemory.readFileWithSettings(fileName);
+        const data = await this.settingsInMemory
+          .findSetting(payload.query[0].type, payload.query[0].objectID, path.parse(this.dbDetail.connectionOptions.path).name);
 
         await context.checkStatus();
 
-        return data ? data.filter( s => isISettingData(s) && s.type === payload.query[0].type && s.objectID === payload.query[0].objectID) as ISettingEnvelope[] : [];
+        return data ? data : [];
       }
     });
 
@@ -958,9 +958,8 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const { newData } = context.command.payload;
-        const fileName = this._getSettingFileName(newData.type);
 
-        this.settingsInMemory.newData(fileName, newData);
+        this.settingsInMemory.newData(newData, path.parse(this.dbDetail.connectionOptions.path).name);
 
         await context.checkStatus();
       }
@@ -980,9 +979,8 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
-        const fileName = this._getSettingFileName(payload.data.type);
 
-        this.settingsInMemory.deleteSettingFromData(fileName, payload.data);
+        this.settingsInMemory.deleteSettingFromData(payload.data, path.parse(this.dbDetail.connectionOptions.path).name);
 
         await context.checkStatus();
       }

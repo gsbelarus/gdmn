@@ -1,7 +1,5 @@
 import { ISettingEnvelope, isISettingData, ISettingParams } from 'gdmn-internals';
 import { promises } from "fs";
-import { ADatabase, IDBDetail } from './ADatabase';
-import log4js from "log4js";
 import path from "path";
 
 interface IDataFromFiles {
@@ -10,33 +8,37 @@ interface IDataFromFiles {
   isChangedData: boolean;
 }
 
-export class SettingSaveInMemory extends ADatabase {
+export class SettingSaveInMemory {
 
-  public sessionLogger = log4js.getLogger("Session");
-  public taskLogger = log4js.getLogger("Task");
+  private dataFromFiles = [] as IDataFromFiles[];
+  private pathFromFolderDB: string;
 
-  public dataFromFiles = [] as IDataFromFiles[];
-
-  constructor(dbDetail: IDBDetail) {
-    super(dbDetail);
+  constructor(path: string) {
+    this.pathFromFolderDB = path;
   }
 
-  public async readFileWithSettings(fileName: string):  Promise<ISettingEnvelope[] | undefined> {
+  private _getSettingFileName(type: string, dbName: string) {
+    console.log(`${path.parse(this.pathFromFolderDB).dir}\\${dbName}\\type.${type}.json`)
+    return `${path.parse(this.pathFromFolderDB).dir}\\${dbName}\\type.${type}.json`;
+  }
+
+  public async readFileWithSettings(type: string, dbName: string):  Promise<ISettingEnvelope[] | undefined> {
+    const fileName = this._getSettingFileName(type, dbName);
     const findData = this.getData(fileName);
     if(!findData) {
       let data = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' })
         .then( text => JSON.parse(text) )
         .then( arr => {
           if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-            this.taskLogger.log(`Read data from file ${fileName}`);
+            console.log(`Read data from file ${fileName}`);
             return arr as ISettingEnvelope[];
           } else {
-            this.taskLogger.warn(`Unknown data type in file ${fileName}`);
+            console.log(`Unknown data type in file ${fileName}`);
             return undefined;
           }
         })
         .catch( err => {
-          this.taskLogger.warn(`Error reading file ${fileName} - ${err}`);
+          console.log(`Error reading file ${fileName} - ${err}`);
           return undefined;
         });
       if(data) {
@@ -58,19 +60,26 @@ export class SettingSaveInMemory extends ADatabase {
             return item.isChangedData ? { ... item, isChangedData: false} : item
           }
           catch (e) {
-            this.taskLogger.warn(`Error writing data to file ${item.fileName} - ${e}`);
+            console.log(`Error writing data to file ${item.fileName} - ${e}`);
           }
         }
       }
     })
   }
 
-  public getData(fileName: string): ISettingEnvelope[] | undefined {
+  private getData(fileName: string): ISettingEnvelope[] | undefined {
     const findData = this.dataFromFiles.find(item => item.fileName === fileName);
     return findData ? findData.data : undefined;
   }
 
-  public newData(fileName: string, newData: ISettingEnvelope) {
+  public findSetting(type: string, objectID: string, dbName: string): ISettingEnvelope[] | undefined {
+    const fileName = this._getSettingFileName(type, dbName);
+    const findData = this.getData(fileName);
+    return findData ? findData.filter( s => isISettingData(s) && s.type === type && s.objectID === objectID) as ISettingEnvelope[]: undefined;
+  }
+
+  public newData(newData: ISettingEnvelope, dbName: string) {
+    const fileName = this._getSettingFileName(newData.type, dbName);
     let oldData = this.dataFromFiles.find(item => item.fileName === fileName);
     if(oldData) {
       const idx = oldData.data.findIndex( s => isISettingData(s) && s.type === newData.type && s.objectID === newData.objectID );
@@ -85,7 +94,8 @@ export class SettingSaveInMemory extends ADatabase {
     }
   }
 
-  public deleteSettingFromData(fileName: string, param: ISettingParams) {
+  public deleteSettingFromData(param: ISettingParams, dbName: string) {
+    const fileName = this._getSettingFileName(param.type, dbName);
     const idxOldData = this.dataFromFiles.findIndex(item => item.fileName === fileName);
     if(idxOldData !== -1) {
       const idx = this.dataFromFiles[idxOldData].data.findIndex( s => isISettingData(s) && s.type === param.type && s.objectID === param.objectID );
