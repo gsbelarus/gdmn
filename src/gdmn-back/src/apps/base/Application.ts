@@ -35,7 +35,7 @@ import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
-import { SettingSaveInMemory } from './SettingSaveInMemory';
+import { SettingsCache } from './SettingsCache';
 
 export type AppAction =
   "DEMO"
@@ -105,11 +105,13 @@ export class Application extends ADatabase {
 
   public erModel: ERModel = new ERModel();
 
-  public settingsInMemory: SettingSaveInMemory;
+  public settingsCache: SettingsCache;
 
   constructor(dbDetail: IDBDetail) {
     super(dbDetail);
-    this.settingsInMemory = new SettingSaveInMemory(this.dbDetail.connectionOptions.path);
+
+    const dbFullPath = dbDetail.connectionOptions.path;
+    this.settingsCache = new SettingsCache(dbFullPath.slice(0, dbFullPath.length - path.parse(dbFullPath).ext.length));
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
@@ -933,12 +935,9 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
-        const data = await this.settingsInMemory
-          .findSetting(payload.query[0].type, payload.query[0].objectID, path.parse(this.dbDetail.connectionOptions.path).name);
-
+        const data = await this.settingsCache.querySetting(payload.query[0].type, payload.query[0].objectID);
         await context.checkStatus();
-
-        return data ? data : [];
+        return data;
       }
     });
 
@@ -958,9 +957,7 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const { newData } = context.command.payload;
-
-        this.settingsInMemory.newData(newData, path.parse(this.dbDetail.connectionOptions.path).name);
-
+        this.settingsCache.writeSetting(newData);
         await context.checkStatus();
       }
     });
@@ -979,9 +976,7 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
         const payload = context.command.payload;
-
-        this.settingsInMemory.deleteSettingFromData(payload.data, path.parse(this.dbDetail.connectionOptions.path).name);
-
+        this.settingsCache.deleteSetting(payload.data);
         await context.checkStatus();
       }
     });
@@ -1053,7 +1048,7 @@ export class Application extends ADatabase {
   }
 
   protected async _onDisconnect(): Promise<void> {
-    await this.settingsInMemory.writeFileSettings();
+    await this.settingsCache.flush();
     await super._onDisconnect();
     if (!ApplicationProcess.isProcess) {
       await this.processPool.destroy();
