@@ -5,14 +5,14 @@ import { getErrorMessage } from "./utils";
 import { NumberField } from "./NumberField";
 import { IAttributeEditorProps } from "./EntityAttribute";
 
-export const NumberEditor = ({ attr, errorLinks, onChange, createAttr, userDefined, onError, onClearError }: IAttributeEditorProps<INumberAttribute<number> | INumericAttribute>) =>
+export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, userDefined, onError, onClearError }: IAttributeEditorProps<INumberAttribute<number> | INumericAttribute>) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
     <NumberField
       label="Min value:"
       onlyInteger={attr.type === 'Integer'}
       value={attr.minValue}
       readOnly={!userDefined}
-      errorMessage={getErrorMessage('minValue', errorLinks)}
+      errorMessage={getErrorMessage(attrIdx, 'minValue', errorLinks)}
       width="180px"
       onChange={ minValue => { onChange({ ...attr, minValue }); onClearError && onClearError('minValue'); } }
       onInvalidValue={ () => onError && onError('minValue', 'Invalid value') }
@@ -22,7 +22,7 @@ export const NumberEditor = ({ attr, errorLinks, onChange, createAttr, userDefin
       onlyInteger={attr.type === 'Integer'}
       value={attr.maxValue}
       readOnly={!userDefined}
-      errorMessage={getErrorMessage('maxValue', errorLinks)}
+      errorMessage={getErrorMessage(attrIdx, 'maxValue', errorLinks)}
       width="180px"
       onChange={ maxValue => { onChange({ ...attr, maxValue }); onClearError && onClearError('maxValue'); } }
       onInvalidValue={ () => onError && onError('maxValue', 'Invalid value') }
@@ -34,7 +34,7 @@ export const NumberEditor = ({ attr, errorLinks, onChange, createAttr, userDefin
             label="Scale:"
             selectedKey={attr.scale}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx + 1, text: (idx + 1).toString() }) ) }
-            errorMessage={getErrorMessage('scale', errorLinks)}
+            errorMessage={getErrorMessage(attrIdx, 'scale', errorLinks)}
             styles={{
               root: {
                 width: '180px'
@@ -48,7 +48,7 @@ export const NumberEditor = ({ attr, errorLinks, onChange, createAttr, userDefin
             label="Precision:"
             selectedKey={attr.precision}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx, text: idx.toString() }) ).filter( i => i.key <= attr.scale ) }
-            errorMessage={getErrorMessage('precision', errorLinks)}
+            errorMessage={getErrorMessage(attrIdx, 'precision', errorLinks)}
             styles={{
               root: {
                 width: '180px'
@@ -67,7 +67,7 @@ export const NumberEditor = ({ attr, errorLinks, onChange, createAttr, userDefin
         onlyInteger={attr.type === 'Integer'}
         value={attr.defaultValue}
         readOnly={!userDefined}
-        errorMessage={getErrorMessage('defaultValue', errorLinks)}
+        errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
         onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
         onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }
       />

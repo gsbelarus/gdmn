@@ -1,5 +1,5 @@
 import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel, isUserDefined } from "gdmn-orm";
-import React from "react";
+import React, { useMemo } from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
@@ -20,6 +20,7 @@ type OnClearError = (fieldName: string) => void;
 
 export interface IAttributeEditorProps<T> {
   attr: T;
+  attrIdx: number;
   createAttr: boolean;
   userDefined: boolean;
   errorLinks?: ErrorLinks;
@@ -56,27 +57,44 @@ interface IEntityAttributeProps extends IAttributeEditorProps<Attr> {
   onSelect: OnSelect;
 };
 
-export const EntityAttribute = ({ attr, createAttr, userDefined, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
+export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
 
-  return (
-    <Frame border marginBottom selected={selected} onClick={onSelect} >
+  return useMemo( () =>
+    <Frame border marginBottom selected={selected} onClick={onSelect} readOnly={!userDefined}>
       <Stack>
         <Stack horizontal verticalAlign="start" tokens={{ childrenGap: '0px 16px' }}>
           <TextField
             label="Name:"
-            value={stripUserPrefix(attr.name)}
-            prefix={userDefined ? 'USR$' : undefined}
+            value={attr.name}
             readOnly={!userDefined}
             autoFocus={selected}
-            errorMessage={getErrorMessage('name', errorLinks)}
+            errorMessage={getErrorMessage(attrIdx, 'name', errorLinks)}
             styles={{
               root: {
                 width: '240px'
+              },
+              field: {
+                textTransform: 'uppercase'
               }
             }}
-            onChange={ (_, name) => name !== undefined && onChange({...attr, name: userDefined ? addUserPrefix(name) : name }) }
+            onChange={
+              (_, newValue) => {
+                if (newValue !== undefined) {
+                  let name = newValue.toUpperCase();
+
+                  if (userDefined && !isUserDefined(name)) {
+                    return;
+                  }
+
+                  onChange({
+                    ...attr,
+                    name
+                  });
+                }
+              }
+            }
           />
           <Dropdown
             label="Type:"
@@ -121,14 +139,13 @@ export const EntityAttribute = ({ attr, createAttr, userDefined, selected, error
             <TextField
               label="Description:"
               value={getLName(attr.lName, ['ru'])}
-              onChange={
-                userDefined ? (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) : undefined
-              }
+              readOnly={!userDefined}
+              onChange={ (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) }
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} createAttr={createAttr} userDefined={userDefined} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
+        <AttrEditor attr={attr as any} attrIdx={attrIdx} createAttr={createAttr} userDefined={userDefined} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
       </Stack>
     </Frame>
-  );
+  , [attr, attrIdx, selected, errorLinks, erModel]);
 };
