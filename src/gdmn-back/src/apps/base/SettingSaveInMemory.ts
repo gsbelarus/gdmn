@@ -22,7 +22,7 @@ export class SettingSaveInMemory {
     return `${path.parse(this.pathFromFolderDB).dir}\\${dbName}\\type.${type}.json`;
   }
 
-  public async readFileWithSettings(type: string, dbName: string):  Promise<ISettingEnvelope[] | undefined> {
+  private async readFileWithSettings(type: string, dbName: string):  Promise<ISettingEnvelope[] | undefined> {
     const fileName = this._getSettingFileName(type, dbName);
     const findData = this.getData(fileName);
     if(!findData) {
@@ -48,7 +48,7 @@ export class SettingSaveInMemory {
     return this.getData(fileName);
   }
 
-  public async writeFileSettings() {
+  private async writeFileSettings() {
     this.dataFromFiles.forEach(async (item, idx) => {
       if(item.isChangedData) {
         const data = this.getData(item.fileName);
@@ -71,13 +71,13 @@ export class SettingSaveInMemory {
     const findData = this.dataFromFiles.find(item => item.fileName === fileName);
     return findData ? findData.data : undefined;
   }
-
+//
   public findSetting(type: string, objectID: string, dbName: string): ISettingEnvelope[] | undefined {
     const fileName = this._getSettingFileName(type, dbName);
     const findData = this.getData(fileName);
     return findData ? findData.filter( s => isISettingData(s) && s.type === type && s.objectID === objectID) as ISettingEnvelope[]: undefined;
   }
-
+//
   public newData(newData: ISettingEnvelope, dbName: string) {
     const fileName = this._getSettingFileName(newData.type, dbName);
     let oldData = this.dataFromFiles.find(item => item.fileName === fileName);
@@ -93,7 +93,7 @@ export class SettingSaveInMemory {
       this.dataFromFiles.push({fileName, data: [newData], isChangedData: true});
     }
   }
-
+//
   public deleteSettingFromData(param: ISettingParams, dbName: string) {
     const fileName = this._getSettingFileName(param.type, dbName);
     const idxOldData = this.dataFromFiles.findIndex(item => item.fileName === fileName);
