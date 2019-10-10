@@ -70,7 +70,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
-  const [userColumnsSettings, setUserColumnsSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
+  const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
   const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
@@ -319,6 +319,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               colors={gridColors}
               userColumnsSettings={userColumnsSettings}
               onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
+              onDelUserColumnsSettings={ () => delUserColumnSettings() }
             />
             : null
           }

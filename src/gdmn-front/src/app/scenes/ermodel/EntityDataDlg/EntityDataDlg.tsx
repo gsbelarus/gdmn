@@ -587,7 +587,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     },
     {
       key: 'designer',
-      disabled: changed,
+      //disabled: changed,
       text: 'Дизайнер',
       iconProps: {
         iconName: 'Design'
@@ -892,7 +892,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       right: 0,
       bottom: 0
     }]
-    : getAreas(setting.objects);
+    : getAreas(setting.objects).sort();
 
     const window: IWindow = setting
       ? setting.objects.find(obj => isWindow(obj)) as IWindow
@@ -936,7 +936,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   width: '100%',
                   height: '100%',
                   gridTemplateColumns: '1fr',
-                  gridTemplateRows: '1fr'
+                  gridTemplateRows: '1fr',
+                  ...object2style(window, objects)
                 }}
               >
                   <div
@@ -948,8 +949,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                       paddingBottom: '4px',
                       gridTemplateColumns: grid.columns.map(c => c.unit === 'AUTO' ? 'auto' : `${c.value ? c.value : 1}${c.unit}`).join(' '),
                       gridTemplateRows: grid.rows.map(r => r.unit === 'AUTO' ? 'auto' : `${r.value ? r.value : 1}${r.unit}`).join(' '),
-                      userSelect: undefined,
-                      ...object2style(window, objects)
                     }}
                   >
                     {
@@ -958,8 +957,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                           key={area.name}
                           style={{
                             ...object2style(area, objects),
-                            borderRadius: '4px',
-                            padding: '4px'
+                            gridArea: `${area.top + 1} / ${area.left + 1} / ${area.bottom + 2} / ${area.right + 2}`,
+                            padding: '4px',
+                            borderRadius: '4px'
                           }}
                         >
                           <Stack horizontal={area.horizontal}>
@@ -976,7 +976,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     }
                   </div>
                 </div>
-              </div>
+            </div>
           </>
       }
     </>

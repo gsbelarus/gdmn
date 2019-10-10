@@ -7,6 +7,7 @@ src/*/build
 src/gdmn-back/public
 templates.config.json
 databases.ts
+databases.7z
 testDB.ts
 testConfig.json
 .lib
@@ -16,6 +17,7 @@ testConfig.json
 # Firebird
 *.fdb
 *.fbk
+*.bk
 
 # VS Code
 .vscode

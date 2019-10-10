@@ -62,7 +62,7 @@ export interface IBaseSemOptions<Adapter = any> extends IBaseOptions<Adapter> {
 export type GedeminEntityType = 'SIMPLE' | 'TREE' | 'LBRBTREE' | 'INHERITED';
 
 export function getGedeminEntityType(entity: IEntity): GedeminEntityType {
-  if (entity.parent) {
+  if (entity.attributes.find( attr => attr.name === 'INHERITEDKEY' )) {
     return 'INHERITED';
   }
 

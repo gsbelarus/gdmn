@@ -54,6 +54,7 @@ interface IDateFieldProps {
   dateFieldType: AttributeDateTimeTypes;
   label: string;
   value: Date | undefined;
+  readOnly?: boolean;
   errorMessage?: string;
   onChange: (newValue: Date | undefined) => void;
 };
@@ -63,7 +64,7 @@ interface IDateFieldState {
   error?: string;
 };
 
-export const DateField = ({ dateFieldType, label, value, errorMessage, onChange }: IDateFieldProps) => {
+export const DateField = ({ dateFieldType, label, value, errorMessage, readOnly, onChange }: IDateFieldProps) => {
 
   const [state, setState] = useState<IDateFieldState>( { text: value === undefined ? '' : date2str(value, dateFieldType) } );
 
@@ -71,6 +72,7 @@ export const DateField = ({ dateFieldType, label, value, errorMessage, onChange 
     <TextField
       label={label}
       value={state.text}
+      readOnly={readOnly}
       errorMessage={state.error || errorMessage}
       styles={{
         root: {
