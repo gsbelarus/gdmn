@@ -36,6 +36,7 @@ import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-intern
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
 import { SettingsCache } from './SettingsCache';
+import { settingsCacheManager } from './SettingsCacheManager';
 
 export type AppAction =
   "DEMO"
@@ -111,7 +112,7 @@ export class Application extends ADatabase {
     super(dbDetail);
 
     const dbFullPath = dbDetail.connectionOptions.path;
-    this.settingsCache = new SettingsCache(dbFullPath.slice(0, dbFullPath.length - path.parse(dbFullPath).ext.length));
+    this.settingsCache = settingsCacheManager.add(dbFullPath, dbFullPath.slice(0, dbFullPath.length - path.parse(dbFullPath).ext.length));
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
@@ -132,12 +133,6 @@ export class Application extends ADatabase {
     };
     const result: IERModel = await worker.executeCmd(Number.NaN, getSchemaCmd);
     return deserializeERModel(result, withAdapter);
-  }
-
-  private _getSettingFileName(type: string) {
-    const pathFromDB = this.dbDetail.connectionOptions.path;
-    const extLen = path.extname(pathFromDB).length;
-    return `${pathFromDB.slice(0, -extLen)}\\type.${type}.json`;
   }
 
   public pushDemoCmd(session: Session, command: DemoCmd): Task<DemoCmd, void> {
