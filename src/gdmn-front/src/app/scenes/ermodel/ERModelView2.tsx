@@ -12,7 +12,9 @@ import styles from './EntityDataView/styles.css';
 import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
-import { useSettings } from "@src/app/hooks/useSettings";
+import {useSettings} from "@src/app/hooks/useSettings";
+import {useMessageBox} from "@src/app/components/MessageBox/MessageBox";
+import {Entity, ERModel, EntityAttribute} from "gdmn-orm";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -25,20 +27,88 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
   const [userColumnsSettingsEntity, setUserColumnsSettingsEntity, delUserColumnSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
   const [userColumnsSettingsAttr, setUserColumnsSettingsAttr, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
+  const [MessageBox, messageBox] = useMessageBox();
+
+  const foundParent = (source: Entity, erModel: ERModel): Entity[] => {
+    return Object.entries(erModel.entities).reduce(
+    (prev, [_name, entity]) => {
+      if (entity === source) {
+        return prev;
+      }
+
+      if (entity.parent === source) {
+        prev.push(entity);
+      }
+      return prev;
+    },
+    [] as Entity[]
+    );
+  };
+
+  const foundAttribute = (entity: Entity, erModel: ERModel): Entity[] => {
+    return Object.entries(erModel.entities).reduce((prev, [name, getEntity]) => {
+      const f = Object.entries(getEntity.attributes)
+        .some( ([k, attr]) =>
+          attr.type === 'Entity'
+          && (attr as EntityAttribute).entities.some(item => item.name === entity.name)
+        );
+        return f ? [...prev, getEntity] : prev
+    }, [] as Entity[]);
+  }
+
+  const foundSet = (entity: Entity, erModel: ERModel): Entity[] => {
+    return Object.entries(erModel.entities).reduce((prev, [name, getEntity]) => {
+      const f = Object.entries(getEntity.attributes)
+        .some( ([k, attr]) =>
+          attr.type === 'Set'
+          && (attr as EntityAttribute).entities.some(item => item.name === entity.name)
+        );
+        return f ? [...prev, getEntity] : prev
+    }, [] as Entity[]);
+  }
 
   const deleteRecord = useCallback( () => {
-    if (entities && entities.size) {
-      dispatch(async dispatch => {
+    if (entities && entities.size && erModel) {
+      const getEntity = erModel.entity(entities.getString('name'));
+      const parent = foundParent(getEntity, erModel);
+      const en = foundAttribute(getEntity, erModel);
+      const setEntity = foundSet(getEntity, erModel);
 
-        const result = await apiService.deleteEntity({
-          entityName: entities.getString('name')
+      if (parent.length) {
+        messageBox({
+          message: `Entity ${getEntity.name} are the parent link to other entities.`,
+          icon: 'Warning',
+          type: 'MB_OK'
+        })
+      } else
+      
+      if (en.length) {
+        messageBox({
+          message: `There is an attribute of type Entity in other entities that refers to ${getEntity.name} entity.`,
+          icon: 'Warning',
+          type: 'MB_OK'
+        })
+      } else
+
+      if (setEntity.length) {
+        messageBox({
+          message: `There is an attribute of type Set in other entities that refers to ${getEntity.name} entity.`,
+          icon: 'Warning',
+          type: 'MB_OK'
+        })
+      } else {
+        dispatch(async dispatch => {
+
+          const result = await apiService.deleteEntity({
+            entityName: getEntity.name
+          });
+
+          if (!result.error) {
+            dispatch(rsActions.setRecordSet(
+              entities.delete(true)))
+          }
         });
-
-        if (!result.error) {
-          dispatch(rsActions.setRecordSet(
-            entities.delete(true)))
-        }
-      });
+      }      
     }
   }, [entities, viewTab]);
 
@@ -337,6 +407,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           onChange={ attributes ? (_, newValue) => onSetFilter({ rs: attributes, filter: newValue ? newValue : '' }) : undefined }
         />
       </div>
+      <MessageBox />
       <div styleName="MDGridDetailTable">
         { attributes && gcsAttributes &&
           <GDMNGrid
