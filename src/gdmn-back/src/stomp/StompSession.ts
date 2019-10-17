@@ -12,6 +12,7 @@ import {IUser, MainApplication} from "../apps/MainApplication";
 import {Actions, MainCommandProvider} from "../apps/MainCommandProvider";
 import {Constants} from "../Constants";
 import {StompErrorCode, StompServerError} from "./StompServerError";
+import { settingsCacheManager } from '../apps/base/SettingsCacheManager';
 
 export type Ack = "auto" | "client" | "client-individual";
 
@@ -188,6 +189,11 @@ export class StompSession implements StompClientCommandListener {
       }
       this._session = undefined;
     }
+    
+    // спорный момент, но пока скидываем весь кэш на диск
+    // главное чтобы этот OnEnd не вызывался слишком часто
+    // например, после каждой команды
+    settingsCacheManager.flush();
   }
 
   public connect(headers: StompHeaders): void {
