@@ -200,7 +200,7 @@ export const Sql = CSSModules(
       setState({ type: 'LOAD_PARAMS', ...state, paramList });
 
       const params = paramList.reduce((map, obj) => {
-        map[obj.name] = obj.type = 5 ? new Date(obj.value) : obj.value || '';
+        map[obj.name] = obj.type === 5 ? new Date(obj.value) : obj.value || '';
         return map
       }, {} as {[x:string]: any});
       setState({ type: 'SET_PARAMS', params });

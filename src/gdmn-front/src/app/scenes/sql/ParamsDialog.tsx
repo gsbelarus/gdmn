@@ -141,11 +141,11 @@ const withNull = (name: string, ch: ReactNode) => {
   return (
     <Stack>
       <Stack.Item>
-        <Label>{name.toUpperCase()}</Label>
+        <Label key={name}>{name.toUpperCase()}</Label>
       </Stack.Item>
       <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 15 }}>
-        <Checkbox label="NULL" />
-        <Stack.Item grow>
+        <Checkbox label="NULL" checked />
+        <Stack.Item grow key={name}>
           {ch}
         </Stack.Item>
       </Stack>
