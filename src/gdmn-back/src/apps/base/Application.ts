@@ -1,5 +1,5 @@
 import {EventEmitter} from "events";
-import {AConnection, IParams} from "gdmn-db";
+import {AConnection, IParams, INamedParams} from "gdmn-db";
 import {EQueryCursor, ERBridge, ISqlQueryResponse, SqlQueryCursor} from "gdmn-er-bridge";
 import {
   deserializeERModel,
@@ -376,7 +376,6 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
 
-
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
@@ -629,6 +628,11 @@ export class Application extends ADatabase {
     return task;
   }
 
+  private isNamedParams(s: any): s is INamedParams {
+    return s instanceof Object && !Array.isArray(s);
+  }
+
+  // tslint:disable-next-line: member-ordering
   public pushPrepareSqlQueryCmd(session: Session, command: PrepareSqlQueryCmd): Task<PrepareSqlQueryCmd, void> {
     const task = new Task({
       session,
@@ -637,7 +641,18 @@ export class Application extends ADatabase {
       unlimited: true,
       logger: this.taskLogger,
       worker: async (context) => {
-        const {select, params} = context.command.payload;
+        const {select, params: preParams} = context.command.payload;
+
+        console.log(preParams);
+        const dateFormat = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
+        const params = this.isNamedParams(preParams) ?
+          Object.keys(preParams).reduce((map, obj: keyof INamedParams) => {
+            const value = (preParams as INamedParams)[obj];
+            map[obj] = (typeof value === "string" && value.length >= 24
+             && dateFormat.test(value)) ? new Date(value) : value;
+            return map;
+          }, {} as INamedParams)
+        : preParams;
 
         const cursorEmitter = new EventEmitter();
         const cursorPromise = new Promise<SqlQueryCursor>((resolve, reject) => {
