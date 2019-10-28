@@ -17,6 +17,7 @@ import { useSaveGridState } from './useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
+import { Tree } from '@src/app/components/Tree';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -259,6 +260,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
         <div styleName="SGridTop">
           <CommandBar items={commandBarItems} />
+          
+          {
+            rs ? <Tree rs={rs} /> : undefined
+          }
+
           {
             error
             &&
