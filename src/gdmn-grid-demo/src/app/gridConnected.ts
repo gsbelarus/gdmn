@@ -13,7 +13,7 @@ import {
   TSetCursorPosEvent,
   TSortEvent,
   TToggleGroupEvent,
-  TRecordsetSetFieldValue 
+  TRecordsetSetFieldValue
 } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
