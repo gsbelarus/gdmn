@@ -5,7 +5,7 @@ import {List} from "immutable";
 import {createGrid, GDMNGrid, IUserColumnsSettings} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
 import {linkCommandBarButton} from "@src/app/components/LinkCommandBarButton";
-import {CommandBar, ICommandBarItemProps, TextField} from "office-ui-fabric-react";
+import {CommandBar, IComponentAsProps, CommandBarButton, ContextualMenuItem, IContextualMenuItemProps, ICommandBarItemProps, TextField, Label} from "office-ui-fabric-react";
 import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
@@ -13,6 +13,7 @@ import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
 import { useSettings } from "@src/app/hooks/useSettings";
+import { Link } from 'react-router-dom';
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -235,6 +236,27 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
     }
   }, [entities, attributes, viewTab]);
 
+  const CustomButton: React.FunctionComponent<IComponentAsProps<ICommandBarItemProps>> = props => {
+    const WrappedButton = () => (
+      <CommandBarButton {...(props as any)} text={'custom ' + (props.text || props.name)} />
+    );
+
+    const MyLink: any = Link; 
+
+    return <MyLink component={WrappedButton} to={props.href!} onClick={props.onClick}/>;
+  };
+
+  const CustomMenuItem: React.FunctionComponent<IContextualMenuItemProps> = props => {
+    const origItem = props.item;
+    const item = { ...origItem, name: undefined, text: (origItem.text || origItem.name) };
+    const WrappedMenuItem = () => <ContextualMenuItem {...props} item={item}/>;
+
+    // TODO: fix afte we settle matters with react-router-dom v5 typings
+    const MyLink: any = Link; 
+
+    return <MyLink component={WrappedMenuItem} to={item.href!} />;
+  };
+
   const commandBarItems: ICommandBarItemProps[] = [
     {
       key: 'loadEntity',
@@ -277,7 +299,10 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       iconProps: {
         iconName: 'Edit'
       },
-      commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entityDlg/${entities.getString('name')}`) : undefined
+      commandBarButtonAs: CustomButton,
+      href: entities && entities.size
+        ? `entityDlg/${entities.getString('name')}`
+        : undefined
     },
     {
       key: 'deleteEntity',
@@ -295,7 +320,15 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   return (
     <div styleName="MDGrid">
       <div styleName="MDGridTop">
-        <CommandBar items={commandBarItems} />
+        <CommandBar 
+          items={commandBarItems} 
+          overflowButtonProps={{
+            menuProps: { 
+              contextualMenuItemAs: CustomMenuItem, 
+              items: [] 
+            }
+          }}
+          />
       </div>
       {
         showInspector && entities && entities.size && erModel &&

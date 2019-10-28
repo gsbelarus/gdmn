@@ -870,11 +870,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
     const fields: Objects = !setting
       ? rs
-        ? rs.fieldDefs.map(fd => {
+        ? rs.fieldDefs.map((fd, index)=> {
           const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
           return ({
             type: 'FIELD',
-            parent: 'Area1',
+            parent: `Area${(index %3)+1}`,
             fieldName: fd.caption,
             label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
             name: fd.caption
@@ -888,6 +888,24 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       type: 'AREA',
       parent: 'Window',
       left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0
+    },
+    {
+      name: 'Area2',
+      type: 'AREA',
+      parent: 'Window',
+      left: 700,
+      top: 0,
+      right: 100,
+      bottom: 0
+    },
+    {
+      name: 'Area3',
+      type: 'AREA',
+      parent: 'Window',
+      left: 100,
       top: 0,
       right: 0,
       bottom: 0
