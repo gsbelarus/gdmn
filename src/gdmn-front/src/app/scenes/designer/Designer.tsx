@@ -79,7 +79,7 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
     const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
     return ({
       type: 'FIELD',
-      parent: `Area${(index %3)+1}`,
+      parent: 'Area',
       fieldName: fd.caption,
       label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
       name: fd.caption
@@ -88,28 +88,10 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
   : [];
 
   const area: IArea[] = [{
-    name: 'Area1',
+    name: 'Area',
     type: 'AREA',
     parent: 'Window',
     left: 0,
-    top: 0,
-    right: 0,
-    bottom: 0
-  },
-  {
-    name: 'Area2',
-    type: 'AREA',
-    parent: 'Window',
-    left: 50,
-    top: 0,
-    right: 250,
-    bottom: 0
-  },
-  {
-    name: 'Area3',
-    type: 'AREA',
-    parent: 'Window',
-    left: 50,
     top: 0,
     right: 0,
     bottom: 0
