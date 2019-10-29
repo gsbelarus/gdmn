@@ -35,8 +35,17 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         });
 
         if (!result.error) {
+          if (erModel) {
+            const entity = erModel.entities[entities.getString('name')];
+            if (entity) dispatch(gdmnActions.deleteEntityFromSchema(erModel.entities[entities.getString('name')]));
+          }
+          //почему после удаления в ermodel не пересоздается RecordSet автоматически?
           dispatch(rsActions.setRecordSet(
             entities.delete(true)))
+        } else {
+         //как лучше выводить ошибку?
+         //dispatch(gdmnActions.updateViewTab({ url: match.url, viewTab: { error: result.error.message } }));
+         throw new Error(result.error.message);
         }
       });
     }
@@ -47,37 +56,41 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       return;
     }
 
-    if (!entities) {
-      dispatch(rsActions.createRecordSet({
-        name: 'entities',
-        rs: RecordSet.create({
-          name: 'entities',
-          fieldDefs: [
-            {
-              fieldName: 'name',
-              dataType: TFieldType.String,
-              size: 31,
-              caption: 'Entity name'
-            },
-            {
-              fieldName: 'description',
-              dataType: TFieldType.String,
-              size: 60,
-              caption: 'Description'
-            }
-          ],
-          data: List(
-            Object.entries(erModel.entities).map(
-              ([name, ent]) =>
-                ({
-                  name,
-                  description: ent.lName.ru ? ent.lName.ru.name : name
-                } as IDataRow)
-            )
-          )
-        })
-      }));
+    //При изменении ermodel необходимо пересоздать recordset
+    if (entities) {
+      dispatch(rsActions.deleteRecordSet({name: 'entities'}));
     }
+
+    dispatch(rsActions.createRecordSet({
+      name: 'entities',
+      rs: RecordSet.create({
+        name: 'entities',
+        fieldDefs: [
+          {
+            fieldName: 'name',
+            dataType: TFieldType.String,
+            size: 31,
+            caption: 'Entity name'
+          },
+          {
+            fieldName: 'description',
+            dataType: TFieldType.String,
+            size: 60,
+            caption: 'Description'
+          }
+        ],
+        data: List(
+          Object.entries(erModel.entities).map(
+            ([name, ent]) =>
+              ({
+                name,
+                description: ent.lName.ru ? ent.lName.ru.name : name
+              } as IDataRow)
+          )
+        )
+      })
+    }));
+
   }, [erModel]);
 
   useEffect( () => {

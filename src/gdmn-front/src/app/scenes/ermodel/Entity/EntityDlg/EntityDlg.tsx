@@ -1,7 +1,7 @@
-import React, {useCallback, useEffect, useReducer, useState} from "react";
+import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
-import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType, isUserDefined } from "gdmn-orm";
+import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, deserializeEntity, IEntityAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -9,8 +9,7 @@ import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { initAttr, ErrorLinks, validateAttributes, getErrorMessage, getTempID, isTempID } from "./utils";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
-import { str2SemCategories } from "gdmn-nlp";
-import { rsActions } from "gdmn-recordset";
+import { IDataRow, rsActions } from "gdmn-recordset";
 
 /**
  * Диалоговое окно создания/изменения Entity.
@@ -42,7 +41,7 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
   const id: IAttribute = {
     name: 'ID',
     type: 'Sequence',
-    required: false,
+    required: true,
     lName: { ru: { name: 'Идентификатор' }},
     semCategories: '',
     id: getTempID()
@@ -51,7 +50,7 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
   const inheritedKey: IAttribute = {
     name: 'INHERITEDKEY',
     type: 'Integer',
-    required: false,
+    required: true,
     lName: { ru: { name: 'Идентификатор' }},
     semCategories: '',
     id: getTempID()
@@ -177,8 +176,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         entityData,
         selectedAttr: entityData && entityData.attributes && entityData.attributes.length ? 0 : undefined,
         changed: false,
-        errorLinks: [],
-       // entityType: getGedeminEntityType(entityData)
+        errorLinks: []
       };
     }
 
@@ -188,7 +186,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         ...state,
         initialData: undefined,
         entityData: {
-          name: '',
+          name: 'USR$',
           lName: { ru: { name: '' }},
           isAbstract: false,
           semCategories: '',
@@ -369,66 +367,48 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const postChanges = useCallback(async (close: boolean) => {
     if (entityData && erModel) {
       if (createEntity) {
-        // временные ID атрибутов надо убрать перед отсылкой на сервер!
         const result = await apiService.AddEntity({
-          ...entityData,
-          attributes: entityData.attributes.filter(a => a.name !== 'ID').map( attr => isTempID(attr.id) ? {...attr, id: undefined} : attr )
-        });
-
-        // FIXME: а если ошибка? ее надо как-то вывести в окне
-        // например, предусмотреть для нее стейт и панель
-
-        if (!result.error && isIEntity(result.payload.result)) {
-          const iEntity = result.payload.result as IEntity;
-          const entity = new Entity({
-            name: iEntity.name,
-            lName: iEntity.lName,
-            parent: iEntity.parent ? erModel.entity(iEntity.parent) : undefined,
-            isAbstract: iEntity.isAbstract,
-            semCategories: str2SemCategories(iEntity.semCategories),
-            adapter: iEntity.adapter,
-            unique: iEntity.unique
+            ...entityData,
+            attributes: entityData.attributes.filter(a => a.name !== 'ID' && a.name !== 'INHERITEDKEY').map( attr => isTempID(attr.id) ? {...attr, id: undefined } : attr )
           });
-          iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
-
-          // FIXME: так а где собственно добавление новой entity в ERModel?
-
-          // entities -- recordset, который нужен нам только для отображения
-          // erModel в гриде на соответствующей вкладке.
-          // просто удалим его. он пересоздастся, когда будет надо.
-          if (entities) {
-            dispatch(rsActions.deleteRecordSet({ name: entities.name }));
-          }
-
-          // закрывать вкладку имеет смысл, только если все прошло успешно
-          // если ошибка -- мы должны остаться на вкладке
-          if (close) {
-            deleteViewTab();
-          }
-        }
-      }
-      else if (initialData) {
-        // TODO: мы никак пока не отображаем ошибки при удалении атрибута
-        // TODO: после удаления атрибута надо обновить ERModel
-        const r = initialData.attributes.every( async attr => {
-          if (!entityData.attributes.find( attr2 => attr2.name === attr.name )) {
-            const result = await apiService.deleteAttribute({
-              entityData: initialData,
-              attrName: attr.name
-            });
-
-            return !result.error;
+        if (result.error) {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        } else {
+          const serializedEntity = result.payload.result;
+          if (isIEntity(serializedEntity)) {
+            const newEntity = deserializeEntity(serializedEntity, erModel);
+            dispatch(gdmnActions.addEntityToSchema(newEntity));
+            if (close) {
+              deleteViewTab();
+            }
           } else {
-           return true;
+            throw new Error("Wrong type of the Entity");
           }
-        });
-
-        if (r && close) {
-          deleteViewTab();
         }
       }
     }
   }, [changed, entityData, entities, createEntity, erModel, initialData]);
+
+  const deleteAtribute = useCallback(async () => {
+    if (entityData && erModel && selectedAttr !== undefined) {
+      // TODO: мы никак пока не отображаем ошибки при удалении атрибута
+      // TODO: после удаления атрибута надо обновить ERModel
+      if (!createEntity) {
+        const newEntityData = {...entityData};
+        const result = await apiService.deleteAttribute({
+          entityData: newEntityData,
+          attrName: newEntityData.attributes[selectedAttr].name
+        });
+        if (!result.error) {
+          dlgDispatch({type: 'DELETE_ATTR'})
+        } else {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        }
+      } else {
+        dlgDispatch({type: 'DELETE_ATTR'})
+      }
+    }
+  }, [selectedAttr, entityData, createEntity, erModel]);
 
   useEffect( () => {
     if (!viewTab) {
@@ -514,12 +494,12 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     },
     {
       key: 'deleteAttr',
-      disabled: selectedAttr === undefined,
+      disabled: selectedAttr === undefined || !isUserDefined(entityData.attributes[selectedAttr].name),
       text: 'Удалить атрибут',
       iconProps: {
         iconName: 'Delete'
       },
-      onClick: async () => dlgDispatch({type: 'DELETE_ATTR'})
+      onClick: () => deleteAtribute()
     },
     {
       key: 'showAdapter',
@@ -549,7 +529,17 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 value={entityData.name}
                 errorMessage={getErrorMessage(undefined, 'entityName', errorLinks)}
                 readOnly={!createEntity}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, name: newValue } }) }
+                onChange={ (_, newValue) => {
+                  if (newValue !== undefined) {
+                    let name = newValue.toUpperCase();
+                    if (!isUserDefined(name)) {
+                      return;
+                    }
+                    dlgDispatch({
+                      type: 'EDIT_ENTITY_DATA',
+                      entityData: { ...entityData, name: name /*newValue addUserPrefix(newValue)*/ }})
+                  }
+                }}
                 styles={{
                   root: {
                     width: '240px'

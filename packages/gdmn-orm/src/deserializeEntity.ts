@@ -1,7 +1,7 @@
 import {str2SemCategories} from "gdmn-nlp";
+import {Attribute} from "./model/Attribute";
 import {Entity} from "./model/Entity";
 import {ERModel} from "./model/ERModel";
-import {Attribute} from "./model/Attribute";
 import {DetailAttribute} from "./model/link/DetailAttribute";
 import {EntityAttribute} from "./model/link/EntityAttribute";
 import {ParentAttribute} from "./model/link/ParentAttribute";
@@ -17,26 +17,12 @@ import {TimeAttribute} from "./model/scalar/number/TimeAttribute";
 import {TimeStampAttribute} from "./model/scalar/number/TimeStampAttribute";
 import {SequenceAttribute} from "./model/scalar/SequenceAttribute";
 import {StringAttribute} from "./model/scalar/StringAttribute";
-import {
-  IAttribute,
-  IEntityAttribute,
-  IStringAttribute,
-  ISequenceAttribute,
-  ISetAttribute,
-  INumberAttribute,
-  INumericAttribute,
-  IBooleanAttribute,
-  IDateAttribute,
-  IEnumAttribute,
-  IBlobAttribute
-} from "./serialize";
+import { IEntity, IAttribute, IEntityAttribute, ISetAttribute, ISequenceAttribute, INumberAttribute, INumericAttribute, IBooleanAttribute, IDateAttribute, IBlobAttribute, IEnumAttribute, IStringAttribute } from "./serialize";
 
-export class EntityUtils {
+// TODO serialize adapter - tmp
+export function deserializeEntity(serializedEntity: IEntity, erModel: ERModel, withAdapter?: boolean): Entity {
 
-  public static createAttribute = (_attr: IAttribute,
-                                   entity: Entity,
-                                   erModel: ERModel,
-                                   withAdapter?: boolean): Attribute => {
+  const createAttribute = (_attr: IAttribute): Attribute => {
     const {name, lName, required} = _attr;
     let {adapter} = _attr;
     if (!withAdapter) {
@@ -52,7 +38,8 @@ export class EntityUtils {
       }
 
       case "Parent": {
-        const entities = [erModel.entities[entity.name]];
+        const attr = _attr as IEntityAttribute;
+        const entities = attr.references.map((e) => erModel.entities[e]);
         return new ParentAttribute({name, lName, entities, semCategories, adapter});
       }
 
@@ -73,7 +60,7 @@ export class EntityUtils {
         const {presLen, attributes, references} = _attr as ISetAttribute;
         const entities = references.map((e) => erModel.entities[e]);
         const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories, adapter});
-        attributes.forEach((a) => setAttribute.add(EntityUtils.createAttribute(a, entity, erModel)));
+        attributes.forEach((a) => setAttribute.add(createAttribute(a)));
         return setAttribute;
       }
 
@@ -134,5 +121,32 @@ export class EntityUtils {
       default:
         throw new Error(`Unknown attribute type ${_attr.type}`);
     }
+  };
+
+  let parent: Entity | undefined;
+
+  if (serializedEntity.parent) {
+    const pe = erModel.entities[serializedEntity.parent];
+    if (!pe) {
+      throw new Error(`Unknown entity ${serializedEntity.parent}`);
+    }
+    parent = pe;
   }
+
+  const newEntity = new Entity({
+    name: serializedEntity.name,
+    lName: serializedEntity.lName,
+
+    parent,
+    isAbstract: serializedEntity.isAbstract,
+    semCategories: str2SemCategories(serializedEntity.semCategories),
+    adapter: withAdapter ? serializedEntity.adapter : undefined
+  });
+
+  serializedEntity.attributes.forEach((_attr) => newEntity.add(createAttribute(_attr)));
+
+  const values = serializedEntity.unique.map((_values) => _values.map((_attr) => newEntity.ownAttribute(_attr)));
+  values.forEach((attrs) => newEntity.addUnique(attrs));
+
+  return newEntity;
 }

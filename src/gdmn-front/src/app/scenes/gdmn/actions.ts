@@ -1,4 +1,4 @@
-import { deserializeERModel, ERModel } from 'gdmn-orm';
+import { deserializeERModel, ERModel, Entity } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus, TSignInCmdResult, IRefreshTokenPayload, IAccessTokenPayload, TUserRoleType, IApplicationInfo, TTaskActionPayloadTypes, ITemplateApplication } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
@@ -175,6 +175,14 @@ export const gdmnActionsAsync = {
 };
 
 export const gdmnActions = {
+  addEntityToSchema: createAction('gdmm/ADD_ENTITY_TO_SCHEMA', resolve => {
+    return (entity: Entity) => resolve(entity);
+  }),
+
+  deleteEntityFromSchema: createAction('gdmm/DELETE_ENTITY_FROM_SCHEMA', resolve => {
+    return (entity: Entity) => resolve(entity);
+  }),
+
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
     return (reconnect: boolean = false) => resolve(reconnect);
   }),
