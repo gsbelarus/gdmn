@@ -157,7 +157,7 @@ export function parseEntity(entityStr: string[], erModel: ERModel): Entity {
 
   attrs.forEach((attr) => {
     if (attr.type !== "Sequence"){
-      const attr2 = EntityUtils.createAttribute(attr, newEntity, erModel);
+      const attr2 = EntityUtils.createAttribute(attr, erModel);
       newEntity.add(attr2)
     }
   });

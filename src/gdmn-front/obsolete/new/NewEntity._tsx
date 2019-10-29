@@ -230,7 +230,7 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
             } else if (value === "add") {
               const addAttr = refAttribute.current.find((at) => at.id === key);
               if (addAttr) {
-                entity.add(EntityUtils.createAttribute(addAttr, entity, erModel))
+                entity.add(EntityUtils.createAttribute(addAttr, erModel))
               }
             }
           });
