@@ -1,23 +1,20 @@
 import {
   GDMNGrid,
-  createGrid,
   TSetCursorPosEvent,
   setCursorCol,
   resizeColumn,
   TColumnResizeEvent,
-  Columns,
   deleteGrid
 } from 'gdmn-grid';
-import { rsActions, RecordSet, TFieldType } from 'gdmn-recordset';
+import { rsActions } from 'gdmn-recordset';
 import { TextField, Stack } from 'office-ui-fabric-react';
 import { DefaultButton, PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import { Modal } from 'office-ui-fabric-react/lib/Modal';
 import React, { useEffect, useState } from 'react';
-
-import { prepareDefaultEntityQuery } from '../../ermodel/EntityDataView/utils';
 import styles from './styles.css';
 import { IHistoryProps } from './HistoryDialog.types';
 import { loadRSActions } from '@src/app/store/loadRSActions';
+import { prepareDefaultEntityQuery } from 'gdmn-orm';
 
 export const HistoryDialog = (props: IHistoryProps) => {
   const { rs, gcs, onClose, onSelect, erModel, dispatch, id } = props;
@@ -41,15 +38,11 @@ export const HistoryDialog = (props: IHistoryProps) => {
   }, [rs]);
 
   useEffect(() => {
-    const loadHistory = async () => {
-      const eq = await prepareDefaultEntityQuery(erModel.entity('TgdcSQLHistory'), undefined, undefined, [
+    if (!rs && id) {
+      const eq = prepareDefaultEntityQuery(erModel.entity('TgdcSQLHistory'), undefined, undefined, [
         { name: 'EDITIONDATE', order: 'DESC' }
       ]);
       eq && dispatch(loadRSActions.attachRS({ name: id, eq }));
-    };
-
-    if (!rs && id) {
-      loadHistory();
     }
   }, [rs, id]);
 
