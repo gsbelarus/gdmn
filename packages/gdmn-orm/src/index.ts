@@ -28,6 +28,7 @@ export * from "./query-models/EntityQuery";
 export * from "./query-models/EntityLinkField";
 export * from "./query-models/EntityQueryOptions";
 export * from "./query-models/SequenceQuery";
+export * from "./query-models/utils";
 
 export * from "./query-models/EntityQuerySet";
 export * from "./query-models/EntityQuerySetOptions";

@@ -24,7 +24,6 @@ import { Semaphore } from 'gdmn-internals';
 import { ERModel } from 'gdmn-orm';
 import { IViewProps, View } from './View';
 import { disposeMutex, getMutex } from './dataViewMutexes';
-import { linkCommandBarButton } from './LinkCommandBarButton';
 import { ISessionData } from '../scenes/gdmn/types';
 
 export interface IRSAndGCS {
@@ -149,7 +148,7 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
       return [];
     }
 
-    const { data, match, refreshRs } = this.props;
+    const { data, match, refreshRs, history } = this.props;
 
     const items: ICommandBarItemProps[] = [
       {
@@ -158,7 +157,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Add'
         },
-        commandBarButtonAs: linkCommandBarButton(`${match.url}/add`)
+        onClick: () => history.push(`${match.url}/add`)
+        //commandBarButtonAs: linkCommandBarButton(`${match.url}/add`)
       },
       {
         key: `edit`,
@@ -166,7 +166,8 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
         iconProps: {
           iconName: 'Edit'
         },
-        commandBarButtonAs: data!.rs.size ? linkCommandBarButton(`${match.url}/edit/${data!.rs.pk2s().join('-')}`) : undefined
+        onClick: () => !!data!.rs.size && history.push(`${match.url}/edit/${data!.rs.pk2s().join('-')}`)
+        //commandBarButtonAs: data!.rs.size ? linkCommandBarButton(`${match.url}/edit/${data!.rs.pk2s().join('-')}`) : undefined
       },
       {
         key: `delete`,

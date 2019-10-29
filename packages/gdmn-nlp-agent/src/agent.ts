@@ -48,7 +48,8 @@ import {
   IEntityQueryAlias,
   IEntityQuery,
   Attribute,
-  IEntityQueryWhereValueNumber
+  IEntityQueryWhereValueNumber,
+  prepareDefaultEntityLinkFields
 } from "gdmn-orm";
 import {Action, ICommand} from "./command";
 
@@ -128,9 +129,13 @@ export class ERTranslatorRU {
     }
 
     return entities.map(entity => {
+      /*
       const fields = Object.values(entity.attributes)
         .filter(attr => attr instanceof ScalarAttribute)
         .map(attr => new EntityLinkField(attr));
+      */
+
+      const fields = prepareDefaultEntityLinkFields(entity);
 
       let first: number | undefined;
       let or: IEntityQueryWhere[] | undefined = undefined;
@@ -270,7 +275,7 @@ export class ERTranslatorRU {
                     if(equals === undefined) {
                       equals = [];
                     }
-                    
+
                     equals.push({
                       alias: "alias1",
                       attribute: attr,
@@ -538,7 +543,7 @@ export class ERTranslatorRU {
           }
         }
       })
-      
+
       const options = new EntityQueryOptions(first, undefined, [{or, not, isNull, equals, contains, greater, less}]);
 
       const entityLink = new EntityLink(entity, "alias1", fields);
