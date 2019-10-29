@@ -37,29 +37,26 @@ const Node = (props: {node: INode, level: (parent: string) => JSX.Element}) => {
 
 export const Tree = (props: {rs: RecordSet}) => {
 
-  /*const nodes: INode[] = [{id: props.rs.name, value: props.rs.name, isLast: false}, ...(Object.values(props.entity).map(item => {
-      return {id: item.name, value: item.name, parent: item.parent ? item.parent.name : undefined, isLast: false} as INode
-    }))
-  ];*/
+  const nodes: INode[] = [{id: props.rs.name, value: props.rs.name, isLast: false}];
 
-  //const fd = props.rs.fieldDefs.find(fieldDef => fieldDef.caption === 'ID')
+  const count = props.rs.size;
+  const f: INode[] = [];
 
-  console.log(props.rs)
+  for(let i = 0; i < count; i++) {
+    //props.rs.getString('USR$NAME', i)
+    const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
+    const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
+    const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
+    if(fdID && (fdNAME || fdUSRNAME)) {
+      fdNAME
+        ? f.push({id: props.rs.getString(fdID.fieldName, i), value: props.rs.getString(fdNAME.fieldName, i), isLast: false} as INode)
+        : fdUSRNAME
+          ? f.push({id: props.rs.getString(fdID.fieldName, i), value: props.rs.getString(fdUSRNAME.fieldName, i), isLast: false} as INode)
+          : undefined
+    }
+  }
 
-  let nodes: INode[] = [
-    {id: '2', value: '2', parent: '1', isLast: false},
-    {id: '3', value: '3', parent: '2', isLast: true},
-    {id: '4', value: '4', parent: '5', isLast: false, rollUp: false},
-    {id: '1', value: '1', isLast: false},
-    {id: '5', value: '5', parent: '1', isLast: false},
-    {id: '6', value: '6', parent: '2', isLast: false},
-    {id: '7', value: '7', parent: '6', isLast: true},
-    {id: '8', value: '8', parent: '2', isLast: true},
-    {id: '9', value: '9', parent: '1', isLast: true},
-    {id: '10', value: '10', parent: '5', isLast: true},
-    {id: '11', value: '11', parent: '4', isLast: true},
-    {id: '12', value: '12', parent: '4', isLast: true},
-  ];
+  console.log(f)
 
   const level = (parent: string) => {
     const nodeInLevel = nodes.filter( curr => curr.parent && curr.parent === parent)
