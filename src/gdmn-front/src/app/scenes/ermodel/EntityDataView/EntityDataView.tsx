@@ -9,7 +9,6 @@ import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
-import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
@@ -187,7 +186,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       iconProps: {
         iconName: 'Edit'
       },
-      commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
+      onClick: () => !!rs && !!rs.size && history.push(`${url}/edit/${rs.pk2s().join('-')}`)
+      //commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
     },
     {
       key: `delete`,
