@@ -304,7 +304,14 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           onDismiss={ () => setShowInspector(false) }
         />
       }
-      <div styleName="MDGridMasterTop OptionsPanel">
+      <div
+        styleName="MDGridMasterTop"
+        style={{
+          paddingLeft: '8px',
+          paddingRight: '8px',
+          paddingBottom: '8px'
+        }}
+      >
         <TextField
           disabled={!entities}
           label="Filter:"
@@ -329,7 +336,14 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           />
         }
       </div>
-      <div styleName="MDGridDetailTop OptionsPanel">
+      <div
+        styleName="MDGridDetailTop"
+        style={{
+          paddingLeft: '8px',
+          paddingRight: '8px',
+          paddingBottom: '8px'
+        }}
+      >
         <TextField
           disabled={!attributes}
           label="Filter:"
