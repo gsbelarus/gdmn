@@ -45,7 +45,6 @@ export const ParamsDialog = (props: ISQLFormProps) => {
   const handleChangeValue = React.useCallback((event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const inputEl = (event.target as HTMLInputElement);
     const name = inputEl.name;
-    console.log(paramList);
 
     const value = (inputEl.validity.valid) ? inputEl.value : paramList.find(i => i.name === name)!.value || '';
     setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i));

@@ -206,7 +206,6 @@ export const Sql = CSSModules(
         return map
       }, {} as {[x: string]: any})
 
-      console.log('params', params);
       setState({ type: 'SET_PARAMS', params });
     }
 
