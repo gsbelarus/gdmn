@@ -1,22 +1,21 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { rsActions, TStatus } from 'gdmn-recordset';
-import { prepareDefaultEntityQuery } from './utils';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
 import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
-import { linkCommandBarButton } from '@src/app/components/LinkCommandBarButton';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
+import { prepareDefaultEntityQuery } from 'gdmn-orm';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -187,7 +186,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       iconProps: {
         iconName: 'Edit'
       },
-      commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
+      onClick: () => !!rs && !!rs.size && history.push(`${url}/edit/${rs.pk2s().join('-')}`)
+      //commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
     },
     {
       key: `delete`,
@@ -271,35 +271,42 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               {error}
             </MessageBar>
           }
-            <div styleName="OptionsPanel">
+            <Stack
+              horizontal
+              tokens={{ childrenGap: '12px' }}
+              styles={{
+                root: {
+                  paddingLeft: '8px',
+                  paddingRight: '8px',
+                  paddingBottom: '8px',
+                }
+              }}
+            >
               <TextField
                 disabled={!rs || rs.status !== TStatus.FULL}
                 label="Filter:"
                 value={filter}
                 onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
               />
-              <span styleName="QueryBox">
-                <TextField
-                  styles={{
-                    root: {
-                      width: '100%'
-                    }
-                  }}
-                  label="Query:"
-                  value={phrase}
-                  onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
-                  errorMessage={ phraseError ? phraseError : undefined }
-                  onRenderSuffix={
-                    () =>
-                      <span
-                        onClick={applyPhrase}
-                      >
-                        Применить
-                      </span>
-                  }
-                />
-              </span>
-            </div>
+              <Stack.Item grow={1}>
+                <Stack horizontal verticalAlign="end">
+                  <TextField
+                    styles={{
+                      root: {
+                        width: '100%'
+                      }
+                    }}
+                    label="Query:"
+                    value={phrase}
+                    onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
+                    errorMessage={ phraseError ? phraseError : undefined }
+                  />
+                  <DefaultButton onClick={applyPhrase}>
+                    Применить
+                  </DefaultButton>
+                </Stack>
+              </Stack.Item>
+            </Stack>
         </div>
         <MessageBox />
         <div styleName="SGridTable">

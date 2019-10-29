@@ -5,11 +5,7 @@ import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
-import {
-  prepareDefaultEntityQuery,
-  attr2fd,
-  prepareDefaultEntityQuerySetAttr
-} from "../EntityDataView/utils";
+import { attr2fd } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import {
@@ -22,6 +18,8 @@ import {
   EntityAttribute,
   EntityLinkField,
   IEntityQueryResponse,
+  prepareDefaultEntityQuery,
+  prepareDefaultEntityQuerySetAttr,
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
