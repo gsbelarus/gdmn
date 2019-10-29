@@ -19,6 +19,7 @@ import { PlanDialog } from './PlanDialog';
 import { ISQLProps } from './Sql.types';
 import styles from './styles.css';
 import { sql2fd, sqlParams2params } from './utils';
+import { SplitView } from './SplitView';
 
 export interface ISQLField {
   name: string,
@@ -36,7 +37,7 @@ interface ISQLViewState {
   fieldList: ISQLField[];
   params: INamedParams;
   plan: string;
-  viewMode: 'hor' | 'ver';
+  viewMode: 'horizontal' | 'vertical';
   showParams: boolean;
   showPlan: boolean;
   showHistory: boolean;
@@ -44,13 +45,13 @@ interface ISQLViewState {
 
 type Action =
   | { type: 'INIT'; state: ISQLViewState }
-  | { type: 'SET_EXPRESSION'; expression: string }
-  | { type: 'SET_PLAN'; plan: string }
-  | { type: 'CLEAR_EXPRESSION' }
   | { type: 'CHANGE_VIEW' }
-  | { type: 'SHOW_PARAMS'; showParams: boolean }
+  | { type: 'SET_EXPRESSION'; expression: string }
+  | { type: 'CLEAR_EXPRESSION' }
   | { type: 'LOAD_PARAMS'; paramList: ISQLField[], fieldList: ISQLField[] }
   | { type: 'SET_PARAMS'; params: INamedParams }
+  | { type: 'SHOW_PARAMS'; showParams: boolean }
+  | { type: 'SET_PLAN'; plan: string }
   | { type: 'SHOW_PLAN'; showPlan: boolean }
   | { type: 'SHOW_HISTORY'; showHistory: boolean };
 
@@ -59,7 +60,7 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
     case 'INIT':
       return action.state;
     case 'SET_EXPRESSION':
-      return { ...state, expression: action.expression, paramList: [], fieldList: [], params: {} };
+      return { ...state, expression: action.expression, fieldList: [], params: {} };
     case 'SET_PLAN':
       return { ...state, plan: action.plan};
     case 'CLEAR_EXPRESSION':
@@ -73,7 +74,7 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
     case 'SHOW_PLAN':
       return { ...state, showPlan: action.showPlan };
     case 'CHANGE_VIEW':
-      return { ...state, viewMode: state.viewMode === 'hor' ? 'ver' : 'hor' };
+      return { ...state, viewMode: state.viewMode === 'horizontal' ? 'vertical' : 'horizontal' };
     case 'SHOW_HISTORY':
       return { ...state, showHistory: action.showHistory };
     default:
@@ -87,7 +88,7 @@ const initialState: ISQLViewState = {
   params: {}, /* {name: 'Золото'}, */
   paramList: [], /* [{name: 'name', type: TFieldType.String, value: 'Зотоло'}], */
   fieldList: [],
-  viewMode: 'hor',
+  viewMode: 'vertical',
   showPlan: false,
   showParams: false,
   showHistory: false
@@ -187,13 +188,6 @@ export const Sql = CSSModules(
     }, [rs]);
 
     useEffect(()=>{
-      // if (!(Object.entries(state.paramList).length === 0 && state.params.constructor === Object)) {
-      // const params = state.paramList.reduce((map, obj) => { map[obj.name] = obj.value || ''; return map }, {} as {[x:string]: any});
-      // setState({ type: 'SET_PARAMS', params });
-      // };
-    }, [state.paramList])
-
-    useEffect(()=>{
       if (!(Object.entries(state.params).length === 0 && state.params.constructor === Object)) executeSql();
     }, [state.params])
 
@@ -203,9 +197,12 @@ export const Sql = CSSModules(
 
     const handleSaveParams = (paramList: ISQLField[]) => {
       setState({ type: 'SHOW_PARAMS', showParams: false});
-      setState({ type: 'LOAD_PARAMS', paramList, ...state });
+      setState({ type: 'LOAD_PARAMS', ...state, paramList });
 
-      const params = state.paramList.reduce((map, obj) => { map[obj.name] = obj.value || ''; return map }, {} as {[x:string]: any});
+      const params = paramList.reduce((map, obj) => {
+        map[obj.name] = obj.type === 5 ? new Date(obj.value) : obj.value || '';
+        return map
+      }, {} as {[x:string]: any});
       setState({ type: 'SET_PARAMS', params });
     }
 
@@ -305,7 +302,6 @@ export const Sql = CSSModules(
 
         dispatch(rsMetaActions.setRsMeta(id, {}));
 
-        // console.log(state.expression, state.params)
         apiService
           .prepareSqlQuery({
             select: state.expression,
@@ -498,46 +494,41 @@ export const Sql = CSSModules(
     const { ...gridActions } = bindGridActions(dispatch);
 
     return (
-      <div styleName="main-container">
-        <div styleName="top-container">
-          <CommandBar items={commandBarItems} />
-          {state.showParams && state.expression.length > 0 && (
-            <ParamsDialog params={state.paramList} onClose={handleCloseParams} onSave={handleSaveParams}/>
-          )}
-          {state.showPlan && state.plan.length > 0 && (
-            <PlanDialog plan={state.plan} onClose={handleClosePlan} />
-          )}
-          {state.showHistory && (
-            <HistoryDialogContainer
-              id={`dialog${id}`}
-              onClose={handleCloseHistory}
-              onSelect={handleSelectExpression}
+      <>
+        {state.showParams && state.expression.length > 0 && (
+          <ParamsDialog params={state.paramList} onClose={handleCloseParams} onSave={handleSaveParams}/>
+        )}
+        {state.showPlan && state.plan.length > 0 && (
+          <PlanDialog plan={state.plan} onClose={handleClosePlan} />
+        )}
+        {state.showHistory && (
+          <HistoryDialogContainer
+            id={`dialog${id}`}
+            onClose={handleCloseHistory}
+            onSelect={handleSelectExpression}
+          />
+        )}
+        <CommandBar items={commandBarItems} />
+        <SplitView split={state.viewMode} border marginLeft>
+          <div onKeyDown={handleKeyDown}>
+            <TextField
+              style={{height: state.viewMode === 'horizontal' ? 'calc(100vh - 180px)' : ''}}
+              name="sql-expression"
+              resizable={false}
+              multiline
+              rows={10}
+              value={state.expression}
+              onChange={(_e, newValue?: string) => {
+                if (newValue !== undefined) {
+                  setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
+                }
+              }}
             />
-          )}
-        </div>
-        <div styleName="grid-container">
-          <div styleName={`sql-container ${state.viewMode}`}>
-            <div onKeyDown={handleKeyDown}>
-              <TextField
-                name="sql-expression"
-                resizable={false}
-                multiline
-                rows={10}
-                value={state.expression}
-                onChange={(_e, newValue?: string) => {
-                  if (newValue !== undefined) {
-                    setState({ type: 'SET_EXPRESSION', expression: newValue || '' });
-                  }
-                }}
-              />
-              <Text block>{state.plan}</Text>
-            </div>
-            <div>
-              {rs && gcs && <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors}/>}
-            </div>
+            <Text block>{state.plan}</Text>
           </div>
-        </div>
-      </div>
+          {rs && gcs && <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors}/>}
+        </SplitView>
+      </>
     );
   },
   styles,

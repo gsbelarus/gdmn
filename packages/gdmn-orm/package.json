@@ -34,7 +34,7 @@
     "@types/jest": "^24",
     "@types/node": "^12",
     "jest": "^24",
-    "jest-junit": "^8",
+    "jest-junit": "^9",
     "shx": "^0",
     "ts-jest": "^24",
     "ts-node": "^8",

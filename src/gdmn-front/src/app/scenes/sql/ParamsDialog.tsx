@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
 import {
   Dialog,
   mergeStyleSets,
@@ -9,10 +9,12 @@ import {
   TextField,
   Stack,
   DefaultButton,
+  Checkbox,
+  Label,
 } from 'office-ui-fabric-react';
-import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
 import { TFieldType } from 'gdmn-recordset';
 import { ISQLField } from './Sql';
+import { DateField } from '../ermodel/Entity/EntityDlg/DateField';
 
 const theme = getTheme();
 const classNames = mergeStyleSets({
@@ -35,34 +37,6 @@ export interface ISQLFormProps {
   onSave: (params: ISQLField[]) => void;
 }
 
-const DayPickerStrings: IDatePickerStrings = {
-  months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-
-  shortMonths: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-
-  days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-
-  shortDays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
-
-  goToToday: 'Go to today',
-  prevMonthAriaLabel: 'Go to previous month',
-  nextMonthAriaLabel: 'Go to next month',
-  prevYearAriaLabel: 'Go to previous year',
-  nextYearAriaLabel: 'Go to next year',
-  closeButtonAriaLabel: 'Close date picker',
-
-  isRequiredErrorMessage: 'Start date is required.',
-
-  invalidInputErrorMessage: 'Invalid date format.'
-};
-
-export interface IDatePickerInputExampleState {
-  firstDayOfWeek?: DayOfWeek;
-  value?: Date | null;
-}
-
-const firstDayOfWeek = DayOfWeek.Monday;
-
 export const ParamsDialog = (props: ISQLFormProps) => {
   const { params, onClose, onSave } = props;
 
@@ -77,13 +51,35 @@ export const ParamsDialog = (props: ISQLFormProps) => {
     setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i))
   };
 
-  const handleSelectDate = (date: Date | null | undefined, name: string): void => {
-    setParamList(paramList.map(i => i.name === name ? {...i, value: date} : i))
+  function formatDate(date: Date) {
+    return `${date.getDate()}.${date.getMonth()}.${date.getFullYear()}`
+  }
+
+  const handleSelectDate = (newDate: Date | undefined, name: string): void => {
+    let date : string | undefined;
+    if (newDate instanceof(Date)) {
+      date = formatDate(newDate);
+    } else {
+      date = undefined;
+    }
+    setParamList(paramList.map(i => i.name === name ? {...i, value: newDate} : i))
   };
 
   useEffect(() => {
     setParamList(params);
   }, [params])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    switch (e.key) {
+      case 'Enter':
+          onSave(paramList);
+        break;
+      default:
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+  }
 
   return (
     <Dialog
@@ -101,27 +97,35 @@ export const ParamsDialog = (props: ISQLFormProps) => {
         isBlocking: false
       }}
     >
-      <Stack tokens={{ childrenGap: 10 }} styles={{ root: { width: "65vh" } }}>
+      <Stack tokens={{ childrenGap: 15 }} styles={{ root: { width: "65vh" } }} onKeyDown={handleKeyDown}>
         {paramList.map(i => {
           switch (i.type) {
             case TFieldType.Integer:
-              return <TextField label={`${i.name} (${i.type})`} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue} pattern="[0-9]*"/>;
-              break;
+              return withNull(
+                i.name,
+                <TextField
+                  key={i.name}
+                  value={i.value}
+                  name={i.name}
+                  onChange={handleChangeValue} pattern="[0-9]*"
+                />
+              );
             case TFieldType.Date:
-              return <DatePicker
-                label={i.name}
-                isRequired={false}
-                allowTextInput={true}
-                ariaLabel={i.name}
-                firstDayOfWeek={firstDayOfWeek}
-                strings={DayPickerStrings}
-                value={i.value}
-                key={i.name}
-                onSelectDate={(date) => handleSelectDate(date, i.name)}
-              />
-              break;
+              return withNull(
+                i.name,
+                <DateField
+                  dateFieldType={"Date"}
+                  value={i.value ? new Date(i.value) : undefined}
+                  label=""
+                  key={i.name}
+                  onChange={newValue => handleSelectDate(newValue, i.name)}
+                />
+              );
             default:
-              return <TextField label={`${i.name} (${i.type})`} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>;
+                return withNull(
+                  i.name,
+                  <TextField key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
+                );
           }
         })}
       </Stack>
@@ -131,4 +135,20 @@ export const ParamsDialog = (props: ISQLFormProps) => {
       </DialogFooter>
     </Dialog>
   );
+};
+
+const withNull = (name: string, ch: ReactNode) => {
+  return (
+    <Stack>
+      <Stack.Item>
+        <Label key={name}>{name.toUpperCase()}</Label>
+      </Stack.Item>
+      <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 15 }}>
+        <Checkbox label="NULL" checked />
+        <Stack.Item grow key={name}>
+          {ch}
+        </Stack.Item>
+      </Stack>
+    </Stack>
+  )
 };

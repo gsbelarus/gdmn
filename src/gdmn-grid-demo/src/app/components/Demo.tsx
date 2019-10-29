@@ -164,7 +164,8 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
             Object.entries(grids).map( ([name, g]) => {
               if (!g) return undefined;
 
-              const { Panel, Grid } = g;
+              const { Panel } = g;
+              const Grid = g.Grid as any;
               return (
                 <div className="GridArea" key={name}>
                   {showPanel && g.Panel ?
@@ -173,7 +174,7 @@ export class Demo extends React.Component<IDemoProps, IDemoState> {
                     </div> : undefined
                   }
                   <div className={showPanel ? "GridForm" : "GridFormNoPanel"}>
-                    <Grid ref={ grid => grid && (grids[name].refGrid = (grid as GDMNGrid)) } rs={getRecordSet(name)} />
+                    <Grid ref={ (grid: any) => grid && (grids[name].refGrid = (grid as GDMNGrid)) } rs={getRecordSet(name)} />
                   </div>
                 </div>
               );

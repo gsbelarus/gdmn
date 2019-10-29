@@ -65,7 +65,7 @@
     "@types/react-css-modules": "^4",
     "@types/react-dom": "^16",
     "@types/react-redux": "^7",
-    "@types/react-router-dom": "^4.3.5",
+    "@types/react-router-dom": "^4",
     "@types/recompose": "^0",
     "@types/uglifyjs-webpack-plugin": "^1",
     "@types/webpack": "^4.39.1",
