@@ -42,34 +42,26 @@ export const ParamsDialog = (props: ISQLFormProps) => {
 
   const [ paramList, setParamList ]  = useState<ISQLField[]>([]);
 
-  const handleChangeValue = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChangeValue = React.useCallback((event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const inputEl = (event.target as HTMLInputElement);
     const name = inputEl.name;
+    console.log(paramList);
 
     const value = (inputEl.validity.valid) ? inputEl.value : paramList.find(i => i.name === name)!.value || '';
+    setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i));
+  }, [paramList]);
 
-    setParamList(paramList.map(i => i.name === name ? {...i, value: value} : i))
-  };
-
-  function formatDate(date: Date) {
-    return `${date.getDate()}.${date.getMonth()}.${date.getFullYear()}`
-  }
-
-  const handleSelectDate = (newDate: Date | undefined, name: string): void => {
-    let date : string | undefined;
-    if (newDate instanceof(Date)) {
-      date = formatDate(newDate);
-    } else {
-      date = undefined;
-    }
-    setParamList(paramList.map(i => i.name === name ? {...i, value: newDate} : i))
-  };
+  const handleNullValue = React.useCallback((event?: React.FormEvent<HTMLInputElement | HTMLElement>, checked?: boolean): void => {
+    const inputEl = (event as React.FormEvent<HTMLInputElement>).currentTarget;
+    const name = inputEl.name;
+    setParamList(paramList.map(i => i.name === name ? {...i, isNull: checked} : i));
+  }, [paramList]);
 
   useEffect(() => {
     setParamList(params);
   }, [params])
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     switch (e.key) {
       case 'Enter':
           onSave(paramList);
@@ -79,7 +71,7 @@ export const ParamsDialog = (props: ISQLFormProps) => {
       }
       e.preventDefault();
       e.stopPropagation();
-  }
+  }, []);
 
   return (
     <Dialog
@@ -99,34 +91,46 @@ export const ParamsDialog = (props: ISQLFormProps) => {
     >
       <Stack tokens={{ childrenGap: 15 }} styles={{ root: { width: "65vh" } }} onKeyDown={handleKeyDown}>
         {paramList.map(i => {
+          let component;
           switch (i.type) {
             case TFieldType.Integer:
-              return withNull(
-                i.name,
+              component =
                 <TextField
                   key={i.name}
                   value={i.value}
                   name={i.name}
+                  disabled={typeof(i.isNull) === 'undefined' ? true : i.isNull}
                   onChange={handleChangeValue} pattern="[0-9]*"
                 />
-              );
+              break;
             case TFieldType.Date:
-              return withNull(
-                i.name,
+              component =
                 <DateField
                   dateFieldType={"Date"}
                   value={i.value ? new Date(i.value) : undefined}
-                  label=""
                   key={i.name}
-                  onChange={newValue => handleSelectDate(newValue, i.name)}
+                  label=""
+                  disabled={typeof(i.isNull) === 'undefined' ? true : i.isNull}
+                  onChange={newValue => setParamList(paramList.map(el => el.name === i.name ? {...el, value: newValue} : el))}
                 />
-              );
+              break;
             default:
-                return withNull(
-                  i.name,
-                  <TextField key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
-                );
+              component =
+                <TextField disabled={typeof(i.isNull) === 'undefined' ? true : i.isNull} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
           }
+          return (
+            <Stack key={i.name}>
+              <Stack.Item>
+                <Label>{i.name.toUpperCase()}</Label>
+              </Stack.Item>
+              <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 15 }}>
+                <Checkbox label="NULL" name={i.name} checked={typeof(i.isNull) === 'undefined' ? true : i.isNull} onChange={handleNullValue}/>
+                <Stack.Item grow>
+                  {component}
+                </Stack.Item>
+              </Stack>
+            </Stack>
+          )
         })}
       </Stack>
       <DialogFooter>
@@ -135,20 +139,4 @@ export const ParamsDialog = (props: ISQLFormProps) => {
       </DialogFooter>
     </Dialog>
   );
-};
-
-const withNull = (name: string, ch: ReactNode) => {
-  return (
-    <Stack>
-      <Stack.Item>
-        <Label key={name}>{name.toUpperCase()}</Label>
-      </Stack.Item>
-      <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 15 }}>
-        <Checkbox label="NULL" checked />
-        <Stack.Item grow key={name}>
-          {ch}
-        </Stack.Item>
-      </Stack>
-    </Stack>
-  )
 };
