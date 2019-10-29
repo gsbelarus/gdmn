@@ -34,7 +34,6 @@ import {
 export class EntityUtils {
 
   public static createAttribute = (_attr: IAttribute,
-                                   entity: Entity,
                                    erModel: ERModel,
                                    withAdapter?: boolean): Attribute => {
     const {name, lName, required} = _attr;
@@ -74,7 +73,7 @@ export class EntityUtils {
         const {presLen, attributes, references} = _attr as ISetAttribute;
         const entities = references.map((e) => erModel.entities[e]);
         const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories, adapter});
-        attributes.forEach((a) => setAttribute.add(EntityUtils.createAttribute(a, entity, erModel)));
+        attributes.forEach((a) => setAttribute.add(EntityUtils.createAttribute(a, erModel)));
         return setAttribute;
       }
 

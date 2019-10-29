@@ -376,31 +376,26 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
 
-
+        const preEntity = new Entity({
+          parent: parent ? this.erModel.entity(parent) : undefined,
+          name,
+          lName,
+          adapter,
+          isAbstract,
+          unique,
+          semCategories: semCategories ? str2SemCategories(semCategories) : undefined
+           })
+        if (attributes) {
+          attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel)).map(attr => preEntity.add(attr));
+        } 
+        
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
-            callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel,
-                new Entity({
-                  parent: parent ? this.erModel.entity(parent) : undefined,
-                  name,
-                  lName,
-                  adapter,
-                  isAbstract,
-                  unique,
-                  semCategories: semCategories ? str2SemCategories(semCategories) : undefined
-                })
-              );
-              if (attributes) {
-                const lengthArr = attributes.length;
-                for (let i = 0; i < lengthArr; i++) {
-                  const attr = EntityUtils.createAttribute(attributes[i], entity, this.erModel);
-                  await eBuilder.createAttribute(entity, attr);
-                }
-              }
+            callback: async ({erBuilder, eBuilder}) => { 
+              const entity = await erBuilder.create(this.erModel, preEntity);
             }
           })
         }));

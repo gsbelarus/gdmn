@@ -51,6 +51,8 @@ export class ERModelBuilder extends Builder {
               }
             }))
           );
+        } else {
+          pkAttrs.push(entity.ownAttribute(Constants.DEFAULT_INHERITED_KEY_NAME));
         }
       } else {
         if (!entity.hasOwnAttribute(Constants.DEFAULT_ID_NAME)) {
@@ -64,6 +66,8 @@ export class ERModelBuilder extends Builder {
             }
           }));
           pkAttrs = entity.pk;
+        } else {
+          pkAttrs.push(entity.ownAttribute(Constants.DEFAULT_ID_NAME));
         }
       }
 
