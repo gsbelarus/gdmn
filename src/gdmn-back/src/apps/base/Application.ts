@@ -640,7 +640,6 @@ export class Application extends ADatabase {
       worker: async (context) => {
         const {select, params: preParams} = context.command.payload;
 
-        console.log(preParams);
         const dateFormat = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
         const params = this.isNamedParams(preParams) ?
           Object.keys(preParams).reduce((map, obj: keyof INamedParams) => {

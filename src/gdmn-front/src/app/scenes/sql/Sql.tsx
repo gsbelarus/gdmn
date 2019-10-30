@@ -25,6 +25,7 @@ export interface ISQLField {
   name: string,
   type: TFieldType;
   value?: any;
+  isNull?: boolean;
 }
 
 export interface INamedParams {
@@ -199,10 +200,12 @@ export const Sql = CSSModules(
       setState({ type: 'SHOW_PARAMS', showParams: false});
       setState({ type: 'LOAD_PARAMS', ...state, paramList });
 
+      // Обработка даты и NULL
       const params = paramList.reduce((map, obj) => {
-        map[obj.name] = obj.type === 5 ? new Date(obj.value) : obj.value || '';
+        map[obj.name] = obj.type === 5 ? new Date(obj.value) : (obj.isNull || typeof(obj.isNull) === 'undefined' ? null : obj.value || '');
         return map
-      }, {} as {[x:string]: any});
+      }, {} as {[x: string]: any})
+
       setState({ type: 'SET_PARAMS', params });
     }
 

@@ -269,7 +269,7 @@ export function GdmnView (props: IGdmnViewProps) {
         <ErrBoundary>
           <Stack horizontal styles={{ root: { height: '100%' } }}>
             <Stack.Item styles={{ root: { width: '240px' } }}>
-              <NLPDialogScroll nlpDialog={nlpDialog} addNLPMessage={ text => dispatch(gdmnActions.addNLPItem({ item: { who: 'me', text } })) }/>
+              <NLPDialogScroll nlpDialog={nlpDialog} addNLPMessage={ text => dispatch(gdmnActions.addNLPItem({ item: { who: 'me', text }, history })) }/>
             </Stack.Item>
             <Stack.Item grow={1} styles={{ root: { height: 'calc(100% - 36px)' } }}>
               <ViewTabsContainer history={history} match={match} location={location} />

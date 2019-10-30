@@ -4,7 +4,6 @@ import { first } from 'rxjs/operators';
 import { getType, ActionType } from 'typesafe-actions';
 import { Auth, TPubSubConnectStatus } from '@gdmn/client-core';
 import { TGdmnErrorCodes, TTaskStatus } from '@gdmn/server-api';
-
 import { authActionsAsync } from '@src/app/scenes/auth/actions';
 import { gdmnActions, gdmnActionsAsync, GdmnAction } from '@src/app/scenes/gdmn/actions';
 import { rootActions, TRootActions } from '@src/app/scenes/root/actions';
@@ -283,7 +282,7 @@ const viewTabMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => 
   return next(action);
 };
 
-const selectThemeMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => (action: ActionType<typeof gdmnActions.selectTheme>) => {
+const selectThemeMiddleware: TThunkMiddleware = () => next => (action: ActionType<typeof gdmnActions.selectTheme>) => {
   if (action.type === getType(gdmnActions.selectTheme)) {
     const namedTheme = themes.find( t => t.name === action.payload );
 
@@ -299,10 +298,28 @@ const selectThemeMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next
   return next(action);
 };
 
+const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next => (action: ActionType<typeof gdmnActions.addNLPItem>) => {
+  if (action.type === getType(gdmnActions.addNLPItem)) {
+    const { item, history } = action.payload;
+    const { erModel } = getState().gdmnState;
+
+    const entity = erModel.entities[item.text];
+
+    if (entity) {
+      history.push(`entity/${entity.name}`);
+      next(action);
+      return next(gdmnActions.addNLPItem({ item: { who: 'it', text: 'found!' }, history }));
+    }
+  }
+
+  return next(action);
+};
+
 export const getGdmnMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
   abortNetReconnectMiddleware,
   getApiMiddleware(apiService),
   loadingMiddleware,
   viewTabMiddleware,
-  selectThemeMiddleware
+  selectThemeMiddleware,
+  nlpDialogMiddleware
 ];
