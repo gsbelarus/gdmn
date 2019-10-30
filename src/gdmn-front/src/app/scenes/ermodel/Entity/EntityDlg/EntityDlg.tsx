@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
-import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, IEntityAttribute, ISequenceAttribute, deserializeEntity, deserializeAttributes } from "gdmn-orm";
+import { gdmnActions } from "@src/app/scenes/gdmn/actions";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -9,7 +9,6 @@ import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { initAttr, ErrorLinks, validateAttributes, getErrorMessage, getTempID, isTempID } from "./utils";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 import { apiService } from "@src/app/services/apiService";
-import { IDataRow, rsActions } from "gdmn-recordset";
 
 /**
  * Диалоговое окно создания/изменения Entity.
