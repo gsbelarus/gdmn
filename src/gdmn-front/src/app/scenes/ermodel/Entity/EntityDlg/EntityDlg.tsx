@@ -38,7 +38,8 @@ import { IDataRow, rsActions } from "gdmn-recordset";
 
 function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: GedeminEntityType = 'SIMPLE'): IAttribute[] {
 
-  const id: IAttribute = {
+  // TODO Доделать выбор sequence на фронте, по умолчанию подставлять Constants.GLOBAL_GENERATOR
+  const id: ISequenceAttribute = {
     name: 'ID',
     type: 'Sequence',
     required: true,

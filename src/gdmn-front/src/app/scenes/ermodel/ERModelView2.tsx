@@ -4,7 +4,6 @@ import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
 import {List} from "immutable";
 import {createGrid, GDMNGrid, IUserColumnsSettings} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
-import {linkCommandBarButton} from "@src/app/components/LinkCommandBarButton";
 import {CommandBar, ICommandBarItemProps, TextField} from "office-ui-fabric-react";
 import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
@@ -16,7 +15,7 @@ import { useSettings } from "@src/app/hooks/useSettings";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
-  const { entities, attributes, viewTab, erModel, dispatch, gcsEntities, gcsAttributes, match, gridColors } = props;
+  const { entities, attributes, viewTab, erModel, dispatch, gcsEntities, gcsAttributes, match, gridColors, history } = props;
   const [showInspector, setShowInspector] = useState(false);
   const entitiesFilter = entities && entities.filter && entities.filter.conditions.length ? entities.filter.conditions[0].value : '';
   const attributesFilter = attributes && attributes.filter && attributes.filter.conditions.length ? attributes.filter.conditions[0].value : '';
@@ -256,7 +255,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       iconProps: {
         iconName: 'Table'
       },
-      commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entity/${entities.getString('name')}`) : undefined
+      onClick: () => !!entities && !!entities.size && history.push(`entity/${entities.getString('name')}`)
+      //commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entity/${entities.getString('name')}`) : undefined
     },
     {
       key: 'reloadERModel',
@@ -281,7 +281,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       iconProps: {
         iconName: 'Add'
       },
-      commandBarButtonAs: linkCommandBarButton(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
+      onClick: () => history.push(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
+      //commandBarButtonAs: linkCommandBarButton(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
     },
     {
       key: 'editEntity',
@@ -290,7 +291,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       iconProps: {
         iconName: 'Edit'
       },
-      commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entityDlg/${entities.getString('name')}`) : undefined
+      onClick: () => !!entities && !!entities.size && history.push(`entityDlg/${entities.getString('name')}`)
+      //commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entityDlg/${entities.getString('name')}`) : undefined
     },
     {
       key: 'deleteEntity',
@@ -317,7 +319,14 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           onDismiss={ () => setShowInspector(false) }
         />
       }
-      <div styleName="MDGridMasterTop OptionsPanel">
+      <div
+        styleName="MDGridMasterTop"
+        style={{
+          paddingLeft: '8px',
+          paddingRight: '8px',
+          paddingBottom: '8px'
+        }}
+      >
         <TextField
           disabled={!entities}
           label="Filter:"
@@ -342,7 +351,14 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           />
         }
       </div>
-      <div styleName="MDGridDetailTop OptionsPanel">
+      <div
+        styleName="MDGridDetailTop"
+        style={{
+          paddingLeft: '8px',
+          paddingRight: '8px',
+          paddingBottom: '8px'
+        }}
+      >
         <TextField
           disabled={!attributes}
           label="Filter:"
