@@ -7,9 +7,10 @@ interface INode {
   parent?: string;
   value: string;
   rollUp?: boolean;
+  children: string[];
 }
 
-const Node = (props: {node: INode, level: (parent: string) => JSX.Element, isLast: boolean}) => {
+const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) => JSX.Element, isLast: boolean, isRoot?: boolean}) => {
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
     return props.isLast
@@ -36,15 +37,17 @@ const Node = (props: {node: INode, level: (parent: string) => JSX.Element, isLas
                     />
                     <div style={{marginLeft: '5px'}}>{props.node.value}</div>
                   </Stack>
-                  <div>{props.level(props.node.id)}</div>
+                  <div>{props.level(props.node.children, false)}</div>
                 </Stack>
 }
 
 export const Tree = (props: {rs: RecordSet}) => {
   
-  const root = {id: props.rs.name, value: props.rs.name}
+  const root = {id: props.rs.name, value: props.rs.name, children: []}
   const nodes: INode[] = [root];
+
   const count = props.rs.size;
+  const childRoot = [] as string[];
 
   for(let i = 0; i < count; i++) {
     const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
@@ -52,38 +55,48 @@ export const Tree = (props: {rs: RecordSet}) => {
     const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
     const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
     const parent = fdPARENT ? props.rs.getString(fdPARENT.fieldName, i) : undefined;
-    if(fdID && (fdNAME || fdUSRNAME)) {
+    const findIDParent = fdID ? props.rs.getString(fdID.fieldName, i) : undefined;
+    if(!parent && findIDParent) {
+      childRoot.push(findIDParent)
+    }
+    if(findIDParent && (fdNAME || fdUSRNAME)) {
       fdNAME
         ? nodes.push({
-            id: props.rs.getString(fdID.fieldName, i),
+            id: findIDParent,
             value: props.rs.getString(fdNAME.fieldName, i), 
             parent: parent ? parent : props.rs.name
           } as INode)
         : fdUSRNAME
           ? nodes.push({
-              id: props.rs.getString(fdID.fieldName, i), 
+              id: findIDParent, 
               value: props.rs.getString(fdUSRNAME.fieldName, i), 
               parent: parent ? parent : props.rs.name
             } as INode)
           : undefined
     }
   }
-  
-  const level = (parent: string) => {
-    const nodeInLevel = nodes.filter( curr => curr.parent && curr.parent === parent)
+  const withoutParent = nodes.filter(node => node.parent ? nodes.find(item => item.id === node.parent) === undefined : false)
+
+  nodes.map( (node, idx) => {
+    return nodes[idx].children = nodes.filter( curr => curr.parent && curr.parent === node.id).map(item => item.id);
+  })
+
+  const level = (children: string[], isRoot: boolean) => {
+
+    const nodeInLevel = nodes.filter( curr => children.find(child => child === curr.id));
     return <div style={{marginLeft: '25px', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', KhtmlUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'  }}>
       {
-        nodeInLevel.map( node => {
-          const nextLevel: INode[] = nodes.filter( curr => curr.parent && curr.parent === node.id);
-          return <Node key={`node-${node.value}-parent-${parent}`} node={node} level={level} isLast={nextLevel.length === 0} />
+        isRoot ? [...nodeInLevel, ...withoutParent].map( node => {
+          return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
+        })
+        : nodeInLevel.map( node => {
+          return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
         })
       }
     </div>
   }
 
   return <div className="Tree">
-    {
-      <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} />
-    }
+    <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} isRoot={true} />
   </div>
 }
