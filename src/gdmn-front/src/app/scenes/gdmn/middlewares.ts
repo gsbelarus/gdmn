@@ -301,12 +301,32 @@ const selectThemeMiddleware: TThunkMiddleware = () => next => (action: ActionTyp
 const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next => (action: ActionType<typeof gdmnActions.addNLPItem>) => {
   if (action.type === getType(gdmnActions.addNLPItem)) {
     const { item, history } = action.payload;
-    const { erModel } = getState().gdmnState;
 
+    switch (item.text) {
+      case 'close': {
+        const { viewTabs } = getState().gdmnState;
+
+        const tab = viewTabs.find( t => t.url === history.location.pathname );
+
+        if (tab && tab.canClose) {
+          dispatch(gdmnActions.deleteViewTab({
+            viewTabURL: history.location.pathname,
+            locationPath: history.location.pathname,
+            historyPush: history.push
+          }));
+          next(action);
+          return next(gdmnActions.addNLPItem({ item: { who: 'it', text: `Вкладка ${tab.caption} закрыта` }, history }));
+        }
+
+        return next(action);
+      }
+    }
+
+    const { erModel } = getState().gdmnState;
     const entity = erModel.entities[item.text];
 
     if (entity) {
-      history.push(`entity/${entity.name}`);
+      history.push(`/spa/gdmn/entity/${entity.name}`);
       next(action);
       return next(gdmnActions.addNLPItem({ item: { who: 'it', text: 'found!' }, history }));
     }
