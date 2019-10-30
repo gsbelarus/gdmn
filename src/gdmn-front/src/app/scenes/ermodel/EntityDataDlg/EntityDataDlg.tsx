@@ -987,21 +987,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       : []
     : [];
 
-  const setFields = (): Objects => {
-    const s = [];
-    if (!setting) {
-      for(let key in setComboBoxData) {
-        s.push({
+  const setFields: Objects = !setting
+    ? Object.keys(setComboBoxData).map(fd => {
+        return ({
           type: 'FIELD',
           parent: 'Area1',
-          fieldName: key,
-          label: key,
-          name: key
+          fieldName: fd,
+          label: fd,
+          name: fd
         } as IField)
-      }
-    }
-    return s
-  };
+      })
+    : [];
 
   const area1: IArea[] = !setting ? [{
     name: 'Area1',
@@ -1021,7 +1017,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         type: 'WINDOW'
       };
 
-  const objects: Objects = setting ? setting.objects : [window, ...area1, ...fields, ...setFields()];
+  const objects: Objects = setting ? setting.objects : [window, ...area1, ...fields, ...setFields];
 
   return (
     <>

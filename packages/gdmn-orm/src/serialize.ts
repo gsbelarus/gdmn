@@ -112,38 +112,34 @@ export interface IERModel {
   sequences: ISequence[];
 }
 
-const deserializeEntity = (erModel: ERModel, serializedERModel: IERModel, serializedEntity: IEntity, withAdapter: boolean): Entity => {
+export const deserializeEntity = (erModel: ERModel, serializedEntity: IEntity, withAdapter: boolean): Entity => {
   let result = erModel.entities[serializedEntity.name];
 
   if (!result) {
     let parent: Entity | undefined;
 
     if (serializedEntity.parent) {
-      const pe = serializedERModel.entities.find( p => p.name === serializedEntity.parent );
+      parent = erModel.entities[serializedEntity.parent];
 
-      if (!pe) {
+      if (!parent) {
         throw new Error(`Unknown entity ${serializedEntity.parent}`);
       }
-
-      parent = deserializeEntity(erModel, serializedERModel, pe, withAdapter);
     }
 
-    erModel.add(
-      result = new Entity({
-        name: serializedEntity.name,
-        lName: serializedEntity.lName,
-        parent,
-        isAbstract: serializedEntity.isAbstract,
-        semCategories: str2SemCategories(serializedEntity.semCategories),
-        adapter: withAdapter ? serializedEntity.adapter : undefined
-      })
-    );
+    result = new Entity({
+      name: serializedEntity.name,
+      lName: serializedEntity.lName,
+      parent,
+      isAbstract: serializedEntity.isAbstract,
+      semCategories: str2SemCategories(serializedEntity.semCategories),
+      adapter: withAdapter ? serializedEntity.adapter : undefined
+    });
   }
 
   return result;
 };
 
-const deserializeAttribute = (erModel: ERModel, _attr: IAttribute, withAdapter: boolean): Attribute => {
+  const deserializeAttribute = (erModel: ERModel, _attr: IAttribute, withAdapter: boolean): Attribute => {
   const {name, lName, required} = _attr;
   const adapter = withAdapter ? _attr.adapter : undefined;
   const semCategories = str2SemCategories(_attr.semCategories);
@@ -241,12 +237,12 @@ const deserializeAttribute = (erModel: ERModel, _attr: IAttribute, withAdapter: 
   }
 };
 
-const deserializeAttributes = (erModel: ERModel, e: IEntity, withAdapter: boolean): void => {
+export const deserializeAttributes = (erModel: ERModel, e: IEntity, withAdapter: boolean): void => {
   const entity = erModel.entity(e.name);
   e.attributes.forEach((_attr) => entity.add(deserializeAttribute(erModel, _attr, withAdapter)));
 };
 
-const deserializeUnique = (erModel: ERModel, e: IEntity): void => {
+export const deserializeUnique = (erModel: ERModel, e: IEntity): void => {
   const entity = erModel.entity(e.name);
   const values = e.unique.map((_values) => _values.map((_attr) => entity.ownAttribute(_attr)));
   values.forEach((attrs) => entity.addUnique(attrs));
@@ -270,7 +266,36 @@ export function deserializeERModel(serialized: IERModel, withAdapter?: boolean):
   const erModel = new ERModel();
 
   serialized.sequences.forEach( s => deserializeSequence(erModel, s, !!withAdapter) );
-  serialized.entities.forEach( e => deserializeEntity(erModel, serialized, e, !!withAdapter) );
+  serialized.entities.forEach( e => {
+
+    if (e.parent) {
+      // если мы десериализуем модель целиком, то может получиться
+      // ситуация, когда энтити для поля пэрэнт еще нет в модели
+      // тогда мы заглянем в сериализованную модель и попробуем
+      // сначала найти там такую энтити и создать
+      //
+      // если мы десиарилизуем ТОЛЬКО одну энтити, то энтити
+      // для пэрэнта проверим в модели и если ее там нет, то
+      // кинем ошибку
+
+      let parent = erModel.entities[e.parent];
+
+      if (!parent) {
+        const pe = serialized.entities.find( p => p.name === e.parent );
+
+        if (pe) {
+          parent = deserializeEntity(erModel, pe, !!withAdapter);
+          erModel.add(parent);
+        }
+      }
+
+      if (!parent) {
+        throw new Error(`Unknown entity ${e.parent}`);
+      }
+    }
+
+    erModel.add(deserializeEntity(erModel, e, !!withAdapter));
+  } );
   serialized.entities.forEach( e => deserializeAttributes(erModel, e, !!withAdapter) );
   serialized.entities.forEach( e => deserializeUnique(erModel, e) );
 

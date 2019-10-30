@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, deserializeEntity, IEntityAttribute } from "gdmn-orm";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, IEntityAttribute, ISequenceAttribute, deserializeEntity, deserializeAttributes } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -42,6 +42,7 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
   const id: ISequenceAttribute = {
     name: 'ID',
     type: 'Sequence',
+    sequence: 'GD_G_UNIQUE',
     required: true,
     lName: { ru: { name: 'Идентификатор' }},
     semCategories: '',
@@ -369,16 +370,20 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     if (entityData && erModel) {
       if (createEntity) {
         const result = await apiService.AddEntity({
-            ...entityData,
-            attributes: entityData.attributes.filter(a => a.name !== 'ID' && a.name !== 'INHERITEDKEY').map( attr => isTempID(attr.id) ? {...attr, id: undefined } : attr )
-          });
+          ...entityData,
+          attributes: entityData.attributes.map( attr => isTempID(attr.id) ? {...attr, id: undefined } : attr )
+        });
+
         if (result.error) {
           dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
         } else {
-          const serializedEntity = result.payload.result;
-          if (isIEntity(serializedEntity)) {
-            const newEntity = deserializeEntity(serializedEntity, erModel);
+          const sEntity = result.payload.result;
+          if (isIEntity(sEntity)) {
+            const newEntity = deserializeEntity(erModel, sEntity, true);
+            deserializeAttributes(erModel, sEntity, true);
+
             dispatch(gdmnActions.addEntityToSchema(newEntity));
+
             if (close) {
               deleteViewTab();
             }

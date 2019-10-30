@@ -23,7 +23,6 @@ export * from "./model/scalar/number/TimeStampAttribute";
 export * from "./rdbadapter";
 export * from "./types";
 export * from "./serialize";
-export * from "./deserializeEntity";
 export * from "./query-models/EntityLink";
 export * from "./query-models/EntityQuery";
 export * from "./query-models/EntityLinkField";
