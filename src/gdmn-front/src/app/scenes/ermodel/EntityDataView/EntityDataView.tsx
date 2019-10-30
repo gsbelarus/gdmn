@@ -262,7 +262,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           <CommandBar items={commandBarItems} />
           
           {
-            rs ? <Tree rs={rs} /> : undefined
+            rs ? <Tree
+              rs={rs}
+              load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+              loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
+            /> : undefined
           }
 
           {

@@ -10,13 +10,16 @@ interface INode {
   children: string[];
 }
 
-const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) => JSX.Element, isLast: boolean, isRoot?: boolean}) => {
+const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) => JSX.Element, isLast: boolean, isRoot?: boolean, iconLoad?: JSX.Element}) => {
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
     return props.isLast
-            ? <div style={{marginLeft: '25px', cursor: 'pointer'}}>{props.node.value}</div>
+            ? <Stack horizontal verticalAlign="center" styles={{root: {marginBottom: '5px', cursor: 'pointer'}}}>
+              {props.iconLoad}
+              <div style={{marginLeft: '5px'}}>{props.node.value}</div>
+              </Stack>
             : (rollUp !== undefined && !rollUp)
-              ? <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
+              ? <Stack horizontal verticalAlign="center" styles={{root: {marginBottom: '5px', cursor: 'pointer'}}}>
                   <Icon
                       iconName="ChevronRight"
                       onClick={() => setRollUp(!rollUp)}
@@ -27,7 +30,7 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
                   <div style={{ marginLeft: '5px'}}>{props.node.value}</div>
                 </Stack>
               : <Stack>
-                  <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
+                  <Stack horizontal verticalAlign="center" styles={{root: {marginBottom: '5px', cursor: 'pointer'}}}>
                     <Icon
                       iconName="ChevronDown"
                       onClick={() => setRollUp(!rollUp)}
@@ -37,23 +40,23 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
                     />
                     <div style={{marginLeft: '5px'}}>{props.node.value}</div>
                   </Stack>
-                  <div>{props.level(props.node.children, false)}</div>
+                  <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false)}</div>
                 </Stack>
 }
 
-export const Tree = (props: {rs: RecordSet}) => {
+export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean}) => {
   
   const root = {id: props.rs.name, value: props.rs.name, children: []}
   const nodes: INode[] = [root];
 
   const count = props.rs.size;
   const childRoot = [] as string[];
+  const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
+  const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
+  const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
+  const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
 
   for(let i = 0; i < count; i++) {
-    const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
-    const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
-    const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
-    const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
     const parent = fdPARENT ? props.rs.getString(fdPARENT.fieldName, i) : undefined;
     const findIDParent = fdID ? props.rs.getString(fdID.fieldName, i) : undefined;
     if(!parent && findIDParent) {
@@ -76,24 +79,44 @@ export const Tree = (props: {rs: RecordSet}) => {
     }
   }
   const withoutParent = nodes.filter(node => node.parent ? nodes.find(item => item.id === node.parent) === undefined : false)
-
   nodes.map( (node, idx) => {
     return nodes[idx].children = nodes.filter( curr => curr.parent && curr.parent === node.id).map(item => item.id);
   })
 
   const level = (children: string[], isRoot: boolean) => {
-
     const nodeInLevel = nodes.filter( curr => children.find(child => child === curr.id));
-    return <div style={{marginLeft: '25px', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', KhtmlUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', userSelect: 'none'  }}>
-      {
-        isRoot ? [...nodeInLevel, ...withoutParent].map( node => {
-          return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
-        })
-        : nodeInLevel.map( node => {
-          return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
-        })
-      }
-    </div>
+    return (
+      <div
+        style={{
+          marginLeft: '25px',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          KhtmlUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none',
+          userSelect: 'none'
+        }}
+      >
+        {
+          nodeInLevel.map( node => {
+            return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
+          })
+        }{
+          isRoot ? withoutParent.map(node => {
+            const iconLoad = !props.loadedAll
+              ? <Icon
+                iconName="More"
+                onClick={props.load}
+                style={{
+                  fontSize: '10px'
+                }}
+              />
+              : undefined;
+            return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} iconLoad={iconLoad} />
+          }) : undefined
+        }
+      </div>
+    )
   }
 
   return <div className="Tree">
