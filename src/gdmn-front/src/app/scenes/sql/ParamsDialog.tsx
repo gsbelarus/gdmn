@@ -98,7 +98,7 @@ export const ParamsDialog = (props: ISQLFormProps) => {
                   key={i.name}
                   value={i.value}
                   name={i.name}
-                  disabled={typeof(i.isNull) === 'undefined' ? true : i.isNull}
+                  disabled={i.isNull === undefined || i.isNull}
                   onChange={handleChangeValue} pattern="[0-9]*"
                 />
               break;
@@ -109,13 +109,13 @@ export const ParamsDialog = (props: ISQLFormProps) => {
                   value={i.value ? new Date(i.value) : undefined}
                   key={i.name}
                   label=""
-                  disabled={typeof(i.isNull) === 'undefined' ? true : i.isNull}
+                  disabled={i.isNull === undefined || i.isNull}
                   onChange={newValue => setParamList(paramList.map(el => el.name === i.name ? {...el, value: newValue} : el))}
                 />
               break;
             default:
               component =
-                <TextField disabled={typeof(i.isNull) === 'undefined' ? true : i.isNull} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
+                <TextField disabled={i.isNull === undefined || i.isNull} key={i.name} value={i.value} name={i.name} onChange={handleChangeValue}/>
           }
           return (
             <Stack key={i.name}>
@@ -123,7 +123,7 @@ export const ParamsDialog = (props: ISQLFormProps) => {
                 <Label>{i.name.toUpperCase()}</Label>
               </Stack.Item>
               <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 15 }}>
-                <Checkbox label="NULL" name={i.name} checked={typeof(i.isNull) === 'undefined' ? true : i.isNull} onChange={handleNullValue}/>
+                <Checkbox label="NULL" name={i.name} checked={i.isNull === undefined || i.isNull} onChange={handleNullValue}/>
                 <Stack.Item grow>
                   {component}
                 </Stack.Item>
