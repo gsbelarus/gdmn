@@ -41,9 +41,9 @@ const Node = (props: {node: INode, level: (parent: string) => JSX.Element, isLas
 }
 
 export const Tree = (props: {rs: RecordSet}) => {
-
-  const nodes: INode[] = [{id: props.rs.name, value: props.rs.name}];
-
+  
+  const root = {id: props.rs.name, value: props.rs.name}
+  const nodes: INode[] = [root];
   const count = props.rs.size;
 
   for(let i = 0; i < count; i++) {
@@ -81,15 +81,9 @@ export const Tree = (props: {rs: RecordSet}) => {
     </div>
   }
 
-  const roots: INode[] = nodes.filter(node => !node.parent)
-
   return <div className="Tree">
     {
-      roots !== []
-      ? roots.map( (root, idx) => (
-        <Node key={`root-${idx}-node-${root.value}`} node={root} level={level} isLast={false} />
-      ))
-      : <div>Not found root</div>
+      <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} />
     }
   </div>
 }
