@@ -10,6 +10,7 @@ import { IViewTab, ISessionData } from './types';
 import { ISignInBoxData } from '../auth/components/SignInBox';
 import { IGridColors } from 'gdmn-grid';
 import { INLPDialogItem } from 'gdmn-nlp-agent';
+import * as H from 'history';
 
 export const gdmnActionsAsync = {
   apiActivate: (): TThunkAction => async (dispatch, getState, { apiService }) => {
@@ -229,7 +230,7 @@ export const gdmnActions = {
 
   clearNLPDialog: createAction('NLPDIALOG/CLEAR'),
 
-  addNLPItem: createAction('NLPDIALOG/ADD', resolve => (param: { item: INLPDialogItem }) => resolve(param) )
+  addNLPItem: createAction('NLPDIALOG/ADD', resolve => (param: { item: INLPDialogItem, history: H.History<any> }) => resolve(param) )
 };
 
 export type GdmnAction = ActionType<typeof gdmnActions>;

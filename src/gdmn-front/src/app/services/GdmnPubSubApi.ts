@@ -465,14 +465,11 @@ export class GdmnPubSubApi {
         this.pubSubClient.connectionStatusObservable.getValue() === TPubSubConnectStatus.CONNECTED) &&
       !reconnect
     ) {
-      // //-//console.log('AUTH');
-
       this.subTasks();
 
       return EMPTY.toPromise(); // todo test
     }
 
-    // //-//console.log('AUTH+connect');
     this.reconnectUrlQuery = "";
     this.pubSubClient.connect(stringfyValues(cmd.payload));
 
@@ -558,23 +555,18 @@ export class GdmnPubSubApi {
       }
     );
 
-    // //-//console.log('SUBSCRIBE');
-
     // todo: test delete
     this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(
       value => {
       }
-      //-//console.log('[GDMN][PUB-SUB] taskProgressResult: ', value)
     );
     this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(
       value => {
       }
-      //-//console.log('[GDMN][PUB-SUB] taskStatusResult: ', value)
     );
     this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(
       value => {
       }
-      //-//console.log('[GDMN][PUB-SUB] taskActionResult: ', value)
     );
   }
 
@@ -591,6 +583,8 @@ export class GdmnPubSubApi {
     taskCmd: TTaskCmd<TActionName>,
     replyMode: boolean = false
   ) {
+    console.log('run task: ', JSON.stringify(taskCmd.payload.payload, undefined, 2));
+
     const observ = this.pubSubClient
       .publish<IPubSubMessage<TGdmnPublishMessageMeta>>(TGdmnTopic.TASK, {
         meta: {
