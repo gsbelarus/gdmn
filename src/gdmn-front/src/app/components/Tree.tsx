@@ -14,12 +14,12 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
     return props.isLast
-            ? <Stack horizontal verticalAlign="center" styles={{root: {marginBottom: '5px', cursor: 'pointer'}}}>
+            ? <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
               {props.iconLoad}
               <div style={{marginLeft: '5px'}}>{props.node.value}</div>
               </Stack>
             : (rollUp !== undefined && !rollUp)
-              ? <Stack horizontal verticalAlign="center" styles={{root: {marginBottom: '5px', cursor: 'pointer'}}}>
+              ? <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
                   <Icon
                       iconName="ChevronRight"
                       onClick={() => setRollUp(!rollUp)}
@@ -30,7 +30,7 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
                   <div style={{ marginLeft: '5px'}}>{props.node.value}</div>
                 </Stack>
               : <Stack>
-                  <Stack horizontal verticalAlign="center" styles={{root: {marginBottom: '5px', cursor: 'pointer'}}}>
+                  <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
                     <Icon
                       iconName="ChevronDown"
                       onClick={() => setRollUp(!rollUp)}
