@@ -6,7 +6,6 @@ interface INode {
   id: string;
   parent?: string;
   value: string;
-  isLast: boolean;
   rollUp?: boolean;
 }
 
@@ -43,7 +42,7 @@ const Node = (props: {node: INode, level: (parent: string) => JSX.Element, isLas
 
 export const Tree = (props: {rs: RecordSet}) => {
 
-  const nodes: INode[] = [{id: props.rs.name, value: props.rs.name, isLast: false}];
+  const nodes: INode[] = [{id: props.rs.name, value: props.rs.name}];
 
   const count = props.rs.size;
 
@@ -58,15 +57,13 @@ export const Tree = (props: {rs: RecordSet}) => {
         ? nodes.push({
             id: props.rs.getString(fdID.fieldName, i),
             value: props.rs.getString(fdNAME.fieldName, i), 
-            parent: parent ? parent : props.rs.name,
-            isLast: false
+            parent: parent ? parent : props.rs.name
           } as INode)
         : fdUSRNAME
           ? nodes.push({
               id: props.rs.getString(fdID.fieldName, i), 
               value: props.rs.getString(fdUSRNAME.fieldName, i), 
-              parent: parent ? parent : props.rs.name,
-              isLast: false
+              parent: parent ? parent : props.rs.name
             } as INode)
           : undefined
     }
