@@ -1111,6 +1111,9 @@ export class RecordSet {
         }
 
       case TFieldType.Date:
+        if (value === '') {
+          return this.setNull(fieldName, rIdx);
+        }
         if (isNaN(Date.parse(value))) {
           throw new Error(`Invalid type cast.`);
         }

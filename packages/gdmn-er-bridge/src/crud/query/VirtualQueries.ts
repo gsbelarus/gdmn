@@ -83,7 +83,7 @@ export class VirtualQueries {
     }));
 
     const fieldParent = new IntegerAttribute({
-      name: "PARENT",
+      name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
       entities: [queryToTree],
       adapter: {relation: "TREE", field: "PARENT"}
@@ -94,32 +94,68 @@ export class VirtualQueries {
   }
 
   private static _makeVirtualTree(link: EntityLink): Entity {
+    //я так понимаю, здесь создаем новую entity с полями ID и PARENT(надо ли эти поля здесь?, они могут и прийти в fields)
     let queryToTree = VirtualQueries._makeQueryToTree();
+    //добавляем поля
 
-    link.fields
-      .filter((field) => !field.links)
-      .map((field) => {
-        const attribute = field.attribute as ScalarAttribute;
-        if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
-          queryToTree = VirtualQueries._makeVirtualFields(queryToTree, attribute.adapter!.field);
-        }
-      });
+    queryToTree = VirtualQueries._addVirtualFields(queryToTree, link);
 
-    link.fields.reduce((items, field) => {
-      if (field.links) {
-        for (const link of field.links) {
-          link.fields
-            .filter((field) => !field.links)
-            .map((field) => {
-              const attribute = field.attribute as ScalarAttribute;
-              if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
-                queryToTree = VirtualQueries._makeVirtualFields(queryToTree, attribute.adapter!.field);
-              }
-            });
-        }
-      }
-      return items;
-    }, [] as string[]);
+    // link.fields
+    //   .forEach((field) => {
+    //     //временно отфильтруем ID и PARENT
+    //     if (field.attribute.adapter.field !== Constants.DEFAULT_ID_NAME && field.attribute.adapter.field !== Constants.DEFAULT_PARENT_KEY_NAME)  {
+    //       //если не поле-сылка
+    //       if (!field.links) {
+    //         if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
+    //           if (field.attribute.adapter) {
+    //             queryToTree = VirtualQueries._makeVirtualFields(queryToTree, field.attribute.adapter.field);
+    //           } else {
+    //                 //что делать, если нет адаптера?
+    //           }
+    //         }
+    //       //если поле-ссылка
+    //       } else {
+    //         field.links.forEach(fieldLink => {
+    //           fieldLink.fields.forEach((f) => {
+    //             if (!fieldLink.entity.isIntervalTree && fieldLink.entity.isTree && queryToTree) {
+    //               if (f.attribute.adapter) {
+    //                 queryToTree = VirtualQueries._makeVirtualFields(queryToTree, f.attribute.adapter.field);
+    //             } else {
+    //                 //что делать, если нет адаптера?
+    //               }
+    //             }
+    //           })
+    //       })
+    //     }}
+    //   });
+
+
+
+    // link.fields
+    //   .filter((field) => !field.links)
+    //   .forEach((field) => {
+    //     const attribute = field.attribute as ScalarAttribute;
+    //     if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
+    //       queryToTree = VirtualQueries._makeVirtualFields(queryToTree, attribute.adapter!.field);
+    //     }
+    //   });
+
+    // link.fields
+    //   .reduce((items, field) => {
+    //     if (field.links) {
+    //         for (const link of field.links) {
+    //         link.fields
+    //             .filter((field) => !field.links)
+    //             .map((field) => {
+    //             const attribute = field.attribute as ScalarAttribute;
+    //             if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
+    //                 queryToTree = VirtualQueries._makeVirtualFields(queryToTree, attribute.adapter!.field);
+    //             }
+    //             });
+    //         }
+    //     }
+    //     return items;
+    //   }, [] as string[]);
 
     return queryToTree;
 
@@ -145,6 +181,7 @@ export class VirtualQueries {
         field: Constants.DEFAULT_ID_NAME
       }
     }));
+
     query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
@@ -154,30 +191,61 @@ export class VirtualQueries {
       }
     }));
 
-    link.fields
-      .filter((field) => !field.links)
-      .map((field) => {
-        const attribute = field.attribute as ScalarAttribute;
-        if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-          query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
-        }
-      });
+        //добавляем поля
+        query = VirtualQueries._addVirtualFields(query, link);
+        // link.fields
+        // .forEach((field) => {
+        //   //временно отфильтруем ID и PARENT
+        //   if (field.attribute.adapter.field !== Constants.DEFAULT_ID_NAME && field.attribute.adapter.field !== Constants.DEFAULT_PARENT_KEY_NAME)  {
+        //     //если не поле-сылка
+        //     if (!field.links) {
+        //       if (!link.entity.isIntervalTree && link.entity.isTree && query) {
+        //         if (field.attribute.adapter) {
+        //           query = VirtualQueries._makeVirtualFields(query, field.attribute.adapter.field);
+        //         } else {
+        //               //что делать, если нет адаптера?
+        //         }
+        //       }
+        //     //если поле-ссылка
+        //     } else {
+        //       field.links.forEach(fieldLink => {
+        //         fieldLink.fields.forEach((f) => {
+        //           if (!fieldLink.entity.isIntervalTree && fieldLink.entity.isTree && query) {
+        //             if (f.attribute.adapter) {
+        //               query = VirtualQueries._makeVirtualFields(query, f.attribute.adapter.field);
+        //           } else {
+        //               //что делать, если нет адаптера?
+        //             }
+        //           }
+        //         })
+        //     })
+        //   }}
+        // });
 
-    link.fields.reduce((items, field) => {
-      if (field.links) {
-        for (const link of field.links) {
-          link.fields
-            .filter((field) => !field.links)
-            .map((field) => {
-              const attribute = field.attribute as ScalarAttribute;
-              if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-                query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
-              }
-            });
-        }
-      }
-      return items;
-    }, [] as string[]);
+    // link.fields
+    //   .filter((field) => !field.links)
+    //   .map((field) => {
+    //     const attribute = field.attribute as ScalarAttribute;
+    //     if (!link.entity.isIntervalTree && link.entity.isTree && query) {
+    //       query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
+    //     }
+    //   });
+
+    // link.fields.reduce((items, field) => {
+    //   if (field.links) {
+    //     for (const link of field.links) {
+    //       link.fields
+    //         .filter((field) => !field.links)
+    //         .map((field) => {
+    //           const attribute = field.attribute as ScalarAttribute;
+    //           if (!link.entity.isIntervalTree && link.entity.isTree && query) {
+    //             query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
+    //           }
+    //         });
+    //     }
+    //   }
+    //   return items;
+    // }, [] as string[]);
 
     return query;
   }
@@ -214,30 +282,94 @@ export class VirtualQueries {
       }
     }));
 
-    link.fields
-      .filter((field) => !field.links)
-      .map((field) => {
-        const attribute = field.attribute as ScalarAttribute;
-        if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-          query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
-        }
-      });
+    // link.fields
+    //   .filter((field) => !field.links)
+    //   .map((field) => {
+    //     const attribute = field.attribute as ScalarAttribute;
+    //     if (!link.entity.isIntervalTree && link.entity.isTree && query) {
+    //       query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
+    //     }
+    //   });
 
-    link.fields.reduce((items, field) => {
-      if (field.links) {
-        for (const link of field.links) {
-          link.fields
-            .filter((field) => !field.links)
-            .map((field) => {
-              const attribute = field.attribute as ScalarAttribute;
+    // link.fields.reduce((items, field) => {
+    //   if (field.links) {
+    //     for (const link of field.links) {
+    //       link.fields
+    //         .filter((field) => !field.links)
+    //         .map((field) => {
+    //           const attribute = field.attribute as ScalarAttribute;
+    //           if (!link.entity.isIntervalTree && link.entity.isTree && query) {
+    //             query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
+    //           }
+    //         });
+    //     }
+    //   }
+    //   return items;
+    // }, [] as string[]);
+
+        //добавляем поля
+        query = VirtualQueries._addVirtualFields(query, link);
+        // link.fields
+        // .forEach((field) => {
+        //   //временно отфильтруем ID и PARENT
+        //   if (field.attribute.adapter.field !== Constants.DEFAULT_ID_NAME && field.attribute.adapter.field !== Constants.DEFAULT_PARENT_KEY_NAME)  {
+        //     //если не поле-сылка
+        //     if (!field.links) {
+        //       if (!link.entity.isIntervalTree && link.entity.isTree && query) {
+        //         if (field.attribute.adapter) {
+        //           query = VirtualQueries._makeVirtualFields(query, field.attribute.adapter.field);
+        //         } else {
+        //               //что делать, если нет адаптера?
+        //         }
+        //       }
+        //     //если поле-ссылка
+        //     } else {
+        //       field.links.forEach(fieldLink => {
+        //         fieldLink.fields.forEach((f) => {
+        //           if (!fieldLink.entity.isIntervalTree && fieldLink.entity.isTree && query) {
+        //             if (f.attribute.adapter) {
+        //               query = VirtualQueries._makeVirtualFields(query, f.attribute.adapter.field);
+        //           } else {
+        //               //что делать, если нет адаптера?
+        //             }
+        //           }
+        //         })
+        //     })
+        //   }}
+        // });
+    return query;
+  }
+
+  private static _addVirtualFields(query: Entity, link: EntityLink): Entity {
+        //добавляем поля
+        link.fields
+        .forEach((field) => {
+          //временно отфильтруем ID и PARENT
+          if (field.attribute.adapter.field !== Constants.DEFAULT_ID_NAME && field.attribute.adapter.field !== Constants.DEFAULT_PARENT_KEY_NAME)  {
+            //если не поле-сылка
+            if (!field.links) {
               if (!link.entity.isIntervalTree && link.entity.isTree && query) {
-                query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
+                if (field.attribute.adapter) {
+                  query = VirtualQueries._makeVirtualFields(query, field.attribute.adapter.field);
+                } else {
+                      //что делать, если нет адаптера?
+                }
               }
-            });
-        }
-      }
-      return items;
-    }, [] as string[]);
+            //если поле-ссылка
+            } else {
+              field.links.forEach(fieldLink => {
+                fieldLink.fields.forEach((f) => {
+                  if (!fieldLink.entity.isIntervalTree && fieldLink.entity.isTree && query) {
+                    if (f.attribute.adapter) {
+                      query = VirtualQueries._makeVirtualFields(query, f.attribute.adapter.field);
+                  } else {
+                      //что делать, если нет адаптера?
+                    }
+                  }
+                })
+            })
+          }}
+        });
     return query;
   }
 

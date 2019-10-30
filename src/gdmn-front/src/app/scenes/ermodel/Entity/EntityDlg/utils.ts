@@ -1,6 +1,6 @@
 import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
   INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
-  IDateAttribute, IEntityAttribute, isUserDefined, getGedeminEntityType } from "gdmn-orm";
+  IDateAttribute, IEntityAttribute, isUserDefined, getGedeminEntityType, ISetAttribute } from "gdmn-orm";
 import equal from "fast-deep-equal";
 
 export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
@@ -62,6 +62,13 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
       return {
         ...attr
       } as IAttribute;
+    case 'Set' :
+      return {
+        ...attr,
+        references: [],
+        attributes: [],
+        presLen: 1
+      } as ISetAttribute;
   }
 
   throw new Error(`Unsupported type ${type}`);
