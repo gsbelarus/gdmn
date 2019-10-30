@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useReducer, useState} from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType, isUserDefined } from "gdmn-orm";
+import { IEntity, IAttribute, Entity, EntityUtils, isIEntity, GedeminEntityType, getGedeminEntityType, isUserDefined, ISequenceAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -38,11 +38,13 @@ import { rsActions } from "gdmn-recordset";
  */
 
 function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: GedeminEntityType = 'SIMPLE'): IAttribute[] {
-
-  const id: IAttribute = {
+  
+  // TODO Доделать выбор sequence на фронте, по умолчанию подставлять Constants.GLOBAL_GENERATOR
+  const id: ISequenceAttribute = {
     name: 'ID',
     type: 'Sequence',
-    required: false,
+    sequence: 'GD_G_UNIQUE',
+    required: true,
     lName: { ru: { name: 'Идентификатор' }},
     semCategories: '',
     id: getTempID()
@@ -372,7 +374,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         // временные ID атрибутов надо убрать перед отсылкой на сервер!
         const result = await apiService.AddEntity({
           ...entityData,
-          attributes: entityData.attributes.filter(a => a.name !== 'ID').map( attr => isTempID(attr.id) ? {...attr, id: undefined} : attr )
+          attributes: entityData.attributes.map( attr => isTempID(attr.id) ? {...attr, id: undefined} : attr )
         });
 
         // FIXME: а если ошибка? ее надо как-то вывести в окне
@@ -389,7 +391,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             adapter: iEntity.adapter,
             unique: iEntity.unique
           });
-          iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, entity, erModel)) );
+          iEntity.attributes.forEach( attr => entity.add(EntityUtils.createAttribute(attr, erModel)) );
 
           // FIXME: так а где собственно добавление новой entity в ERModel?
 
