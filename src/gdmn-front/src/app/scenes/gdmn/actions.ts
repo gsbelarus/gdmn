@@ -1,4 +1,4 @@
-import { deserializeERModel, ERModel, Entity } from 'gdmn-orm';
+import { deserializeERModel, ERModel } from 'gdmn-orm';
 import { ActionType, createAction } from 'typesafe-actions';
 import { TGdmnErrorCodes, TTaskActionNames, TTaskStatus, TSignInCmdResult, IRefreshTokenPayload, IAccessTokenPayload, TUserRoleType, IApplicationInfo, TTaskActionPayloadTypes, ITemplateApplication } from '@gdmn/server-api';
 import { Auth } from '@gdmn/client-core';
@@ -122,7 +122,7 @@ export const gdmnActionsAsync = {
       dispatch(gdmnActions.setTemplates(response.payload.result!));
     }
   },
-  reconnectToApp: (app?: IApplicationInfo): TThunkAction => async (dispatch, getState, { apiService }) => {
+  reconnectToApp: (app?: IApplicationInfo): TThunkAction => async (dispatch, getState) => {
     const {application, ...authState} = selectAuthState(getState());
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut());
@@ -163,7 +163,7 @@ export const gdmnActionsAsync = {
       dispatch(authActions.signIn.failure(error));
     }
   },
-  signOut: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+  signOut: (): TThunkAction => async (dispatch, getState) => {
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut()); // todo test
   },
