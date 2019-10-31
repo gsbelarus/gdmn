@@ -5,7 +5,6 @@ import {EntityAttribute} from "../model/link/EntityAttribute";
 import {SetAttribute} from "../model/link/SetAttribute";
 import {ScalarAttribute} from "../model/scalar/ScalarAttribute";
 import {EntityLink, IEntityLinkInspector} from "./EntityLink";
-import { ParentAttribute } from "..";
 
 export interface IEntityLinkFieldInspector {
   attribute: string;
@@ -21,7 +20,7 @@ export class EntityLinkField {
 
   constructor(attribute: Attribute, links?: EntityLink[], setAttributes?: ScalarAttribute[]) {
     this.attribute = attribute;
-    if (attribute instanceof EntityAttribute && !(attribute instanceof ParentAttribute)) {
+    if (attribute instanceof EntityAttribute) {
       if (!links || !links.length) {
         throw new Error("EntityLinkField with EntityAttribute must has 'links' property");
       }
