@@ -36,6 +36,7 @@ const initialState: TGdmnState = {
 
 export function reducer(state: TGdmnState = initialState, action: GdmnAction): TGdmnState {
   switch (action.type) {
+
     case getType(gdmnActions.setSchema): {
       return {
         ...state,

@@ -52,7 +52,7 @@ export class EntityUtils {
 
       case "Parent": {
         const attr = _attr as IEntityAttribute;
-        const entities = attr.references.map((e) => erModel.entities[e]);
+        const entities = attr.references.map((e) => erModel.entity(e));
         return new ParentAttribute({name, lName, entities, semCategories, adapter});
       }
 

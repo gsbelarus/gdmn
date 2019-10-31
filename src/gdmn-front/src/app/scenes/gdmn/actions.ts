@@ -122,7 +122,7 @@ export const gdmnActionsAsync = {
       dispatch(gdmnActions.setTemplates(response.payload.result!));
     }
   },
-  reconnectToApp: (app?: IApplicationInfo): TThunkAction => async (dispatch, getState, { apiService }) => {
+  reconnectToApp: (app?: IApplicationInfo): TThunkAction => async (dispatch, getState) => {
     const {application, ...authState} = selectAuthState(getState());
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut());
@@ -163,7 +163,7 @@ export const gdmnActionsAsync = {
       dispatch(authActions.signIn.failure(error));
     }
   },
-  signOut: (): TThunkAction => async (dispatch, getState, { apiService }) => {
+  signOut: (): TThunkAction => async (dispatch, getState) => {
     dispatch(gdmnActions.apiDisconnect());
     dispatch(authActions.onSignOut()); // todo test
   },
@@ -176,6 +176,7 @@ export const gdmnActionsAsync = {
 };
 
 export const gdmnActions = {
+
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
     return (reconnect: boolean = false) => resolve(reconnect);
   }),
