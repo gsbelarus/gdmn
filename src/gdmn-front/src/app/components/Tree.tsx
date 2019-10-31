@@ -136,12 +136,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
     )
   }
 
-  return <div className="Tree" 
-              style={{
-                overflow: 'auto',
-                height: '250px'
-              }}
-          >
+  return <div className="Tree">
     <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} isRoot={true} />
   </div>
 }
