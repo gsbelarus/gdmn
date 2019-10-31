@@ -27,33 +27,24 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [userColumnsSettingsAttr, setUserColumnsSettingsAttr, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
 
   const deleteRecord = useCallback( () => {
-    if (entities && entities.size) {
+    if (entities && entities.size && erModel) {
       dispatch(async dispatch => {
 
-        const result = await apiService.deleteEntity({
-          entityName: entities.getString('name')
-        });
+        const entityName = entities.getString('name');
+        const entity = erModel.entity(entityName);
+        const result = await apiService.deleteEntity({ entityName });
 
         if (!result.error) {
-          if (erModel) {
-            const entity = erModel.entities[entities.getString('name')];
-            if (entity) {
-              const newERModel = new ERModel(erModel);
-              erModel.remove(entity);
-              dispatch(gdmnActions.setSchema(newERModel));
-            }
-          }
-          //почему после удаления в ermodel не пересоздается RecordSet автоматически?
-          dispatch(rsActions.setRecordSet(
-            entities.delete(true)))
+          const newERModel = new ERModel(erModel);
+          erModel.remove(entity);
+          dispatch(gdmnActions.setSchema(newERModel));
+          dispatch(rsActions.setRecordSet(entities.delete(true)));
         } else {
-         //как лучше выводить ошибку?
-         //dispatch(gdmnActions.updateViewTab({ url: match.url, viewTab: { error: result.error.message } }));
          throw new Error(result.error.message);
         }
       });
     }
-  }, [entities, viewTab]);
+  }, [entities, viewTab, erModel]);
 
   useEffect(() => {
     if (!erModel || !Object.keys(erModel.entities).length) {

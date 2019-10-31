@@ -328,7 +328,7 @@ const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next =
     if (entity) {
       history.push(`/spa/gdmn/entity/${entity.name}`);
       next(action);
-      return next(gdmnActions.addNLPItem({ item: { who: 'it', text: 'found!' }, history }));
+      return next(gdmnActions.addNLPItem({ item: { who: 'it', text: 'Открыта таблица с данными.' }, history }));
     }
   }
 
