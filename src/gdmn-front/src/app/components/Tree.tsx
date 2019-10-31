@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stack, Icon } from 'office-ui-fabric-react';
+import { Stack, Icon, getTheme } from 'office-ui-fabric-react';
 import { RecordSet } from 'gdmn-recordset';
 
 interface INode {
@@ -8,18 +8,28 @@ interface INode {
   value: string;
   rollUp?: boolean;
   children: string[];
+  selected: boolean;
 }
 
 const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) => JSX.Element, isLast: boolean, isRoot?: boolean, iconLoad?: JSX.Element}) => {
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
     return props.isLast
-            ? <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
+            ? <Stack 
+                horizontal 
+                verticalAlign="center" 
+                styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
+              >
               {props.iconLoad}
               <div style={{marginLeft: '5px'}}>{props.node.value}</div>
+              
               </Stack>
             : (rollUp !== undefined && !rollUp)
-              ? <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
+              ? <Stack 
+                  horizontal 
+                  verticalAlign="center" 
+                  styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
+                >
                   <Icon
                       iconName="ChevronRight"
                       onClick={() => setRollUp(!rollUp)}
@@ -30,7 +40,11 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
                   <div style={{ marginLeft: '5px'}}>{props.node.value}</div>
                 </Stack>
               : <Stack>
-                  <Stack horizontal verticalAlign="center" styles={{root: {margin: '5px', cursor: 'pointer'}}}>
+                  <Stack 
+                    horizontal 
+                    verticalAlign="center" 
+                    styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
+                  >
                     <Icon
                       iconName="ChevronDown"
                       onClick={() => setRollUp(!rollUp)}
@@ -46,7 +60,7 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
 
 export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean}) => {
   
-  const root = {id: props.rs.name, value: props.rs.name, children: []}
+  const root = {id: props.rs.name, value: props.rs.name, children: [], selected: false}
   const nodes: INode[] = [root];
 
   const count = props.rs.size;
@@ -55,6 +69,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
   const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
   const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
   const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
+  const selectedRow = props.rs.currentRow
 
   for(let i = 0; i < count; i++) {
     const parent = fdPARENT ? props.rs.getString(fdPARENT.fieldName, i) : undefined;
@@ -67,13 +82,15 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
         ? nodes.push({
             id: findIDParent,
             value: props.rs.getString(fdNAME.fieldName, i), 
-            parent: parent ? parent : props.rs.name
+            parent: parent ? parent : props.rs.name,
+            selected: i === selectedRow
           } as INode)
         : fdUSRNAME
           ? nodes.push({
               id: findIDParent, 
               value: props.rs.getString(fdUSRNAME.fieldName, i), 
-              parent: parent ? parent : props.rs.name
+              parent: parent ? parent : props.rs.name,
+              selected: i === selectedRow
             } as INode)
           : undefined
     }
@@ -119,7 +136,12 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
     )
   }
 
-  return <div className="Tree">
+  return <div className="Tree" 
+              style={{
+                overflow: 'auto',
+                height: '250px'
+              }}
+          >
     <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} isRoot={true} />
   </div>
 }
