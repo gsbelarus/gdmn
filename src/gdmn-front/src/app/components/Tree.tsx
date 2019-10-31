@@ -46,7 +46,7 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
 
 export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean}) => {
   
-  const root = {id: props.rs.name, value: props.rs.name, children: []}
+  const root = {id: props.rs.name, value: props.rs.name, rollUp: true, children: []}
   const nodes: INode[] = [root];
 
   const count = props.rs.size;
