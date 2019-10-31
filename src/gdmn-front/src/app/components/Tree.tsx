@@ -14,48 +14,41 @@ interface INode {
 const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) => JSX.Element, isLast: boolean, isRoot?: boolean, iconLoad?: JSX.Element}) => {
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
-    return props.isLast
-            ? <Stack 
-                horizontal 
-                verticalAlign="center" 
-                styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
-              >
-              {props.iconLoad}
-              <div style={{marginLeft: '5px'}}>{props.node.value}</div>
-              
-              </Stack>
-            : (rollUp !== undefined && !rollUp)
-              ? <Stack 
-                  horizontal 
-                  verticalAlign="center" 
-                  styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
-                >
-                  <Icon
-                      iconName="ChevronRight"
-                      onClick={() => setRollUp(!rollUp)}
-                      style={{
-                        fontSize: '10px'
-                      }}
-                    />
-                  <div style={{ marginLeft: '5px'}}>{props.node.value}</div>
-                </Stack>
-              : <Stack>
-                  <Stack 
-                    horizontal 
-                    verticalAlign="center" 
-                    styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
-                  >
-                    <Icon
-                      iconName="ChevronDown"
-                      onClick={() => setRollUp(!rollUp)}
-                      style={{
-                        fontSize: '10px'
-                      }}
-                    />
-                    <div style={{marginLeft: '5px'}}>{props.node.value}</div>
-                  </Stack>
-                  <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false)}</div>
-                </Stack>
+  return (
+    <Stack>
+      <Stack
+        horizontal
+        verticalAlign="center" 
+        styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
+      >
+        {
+          props.isLast
+          ? props.iconLoad
+          : (rollUp !== undefined && !rollUp)
+            ? <Icon
+            iconName="ChevronRight"
+            onClick={() => setRollUp(!rollUp)}
+            style={{
+              fontSize: '10px'
+            }}
+          />
+            : <Icon
+            iconName="ChevronDown"
+            onClick={() => setRollUp(!rollUp)}
+            style={{
+              fontSize: '10px'
+            }}
+          />
+        }
+        <div style={{marginLeft: '5px'}}>{props.node.value}</div>
+        </Stack>
+        {
+          !(rollUp !== undefined && !rollUp)
+          ? <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false)}</div>
+          : undefined
+        }
+    </Stack>
+  )
 }
 
 export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean}) => {
@@ -78,21 +71,12 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
       childRoot.push(findIDParent)
     }
     if(findIDParent && (fdNAME || fdUSRNAME)) {
-      fdNAME
-        ? nodes.push({
-            id: findIDParent,
-            value: props.rs.getString(fdNAME.fieldName, i), 
-            parent: parent ? parent : props.rs.name,
-            selected: i === selectedRow
-          } as INode)
-        : fdUSRNAME
-          ? nodes.push({
-              id: findIDParent, 
-              value: props.rs.getString(fdUSRNAME.fieldName, i), 
-              parent: parent ? parent : props.rs.name,
-              selected: i === selectedRow
-            } as INode)
-          : undefined
+      nodes.push({
+          id: findIDParent, 
+          value: fdNAME ? props.rs.getString(fdNAME.fieldName, i) : props.rs.getString(fdUSRNAME!.fieldName, i), 
+          parent: parent ? parent : props.rs.name,
+          selected: i === selectedRow
+        } as INode)
     }
   }
   const withoutParent = nodes.filter(node => node.parent ? nodes.find(item => item.id === node.parent) === undefined : false)
