@@ -36,23 +36,6 @@ const initialState: TGdmnState = {
 
 export function reducer(state: TGdmnState = initialState, action: GdmnAction): TGdmnState {
   switch (action.type) {
-    case getType(gdmnActions.addEntityToSchema): {
-      const erModel = state.erModel;
-      erModel.add(action.payload);
-      return {
-        ...state,
-        erModel: new ERModel(erModel)
-      };
-    }
-
-    case getType(gdmnActions.deleteEntityFromSchema): {
-      const erModel = state.erModel;
-      erModel.remove(action.payload);
-      return {
-        ...state,
-        erModel: new ERModel(erModel)
-      };
-    }
 
     case getType(gdmnActions.setSchema): {
       return {

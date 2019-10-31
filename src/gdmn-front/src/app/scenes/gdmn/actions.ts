@@ -176,13 +176,6 @@ export const gdmnActionsAsync = {
 };
 
 export const gdmnActions = {
-  addEntityToSchema: createAction('gdmm/ADD_ENTITY_TO_SCHEMA', resolve => {
-    return (entity: Entity) => resolve(entity);
-  }),
-
-  deleteEntityFromSchema: createAction('gdmm/DELETE_ENTITY_FROM_SCHEMA', resolve => {
-    return (entity: Entity) => resolve(entity);
-  }),
 
   apiConnect: createAction('gdmn/API_CONNECT', resolve => {
     return (reconnect: boolean = false) => resolve(reconnect);

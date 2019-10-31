@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes } from "gdmn-orm";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -378,16 +378,13 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         } else {
           const sEntity = result.payload.result;
           if (isIEntity(sEntity)) {
-            const newEntity = deserializeEntity(erModel, sEntity, true);
-            deserializeAttributes(erModel, sEntity, true);
-
-            dispatch(gdmnActions.addEntityToSchema(newEntity));
-
-            if (close) {
-              deleteViewTab();
-            }
+            const newERModel = new ERModel(erModel);
+            newERModel.add(deserializeEntity(newERModel, sEntity, true));
+            deserializeAttributes(newERModel, sEntity, true);
+            dispatch(gdmnActions.setSchema(newERModel));
+            close && deleteViewTab();
           } else {
-            throw new Error("Wrong type of the Entity");
+            throw new Error("Wrong type of data");
           }
         }
       }

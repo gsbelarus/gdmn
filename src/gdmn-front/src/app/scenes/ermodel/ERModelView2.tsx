@@ -12,6 +12,7 @@ import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
 import { useSettings } from "@src/app/hooks/useSettings";
+import { ERModel } from "gdmn-orm";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -36,7 +37,11 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         if (!result.error) {
           if (erModel) {
             const entity = erModel.entities[entities.getString('name')];
-            if (entity) dispatch(gdmnActions.deleteEntityFromSchema(erModel.entities[entities.getString('name')]));
+            if (entity) {
+              const newERModel = new ERModel(erModel);
+              erModel.remove(entity);
+              dispatch(gdmnActions.setSchema(newERModel));
+            }
           }
           //почему после удаления в ermodel не пересоздается RecordSet автоматически?
           dispatch(rsActions.setRecordSet(
