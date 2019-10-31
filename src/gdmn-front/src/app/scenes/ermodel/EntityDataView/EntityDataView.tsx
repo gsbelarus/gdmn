@@ -15,6 +15,7 @@ import { useSaveGridState } from './useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
+import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery } from 'gdmn-orm';
 
 interface IEntityDataViewState {
@@ -249,6 +250,16 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
+    <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
+      <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
+        {
+          rs ? <Tree
+            rs={rs}
+            load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+            loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
+          /> : undefined
+        }
+      </Stack>
       <div styleName="SGrid">
         {
           showSQL && rs && rs.sql &&
@@ -259,6 +270,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
         <div styleName="SGridTop">
           <CommandBar items={commandBarItems} />
+          
           {
             error
             &&
@@ -271,42 +283,42 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               {error}
             </MessageBar>
           }
-            <Stack
-              horizontal
-              tokens={{ childrenGap: '12px' }}
-              styles={{
-                root: {
-                  paddingLeft: '8px',
-                  paddingRight: '8px',
-                  paddingBottom: '8px',
-                }
-              }}
-            >
-              <TextField
-                disabled={!rs || rs.status !== TStatus.FULL}
-                label="Filter:"
-                value={filter}
-                onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
-              />
-              <Stack.Item grow={1}>
-                <Stack horizontal verticalAlign="end">
-                  <TextField
-                    styles={{
-                      root: {
-                        width: '100%'
-                      }
-                    }}
-                    label="Query:"
-                    value={phrase}
-                    onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
-                    errorMessage={ phraseError ? phraseError : undefined }
-                  />
-                  <DefaultButton onClick={applyPhrase}>
-                    Применить
-                  </DefaultButton>
-                </Stack>
-              </Stack.Item>
-            </Stack>
+              <Stack
+                horizontal
+                tokens={{ childrenGap: '12px' }}
+                styles={{
+                  root: {
+                    paddingLeft: '8px',
+                    paddingRight: '8px',
+                    paddingBottom: '8px',
+                  }
+                }}
+              >
+                <TextField
+                  disabled={!rs || rs.status !== TStatus.FULL}
+                  label="Filter:"
+                  value={filter}
+                  onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+                />
+                <Stack.Item grow={1}>
+                  <Stack horizontal verticalAlign="end">
+                    <TextField
+                      styles={{
+                        root: {
+                          width: '100%'
+                        }
+                      }}
+                      label="Query:"
+                      value={phrase}
+                      onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
+                      errorMessage={ phraseError ? phraseError : undefined }
+                    />
+                    <DefaultButton onClick={applyPhrase}>
+                      Применить
+                    </DefaultButton>
+                  </Stack>
+                </Stack.Item>
+              </Stack>
         </div>
         <MessageBox />
         <div styleName="SGridTable">
@@ -332,5 +344,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           }
         </div>
       </div>
+    </Stack>
   );
 }, styles, { allowMultiple: true });
