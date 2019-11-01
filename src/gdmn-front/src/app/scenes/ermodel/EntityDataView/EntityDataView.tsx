@@ -62,7 +62,6 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 
     case 'SET_LINK_FIELD': {
       const { linkField } = action;
-      console.log(linkField)
 
       return {
         ...state,
@@ -84,7 +83,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
-  const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
+  const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
       ? rs.queryPhrase
       : entityName
@@ -264,15 +263,24 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
-      <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
         {
-          rs ? <Tree
-            rs={rs}
-            load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
-            loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
-          /> : undefined
+          rs
+            ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
+              ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
+                  {
+                    linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
+                    ?
+                      <Tree
+                        rs={rs}
+                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+                        loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
+                      />
+                    : <div>List</div>
+                  }
+                </Stack>
+              : undefined
+            : undefined
         }
-      </Stack>
       <div styleName="SGrid">
         {
           showSQL && rs && rs.sql &&
@@ -315,7 +323,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
                   options={
                     linkfields.length !== 0
-                      ? linkfields.map( link => {return {key: link.links![0].entity!.name, text: link.attribute.name} as IComboBoxOption})
+                      ? linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
                       : undefined
                   }
                 />
