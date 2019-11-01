@@ -1,10 +1,10 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { rsActions, TStatus } from 'gdmn-recordset';
+import { rsActions, TStatus, RecordSet } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
@@ -76,16 +76,19 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
   const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors } = props;
-  const locked = rs ? rs.locked : false;
+  const currRS: RecordSet | undefined = rs ? rs[entityName] : undefined;
+  const locked = currRS ? currRS.locked : false;
   const error = viewTab ? viewTab.error : undefined;
-  const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
+  const filter = currRS && currRS.filter && currRS.filter.conditions.length ? currRS.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
+  let rsMaster: RecordSet | undefined = undefined;
+  
   const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
-    phrase: rs && rs.queryPhrase
-      ? rs.queryPhrase
+    phrase: currRS && currRS.queryPhrase
+      ? currRS.queryPhrase
       : entityName
       ? `покажи все ${entityName}`
       : ''
@@ -102,7 +105,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             const command = erTranslatorRU.process(phrases);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
-              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, entityMaster: false }));
             }
           }
         }
@@ -111,24 +114,44 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
       } else {
         const eq = prepareDefaultEntityQuery(entity);
-        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: false }));
       }
     }
   };
 
+  // надо учесть, что когда у нас будет мастер рс, то
+  // мы должны грузить набор данных исходя из того, 
+  // что там выбрано в мастере
   useEffect( () => {
-    if (!rs && entity) {
+    if (!currRS && entity) {
       applyPhrase();
     }
-  }, [rs, entity]);
+  }, [currRS, entity]);
 
+  const linkfields = currRS && currRS.params.eq ? currRS.params.eq.link.fields.filter(fd => fd.links) : [];
+
+  // добавить еще эффект для загрузки мастер рс
+  // если мы в режиме мастер-дитэйл
   useEffect( () => {
-    if (rs) {
+    if (rs && currRS && !rsMaster && linkField) {
+      console.log(Object.keys(rs))
+      // как-то грузим мастер здесь
+      const findLF = linkfields.find(lf => lf.attribute.name === linkField);
+      if(findLF && findLF.links && findLF.links.length !== 0) {
+        console.log(findLF.links[0].entity.name)
+        rsMaster = rs[findLF.links[0].entity.name];
+        console.log(rs[findLF.links[0].entity.name])
+      }
+    }
+  }, [currRS, rsMaster, linkField]);
+  
+  useEffect( () => {
+    if (currRS) {
       if (viewTab && (!viewTab.rs || !viewTab.rs.length)) {
         dispatch(gdmnActions.updateViewTab({
           url,
           viewTab: {
-            rs: [rs.name]
+            rs: [currRS.name]
           }
         }));
       }
@@ -137,7 +160,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           url,
           caption: `${entityName}`,
           canClose: true,
-          rs: [rs.name]
+          rs: [currRS.name]
         }));
       }
     } else {
@@ -149,7 +172,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }));
       }
     }
-  }, [rs, viewTab]);
+  }, [rs, currRS, viewTab]);
 
   const addRecord = () => {
     if (entityName) {
@@ -185,7 +208,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     {
       key: `add`,
       text: 'Add',
-      disabled: !rs || locked,
+      disabled: !currRS || locked,
       iconProps: {
         iconName: 'Add'
       },
@@ -194,24 +217,24 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     {
       key: `edit`,
       text: 'Edit',
-      disabled: !rs || !rs.size || locked,
+      disabled: !currRS || !currRS.size || locked,
       iconProps: {
         iconName: 'Edit'
       },
-      onClick: () => !!rs && !!rs.size && history.push(`${url}/edit/${rs.pk2s().join('-')}`)
+      onClick: () => !!currRS && !!currRS.size && history.push(`${url}/edit/${currRS.pk2s().join('-')}`)
       //commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
     },
     {
       key: `delete`,
       text: 'Delete',
-      disabled: !rs || !rs.size || locked,
+      disabled: !currRS || !currRS.size || locked,
       iconProps: {
         iconName: 'Delete'
       }
     },
     {
       key: 'load',
-      disabled: !gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL,
+      disabled: !gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL,
       text: 'Load all',
       iconProps: {
         iconName: 'Download'
@@ -220,16 +243,16 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     },
     {
       key: 'refresh',
-      disabled: !rs || rs.status === TStatus.LOADING,
+      disabled: !currRS || currRS.status === TStatus.LOADING,
       text: 'Refresh',
       iconProps: {
         iconName: 'Refresh'
       },
-      onClick: () => rs && rs.eq && dispatch(loadRSActions.attachRS({ name: rs.name, eq: rs.eq, override: true }))
+      onClick: () => currRS && currRS.eq && dispatch(loadRSActions.attachRS({ name: currRS.name, eq: currRS.eq, override: true, entityMaster: false }))
     },
     {
       key: 'sql',
-      disabled: !rs || !rs.sql,
+      disabled: !currRS || !currRS.sql,
       text: 'Show SQL',
       iconProps: {
         iconName: 'FileCode'
@@ -259,7 +282,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
-  const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter(fd => fd.links) : [];
+  //const d = linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree ?
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
@@ -269,12 +292,12 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
                   {
                     linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
-                    ?
+                    ? rsMaster ?
                       <Tree
-                        rs={rs}
+                        rs={rsMaster}
                         load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
-                        loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
-                      />
+                        loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
+                      /> : <div>Not found rs-master</div>
                     : <div>List</div>
                   }
                 </Stack>
@@ -283,9 +306,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
       <div styleName="SGrid">
         {
-          showSQL && rs && rs.sql &&
+          showSQL && currRS && currRS.sql &&
           <SQLForm
-            rs={rs}
+            rs={currRS}
             onCloseSQL={onCloseSQL}
           />
         }
@@ -318,7 +341,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                 <ComboBox
                   label="Link field"
                   placeholder="Select link field"
-                  allowFreeform
+                  selectedKey={linkField}
                   autoComplete="on"
                   onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
                   options={
@@ -328,10 +351,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   }
                 />
                 <TextField
-                  disabled={!rs || rs.status !== TStatus.FULL}
+                  disabled={!currRS || currRS.status !== TStatus.FULL}
                   label="Filter:"
                   value={filter}
-                  onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+                  onChange={ (_, newValue) => onSetFilter({ rs: currRS!, filter: newValue ? newValue : '' }) }
                 />
                 <Stack.Item grow={1}>
                   <Stack horizontal verticalAlign="end">
@@ -355,11 +378,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         </div>
         <MessageBox />
         <div styleName="SGridTable">
-          { rs && gcs ?
+          { currRS && gcs ?
             <GDMNGrid
               {...gcs}
               columns={gcs.columns}
-              rs={rs}
+              rs={currRS}
               loadMoreRsData={loadMoreRsData}
               {...gridActions}
               onDelete={onDelete}

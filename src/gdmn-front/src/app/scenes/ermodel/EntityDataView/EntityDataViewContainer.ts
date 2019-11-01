@@ -5,7 +5,7 @@ import { EntityDataView } from "./EntityDataView";
 
 export const EntityDataViewContainer = connect(
   (state: IState, ownProps: IEntityDataViewContainerProps): IEntityDataViewStateProps => ({
-    rs: state.recordSet[ownProps.entityName],
+    rs: state.recordSet,
     entity: state.gdmnState.erModel.entities[ownProps.entityName],
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
     erModel: state.gdmnState.erModel,

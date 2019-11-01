@@ -1,5 +1,5 @@
 import { RouteComponentProps } from "react-router";
-import { RecordSet, RSAction } from "gdmn-recordset";
+import { RecordSet, RSAction, RecordSetReducerState } from "gdmn-recordset";
 import { Entity, ERModel } from "gdmn-orm";
 import { IViewTab } from "../../gdmn/types";
 import { ThunkDispatch } from "redux-thunk";
@@ -18,7 +18,7 @@ export interface IEntityDataViewContainerProps extends RouteComponentProps<IEnti
 };
 
 export interface IEntityDataViewStateProps {
-  rs?: RecordSet;
+  rs?: RecordSetReducerState;
   entity?: Entity;
   viewTab?: IViewTab;
   erModel?: ERModel;

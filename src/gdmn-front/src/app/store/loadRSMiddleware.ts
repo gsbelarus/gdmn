@@ -71,7 +71,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
     }
 
     case getType(actions.attachRS): {
-      const { eq, queryPhrase, override } = action.payload;
+      const { eq, queryPhrase, override, entityMaster } = action.payload;
 
       const prevRsm = getRsMeta();
 
@@ -130,26 +130,47 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     sql: result.info,
                     sequentially: !!rsm.taskKey
                   });
-
-                  dispatch(rsActions.createRecordSet({ name, rs, override }));
-
-                  if (override || !getState().grid[name]) {
-                    dispatch(
-                      createGrid({
-                        name,
-                        columns: rs.fieldDefs.map(fd => ({
-                          name: fd.fieldName,
-                          caption: [fd.caption || fd.fieldName],
-                          fields: [{...fd}],
-                          width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
-                        })),
-                        leftSideColumns: 0,
-                        rightSideColumns: 0,
-                        hideFooter: true,
-                        override
-                      })
-                    );
+                  if(!entityMaster) {
+                    dispatch(rsActions.createRecordSet({ name, rs, override }))
+                  
+                    if (override || !getState().grid[name]) {
+                      dispatch(
+                        createGrid({
+                          name,
+                          columns: rs.fieldDefs.map(fd => ({
+                            name: fd.fieldName,
+                            caption: [fd.caption || fd.fieldName],
+                            fields: [{...fd}],
+                            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                          })),
+                          leftSideColumns: 0,
+                          rightSideColumns: 0,
+                          hideFooter: true,
+                          override
+                        })
+                      );
+                    }
+                  } else {
+                    dispatch(rsActions.createRecordSet({ name: `${name}-master`, rs, override }));
+                    if (override || !getState().grid[`${name}-master`]) {
+                      dispatch(
+                        createGrid({
+                          name: `${name}-master`,
+                          columns: rs.fieldDefs.map(fd => ({
+                            name: fd.fieldName,
+                            caption: [fd.caption || fd.fieldName],
+                            fields: [{...fd}],
+                            width: fd.dataType === TFieldType.String && fd.size ? fd.size * 10 : undefined
+                          })),
+                          leftSideColumns: 0,
+                          rightSideColumns: 0,
+                          hideFooter: true,
+                          override
+                        })
+                      );
+                    }
                   }
+
 
                   break;
                 }

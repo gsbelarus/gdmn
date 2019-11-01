@@ -42,7 +42,7 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
       refreshRs: (rs: RecordSet) => {
         if (rs.eq) {
-          dispatch(loadRSActions.attachRS({ name: rs.name, eq: rs.eq, override: true }))
+          dispatch(loadRSActions.attachRS({ name: rs.name, eq: rs.eq, override: true, entityMaster: false }))
         }
       },
 
