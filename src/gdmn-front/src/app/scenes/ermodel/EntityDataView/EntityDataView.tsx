@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -22,11 +22,13 @@ interface IEntityDataViewState {
   phrase: string;
   phraseError?: string;
   showSQL?: boolean;
+  linkField?: string;
 };
 
 type Action = { type: 'SET_PHRASE', phrase: string }
   | { type: 'SET_PHRASE_ERROR', phraseError: string }
-  | { type: 'SET_SHOW_SQL', showSQL: boolean };
+  | { type: 'SET_SHOW_SQL', showSQL: boolean }
+  | { type: 'SET_LINK_FIELD', linkField: string };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
@@ -55,6 +57,16 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
       return {
         ...state,
         showSQL
+      }
+    }
+
+    case 'SET_LINK_FIELD': {
+      const { linkField } = action;
+      console.log(linkField)
+
+      return {
+        ...state,
+        linkField
       }
     }
   }
@@ -248,6 +260,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
+  const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter(fd => fd.links) : [];
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
@@ -294,6 +307,18 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   }
                 }}
               >
+                <ComboBox
+                  label="Link field"
+                  placeholder="Select link field"
+                  allowFreeform
+                  autoComplete="on"
+                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
+                  options={
+                    linkfields.length !== 0
+                      ? linkfields.map( link => {return {key: link.links![0].entity!.name, text: link.attribute.name} as IComboBoxOption})
+                      : undefined
+                  }
+                />
                 <TextField
                   disabled={!rs || rs.status !== TStatus.FULL}
                   label="Filter:"
