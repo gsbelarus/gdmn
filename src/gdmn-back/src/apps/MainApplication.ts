@@ -139,13 +139,15 @@ export class MainApplication extends Application {
         (error, data) => error ? reject(error) : resolve(JSON.parse(data.toString())));
     });
 
-    return templateConfig.map((template) => {
+    const templ: ITemplateApplication[] = [];
+
+    templateConfig.forEach((template) =>  {
       const {name, description} = template;
-      if (!name || !description) {
-        throw new Error("Incorrect template config");
-      }
-      return {name, description};
+      (!name || !description)
+        ? console.error("Incorrect template config")
+        : templ.push({name, description});
     });
+    return templ;
   }
 
   private static async _getTemplatesFiles(): Promise<string[]> {
@@ -422,7 +424,7 @@ export class MainApplication extends Application {
               description: item.description
             });
           } else {
-            throw new Error("Template file is not found, check templates config");
+            console.log(`Template file "${item.name}" (${item.description}) is not found, check templates config`);
           }
           return items;
         }, [] as ITemplateApplication[]);

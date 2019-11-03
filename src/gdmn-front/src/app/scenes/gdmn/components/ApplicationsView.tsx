@@ -250,7 +250,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
                 }}
               />
               <TextField
-                label="Username:"
+                label="DB Username:"
                 style={{maxWidth: "300px"}}
                 value={this.state.username}
                 onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
@@ -258,7 +258,7 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
                 }}
               />
               <PasswordInput
-                label="Password:"
+                label="DB Password:"
                 style={{maxWidth: "300px"}}
                 value={this.state.password}
                 onChange={(_e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
@@ -282,6 +282,10 @@ export class ApplicationsView extends View<IApplicationsViewProps, IAddApplicati
             )}
           <DialogFooter>
             <PrimaryButton
+              disabled={!this.state.external
+                ? !(this.state.alias && this.state.template !== undefined && this.state.template !== 'undefined')
+                : !(this.state.alias && this.state.host && this.state.path && this.state.password)
+              }
               onClick={() => {
                 const data: TTaskActionPayloadTypes[TTaskActionNames.CREATE_APP] = {
                   alias: this.state.alias ? this.state.alias : "",
