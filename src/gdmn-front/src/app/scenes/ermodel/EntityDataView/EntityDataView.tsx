@@ -309,7 +309,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         load={() => {
                           rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
                         }
-                        loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
+                        loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
                       />
                     : 
                       <ListEntity
@@ -317,7 +317,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         load={() => {
                           rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
                         }
-                        loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
+                        loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
                       /> 
                       : <div>Not found rs-master</div>
                   }

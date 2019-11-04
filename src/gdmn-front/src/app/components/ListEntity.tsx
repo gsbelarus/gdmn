@@ -25,7 +25,7 @@ export const ListEntity = (props: {rs:RecordSet, load: () => void, loadedAll: bo
       }
 
     return <div styleName="ListEntity">
-        { props.loadedAll
+        { !props.loadedAll
               ? <Icon
                 iconName="More"
                 onClick={props.load}
