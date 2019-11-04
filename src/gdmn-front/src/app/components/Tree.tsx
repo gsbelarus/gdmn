@@ -11,7 +11,23 @@ interface INode {
   selected: boolean;
 }
 
-const Node = (props: {node: INode, onClick: (value: string) => void, level: (children: string[], isRoot: boolean, onClick: (value: string) => void) => JSX.Element, isLast: boolean, isRoot?: boolean, iconLoad?: JSX.Element}) => {
+interface ITreeProps {
+  rs: RecordSet;
+  load: () => void;
+  selectNode: (value: string) => void;
+  loadedAll: boolean;
+}
+
+interface INodeProps {
+  node: INode,
+  onClick: (value: string) => void;
+  level: (children: string[], isRoot: boolean, onClick: (value: string) => void) => JSX.Element;
+  isLast: boolean;
+  isRoot?: boolean;
+  iconLoad?: JSX.Element;
+}
+
+const Node = (props: INodeProps) => {
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
   return (
@@ -51,7 +67,7 @@ const Node = (props: {node: INode, onClick: (value: string) => void, level: (chi
   )
 }
 
-export const Tree = (props: {rs: RecordSet, load: () => void, selectNode: (value: string) => void, loadedAll: boolean}) => {
+export const Tree = (props: ITreeProps) => {
   
   const root = {id: props.rs.name, value: props.rs.name, rollUp: true, children: [], selected: false}
   const nodes: INode[] = [root];
@@ -119,7 +135,6 @@ export const Tree = (props: {rs: RecordSet, load: () => void, selectNode: (value
     msUserSelect: 'none',
     userSelect: 'none'
   }} >
-    <Node key={`root-node-${root.value}`} onClick={props.selectNode} node={root} level={level} isLast={false} isRoot={true} />
     {
       props.loadedAll
       ? undefined
@@ -132,6 +147,6 @@ export const Tree = (props: {rs: RecordSet, load: () => void, selectNode: (value
           }}
         />
     }
-    
+    <Node key={`root-node-${root.value}`} onClick={props.selectNode} node={root} level={level} isLast={false} isRoot={true} />
   </div>
 }
