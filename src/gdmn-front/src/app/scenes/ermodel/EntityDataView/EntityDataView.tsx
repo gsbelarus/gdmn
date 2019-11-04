@@ -84,7 +84,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
-  let rsMaster: RecordSet | undefined = /*rs ? rs[`${entityMaster.name}-master`] :*/ undefined;
+  let rsMaster: RecordSet | undefined = undefined;
   
   const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
     phrase: currRS && currRS.queryPhrase
@@ -305,8 +305,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                     ? rsMaster ?
                       <Tree
                         rs={rsMaster}
-                        load={async() => {
-                          console.log('load')
+                        load={() => {
                           rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
                         }
                         loadedAll={!gridRef.current || !rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}

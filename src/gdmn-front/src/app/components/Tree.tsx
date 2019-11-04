@@ -125,7 +125,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
       ? undefined
       : <Icon
           iconName="More"
-          onClick={ () => {props.load(); console.log(count)}}
+          onClick={ () => {props.load()}}
           style={{
             fontSize: '10px',
             cursor: 'pointer'
