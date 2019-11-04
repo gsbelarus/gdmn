@@ -16,19 +16,21 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, prepareEntityQueryWithParams } from 'gdmn-orm';
 
 interface IEntityDataViewState {
   phrase: string;
   phraseError?: string;
   showSQL?: boolean;
   linkField?: string;
+  valueFilter?: string;
 };
 
 type Action = { type: 'SET_PHRASE', phrase: string }
   | { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
-  | { type: 'SET_LINK_FIELD', linkField: string };
+  | { type: 'SET_LINK_FIELD', linkField: string }
+  | { type: 'SET_FILTER_FIELD', valueFilter: string };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
@@ -68,6 +70,15 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
         linkField
       }
     }
+
+    case 'SET_FILTER_FIELD': {
+      const { valueFilter } = action;
+
+      return {
+        ...state,
+        valueFilter
+      }
+    }
   }
 
   return state;
@@ -86,7 +97,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   let rsMaster: RecordSet | undefined = undefined;
   
-  const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
+  const [{ phrase, phraseError, showSQL, linkField, valueFilter }, viewDispatch] = useReducer(reducer, {
     phrase: currRS && currRS.queryPhrase
       ? currRS.queryPhrase
       : entityName
@@ -147,13 +158,21 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   }, [linkField]);
 
-    if(rs && linkField) {
-      const findLF = linkfields.find(lf => lf.attribute.name === linkField);
-      if(findLF && findLF.links && findLF.links.length !== 0) {
-        const entityMaster = findLF.links[0].entity;
-        rsMaster = rs[entityMaster.name];
-      }
+  if(rs && linkField) {
+    const findLF = linkfields.find(lf => lf.attribute.name === linkField);
+    if(findLF && findLF.links && findLF.links.length !== 0) {
+      const entityMaster = findLF.links[0].entity;
+      rsMaster = rs[entityMaster.name];
     }
+  }
+
+  const filterByFieldLink = (value: string) => {
+    if(entity) {
+      const findAttr = entity.attribute('ID');
+      const eq = prepareEntityQueryWithParams(entity, findAttr && linkField ? [{attr: findAttr, alias: linkField, value}] : undefined);
+      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: true }));
+    }
+  }
   
   useEffect( () => {
     if (currRS) {
@@ -292,7 +311,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
-  //const d = linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree ?
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
@@ -308,6 +326,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         load={() => {
                           rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
                         }
+                        selectNode={filterByFieldLink}
                         loadedAll={!gridRef.current || !rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
                       /> : <div>Not found rs-master</div>
                     : <div>List</div>

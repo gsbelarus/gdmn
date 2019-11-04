@@ -11,7 +11,7 @@ interface INode {
   selected: boolean;
 }
 
-const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) => JSX.Element, isLast: boolean, isRoot?: boolean, iconLoad?: JSX.Element}) => {
+const Node = (props: {node: INode, onClick: (value: string) => void, level: (children: string[], isRoot: boolean, onClick: (value: string) => void) => JSX.Element, isLast: boolean, isRoot?: boolean, iconLoad?: JSX.Element}) => {
   const [rollUp, setRollUp] = useState(props.node.rollUp ? props.node.rollUp : false);
 
   return (
@@ -40,18 +40,18 @@ const Node = (props: {node: INode, level: (children: string[], isRoot: boolean) 
             }}
           />
         }
-        <div style={{marginLeft: '5px'}}>{props.node.value}</div>
+        <div style={{marginLeft: '5px'}} onClick={() => props.onClick(props.node.id)}>{props.node.value}</div>
         </Stack>
         {
           !(rollUp !== undefined && !rollUp)
-          ? <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false)}</div>
+          ? <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false, props.onClick)}</div>
           : undefined
         }
     </Stack>
   )
 }
 
-export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean}) => {
+export const Tree = (props: {rs: RecordSet, load: () => void, selectNode: (value: string) => void, loadedAll: boolean}) => {
   
   const root = {id: props.rs.name, value: props.rs.name, rollUp: true, children: [], selected: false}
   const nodes: INode[] = [root];
@@ -85,13 +85,13 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
     return nodes[idx].children = nodes.filter( curr => curr.parent && curr.parent === node.id).map(item => item.id);
   })
 
-  const level = (children: string[], isRoot: boolean) => {
+  const level = (children: string[], isRoot: boolean, onClick: (value: string) => void) => {
     const nodeInLevel = nodes.filter( curr => children.find(child => child === curr.id));
     return (
       <div style={{ marginLeft: '25px' }} >
         {
           nodeInLevel.map( node => {
-            return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
+            return <Node key={`node-${node.id}`} onClick={props.selectNode} node={node} level={level} isLast={node.children.length === 0} />
           })
         }{
           isRoot ? withoutParent.map(node => {
@@ -104,7 +104,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
                 }}
               />
               : undefined;
-            return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} iconLoad={iconLoad} />
+            return <Node key={`node-${node.id}`} onClick={props.selectNode} node={node} level={level} isLast={node.children.length === 0} iconLoad={iconLoad} />
           }) : undefined
         }
       </div>
@@ -119,7 +119,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
     msUserSelect: 'none',
     userSelect: 'none'
   }} >
-    <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} isRoot={true} />
+    <Node key={`root-node-${root.value}`} onClick={props.selectNode} node={root} level={level} isLast={false} isRoot={true} />
     {
       props.loadedAll
       ? undefined

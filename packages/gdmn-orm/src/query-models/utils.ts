@@ -1,4 +1,5 @@
 import { Entity, EntityLinkField, ScalarAttribute, EntityAttribute, EntityLink, ParentAttribute, EntityQueryOrderType, EntityQuery, IEntityQueryOrder, EntityQueryOptions, EntityQuerySet, EntityQuerySetOptions } from "..";
+import { Attribute } from '../model/Attribute';
 
 export function prepareDefaultEntityLinkFields(entity: Entity): EntityLinkField[] {
   const scalarFields = Object.values(entity.attributes)
@@ -59,6 +60,40 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
       alias,
       attribute: entity.pk[index],
       value
+    }))
+  }];
+
+  return new EntityQuery(
+    new EntityLink(entity, alias, prepareDefaultEntityLinkFields(entity)),
+    new EntityQueryOptions(
+    undefined,
+    undefined,
+    whereObj,
+    orderObj)
+  );
+}
+
+export interface IParamsQuery {
+  attr: Attribute<any>;
+  alias: string;
+  value: string;
+}
+
+export function prepareEntityQueryWithParams(entity: Entity, pkValues?: IParamsQuery[], alias: string = 'root', orderFields?: {name: string, order: EntityQueryOrderType}[]): EntityQuery {
+
+  const orderObj: IEntityQueryOrder[] = [];
+  orderFields && orderFields.forEach(fd => {
+    const sortAttrs = Object.values(entity.attributes).find(attr => attr.name === fd.name);
+    sortAttrs && orderObj.push({alias, type: fd.order, attribute: sortAttrs});
+  });
+
+  //const getAlias = entity.pk[]
+
+  const whereObj = pkValues && [{
+    equals: pkValues.map(param => ({
+      alias: param.alias,
+      attribute: param.attr,
+      value: param.value
     }))
   }];
 
