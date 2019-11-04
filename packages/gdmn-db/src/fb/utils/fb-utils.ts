@@ -313,7 +313,7 @@ export async function valueToBuffer(transaction: Transaction,
             break;
 
         case SQLTypes.SQL_TYPE_TIME: {
-            const date = value as Date;
+            const date = new Date(value);
             dataView.setUint32(inDescriptor.offset,
                 encodeTime(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds() * 10),
                 littleEndian);
@@ -321,15 +321,15 @@ export async function valueToBuffer(transaction: Transaction,
         }
 
         case SQLTypes.SQL_TYPE_DATE: {
-            const date = value as Date;
+            const date = new Date(value);
             dataView.setInt32(inDescriptor.offset,
                 encodeDate(date.getFullYear(), date.getMonth() + 1, date.getDate()),
                 littleEndian);
-            break;
-        }
+                break;
+            }
 
         case SQLTypes.SQL_TIMESTAMP: {
-            const date = value as Date;
+            const date = new Date(value);
             dataView.setInt32(inDescriptor.offset,
                 encodeDate(date.getFullYear(), date.getMonth() + 1, date.getDate()),
                 littleEndian);
