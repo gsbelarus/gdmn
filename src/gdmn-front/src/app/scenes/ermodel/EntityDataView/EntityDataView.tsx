@@ -16,6 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
+import { ListEntity } from '@src/app/components/ListEntity';
 import { prepareDefaultEntityQuery } from 'gdmn-orm';
 
 interface IEntityDataViewState {
@@ -301,14 +302,20 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
               ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
                   {
-                    linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
-                    ? rsMaster ?
+                    rsMaster
+                    ? linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree ?
                       <Tree
                         rs={rsMaster}
                         load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
                         loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
-                      /> : <div>Not found rs-master</div>
-                    : <div>List</div>
+                      />
+                    : 
+                      <ListEntity
+                        rs={rsMaster}
+                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+                        loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
+                      /> 
+                      : <div>Not found rs-master</div>
                   }
                 </Stack>
               : undefined
