@@ -84,7 +84,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
-  let rsMaster: RecordSet | undefined = undefined;
+  let rsMaster: RecordSet | undefined = /*rs ? rs[`${entityMaster.name}-master`] :*/ undefined;
   
   const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
     phrase: currRS && currRS.queryPhrase
@@ -133,17 +133,27 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   // добавить еще эффект для загрузки мастер рс
   // если мы в режиме мастер-дитэйл
   useEffect( () => {
-    if (rs && currRS && !rsMaster && linkField) {
-      console.log(Object.keys(rs))
-      // как-то грузим мастер здесь
-      const findLF = linkfields.find(lf => lf.attribute.name === linkField);
-      if(findLF && findLF.links && findLF.links.length !== 0) {
-        console.log(findLF.links[0].entity.name)
-        rsMaster = rs[findLF.links[0].entity.name];
-        console.log(rs[findLF.links[0].entity.name])
+    if (rs && currRS && linkField) {
+      if(rsMaster) {
+
+      } else {
+        const findLF = linkfields.find(lf => lf.attribute.name === linkField);
+        if(findLF && findLF.links && findLF.links.length !== 0) {
+          const entityMaster = findLF.links[0].entity;
+          const eq = prepareDefaultEntityQuery(entityMaster);
+          dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true, entityMaster: true }));
+        }
       }
     }
-  }, [currRS, rsMaster, linkField]);
+  }, [linkField]);
+
+    if(rs && linkField) {
+      const findLF = linkfields.find(lf => lf.attribute.name === linkField);
+      if(findLF && findLF.links && findLF.links.length !== 0) {
+        const entityMaster = findLF.links[0].entity;
+        rsMaster = rs[`${entityMaster.name}-master`];
+      }
+    }
   
   useEffect( () => {
     if (currRS) {
