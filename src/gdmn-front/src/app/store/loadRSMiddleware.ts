@@ -151,11 +151,11 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                       );
                     }
                   } else {
-                    dispatch(rsActions.createRecordSet({ name: `${name}-master`, rs, override }));
-                    if (override || !getState().grid[`${name}-master`]) {
+                    dispatch(rsActions.createRecordSet({ name, rs, override }));
+                    if (override || !getState().grid[name]) {
                       dispatch(
                         createGrid({
-                          name: `${name}-master`,
+                          name,
                           columns: rs.fieldDefs.map(fd => ({
                             name: fd.fieldName,
                             caption: [fd.caption || fd.fieldName],

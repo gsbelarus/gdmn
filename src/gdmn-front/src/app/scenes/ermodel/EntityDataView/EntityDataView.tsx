@@ -151,7 +151,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       const findLF = linkfields.find(lf => lf.attribute.name === linkField);
       if(findLF && findLF.links && findLF.links.length !== 0) {
         const entityMaster = findLF.links[0].entity;
-        rsMaster = rs[`${entityMaster.name}-master`];
+        rsMaster = rs[entityMaster.name];
       }
     }
   
@@ -305,8 +305,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                     ? rsMaster ?
                       <Tree
                         rs={rsMaster}
-                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
-                        loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
+                        load={async() => {
+                          console.log('load')
+                          rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
+                        }
+                        loadedAll={!gridRef.current || !rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
                       /> : <div>Not found rs-master</div>
                     : <div>List</div>
                   }

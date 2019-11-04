@@ -57,6 +57,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
   const nodes: INode[] = [root];
 
   const count = props.rs.size;
+  console.log(count)
   const childRoot = [] as string[];
   const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
   const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
@@ -87,17 +88,7 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
   const level = (children: string[], isRoot: boolean) => {
     const nodeInLevel = nodes.filter( curr => children.find(child => child === curr.id));
     return (
-      <div
-        style={{
-          marginLeft: '25px',
-          WebkitTouchCallout: 'none',
-          WebkitUserSelect: 'none',
-          KhtmlUserSelect: 'none',
-          MozUserSelect: 'none',
-          msUserSelect: 'none',
-          userSelect: 'none'
-        }}
-      >
+      <div style={{ marginLeft: '25px' }} >
         {
           nodeInLevel.map( node => {
             return <Node key={`node-${node.id}`} node={node} level={level} isLast={node.children.length === 0} />
@@ -120,7 +111,27 @@ export const Tree = (props: {rs: RecordSet, load: () => void, loadedAll: boolean
     )
   }
 
-  return <div className="Tree">
+  return <div className="Tree" style={{
+    WebkitTouchCallout: 'none',
+    WebkitUserSelect: 'none',
+    KhtmlUserSelect: 'none',
+    MozUserSelect: 'none',
+    msUserSelect: 'none',
+    userSelect: 'none'
+  }} >
     <Node key={`root-node-${root.value}`} node={root} level={level} isLast={false} isRoot={true} />
+    {
+      props.loadedAll
+      ? undefined
+      : <Icon
+          iconName="More"
+          onClick={ () => {props.load(); console.log(count)}}
+          style={{
+            fontSize: '10px',
+            cursor: 'pointer'
+          }}
+        />
+    }
+    
   </div>
 }
