@@ -17,6 +17,7 @@ import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, prepareEntityQueryWithParams } from 'gdmn-orm';
+import { ListEntity } from '@src/app/components/ListEntity';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -319,17 +320,26 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
               ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
                   {
-                    linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
-                    ? rsMaster ?
+                    rsMaster
+                    ? linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree ?
                       <Tree
                         rs={rsMaster}
                         load={() => {
                           rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
                         }
                         selectNode={filterByFieldLink}
-                        loadedAll={!gridRef.current || !rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
-                      /> : <div>Not found rs-master</div>
-                    : <div>List</div>
+                        loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
+                      />
+                    : 
+                      <ListEntity
+                        rs={rsMaster}
+                        load={() => {
+                          rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
+                        }
+                        //selectNode={filterByFieldLink}
+                        loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
+                      /> 
+                      : <div>Not found rs-master</div>
                   }
                 </Stack>
               : undefined
