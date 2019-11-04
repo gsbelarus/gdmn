@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Stack, Icon, getTheme } from 'office-ui-fabric-react';
 import { RecordSet } from 'gdmn-recordset';
+import { node } from 'prop-types';
 
 interface INode {
   id: string;
@@ -8,7 +9,6 @@ interface INode {
   value: string;
   rollUp?: boolean;
   children: string[];
-  selected: boolean;
 }
 
 interface ITreeProps {
@@ -25,6 +25,8 @@ interface INodeProps {
   isLast: boolean;
   isRoot?: boolean;
   iconLoad?: JSX.Element;
+  selected?: string;
+  onSelectNode: (id: string) => void;
 }
 
 const Node = (props: INodeProps) => {
@@ -35,7 +37,7 @@ const Node = (props: INodeProps) => {
       <Stack
         horizontal
         verticalAlign="center" 
-        styles={{root: {margin: '5px', cursor: 'pointer', background:props.node.selected ? getTheme().palette.themeTertiary : undefined}}}
+        styles={{root: {margin: '5px', cursor: 'pointer', background: props.selected === props.node.id ? getTheme().palette.themeTertiary : undefined}}}
       >
         {
           props.isLast
@@ -56,7 +58,15 @@ const Node = (props: INodeProps) => {
             }}
           />
         }
-        <div style={{marginLeft: '5px'}} onClick={() => props.onClick(props.node.id)}>{props.node.value}</div>
+        <div
+          style={{marginLeft: '5px'}}
+          onClick={() => {
+            props.onSelectNode(props.node.id);
+            props.onClick(props.node.id);
+          }}
+        >
+          {props.node.value}
+        </div>
         </Stack>
         {
           !(rollUp !== undefined && !rollUp)
@@ -69,17 +79,16 @@ const Node = (props: INodeProps) => {
 
 export const Tree = (props: ITreeProps) => {
   
-  const root = {id: props.rs.name, value: props.rs.name, rollUp: true, children: [], selected: false}
+  const root = {id: props.rs.name, value: props.rs.name, rollUp: true, children: []}
   const nodes: INode[] = [root];
 
   const count = props.rs.size;
-  console.log(count)
   const childRoot = [] as string[];
   const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
   const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
   const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
   const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
-  const selectedRow = props.rs.currentRow
+  const [selectedNode, setSelectedNode] = useState<string | undefined>();
 
   for(let i = 0; i < count; i++) {
     const parent = fdPARENT ? props.rs.getString(fdPARENT.fieldName, i) : undefined;
@@ -91,8 +100,7 @@ export const Tree = (props: ITreeProps) => {
       nodes.push({
           id: findIDParent, 
           value: fdNAME ? props.rs.getString(fdNAME.fieldName, i) : props.rs.getString(fdUSRNAME!.fieldName, i), 
-          parent: parent ? parent : props.rs.name,
-          selected: i === selectedRow
+          parent: parent ? parent : props.rs.name
         } as INode)
     }
   }
@@ -107,7 +115,17 @@ export const Tree = (props: ITreeProps) => {
       <div style={{ marginLeft: '25px' }} >
         {
           nodeInLevel.map( node => {
-            return <Node key={`node-${node.id}`} onClick={props.selectNode} node={node} level={level} isLast={node.children.length === 0} />
+            return (
+              <Node
+                key={`node-${node.id}`}
+                onClick={props.selectNode}
+                node={node}
+                level={level}
+                isLast={node.children.length === 0}
+                selected={selectedNode}
+                onSelectNode={setSelectedNode}
+              />
+            )
           })
         }{
           isRoot ? withoutParent.map(node => {
@@ -120,7 +138,18 @@ export const Tree = (props: ITreeProps) => {
                 }}
               />
               : undefined;
-            return <Node key={`node-${node.id}`} onClick={props.selectNode} node={node} level={level} isLast={node.children.length === 0} iconLoad={iconLoad} />
+            return (
+              <Node
+                key={`node-${node.id}`}
+                onClick={props.selectNode}
+                node={node}
+                level={level}
+                isLast={node.children.length === 0}
+                iconLoad={iconLoad}
+                selected={selectedNode}
+                onSelectNode={setSelectedNode}
+              />
+            )
           }) : undefined
         }
       </div>
@@ -147,6 +176,15 @@ export const Tree = (props: ITreeProps) => {
           }}
         />
     }
-    <Node key={`root-node-${root.value}`} onClick={props.selectNode} node={root} level={level} isLast={false} isRoot={true} />
+    <Node
+      key={`root-node-${root.value}`}
+      onClick={props.selectNode}
+      node={root}
+      level={level}
+      isLast={false}
+      isRoot={true}
+      selected={selectedNode}
+      onSelectNode={setSelectedNode}
+    />
   </div>
 }
