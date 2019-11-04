@@ -85,7 +85,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
-  let rsMaster: RecordSet | undefined = /*rs ? rs[`${entityMaster.name}-master`] :*/ undefined;
+  let rsMaster: RecordSet | undefined = undefined;
   
   const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
     phrase: currRS && currRS.queryPhrase
@@ -152,7 +152,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       const findLF = linkfields.find(lf => lf.attribute.name === linkField);
       if(findLF && findLF.links && findLF.links.length !== 0) {
         const entityMaster = findLF.links[0].entity;
-        rsMaster = rs[`${entityMaster.name}-master`];
+        rsMaster = rs[entityMaster.name];
       }
     }
   
@@ -306,13 +306,17 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                     ? linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree ?
                       <Tree
                         rs={rsMaster}
-                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+                        load={() => {
+                          rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
+                        }
                         loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
                       />
                     : 
                       <ListEntity
                         rs={rsMaster}
-                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+                        load={() => {
+                          rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
+                        }
                         loadedAll={!gridRef.current || !currRS || currRS.status === TStatus.LOADING || currRS.status === TStatus.FULL}
                       /> 
                       : <div>Not found rs-master</div>
