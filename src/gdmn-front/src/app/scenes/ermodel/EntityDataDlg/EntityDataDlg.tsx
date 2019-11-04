@@ -131,6 +131,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       const { fieldName, value } = lastEdited.current;
       if (typeof value === "boolean") {
         dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+      } else if (value === '' && rs.getFieldDef(fieldName).dataType === TFieldType.Date) {
+        dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
       } else {
         dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
       }
