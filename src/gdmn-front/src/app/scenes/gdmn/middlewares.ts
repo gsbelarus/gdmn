@@ -332,6 +332,15 @@ const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next =
         return;
       }
 
+      case 'morphology': {
+        history.push(`/spa/gdmn/morphology`);
+        dispatch(gdmnActions.nlpAdd([
+          { who: 'me', text }
+        ]));
+
+        return;
+      }
+
       case 'clear': {
         dispatch(gdmnActions.nlpClear());
         return;
@@ -349,6 +358,20 @@ const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next =
       ]));
       return;
     }
+
+    if (/[А-Яа-я]+/.test(text)) {
+      history.push(`/spa/gdmn/morphology/${text}`);
+      dispatch(gdmnActions.nlpAdd([
+        { who: 'me', text }
+      ]));
+
+      return;
+    }
+
+    dispatch(gdmnActions.nlpAdd([
+      { who: 'me', text },
+      { who: 'it', text: 'Неизвестная команда!' }
+    ]));
   }
 
   return next(action);
