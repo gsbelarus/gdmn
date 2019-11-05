@@ -3,7 +3,7 @@ import CSSModules from 'react-css-modules';
 import styles from './style.css';
 import { IThemeEditorProps } from './ThemeEditor.types';
 import { gdmnActions } from '../gdmn/actions';
-import { ChoiceGroup, IChoiceGroupOption, Label, PrimaryButton, DefaultButton, createTheme, Customizer, loadTheme, getTheme, DetailsList, IColumn, SelectionMode, DetailsListLayoutMode, Selection, MarqueeSelection } from 'office-ui-fabric-react';
+import { ChoiceGroup, IChoiceGroupOption, Label, PrimaryButton, DefaultButton, createTheme, Customizer, loadTheme, getTheme, DetailsList, IColumn, SelectionMode, DetailsListLayoutMode, Selection, MarqueeSelection, Stack } from 'office-ui-fabric-react';
 import { themes } from './themes';
 
 export const ThemeEditor = CSSModules( (props: IThemeEditorProps): JSX.Element => {
@@ -93,7 +93,10 @@ export const ThemeEditor = CSSModules( (props: IThemeEditorProps): JSX.Element =
 
           return {
             key: t.name,
-            iconProps: { iconName: 'Color', styles: { root: { color: theme.semanticColors.primaryButtonBackground } } },
+            iconProps: {
+              iconName: theme.isInverted ? 'ColorSolid' : 'Color',
+              styles: { root: { color: theme.semanticColors.primaryButtonBackground } }
+            },
             text: t.name,
             styles: {
               root: {
@@ -109,6 +112,33 @@ export const ThemeEditor = CSSModules( (props: IThemeEditorProps): JSX.Element =
           }
         })}
       />
+      <Label>Colors</Label>
+      <Stack wrap tokens={{ childrenGap: '8px' }} styles={{ root: { height: '460px' } }}>
+        {
+          Object.entries(getTheme().palette).map( ([name, backgroundColor]) =>
+            <div
+              style={{
+                width: '162px'
+              }}
+            >
+              <div
+                style={{
+                  display: 'inline-block',
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor,
+                  marginRight: '6px'
+                }}
+              >
+                &nbsp;
+              </div>
+              <span>
+                {name}
+              </span>
+            </div>
+          )
+        }
+      </Stack>
       <Label>Examples</Label>
       <PrimaryButton>Primary button</PrimaryButton>
       <DefaultButton>Test</DefaultButton>

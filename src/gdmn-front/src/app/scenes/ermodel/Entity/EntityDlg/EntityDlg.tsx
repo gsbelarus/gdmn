@@ -389,7 +389,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         }
       }
     }
-  }, [changed, entityData, entities, createEntity, erModel, initialData]);
+  }, [changed, entityData, createEntity, erModel]);
 
   const deleteAtribute = useCallback(async () => {
     if (entityData && erModel && selectedAttr !== undefined) {

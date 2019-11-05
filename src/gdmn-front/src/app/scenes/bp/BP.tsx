@@ -12,6 +12,7 @@ import { flowcharts } from '@src/app/fsm/flowcharts';
 import { IFSMState } from '@src/app/fsm/types';
 import { fsmSignals } from '@src/app/fsm/fsmSignals';
 import { getPlugins } from '@src/app/fsm/plugins';
+import { useTab } from '@src/app/hooks/useTab';
 
 interface IGraphState{
   graph: any;
@@ -24,15 +25,7 @@ export const BP = CSSModules( (props: IBPProps): JSX.Element => {
   const [graphState, setGraphState] = useState<IGraphState | null>(null);
   const graphContainer = useRef(null);
 
-  useEffect( () => {
-    if (!viewTab) {
-      dispatch(gdmnActions.addViewTab({
-        url,
-        caption: 'BP',
-        canClose: true
-      }));
-    }
-  }, []);
+  useTab(viewTab, url, 'BP', true, dispatch);
 
   const graphStyles = useMemo( () => {
     const t = getTheme();
