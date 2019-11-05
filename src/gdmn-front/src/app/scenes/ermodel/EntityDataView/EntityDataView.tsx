@@ -8,7 +8,7 @@ import { rsActions, TStatus, RecordSet } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
 import { ERTranslatorRU } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings, GridComponentState } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
@@ -167,6 +167,15 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   }
 
+  useEffect( () => {
+    if(rsMaster && entity && rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')) {
+      const findAttr = entity.attribute('ID');
+      const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow)
+      const eq = prepareEntityQueryWithParams(entity, findAttr && linkField ? [{attr: findAttr, alias: linkField, value}] : undefined);
+      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: true }));
+    }
+  }, [rsMaster])
+
   const filterByFieldLink = (value: string) => {
     if(entity) {
       const findAttr = entity.attribute('ID');
@@ -311,6 +320,22 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   ];
 
+  const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, url, viewTab);
+  const [userColumnsSettingsEntity, setUserColumnsSettingsEntity, delUserColumnSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
+  const fdMaster = rsMaster ? rsMaster.params.fieldDefs.find( fd => fd.caption === 'NAME' || fd.caption === 'USR$NAME') : undefined;
+  const gcsRSMaster: GridComponentState | undefined = rsMaster  && fdMaster ? {
+    columns: [{name: fdMaster.fieldName, fields: [fdMaster]}],
+    leftSideColumns: 0,
+    rightSideColumns: 0,
+    currentCol: 0,
+    selectRows: false,
+    hideHeader: false,
+    hideFooter: true,
+    sortDialog: false,
+    paramsDialog: false,
+    searchIdx: 0
+  } : undefined;
+
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
@@ -331,14 +356,22 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
                       />
                     : 
-                      <ListEntity
-                        rs={rsMaster}
-                        load={() => {
-                          rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
+                      <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
+                        { gcsRSMaster ?
+                          <GDMNGrid
+                            {...gcsRSMaster}
+                            rs={rsMaster}
+                            columns={gcsRSMaster.columns}
+                            ref={ grid => grid && (gridRefEntities.current = grid) }
+                            {...gridActions}
+                            savedState={getSavedStateEntities()}
+                            colors={gridColors}
+                            userColumnsSettings={userColumnsSettingsEntity}
+                            onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsEntity(userSettings) }
+                            onDelUserColumnsSettings={ () => delUserColumnSettingsEntity() }
+                          /> : <div>Not found grid rs-master</div>
                         }
-                        //selectNode={filterByFieldLink}
-                        loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
-                      /> 
+                      </div>
                       : <div>Not found rs-master</div>
                   }
                 </Stack>
