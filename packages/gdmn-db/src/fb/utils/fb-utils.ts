@@ -313,7 +313,14 @@ export async function valueToBuffer(transaction: Transaction,
             break;
 
         case SQLTypes.SQL_TYPE_TIME: {
-            const date = new Date(value);
+            let date;
+            if (typeof value === 'string') {
+                date = new Date(value);
+            } else if (value instanceof Date) {
+                date = value as Date;
+            } else {
+                throw new Error("Unrecognized type used as TIME.");
+            }
             dataView.setUint32(inDescriptor.offset,
                 encodeTime(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds() * 10),
                 littleEndian);
@@ -321,7 +328,14 @@ export async function valueToBuffer(transaction: Transaction,
         }
 
         case SQLTypes.SQL_TYPE_DATE: {
-            const date = new Date(value);
+            let date;
+            if (typeof value === 'string') {
+                date = new Date(value);
+            } else if (value instanceof Date) {
+                date = value as Date;
+            } else {
+                throw new Error("Unrecognized type used as DATE.");
+            }
             dataView.setInt32(inDescriptor.offset,
                 encodeDate(date.getFullYear(), date.getMonth() + 1, date.getDate()),
                 littleEndian);
@@ -329,7 +343,14 @@ export async function valueToBuffer(transaction: Transaction,
             }
 
         case SQLTypes.SQL_TIMESTAMP: {
-            const date = new Date(value);
+            let date;
+            if (typeof value === 'string') {
+                date = new Date(value);
+            } else if (value instanceof Date) {
+                date = value as Date;
+            } else {
+                throw new Error("Unrecognized type used as TIMESTAMP.");
+            }
             dataView.setInt32(inDescriptor.offset,
                 encodeDate(date.getFullYear(), date.getMonth() + 1, date.getDate()),
                 littleEndian);
