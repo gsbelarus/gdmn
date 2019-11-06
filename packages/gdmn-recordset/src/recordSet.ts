@@ -1000,6 +1000,9 @@ export class RecordSet {
 
       case TFieldType.Date:
         return this._setFieldValue(fieldName, value, rIdx);
+
+      default:
+        throw new Error('Unknown data type');
     }
   }
 
@@ -1016,7 +1019,7 @@ export class RecordSet {
       case TFieldType.Boolean:
         return this._setFieldValue(fieldName, value, rIdx);
 
-      case TFieldType.Date:
+      default:
         throw new Error(`Invalid type cast.`);
     }
   }
@@ -1040,6 +1043,9 @@ export class RecordSet {
 
       case TFieldType.Date:
         return this._setFieldValue(fieldName, new Date(value), rIdx);
+
+      default:
+        throw new Error('Unknown data type');
     }
   }
 
@@ -1060,6 +1066,9 @@ export class RecordSet {
 
       case TFieldType.Date:
         return this._setFieldValue(fieldName, new Date(value), rIdx);
+
+      default:
+        throw new Error('Unknown data type');
     }
   }
 
@@ -1115,6 +1124,9 @@ export class RecordSet {
           throw new Error(`Invalid type cast.`);
         }
         return this._setFieldValue(fieldName, new Date(value), rIdx);
+
+      default:
+        throw new Error('Unknown data type');
     }
   }
 
