@@ -2,15 +2,14 @@ import { IPartialTheme } from 'office-ui-fabric-react';
 
 interface INamedTheme {
   name: string;
-  isInverted: boolean;
   theme: IPartialTheme;
 };
 
 export const themes: INamedTheme[] = [
   {
     name: 'Blue',
-    isInverted: false,
     theme: {
+      isInverted: false,
       palette: {
         themePrimary: '#0078d4',
         themeLighterAlt: '#f3f9fd',
@@ -39,8 +38,8 @@ export const themes: INamedTheme[] = [
   },
   {
     name: 'Violet',
-    isInverted: false,
     theme: {
+      isInverted: false,
       palette: {
         themePrimary: '#ab00d4',
         themeLighterAlt: '#fbf3fd',
@@ -69,8 +68,8 @@ export const themes: INamedTheme[] = [
   },
   {
     name: 'Red',
-    isInverted: false,
     theme: {
+      isInverted: false,
       palette: {
         themePrimary: '#dd0000',
         themeLighterAlt: '#fef4f4',
@@ -99,8 +98,8 @@ export const themes: INamedTheme[] = [
   },
   {
     name: 'DarkViolet',
-    isInverted: true,
     theme: {
+      isInverted: true,
       palette: {
         themePrimary: '#e6b0f5',
         themeLighterAlt: '#e9b9f6',
@@ -129,8 +128,8 @@ export const themes: INamedTheme[] = [
   },
   {
     name: 'DarkGreen',
-    isInverted: true,
     theme: {
+      isInverted: true,
       palette: {
         themePrimary: '#d1f58c',
         themeLighterAlt: '#080a06',
@@ -159,8 +158,8 @@ export const themes: INamedTheme[] = [
   },
   {
     name: 'DarkRed',
-    isInverted: true,
     theme: {
+      isInverted: true,
       palette: {
           themePrimary: '#f4c971',
           themeLighterAlt: '#0a0805',
@@ -189,8 +188,8 @@ export const themes: INamedTheme[] = [
   },
   {
     name: 'Graphite',
-    isInverted: true,
     theme: {
+      isInverted: true,
       palette: {
         themePrimary: '#dfdfdf',
         themeLighterAlt: '#e3e3e3',
@@ -218,4 +217,3 @@ export const themes: INamedTheme[] = [
     }
   }
 ];
-

@@ -298,11 +298,11 @@ const selectThemeMiddleware: TThunkMiddleware = () => next => (action: ActionTyp
   return next(action);
 };
 
-const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next => (action: ActionType<typeof gdmnActions.addNLPItem>) => {
-  if (action.type === getType(gdmnActions.addNLPItem)) {
-    const { item, history } = action.payload;
+const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next => (action: ActionType<typeof gdmnActions.nlpProcess>) => {
+  if (action.type === getType(gdmnActions.nlpProcess)) {
+    const { item: { text }, history } = action.payload;
 
-    switch (item.text) {
+    switch (text) {
       case 'close': {
         const { viewTabs } = getState().gdmnState;
 
@@ -314,22 +314,64 @@ const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next =
             locationPath: history.location.pathname,
             historyPush: history.push
           }));
-          next(action);
-          return next(gdmnActions.addNLPItem({ item: { who: 'it', text: `Вкладка ${tab.caption} закрыта` }, history }));
+          dispatch(gdmnActions.nlpAdd([
+            { who: 'me', text },
+            { who: 'it', text: `Вкладка ${tab.caption} закрыта` }
+          ]));
         }
 
-        return next(action);
+        return;
+      }
+
+      case 'sql': {
+        history.push(`/spa/gdmn/sql`);
+        dispatch(gdmnActions.nlpAdd([
+          { who: 'me', text }
+        ]));
+
+        return;
+      }
+
+      case 'morphology': {
+        history.push(`/spa/gdmn/morphology`);
+        dispatch(gdmnActions.nlpAdd([
+          { who: 'me', text }
+        ]));
+
+        return;
+      }
+
+      case 'clear': {
+        dispatch(gdmnActions.nlpClear());
+        return;
       }
     }
 
     const { erModel } = getState().gdmnState;
-    const entity = erModel.entities[item.text];
+    const entity = erModel.entities[text];
 
     if (entity) {
       history.push(`/spa/gdmn/entity/${entity.name}`);
-      next(action);
-      return next(gdmnActions.addNLPItem({ item: { who: 'it', text: 'Открыта таблица с данными.' }, history }));
+      dispatch(gdmnActions.nlpAdd([
+        { who: 'me', text },
+        { who: 'it', text: 'Открыта таблица с данными.' }
+      ]));
+      return;
     }
+
+    if (/[А-Яа-я]+/.test(text)) {
+      history.push(`/spa/gdmn/morphology/${text}`);
+      dispatch(gdmnActions.nlpAdd([
+        { who: 'me', text }
+      ]));
+
+      return;
+    }
+
+    dispatch(gdmnActions.nlpAdd([
+      { who: 'me', text },
+      { who: 'it', text: 'Неизвестная команда!' }
+    ]));
   }
 
   return next(action);

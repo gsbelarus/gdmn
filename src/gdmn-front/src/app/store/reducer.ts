@@ -40,7 +40,7 @@ const authPersistConfig: PersistConfig<IAuthState> = {
 const gdmnStatePersistConfig: PersistConfig<TGdmnState> = {
   key: 'gdmn::root::gdmnState',
   storage: persistLocalStorage,
-  whitelist: ['theme'],
+  whitelist: ['theme', 'nlpDialog'],
   migrate: (state: any) => {
     const namedTheme = state && themes.find( t => t.name === state.theme );
 

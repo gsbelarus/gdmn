@@ -9,7 +9,7 @@ import { rootActions } from '@src/app/scenes/root/actions';
 import { IViewTab, ISessionData } from './types';
 import { ISignInBoxData } from '../auth/components/SignInBox';
 import { IGridColors } from 'gdmn-grid';
-import { INLPDialogItem } from 'gdmn-nlp-agent';
+import { INLPDialogItem, NLPDialog } from 'gdmn-nlp-agent';
 import * as H from 'history';
 
 export const gdmnActionsAsync = {
@@ -229,9 +229,9 @@ export const gdmnActions = {
 
   setThemeAndGridColors: createAction('gdmn/SET_THEME_AND_GRID_COLORS', resolve => (theme: string, gridColors: IGridColors) => resolve({ theme, gridColors }) ),
 
-  clearNLPDialog: createAction('NLPDIALOG/CLEAR'),
-
-  addNLPItem: createAction('NLPDIALOG/ADD', resolve => (param: { item: INLPDialogItem, history: H.History<any> }) => resolve(param) )
+  nlpClear: createAction('NLPDIALOG/CLEAR'),
+  nlpAdd: createAction('NLPDIALOG/ADD', resolve => (param: NLPDialog) => resolve(param) ),
+  nlpProcess: createAction('NLPDIALOG/PROCESS', resolve => (param: { item: INLPDialogItem, history: H.History<any> }) => resolve(param) )
 };
 
 export type GdmnAction = ActionType<typeof gdmnActions>;
