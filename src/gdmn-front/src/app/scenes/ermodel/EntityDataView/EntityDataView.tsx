@@ -144,18 +144,20 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   // добавить еще эффект для загрузки мастер рс
   // если мы в режиме мастер-дитэйл
   useEffect( () => {
-    if (rs && currRS && linkField && linkField !== 'noSelected') {
-      if(rsMaster) {
-
+    if (rs && currRS && linkField && linkField) {
+      if(linkField === 'noSelected') {
+        applyPhrase();
       } else {
-        const findLF = linkfields.find(lf => lf.attribute.name === linkField);
-        if(findLF && findLF.links && findLF.links.length !== 0) {
-          const entityMaster = findLF.links[0].entity;
-          const eq = prepareDefaultEntityQuery(entityMaster);
-          dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true, entityMaster: true }));
+        if(!rsMaster) {
+          const findLF = linkfields.find(lf => lf.attribute.name === linkField);
+          if(findLF && findLF.links && findLF.links.length !== 0) {
+            const entityMaster = findLF.links[0].entity;
+            const eq = prepareDefaultEntityQuery(entityMaster);
+            dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true, entityMaster: true }));
+          }
         }
       }
-    } applyPhrase();
+    }
   }, [linkField]);
 
   if(rs && linkField) {
