@@ -341,6 +341,15 @@ const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next =
         return;
       }
 
+      case 'syntax': {
+        history.push(`/spa/gdmn/syntax`);
+        dispatch(gdmnActions.nlpAdd([
+          { who: 'me', text }
+        ]));
+
+        return;
+      }
+
       case 'clear': {
         dispatch(gdmnActions.nlpClear());
         return;
