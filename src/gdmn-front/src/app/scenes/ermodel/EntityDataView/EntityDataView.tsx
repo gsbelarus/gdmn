@@ -17,7 +17,6 @@ import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, prepareEntityQueryWithParams } from 'gdmn-orm';
-import { ListEntity } from '@src/app/components/ListEntity';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -145,7 +144,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   // добавить еще эффект для загрузки мастер рс
   // если мы в режиме мастер-дитэйл
   useEffect( () => {
-    if (rs && currRS && linkField) {
+    if (rs && currRS && linkField && linkField !== 'noSelected') {
       if(rsMaster) {
 
       } else {
@@ -156,7 +155,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true, entityMaster: true }));
         }
       }
-    }
+    } applyPhrase();
   }, [linkField]);
 
   if(rs && linkField) {
@@ -342,7 +341,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
         {
           rs
-            ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
+            ? linkfields && linkfields.length !== 0 && linkField && linkField !== '' && linkField && linkField !== 'noSelected'
               ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
                   {
                     rsMaster
@@ -417,10 +416,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   placeholder="Select link field"
                   selectedKey={linkField}
                   autoComplete="on"
-                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
+                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.key.toString() : '' })}
                   options={
                     linkfields.length !== 0
-                      ? linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
+                      ? [{key: 'noSelected', text: 'Не выбрано'} as IComboBoxOption, ...linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})]
                       : undefined
                   }
                 />
