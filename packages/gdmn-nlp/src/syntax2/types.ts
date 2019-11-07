@@ -1,10 +1,13 @@
-export interface ITokenType {
-  name: string
-  pattern: RegExp
-}
+import { AnyWords } from "..";
 
-export interface IToken {
-  image: string
-  startOffset: number
-  tokenType: ITokenType
-}
+export interface INLPTokenType {
+  name: string;
+  pattern: RegExp;
+};
+
+export interface INLPToken {
+  image: string;
+  startOffset: number;
+  tokenType: INLPTokenType;
+  words?: AnyWords;
+};

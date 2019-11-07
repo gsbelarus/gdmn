@@ -41,7 +41,7 @@ import {
   SemContext,
   semCategory2Str
 } from 'gdmn-nlp';
-import { CommandBar, TextField, Stack, DefaultButton, getTheme, mergeStyles } from 'office-ui-fabric-react';
+import { CommandBar, TextField, Stack, DefaultButton, getTheme, mergeStyleSets } from 'office-ui-fabric-react';
 import { Frame } from '../../gdmn/components/Frame';
 import { gdmnActions } from '../../gdmn/actions';
 
@@ -122,24 +122,24 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
     };
   }, [state, url]);
 
-  const thClass = useMemo( () => mergeStyles({
-    border: '1px solid ' + getTheme().palette.neutralSecondary,
-    paddingLeft: '2px',
-    paddingRight: '2px',
-    fontWeight: 600
-  }), [theme]);
-
-  const tdClass = useMemo( () => mergeStyles({
-    border: '1px solid ' + getTheme().palette.neutralSecondary,
-    paddingLeft: '2px',
-    paddingRight: '2px'
-  }), [theme]);
-
-  const hoverClass = useMemo( () => mergeStyles({
-    color: getTheme().semanticColors.actionLink,
-    selectors: {
-      ':hover': {
-        color: getTheme().semanticColors.actionLinkHovered
+  const { thClass, tdClass, hoverClass } = useMemo( () => mergeStyleSets({
+    thClass: {
+      border: '1px solid ' + getTheme().palette.neutralSecondary,
+      paddingLeft: '4px',
+      paddingRight: '4px',
+      fontWeight: 600
+    },
+    tdClass: {
+      border: '1px solid ' + getTheme().palette.neutralSecondary,
+      paddingLeft: '4px',
+      paddingRight: '4px'
+    },
+    hoverClass: {
+      color: getTheme().semanticColors.actionLink,
+      selectors: {
+        ':hover': {
+          color: getTheme().semanticColors.actionLinkHovered
+        }
       }
     }
   }), [theme]);
