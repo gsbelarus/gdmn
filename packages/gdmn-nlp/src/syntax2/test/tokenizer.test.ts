@@ -11,7 +11,11 @@ test('nlpTokenizer2', () => {
   expect(tokens3.length).toEqual(5);
 
   const tokens4 = nlpTokenize('отсортируй по названию и убыванию');
-  expect(tokens4.length).toEqual(9);
+  expect(tokens4.length).toEqual(5);
+  expect(tokens4[4].uniformPOS!.length).toEqual(4);
+
+  const tokens4a = nlpTokenize('отсортируй по названию и или убыванию');
+  expect(tokens4a.length).toEqual(11);
 
   const tokens5 = nlpTokenize('отсортируй по названию, по возрастанию');
   expect(tokens5.length).toEqual(10);
@@ -27,4 +31,7 @@ test('nlpTokenizer2', () => {
   const tokens8 = nlpTokenize('покажи все TgdcUserDocument147134915_1757699501');
   expect(tokens8.length).toEqual(5);
   expect(tokens8[4].tokenType!.name).toEqual('IDToken');
+
+  const tokens9 = nlpTokenize('покажи все организации из Минска и Пинска');
+  expect(tokens9.length).toEqual(9);
 });

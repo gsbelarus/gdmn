@@ -10,4 +10,5 @@ export interface INLPToken {
   startOffset: number;
   tokenType: INLPTokenType;
   words?: AnyWords;
+  uniformPOS?: INLPToken[];
 };
