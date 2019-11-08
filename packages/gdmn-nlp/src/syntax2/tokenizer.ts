@@ -1,7 +1,8 @@
 import { INLPTokenType, INLPToken } from "./types";
 import { morphAnalyzer } from "../morphology/morphAnalyzer";
-import { RusNoun, RusVerb, RusConjunction, AnyWord } from "..";
+import { RusNoun, RusVerb, RusConjunction, AnyWord, RusNumeral, NumeralRank } from "..";
 import { RusAdjective } from "../morphology/rusAdjective";
+import { RusNumeralLexeme } from "../morphology/rusNumeral";
 
 export const nlpWhiteSpace: INLPTokenType = {
   name: 'WhiteSpace',
@@ -30,7 +31,7 @@ export const nlpCyrillicWord: INLPTokenType = {
 
 export const nlpNumber: INLPTokenType = {
   name: 'Number',
-  pattern: /^[0-9]+/
+  pattern: /^[-]{0,1}[0-9]+/
 };
 
 export const nlpDateToken: INLPTokenType = {
@@ -75,7 +76,8 @@ export function nlpTokenize(text: string): INLPToken[] {
           image: match[0],
           startOffset,
           tokenType,
-          words: tokenType === nlpCyrillicWord ?  morphAnalyzer(match[0]) : undefined
+          words: tokenType === nlpCyrillicWord ?  morphAnalyzer(match[0]) : undefined,
+          value: tokenType === nlpNumber ? Number(match[0]) : undefined
         });
         startOffset += match[0].length;
         found = true;
@@ -88,6 +90,132 @@ export function nlpTokenize(text: string): INLPToken[] {
     }
   }
 
+  /**
+   * Замена числительных на число
+   */
+
+  let startIdx = 0;
+  while (startIdx < tokens.length) {
+    const startToken = tokens[startIdx];
+
+    if (!startToken.words ||
+      !startToken.words.length ||
+      !(
+        (
+          startToken.words[0] instanceof RusNumeral &&
+          (startToken.words[0].lexeme as RusNumeralLexeme).rank === NumeralRank.ProperQuantitative
+        )
+        ||
+        (
+          startToken.words[0] instanceof RusNoun &&
+          (
+            startToken.words[0].lexeme.stem === 'нол'
+            ||
+            startToken.words[0].lexeme.stem === 'тысяч'
+            ||
+            startToken.words[0].lexeme.stem === 'миллион'
+            ||
+            startToken.words[0].lexeme.stem === 'миллиард'
+          )
+        )
+      )
+    ) {
+      startIdx++;
+      continue;
+    }
+
+    let was_1e9 = false;
+    let was_1e6 = false;
+    let was_1e3 = false;
+    let cnt = 0;
+    let value = 0;
+    let currValue = 0;
+
+    while (startIdx + cnt < tokens.length) {
+      const token = tokens[startIdx + cnt];
+
+      if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
+        cnt++;
+        continue;
+      }
+
+      if (token.words && token.words.length) {
+        if (token.words[0] instanceof RusNumeral && (token.words[0].lexeme as RusNumeralLexeme).rank === NumeralRank.ProperQuantitative) {
+          cnt++;
+          currValue += (token.words[0].lexeme as RusNumeralLexeme).value;
+          continue;
+        }
+
+        if (token.words[0] instanceof RusNoun) {
+          let cont = true;
+
+          switch (token.words[0].lexeme.stem) {
+            case 'нол': {
+              currValue = 0;
+              break;
+            }
+
+            case 'тысяч': {
+              value += currValue * 1000;
+              currValue = 0;
+              was_1e3 = true;
+              break;
+            }
+
+            case 'миллион': {
+              value += currValue * 1000000;
+              currValue = 0;
+              was_1e6 = true;
+              break;
+            }
+
+            case 'миллиард': {
+              value += currValue * 1000000000;
+              currValue = 0;
+              was_1e9 = true;
+              break;
+            }
+
+            default:
+              cont = false;
+          }
+
+          if (cont) {
+            cnt++;
+            continue;
+          }
+        }
+      }
+
+      break;
+    }
+
+    if (currValue) {
+      value += currValue;
+    }
+
+    while (cnt &&
+      (
+        tokens[startIdx + cnt - 1].tokenType === nlpWhiteSpace ||
+        tokens[startIdx + cnt - 1].tokenType === nlpLineBreak
+      )
+    ) {
+      cnt--;
+    }
+
+    if (cnt) {
+      const newToken: INLPToken = {
+        image: '',
+        startOffset: -1,
+        tokenType: nlpNumber,
+        value
+      };
+      const numerals = tokens.splice(startIdx, cnt, newToken);
+      newToken.image = value.toString();
+      newToken.startOffset = numerals[0].startOffset;
+      newToken.numerals = numerals;
+    }
+  }
 
   /**
    * Замена однородных частей речи на один токен.
@@ -101,7 +229,7 @@ export function nlpTokenize(text: string): INLPToken[] {
    *   -- Минска и Пинска
    */
 
-  let startIdx = 0;
+  startIdx = 0;
   while (startIdx < tokens.length) {
 
     const startToken = tokens[startIdx];

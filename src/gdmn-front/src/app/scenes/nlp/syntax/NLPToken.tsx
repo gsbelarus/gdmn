@@ -17,6 +17,7 @@ export const NLPToken = ({ token }: { token: INLPToken }) => {
 
   const tokenImage = token.image.trim() ? token.image : '\xa0';
   const uniformPOS = token.uniformPOS ? <span style={{ paddingLeft: '2px' }}>{token.uniformPOS.map( u => <sup>{u.image}</sup> )}</span> : null;
+  const numerals = token.numerals ? <span style={{ paddingLeft: '2px' }}>{token.numerals.map( u => <sup>{u.image}</sup> )}</span> : null;
 
   return (
     <Stack tokens={{ childrenGap: '4px' }}>
@@ -33,6 +34,7 @@ export const NLPToken = ({ token }: { token: INLPToken }) => {
       >
         {tokenImage}
         {uniformPOS}
+        {numerals}
       </div>
       {
         token.words &&

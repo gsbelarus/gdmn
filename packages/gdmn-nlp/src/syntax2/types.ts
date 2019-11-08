@@ -11,4 +11,6 @@ export interface INLPToken {
   tokenType: INLPTokenType;
   words?: AnyWords;
   uniformPOS?: INLPToken[];
+  numerals?: INLPToken[];
+  value?: number;
 };
