@@ -14,6 +14,10 @@ const colors: { [name: string]: string } = {
 };
 
 export const NLPToken = ({ token }: { token: INLPToken }) => {
+
+  const tokenImage = token.image.trim() ? token.image : '\xa0';
+  const uniformPOS = token.uniformPOS ? <span style={{ paddingLeft: '2px' }}>{token.uniformPOS.map( u => <sup>{u.image}</sup> )}</span> : null;
+
   return (
     <Stack tokens={{ childrenGap: '4px' }}>
       <div
@@ -23,10 +27,12 @@ export const NLPToken = ({ token }: { token: INLPToken }) => {
           borderRadius: '2px',
           padding: '0 4px 2px 4px',
           color: 'black',
-          minWidth: '16px'
+          minWidth: '16px',
+          minHeight: '26px'
         }}
       >
-        {token.image.trim() ? token.image : '\xa0'}
+        {tokenImage}
+        {uniformPOS}
       </div>
       {
         token.words &&
