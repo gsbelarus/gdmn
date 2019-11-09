@@ -2485,10 +2485,15 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
-"@types/node@*", "@types/node@>= 8", "@types/node@^12":
+"@types/node@*", "@types/node@>= 8":
   version "12.12.6"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.6.tgz#a47240c10d86a9a57bb0c633f0b2e0aea9ce9253"
   integrity sha512-FjsYUPzEJdGXjwKqSpE0/9QEh6kzhTAeObA54rn6j3rR4C/mzpI9L0KNfoeASSPMMdxIsoJuCLDWcM/rVjIsSA==
+
+"@types/node@^12":
+  version "12.12.7"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.7.tgz#01e4ea724d9e3bd50d90c11fd5980ba317d8fa11"
+  integrity sha512-E6Zn0rffhgd130zbCbAr/JdXfXkoOUFAKNs/rF8qnafSJ8KYaA/j3oz7dcwal+lYjLA7xvdd5J4wdYpCTlP8+w==
 
 "@types/node@^12.6.9":
   version "12.6.9"
@@ -2828,10 +2833,10 @@
     "@uifabric/set-version" "^7.0.2"
     tslib "^1.7.1"
 
-"@uifabric/merge-styles@^7.7.0", "@uifabric/merge-styles@^7.8.0":
-  version "7.8.0"
-  resolved "https://registry.yarnpkg.com/@uifabric/merge-styles/-/merge-styles-7.8.0.tgz#d3deb2e1fa8185480af4a9958590c2e677407f69"
-  integrity sha512-NISbWaU7msRBNTuVglLRRyhAwnXaOUc+7xWoP5Y9m4npaAfbDl9OtgYp5pGeNr9o07kiuZ3Dqt5NHot3idtIlw==
+"@uifabric/merge-styles@^7.7.0", "@uifabric/merge-styles@^7.8.0", "@uifabric/merge-styles@^7.8.1":
+  version "7.8.1"
+  resolved "https://registry.yarnpkg.com/@uifabric/merge-styles/-/merge-styles-7.8.1.tgz#b3973eb6942bf5fd1653fb8c2ae349343bacd30d"
+  integrity sha512-DJBXNsYfrYQ3wCjOE197JqXTkqwfPlGJhQkhYMBwO76ovKBQyJxT8m6NL8og5F9blnIBdCJPrvRUz/21/WlUGg==
   dependencies:
     "@uifabric/set-version" "^7.0.2"
     tslib "^1.7.1"
@@ -11613,9 +11618,9 @@ mute-stream@~0.0.4:
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
 
 mxgraph@^4.0.4:
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/mxgraph/-/mxgraph-4.0.5.tgz#3252d2299f5e0aeb30b4cbeb2ae118bac3fb1569"
-  integrity sha512-nNO9GUkSD6I7AujPdD+EypZ7OVDIcO9jzsL3hE5UfhtHpVw1ula7F7p8mMOsBtusBGcwnHpjYqONNsDbuvkX2A==
+  version "4.0.6"
+  resolved "https://registry.yarnpkg.com/mxgraph/-/mxgraph-4.0.6.tgz#759d4761ec20470b86a0926865bf87dada99b0b4"
+  integrity sha512-5XZXeAkA4k6n4BS05Fxd2cNhMw+3dnlRqAaLtsuXdT0g8BvvEa1VT4jjuGtUW4QTt38Q+I2Dr/3EWiAaGRfAXw==
 
 mz@^2.5.0, mz@^2.7.0:
   version "2.7.0"
@@ -12161,14 +12166,14 @@ octokit-pagination-methods@^1.1.0:
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
 office-ui-fabric-react@^7:
-  version "7.59.0"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.59.0.tgz#dab944cdf57bfc2588ba02ec12a9bf10e84c69fe"
-  integrity sha512-bZg1Msffb7DKAawxzxmUYMEv+me6FzdPvRKbrG7pQrj/rRR8ofPbo43NRFfFmOdHnNs7290H0Cwpu3kRk+6msg==
+  version "7.59.2"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.59.2.tgz#fd58ab4d8e1fe5206eba3a7994de4c6e948a9211"
+  integrity sha512-ZxUn+IQfFRaZfurwlzUrtLM2ceaS36KNFvsebh61Gsm7PmL5m6kH+Ayg8ELNcDPvywKoTsJLhz31RIq1gyzugw==
   dependencies:
     "@microsoft/load-themed-styles" "^1.7.13"
     "@uifabric/foundation" "^7.5.0"
     "@uifabric/icons" "^7.3.0"
-    "@uifabric/merge-styles" "^7.8.0"
+    "@uifabric/merge-styles" "^7.8.1"
     "@uifabric/react-hooks" "^7.0.1"
     "@uifabric/set-version" "^7.0.2"
     "@uifabric/styling" "^7.7.2"
@@ -13553,9 +13558,9 @@ preserve@^0.2.0:
   integrity sha1-gV7R9uvGWSb4ZbMQwHE7yzMVzks=
 
 prettier@^1:
-  version "1.18.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.18.2.tgz#6823e7c5900017b4bd3acf46fe9ac4b4d7bda9ea"
-  integrity sha512-OeHeMc0JhFE9idD4ZdtNibzY0+TPHSpSSb9h8FqtP+YnoZZ1sl8Vc9b1sasjfymH3SonAF4QcA2+mzHPhMvIiw==
+  version "1.19.0"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.19.0.tgz#3bec4489d5eebcd52b95ddd2c22467b5c852fde1"
+  integrity sha512-GlAIjk6DjkNT6u/Bw5QCWrbzh9YlLKwwmJT//1YiCR3WDpZDnyss64aXHQZgF8VKeGlWnX6+tGsKSVxsZT/gtA==
 
 pretty-bytes@^4.0.2:
   version "4.0.2"
