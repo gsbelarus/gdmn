@@ -3,6 +3,7 @@ import { morphAnalyzer } from "../morphology/morphAnalyzer";
 import { RusNoun, RusVerb, RusConjunction, AnyWord, RusNumeral, NumeralRank } from "..";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusNumeralLexeme } from "../morphology/rusNumeral";
+import { RusParticle } from "../morphology/rusParticle";
 
 export const nlpWhiteSpace: INLPTokenType = {
   name: 'WhiteSpace',
@@ -45,14 +46,14 @@ export const nlpIDToken: INLPTokenType = {
 };
 
 const allTokens = [
-  nlpLineBreak,
   nlpWhiteSpace,
+  nlpCyrillicWord,
+  nlpComma,
+  nlpIDToken,
+  nlpLineBreak,
   nlpDateToken,
   nlpNumber,
-  nlpCyrillicWord,
-  nlpPunctuationMark,
-  nlpComma,
-  nlpIDToken
+  nlpPunctuationMark
 ];
 
 const isUniformPOS = (w1: AnyWord, w2: AnyWord) => {
@@ -63,37 +64,46 @@ const isUniformPOS = (w1: AnyWord, w2: AnyWord) => {
   return w1.getSignature() === w2.getSignature();
 };
 
-export function nlpTokenize(text: string): INLPToken[] {
-  const tokens: INLPToken[] = [];
-  let startOffset = 0;
+/**
+ * Убираем частицы. Они переплетаются с союзами и путаются под ногами.
+ */
+const transform = (tokens: INLPToken[]): INLPToken[] => {
+  return tokens.map( t => t.words ? {...t, words: t.words.filter( w => !(w instanceof RusParticle) )} : t);
+}
 
-  while (startOffset < text.length) {
-    let found = false;
-    for (const tokenType of allTokens) {
-      const match = tokenType.pattern.exec(text.slice(startOffset));
-      if (match) {
-        tokens.push({
-          image: match[0],
-          startOffset,
-          tokenType,
-          words: tokenType === nlpCyrillicWord ?  morphAnalyzer(match[0]) : undefined,
-          value: tokenType === nlpNumber ? Number(match[0]) : undefined
-        });
-        startOffset += match[0].length;
-        found = true;
-        break;
+/**
+ * Проверяем массивы словоформ у каждого токена. Если встречаются
+ * словоформы разных частей речи, то разделяем их.
+ * Например, для фразы "три доски" мы получим два варианта разбора.
+ * Один для "три", как числительного, и второй -- как для глагола.
+ */
+const separateByPOS = (tokens: INLPToken[]): INLPToken[][] => {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.words && token.words.length) {
+      const posNames = token.words.reduce( (p, w) => { p[w.getSignature().slice(0, 4)] = true; return p; }, {} as { [name: string]: boolean });
+      const keys = Object.keys(posNames);
+      const res: INLPToken[][] = [];
+      if (keys.length > 1) {
+        for (const key of keys) {
+          const newToken = {
+            ...token,
+            words: token.words.filter( w => w.getSignature().slice(0, 4) === key )
+          };
+          res.push(...separateByPOS([newToken, ...tokens.slice(i + 1)]));
+        }
+        return res.map( r => [...tokens.slice(0, i), ...r]);
       }
-    }
-
-    if (!found) {
-      throw new Error(`Invalid text "${text}"`);
     }
   }
 
-  /**
-   * Замена числительных на число
-   */
+  return [tokens];
+};
 
+/**
+ * Замена числительных на число
+ */
+const replaceNumerals = (tokens: INLPToken[]): INLPToken[] => {
   let startIdx = 0;
   while (startIdx < tokens.length) {
     const startToken = tokens[startIdx];
@@ -204,32 +214,38 @@ export function nlpTokenize(text: string): INLPToken[] {
     }
 
     if (cnt) {
+      const newTokens = [...tokens];
       const newToken: INLPToken = {
         image: '',
         startOffset: -1,
         tokenType: nlpNumber,
         value
       };
-      const numerals = tokens.splice(startIdx, cnt, newToken);
+      const numerals = newTokens.splice(startIdx, cnt, newToken);
       newToken.image = value.toString();
       newToken.startOffset = numerals[0].startOffset;
       newToken.numerals = numerals;
+      return newTokens;
     }
   }
 
-  /**
-   * Замена однородных частей речи на один токен.
-   * По однородными частями мы понимаем два и более слова,
-   * относящихся к одной части речи и имеющих одинаковые
-   * морфологические характеристики, разделенные пробелами,
-   * запятыми или союзами "и" или "или".
-   *
-   * Примеры:
-   *   -- зеленый, красный, фиолетовый
-   *   -- Минска и Пинска
-   */
+  return tokens;
+};
 
-  startIdx = 0;
+/**
+ * Замена однородных частей речи на один токен.
+ * По однородными частями мы понимаем два и более слова,
+ * относящихся к одной части речи и имеющих одинаковые
+ * морфологические характеристики, разделенные пробелами,
+ * запятыми или союзами "и" или "или".
+ *
+ * Примеры:
+ *   -- зеленый, красный, фиолетовый
+ *   -- Минска и Пинска
+ */
+const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
+  const tokens = [...inputTokens];
+  let startIdx = 0;
   while (startIdx < tokens.length) {
 
     const startToken = tokens[startIdx];
@@ -310,4 +326,42 @@ export function nlpTokenize(text: string): INLPToken[] {
   }
 
   return tokens;
+};
+
+export function nlpTokenize(text: string): INLPToken[][] {
+  /**
+   * Поочередно проверяем строку на регулярные выражения
+   * из массива типов токенов. Если регулярное выражение срабатывает,
+   * то создаем токен соответствующего типа. Для чисел -- получаем
+   * значение преобразованием из строки, для слов -- определяем массив
+   * словоформ. Передвигаем указатель на следующую позицию (после
+   * найденного токена) и повторяем цикл пока не достигнем конца строки.
+   */
+  const tokens: INLPToken[] = [];
+  let startOffset = 0;
+
+  while (startOffset < text.length) {
+    let found = false;
+    for (const tokenType of allTokens) {
+      const match = tokenType.pattern.exec(text.slice(startOffset));
+      if (match) {
+        tokens.push({
+          image: match[0],
+          startOffset,
+          tokenType,
+          words: tokenType === nlpCyrillicWord ?  morphAnalyzer(match[0]) : undefined,
+          value: tokenType === nlpNumber ? Number(match[0]) : undefined
+        });
+        startOffset += match[0].length;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      throw new Error(`Invalid text "${text}"`);
+    }
+  }
+
+  return separateByPOS(transform(tokens)).map( t => replaceUniform(replaceNumerals(t)) );
 };

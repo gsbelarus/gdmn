@@ -19,12 +19,16 @@ const predefinedPhrases = [
   'отсортируй по названию',
   'покажи курсы на 10.10.2018',
   'покажи все TgdcUserDocument147134915_1757699501',
-  'покажи пятьсот двадцать три  миллиарда шестьсот восемьдесят восемь миллионов триста тридцать тысяч сто сорок одну организацию'
+  'покажи пятьсот двадцать три  миллиарда шестьсот восемьдесят восемь миллионов триста тридцать тысяч сто сорок одну организацию',
+  'три доски',
+  'три три доски',
+  'три доску',
 ];
 
 interface ISyntaxState {
   text: string;
-  tokens: INLPToken[];
+  tokens: INLPToken[][];
+  selectedTokensIdx: number;
 };
 
 type Action =
@@ -47,10 +51,11 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
   const { viewTab, url, dispatch, theme } = props;
-  const [{ text, tokens }, reactDispatch] = useReducer(reducer,
+  const [{ text, tokens, selectedTokensIdx }, reactDispatch] = useReducer(reducer,
     {
       text: '',
-      tokens: []
+      tokens: [],
+      selectedTokensIdx: 0
     }
   );
 
@@ -88,18 +93,22 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
               : reactDispatch({ type: 'SET_TEXT', text: '' })
           }
         />
-        <Frame marginTop>
-          <Stack
-            horizontal
-            wrap
-            tokens={{ childrenGap: '4px' }}
-            styles={{
-              root: { overflow: 'hidden' }
-            }}
-          >
-            {tokens.map( t => <NLPToken token={t} /> )}
-          </Stack>
-        </Frame>
+        {
+          tokens.map( (t, idx) =>
+            <Frame marginTop border selected={idx === selectedTokensIdx}>
+              <Stack
+                horizontal
+                wrap
+                tokens={{ childrenGap: '4px' }}
+                styles={{
+                  root: { overflow: 'hidden' }
+                }}
+              >
+                {t.map( w => <NLPToken token={w} /> )}
+              </Stack>
+            </Frame>
+          )
+        }
       </Frame>
     </>
   );
