@@ -50,7 +50,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
-  const { viewTab, url, dispatch, theme } = props;
+  const { viewTab, url, dispatch, theme, history } = props;
   const [{ text, tokens, selectedTokensIdx }, reactDispatch] = useReducer(reducer,
     {
       text: '',
@@ -104,7 +104,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
                   root: { overflow: 'hidden' }
                 }}
               >
-                {t.map( w => <NLPToken token={w} /> )}
+                {t.map( w => <NLPToken token={w} onClick={ () => history.push(`/spa/gdmn/morphology/${w.image}`) } /> )}
               </Stack>
             </Frame>
           )

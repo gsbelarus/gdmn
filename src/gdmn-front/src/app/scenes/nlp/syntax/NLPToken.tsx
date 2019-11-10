@@ -13,7 +13,12 @@ const colors: { [name: string]: string } = {
   'IDToken': 'violet'
 };
 
-export const NLPToken = ({ token }: { token: INLPToken }) => {
+interface INLPTokenProps {
+  token: INLPToken;
+  onClick: () => void;
+};
+
+export const NLPToken = ({ token, onClick }: INLPTokenProps) => {
 
   const tokenImage = token.image.trim() ? token.image : '\xa0';
   const uniformPOS = token.uniformPOS ? <span style={{ paddingLeft: '2px' }}>{token.uniformPOS.map( u => <sup>{u.image}</sup> )}</span> : null;
@@ -31,6 +36,7 @@ export const NLPToken = ({ token }: { token: INLPToken }) => {
           minWidth: '16px',
           minHeight: '26px'
         }}
+        onClick={onClick}
       >
         {tokenImage}
         {uniformPOS}

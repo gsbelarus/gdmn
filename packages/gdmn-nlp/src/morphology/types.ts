@@ -3,7 +3,8 @@
   could be find here:
   http://pymorphy2.readthedocs.io/en/latest/_modules/pymorphy2/tagset.html
 */
-export type PartOfSpeech    = 'VERB';
+export type PartOfSpeech    = 'VERB' | 'NOUN' | 'ADJF' | 'PREP';
+export type MorphNumber     = 'PLURAL' | 'SINGULAR';
 export type RusPersons      = 1 | 2 | 3;
 export enum RusGender       {Masc = 0, Femn, Neut}
 export const RusGenderNames = ['мужской', 'женский', 'средний'];
@@ -271,7 +272,7 @@ export interface RusNumeralInterface {
   readonly stem2: string;
   readonly type: NumeralType;
   readonly structure: NumeralStructure;
-  readonly gender?: RusGender; 
+  readonly gender?: RusGender;
   readonly value: number;
   readonly declension?: RusDeclensionNumeral;
   readonly rank?: NumeralRank;
