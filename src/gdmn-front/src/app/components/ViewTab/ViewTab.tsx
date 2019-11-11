@@ -28,7 +28,7 @@ export const ViewTab = (props: IViewTabProps) => {
       </Link>
     );
 
-    return url === location.pathname ? (
+    return url === decodeURI(location.pathname) ? (
       <Fragment key={url}>
         <div style={viewTab} onMouseDown={event => event.button === 1 && onClose ? onClose() : undefined}>
           <div style={viewActiveColor} />

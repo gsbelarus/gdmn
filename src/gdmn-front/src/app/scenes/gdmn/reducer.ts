@@ -44,17 +44,17 @@ export function reducer(state: TGdmnState = initialState, action: GdmnAction): T
       };
     }
 
-    case getType(gdmnActions.clearNLPDialog): {
+    case getType(gdmnActions.nlpClear): {
       return {
         ...state,
         nlpDialog: []
       };
     }
 
-    case getType(gdmnActions.addNLPItem): {
+    case getType(gdmnActions.nlpAdd): {
       return {
         ...state,
-        nlpDialog: [...state.nlpDialog, action.payload.item]
+        nlpDialog: [...state.nlpDialog, ...action.payload]
       };
     }
 

@@ -206,6 +206,15 @@
     declensionZ: '2b',
   },
   {
+    stem: 'нол',
+    stem1: '',
+    stem2: '',
+    animate: true,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '2b',
+  },
+  {
     stem: 'словар',
     stem1: '',
     stem2: '',
@@ -1538,7 +1547,7 @@
     declensionZ: '7a',
   },
   {
-    stem: 'наименовани',
+    stem: 'наименован',
     stem1: '',
     stem2: '',
     animate: false,

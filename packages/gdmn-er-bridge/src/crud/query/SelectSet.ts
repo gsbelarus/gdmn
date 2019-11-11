@@ -7,7 +7,6 @@ import {
   ScalarAttribute,
   SetAttribute
 } from "gdmn-orm";
-import {IParams} from "../..";
 import {AdapterUtils} from "../../AdapterUtils";
 import {SQLTemplates} from "./SQLTemplates";
 
