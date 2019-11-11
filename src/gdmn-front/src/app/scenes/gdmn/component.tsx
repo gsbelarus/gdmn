@@ -29,6 +29,10 @@ import { themes } from '../themeeditor/themes';
 import { EntityDlgContainer } from '../ermodel/Entity/EntityDlg/EntityDlg2Container';
 import { NLPDialogScroll } from './components/NLPDialogScroll';
 import { NLPDialog } from 'gdmn-nlp-agent';
+import { IMorphologyRouteProps } from '../nlp/morphology/Morphology.types';
+import { MorphologyContainer } from '../nlp/morphology/MorphologyContainer';
+import { ISyntaxRouteProps } from '../nlp/syntax/Syntax.types';
+import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -100,7 +104,7 @@ export function GdmnView (props: IGdmnViewProps) {
   const memoizedStyles = useMemo( () => {
     const namedTheme = themes.find( t => t.name === theme );
 
-    if (namedTheme && namedTheme.isInverted) {
+    if (namedTheme && namedTheme.theme.isInverted) {
       return {
         stackStyles: {
           root: {
@@ -262,13 +266,14 @@ export function GdmnView (props: IGdmnViewProps) {
         className="WorkArea"
         style={{
           height: `calc(100vh - ${topAreaHeight}px)`,
+          maxWidth: '100%',
           backgroundColor: getTheme().semanticColors.bodyBackground,
           color: getTheme().semanticColors.bodyText
         }}
       >
         <ErrBoundary>
           <Stack horizontal styles={{ root: { height: '100%' } }}>
-            <Stack.Item styles={{ root: { width: '240px' } }}>
+            <Stack.Item styles={{ root: { minWidth: '240px' } }}>
               <NLPDialogScroll nlpDialog={nlpDialog} addNLPMessage={ text => dispatch(gdmnActions.nlpProcess({ item: { who: 'me', text }, history })) }/>
             </Stack.Item>
             <Stack.Item grow={1} styles={{ root: { height: 'calc(100% - 36px)' } }}>
@@ -440,6 +445,39 @@ export function GdmnView (props: IGdmnViewProps) {
                         id={props.match.params.id}
                         url={props.match.url}
                         newRecord={false}
+                      />
+                    )}
+                  />
+                  <Route
+                    path={`${match.path}/syntax`}
+                    exact={true}
+                    render={ (props: RouteComponentProps<ISyntaxRouteProps>) => (
+                      <SyntaxContainer
+                        {...props}
+                        url={props.match.url}
+                        key={props.match.url}
+                      />
+                    )}
+                  />
+                  <Route
+                    path={`${match.path}/morphology`}
+                    exact={true}
+                    render={ (props: RouteComponentProps<IMorphologyRouteProps>) => (
+                      <MorphologyContainer
+                        {...props}
+                        url={props.match.url}
+                        key={props.match.url}
+                      />
+                    )}
+                  />
+                  <Route
+                    path={`${match.path}/morphology/:word`}
+                    render={ (props: RouteComponentProps<IMorphologyRouteProps>) => (
+                      <MorphologyContainer
+                        {...props}
+                        url={props.match.url}
+                        word={props.match.params.word}
+                        key={props.match.url}
                       />
                     )}
                   />

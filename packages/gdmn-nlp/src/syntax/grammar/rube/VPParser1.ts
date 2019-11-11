@@ -7,6 +7,42 @@ import { Numeric, idEntityToken } from '../../tokenizer';
 /**
  * Грамматика для фразы типа "Покажи все организации из Минска"
  */
+
+/*
+
+imperativeVP          ::= VERBTranPerfSingImpr imperativeNP
+imperativeNP          ::= qualImperativeANPNoun | qualImperativeANPNoun pp
+qualImperativeANPNoun ::= imperativeDets imperativeNouns | imperativeNouns
+imperativeDets        ::= imperativeDet | DefinitionToken
+imperativeDet         ::= ADJFAProPlurAccs | ADJFQualPlurAccs | ADJFRelvPlurAccs
+imperativeNouns       ::= nounAccs | nounGent | IDToken
+pp                    ::= ppPlace | ppTime
+ppPlace               ::= prepPlace ppNoun
+ppNoun                ::= nounGent
+nounAccs              ::=
+  NOUNAnimMascPlurAccs |
+  NOUNAnimFemnPlurAccs |
+  NOUNAnimNeutPlurAccs |
+  NOUNInanMascPlurAccs |
+  NOUNInanFemnPlurAccs |
+  NOUNInanNeutPlurAccs |
+  NOUNAnimMascSingAccs |
+  NOUNAnimFemnSingAccs |
+  NOUNAnimNeutSingAccs |
+  NOUNInanMascSingAccs |
+  NOUNInanFemnSingAccs |
+  NOUNInanNeutSingAccs
+nounGent              ::=
+  NOUNInanMascSingGent |
+  NOUNInanFemnSingGent |
+  NOUNInanNeutSingGent |
+  NOUNInanMascPlurGent |
+  NOUNInanFemnPlurGent |
+  NOUNInanNeutPlurGent
+ppTime                ::= PREPTime DateToken
+
+*/
+
 export class VPParser1 extends Parser implements IDescribedParser {
   constructor() {
     super({...morphTokens, DateToken, Numeric, idEntityToken});
@@ -63,7 +99,7 @@ export class VPParser1 extends Parser implements IDescribedParser {
   public imperativeDefin  = this.RULE('imperativeDefin', () => {
     this.CONSUME(morphTokens.DefinitionToken);
   });
-  
+
   public imperativeNouns = this.RULE('imperativeNouns', () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.nounAccs) },
@@ -73,7 +109,7 @@ export class VPParser1 extends Parser implements IDescribedParser {
   });
 
   public idEntity = this.RULE('idEntity', () => this.CONSUME(idEntityToken) );
-  
+
   public imperativeNoun = this.RULE('imperativeNoun', () => this.SUBRULE(this.nounAccs) );
 
   public nounAccs = this.RULE('nounAccs', () => {

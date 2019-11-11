@@ -11,14 +11,25 @@ import { RusParticleLexemes } from './rusParticle';
 
 /**
  * Возвращает все возможные словоформы для заданного слова.
+ * Массив отсортирован по типам частей речи. Порядок устанавливается
+ * по алфавиту, по сигнатурам типов речи.
  * @param word заданное слово
  */
 export function morphAnalyzer(word: string): AnyWords {
   const res: AnyWords = [];
   const resFunc = function (w: AnyWord): void { res.push(w); };
   const lw = word.toLowerCase();
-  const pos: Lexeme[][] = [RusNounLexemes, RusNumeralLexemes, RusVerbLexemes, RusAdjectiveLexemes,
-    RusPronounLexemes, RusConjunctionLexemes, RusPrepositionLexemes, RusParticleLexemes, RusAdverbLexemes];
+  const pos: Lexeme[][] = [
+    RusAdjectiveLexemes,
+    RusAdverbLexemes,
+    RusConjunctionLexemes,
+    RusNounLexemes,
+    RusNumeralLexemes,
+    RusParticleLexemes,
+    RusPrepositionLexemes,
+    RusPronounLexemes,
+    RusVerbLexemes,
+  ];
   pos.forEach( lexemes => lexemes.forEach( l => l.analyze(lw, resFunc)) );
   return res;
 };
