@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -22,11 +22,13 @@ interface IEntityDataViewState {
   phrase: string;
   phraseError?: string;
   showSQL?: boolean;
+  linkField?: string;
 };
 
 type Action = { type: 'SET_PHRASE', phrase: string }
   | { type: 'SET_PHRASE_ERROR', phraseError: string }
-  | { type: 'SET_SHOW_SQL', showSQL: boolean };
+  | { type: 'SET_SHOW_SQL', showSQL: boolean }
+  | { type: 'SET_LINK_FIELD', linkField: string };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
@@ -57,6 +59,15 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
         showSQL
       }
     }
+
+    case 'SET_LINK_FIELD': {
+      const { linkField } = action;
+
+      return {
+        ...state,
+        linkField
+      }
+    }
   }
 
   return state;
@@ -72,7 +83,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
-  const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
+  const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
       ? rs.queryPhrase
       : entityName
@@ -248,18 +259,28 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
+  const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter(fd => fd.links) : [];
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
-      <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
         {
-          rs ? <Tree
-            rs={rs}
-            load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
-            loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
-          /> : undefined
+          rs
+            ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
+              ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
+                  {
+                    linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
+                    ?
+                      <Tree
+                        rs={rs}
+                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
+                        loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
+                      />
+                    : <div>List</div>
+                  }
+                </Stack>
+              : undefined
+            : undefined
         }
-      </Stack>
       <div styleName="SGrid">
         {
           showSQL && rs && rs.sql &&
@@ -294,6 +315,18 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   }
                 }}
               >
+                <ComboBox
+                  label="Link field"
+                  placeholder="Select link field"
+                  allowFreeform
+                  autoComplete="on"
+                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
+                  options={
+                    linkfields.length !== 0
+                      ? linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
+                      : undefined
+                  }
+                />
                 <TextField
                   disabled={!rs || rs.status !== TStatus.FULL}
                   label="Filter:"
