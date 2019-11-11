@@ -31,6 +31,8 @@ import { NLPDialogScroll } from './components/NLPDialogScroll';
 import { NLPDialog } from 'gdmn-nlp-agent';
 import { IMorphologyRouteProps } from '../nlp/morphology/Morphology.types';
 import { MorphologyContainer } from '../nlp/morphology/MorphologyContainer';
+import { ISyntaxRouteProps } from '../nlp/syntax/Syntax.types';
+import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -443,6 +445,17 @@ export function GdmnView (props: IGdmnViewProps) {
                         id={props.match.params.id}
                         url={props.match.url}
                         newRecord={false}
+                      />
+                    )}
+                  />
+                  <Route
+                    path={`${match.path}/syntax`}
+                    exact={true}
+                    render={ (props: RouteComponentProps<ISyntaxRouteProps>) => (
+                      <SyntaxContainer
+                        {...props}
+                        url={props.match.url}
+                        key={props.match.url}
                       />
                     )}
                   />

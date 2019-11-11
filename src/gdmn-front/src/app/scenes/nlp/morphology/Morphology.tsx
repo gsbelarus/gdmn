@@ -41,7 +41,7 @@ import {
   SemContext,
   semCategory2Str
 } from 'gdmn-nlp';
-import { CommandBar, TextField, Stack, DefaultButton, getTheme, mergeStyles } from 'office-ui-fabric-react';
+import { CommandBar, TextField, Stack, DefaultButton, getTheme, mergeStyleSets } from 'office-ui-fabric-react';
 import { Frame } from '../../gdmn/components/Frame';
 import { gdmnActions } from '../../gdmn/actions';
 
@@ -122,19 +122,24 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
     };
   }, [state, url]);
 
-  const thtd = useMemo( () => mergeStyles({
-    border: '1px solid ' + getTheme().palette.neutralSecondary,
-    paddingLeft: '2px',
-    paddingRight: '2px',
-    backgroundColor: getTheme().semanticColors.bodyBackground,
-    color: getTheme().semanticColors.bodyText
-  }), [theme]);
-
-  const hoverClass = useMemo( () => mergeStyles({
-    color: getTheme().semanticColors.actionLink,
-    selectors: {
-      ':hover': {
-        color: getTheme().semanticColors.actionLinkHovered
+  const { thClass, tdClass, hoverClass } = useMemo( () => mergeStyleSets({
+    thClass: {
+      border: '1px solid ' + getTheme().palette.neutralSecondary,
+      paddingLeft: '4px',
+      paddingRight: '4px',
+      fontWeight: 600
+    },
+    tdClass: {
+      border: '1px solid ' + getTheme().palette.neutralSecondary,
+      paddingLeft: '4px',
+      paddingRight: '4px'
+    },
+    hoverClass: {
+      color: getTheme().semanticColors.actionLink,
+      selectors: {
+        ':hover': {
+          color: getTheme().semanticColors.actionLinkHovered
+        }
       }
     }
   }), [theme]);
@@ -222,82 +227,86 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
       );
 
       return (
-        <Stack horizontal horizontalAlign="center" styles={{ root: { padding: '6px' } }}>
-          <table>
-            <thead>
-              <tr>
-                <th className={thtd} colSpan={2}>падеж</th>
-                <th className={thtd}>формы</th>
-              </tr>
-            </thead>
-              {
-                l.value === 1 || l.value === 2 ?
-                <tbody>
+        <table style={{
+          backgroundColor: getTheme().semanticColors.bodyBackground,
+          color: getTheme().semanticColors.bodyText,
+          minWidth: '100%',
+          borderCollapse: 'collapse',
+          borderStyle: 'hidden'
+        }}>
+          <thead>
+            <tr>
+              <th className={thClass} colSpan={2}>падеж</th>
+              <th className={thClass}>формы</th>
+            </tr>
+          </thead>
+            {
+              l.value === 1 || l.value === 2 ?
+              <tbody>
                 <tr>
-                  <th className={thtd} colSpan={2}>Им.</th>
-                  <td className={thtd}>{f({ c: RusCase.Nomn, gender: l.gender })}</td>
+                  <th className={thClass} colSpan={2}>Им.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Nomn, gender: l.gender })}</td>
                 </tr>
                 <tr>
-                  <th className={thtd} colSpan={2}>Рд.</th>
-                  <td className={thtd}>{f({ c: RusCase.Gent, gender: l.gender })}</td>
+                  <th className={thClass} colSpan={2}>Рд.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Gent, gender: l.gender })}</td>
                 </tr>
                 <tr>
-                  <th className={thtd} colSpan={2}>Дт.</th>
-                  <td className={thtd}>{f({ c: RusCase.Datv, gender: l.gender })}</td>
+                  <th className={thClass} colSpan={2}>Дт.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Datv, gender: l.gender })}</td>
                 </tr>
                 <tr>
-                  <th className={thtd} rowSpan={2}>Вн.</th>
-                  <th className={thtd}>одуш.</th>
-                  <td className={thtd}>{f({ c: RusCase.Accs, gender: l.gender, animate: true })}</td>
+                  <th className={thClass} rowSpan={2}>Вн.</th>
+                  <th className={thClass}>одуш.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Accs, gender: l.gender, animate: true })}</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>неодуш.</th>
-                  <td className={thtd}>{f({ c: RusCase.Accs, gender: l.gender, animate: false })}</td>
+                  <th className={thClass}>неодуш.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Accs, gender: l.gender, animate: false })}</td>
                 </tr>
                 <tr>
-                  <th className={thtd} colSpan={2}>Тв.</th>
-                  <td className={thtd}>{f({ c: RusCase.Ablt, gender: l.gender })}</td>
+                  <th className={thClass} colSpan={2}>Тв.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Ablt, gender: l.gender })}</td>
                 </tr>
                 <tr>
-                  <th className={thtd} colSpan={2}>Пр.</th>
-                  <td className={thtd}>{f({ c: RusCase.Loct, gender: l.gender })}</td>
+                  <th className={thClass} colSpan={2}>Пр.</th>
+                  <td className={tdClass}>{f({ c: RusCase.Loct, gender: l.gender })}</td>
                 </tr>
               </tbody>
-              :
-              <tbody>
+            :
+            <tbody>
               <tr>
-                <th className={thtd} colSpan={2}>Им.</th>
-                <td className={thtd}>{f({ c: RusCase.Nomn })}</td>
+                <th className={thClass} colSpan={2}>Им.</th>
+                <td className={tdClass}>{f({ c: RusCase.Nomn })}</td>
               </tr>
               <tr>
-                <th className={thtd} colSpan={2}>Рд.</th>
-                <td className={thtd}>{f({ c: RusCase.Gent })}</td>
+                <th className={thClass} colSpan={2}>Рд.</th>
+                <td className={tdClass}>{f({ c: RusCase.Gent })}</td>
               </tr>
               <tr>
-                <th className={thtd} colSpan={2}>Дт.</th>
-                <td className={thtd}>{f({ c: RusCase.Datv })}</td>
+                <th className={thClass} colSpan={2}>Дт.</th>
+                <td className={tdClass}>{f({ c: RusCase.Datv })}</td>
               </tr>
               <tr>
-                <th className={thtd} rowSpan={2}>Вн.</th>
-                <th className={thtd}>одуш.</th>
-                <td className={thtd}>{f({ c: RusCase.Accs, animate: true })}</td>
+                <th className={thClass} rowSpan={2}>Вн.</th>
+                <th className={thClass}>одуш.</th>
+                <td className={tdClass}>{f({ c: RusCase.Accs, animate: true })}</td>
               </tr>
               <tr>
-                <th className={thtd}>неодуш.</th>
-                <td className={thtd}>{f({ c: RusCase.Accs, animate: false })}</td>
+                <th className={thClass}>неодуш.</th>
+                <td className={tdClass}>{f({ c: RusCase.Accs, animate: false })}</td>
               </tr>
               <tr>
-                <th className={thtd} colSpan={2}>Тв.</th>
-                <td className={thtd}>{f({ c: RusCase.Ablt })}</td>
+                <th className={thClass} colSpan={2}>Тв.</th>
+                <td className={tdClass}>{f({ c: RusCase.Ablt })}</td>
               </tr>
               <tr>
-                <th className={thtd} colSpan={2}>Пр.</th>
-                <td className={thtd}>{f({ c: RusCase.Loct })}</td>
+                <th className={thClass} colSpan={2}>Пр.</th>
+                <td className={tdClass}>{f({ c: RusCase.Loct })}</td>
               </tr>
             </tbody>
-              }
-          </table>
-        </Stack>
+          }
+        </table>
       );
     }
 
@@ -321,85 +330,89 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
 
         return (
           <tr>
-            <th className={thtd} colSpan={2}>Кратк. форма</th>
-            <td className={thtd}>{f({ singular: true, gender: RusGender.Masc, short: true })}</td>
-            <td className={thtd}>{f({ singular: true, gender: RusGender.Neut, short: true })}</td>
-            <td className={thtd}>{f({ singular: true, gender: RusGender.Femn, short: true })}</td>
-            <td className={thtd}>{f({ singular: false, short: true })}</td>
+            <th className={thClass} colSpan={2}>Кратк. форма</th>
+            <td className={tdClass}>{f({ singular: true, gender: RusGender.Masc, short: true })}</td>
+            <td className={tdClass}>{f({ singular: true, gender: RusGender.Neut, short: true })}</td>
+            <td className={tdClass}>{f({ singular: true, gender: RusGender.Femn, short: true })}</td>
+            <td className={tdClass}>{f({ singular: false, short: true })}</td>
           </tr>
         );
       }
 
       return (
-        <Stack horizontal horizontalAlign="center" styles={{ root: { padding: '6px' } }}>
-          <table>
-            <thead>
-              <tr>
-                <th className={thtd} rowSpan={2} colSpan={2}>
-                  падеж
-                </th>
-                <th className={thtd} colSpan={3}>ед. ч.</th>
-                <th className={thtd} rowSpan={2}>мн. ч.</th>
-              </tr>
-              <tr>
-                <th className={thtd}>муж.р.</th>
-                <th className={thtd}>ср.р.</th>
-                <th className={thtd}>жен.р.</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th className={thtd} colSpan={2}>Им.</th>
-                <td className={thtd}>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })}</td>
-                <td className={thtd}>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Neut })}</td>
-                <td className={thtd}>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Femn })}</td>
-                <td className={thtd}>{f({ c: RusCase.Nomn, singular: false })}</td>
-              </tr>
-              <tr>
-                <th className={thtd} colSpan={2}>Рд.</th>
-                <td className={thtd}>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Masc })}</td>
-                <td className={thtd}>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Neut })}</td>
-                <td className={thtd}>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Femn })}</td>
-                <td className={thtd}>{f({ c: RusCase.Gent, singular: false })}</td>
-              </tr>
-              <tr>
-                <th className={thtd} colSpan={2}>Дт.</th>
-                <td className={thtd}>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Masc })}</td>
-                <td className={thtd}>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Neut })}</td>
-                <td className={thtd}>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Femn })}</td>
-                <td className={thtd}>{f({ c: RusCase.Datv, singular: false })}</td>
-              </tr>
-              <tr>
-                <th className={thtd} rowSpan={2}>Вн.</th>
-                <th className={thtd}>одуш.</th>
-                <td className={thtd}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: true })}</td>
-                <td className={thtd} rowSpan={2}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Neut })}</td>
-                <td className={thtd} rowSpan={2}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Femn })}</td>
-                <td className={thtd}>{f({ c: RusCase.Accs, singular: false, animate: true })}</td>
-              </tr>
-              <tr>
-                <th className={thtd}>неодуш.</th>
-                <td className={thtd}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: false })}</td>
-                <td className={thtd}>{f({ c: RusCase.Accs, singular: false, animate: false })}</td>
-              </tr>
-              <tr>
-                <th className={thtd} colSpan={2}>Тв.</th>
-                <td className={thtd}>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Masc })}</td>
-                <td className={thtd}>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Neut })}</td>
-                <td className={thtd}>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Femn })}</td>
-                <td className={thtd}>{f({ c: RusCase.Ablt, singular: false })}</td>
-              </tr>
-              <tr>
-                <th className={thtd} colSpan={2}>Пр.</th>
-                <td className={thtd}>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Masc })}</td>
-                <td className={thtd}>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Neut })}</td>
-                <td className={thtd}>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Femn })}</td>
-                <td className={thtd}>{f({ c: RusCase.Loct, singular: false })}</td>
-              </tr>
-              {getShortForm()}
-            </tbody>
-          </table>
-        </Stack>
+        <table style={{
+          backgroundColor: getTheme().semanticColors.bodyBackground,
+          color: getTheme().semanticColors.bodyText,
+          minWidth: '100%',
+          borderCollapse: 'collapse',
+          borderStyle: 'hidden'
+        }}>
+          <thead>
+            <tr>
+              <th className={thClass} rowSpan={2} colSpan={2}>
+                падеж
+              </th>
+              <th className={thClass} colSpan={3}>ед. ч.</th>
+              <th className={thClass} rowSpan={2}>мн. ч.</th>
+            </tr>
+            <tr>
+              <th className={thClass}>муж.р.</th>
+              <th className={thClass}>ср.р.</th>
+              <th className={thClass}>жен.р.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th className={thClass} colSpan={2}>Им.</th>
+              <td className={tdClass}>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Masc })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Neut })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Nomn, singular: true, gender: RusGender.Femn })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Nomn, singular: false })}</td>
+            </tr>
+            <tr>
+              <th className={thClass} colSpan={2}>Рд.</th>
+              <td className={tdClass}>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Masc })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Neut })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Gent, singular: true, gender: RusGender.Femn })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Gent, singular: false })}</td>
+            </tr>
+            <tr>
+              <th className={thClass} colSpan={2}>Дт.</th>
+              <td className={tdClass}>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Masc })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Neut })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Datv, singular: true, gender: RusGender.Femn })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Datv, singular: false })}</td>
+            </tr>
+            <tr>
+              <th className={thClass} rowSpan={2}>Вн.</th>
+              <th className={thClass}>одуш.</th>
+              <td className={tdClass}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: true })}</td>
+              <td className={tdClass} rowSpan={2}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Neut })}</td>
+              <td className={tdClass} rowSpan={2}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Femn })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Accs, singular: false, animate: true })}</td>
+            </tr>
+            <tr>
+              <th className={thClass}>неодуш.</th>
+              <td className={tdClass}>{f({ c: RusCase.Accs, singular: true, gender: RusGender.Masc, animate: false })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Accs, singular: false, animate: false })}</td>
+            </tr>
+            <tr>
+              <th className={thClass} colSpan={2}>Тв.</th>
+              <td className={tdClass}>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Masc })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Neut })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Ablt, singular: true, gender: RusGender.Femn })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Ablt, singular: false })}</td>
+            </tr>
+            <tr>
+              <th className={thClass} colSpan={2}>Пр.</th>
+              <td className={tdClass}>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Masc })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Neut })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Loct, singular: true, gender: RusGender.Femn })}</td>
+              <td className={tdClass}>{f({ c: RusCase.Loct, singular: false })}</td>
+            </tr>
+            {getShortForm()}
+          </tbody>
+        </table>
       );
     }
 
@@ -412,153 +425,159 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
       );
 
       return (
-        <Stack horizontal horizontalAlign="center" styles={{ root: { padding: '6px' } }}>
+        <table style={{
+          backgroundColor: getTheme().semanticColors.bodyBackground,
+          color: getTheme().semanticColors.bodyText,
+          minWidth: '100%',
+          borderCollapse: 'collapse',
+          borderStyle: 'hidden'
+        }}>
           {
             l.aspect === RusAspect.Perf
             ?
-            <table style={{ border: 'none', borderCollapse: 'collapse' }}>
+            <>
               <thead>
                 <tr>
-                  <th className={thtd}>&nbsp;</th>
-                  <th className={thtd}>будущее</th>
-                  <th className={thtd}>прош.</th>
-                  <th className={thtd}>повелит.</th>
+                  <th className={thClass}>&nbsp;</th>
+                  <th className={thClass}>будущее</th>
+                  <th className={thClass}>прош.</th>
+                  <th className={thClass}>повелит.</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <th className={thtd}>Я</th>
-                  <td className={thtd}>{f({ tense: RusTense.Futr, singular: true, person: 1, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <th className={thClass}>Я</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Futr, singular: true, person: 1, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Masc, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Femn, mood: RusMood.Indc })}
                   </td>
-                  <td className={thtd}>&mdash;</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Ты</th>
-                  <td className={thtd}>{f({ tense: RusTense.Futr, singular: true, person: 2, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <th className={thClass}>Ты</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Futr, singular: true, person: 2, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Masc, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Femn, mood: RusMood.Indc })}
                   </td>
-                  <td className={thtd}>
+                  <td className={tdClass}>
                     {l.hasImprMood() ? f({ singular: true, mood: RusMood.Impr, involvement: Involvement.Excl }) : '-'}
                   </td>
                 </tr>
                 <tr>
-                  <th className={thtd}>
+                  <th className={thClass}>
                     Он
                     <br />
                     Она
                     <br />
                     Оно
                   </th>
-                  <td className={thtd}>{f({ tense: RusTense.Futr, singular: true, person: 3, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <td className={tdClass}>{f({ tense: RusTense.Futr, singular: true, person: 3, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Masc, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Femn, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Neut, mood: RusMood.Indc })}
                   </td>
-                  <td className={thtd}>&mdash;</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Мы</th>
-                  <td className={thtd}>{f({ tense: RusTense.Futr, singular: false, person: 1, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>&mdash;</td>
+                  <th className={thClass}>Мы</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Futr, singular: false, person: 1, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Вы</th>
-                  <td className={thtd}>{f({ tense: RusTense.Futr, singular: false, person: 2, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <th className={thClass}>Вы</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Futr, singular: false, person: 2, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {l.hasImprMood() ? f({ singular: false, mood: RusMood.Impr, involvement: Involvement.Excl }) : '-'}
                   </td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Они</th>
-                  <td className={thtd}>{f({ tense: RusTense.Futr, singular: false, person: 3, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>&mdash;</td>
+                  <th className={thClass}>Они</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Futr, singular: false, person: 3, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
               </tbody>
-            </table>
+            </>
             :
-            <table>
+            <>
               <thead>
                 <tr>
-                  <th className={thtd}>&nbsp;</th>
-                  <th className={thtd}>наст.</th>
-                  <th className={thtd}>прош.</th>
-                  <th className={thtd}>повелит.</th>
+                  <th className={thClass}>&nbsp;</th>
+                  <th className={thClass}>наст.</th>
+                  <th className={thClass}>прош.</th>
+                  <th className={thClass}>повелит.</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <th className={thtd}>Я</th>
-                  <td className={thtd}>{f({ tense: RusTense.Pres, singular: true, person: 1, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <th className={thClass}>Я</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Pres, singular: true, person: 1, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Masc, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Femn, mood: RusMood.Indc })}
                   </td>
-                  <td className={thtd}>&mdash;</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Ты</th>
-                  <td className={thtd}>{f({ tense: RusTense.Pres, singular: true, person: 2, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <th className={thClass}>Ты</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Pres, singular: true, person: 2, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Masc, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Femn, mood: RusMood.Indc })}
                   </td>
-                  <td className={thtd}>
+                  <td className={tdClass}>
                     {l.hasImprMood() ? f({ singular: true, mood: RusMood.Impr, involvement: Involvement.Excl }) : '-'}
                   </td>
                 </tr>
                 <tr>
-                  <th className={thtd}>
+                  <th className={thClass}>
                     Он
                     <br />
                     Она
                     <br />
                     Оно
                   </th>
-                  <td className={thtd}>{f({ tense: RusTense.Pres, singular: true, person: 3, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <td className={tdClass}>{f({ tense: RusTense.Pres, singular: true, person: 3, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Masc, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Femn, mood: RusMood.Indc })}
                     {f({ tense: RusTense.Past, singular: true, gender: RusGender.Neut, mood: RusMood.Indc })}
                   </td>
-                  <td className={thtd}>&mdash;</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Мы</th>
-                  <td className={thtd}>{f({ tense: RusTense.Pres, singular: false, person: 1, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>&mdash;</td>
+                  <th className={thClass}>Мы</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Pres, singular: false, person: 1, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Вы</th>
-                  <td className={thtd}>{f({ tense: RusTense.Pres, singular: false, person: 2, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>
+                  <th className={thClass}>Вы</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Pres, singular: false, person: 2, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>
                     {l.hasImprMood() ? f({ singular: false, mood: RusMood.Impr, involvement: Involvement.Excl }) : '-'}
                   </td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Они</th>
-                  <td className={thtd}>{f({ tense: RusTense.Pres, singular: false, person: 3, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
-                  <td className={thtd}>&mdash;</td>
+                  <th className={thClass}>Они</th>
+                  <td className={tdClass}>{f({ tense: RusTense.Pres, singular: false, person: 3, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>{f({ tense: RusTense.Past, singular: false, mood: RusMood.Indc })}</td>
+                  <td className={tdClass}>&mdash;</td>
                 </tr>
                 <tr>
-                  <th className={thtd}>Будущее</th>
-                  <td className={thtd} colSpan={3}>буду/будешь {f({ infn: true })}</td>
+                  <th className={thClass}>Будущее</th>
+                  <td className={tdClass} colSpan={3}>буду/будешь {f({ infn: true })}</td>
                 </tr>
               </tbody>
-            </table>
+            </>
           }
-        </Stack>
+        </table>
       );
     } else {
       const l = (w as RusNoun).lexeme as RusNounLexeme;
@@ -672,8 +691,7 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
               <span
                 key={w.getDisplayText()}
                 style={{
-                  border: '1px solid ' + getTheme().palette.neutralSecondary,
-                  borderRadius: '4px',
+                  border: '1px solid ' + getTheme().palette.themeDarker,
                   minWidth: '280px',
                   cursor: 'default',
                   backgroundColor: getTheme().semanticColors.bodyBackground
@@ -708,8 +726,11 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
                   <div
                     style={{
                       paddingLeft: '4px',
-                      backgroundColor: getTheme().palette.themeDarker,
-                      color: getTheme().palette.white
+                      backgroundColor: getTheme().palette.neutralLight,
+                      color: getTheme().palette.black,
+                      borderBottom: '1px solid ' + getTheme().palette.black,
+                      borderTop: '1px dotted ' + getTheme().palette.black,
+                      fontWeight: 600
                     }}
                   >
                     {w.getSignature()}
