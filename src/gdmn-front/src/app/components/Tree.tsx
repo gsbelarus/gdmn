@@ -22,7 +22,7 @@ interface ITreeProps {
 interface INodeProps {
   node: INode,
   onClick: (value: string, lb?: number, rb?: number) => void;
-  level: (children: string[], isRoot: boolean, onClick: (value: string) => void) => JSX.Element;
+  level: (children: string[], isRoot: boolean) => JSX.Element;
   isLast: boolean;
   isRoot?: boolean;
   iconLoad?: JSX.Element;
@@ -71,7 +71,7 @@ const Node = (props: INodeProps) => {
         </Stack>
         {
           !(rollUp !== undefined && !rollUp)
-          ? <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false, props.onClick)}</div>
+          ? <div>{props.level(props.node.children, props.isRoot ? props.isRoot : false)}</div>
           : undefined
         }
     </Stack>
@@ -85,13 +85,14 @@ export const Tree = (props: ITreeProps) => {
 
   const count = props.rs.size;
   const childRoot = [] as string[];
-  const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID')
-  const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
-  const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
-  const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
-  const fdLB = props.rs.params.fieldDefs.find(fd => fd.caption === 'LB')
-  const fdRB = props.rs.params.fieldDefs.find(fd => fd.caption === 'RB')
-  const [selectedNode, setSelectedNode] = useState<string | undefined>();
+  const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID');
+  const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME');
+  const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME');
+  const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID');
+  const fdLB = props.rs.params.fieldDefs.find(fd => fd.caption === 'LB');
+  const fdRB = props.rs.params.fieldDefs.find(fd => fd.caption === 'RB');
+
+  const [selectedNode, setSelectedNode] = useState<string | undefined>(fdID ? props.rs.getString(fdID.fieldName, props.rs.currentRow) : undefined);
 
   for(let i = 0; i < count; i++) {
     const parent = fdPARENT ? props.rs.getString(fdPARENT.fieldName, i) : undefined;
@@ -109,12 +110,12 @@ export const Tree = (props: ITreeProps) => {
         } as INode)
     }
   }
-  const withoutParent = nodes.filter(node => node.parent ? nodes.find(item => item.id === node.parent) === undefined : false)
+  const withoutParent = nodes.filter(node => node.parent ? nodes.find(item => item.id === node.parent) === undefined : false);
   nodes.map( (node, idx) => {
     return nodes[idx].children = nodes.filter( curr => curr.parent && curr.parent === node.id).map(item => item.id);
   })
 
-  const level = (children: string[], isRoot: boolean, onClick: (value: string) => void) => {
+  const level = (children: string[], isRoot: boolean) => {
     const nodeInLevel = nodes.filter( curr => children.find(child => child === curr.id));
     return (
       <div style={{ marginLeft: '25px' }} >

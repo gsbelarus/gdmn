@@ -169,14 +169,34 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   }
 
   useEffect( () => {
+    //как только будет выбрано ссылочное поле,
+    //на сервер будет отправлен запрос на получение
+    //первой выборки в соответствии с выбранной строкой в rsMaster
     if(rsMaster && entity && rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')) {
-      const findAttr = entity.attribute('ID');
-      const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow)
-      const eq = prepareEntityQueryWithParams(entity, findAttr && linkField ? [{attr: findAttr, alias: linkField, value}] : undefined);
+      const findAttrID = entity.attribute('ID');
+      const findAttrLB = entity.attribute('LB');
+      const findAttrRB = entity.attribute('RB');
+      const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow);
+      const lb = rsMaster.params.fieldDefs.find(fd => fd.caption === 'LB')
+        ? rsMaster.getInteger(rsMaster.params.fieldDefs.find(fd => fd.caption === 'LB')!.fieldName, rsMaster.params.currentRow)
+        : undefined;
+      const rb = rsMaster.params.fieldDefs.find(fd => fd.caption === 'RB')
+        ? rsMaster.getInteger(rsMaster.params.fieldDefs.find(fd => fd.caption === 'RB')!.fieldName, rsMaster.params.currentRow)
+        : undefined;
+      const pkValues: IParamsQuery[] = findAttrID && linkField ? [ {attr: findAttrID, alias: linkField, value} ] : [];
+      if (linkField && lb) {
+        pkValues.push({attr: findAttrLB, alias: linkField, lb})
+      }
+      if (linkField && rb) {
+        pkValues.push({attr: findAttrRB, alias: linkField, rb})
+      }
+      const eq = prepareEntityQueryWithParams( entity, pkValues === [] ? undefined : pkValues );
       dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: true }));
     }
   }, [rsMaster])
 
+  //этот метод вызывается для получения новых данных,
+  //которые соответствуют выбранной записи в дереве или гриде мастера
   const filterByFieldLink = (value: string, lb?: number, rb?: number) => {
     if(entity) {
       const findAttrID = entity.attribute('ID');
