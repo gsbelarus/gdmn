@@ -690,13 +690,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.HeaderGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns}
               height={headerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getHeaderCellRenderer(
                 this._adjustBodyColumnIndex,
                 true,
-                bodyColumns + (deltaWidth ? 1 : 0),
+                bodyColumns,
                 false
               )}
               rowHeight={rowHeight}
@@ -766,7 +766,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                       !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
                     )}
                     columnWidth={getBodyColumnWidth}
-                    columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+                    columnCount={bodyColumns}
                     height={bodyHeight}
                     overscanColumnCount={overscanColumnCount}
                     overscanRowCount={overscanRowCount}
@@ -804,7 +804,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.BodyFooterGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns}
               height={footerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getFooterCellRenderer(this._adjustBodyColumnIndex, false)}
@@ -1508,7 +1508,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const adjustedIndex = adjustFunc(index);
     return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex) ? deltaWidth
       : displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width ? displayColumns[adjustedIndex].width!
-      : columnWidth;
+      : columnWidth + (displayColumns.length === adjustedIndex + 1 ? deltaWidth : 0);
   };
 
   private _isRowLoaded = ({ index }: Index) => {
