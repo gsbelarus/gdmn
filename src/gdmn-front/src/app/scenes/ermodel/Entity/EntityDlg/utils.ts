@@ -45,7 +45,7 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
       return attr as INumberAttribute<number>;
 
     case 'Numeric':
-      return {...attr, scale: 18, precision: 4} as INumericAttribute;
+      return {...attr, precision: 18, scale: 4} as INumericAttribute;
 
     case 'Boolean':
       return {
@@ -171,11 +171,11 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
           }
 
           if (isINumericAttribute(attr)) {
-            if (attr.precision >= attr.scale) {
+            if (attr.scale >= attr.precision) {
               p.push({
                 attrIdx,
-                field: 'precision',
-                message: "Precision must be less than scale",
+                field: 'scale',
+                message: "Scale must be less than precision",
                 internal: false
               });
             }
