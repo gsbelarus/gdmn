@@ -116,7 +116,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             const command = erTranslatorRU.process(phrases);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
-              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, entityMaster: false }));
+              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
             }
           }
         }
@@ -125,7 +125,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
       } else {
         const eq = prepareDefaultEntityQuery(entity);
-        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: false }));
+        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
       }
     }
   };
@@ -153,7 +153,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           if(findLF && findLF.links && findLF.links.length !== 0) {
             const entityMaster = findLF.links[0].entity;
             const eq = prepareDefaultEntityQuery(entityMaster);
-            dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true, entityMaster: true }));
+            dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true }));
           }
         }
       }
@@ -191,7 +191,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         pkValues.push({attr: findAttrRB, alias: linkField, rb})
       }
       const eq = prepareEntityQueryWithParams( entity, pkValues === [] ? undefined : pkValues );
-      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: true }));
+      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
     }
   }, [rsMaster])
 
@@ -210,7 +210,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         pkValues.push({attr: findAttrRB, alias: linkField, rb})
       }
       const eq = prepareEntityQueryWithParams( entity, pkValues === [] ? undefined : pkValues );
-      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: true }));
+      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
     }
   }
   
@@ -317,7 +317,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       iconProps: {
         iconName: 'Refresh'
       },
-      onClick: () => currRS && currRS.eq && dispatch(loadRSActions.attachRS({ name: currRS.name, eq: currRS.eq, override: true, entityMaster: false }))
+      onClick: () => currRS && currRS.eq && dispatch(loadRSActions.attachRS({ name: currRS.name, eq: currRS.eq, override: true }))
     },
     {
       key: 'sql',

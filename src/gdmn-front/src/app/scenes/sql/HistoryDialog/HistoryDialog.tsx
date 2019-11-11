@@ -42,7 +42,7 @@ export const HistoryDialog = (props: IHistoryProps) => {
       const eq = prepareDefaultEntityQuery(erModel.entity('TgdcSQLHistory'), undefined, undefined, [
         { name: 'EDITIONDATE', order: 'DESC' }
       ]);
-      eq && dispatch(loadRSActions.attachRS({ name: id, eq, entityMaster: false }));
+      eq && dispatch(loadRSActions.attachRS({ name: id, eq }));
     }
   }, [rs, id]);
 
