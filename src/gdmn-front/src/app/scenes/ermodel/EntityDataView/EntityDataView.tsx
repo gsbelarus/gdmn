@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, prepareEntityQueryWithParams } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, prepareEntityQueryWithParams, IParamsQuery } from 'gdmn-orm';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -177,10 +177,19 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   }, [rsMaster])
 
-  const filterByFieldLink = (value: string) => {
+  const filterByFieldLink = (value: string, lb?: number, rb?: number) => {
     if(entity) {
-      const findAttr = entity.attribute('ID');
-      const eq = prepareEntityQueryWithParams(entity, findAttr && linkField ? [{attr: findAttr, alias: linkField, value}] : undefined);
+      const findAttrID = entity.attribute('ID');
+      const findAttrLB = entity.attribute('LB');
+      const findAttrRB = entity.attribute('RB');
+      const pkValues: IParamsQuery[] = findAttrID && linkField ? [ {attr: findAttrID, alias: linkField, value} ] : [];
+      if (linkField && lb) {
+        pkValues.push({attr: findAttrLB, alias: linkField, lb})
+      }
+      if (linkField && rb) {
+        pkValues.push({attr: findAttrRB, alias: linkField, rb})
+      }
+      const eq = prepareEntityQueryWithParams( entity, pkValues === [] ? undefined : pkValues );
       dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, entityMaster: true }));
     }
   }

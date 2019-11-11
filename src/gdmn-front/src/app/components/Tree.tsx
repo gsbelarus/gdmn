@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, Icon, getTheme } from 'office-ui-fabric-react';
 import { RecordSet } from 'gdmn-recordset';
-import { node } from 'prop-types';
 
 interface INode {
   id: string;
@@ -9,18 +8,20 @@ interface INode {
   value: string;
   rollUp?: boolean;
   children: string[];
+  lb?: number;
+  rb?: number;
 }
 
 interface ITreeProps {
   rs: RecordSet;
   load: () => void;
-  selectNode: (value: string) => void;
+  selectNode: (value: string, lb?: number, rb?: number) => void;
   loadedAll: boolean;
 }
 
 interface INodeProps {
   node: INode,
-  onClick: (value: string) => void;
+  onClick: (value: string, lb?: number, rb?: number) => void;
   level: (children: string[], isRoot: boolean, onClick: (value: string) => void) => JSX.Element;
   isLast: boolean;
   isRoot?: boolean;
@@ -62,7 +63,7 @@ const Node = (props: INodeProps) => {
           style={{marginLeft: '5px'}}
           onClick={() => {
             props.onSelectNode(props.node.id);
-            props.onClick(props.node.id);
+            props.onClick(props.node.id, props.node.lb, props.node.rb);
           }}
         >
           {props.node.value}
@@ -88,6 +89,8 @@ export const Tree = (props: ITreeProps) => {
   const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME')
   const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME')
   const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID')
+  const fdLB = props.rs.params.fieldDefs.find(fd => fd.caption === 'LB')
+  const fdRB = props.rs.params.fieldDefs.find(fd => fd.caption === 'RB')
   const [selectedNode, setSelectedNode] = useState<string | undefined>();
 
   for(let i = 0; i < count; i++) {
@@ -100,7 +103,9 @@ export const Tree = (props: ITreeProps) => {
       nodes.push({
           id: findIDParent, 
           value: fdNAME ? props.rs.getString(fdNAME.fieldName, i) : props.rs.getString(fdUSRNAME!.fieldName, i), 
-          parent: parent ? parent : props.rs.name
+          parent: parent ? parent : props.rs.name,
+          lb: fdLB ? props.rs.getInteger(fdLB.fieldName, i) : undefined,
+          rb: fdRB ? props.rs.getInteger(fdRB.fieldName, i) : undefined
         } as INode)
     }
   }
