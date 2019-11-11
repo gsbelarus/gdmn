@@ -21,13 +21,21 @@ export interface IRusSentenceTemplate {
   id: string;
   label?: string;
   examples?: string[];
-  phrases: IRusPhraseTemplate[];
+  phrases: {
+    id: string;
+    template: IRusPhraseTemplate;
+    optional?: boolean;
+  }[]
 };
 
 export interface IRusPhraseTemplate {
   id: string;
-  words: IRusPhraseWordTemplate[][];
-  optional?: boolean;
+  label?: string;
+  examples?: string[];
+  words: {
+    optional?: boolean;
+    wordForms: RusPhraseWordTemplate[];
+  }[];
 };
 
 export interface IRusPhraseWordTemplate {
@@ -58,60 +66,15 @@ export interface IRusPhrasePrepositionTemplate extends IRusPhraseWordTemplate {
   pos: 'PREP';
 };
 
-const templates: IRusSentenceTemplate = {
-  id: 'VPShowByPlace',
-  label: 'Глагольное предложение',
-  examples: ['Покажи все организации и банки из Минска и Пинска'],
-  phrases: [
-    {
-      id: 'verb',
-      words: [
-        [
-          {
-            pos: 'VERB',
-            image: 'покажи'
-          } as IRusPhraseVerbTemplate
-        ],
-      ]
-    },
-    {
-      id: 'obj',
-      words: [
-        [
-          {
-            pos: 'ADJF',
-            optional: true,
-            image: 'все'
-          } as IRusPhraseAdjectiveTemplate
-        ],
-        [
-          {
-            pos: 'NOUN',
-            case: RusCase.Accs,
-            number: 'PLURAL'
-          } as IRusPhraseNounTemplate
-        ],
-      ]
-    },
-    {
-      id: 'place',
-      optional: true,
-      words: [
-        [
-          {
-            pos: 'PREP',
-            image: 'из'
-          } as IRusPhrasePrepositionTemplate
-        ],
-        [
-          {
-            pos: 'NOUN',
-            case: RusCase.Gent,
-            number: 'SINGULAR',
-            allowUniform: true
-          } as IRusPhraseNounTemplate
-        ],
-      ]
-    }
-  ]
+export type RusPhraseWordTemplate = IRusPhraseNounTemplate
+  | IRusPhraseVerbTemplate
+  | IRusPhraseAdjectiveTemplate
+  | IRusPhrasePrepositionTemplate;
+
+export interface IRusSentence {
+  templateId: string;
+  phrases: {
+    phraseId: string;
+    words: AnyWord[];
+  }[];
 };
