@@ -39,7 +39,7 @@ export const Frame = (props: IFrameProps): JSX.Element => {
           paddingRight: ifBorder(),
           paddingBottom: ifBorder(),
           overflowY: scroll ? 'auto' : 'hidden',
-          backgroundColor: selected ? getTheme().palette.themeLight : readOnly ? getTheme().palette.neutralLight : getTheme().semanticColors.bodyBackground,
+          backgroundColor: selected ? getTheme().palette.themeLighter : readOnly ? getTheme().palette.neutralLight : getTheme().semanticColors.bodyBackground,
         }}
         onClick={onClick}
       >

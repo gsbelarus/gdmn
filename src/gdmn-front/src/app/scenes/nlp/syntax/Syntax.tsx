@@ -3,8 +3,9 @@ import { useTab } from "@src/app/hooks/useTab";
 import React, { useReducer } from "react";
 import { CommandBar, ComboBox, Stack } from "office-ui-fabric-react";
 import { Frame } from "../../gdmn/components/Frame";
-import { INLPToken, nlpTokenize } from "gdmn-nlp";
+import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates } from "gdmn-nlp";
 import { NLPToken } from "./NLPToken";
+import { NLPSentence } from "./NLPSentence";
 
 const predefinedPhrases = [
   'название не содержит ООО',
@@ -29,6 +30,7 @@ interface ISyntaxState {
   text: string;
   tokens: INLPToken[][];
   selectedTokensIdx: number;
+  parsed: IRusSentence[];
 };
 
 type Action =
@@ -37,12 +39,16 @@ type Action =
 function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
   switch (action.type) {
-    case 'SET_TEXT':
+
+    case 'SET_TEXT': {
+      const tokens = action.text ? nlpTokenize(action.text) : [];
       return {
         ...state,
         text: action.text,
-        tokens: action.text ? nlpTokenize(action.text) : []
-      }
+        tokens,
+        parsed: tokens.length ? nlpParse(tokens[0], sentenceTemplates) : []
+      };
+    }
   }
 
   return state;
@@ -51,11 +57,12 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
   const { viewTab, url, dispatch, theme, history } = props;
-  const [{ text, tokens, selectedTokensIdx }, reactDispatch] = useReducer(reducer,
+  const [{ text, tokens, selectedTokensIdx, parsed }, reactDispatch] = useReducer(reducer,
     {
       text: '',
       tokens: [],
-      selectedTokensIdx: 0
+      selectedTokensIdx: 0,
+      parsed: []
     }
   );
 
@@ -106,6 +113,13 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
               >
                 {t.map( w => <NLPToken token={w} onClick={ () => history.push(`/spa/gdmn/morphology/${w.image}`) } /> )}
               </Stack>
+            </Frame>
+          )
+        }
+        {
+          parsed.map( (sentence, idx) =>
+            <Frame marginTop border>
+              <NLPSentence sentence={sentence} />
             </Frame>
           )
         }

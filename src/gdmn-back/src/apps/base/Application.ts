@@ -35,8 +35,8 @@ import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
 import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
-import { SettingsCache } from './SettingsCache';
-import { settingsCacheManager } from './SettingsCacheManager';
+import { SettingsCache } from "./SettingsCache";
+import { settingsCacheManager } from "./SettingsCacheManager";
 
 export type AppAction =
   "DEMO"
@@ -112,7 +112,8 @@ export class Application extends ADatabase {
     super(dbDetail);
 
     const dbFullPath = dbDetail.connectionOptions.path;
-    this.settingsCache = settingsCacheManager.add(dbFullPath, dbFullPath.slice(0, dbFullPath.length - path.parse(dbFullPath).ext.length));
+    this.settingsCache = settingsCacheManager.add
+      (dbFullPath, dbFullPath.slice(0, dbFullPath.length - path.parse(dbFullPath).ext.length));
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
@@ -384,18 +385,18 @@ export class Application extends ADatabase {
           isAbstract,
           unique,
           semCategories: semCategories ? str2SemCategories(semCategories) : undefined
-        })
+        });
 
         if (attributes) {
           attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel)).map(attr => preEntity.add(attr));
-        } 
-      
+        }
+
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
-            callback: async ({erBuilder, eBuilder}) => { 
+            callback: async ({erBuilder, eBuilder}) => {
               const entity = await erBuilder.create(this.erModel, preEntity);
             }
           })

@@ -31,23 +31,9 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
       isINumericAttribute(attr)
       ? <>
           <Dropdown
-            label="Scale:"
-            selectedKey={attr.scale}
-            options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx + 1, text: (idx + 1).toString() }) ) }
-            errorMessage={getErrorMessage(attrIdx, 'scale', errorLinks)}
-            styles={{
-              root: {
-                width: '180px'
-              }
-            }}
-            onChange={
-              createAttr ? (_, newValue) => newValue && onChange({ ...attr, scale: newValue.key as number }) : undefined
-            }
-          />
-          <Dropdown
             label="Precision:"
             selectedKey={attr.precision}
-            options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx, text: idx.toString() }) ).filter( i => i.key <= attr.scale ) }
+            options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx + 1, text: (idx + 1).toString() }) ) }
             errorMessage={getErrorMessage(attrIdx, 'precision', errorLinks)}
             styles={{
               root: {
@@ -58,6 +44,20 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
               createAttr ? (_, newValue) => newValue && onChange({ ...attr, precision: newValue.key as number }) : undefined
             }
           />
+          <Dropdown
+            label="Scale:"
+            selectedKey={attr.scale}
+            options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx, text: idx.toString() }) ).filter( i => i.key <= attr.precision ) }
+            errorMessage={getErrorMessage(attrIdx, 'scale', errorLinks)}
+            styles={{
+              root: {
+                width: '180px'
+              }
+            }}
+            onChange={
+              createAttr ? (_, newValue) => newValue && onChange({ ...attr, scale: newValue.key as number }) : undefined
+            }
+          /> 
         </>
       : null
     }
