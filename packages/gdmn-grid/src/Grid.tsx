@@ -685,18 +685,19 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       };
 
       const body = () => {
+        const columnWidth = this.state.columnWidth;
         const bodyHeader = () => (
           <div className={styles.BodyHeader}>
             <Grid
               className={styles.HeaderGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns + (deltaWidth && deltaWidth > columnWidth ? 1 : 0)}
               height={headerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getHeaderCellRenderer(
                 this._adjustBodyColumnIndex,
                 true,
-                bodyColumns + (deltaWidth ? 1 : 0),
+                bodyColumns + (deltaWidth && deltaWidth > columnWidth ? 1 : 0),
                 false
               )}
               rowHeight={rowHeight}
@@ -766,7 +767,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                       !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
                     )}
                     columnWidth={getBodyColumnWidth}
-                    columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+                    columnCount={bodyColumns + (deltaWidth && deltaWidth > columnWidth ? 1 : 0)}
                     height={bodyHeight}
                     overscanColumnCount={overscanColumnCount}
                     overscanRowCount={overscanRowCount}
@@ -804,7 +805,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.BodyFooterGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={bodyColumns + (deltaWidth && deltaWidth > columnWidth ? 1 : 0)}
               height={footerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getFooterCellRenderer(this._adjustBodyColumnIndex, false)}
@@ -1507,8 +1508,8 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const { displayColumns, columnWidth, deltaWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
     return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex) ? deltaWidth
-      : displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width ? displayColumns[adjustedIndex].width!
-      : columnWidth;
+      : ((displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width ? displayColumns[adjustedIndex].width!
+      : columnWidth) + (deltaWidth <= columnWidth && displayColumns.length === adjustedIndex + 1 ? deltaWidth : 0));
   };
 
   private _isRowLoaded = ({ index }: Index) => {
