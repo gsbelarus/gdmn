@@ -1523,9 +1523,20 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const { rightSideColumns } = this.props;
     const { displayColumns, columnWidth, deltaWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
-    return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex) ? deltaWidth
-      : ((displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width ? displayColumns[adjustedIndex].width!
-      : columnWidth) + (deltaWidth <= columnWidth && displayColumns.length === adjustedIndex + 1 ? deltaWidth : 0));
+    return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex)
+      ? deltaWidth
+      : (
+          (
+            displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width
+            ? displayColumns[adjustedIndex].width!
+            : columnWidth
+          ) +
+          (
+            deltaWidth <= columnWidth && displayColumns.length === adjustedIndex + 1
+            ? deltaWidth
+            : 0
+          )
+        );
   };
 
   private _isRowLoaded = ({ index }: Index) => {
