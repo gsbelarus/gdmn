@@ -1,5 +1,4 @@
 import { Entity, EntityLinkField, ScalarAttribute, EntityAttribute, EntityLink, ParentAttribute, EntityQueryOrderType, EntityQuery, IEntityQueryOrder, EntityQueryOptions, EntityQuerySet, EntityQuerySetOptions } from "..";
-import { Attribute } from '../model/Attribute';
 
 export function prepareDefaultEntityLinkFields(entity: Entity): EntityLinkField[] {
   const scalarFields = Object.values(entity.attributes)
