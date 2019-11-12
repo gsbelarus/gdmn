@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, Entity, EntityQuery, EntityLink, EntityQueryOptions } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, Entity, EntityQuery, EntityQueryOptions } from 'gdmn-orm';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -369,7 +369,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                           rsMaster ? dispatch(loadRSActions.loadMoreRsData({ name: rsMaster.name, rowsCount: 5000 })) : undefined}
                         }
                         selectNode={filterByFieldLink}
-                        loadedAll={!rsMaster || rsMaster.status === TStatus.LOADING || rsMaster.status === TStatus.FULL}
                       />
                     : 
                       <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>

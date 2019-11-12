@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, Icon, getTheme } from 'office-ui-fabric-react';
-import { RecordSet } from 'gdmn-recordset';
+import { RecordSet, TStatus } from 'gdmn-recordset';
 
 interface INode {
   id: string;
@@ -16,7 +16,6 @@ interface ITreeProps {
   rs: RecordSet;
   load: () => void;
   selectNode: (value: string, lb?: number, rb?: number) => void;
-  loadedAll: boolean;
 }
 
 interface INodeProps {
@@ -79,6 +78,8 @@ const Node = (props: INodeProps) => {
 }
 
 export const Tree = (props: ITreeProps) => {
+
+  const loadedAll = !props.rs || props.rs.status === TStatus.LOADING || props.rs.status === TStatus.FULL
   
   const root = {id: props.rs.name, value: props.rs.name, rollUp: true, children: []}
   const nodes: INode[] = [root];
@@ -135,7 +136,7 @@ export const Tree = (props: ITreeProps) => {
           })
         }{
           isRoot ? withoutParent.map(node => {
-            const iconLoad = !props.loadedAll
+            const iconLoad = !loadedAll
               ? <Icon
                 iconName="More"
                 onClick={props.load}
@@ -171,7 +172,7 @@ export const Tree = (props: ITreeProps) => {
     userSelect: 'none'
   }} >
     {
-      props.loadedAll
+      loadedAll
       ? undefined
       : <Icon
           iconName="More"
