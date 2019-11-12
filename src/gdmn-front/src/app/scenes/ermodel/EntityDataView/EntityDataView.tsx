@@ -170,25 +170,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         выбранной записи из мастер рс.
 
         */
-      const findAttrID = entity.attribute(linkField);
       const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow);
-      const eq = prepareDefaultEntityQuery(entity);
-      const whereObj = eq.options && eq.options.where ? eq.options.where : [];
-      const orderObj = eq.options && eq.options.order ? eq.options.order : undefined;
-
-      whereObj.push({
-        equals: [{
-          alias: 'root',
-          attribute: findAttrID,
-          value
-        }]
-      })
-        
-      const newEntityQuery: EntityQuery = new EntityQuery(
-        eq.link,
-        new EntityQueryOptions( undefined, undefined, whereObj, orderObj )
-      );
-      dispatch(loadRSActions.attachRS({ name: entityName, eq: newEntityQuery, override: true }));
+      filterByFieldLink(value);
     }
   }, [rsMaster])
 
