@@ -685,18 +685,35 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       };
 
       const body = () => {
+        /**
+         * Для того, чтобы грид грасиво выглядел на экране мы хотим, чтобы
+         * колонки заполняли всю отведенную ему ширину. Мы вычисляем разницу,
+         * между фактической шириной колонок и шириной места под грид
+         * и записываем ее в переменную deltaWidth.
+         *
+         * Но, если мы просто всегда будем расширять последнюю колонку на
+         * недостающую ширину, то в некоторых конфигурациях грида она может
+         * стать слишком широкой и это тоже будет некрасиво.
+         *
+         * Поэтому мы проверяем, если разница больше ширины колонки
+         * по-умолчанию, то добавляем еще одну пустую колонку,
+         * если меньше -- то прибавляем к ширине последней колонки.
+         *
+         */
+        const columnCountWithFakeColumn = bodyColumns + ((deltaWidth && deltaWidth > this.state.columnWidth) ? 1 : 0)
+
         const bodyHeader = () => (
           <div className={styles.BodyHeader}>
             <Grid
               className={styles.HeaderGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={columnCountWithFakeColumn}
               height={headerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getHeaderCellRenderer(
                 this._adjustBodyColumnIndex,
                 true,
-                bodyColumns + (deltaWidth ? 1 : 0),
+                columnCountWithFakeColumn,
                 false
               )}
               rowHeight={rowHeight}
@@ -766,7 +783,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                       !hideFooter ? styles.BodyGridNoHScroll : styles.BodyGridHScroll
                     )}
                     columnWidth={getBodyColumnWidth}
-                    columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+                    columnCount={columnCountWithFakeColumn}
                     height={bodyHeight}
                     overscanColumnCount={overscanColumnCount}
                     overscanRowCount={overscanRowCount}
@@ -804,7 +821,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             <Grid
               className={styles.BodyFooterGrid}
               columnWidth={getBodyColumnWidth}
-              columnCount={bodyColumns + (deltaWidth ? 1 : 0)}
+              columnCount={columnCountWithFakeColumn}
               height={footerHeight}
               overscanColumnCount={overscanColumnCount}
               cellRenderer={this._getFooterCellRenderer(this._adjustBodyColumnIndex, false)}
@@ -1506,9 +1523,20 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
     const { rightSideColumns } = this.props;
     const { displayColumns, columnWidth, deltaWidth } = this.state;
     const adjustedIndex = adjustFunc(index);
-    return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex) ? deltaWidth
-      : displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width ? displayColumns[adjustedIndex].width!
-      : columnWidth;
+    return !fixed && (displayColumns.length - rightSideColumns === adjustedIndex)
+      ? deltaWidth
+      : (
+          (
+            displayColumns[adjustedIndex] && displayColumns[adjustedIndex].width
+            ? displayColumns[adjustedIndex].width!
+            : columnWidth
+          ) +
+          (
+            deltaWidth <= columnWidth && displayColumns.length === adjustedIndex + 1
+            ? deltaWidth
+            : 0
+          )
+        );
   };
 
   private _isRowLoaded = ({ index }: Index) => {
