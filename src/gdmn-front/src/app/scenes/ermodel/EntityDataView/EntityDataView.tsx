@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, prepareEntityQueryWithParams, IParamsQuery } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, Entity, EntityQuery, EntityLink, EntityQueryOptions } from 'gdmn-orm';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -29,8 +29,7 @@ interface IEntityDataViewState {
 type Action = { type: 'SET_PHRASE', phrase: string }
   | { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
-  | { type: 'SET_LINK_FIELD', linkField: string }
-  | { type: 'SET_FILTER_FIELD', valueFilter: string };
+  | { type: 'SET_LINK_FIELD', linkField: string };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
@@ -70,15 +69,6 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
         linkField
       }
     }
-
-    case 'SET_FILTER_FIELD': {
-      const { valueFilter } = action;
-
-      return {
-        ...state,
-        valueFilter
-      }
-    }
   }
 
   return state;
@@ -96,8 +86,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
   let rsMaster: RecordSet | undefined = undefined;
+  let entityMaster: Entity | undefined = undefined;
   
-  const [{ phrase, phraseError, showSQL, linkField, valueFilter }, viewDispatch] = useReducer(reducer, {
+  const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
     phrase: currRS && currRS.queryPhrase
       ? currRS.queryPhrase
       : entityName
@@ -144,17 +135,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   // добавить еще эффект для загрузки мастер рс
   // если мы в режиме мастер-дитэйл
   useEffect( () => {
-    if (rs && currRS && linkField && linkField) {
+    if (rs && currRS && linkField) {
       if(linkField === 'noSelected') {
         applyPhrase();
       } else {
-        if(!rsMaster) {
-          const findLF = linkfields.find(lf => lf.attribute.name === linkField);
-          if(findLF && findLF.links && findLF.links.length !== 0) {
-            const entityMaster = findLF.links[0].entity;
-            const eq = prepareDefaultEntityQuery(entityMaster);
-            dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true }));
-          }
+        if(!rsMaster && entityMaster) {
+          const eq = prepareDefaultEntityQuery(entityMaster);
+          dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true }));
         }
       }
     }
@@ -163,7 +150,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   if(rs && linkField) {
     const findLF = linkfields.find(lf => lf.attribute.name === linkField);
     if(findLF && findLF.links && findLF.links.length !== 0) {
-      const entityMaster = findLF.links[0].entity;
+      entityMaster = findLF.links[0].entity;
       rsMaster = rs[entityMaster.name];
     }
   }
@@ -172,45 +159,61 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     //как только будет выбрано ссылочное поле,
     //на сервер будет отправлен запрос на получение
     //первой выборки в соответствии с выбранной строкой в rsMaster
-    if(rsMaster && entity && rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')) {
-      const findAttrID = entity.attribute('ID');
-      const findAttrLB = entity.attribute('LB');
-      const findAttrRB = entity.attribute('RB');
+    if(rsMaster && entity && linkField) {
+      /*
+
+        Если связь м-д.
+        И мастер рс имеет структуру интервального дерева.
+        то в запрос на извлечение данных детального рс
+        надо добавить условия на то чтобы lb, rb 
+        объекта из энтити атрибута входили в границы
+        выбранной записи из мастер рс.
+
+        */
+      const findAttrID = entity.attribute(linkField);
       const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow);
-      const lb = rsMaster.params.fieldDefs.find(fd => fd.caption === 'LB')
-        ? rsMaster.getInteger(rsMaster.params.fieldDefs.find(fd => fd.caption === 'LB')!.fieldName, rsMaster.params.currentRow)
-        : undefined;
-      const rb = rsMaster.params.fieldDefs.find(fd => fd.caption === 'RB')
-        ? rsMaster.getInteger(rsMaster.params.fieldDefs.find(fd => fd.caption === 'RB')!.fieldName, rsMaster.params.currentRow)
-        : undefined;
-      const pkValues: IParamsQuery[] = findAttrID && linkField ? [ {attr: findAttrID, alias: linkField, value} ] : [];
-      if (linkField && lb) {
-        pkValues.push({attr: findAttrLB, alias: linkField, lb})
-      }
-      if (linkField && rb) {
-        pkValues.push({attr: findAttrRB, alias: linkField, rb})
-      }
-      const eq = prepareEntityQueryWithParams( entity, pkValues === [] ? undefined : pkValues );
-      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+      const eq = prepareDefaultEntityQuery(entity);
+      const whereObj = eq.options && eq.options.where ? eq.options.where : [];
+      const orderObj = eq.options && eq.options.order ? eq.options.order : undefined;
+
+      whereObj.push({
+        equals: [{
+          alias: 'root',
+          attribute: findAttrID,
+          value
+        }]
+      })
+        
+      const newEntityQuery: EntityQuery = new EntityQuery(
+        eq.link,
+        new EntityQueryOptions( undefined, undefined, whereObj, orderObj )
+      );
+      dispatch(loadRSActions.attachRS({ name: entityName, eq: newEntityQuery, override: true }));
     }
   }, [rsMaster])
 
   //этот метод вызывается для получения новых данных,
   //которые соответствуют выбранной записи в дереве или гриде мастера
   const filterByFieldLink = (value: string, lb?: number, rb?: number) => {
-    if(entity) {
-      const findAttrID = entity.attribute('ID');
-      const findAttrLB = entity.attribute('LB');
-      const findAttrRB = entity.attribute('RB');
-      const pkValues: IParamsQuery[] = findAttrID && linkField ? [ {attr: findAttrID, alias: linkField, value} ] : [];
-      if (linkField && lb) {
-        pkValues.push({attr: findAttrLB, alias: linkField, lb})
-      }
-      if (linkField && rb) {
-        pkValues.push({attr: findAttrRB, alias: linkField, rb})
-      }
-      const eq = prepareEntityQueryWithParams( entity, pkValues === [] ? undefined : pkValues );
-      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+    if(entity && rsMaster && entityMaster && linkField) {
+      const findAttrID = entity.attribute(linkField);
+      const eq = prepareDefaultEntityQuery(entity);
+      const whereObj = eq.options && eq.options.where ? eq.options.where : [];
+      const orderObj = eq.options && eq.options.order ? eq.options.order : undefined;
+
+      whereObj.push({
+        equals: [{
+          alias: 'root',
+          attribute: findAttrID,
+          value
+        }]
+      })
+        
+      const newEntityQuery: EntityQuery = new EntityQuery(
+        eq.link,
+        new EntityQueryOptions( undefined, undefined, whereObj, orderObj )
+      );
+      dispatch(loadRSActions.attachRS({ name: entityName, eq: newEntityQuery, override: true }));
     }
   }
   

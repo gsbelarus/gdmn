@@ -73,55 +73,6 @@ export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alia
   );
 }
 
-export interface IParamsQuery {
-  attr: Attribute<any>;
-  alias: string;
-  value?: string;
-  lb?: number;
-  rb?: number;
-}
-
-export function prepareEntityQueryWithParams(entity: Entity, pkValues?: IParamsQuery[], alias: string = 'root', orderFields?: {name: string, order: EntityQueryOrderType}[]): EntityQuery {
-
-  const orderObj: IEntityQueryOrder[] = [];
-  orderFields && orderFields.forEach(fd => {
-    const sortAttrs = Object.values(entity.attributes).find(attr => attr.name === fd.name);
-    sortAttrs && orderObj.push({alias, type: fd.order, attribute: sortAttrs});
-  });
-
-  const equals = pkValues ? pkValues.filter(pkv => pkv.value && !pkv.lb && !pkv.rb).map(param => ({
-    alias: param.alias,
-    attribute: param.attr,
-    value: param.value!
-  })) : undefined;
-  const and = pkValues ? pkValues.filter(pkv => !!pkv.lb || !!pkv.rb).map(param => ({or: [{
-      equals: [{
-        alias: param.alias,
-        attribute: param.attr,
-        value: param.lb ? param.lb.toString() : param.rb!.toString()
-      }],
-      greater: param.lb ? [{
-        alias: param.alias,
-        attribute: param.attr,
-        value: param.lb
-      }] : undefined,
-      less: param.rb ? [{
-        alias: param.alias,
-        attribute: param.attr,
-        value: param.rb
-      }] : undefined
-    }]})) : undefined;
-
-  return new EntityQuery(
-    new EntityLink(entity, alias, prepareDefaultEntityLinkFields(entity)),
-    new EntityQueryOptions(
-    undefined,
-    undefined,
-    [ and && and.length !== 0 ? {or : [{and}, {equals}]} : {equals}],
-    orderObj)
-  );
-}
-
 export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname?: string, pkValues?: any[], alias: string = 'root'): EntityQuerySet {
   const setLinkFields = Object.values(entity.attributes)
   .filter((attr) => attr.type === "Set" && (fieldname? attr.name === fieldname : true))
