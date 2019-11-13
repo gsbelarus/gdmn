@@ -184,6 +184,7 @@ export const themes: INamedTheme[] = [
         black: '#f8f8f8',
         white: '#400000',
       }
+    }
   },
   {
     name: 'Graphite',
