@@ -28,6 +28,7 @@ export const Frame = (props: IFrameProps): JSX.Element => {
     return (
       <div
         style={{
+          position: 'relative',
           marginLeft: ifMargin(marginLeft),
           marginTop: ifMargin(marginTop),
           marginRight: ifMargin(marginRight),
@@ -39,30 +40,31 @@ export const Frame = (props: IFrameProps): JSX.Element => {
           paddingTop: ifBorder(subTitle ? '8px' : '16px'),
           paddingRight: ifBorder(),
           paddingBottom: ifBorder(),
-          overflowY: scroll ? 'auto' : 'hidden',
-          backgroundColor: selected ? getTheme().palette.themeLighter : readOnly ? getTheme().palette.neutralLight : getTheme().semanticColors.bodyBackground,
+          backgroundColor: selected
+            ? getTheme().palette.themeLighter
+            : readOnly
+            ? getTheme().palette.neutralLight
+            : getTheme().semanticColors.bodyBackground
         }}
         onClick={onClick}
       >
         {
-          caption
+          caption && border
             ?
               <div
                 style={{
                   position: 'absolute',
-                  marginLeft: ifMargin(marginLeft),
-                  marginTop: '-30px',
-                  marginRight: '1050px',
+                  left: '16px',
+                  top: '-10px',
                   marginBottom: ifMargin(marginBottom),
-                  height,
-                  border: ifBorder('1px solid ' + (attention ? getTheme().palette.red : getTheme().palette.themeDark)),
-                  borderRadius: ifBorder('4px'),
-                  paddingLeft: ifBorder(),
-                  paddingTop: ifBorder(subTitle ? '2px' : '4px'),
-                  paddingRight: ifBorder(),
-                  paddingBottom: ifBorder(subTitle ? '2px' : '4px'),
-                  overflowY: scroll ? 'auto' : 'hidden',
-                  backgroundColor: selected ? getTheme().palette.themeLighter : readOnly ? getTheme().palette.neutralLight : getTheme().semanticColors.bodyBackground
+                  height: '22px',
+                  border: '1px solid ' + getTheme().palette.themeDark,
+                  borderRadius: '3px',
+                  paddingLeft: '4px',
+                  paddingRight: '4px',
+                  paddingBottom: '2px',
+                  backgroundColor: getTheme().palette.themeLighter,
+                  color: getTheme().semanticColors.bodyText
                 }}
               >
                 {caption}

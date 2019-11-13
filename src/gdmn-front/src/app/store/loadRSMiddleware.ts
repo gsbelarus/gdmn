@@ -11,17 +11,7 @@ import { rsMetaActions, IRsMeta } from "./rsmeta";
 
 export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => ({ dispatch, getState }) => next => async (action: LoadRSActions) => {
 
-  if (
-    action.type !== getType(actions.loadRS)
-    &&
-    action.type !== getType(actions.postRS)
-    &&
-    action.type !== getType(actions.attachRS)
-    &&
-    action.type !== getType(actions.loadMoreRsData)
-    &&
-    action.type !== getType(actions.deleteRS) )
-  {
+  if (!action.type.startsWith('LOADRS/')) {
     return next(action);
   }
 
