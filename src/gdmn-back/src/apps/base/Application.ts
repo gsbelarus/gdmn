@@ -22,7 +22,8 @@ import {
   ISequenceQueryInspector,
   ISequenceQueryResponse,
   SequenceQuery,
-  IEntity
+  IEntity,
+  IEntityInsertFieldInspector
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -32,7 +33,7 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse} from "gdmn-internals";
+import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse, isValidDateByFormat} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
 import { SettingsCache } from './SettingsCache';
@@ -388,14 +389,14 @@ export class Application extends ADatabase {
 
         if (attributes) {
           attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel)).map(attr => preEntity.add(attr));
-        } 
-      
+        }
+
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
-            callback: async ({erBuilder, eBuilder}) => { 
+            callback: async ({erBuilder, eBuilder}) => {
               const entity = await erBuilder.create(this.erModel, preEntity);
             }
           })
@@ -640,12 +641,10 @@ export class Application extends ADatabase {
       worker: async (context) => {
         const {select, params: preParams} = context.command.payload;
 
-        const dateFormat = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
         const params = this.isNamedParams(preParams) ?
           Object.keys(preParams).reduce((map, obj: keyof INamedParams) => {
             const value = (preParams as INamedParams)[obj];
-            map[obj] = (typeof value === "string" && value.length >= 24
-             && dateFormat.test(value)) ? new Date(value) : value;
+            map[obj] = (isValidDateByFormat(value)) ? new Date(value) : value;
             return map;
           }, {} as INamedParams)
         : preParams;
@@ -781,6 +780,15 @@ export class Application extends ADatabase {
     return task;
   }
 
+  /** Преобразовываем значения полей типа Дата из строки в дату */
+  public parseDate = (entityname: string, fields: IEntityInsertFieldInspector[]): IEntityInsertFieldInspector[] =>
+     fields.map(f => {
+      const attribute = this.erModel.entity(entityname).attribute(f.attribute);
+      return (attribute.type === 'Date' || attribute.type === 'Time' || attribute.type === 'TimeStamp') && f.value !== null
+        ? {attribute: f.attribute, value: new Date(f.value as Date)}
+        : f
+     });
+
   public pushInsertCmd(session: Session, command: InsertCmd): Task<InsertCmd, void> {
     const task = new Task({
       session,
@@ -791,9 +799,11 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {insert} = context.command.payload;
+        const {insert: {entity, fields: prefields}} = context.command.payload;
 
-        const entityInsert = EntityInsert.inspectorToObject(this.erModel, insert);
+        const fields = this.parseDate(entity, prefields);
+
+        const entityInsert = EntityInsert.inspectorToObject(this.erModel, {entity, fields});
 
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
@@ -816,9 +826,11 @@ export class Application extends ADatabase {
         await this.waitUnlock();
         this.checkSession(context.session);
 
-        const {update} = context.command.payload;
+        const {update: {entity, fields: prefields, pkValues}} = context.command.payload;
 
-        const entityUpdate = EntityUpdate.inspectorToObject(this.erModel, update);
+        const fields = this.parseDate(entity, prefields);
+
+        const entityUpdate = EntityUpdate.inspectorToObject(this.erModel,  {entity, fields, pkValues});
 
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
