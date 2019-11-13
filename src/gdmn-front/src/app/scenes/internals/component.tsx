@@ -6,6 +6,7 @@ import {ISessionInfo, IViewTab} from "../gdmn/types";
 import {StompLogPanelContainer, ConnectBtnContainer} from "./container";
 import {IRsMetaState} from "@src/app/store/rsmeta";
 import {IconButton} from 'office-ui-fabric-react/lib/Button';
+import { Frame } from "../gdmn/components/Frame";
 
 export interface IInternalsProps extends IViewProps<any> {
   erModel?: ERModel;
@@ -19,7 +20,7 @@ export interface IInternalsProps extends IViewProps<any> {
 export class Internals extends View<IInternalsProps, {}> {
 
   public getViewHeaderHeight() {
-    return 120;
+    return 0;
   }
 
   public getViewCaption(): string {
@@ -33,12 +34,10 @@ export class Internals extends View<IInternalsProps, {}> {
     return this.renderWide(
       undefined,
       <>
-        <div>
-          <h2>erModel</h2>
+        <Frame border marginTop marginLeft marginRight caption="erModel">
           erModel: {erModel ? `${Object.entries(erModel.entities).length} entites` : 'not loaded'}
-        </div>
-        <div>
-          <h2>Recordsets</h2>
+        </Frame>
+        <Frame border marginTop marginLeft marginRight caption="Recordsets">
           <ol>
             {
               Object.entries(recordSet).map(([name, rs]) => (
@@ -48,9 +47,8 @@ export class Internals extends View<IInternalsProps, {}> {
               ))
             }
           </ol>
-        </div>
-        <div>
-          <h2>ViewTabs</h2>
+        </Frame>
+        <Frame border marginTop marginLeft marginRight caption="ViewTabs">
           <ol>
             {
               viewTabs.map(vt => (
@@ -60,10 +58,9 @@ export class Internals extends View<IInternalsProps, {}> {
               ))
             }
           </ol>
-        </div>
+        </Frame>
         {rsMeta &&
-        <div>
-          <h2>rsMeta</h2>
+        <Frame border marginTop marginLeft marginRight caption="rsMeta">
           <ol>
             {
               Object.entries(rsMeta).map(([name, rsm]) => (
@@ -76,12 +73,13 @@ export class Internals extends View<IInternalsProps, {}> {
               ))
             }
           </ol>
-        </div>
+        </Frame>
         }
-        <div>
-          <h2>Session info
+        <Frame border marginTop marginLeft marginRight caption="Session info">
+          <div>
+            Refresh
             <IconButton iconProps={{iconName: 'Sync'}} title="Emoji" ariaLabel="Emoji" onClick={getSessionInfo}/>
-          </h2>
+          </div>
           <ol>
             {
               sessionInfo.map((si, index) => (
@@ -118,9 +116,13 @@ export class Internals extends View<IInternalsProps, {}> {
               ))
             }
           </ol>
-        </div>
-        <StompLogPanelContainer/>
-        <ConnectBtnContainer/>
+        </Frame>
+        <Frame border marginTop marginLeft marginRight caption="Stomp">
+          <StompLogPanelContainer/>
+        </Frame>
+        <Frame border marginTop marginLeft marginRight caption="Connect">
+          <ConnectBtnContainer/>
+        </Frame>
       </>
     );
   }
