@@ -523,7 +523,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       <CommandBar items={commandBarItems} />
       <MessageBox />
       <Frame scroll height='calc(100% - 42px)'>
-        <Frame border marginLeft marginRight>
+        <Frame border caption='caption' marginLeft marginRight>
           <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
             <Stack.Item>
               <TextField
