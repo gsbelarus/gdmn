@@ -325,11 +325,12 @@ export async function valueToBuffer(transaction: Transaction,
             dataView.setInt32(inDescriptor.offset,
                 encodeDate(date.getFullYear(), date.getMonth() + 1, date.getDate()),
                 littleEndian);
-            break;
-        }
+                break;
+            }
 
         case SQLTypes.SQL_TIMESTAMP: {
             const date = value as Date;
+
             dataView.setInt32(inDescriptor.offset,
                 encodeDate(date.getFullYear(), date.getMonth() + 1, date.getDate()),
                 littleEndian);

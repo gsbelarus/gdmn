@@ -129,10 +129,21 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const applyLastEdited = () => {
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
-      if (typeof value === "boolean") {
-        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+      const def = rs.getFieldDef(fieldName);
+      // у нас контролы для редактирования полей сейчас
+      // это либо текстовые поля, либо чекбоксы
+      // поэтому здесь мы и храним в value или строку
+      // или булевское значений.
+      // по идее, значение от DatePicker должно храниться/передаваться
+      // как Date, но это пока не сделано
+      if (typeof value === "string") {
+        if (value === '' && def.dataType !== TFieldType.String && !def.required) {
+          dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
+        } else {
+          dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+        }
       } else {
-        dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
       }
       lastEdited.current = undefined;
     }
@@ -144,10 +155,13 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        if (typeof value === "boolean") {
+        const def = tempRs.getFieldDef(fieldName);
+        if (typeof value === "string") {
+          if (value === '' && def.dataType !== TFieldType.String && !def.required) {
+            tempRs = tempRs.setNull(fieldName)
+          } else  tempRs = tempRs.setString(fieldName, value);
+        } else if (typeof value === "boolean") {
           tempRs = tempRs.setBoolean(fieldName, value);
-        } else {
-          tempRs = tempRs.setString(fieldName, value);
         }
         lastEdited.current = undefined;
       }
