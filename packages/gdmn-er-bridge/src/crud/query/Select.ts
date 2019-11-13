@@ -11,7 +11,6 @@ import {
   ScalarAttribute,
   SetAttribute
 } from "gdmn-orm";
-import {IParams} from "../..";
 import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "./SQLTemplates";

@@ -61,7 +61,7 @@
     "@types/optimize-css-assets-webpack-plugin": "^5",
     "@types/react": "^16",
     "@types/react-color": "^3.0.1",
-    "@types/react-content-loader": "^3",
+    "@types/react-content-loader": "^4",
     "@types/react-css-modules": "^4",
     "@types/react-dom": "^16",
     "@types/react-redux": "^7",
