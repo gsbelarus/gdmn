@@ -645,7 +645,7 @@ export class Application extends ADatabase {
         const params = this.isNamedParams(preParams) ?
           Object.keys(preParams).reduce((map, obj: keyof INamedParams) => {
             const value = (preParams as INamedParams)[obj];
-            map[obj] = (isValidDateByFormat(value)) ? new Date(value) : value;
+            map[obj] = isValidDateByFormat(value) ? new Date(value) : value;
             return map;
           }, {} as INamedParams)
         : preParams;
@@ -782,13 +782,15 @@ export class Application extends ADatabase {
   }
 
   /** Преобразовываем значения полей типа Дата из строки в дату */
-  public parseDate = (entityname: string, fields: IEntityInsertFieldInspector[]): IEntityInsertFieldInspector[] =>
-     fields.map(f => {
-      const attribute = this.erModel.entity(entityname).attribute(f.attribute);
-      return (attribute.type === 'Date' || attribute.type === 'Time' || attribute.type === 'TimeStamp') && f.value !== null
-        ? {attribute: f.attribute, value: new Date(f.value as Date)}
+  public parseDate = (entityname: string, fields: IEntityInsertFieldInspector[]): IEntityInsertFieldInspector[] => {
+    const entity = this.erModel.entity(entityname);
+    return fields.map(f => {
+      const attribute = entity.attribute(f.attribute);
+      return f.value !== null && typeof f.value === 'string' && (attribute.type === 'TimeStamp' || attribute.type === 'Date' || attribute.type === 'Time')
+        ? {...f, value: new Date(f.value)}
         : f
      });
+    }
 
   public pushInsertCmd(session: Session, command: InsertCmd): Task<InsertCmd, void> {
     const task = new Task({
