@@ -39,7 +39,6 @@ type Action =
 function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
   switch (action.type) {
-
     case 'SET_TEXT': {
       const tokens = action.text ? nlpTokenize(action.text) : [];
       return {
@@ -50,8 +49,6 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
       };
     }
   }
-
-  return state;
 };
 
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
@@ -102,7 +99,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
         />
         {
           tokens.map( (t, idx) =>
-            <Frame marginTop border selected={idx === selectedTokensIdx}>
+            <Frame key={idx} marginTop border selected={idx === selectedTokensIdx}>
               <Stack
                 horizontal
                 wrap
@@ -111,14 +108,14 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
                   root: { overflow: 'hidden' }
                 }}
               >
-                {t.map( w => <NLPToken token={w} onClick={ () => history.push(`/spa/gdmn/morphology/${w.image}`) } /> )}
+                {t.map( (w, idx) => <NLPToken key={idx} token={w} onClick={ () => history.push(`/spa/gdmn/morphology/${w.image}`) } /> )}
               </Stack>
             </Frame>
           )
         }
         {
-          parsed.map( (sentence, idx) =>
-            <Frame marginTop border>
+          parsed.map( sentence =>
+            <Frame key={sentence.templateId} marginTop border caption={sentence.templateId}>
               <NLPSentence sentence={sentence} />
             </Frame>
           )

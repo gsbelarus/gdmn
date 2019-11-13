@@ -158,9 +158,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         const def = tempRs.getFieldDef(fieldName);
         if (typeof value === "string") {
           if (value === '' && def.dataType !== TFieldType.String && !def.required) {
-            tempRs = tempRs.setNull(fieldName)
-          } else  tempRs = tempRs.setString(fieldName, value);
-        } else if (typeof value === "boolean") {
+            tempRs = tempRs.setNull(fieldName);
+          } else {
+            tempRs = tempRs.setString(fieldName, value);
+          }
+        } else {
           tempRs = tempRs.setBoolean(fieldName, value);
         }
         lastEdited.current = undefined;
