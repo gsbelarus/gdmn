@@ -129,10 +129,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const applyLastEdited = () => {
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
-      if (typeof value === "boolean") {
-        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
-      } else if (value === '' && rs.getFieldDef(fieldName).dataType === TFieldType.Date) {
+      const def = rs.getFieldDef(fieldName);
+      if (value === '' && !(def.dataType === TFieldType.String && def.required)) {
         dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
+      } else if (typeof value === "boolean") {
+        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
       } else {
         dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
       }
@@ -146,7 +147,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        if (typeof value === "boolean") {
+        const def = tempRs.getFieldDef(fieldName);
+        if (value === '' && !(def.dataType === TFieldType.String && def.required)) {
+          dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
+        } else if (typeof value === "boolean") {
           tempRs = tempRs.setBoolean(fieldName, value);
         } else {
           tempRs = tempRs.setString(fieldName, value);
