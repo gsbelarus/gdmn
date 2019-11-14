@@ -13,8 +13,9 @@ export const NLPSentence = (props: INLPSentenceProps) => {
     <Stack horizontal tokens={{ childrenGap: '4px' }}>
       {
         sentence.phrases.map(
-          phrase =>
+          (phrase, idx) =>
             <div
+              key={idx}
               style={{
                 border: '1px solid ' + getTheme().palette.themeDark,
                 borderRadius: '2px',
@@ -32,8 +33,9 @@ export const NLPSentence = (props: INLPSentenceProps) => {
               <Stack horizontal tokens={{ childrenGap: '4px' }}>
                 {
                   phrase.words.map(
-                    word =>
-                      <div
+                    (word, idx) =>
+                      word && <div
+                        key={idx}
                         style={{
                           border: '1px dotted ' + getTheme().palette.themeDark,
                           borderRadius: '2px',

@@ -14,8 +14,9 @@ test('nlpParser2', () => {
   expect(sentences[0].phrases[0].words[0]).toBeInstanceOf(RusVerb);
   expect((sentences[0].phrases[0].words[0] as RusVerb).getText()).toEqual('покажи');
   expect(sentences[0].phrases[1].phraseId).toEqual('entity');
-  expect(sentences[0].phrases[1].words[0]).toBeInstanceOf(RusNoun);
-  expect((sentences[0].phrases[1].words[0] as RusNoun).getText()).toEqual('организации');
+  expect(sentences[0].phrases[1].words[0]).toEqual(null);
+  expect(sentences[0].phrases[1].words[1]).toBeInstanceOf(RusNoun);
+  expect((sentences[0].phrases[1].words[1] as RusNoun).getText()).toEqual('организации');
   expect(sentences[0].phrases[2].phraseId).toEqual('fromPlace');
   expect(sentences[0].phrases[2].words[0]).toBeInstanceOf(RusPreposition);
   expect((sentences[0].phrases[2].words[0] as RusPreposition).getText()).toEqual('из');

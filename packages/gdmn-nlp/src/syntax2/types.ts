@@ -89,7 +89,7 @@ export type RusPhraseElement = IIdentifierTemplate
   | IRusSubPhraseTemplate
   | RusWordTemplate;
 
-export type RusPhraseWord = AnyWord | string;
+export type RusPhraseWord = AnyWord | string | null;
 
 export interface IRusSentence {
   templateId: string;

@@ -91,6 +91,7 @@ export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[])
           phraseElementIdx++;
         } else {
           if (phraseElement.optional) {
+            foundWords.push(null);
             phraseElementIdx++;
           } else {
             matched = false;

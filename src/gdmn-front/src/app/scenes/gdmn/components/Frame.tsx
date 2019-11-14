@@ -29,17 +29,17 @@ export const Frame = (props: IFrameProps): JSX.Element => {
       <div
         style={{
           position: 'relative',
+          height,
           marginLeft: ifMargin(marginLeft),
           marginTop: ifMargin(marginTop),
           marginRight: ifMargin(marginRight),
           marginBottom: ifMargin(marginBottom),
-          height,
           border: ifBorder('1px solid ' + (attention ? getTheme().palette.red : getTheme().palette.themeDark)),
-          borderRadius: ifBorder('4px'),
-          paddingLeft: ifBorder(),
-          paddingTop: ifBorder(subTitle ? '8px' : '16px'),
-          paddingRight: ifBorder(),
-          paddingBottom: ifBorder(),
+          borderRadius: border
+            ? scroll
+            ? '4px 0 0 4px'
+            : '4px'
+            : 'none',
           backgroundColor: selected
             ? getTheme().palette.themeLighter
             : readOnly
@@ -71,7 +71,19 @@ export const Frame = (props: IFrameProps): JSX.Element => {
               </div>
           : undefined
         }
-        {ch}
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            overflowY: scroll ? 'scroll' : 'hidden',
+            paddingLeft: ifBorder(),
+            paddingTop: ifBorder(subTitle ? '8px' : '16px'),
+            paddingRight: ifBorder(),
+            paddingBottom: ifBorder(),
+          }}
+        >
+          {ch}
+        </div>
       </div>
     );
   };
