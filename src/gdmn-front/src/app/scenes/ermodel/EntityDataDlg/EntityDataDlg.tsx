@@ -654,17 +654,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
-    if (setComboBoxData[props.fieldName]) {
-      const setAttrName = props.fieldName;
-      const data = setComboBoxData[setAttrName];
-      const attr = entity.attributes[setAttrName] as EntityAttribute;
+    const fieldName = props.fieldName;
+    const data = setComboBoxData[fieldName];
+    if (data) {
+      const attr = entity.attributes[fieldName] as EntityAttribute;
       const linkEntity = attr.entities[0];
       return (
         <SetLookupComboBox
-          key={setAttrName}
-          name={setAttrName}
-          label={setAttrName}
-          preSelectedOption={data ? data : undefined}
+          key={fieldName}
+          name={fieldName}
+          label={fieldName}
+          preSelectedOption={data}
           getSessionData={
             () => {
               if (!controlsData.current) {
@@ -676,13 +676,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           onChanged={
             (option: IComboBoxOption[] | undefined) => {
               if (option) {
-                console.log(setComboBoxData);
-                console.log(option);
                 setSetComboBoxData( {...setComboBoxData,
-                  [setAttrName]: option
+                  [fieldName]: option
                 });
                 setChanged(true);
-                changedFields.current[setAttrName] = true;
+                changedFields.current[fieldName] = true;
               }
             }
           }
@@ -743,7 +741,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       )
     }
 
-    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
+    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === fieldName);
 
     if (!fd || !fd.eqfa) {
       return undefined;
