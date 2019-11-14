@@ -46,7 +46,6 @@ import {
   IEntityQueryWhereValue,
   ScalarAttribute,
   IEntityQueryAlias,
-  IEntityQuery,
   Attribute,
   IEntityQueryWhereValueNumber,
   prepareDefaultEntityLinkFields
@@ -139,7 +138,6 @@ export class ERTranslatorRU {
 
       let first: number | undefined;
       let or: IEntityQueryWhere[] | undefined = undefined;
-      const and: IEntityQueryWhere[] = [];
       let not: IEntityQueryWhere[] | undefined = undefined;
       let equals: IEntityQueryWhereValue[] | undefined = undefined;
       let greater: IEntityQueryWhereValue[] | undefined = undefined;

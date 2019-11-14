@@ -32,49 +32,69 @@ export interface IRusPhraseTemplate {
   id: string;
   label?: string;
   examples?: string[];
-  words: {
+  elements: {
     optional?: boolean;
-    wordForms: RusPhraseWordTemplate[];
+    alt: RusPhraseElement[];
   }[];
 };
 
-export interface IRusPhraseWordTemplate {
-  pos: PartOfSpeech;
-  optional?: boolean;
-  image?: string;
-  categories?: SemCategory[];
-  allowUniform?: boolean;
+export interface IRusPhraseTemplateElement {
+  type: 'PHRASE' | 'WORD' | 'ID';
 };
 
-export interface IRusPhraseNounTemplate extends IRusPhraseWordTemplate {
+export interface IRusSubPhraseTemplate extends IRusPhraseTemplateElement {
+  type: 'PHRASE';
+  phrase: IRusPhraseTemplate;
+};
+
+export interface IIdentifierTemplate extends IRusPhraseTemplateElement {
+  type: 'ID';
+  image?: string;
+};
+
+export interface IRusWordTemplate extends IRusPhraseTemplateElement {
+  type: 'WORD';
+  pos: PartOfSpeech;
+  image?: string;
+  categories?: SemCategory[];
+  noUniform?: boolean;
+};
+
+export interface IRusNounTemplate extends IRusWordTemplate {
   pos: 'NOUN';
   case?: RusCase;
   number?: MorphNumber;
 };
 
-export interface IRusPhraseVerbTemplate extends IRusPhraseWordTemplate {
+export interface IRusVerbTemplate extends IRusWordTemplate {
   pos: 'VERB';
   mood?: RusMood;
 };
 
-export interface IRusPhraseAdjectiveTemplate extends IRusPhraseWordTemplate {
+export interface IRusAdjectiveTemplate extends IRusWordTemplate {
   pos: 'ADJF';
   case?: RusCase;
 };
 
-export interface IRusPhrasePrepositionTemplate extends IRusPhraseWordTemplate {
+export interface IRusPrepositionTemplate extends IRusWordTemplate {
   pos: 'PREP';
 };
 
-export type RusPhraseWordTemplate = IRusPhraseNounTemplate
-  | IRusPhraseVerbTemplate
-  | IRusPhraseAdjectiveTemplate
-  | IRusPhrasePrepositionTemplate;
+export type RusWordTemplate = IRusNounTemplate
+  | IRusVerbTemplate
+  | IRusAdjectiveTemplate
+  | IRusPrepositionTemplate;
+
+export type RusPhraseElement = IIdentifierTemplate
+  | IRusSubPhraseTemplate
+  | RusWordTemplate;
+
+export type RusPhraseWord = AnyWord | string;
 
 export interface IRusSentence {
   templateId: string;
   phrases: {
     phraseId: string;
-    words: AnyWord[];
+    words: RusPhraseWord[];
   }[];
 };

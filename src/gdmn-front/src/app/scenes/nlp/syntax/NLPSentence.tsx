@@ -40,7 +40,7 @@ export const NLPSentence = (props: INLPSentenceProps) => {
                           padding: '0 2px 0 2px'
                         }}
                       >
-                        {word.getText()}
+                        {typeof word === 'string' ? word : word.getText()}
                       </div>
                   )
                 }
