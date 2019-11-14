@@ -40,7 +40,7 @@ function reducer(state: ISetLookupComboBoxState, action: Action): ISetLookupComb
       return {
         ...state,
         selectedOptions,
-        options: state.options.map(o => selectedOptions.find(s => s.key === o.key) ? {...o, selected: true} : {...o, selected: false}),
+        options: state.options.map(o => ({...o, selected: !!selectedOptions.find(s => s.key === o.key)})) ,
         text: selectedOptions.map(o => o.text).join(', ')
       };
     }
