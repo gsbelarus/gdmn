@@ -3,9 +3,10 @@ import { IRusPhraseTemplate, RusCase, IRusSentenceTemplate } from "..";
 export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
   'VERB_SHOW': {
     id: 'VERB_SHOW',
-    words: [
+    elements: [
       {
-        wordForms: [{
+        alt: [{
+          type: 'WORD',
           pos: 'VERB',
           image: 'покажи'
         }]
@@ -16,20 +17,28 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
   'QUALIFIED_ENTITY_NAME': {
     id: 'QUALIFIED_ENTITY_NAME',
     examples: ['все организации'],
-    words: [
+    elements: [
       {
         optional: true,
-        wordForms: [{
+        alt: [{
+          type: 'WORD',
           pos: 'ADJF',
           image: 'все'
         }],
       },
       {
-        wordForms: [{
-          pos: 'NOUN',
-          case: RusCase.Accs,
-          number: 'PLURAL'
-        }],
+        alt: [
+          {
+            type: 'WORD',
+            pos: 'NOUN',
+            case: RusCase.Accs,
+            number: 'PLURAL',
+            noUniform: true
+          },
+          {
+            type: 'ID'
+          }
+        ],
       }
     ]
   },
@@ -37,19 +46,20 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
   'FROM_PLACE_TEMPLATE': {
     id: 'FROM_PLACE_TEMPLATE',
     examples: ['из Минска', 'из Минска и Пинска'],
-    words: [
+    elements: [
       {
-        wordForms: [{
+        alt: [{
+          type: 'WORD',
           pos: 'PREP',
           image: 'из'
         }],
       },
       {
-        wordForms: [{
+        alt: [{
+          type: 'WORD',
           pos: 'NOUN',
           case: RusCase.Gent,
           number: 'SINGULAR',
-          allowUniform: true
         }],
       }
     ]
@@ -67,7 +77,7 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
         template: phraseTemplates.VERB_SHOW
       },
       {
-        id: 'object',
+        id: 'entity',
         template: phraseTemplates.QUALIFIED_ENTITY_NAME
       },
       {

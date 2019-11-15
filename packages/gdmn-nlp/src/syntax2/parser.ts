@@ -1,38 +1,49 @@
-import { INLPToken, IRusSentenceTemplate, RusPhraseWordTemplate, RusNoun, RusVerb, AnyWord, IRusSentence } from "..";
-import { nlpWhiteSpace, nlpLineBreak, nlpCyrillicWord } from "./tokenizer";
+import { INLPToken, IRusSentenceTemplate, RusPhraseElement, RusNoun, RusVerb, AnyWord, IRusSentence } from "..";
+import { nlpWhiteSpace, nlpLineBreak, nlpCyrillicWord, nlpIDToken } from "./tokenizer";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
+import { RusWordTemplate, RusPhraseWord } from "./types";
 
-const match = (token: INLPToken, words: RusPhraseWordTemplate[]) => {
-  for (const word of words) {
-    switch (word.pos) {
-      case 'NOUN':
-        return token.words && token.words.find(
-          w => w instanceof RusNoun
-            && (!word.image || word.image === w.getText())
-            && (word.case === undefined || word.case === w.grammCase)
-            && (word.number === undefined || (word.number === 'SINGULAR' && w.singular) || (word.number === 'PLURAL' && !w.singular))
-        );
+const match = (token: INLPToken, srcElements: RusPhraseElement[]) => {
+  switch (token.tokenType) {
+    case nlpCyrillicWord: {
+      for (const element of srcElements.filter( e => e.type === 'WORD' )) {
+        const word = element as RusWordTemplate;
 
-      case 'VERB':
-        return token.words && token.words.find(
-          w => w instanceof RusVerb
-            && (!word.image || word.image === w.getText())
-            && (word.mood === undefined || word.mood === w.mood)
-        );
+        switch (word.pos) {
+          case 'NOUN':
+            return token.words && token.words.find(
+              w => w instanceof RusNoun
+                && (!word.image || word.image === w.getText())
+                && (word.case === undefined || word.case === w.grammCase)
+                && (word.number === undefined || (word.number === 'SINGULAR' && w.singular) || (word.number === 'PLURAL' && !w.singular))
+            );
 
-      case 'ADJF':
-        return token.words && token.words.find(
-          w => w instanceof RusAdjective
-            && (!word.image || word.image === w.getText())
-            && (word.case === undefined || word.case === w.grammCase)
-        );
+          case 'VERB':
+            return token.words && token.words.find(
+              w => w instanceof RusVerb
+                && (!word.image || word.image === w.getText())
+                && (word.mood === undefined || word.mood === w.mood)
+            );
 
-      case 'PREP':
-        return token.words && token.words.find(
-          w => w instanceof RusPreposition
-            && (!word.image || word.image === w.getText())
-        );
+          case 'ADJF':
+            return token.words && token.words.find(
+              w => w instanceof RusAdjective
+                && (!word.image || word.image === w.getText())
+                && (word.case === undefined || word.case === w.grammCase)
+            );
+
+          case 'PREP':
+            return token.words && token.words.find(
+              w => w instanceof RusPreposition
+                && (!word.image || word.image === w.getText())
+            );
+        }
+      }
+    }
+
+    case nlpIDToken: {
+      return token.image;
     }
   }
 };
@@ -54,16 +65,16 @@ export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[])
         continue;
       }
 
-      if (token.tokenType !== nlpCyrillicWord) {
+      if (token.tokenType !== nlpCyrillicWord && token.tokenType !== nlpIDToken) {
         matched = false;
         break;
       }
 
       const phrase = template.phrases[phraseIdx++];
 
-      let phraseWordIdx = 0;
-      const foundWords: AnyWord[] = [];
-      while (tokenIdx < tokens.length && phraseWordIdx < phrase.template.words.length) {
+      let phraseElementIdx = 0;
+      const foundWords: RusPhraseWord[] = [];
+      while (tokenIdx < tokens.length && phraseElementIdx < phrase.template.elements.length) {
         token = tokens[tokenIdx];
 
         if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
@@ -71,16 +82,17 @@ export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[])
           continue;
         }
 
-        const phraseWord = phrase.template.words[phraseWordIdx];
-        const found = match(token, phraseWord.wordForms);
+        const phraseElement = phrase.template.elements[phraseElementIdx];
+        const found = match(token, phraseElement.alt);
 
         if (found) {
           foundWords.push(found);
           tokenIdx++;
-          phraseWordIdx++;
+          phraseElementIdx++;
         } else {
-          if (phraseWord.optional) {
-            phraseWordIdx++;
+          if (phraseElement.optional) {
+            foundWords.push(null);
+            phraseElementIdx++;
           } else {
             matched = false;
             break;
