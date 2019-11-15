@@ -17,7 +17,8 @@ type TNLPDialogScrollProps = INLPDialogScrollStateProps & INLPDialogScrollAction
 
 interface INLPDialogScrollState {
   text: string;
-  prevText: string;
+  prevText: string[];
+  idPrevText?: number;
   showFrom: number;
   showTo: number;
   partialOK: boolean;
@@ -37,7 +38,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
     this.state = {
       text: '',
-      prevText: '',
+      prevText: this.props.nlpDialog.filter( rep => rep.who === 'me').map( rep => rep.text),
       showFrom: -1,
       showTo: -1,
       partialOK: true,
@@ -55,6 +56,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onInputPressEnter = this.onInputPressEnter.bind(this);
     this.onInputArrowUp = this.onInputArrowUp.bind(this);
+    this.onInputArrowDown = this.onInputArrowDown.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
   }
 
@@ -68,7 +70,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
       this.setState({
         text: '',
-        prevText: trimText,
+        prevText: [...this.state.prevText, trimText],
         showFrom: -1,
         showTo: -1,
         partialOK: true,
@@ -79,11 +81,24 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
   }
 
   private onInputArrowUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    const { text, prevText } = this.state;
-    const trimText = text.trim();
+    const { text, prevText, idPrevText } = this.state;
 
-    if (e.key === 'ArrowUp' && !trimText) {
-      this.setState({ text: prevText });
+    if (e.key === 'ArrowUp') {
+      idPrevText !== undefined && prevText.length !== 0
+        ? idPrevText !== 0
+          ? this.setState({ idPrevText: idPrevText - 1, text: prevText[idPrevText - 1] })
+          : undefined
+        : this.setState({ idPrevText: prevText.length - 1, text: prevText[prevText.length - 1] })
+    }
+  }
+
+  private onInputArrowDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    const { text, prevText, idPrevText } = this.state;
+
+    if (e.key === 'ArrowDown') {
+      idPrevText !== undefined && prevText.length - 1 !== idPrevText
+        ? this.setState({ idPrevText: idPrevText + 1, text: prevText[idPrevText + 1] })
+        : undefined
     }
   }
 
@@ -302,7 +317,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
   public render(): ReactNode {
     const { nlpDialog } = this.props;
-    const { scrollVisible } = this.state;
+    const { scrollVisible, prevText, idPrevText } = this.state;
 
     const showFrom = this.state.showFrom === -1 ? nlpDialog.length - 1 : this.state.showFrom;
     const showTo = this.state.showTo === -1 ? nlpDialog.length - 1 : this.state.showTo;
@@ -326,7 +341,14 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
                     {
                       i.who === 'me' ?
                         <>
-                          <span className="Message MessageRight">{i.text}</span>
+                          <span 
+                            className="Message MessageRight" 
+                            onClick={() => {
+                              const id = prevText.findIndex(rep => rep === i.text)
+                              id >= 0 ? this.setState({idPrevText: id, text: prevText[id] }) 
+                              : undefined}}
+                          >{i.text} 
+                          </span>
                           <span className="Circle">{i.who}</span>
                         </>
                       :
@@ -356,7 +378,8 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
               spellCheck={false}
               value={this.state.text}
               onKeyPress={this.onInputPressEnter}
-              onKeyDown={this.onInputArrowUp}
+              onKeyUp={this.onInputArrowUp}
+              onKeyDown={this.onInputArrowDown}
               onChange={this.onInputChange}
             />
           </div>
