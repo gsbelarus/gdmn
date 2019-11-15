@@ -17,6 +17,7 @@ import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, Entity, EntityQuery, EntityQueryOptions } from 'gdmn-orm';
+import { mdgActions } from '../actions';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -139,9 +140,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       if(linkField === 'noSelected') {
         applyPhrase();
       } else {
-        if(!rsMaster && entityMaster) {
-          const eq = prepareDefaultEntityQuery(entityMaster);
-          dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq, override: true }));
+        if(!rsMaster && entityMaster && entity) {
+          const findAttr = entity.attribute(linkField);
+          const eqM = prepareDefaultEntityQuery(entityMaster);
+          dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq: eqM, override: true }));
         }
       }
     }
@@ -170,33 +172,18 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         выбранной записи из мастер рс.
 
         */
-      const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow);
-      filterByFieldLink(value);
+      //const findAttr = entity.attribute(linkField);
+      //const eq = prepareDefaultEntityQuery(entity);
+      //currRS ? dispatch(mdgActions.addNewBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr, entityQuery: eq })) : undefined
     }
   }, [rsMaster])
 
   //этот метод вызывается для получения новых данных,
   //которые соответствуют выбранной записи в дереве или гриде мастера
   const filterByFieldLink = (value: string, lb?: number, rb?: number) => {
-    if(entity && rsMaster && entityMaster && linkField) {
-      const findAttrID = entity.attribute(linkField);
-      const eq = prepareDefaultEntityQuery(entity);
-      const whereObj = eq.options && eq.options.where ? eq.options.where : [];
-      const orderObj = eq.options && eq.options.order ? eq.options.order : undefined;
-
-      whereObj.push({
-        equals: [{
-          alias: 'root',
-          attribute: findAttrID,
-          value
-        }]
-      })
-        
-      const newEntityQuery: EntityQuery = new EntityQuery(
-        eq.link,
-        new EntityQueryOptions( undefined, undefined, whereObj, orderObj )
-      );
-      dispatch(loadRSActions.attachRS({ name: entityName, eq: newEntityQuery, override: true }));
+    if(entity && rsMaster && entityMaster && linkField && currRS) {
+      const findAttr = entity.attribute(linkField);
+      dispatch(mdgActions.editeValue({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr, value }));
     }
   }
   
@@ -432,7 +419,34 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   placeholder="Select link field"
                   selectedKey={linkField}
                   autoComplete="on"
-                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.key.toString() : '' })}
+                  onChange={
+                    (_, option) => {
+                      if(option) {
+                        if(currRS && entity) {
+                          if(option.key.toString() === 'noSelected' && linkField && rsMaster) {
+                            const findAttr = entity.attribute(linkField);
+                            dispatch(mdgActions.deleteBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr}));
+                          }
+                          else if((!linkField || linkField === 'noSelected') && option.key.toString() !== 'noSelected') {
+                            const findAttr = entity.attribute(option.key.toString());
+
+                            const findLF = linkfields.find(lf => lf.attribute.name === option.key.toString());
+                            if(findLF && findLF.links && findLF.links.length !== 0) {
+                              const findEntityMaster = findLF.links[0].entity;
+                              const eq = prepareDefaultEntityQuery(entity);
+                              dispatch(mdgActions.addNewBinding({masterRS: findEntityMaster.name, detailsRS: currRS.name, attr: findAttr, entityQuery: eq }))
+                           }
+
+                          } else if(linkField && rsMaster) {
+                            const findOldAttr = entity.attribute(linkField);
+                            const findNewAttr = entity.attribute(option.key.toString());
+                            dispatch(mdgActions.editeMasterRS({masterRS: rsMaster.name, detailsRS: currRS.name, oldAttr: findOldAttr, newAttr: findNewAttr}));
+                          }
+                        }
+                        viewDispatch({ type: 'SET_LINK_FIELD', linkField: option.key.toString() })
+                      }
+                    }
+                  }
                   options={
                     linkfields.length !== 0
                       ? [{key: 'noSelected', text: 'Не выбрано'} as IComboBoxOption, ...linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})]

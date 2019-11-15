@@ -12,9 +12,11 @@ import { TActions } from '@src/app/store/TActions';
 import { IAuthState, reducer as authReducer, _IAuthState } from '@src/app/scenes/auth/reducer';
 import { IRootState, reducer as rootReducer } from '@src/app/scenes/root/reducer';
 import { reducer as gdmnReducer, TGdmnState } from '@src/app/scenes/gdmn/reducer';
+import { reducer as mdgReducer, TMDGState } from '@src/app/scenes/ermodel/reducer';
 import { reducer as fsmReducer, IFSMReduxState } from '@src/app/fsm/reducer';
 import { authActions, TAuthActions } from '@src/app/scenes/auth/actions';
 import { gdmnActions, GdmnAction } from '@src/app/scenes/gdmn/actions';
+import { mdgActions, MDGAction } from '@src/app/scenes/ermodel/actions';
 import { IRsMetaState, rsMetaReducer } from './rsmeta';
 import { themes } from '../scenes/themeeditor/themes';
 import { loadTheme } from 'office-ui-fabric-react';
@@ -29,6 +31,7 @@ export interface IState {
   readonly rsMeta: IRsMetaState;
   readonly grid: GridReducerState;
   readonly fsm: IFSMReduxState;
+  readonly mdgState: TMDGState;
 }
 
 const authPersistConfig: PersistConfig<IAuthState> = {
@@ -69,7 +72,8 @@ const reducer = combineReducers<IState, TActions>({
   recordSet: withReset(recordSetReducer),
   rsMeta: withReset(rsMetaReducer),
   grid: withReset(gridReducer),
-  fsm: withReset(fsmReducer)
+  fsm: withReset(fsmReducer),
+  mdgState: withReset(mdgReducer)
 });
 
 export type TReducer = Reducer<IState & PersistPartial, TActions>;

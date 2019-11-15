@@ -7,6 +7,7 @@ import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "../../gdmn/actions";
 import { LoadRSActions } from "@src/app/store/loadRSActions";
 import { GridComponentState, GridAction, IGridColors } from "gdmn-grid";
+import { MDGAction } from '../actions';
 
 export interface IEntityDataViewRouteProps {
   entityName: string
@@ -27,5 +28,5 @@ export interface IEntityDataViewStateProps {
 };
 
 export interface IEntityDataViewProps extends IEntityDataViewContainerProps, IEntityDataViewStateProps {
-  dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction | LoadRSActions | GridAction>;
+  dispatch: ThunkDispatch<IState, never, RSAction | GdmnAction | LoadRSActions | GridAction | MDGAction>;
 };
