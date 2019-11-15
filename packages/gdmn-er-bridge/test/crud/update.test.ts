@@ -28,6 +28,8 @@ describe("Update", () => {
   const erModel = new ERModel();
   const connection = Factory.FBDriver.newConnection();
   let setAttributeTableName = "";
+  let setAttributeOwnPk = "";
+  let setAttributeRefPk = "";
   let childID = 0;
 
   beforeAll(async () => {
@@ -107,6 +109,8 @@ describe("Update", () => {
             const setAttribute = await eBuilder.createAttribute(ChildEntity, setAttr);
             const setAttr1 = setAttribute as SetAttribute;
             setAttributeTableName = setAttr1.adapter!.crossRelation;
+            setAttributeOwnPk = setAttr1.adapter!.crossPk[0];
+            setAttributeRefPk = setAttr1.adapter!.crossPk[1];
 
             await eBuilder.createAttribute(ChildEntity, new DetailAttribute({
               name: "DETAIL_ENTITY",
@@ -333,9 +337,9 @@ describe("Update", () => {
       "BEGIN\n" +
       `  DELETE\n` +
       `  FROM ${setAttributeTableName}\n` +
-      `  WHERE KEY1 = :ParentID;\n` +
+      `  WHERE ${setAttributeOwnPk} = :ParentID;\n` +
       "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      `  INSERT INTO ${setAttributeTableName}(${setAttributeOwnPk}, ${setAttributeRefPk}, TOTAL)\n` +
       "  VALUES(:ParentID, :P$1, :P$2);\n" +
       "END");
     await AConnection.executeTransaction({
@@ -383,10 +387,10 @@ describe("Update", () => {
       "  WHERE INHERITEDKEY = :ParentID;\n" +
       "\n" +
       "  DELETE\n" +
-      "  FROM TABLE_18\n" +
-      "  WHERE KEY1 = :ParentID;\n" +
+      "  FROM USR$CROSS1_0\n" +
+      `  WHERE ${setAttributeOwnPk} = :ParentID;\n` +
       "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      `  INSERT INTO ${setAttributeTableName}(${setAttributeOwnPk}, ${setAttributeRefPk}, TOTAL)\n` +
       "  VALUES(:ParentID, :P$4, :P$5);\n" +
       "END");
 

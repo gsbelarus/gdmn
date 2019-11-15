@@ -9,6 +9,8 @@ export class Update1 extends BaseSimpleUpdate {
 
   protected async internalRun(ddlHelper: DDLHelper): Promise<void> {
     await ddlHelper.addSequence(Constants.GLOBAL_GENERATOR, true);
+    await ddlHelper.addSequence(Constants.GLOBAL_DBID_GENERATOR, true);
+    await ddlHelper.addSequence(Constants.GLOBAL_TRIGGERCROSS_GENERATOR, true);
 
     await ddlHelper.addDomain("DINTKEY", {type: "INTEGER", notNull: true, check: "CHECK (VALUE > 0)"}, true);
     await ddlHelper.addDomain("DPARENT", {type: "INTEGER"}, true);

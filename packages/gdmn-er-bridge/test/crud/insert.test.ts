@@ -31,6 +31,8 @@ describe("Insert", () => {
   const connection = Factory.FBDriver.newConnection();
   let linkKey = 0;
   let setAttributeTableName = "";
+  let setAttributeOwnPk = "";
+  let setAttributeRefPk = "";
   let ParentKey = 0;
 
   beforeAll(async () => {
@@ -102,7 +104,9 @@ describe("Insert", () => {
 
             const setAttribute = await eBuilder.createAttribute(ChildEntity, setAttr);
             const setAttr1 = setAttribute as SetAttribute;
-            setAttributeTableName = setAttr1.adapter!.crossRelation;
+            setAttributeTableName = setAttr1.adapter!.crossRelation; 
+            setAttributeOwnPk = setAttr1.adapter!.crossPk[0];
+            setAttributeRefPk = setAttr1.adapter!.crossPk[1];
 
             await eBuilder.createAttribute(ChildEntity, new DetailAttribute({
               name: "DETAIL_ENTITY",
@@ -292,7 +296,7 @@ describe("Insert", () => {
       "  VALUES(:ParentID)\n" +
       "  RETURNING INHERITEDKEY INTO :ID;\n" +
       "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      `  INSERT INTO ${setAttributeTableName}(${setAttributeOwnPk}, ${setAttributeRefPk}, TOTAL)\n` +
       "  VALUES(:ID, :P$1, :P$2);\n" +
       "SUSPEND;\n" +
       "END");
@@ -405,7 +409,7 @@ describe("Insert", () => {
       "  VALUES(:P$1, :P$2, :P$3, :ParentID)\n" +
       "  RETURNING INHERITEDKEY INTO :ID;\n" +
       "\n" +
-      `  INSERT INTO ${setAttributeTableName}(KEY1, KEY2, TOTAL)\n` +
+      `  INSERT INTO ${setAttributeTableName}(${setAttributeOwnPk}, ${setAttributeRefPk}, TOTAL)\n` +
       "  VALUES(:ID, :P$4, :P$5);\n" +
       "SUSPEND;\n" +
       "END");

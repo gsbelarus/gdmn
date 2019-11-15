@@ -10,6 +10,7 @@ export class Prefix {
   public static PRIMARY_KEY = "PK";
   public static FOREIGN_KEY = "FK";
   public static TRIGGER_BI = "BI";
+  public static CROSS = "USR$CROSS";
 
   public static join(name: any, ...prefixes: string[]): string {
     if (!prefixes.length) return name;
@@ -42,5 +43,9 @@ export class Prefix {
 
   public static fkConstraint(name: any): string {
     return Prefix.join(name, Prefix.CONSTRAINT, Prefix.FOREIGN_KEY);
+  }
+
+  public static crossTable(triggerCross: any, bdID: any): string {
+    return Prefix.join(bdID, Prefix.CROSS + triggerCross);
   }
 }
