@@ -17,7 +17,7 @@ type TNLPDialogScrollProps = INLPDialogScrollStateProps & INLPDialogScrollAction
 
 interface INLPDialogScrollState {
   text: string;
-  prevText: string[];
+  flag: boolean;
   idPrevText?: number;
   showFrom: number;
   showTo: number;
@@ -38,7 +38,8 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
     this.state = {
       text: '',
-      prevText: this.props.nlpDialog.filter( rep => rep.who === 'me').map( rep => rep.text),
+      flag: false,
+      //prevText: this.props.nlpDialog.filter( rep => rep.who === 'me').map( rep => rep.text),
       showFrom: -1,
       showTo: -1,
       partialOK: true,
@@ -60,6 +61,8 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     this.onInputChange = this.onInputChange.bind(this);
   }
 
+  private prevTexsts = this.props.nlpDialog.filter( rep => rep.who === 'me').map( rep => rep.text);
+
   private onInputPressEnter(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     const { text } = this.state;
     const trimText = text.trim();
@@ -70,7 +73,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
       this.setState({
         text: '',
-        prevText: [...this.state.prevText, trimText],
+        flag: false,
         showFrom: -1,
         showTo: -1,
         partialOK: true,
@@ -81,29 +84,31 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
   }
 
   private onInputArrowUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    const { text, prevText, idPrevText } = this.state;
+    const { text, flag, idPrevText } = this.state;
 
     if (e.key === 'ArrowUp') {
-      idPrevText !== undefined && prevText.length !== 0
-        ? idPrevText !== 0
-          ? this.setState({ idPrevText: idPrevText - 1, text: prevText[idPrevText - 1] })
-          : undefined
-        : this.setState({ idPrevText: prevText.length - 1, text: prevText[prevText.length - 1] })
+      if (flag && idPrevText !== undefined ) {
+        this.setState({ idPrevText: idPrevText - 1, text: this.prevTexsts[idPrevText - 1]});
+      } else if ( text === '') {
+        this.setState({ idPrevText: this.prevTexsts.length - 1, text: this.prevTexsts[this.prevTexsts.length - 1] })
+      }
     }
   }
 
   private onInputArrowDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    const { text, prevText, idPrevText } = this.state;
+    const { text, flag, idPrevText } = this.state;
 
     if (e.key === 'ArrowDown') {
-      idPrevText !== undefined && prevText.length - 1 !== idPrevText
-        ? this.setState({ idPrevText: idPrevText + 1, text: prevText[idPrevText + 1] })
-        : undefined
+      if (flag && idPrevText !== undefined ) {
+        this.setState({ idPrevText: idPrevText + 1, text: this.prevTexsts[idPrevText + 1]});
+      } else if ( text === '') {
+        this.setState({ idPrevText: 0, text: this.prevTexsts[0]})
+      }
     }
   }
 
   private onInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    this.setState({ text: e.target.value });
+    this.setState({ text: e.target.value, flag: false });
   }
 
   private onWheel(e: React.WheelEvent<HTMLDivElement>) {
@@ -317,7 +322,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
   public render(): ReactNode {
     const { nlpDialog } = this.props;
-    const { scrollVisible, prevText, idPrevText } = this.state;
+    const { scrollVisible} = this.state;
 
     const showFrom = this.state.showFrom === -1 ? nlpDialog.length - 1 : this.state.showFrom;
     const showTo = this.state.showTo === -1 ? nlpDialog.length - 1 : this.state.showTo;
@@ -344,9 +349,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
                           <span 
                             className="Message MessageRight" 
                             onClick={() => {
-                              const id = prevText.findIndex(rep => rep === i.text)
-                              id >= 0 ? this.setState({idPrevText: id, text: prevText[id] }) 
-                              : undefined}}
+                              this.setState({text: i.text}) }}
                           >{i.text} 
                           </span>
                           <span className="Circle">{i.who}</span>
