@@ -273,7 +273,8 @@ export class GdmnPubSubApi {
   public prepareSqlQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.PREPARE_SQL_QUERY]): Observable<TPrepareSqlQueryTaskCmdResult> {
     return this.runTaskCmd({
       payload: {
-        action: TTaskActionNames.PREPARE_SQL_QUload
+        action: TTaskActionNames.PREPARE_SQL_QUERY,
+        payload
       }
     });
   }
