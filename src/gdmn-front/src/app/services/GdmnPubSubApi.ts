@@ -72,7 +72,7 @@ import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
 import { EMPTY, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
-import { isValidDateByFormat } from 'gdmn-internals';
+import { detectAndParseDate } from 'gdmn-internals';
 
 export class GdmnPubSubError extends ExtendableError {
   public errorData: IGdmnMessageError<TGdmnErrorCodes>;
@@ -149,12 +149,12 @@ export class GdmnPubSubApi {
     return this.sign(cmd);
   }
 
-  public async signOut(cmd: TSignOutCmd): Promise<TSignOutCmdResult> {
+  public async signOut(): Promise<TSignOutCmdResult> {
     this.pubSubClient.disconnect();
 
     return await this.pubSubClient.connectionDisconnectedObservable
       .pipe(
-        map(connectStatus => ({
+        map(() => ({
           payload: null
         })),
         first()
@@ -273,8 +273,7 @@ export class GdmnPubSubApi {
   public prepareSqlQuery(payload: TTaskActionPayloadTypes[TTaskActionNames.PREPARE_SQL_QUERY]): Observable<TPrepareSqlQueryTaskCmdResult> {
     return this.runTaskCmd({
       payload: {
-        action: TTaskActionNames.PREPARE_SQL_QUERY,
-        payload
+        action: TTaskActionNames.PREPARE_SQL_QUload
       }
     });
   }
@@ -558,15 +557,15 @@ export class GdmnPubSubApi {
 
     // todo: test delete
     this.taskProgressResultSubscription = this.taskProgressResultObservable!.subscribe(
-      value => {
+      () => {
       }
     );
     this.taskStatusResultSubscription = this.taskStatusResultObservable!.subscribe(
-      value => {
+      () => {
       }
     );
     this.taskActionResultSubscription = this.taskActionResultObservable!.subscribe(
-      value => {
+      () => {
       }
     );
   }
@@ -606,9 +605,7 @@ export class GdmnPubSubApi {
           const parseMsgDataMapOperator = map<IPubSubMessage<TGdmnReceivedMessageMeta>, IGdmnMessageData>(message => {
             if (!message.data) throw Error("[GDMN][PUB-SUB] Invalid server response (TaskCmdResult)");
             // parse date as js Date object
-            return JSON.parse(message.data, (key, value) =>
-              isValidDateByFormat(value) ? new Date(value) : value
-            );
+            return JSON.parse(message.data, (_, value) => detectAndParseDate(value) );
           });
 
           const meta = {

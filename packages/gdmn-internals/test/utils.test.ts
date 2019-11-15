@@ -1,6 +1,5 @@
 import { isValidDate } from "gdmn-internals";
 
-
 describe("utils", () => {
   it("isValidDate", () => {
     expect(isValidDate(undefined)).toEqual(false);
