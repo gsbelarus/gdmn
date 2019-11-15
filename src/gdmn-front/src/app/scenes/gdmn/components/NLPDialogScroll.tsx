@@ -53,7 +53,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onInputPressEnter = this.onInputPressEnter.bind(this);
-    this.onInputArrowUp = this.onInputArrowUp.bind(this);
+    this.onInputKeyDown = this.onInputKeyDown.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
   }
 
@@ -76,64 +76,57 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     }
   }
 
-  /**
-   * Задача функции отыскать следующий элемент
-   * в массиве nlpDialog, двигаясь вверх или вниз
-   */
-  private findNextItemIdx(currIdx: number, upWard: boolean) {
-    const { nlpDialog } = this.props;
-    let idx = currIdx;
-    if (upWard) {
-      while (idx >= 0 && nlpDialog[idx].who !== 'me') {
-        idx--;
-      }
-
-      if (idx < 0) {
-        idx = nlpDialog.length - 1;
-        while (idx > currIdx && nlpDialog[idx].who !== 'me') {
-          idx--;
-        }
-      }
-    } else {
-      while (idx < nlpDialog.length && nlpDialog[idx].who !== 'me') {
-        idx++;
-      }
-
-      if (idx >= nlpDialog.length) {
-        idx = 0;
-        while (idx < currIdx && nlpDialog[idx].who !== 'me') {
-          idx++;
-        }
-      }
-    }
-    return idx;
-  }
-
-  private onInputArrowUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+  private onInputKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     const { text, prevIdx } = this.state;
     const { nlpDialog } = this.props;
 
-    if (e.key === 'ArrowUp') {
-      if (nlpDialog.length && (!text || prevIdx !== undefined)) {
-        const nextIdx = this.findNextItemIdx(prevIdx === undefined ? nlpDialog.length - 1 : (prevIdx - 1), true);
-        this.setState({
-          text: nlpDialog[nextIdx].text,
-          prevIdx: nextIdx
-        });
+    const findNextItemIdx = (currIdx: number) => {
+      const { nlpDialog } = this.props;
+      let idx = currIdx;
+      if (e.key === 'ArrowUp') {
+        while (idx >= 0 && nlpDialog[idx].who !== 'me') {
+          idx--;
+        }
+
+        if (idx < 0) {
+          idx = nlpDialog.length - 1;
+          while (idx > currIdx && nlpDialog[idx].who !== 'me') {
+            idx--;
+          }
+        }
+      } else {
+        while (idx < nlpDialog.length && nlpDialog[idx].who !== 'me') {
+          idx++;
+        }
+
+        if (idx >= nlpDialog.length) {
+          idx = 0;
+          while (idx < currIdx && nlpDialog[idx].who !== 'me') {
+            idx++;
+          }
+        }
       }
-    } 
-    else if (e.key === 'ArrowDown') {
-      if (nlpDialog.length && (!text || prevIdx !== undefined)) {
-        const nextIdx = this.findNextItemIdx(prevIdx === undefined ? 0 : (prevIdx + 1), false);
+      return idx;
+    };
+
+    if (nlpDialog.length && (!text || prevIdx !== undefined) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.stopPropagation();
+      e.preventDefault();
+      const nextIdx = e.key === 'ArrowUp'
+        ? findNextItemIdx(prevIdx === undefined ? nlpDialog.length - 1 : (prevIdx - 1))
+        : findNextItemIdx(prevIdx === undefined ? 0 : (prevIdx + 1));
+      if (nextIdx !== prevIdx) {
         this.setState({
           text: nlpDialog[nextIdx].text,
           prevIdx: nextIdx
         });
       }
     } else {
-      this.setState({
-        prevIdx: undefined
-      });
+      if (prevIdx !== undefined) {
+        this.setState({
+          prevIdx: undefined
+        });
+      }
     }
   }
 
@@ -376,7 +369,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
                     {
                       i.who === 'me' ?
                         <>
-                          <span 
+                          <span
                             className="Message MessageRight"
                             onClick={ () => this.setState({ text: i.text, prevIdx: undefined })}
                           >
@@ -411,7 +404,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
               spellCheck={false}
               value={this.state.text}
               onKeyPress={this.onInputPressEnter}
-              onKeyDown={this.onInputArrowUp}
+              onKeyDown={this.onInputKeyDown}
               onChange={this.onInputChange}
             />
           </div>
