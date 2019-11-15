@@ -9,7 +9,8 @@ import {
   ParentAttribute,
   ScalarAttribute,
   SequenceAttribute,
-  SetAttribute
+  SetAttribute,
+  isUserDefined
 } from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../Constants";
@@ -32,6 +33,17 @@ export class EntityBuilder extends Builder {
     // TODO
     throw new Error("Unsupported yet");
   }
+
+  /**
+ * Функция возвращает имя без префикса.
+ */
+  public stripUserPrefix(name: string) {
+    if (isUserDefined(name)) {
+      return name.substring(Constants.DEFAULT_USR_PREFIX.length);
+    } else {
+      return name;
+    }
+  };
 
   public async createAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr): Promise<Attr> {
     const tableName = AdapterUtils.getOwnRelationName(entity);
@@ -177,10 +189,12 @@ export class EntityBuilder extends Builder {
             throw new Error("Never throws");
           }
           const setAttr = attribute as SetAttribute;
-
-          const relationName = setAttr.adapter ? setAttr.adapter.crossRelation : Prefix.table(await this.nextDDLUnique());
-          const ownPKName = setAttr.adapter ? setAttr.adapter.crossPk[0] : Constants.DEFAULT_CROSS_PK_OWN_NAME;
-          const refPKName = setAttr.adapter ? setAttr.adapter.crossPk[1] : Constants.DEFAULT_CROSS_PK_REF_NAME;
+          const relationName = setAttr.adapter ? setAttr.adapter.crossRelation : Prefix.crossTable(await this.nextDDLTriggercross(), await this.DDLdbID());
+          const ownPKName = setAttr.adapter ? setAttr.adapter.crossPk[0] : Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(tableName)).concat("KEY");
+          const refPKName = setAttr.adapter ? setAttr.adapter.crossPk[1] :
+            AdapterUtils.getOwnRelationName(setAttr.entities[0]) ?
+            Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(AdapterUtils.getOwnRelationName(setAttr.entities[0]))).concat("KEY") :
+            Constants.DEFAULT_CROSS_PK_REF_NAME;
 
           // create cross table
           const fields: Array<IFieldProps & { attr?: Attribute }> = [];
@@ -237,6 +251,17 @@ export class EntityBuilder extends Builder {
 
           // create own table column
           const fieldName = AdapterUtils.getFieldName(setAttr);
+
+          // Находим поле для отображения в множестве из Entity в Referense
+          // NAME либо USR$NAME либо ALIAS либо первое строковое поле, либо DEFAULT_ID_NAME
+          const scalarFields = Object.values(setAttr.entities[0].attributes)
+           .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
+          const crossFieldAttr =  scalarFields.find((attr) => attr.name === "NAME") ||  
+            scalarFields.find((attr) => attr.name === "USR$NAME") ||
+            scalarFields.find((attr) => attr.name === "ALIAS") ||
+            scalarFields.find((attr) =>  attr.type === "String");
+          const crossField = crossFieldAttr? AdapterUtils.getFieldName(crossFieldAttr) : Constants.DEFAULT_ID_NAME;
+            
           const domainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(setAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -244,7 +269,9 @@ export class EntityBuilder extends Builder {
             relationName: tableName,
             fieldName,
             domainName,
-            crossTable: relationName
+            crossTable: relationName,
+            crossField: crossField,
+            setTable: AdapterUtils.getOwnRelationName(setAttr.entities[0]) 
           });
 
           // add foreign keys for cross table
