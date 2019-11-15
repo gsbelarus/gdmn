@@ -549,7 +549,7 @@ describe("ERBridge", () => {
         adapter: {
           crossRelation: "CROSS_TABLE_ADAPTER1",
           crossPk: ["KEY1", "KEY2"],
-          presentationField: "SET_FIELD_ADAPTER"
+          presentationField: "NAME"
         }
       }));
       const setAttr = new SetAttribute({

@@ -47,6 +47,7 @@ export class EntityBuilder extends Builder {
 
   public async createAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr): Promise<Attr> {
     const tableName = AdapterUtils.getOwnRelationName(entity);
+    const tablePk = entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ? Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME; 
 
     if (attribute instanceof ScalarAttribute) {
       // if (attribute.name === "RB") {
@@ -189,12 +190,15 @@ export class EntityBuilder extends Builder {
             throw new Error("Never throws");
           }
           const setAttr = attribute as SetAttribute;
-          const relationName = setAttr.adapter ? setAttr.adapter.crossRelation : Prefix.crossTable(await this.nextDDLTriggercross(), await this.DDLdbID());
+          const position = await this.nextDDLTriggercross();
+          const relationName = setAttr.adapter ? setAttr.adapter.crossRelation : Prefix.crossTable(position, await this.DDLdbID());
+          const setTable = AdapterUtils.getOwnRelationName(setAttr.entities[0]);
           const ownPKName = setAttr.adapter ? setAttr.adapter.crossPk[0] : Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(tableName)).concat("KEY");
           const refPKName = setAttr.adapter ? setAttr.adapter.crossPk[1] :
-            AdapterUtils.getOwnRelationName(setAttr.entities[0]) ?
-            Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(AdapterUtils.getOwnRelationName(setAttr.entities[0]))).concat("KEY") :
-            Constants.DEFAULT_CROSS_PK_REF_NAME;
+            setTable ? Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(setTable)).concat("KEY") :
+              Constants.DEFAULT_CROSS_PK_REF_NAME;
+          const setTablePk = setAttr.entities[0].hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ?
+             Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME;
 
           // create cross table
           const fields: Array<IFieldProps & { attr?: Attribute }> = [];
@@ -260,8 +264,7 @@ export class EntityBuilder extends Builder {
             scalarFields.find((attr) => attr.name === "USR$NAME") ||
             scalarFields.find((attr) => attr.name === "ALIAS") ||
             scalarFields.find((attr) =>  attr.type === "String");
-          const crossField = crossFieldAttr? AdapterUtils.getFieldName(crossFieldAttr) : Constants.DEFAULT_ID_NAME;
-            
+          const crossField = crossFieldAttr? AdapterUtils.getFieldName(crossFieldAttr) : Constants.DEFAULT_ID_NAME; 
           const domainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(setAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -271,9 +274,15 @@ export class EntityBuilder extends Builder {
             domainName,
             crossTable: relationName,
             crossField: crossField,
-            setTable: AdapterUtils.getOwnRelationName(setAttr.entities[0]) 
+            setTable: setTable
           });
-
+          const presLen = setAttr.presLen;
+          const triggerName = Prefix.triggerBeforeInsert(relationName);
+          if (presLen > 0) {
+            await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable, 
+              crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk);
+          }
+          
           // add foreign keys for cross table
           const crossFKOwnConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKOwnConstName, {
@@ -291,8 +300,8 @@ export class EntityBuilder extends Builder {
             tableName: relationName,
             fieldName: refPKName
           }, {
-            tableName: AdapterUtils.getOwnRelationName(setAttr.entities[0]),
-            fieldName: AdapterUtils.getPKFieldName(setAttr.entities[0], AdapterUtils.getOwnRelationName(setAttr.entities[0]))
+            tableName: setTable,
+            fieldName: AdapterUtils.getPKFieldName(setAttr.entities[0], setTable)
           });
 
           if (!attribute.adapter) {

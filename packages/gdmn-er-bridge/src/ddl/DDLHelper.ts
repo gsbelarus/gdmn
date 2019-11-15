@@ -375,6 +375,52 @@ export class DDLHelper {
     return triggerName;
   }
 
+  public async addBICrossTrigger(triggerName: string,
+                                tableName: string,
+                                fieldName: string,
+                                setTable: string,
+                                crossField: string,
+                                relationName: string,
+                                ownPKName: string,
+                                refPKName: string,
+                                presLen: number,
+                                position: string,
+                                tablePk: string,
+                                setTablePk: string,
+                                skipAT: boolean = this._skipAT,
+                                ignore: boolean = this._defaultIgnore): Promise<string> {
+    if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
+    await this._loggedExecute(`
+    CREATE TRIGGER ${triggerName} FOR ${tableName}
+    ACTIVE BEFORE UPDATE POSITION ${position}
+    AS
+      DECLARE VARIABLE attr VARCHAR(8192); 
+      DECLARE VARIABLE text VARCHAR(8192) = ''; 
+    BEGIN
+    FOR 
+      SELECT L.${crossField}
+        FROM 
+          ${relationName} C JOIN ${setTable} L ON C.${refPKName} = L.${setTablePk} 
+        WHERE C.${ownPKName} = NEW.${tablePk} AND L.${crossField} > '' 
+        INTO :attr 
+        DO 
+        BEGIN 
+          IF (CHARACTER_LENGTH(:text) > ${presLen}) THEN 
+            LEAVE; 
+          text = :text || SUBSTRING(:attr FROM 1 FOR 254) || ' '; 
+        END 
+        NEW.${fieldName} = TRIM(SUBSTRING(:text FROM 1 FOR ${presLen})); 
+    END
+    `);
+    await this._transaction.commitRetaining();
+    }
+
+    if (!skipAT && !(ignore && await this._cachedStatements.isTriggerATExists(triggerName))) {
+    await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
+    }
+    return triggerName;
+    }
+
   public async dropTrigger(triggerName: string,
                            skipAT: boolean = this._skipAT,
                            ignore: boolean = this._defaultIgnore): Promise<void> {
