@@ -72,6 +72,7 @@ import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
 import { EMPTY, merge, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { catchError, filter, first, map, mergeMap, tap } from 'rxjs/operators';
+import { isValidDateByFormat } from 'gdmn-internals';
 
 export class GdmnPubSubError extends ExtendableError {
   public errorData: IGdmnMessageError<TGdmnErrorCodes>;
@@ -605,13 +606,9 @@ export class GdmnPubSubApi {
           const parseMsgDataMapOperator = map<IPubSubMessage<TGdmnReceivedMessageMeta>, IGdmnMessageData>(message => {
             if (!message.data) throw Error("[GDMN][PUB-SUB] Invalid server response (TaskCmdResult)");
             // parse date as js Date object
-            const dateFormat = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
-            return JSON.parse(message.data, (key, value) => {
-              if (typeof value === "string" && dateFormat.test(value)) {
-                return new Date(value);
-              }
-              return value;
-            });
+            return JSON.parse(message.data, (key, value) =>
+              isValidDateByFormat(value) ? new Date(value) : value
+            );
           });
 
           const meta = {

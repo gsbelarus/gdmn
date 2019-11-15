@@ -35,6 +35,11 @@ export class ERModelBuilder extends Builder {
       return erModel.add(sequence);
 
     } else if (source instanceof Entity) {
+      /**
+      * проверяем, существует ли системное свойство сущности (ID, INHERITEDKEY и др.),
+      * если существует, то проверяем, заполнен ли у свойства адаптер
+      * если нет адаптера, то добавляем
+      **/
       const entity = source;
       let pkAttrs: Attribute[] = [];
       if (entity.parent) {
@@ -52,6 +57,11 @@ export class ERModelBuilder extends Builder {
             }))
           );
         } else {
+          const attrId = entity.ownAttribute(Constants.DEFAULT_INHERITED_KEY_NAME);
+          attrId.adapter = {
+            relation: AdapterUtils.getOwnRelationName(entity),
+            field: Constants.DEFAULT_INHERITED_KEY_NAME
+          };
           pkAttrs.push(entity.ownAttribute(Constants.DEFAULT_INHERITED_KEY_NAME));
         }
       } else {
@@ -67,7 +77,13 @@ export class ERModelBuilder extends Builder {
           }));
           pkAttrs = entity.pk;
         } else {
-          pkAttrs.push(entity.ownAttribute(Constants.DEFAULT_ID_NAME));
+          const attrId = entity.ownAttribute(Constants.DEFAULT_ID_NAME);
+          attrId.adapter = {
+              relation: AdapterUtils.getOwnRelationName(entity),
+              field: Constants.DEFAULT_ID_NAME
+          };
+
+          pkAttrs.push(attrId);
         }
       }
 
