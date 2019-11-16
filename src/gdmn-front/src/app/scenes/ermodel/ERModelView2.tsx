@@ -13,6 +13,7 @@ import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
 import { useSettings } from "@src/app/hooks/useSettings";
 import { ERModel } from "gdmn-orm";
+import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 
 export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
@@ -22,27 +23,53 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const attributesFilter = attributes && attributes.filter && attributes.filter.conditions.length ? attributes.filter.conditions[0].value : '';
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
+  const [MessageBox, messageBox] = useMessageBox();
 
   const [userColumnsSettingsEntity, setUserColumnsSettingsEntity, delUserColumnSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
   const [userColumnsSettingsAttr, setUserColumnsSettingsAttr, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
 
   const deleteRecord = useCallback( () => {
     if (entities && entities.size && erModel) {
-      dispatch(async dispatch => {
+      const entityName = entities.getString('name');
+      const entity = erModel.entity(entityName);
 
-        const entityName = entities.getString('name');
-        const entity = erModel.entity(entityName);
-        const result = await apiService.deleteEntity({ entityName });
+      const children = Object.values(erModel.entities).filter( e => e.parent === entity );
+      const references = erModel.entityReferencedBy(entity);
 
-        if (!result.error) {
-          const newERModel = new ERModel(erModel);
-          erModel.remove(entity);
-          dispatch(gdmnActions.setSchema(newERModel));
-          dispatch(rsActions.setRecordSet(entities.delete(true)));
-        } else {
-         throw new Error(result.error.message);
-        }
-      });
+      if (children.length) {
+        messageBox({
+          title: `Нельзя удалить ${entityName}`,
+          message: `Так как от неё наследованы сущности: ${children.map( e => e.name ).join(', ')}`,
+          type: 'MB_OK',
+          icon: 'Attention'
+        });
+      }
+      else if (references.length) {
+        const refNames = references.length <= 20
+          ? references.map( er => er.entity.name ).join(', ')
+          : references.slice(0, 20).map( er => er.entity.name ).join(', ') + '...';
+
+        messageBox({
+          title: `Нельзя удалить ${entityName}`,
+          message: `Так как на неё ссылаются сущности: ${refNames}`,
+          type: 'MB_OK',
+          icon: 'Attention'
+        });
+      }
+      else {
+        dispatch(async dispatch => {
+          const result = await apiService.deleteEntity({ entityName });
+
+          if (!result.error) {
+            const newERModel = new ERModel(erModel);
+            erModel.remove(entity);
+            dispatch(gdmnActions.setSchema(newERModel));
+            dispatch(rsActions.setRecordSet(entities.delete(true)));
+          } else {
+          throw new Error(result.error.message);
+          }
+        });
+      }
     }
   }, [entities, viewTab, erModel]);
 
@@ -307,6 +334,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
     <div styleName="MDGrid">
       <div styleName="MDGridTop">
         <CommandBar items={commandBarItems} />
+        <MessageBox />
       </div>
       {
         showInspector && entities && entities.size && erModel &&
