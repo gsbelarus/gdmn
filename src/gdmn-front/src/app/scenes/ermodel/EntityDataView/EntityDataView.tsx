@@ -74,7 +74,6 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 };
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
-
   const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
@@ -291,7 +290,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
         <div styleName="SGridTop">
           <CommandBar items={commandBarItems} />
-          
+
           {
             error
             &&

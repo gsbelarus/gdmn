@@ -15,7 +15,6 @@ import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
 import {EntityBuilder} from "./EntityBuilder";
-import { log } from "util";
 
 export class ERModelBuilder extends Builder {
 
