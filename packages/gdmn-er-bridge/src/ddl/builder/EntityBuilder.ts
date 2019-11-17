@@ -35,8 +35,8 @@ export class EntityBuilder extends Builder {
   }
 
   /**
- * Функция возвращает имя без префикса.
- */
+  * Функция возвращает имя без префикса.
+  */
   public stripUserPrefix(name: string) {
     if (isUserDefined(name)) {
       return name.substring(Constants.DEFAULT_USR_PREFIX.length);
@@ -145,9 +145,11 @@ export class EntityBuilder extends Builder {
           await this.ddlHelper.addForeignKey(fkConstName, {
             tableName,
             fieldName
-          }, {
-            tableName: AdapterUtils.getOwnRelationName(pAttr.entities[0]),
-            fieldName: AdapterUtils.getPKFieldName(pAttr.entities[0], AdapterUtils.getOwnRelationName(pAttr.entities[0]))
+          }, {            
+            tableName: AdapterUtils.getOwnRelationName(entity),
+            fieldName: AdapterUtils.getPKFieldName(entity, AdapterUtils.getOwnRelationName(entity))
+            // tableName: AdapterUtils.getOwnRelationName(pAttr.entities[0]),            
+            // fieldName: AdapterUtils.getPKFieldName(pAttr.entities[0], AdapterUtils.getOwnRelationName(pAttr.entities[0]))
           }, {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"

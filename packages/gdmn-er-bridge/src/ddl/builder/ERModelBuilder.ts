@@ -15,6 +15,7 @@ import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
 import {EntityBuilder} from "./EntityBuilder";
+import { log } from "util";
 
 export class ERModelBuilder extends Builder {
 
@@ -28,15 +29,18 @@ export class ERModelBuilder extends Builder {
   public async create(erModel: ERModel, sequence: Sequence): Promise<Sequence>;
   public async create(erModel: ERModel, entity: Entity): Promise<Entity>;
   public async create(erModel: ERModel, source: Sequence | Entity): Promise<Sequence | Entity> {
+    console.log('PARENT source before', source);
+           
     if (source instanceof Sequence) {
       // TODO custom adapter name
       const sequence = source;
       await this.ddlHelper.addSequence(sequence.name);
       return erModel.add(sequence);
+    }
 
-    } else if (source instanceof Entity) {
+    if (source instanceof Entity) {        
       /**
-      * проверяем, существует ли системное свойство сущности (ID, INHERITEDKEY и др.),
+      * проверяем, существует ли системный атрибут сущности (ID, INHERITEDKEY и др.),
       * если существует, то проверяем, заполнен ли у свойства адаптер
       * если нет адаптера, то добавляем
       **/
@@ -44,6 +48,7 @@ export class ERModelBuilder extends Builder {
       let pkAttrs: Attribute[] = [];
       if (entity.parent) {
         if (!entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME)) {
+          /** если у сущности указан атрибут parent но нет атрибута INHERITEDKEY (ссылка на родителя) то создаём */
           pkAttrs.push(
             entity.add(new EntityAttribute({
               name: Constants.DEFAULT_INHERITED_KEY_NAME,
@@ -65,6 +70,7 @@ export class ERModelBuilder extends Builder {
           pkAttrs.push(entity.ownAttribute(Constants.DEFAULT_INHERITED_KEY_NAME));
         }
       } else {
+        /** если у сущности не указан атрибут parent и нет атрибута ID то создаём */          
         if (!entity.hasOwnAttribute(Constants.DEFAULT_ID_NAME)) {
           entity.add(new SequenceAttribute({
             name: Constants.DEFAULT_ID_NAME,
@@ -86,6 +92,18 @@ export class ERModelBuilder extends Builder {
           pkAttrs.push(attrId);
         }
       }
+
+    /** если у сущности в списке атрибутов есть атрибут PARENT то добавляем к нему адаптер*/      
+    /*       if (entity.hasOwnAttribute(Constants.DEFAULT_PARENT_KEY_NAME)) {        
+        const attrId = entity.ownAttribute(Constants.DEFAULT_PARENT_KEY_NAME);
+        attrId.adapter = {
+            relation: AdapterUtils.getOwnRelationName(entity),
+            field: Constants.DEFAULT_PARENT_KEY_NAME
+        };
+
+        pkAttrs.push(attrId);
+      } */
+      console.log('PARENT source after', source);
 
       const tableName = AdapterUtils.getOwnRelationName(entity);
       const fields: IFieldProps[] = [];
@@ -110,7 +128,7 @@ export class ERModelBuilder extends Builder {
         entityName: entity.name,
         semCategory: entity.semCategories
       });
-
+      
       for (const pkAttr of pkAttrs) {
         switch (pkAttr.type) {
           case "Sequence": {
@@ -142,6 +160,7 @@ export class ERModelBuilder extends Builder {
         }
       }
       const pk = [...entity.pk];
+
       const attributes = Object.values(entity.ownAttributes);
       attributes.forEach((attr) => entity.remove(attr));
       for (const attr of attributes) {
