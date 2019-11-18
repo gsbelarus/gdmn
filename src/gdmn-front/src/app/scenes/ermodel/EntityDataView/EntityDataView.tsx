@@ -124,9 +124,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   useEffect( () => {
     if (!currRS && entity && !rsMaster) {
+      console.log('useEffect:: !currRS')
       applyPhrase();
     }
-  }, [currRS, entity]);
+  }, [currRS, entity, rsMaster]);
 
   const linkfields = currRS && currRS.params.eq ? currRS.params.eq.link.fields.filter(fd => fd.links) : [];
 
@@ -146,6 +147,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       dispatch(mdgActions.editeValue({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr, value }));
     }
   }
+
+  useEffect( () => {
+    if(rsMaster && entityMaster && !entityMaster.isTree) {
+      const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow);
+      filterByFieldLink(value);
+    }
+  }, [rsMaster])
   
   useEffect( () => {
     if (currRS) {
@@ -224,7 +232,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         iconName: 'Edit'
       },
       onClick: () => !!currRS && !!currRS.size && history.push(`${url}/edit/${currRS.pk2s().join('-')}`)
-      //commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
     },
     {
       key: `delete`,
@@ -384,8 +391,10 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                       if(option) {
                         if(currRS && entity) {
                           if(option.key.toString() === 'noSelected' && linkField && rsMaster) {
+                            console.log('delete binding')
                             const findAttr = entity.attribute(linkField);
                             dispatch(mdgActions.deleteBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr}));
+                            applyPhrase();
                           } else if((!linkField || linkField === 'noSelected') && option.key.toString() !== 'noSelected') {
                             const findAttr = entity.attribute(option.key.toString());
 
