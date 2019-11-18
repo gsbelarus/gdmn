@@ -7,12 +7,17 @@ import { EntityAttribute, Entity } from 'gdmn-orm';
 import { SetLookupComboBox } from '@src/app/components/SetLookupComboBox/SetLookupComboBox';
 import { TFieldType, RecordSet } from 'gdmn-recordset';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
+import { FrameBox } from "./FrameBox";
 
 interface IInternalControlProps {
   object: Object;
   objects: Objects;
   entity?: Entity;
   rs?: RecordSet;
+  gridMode?: boolean;
+  previewMode?: boolean;
+  selectedObject?: Object;
+  onSelectObject: (object: Object) => void;
 };
 
 const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string, rs?: RecordSet, entity?: Entity /*fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection*/ }): JSX.Element | null => {
@@ -81,8 +86,8 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
   }
 }
 
-const InternalControl = ({ object, objects, rs, entity }: IInternalControlProps) => {
-
+const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewMode, gridMode, selectedObject }: IInternalControlProps) => {
+  console.log('InternalControl');
   switch (object.type) {
     case 'LABEL':
       return (
@@ -118,6 +123,21 @@ const InternalControl = ({ object, objects, rs, entity }: IInternalControlProps)
         </div>
       )
 
+       case 'FRAME':
+         return (
+          <FrameBox
+            key={object.name}
+            previewMode={previewMode}
+            gridMode={gridMode}
+            selectedObject={selectedObject}
+            objects={objects}
+            frame={object}
+            rs={rs}
+            entity={entity}
+            onSelectObject={onSelectObject}
+          />
+         )
+
     default:
       return null;
   }
@@ -130,10 +150,11 @@ interface IControlProps {
   entity?: Entity;
   selected: boolean;
   previewMode?: boolean;
+  selectedObject?: Object;
   onSelectObject: () => void;
 };
 
-export const Control = ({ object, objects, rs, entity, onSelectObject, selected, previewMode }: IControlProps) =>
+export const Control = ({ object, objects, rs, entity, onSelectObject, selected, previewMode, selectedObject }: IControlProps) =>
   <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject}>
-    <InternalControl object={object} objects={objects} rs={rs} entity={entity} />
+    <InternalControl object={object} objects={objects} rs={rs} entity={entity} previewMode={previewMode} onSelectObject={onSelectObject} selectedObject={selectedObject}/>
   </WithSelectionFrame>

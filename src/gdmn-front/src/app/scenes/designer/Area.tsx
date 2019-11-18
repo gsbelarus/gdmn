@@ -1,10 +1,11 @@
 import { getTheme, Stack } from "office-ui-fabric-react";
-import { Object, IArea, Objects } from "./types";
+import { Object, IArea, Objects, isFrame } from "./types";
 import { object2style } from "./utils";
 import React from "react";
 import { Control } from "./Control";
 import { RecordSet } from 'gdmn-recordset';
 import { Entity } from 'gdmn-orm';
+import { Frame } from "../gdmn/components/Frame";
 
 interface IAreaProps {
   gridMode?: boolean;
@@ -43,7 +44,6 @@ export const Area = (props: IAreaProps) => {
       borderRadius: '4px',
       padding: '4px'
     };
-
   return (
     <div
       key={area.name}
@@ -82,7 +82,7 @@ export const Area = (props: IAreaProps) => {
           <Stack horizontal={area.horizontal}>
             {
               objects
-                .filter( object => object.parent === area.name )
+                .filter( object => object.parent === area.name)
                 .map( object =>
                   <Control
                     key={object.name}
@@ -92,7 +92,8 @@ export const Area = (props: IAreaProps) => {
                     entity={entity}
                     selected={object === selectedObject}
                     previewMode={previewMode}
-                    onSelectObject={ () => onSelectObject(object) }
+                    selectedObject={selectedObject}
+                    onSelectObject={ () =>{console.log(object.name); console.log('Area');onSelectObject(object)} }
                   />
                 )
             }

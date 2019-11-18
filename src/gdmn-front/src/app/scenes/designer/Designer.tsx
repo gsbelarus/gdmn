@@ -1,7 +1,7 @@
 import React, { useReducer, useMemo } from "react";
 import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
-import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField } from "./types";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField, IFrame, getFrames, isFrame } from "./types";
 import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
@@ -10,6 +10,8 @@ import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { getLName } from "gdmn-internals";
 import { RecordSet } from "gdmn-recordset";
+import { Frame } from "../gdmn/components/Frame";
+import { FrameBox } from "./FrameBox";
 
 /**
  *
@@ -84,7 +86,7 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
     bottom: 0
   };
 
-  const fields: IField[] =  rs && entity 
+  const fields: IField[] =  rs && entity
   ? rs.fieldDefs.map(fd => {
     const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
     return ({
@@ -118,7 +120,7 @@ const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?:
     };
   } else {
     return getDefaultState(entity, rs);
-  }  
+  }
 };
 
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
@@ -127,6 +129,7 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'CREATE_LABEL' }
+  | { type: 'CREATE_FRAME', newProps?: Partial<IFrame>}
   | { type: 'CREATE_OBJECT', objectType: TObjectType, newProps?: Partial<Object>, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
   | { type: 'TOGGLE_SELECT_FIELDS' }
@@ -346,6 +349,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
       return createObject('LABEL', { name, text: name });
     }
 
+    case 'CREATE_FRAME': {
+      const { newProps } = action;
+      return createObject('FRAME', newProps);
+    }
+
     case 'CREATE_OBJECT': {
       const { objectType, newProps, makeSelected } = action;
       return createObject(objectType, newProps, makeSelected);
@@ -536,7 +544,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
   const { erModel, rs, entity, setting, onSaveSetting } = props;
-  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity));     
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
@@ -580,7 +588,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       area={area}
       rs={rs}
       entity={entity}
-      onSelectObject={ object => designerDispatch({ type: 'SELECT_OBJECT', object }) }
+      onSelectObject={ object =>{console.log(object.name);console.log(object.name); designerDispatch({ type: 'SELECT_OBJECT', object })} }
     />
   );
 
@@ -623,7 +631,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertField',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject) || !erModel,
+      disabled: previewMode || gridMode || !selectedObject || !(isArea(selectedObject) || isFrame(selectedObject)) || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
@@ -644,6 +652,14 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
       onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'IMAGE' })
+    },
+    {
+      key: 'insertFrame',
+      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
+      text: 'Insert Frame',
+      iconOnly: true,
+      iconProps: { iconName: 'Picture' },
+      onClick: () => designerDispatch({ type: 'CREATE_FRAME'})
     },
     {
       key: 'split1',
@@ -781,7 +797,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
   ], [previewMode, gridMode, objects, selectedObject, grid, gridSelection]);
 
   const window = objects.find( object => isWindow(object) ) as IWindow;
-
+  console.log(selectedObject);
   return (
     <>
       <CommandBar items={commandBarItems} />

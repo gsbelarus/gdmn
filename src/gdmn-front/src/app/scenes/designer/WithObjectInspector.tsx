@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { GridInspector, OnUpdateGrid } from "./GridInspector";
-import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage, getAreas, isWindow } from "./types";
-import { Dropdown, TextField, ChoiceGroup, Stack } from "office-ui-fabric-react";
+import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage, getAreas, isWindow, isFrame, IFrame } from "./types";
+import { Dropdown, TextField, ChoiceGroup, Stack, Checkbox } from "office-ui-fabric-react";
 import { ColorDropDown } from "./ColorDropDown";
 
 interface IWithObjectInspectorProps {
@@ -26,7 +26,7 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
       return res;
     }
 
-    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField, required?: boolean) => (_e: any, newValue?: string) => {
+    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField | keyof IFrame, required?: boolean) => (_e: any, newValue?: string | boolean) => {
       if (!required || newValue !== undefined) {
         onUpdateSelectedObject({ [prop]: newValue })
       }
@@ -57,7 +57,7 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
           label="Parent"
           selectedKey={selectedObject ? selectedObject.parent : undefined}
           onChange={ (_, option) => option && onUpdateSelectedObject({ parent: option.key as string }) }
-          options={ getAreas(objects).map( object => ({ key: object.name, text: object.name }) ) }
+          options={ objects.filter( object => isArea(object) || isFrame(object)).map( object => ({ key: object.name, text: object.name }) ) }
         />
       );
     }
@@ -69,6 +69,66 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
           label="Text"
           value={selectedObject.text}
           onChange={getOnChange('text', true)}
+        />
+      );
+    }
+
+    if (isFrame(selectedObject)) {
+      res.push(
+        <TextField
+          key="caption"
+          label="Caption"
+          value={selectedObject.caption}
+          onChange={getOnChange('caption')}
+        />
+      );
+      res.push(
+        <TextField
+          key="height"
+          label="Height"
+          value={selectedObject.height}
+          onChange={getOnChange('height')}
+        />
+      );
+      res.push(
+        <Checkbox
+          key="border"
+          label="Border"
+          checked={!!selectedObject.border}
+          onChange={getOnChange('border')}
+        />
+      );
+      res.push(
+        <Checkbox
+          style={{ margin: '16px 0' }}
+          key="marginTop"
+          label="MarginTop"
+          checked={!!selectedObject.marginTop}
+          onChange={getOnChange('marginTop')}
+        />
+      );
+      res.push(
+        <Checkbox
+          key="marginRight"
+          label="MarginRight"
+          checked={!!selectedObject.marginRight}
+          onChange={getOnChange('marginRight')}
+        />
+      );
+      res.push(
+        <Checkbox
+          key="marginBottom"
+          label="MarginBottom"
+          checked={!!selectedObject.marginBottom}
+          onChange={getOnChange('marginBottom')}
+        />
+      );
+      res.push(
+        <Checkbox
+          key="marginLeft"
+          label="MarginLeft"
+          checked={!!selectedObject.marginLeft}
+          onChange={getOnChange('marginLeft')}
         />
       );
     }

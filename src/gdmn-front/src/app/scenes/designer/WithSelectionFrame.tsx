@@ -17,6 +17,7 @@ export const WithSelectionFrame = ({ children, selected, previewMode, onSelectOb
         border: selected ? '1px dotted ' + getTheme().palette.themePrimary : '1px solid transparent'
       }}
       onClick={ e => {
+        console.log('stopPropagation');
         e.stopPropagation();
         onSelectObject();
       }}
