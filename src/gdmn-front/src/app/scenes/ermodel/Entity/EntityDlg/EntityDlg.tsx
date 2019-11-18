@@ -372,6 +372,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         const result = await apiService.AddEntity({
           ...entityData,
           attributes: entityData.attributes
+            .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
             .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
         });
 

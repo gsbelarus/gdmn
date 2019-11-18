@@ -146,10 +146,8 @@ export class EntityBuilder extends Builder {
             tableName,
             fieldName
           }, {            
-            tableName: AdapterUtils.getOwnRelationName(entity),
-            fieldName: AdapterUtils.getPKFieldName(entity, AdapterUtils.getOwnRelationName(entity))
-            // tableName: AdapterUtils.getOwnRelationName(pAttr.entities[0]),            
-            // fieldName: AdapterUtils.getPKFieldName(pAttr.entities[0], AdapterUtils.getOwnRelationName(pAttr.entities[0]))
+            tableName: AdapterUtils.getOwnRelationName(pAttr.entities[0]),            
+            fieldName: AdapterUtils.getPKFieldName(pAttr.entities[0], AdapterUtils.getOwnRelationName(pAttr.entities[0]))
           }, {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"

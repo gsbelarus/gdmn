@@ -35,7 +35,8 @@ export class EntityUtils {
 
   public static createAttribute = (_attr: IAttribute,
                                    erModel: ERModel,
-                                   withAdapter?: boolean): Attribute => {
+                                   withAdapter?: boolean,
+                                   entity?: Entity): Attribute => {
     const {name, lName, required} = _attr;
     let {adapter} = _attr;
     if (!withAdapter) {
@@ -52,7 +53,12 @@ export class EntityUtils {
 
       case "Parent": {
         const attr = _attr as IEntityAttribute;
-        const entities = attr.references.map((e) => erModel.entity(e));
+        const entities = [];
+        if (!entity) {
+          entities.push(...attr.references.map((e) => erModel.entity(e)));
+        } else {
+          entities.push(entity);
+        }
         return new ParentAttribute({name, lName, entities, semCategories, adapter});
       }
 

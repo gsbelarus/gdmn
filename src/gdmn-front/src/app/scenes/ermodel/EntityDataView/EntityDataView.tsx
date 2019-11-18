@@ -91,28 +91,32 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   });
 
   const applyPhrase = () => {
-    if (erModel && entity) {
-      if (phrase) {
-        try {
-          const parsedText: ParsedText[] = parsePhrase(phrase);
-          const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-          if (phrases.length) {
-            const erTranslatorRU = new ERTranslatorRU(erModel)
-            const command = erTranslatorRU.process(phrases);
-            const eq = command[0] ? command[0].payload : undefined;
-            if (eq) {
-              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
-            }
-          }
-        }
-        catch (e) {
-          viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
-        }
-      } else {
-        const eq = prepareDefaultEntityQuery(entity);
-        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
-      }
+    if (entity) {
+      const eq = prepareDefaultEntityQuery(entity);
+      dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
     }
+    // if (erModel && entity) {
+    //   if (phrase) {
+    //     try {
+    //       const parsedText: ParsedText[] = parsePhrase(phrase);
+    //       const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
+    //       if (phrases.length) {
+    //         const erTranslatorRU = new ERTranslatorRU(erModel)
+    //         const command = erTranslatorRU.process(phrases);
+    //         const eq = command[0] ? command[0].payload : undefined;
+    //         if (eq) {
+    //           dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+    //         }
+    //       }
+    //     }
+    //     catch (e) {
+    //       viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
+    //     }
+    //   } else {
+    //     const eq = prepareDefaultEntityQuery(entity);
+    //     dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+    //   }
+    // }
   };
 
   useEffect( () => {

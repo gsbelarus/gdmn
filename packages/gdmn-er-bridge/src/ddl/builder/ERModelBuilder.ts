@@ -27,9 +27,7 @@ export class ERModelBuilder extends Builder {
 
   public async create(erModel: ERModel, sequence: Sequence): Promise<Sequence>;
   public async create(erModel: ERModel, entity: Entity): Promise<Entity>;
-  public async create(erModel: ERModel, source: Sequence | Entity): Promise<Sequence | Entity> {
-    console.log('PARENT source before', source);
-           
+  public async create(erModel: ERModel, source: Sequence | Entity): Promise<Sequence | Entity> {          
     if (source instanceof Sequence) {
       // TODO custom adapter name
       const sequence = source;
@@ -102,7 +100,6 @@ export class ERModelBuilder extends Builder {
 
         pkAttrs.push(attrId);
       } */
-      console.log('PARENT source after', source);
 
       const tableName = AdapterUtils.getOwnRelationName(entity);
       const fields: IFieldProps[] = [];

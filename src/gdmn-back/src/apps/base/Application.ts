@@ -390,7 +390,7 @@ export class Application extends ADatabase {
         });
 
         if (attributes) {
-          attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel)).map(attr => preEntity.add(attr));
+          attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel, undefined, preEntity)).map(attr => preEntity.add(attr));
         }
 
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
