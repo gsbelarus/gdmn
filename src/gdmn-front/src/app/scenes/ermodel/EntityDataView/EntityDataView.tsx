@@ -122,32 +122,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   };
 
-  // надо учесть, что когда у нас будет мастер рс, то
-  // мы должны грузить набор данных исходя из того, 
-  // что там выбрано в мастере
   useEffect( () => {
-    if (!currRS && entity) {
+    if (!currRS && entity && !rsMaster) {
       applyPhrase();
     }
   }, [currRS, entity]);
 
   const linkfields = currRS && currRS.params.eq ? currRS.params.eq.link.fields.filter(fd => fd.links) : [];
-
-  // добавить еще эффект для загрузки мастер рс
-  // если мы в режиме мастер-дитэйл
-  useEffect( () => {
-    if (rs && currRS && linkField) {
-      if(linkField === 'noSelected') {
-        applyPhrase();
-      } else {
-        if(!rsMaster && entityMaster && entity) {
-          const findAttr = entity.attribute(linkField);
-          const eqM = prepareDefaultEntityQuery(entityMaster);
-          dispatch(loadRSActions.attachRS({ name: entityMaster.name, eq: eqM, override: true }));
-        }
-      }
-    }
-  }, [linkField]);
 
   if(rs && linkField) {
     const findLF = linkfields.find(lf => lf.attribute.name === linkField);
@@ -156,27 +137,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       rsMaster = rs[entityMaster.name];
     }
   }
-
-  useEffect( () => {
-    //как только будет выбрано ссылочное поле,
-    //на сервер будет отправлен запрос на получение
-    //первой выборки в соответствии с выбранной строкой в rsMaster
-    if(rsMaster && entity && linkField) {
-      /*
-
-        Если связь м-д.
-        И мастер рс имеет структуру интервального дерева.
-        то в запрос на извлечение данных детального рс
-        надо добавить условия на то чтобы lb, rb 
-        объекта из энтити атрибута входили в границы
-        выбранной записи из мастер рс.
-
-        */
-      //const findAttr = entity.attribute(linkField);
-      //const eq = prepareDefaultEntityQuery(entity);
-      //currRS ? dispatch(mdgActions.addNewBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr, entityQuery: eq })) : undefined
-    }
-  }, [rsMaster])
 
   //этот метод вызывается для получения новых данных,
   //которые соответствуют выбранной записи в дереве или гриде мастера
@@ -426,8 +386,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                           if(option.key.toString() === 'noSelected' && linkField && rsMaster) {
                             const findAttr = entity.attribute(linkField);
                             dispatch(mdgActions.deleteBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr}));
-                          }
-                          else if((!linkField || linkField === 'noSelected') && option.key.toString() !== 'noSelected') {
+                          } else if((!linkField || linkField === 'noSelected') && option.key.toString() !== 'noSelected') {
                             const findAttr = entity.attribute(option.key.toString());
 
                             const findLF = linkfields.find(lf => lf.attribute.name === option.key.toString());
@@ -435,12 +394,16 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                               const findEntityMaster = findLF.links[0].entity;
                               const eq = prepareDefaultEntityQuery(entity);
                               dispatch(mdgActions.addNewBinding({masterRS: findEntityMaster.name, detailsRS: currRS.name, attr: findAttr, entityQuery: eq }))
-                           }
-
+                            }
                           } else if(linkField && rsMaster) {
                             const findOldAttr = entity.attribute(linkField);
                             const findNewAttr = entity.attribute(option.key.toString());
-                            dispatch(mdgActions.editeMasterRS({masterRS: rsMaster.name, detailsRS: currRS.name, oldAttr: findOldAttr, newAttr: findNewAttr}));
+
+                            const findLF = linkfields.find(lf => lf.attribute.name === option.key.toString());
+                            if(findLF && findLF.links && findLF.links.length !== 0) {
+                              const findEntityMaster = findLF.links[0].entity;
+                              dispatch(mdgActions.editeMasterRS({masterRS: findEntityMaster.name, detailsRS: currRS.name, oldAttr: findOldAttr, newAttr: findNewAttr }))
+                            }
                           }
                         }
                         viewDispatch({ type: 'SET_LINK_FIELD', linkField: option.key.toString() })
