@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, Entity, EntityQuery, EntityQueryOptions } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, Entity } from 'gdmn-orm';
 import { mdgActions } from '../actions';
 
 interface IEntityDataViewState {
@@ -124,7 +124,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   useEffect( () => {
     if (!currRS && entity && !rsMaster) {
-      console.log('useEffect:: !currRS')
       applyPhrase();
     }
   }, [currRS, entity, rsMaster]);
@@ -140,7 +139,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   }
 
   //этот метод вызывается для получения новых данных,
-  //которые соответствуют выбранной записи в дереве или гриде мастера
+  //которые соответствуют выбранной записи в дереве мастера
   const filterByFieldLink = (value: string, lb?: number, rb?: number) => {
     if(entity && rsMaster && entityMaster && linkField && currRS) {
       const findAttr = entity.attribute(linkField);
@@ -391,7 +390,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                       if(option) {
                         if(currRS && entity) {
                           if(option.key.toString() === 'noSelected' && linkField && rsMaster) {
-                            console.log('delete binding')
                             const findAttr = entity.attribute(linkField);
                             dispatch(mdgActions.deleteBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr}));
                             applyPhrase();

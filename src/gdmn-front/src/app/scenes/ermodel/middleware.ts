@@ -27,7 +27,7 @@ const getRS = async (name: string, eq: EntityQuery) => {
   });
 }
 
-const setNewRS = async (detailsRS: RecordSet, nameMasterRS: string, attr: Attribute<any>, dispatch: ThunkDispatch<IState, { apiService: GdmnPubSubApi; }, AnyAction>) => {
+const setNewRS = (detailsRS: RecordSet, nameMasterRS: string, attr: Attribute<any>, dispatch: ThunkDispatch<IState, { apiService: GdmnPubSubApi; }, AnyAction>) => {
 
   const linkfields = detailsRS.params.eq ? detailsRS.params.eq.link.fields.filter(fd => fd.links) : [];
   const findLF = linkfields.find(lf => lf.attribute.name === attr.name);
