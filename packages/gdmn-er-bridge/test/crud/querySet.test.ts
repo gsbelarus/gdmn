@@ -123,9 +123,9 @@ describe("Query", () => {
 
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING AS F$1\n" +
-      "FROM TABLE_12 T$2\n" +
-      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$2.KEY2\n" +
-      "WHERE T$2.KEY1 = :P$1");
+      "FROM USR$CROSS1_0 T$2\n" +
+      "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$2.USR$TEST_ENTITYKEY\n" +
+      "WHERE T$2.USR$MASTER_ENTITYKEY = :P$1");
 
     await ERBridge.querySet(connection, connection.readTransaction, querySet);
   });
@@ -167,9 +167,9 @@ describe("Query", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_INTEGER AS F$1,\n" +
       "  T$2.TEST_STRING AS F$2\n" +
-      "FROM TABLE_12 T$1\n" +
-      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2\n" +
-      "WHERE T$1.KEY1 = :P$1");
+      "FROM USR$CROSS1_0 T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.USR$TEST_ENTITYKEY\n" +
+      "WHERE T$1.USR$MASTER_ENTITYKEY = :P$1");
 
     await ERBridge.querySet(connection, connection.readTransaction, querySet);
   });
@@ -211,9 +211,9 @@ describe("Query", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_STRING AS F$1,\n" +
       "  T$2.TEST_STRING AS F$2\n" +
-      "FROM TABLE_12 T$1\n" +
-      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2\n" +
-      "WHERE T$1.KEY1 = :P$1");
+      "FROM USR$CROSS1_0 T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.USR$TEST_ENTITYKEY\n" +
+      "WHERE T$1.USR$MASTER_ENTITYKEY = :P$1");
 
     await ERBridge.querySet(connection, connection.readTransaction, querySet);
   });
@@ -255,9 +255,9 @@ describe("Query", () => {
     expect(sql).toEqual("SELECT\n" +
       "  T$1.TEST_DATE AS F$1,\n" +
       "  T$2.TEST_STRING AS F$2\n" +
-      "FROM TABLE_12 T$1\n" +
-      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2\n" +
-      "WHERE T$1.KEY1 = :P$1");
+      "FROM USR$CROSS1_0 T$1\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.USR$TEST_ENTITYKEY\n" +
+      "WHERE T$1.USR$MASTER_ENTITYKEY = :P$1");
 
     await ERBridge.querySet(connection, connection.readTransaction, querySet);
   });

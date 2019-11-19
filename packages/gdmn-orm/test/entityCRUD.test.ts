@@ -69,6 +69,12 @@ describe("EntityQuery", () => {
 
   });
 
+  it("Get all references", () => {
+    const references = erModel.entityReferencedBy(erModel.entity('TEST_ENTITY'));
+    console.log(references);
+    expect(references.length).toEqual(3);
+  });
+
   it("Query: serialize/deserialize", () => {
     const inspectorQuery: IEntityQueryInspector = {
       link: {

@@ -1,6 +1,9 @@
 import {IERModel} from "../serialize";
 import {Entity} from "./Entity";
 import {Sequence} from "./Sequence";
+import { Attribute } from "./Attribute";
+import { EntityAttribute } from "./link/EntityAttribute";
+import { SetAttribute } from "./link/SetAttribute";
 
 export interface IEntities {
   [name: string]: Entity;
@@ -147,6 +150,37 @@ export class ERModel {
     } else {
       throw new Error("Unknown arg of type");
     }
+  }
+
+  /**
+   * Finds all entities which have at least one attribute
+   * referencing given entity.
+   * @param entity
+   */
+  public entityReferencedBy(entity: Entity) {
+    return Object.values(this._entities).reduce(
+      (p, e) => {
+        if (e !== entity) {
+          const attributes = Object.values(e.attributes).reduce(
+            (prevA, a) => {
+              if (a instanceof EntityAttribute || a instanceof SetAttribute) {
+                if (a.entities.find( ent => ent === entity)) {
+                  prevA.push(a);
+                }
+              }
+
+              return prevA;
+            },
+          [] as Attribute[]);
+
+          if (attributes.length) {
+            p.push({ entity: e, attributes })
+          }
+        }
+
+        return p;
+      },
+    [] as { entity: Entity; attributes: Attribute[]; }[]);
   }
 
   public serialize(withAdapter?: boolean): IERModel {

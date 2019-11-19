@@ -5,6 +5,8 @@ export class Constants {
 
   public static GLOBAL_GENERATOR = Prefix.join("UNIQUE", Prefix.GDMN, Prefix.GENERATOR);
   public static GLOBAL_DDL_GENERATOR = Prefix.join("DDL", Prefix.GDMN, Prefix.GENERATOR);
+  public static GLOBAL_DBID_GENERATOR = Prefix.join("DBID", Prefix.GDMN, Prefix.GENERATOR);
+  public static GLOBAL_TRIGGERCROSS_GENERATOR = Prefix.join("TRIGGERCROSS", Prefix.GDMN, Prefix.GENERATOR);
 
   public static DEFAULT_ID_NAME = "ID";
   public static DEFAULT_INHERITED_KEY_NAME = "INHERITEDKEY";
@@ -14,6 +16,7 @@ export class Constants {
   public static DEFAULT_CROSS_PK_REF_NAME = "KEY2";
   public static DEFAULT_LB_NAME = "LB";
   public static DEFAULT_RB_NAME = "RB";
+  public static DEFAULT_USR_PREFIX = "USR$";
 
   public static TIME_TEMPLATE = "HH:mm:ss.SSS";
   public static DATE_TEMPLATE = "DD.MM.YYYY";

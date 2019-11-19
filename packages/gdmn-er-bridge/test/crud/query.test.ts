@@ -359,8 +359,8 @@ describe("Query", () => {
       "  T$1.TEST_INTEGER AS F$1,\n" +
       "  T$2.TEST_STRING AS F$2\n" +
       "FROM MASTER_ENTITY T$3\n" +
-      "  LEFT JOIN TABLE_21 T$1 ON T$1.KEY1 = T$3.ID\n" +
-      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.KEY2");
+      "  LEFT JOIN USR$CROSS1_0 T$1 ON T$1.USR$MASTER_ENTITYKEY = T$3.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$2 ON T$2.ID = T$1.USR$TEST_ENTITYKEY");
 
     const result = await ERBridge.query(connection, connection.readTransaction, query);
     const resultAttrs = Object.entries(result.aliases).map(([alias, info]) => {
@@ -485,8 +485,8 @@ describe("Query", () => {
       "  T$5.TEST_STRING AS F$5\n" +
       "FROM MASTER_ENTITY T$6\n" +
       "  LEFT JOIN TEST_ENTITY T$1 ON T$1.ID = T$6.LINK\n" +
-      "  LEFT JOIN TABLE_21 T$2 ON T$2.KEY1 = T$6.ID\n" +
-      "  LEFT JOIN TEST_ENTITY T$3 ON T$3.ID = T$2.KEY2\n" +
+      "  LEFT JOIN USR$CROSS1_0 T$2 ON T$2.USR$MASTER_ENTITYKEY = T$6.ID\n" +
+      "  LEFT JOIN TEST_ENTITY T$3 ON T$3.ID = T$2.USR$TEST_ENTITYKEY\n" +
       "  LEFT JOIN DETAIL_ENTITY T$4 ON T$4.MASTERKEY = T$6.ID\n" +
       "  LEFT JOIN TEST_ENTITY T$5 ON T$5.ID = T$4.LINK");
 

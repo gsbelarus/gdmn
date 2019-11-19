@@ -1,4 +1,4 @@
-import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ERModel, isUserDefined } from "gdmn-orm";
+import { IAttribute, attributeTypeNames, IEnumAttribute, IStringAttribute, IBooleanAttribute, AttributeTypes, INumberAttribute, IDateAttribute, IEntityAttribute, ISetAttribute, ERModel, isUserDefined } from "gdmn-orm";
 import React, { useMemo } from "react";
 import { Stack, TextField, Dropdown, Checkbox, Label } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -9,10 +9,11 @@ import { NumberEditor} from "./NumberEditor"
 import { DateEditor } from "./DateEditor";
 import { BooleanEditor } from "./BooleanEditor";
 import { EntityEditor } from "./EntityEditor";
+import { SetEditor } from "./SetEditor";
 import { initAttr, ErrorLinks, getErrorMessage, stripUserPrefix, addUserPrefix } from "./utils";
 import { BlobEditor } from "./BlobEditor";
 
-type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute;
+type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute | ISetAttribute;
 type OnChange<T> = (newAttr: T) => void;
 type OnSelect = () => void;
 type OnError = (fieldName: string, errorMessage: string) => void;
@@ -37,7 +38,7 @@ const DumbEditor = (_: IDumbEditorProps) => null;
 const mapEditor = {
  'Entity': EntityEditor,
  'String': StringEditor,
- 'Set': DumbEditor,
+ 'Set': SetEditor,
  'Parent': DumbEditor,
  'Detail': DumbEditor,
  'Sequence': DumbEditor,

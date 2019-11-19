@@ -129,10 +129,21 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const applyLastEdited = () => {
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
-      if (typeof value === "boolean") {
-        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+      const def = rs.getFieldDef(fieldName);
+      // у нас контролы для редактирования полей сейчас
+      // это либо текстовые поля, либо чекбоксы
+      // поэтому здесь мы и храним в value или строку
+      // или булевское значений.
+      // по идее, значение от DatePicker должно храниться/передаваться
+      // как Date, но это пока не сделано
+      if (typeof value === "string") {
+        if (value === '' && def.dataType !== TFieldType.String && !def.required) {
+          dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
+        } else {
+          dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+        }
       } else {
-        dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
       }
       lastEdited.current = undefined;
     }
@@ -144,10 +155,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
       if (lastEdited.current) {
         const { fieldName, value } = lastEdited.current;
-        if (typeof value === "boolean") {
-          tempRs = tempRs.setBoolean(fieldName, value);
+        const def = tempRs.getFieldDef(fieldName);
+        if (typeof value === "string") {
+          if (value === '' && def.dataType !== TFieldType.String && !def.required) {
+            tempRs = tempRs.setNull(fieldName);
+          } else {
+            tempRs = tempRs.setString(fieldName, value);
+          }
         } else {
-          tempRs = tempRs.setString(fieldName, value);
+          tempRs = tempRs.setBoolean(fieldName, value);
         }
         lastEdited.current = undefined;
       }
@@ -638,17 +654,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
-    if (setComboBoxData[props.fieldName]) {
-      const setAttrName = props.fieldName;
-      const data = setComboBoxData[setAttrName];
-      const attr = entity.attributes[setAttrName] as EntityAttribute;
+    const fieldName = props.fieldName;
+    const data = setComboBoxData[fieldName];
+    if (data) {
+      const attr = entity.attributes[fieldName] as EntityAttribute;
       const linkEntity = attr.entities[0];
       return (
         <SetLookupComboBox
-          key={setAttrName}
-          name={setAttrName}
-          label={setAttrName}
-          preSelectedOption={data ? data : undefined}
+          key={fieldName}
+          name={fieldName}
+          label={fieldName}
+          preSelectedOption={data}
           getSessionData={
             () => {
               if (!controlsData.current) {
@@ -660,13 +676,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           onChanged={
             (option: IComboBoxOption[] | undefined) => {
               if (option) {
-                console.log(setComboBoxData);
-                console.log(option);
                 setSetComboBoxData( {...setComboBoxData,
-                  [setAttrName]: option
+                  [fieldName]: option
                 });
                 setChanged(true);
-                changedFields.current[setAttrName] = true;
+                changedFields.current[fieldName] = true;
               }
             }
           }
@@ -727,7 +741,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       )
     }
 
-    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
+    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === fieldName);
 
     if (!fd || !fd.eqfa) {
       return undefined;
