@@ -17,7 +17,7 @@ type TNLPDialogScrollProps = INLPDialogScrollStateProps & INLPDialogScrollAction
 
 interface INLPDialogScrollState {
   text: string;
-  prevText: string;
+  prevIdx?: number;
   showFrom: number;
   showTo: number;
   partialOK: boolean;
@@ -37,7 +37,6 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
     this.state = {
       text: '',
-      prevText: '',
       showFrom: -1,
       showTo: -1,
       partialOK: true,
@@ -54,7 +53,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     this.onPointerUp = this.onPointerUp.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onInputPressEnter = this.onInputPressEnter.bind(this);
-    this.onInputArrowUp = this.onInputArrowUp.bind(this);
+    this.onInputKeyDown = this.onInputKeyDown.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
   }
 
@@ -68,7 +67,6 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
       this.setState({
         text: '',
-        prevText: trimText,
         showFrom: -1,
         showTo: -1,
         partialOK: true,
@@ -78,12 +76,57 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     }
   }
 
-  private onInputArrowUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    const { text, prevText } = this.state;
-    const trimText = text.trim();
+  private onInputKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    const { text, prevIdx } = this.state;
+    const { nlpDialog } = this.props;
 
-    if (e.key === 'ArrowUp' && !trimText) {
-      this.setState({ text: prevText });
+    const findNextItemIdx = (currIdx: number) => {
+      const { nlpDialog } = this.props;
+      let idx = currIdx;
+      if (e.key === 'ArrowUp') {
+        while (idx >= 0 && nlpDialog[idx].who !== 'me') {
+          idx--;
+        }
+
+        if (idx < 0) {
+          idx = nlpDialog.length - 1;
+          while (idx > currIdx && nlpDialog[idx].who !== 'me') {
+            idx--;
+          }
+        }
+      } else {
+        while (idx < nlpDialog.length && nlpDialog[idx].who !== 'me') {
+          idx++;
+        }
+
+        if (idx >= nlpDialog.length) {
+          idx = 0;
+          while (idx < currIdx && nlpDialog[idx].who !== 'me') {
+            idx++;
+          }
+        }
+      }
+      return idx;
+    };
+
+    if (nlpDialog.length && (!text || prevIdx !== undefined) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.stopPropagation();
+      e.preventDefault();
+      const nextIdx = e.key === 'ArrowUp'
+        ? findNextItemIdx(prevIdx === undefined ? nlpDialog.length - 1 : (prevIdx - 1))
+        : findNextItemIdx(prevIdx === undefined ? 0 : (prevIdx + 1));
+      if (nextIdx !== prevIdx) {
+        this.setState({
+          text: nlpDialog[nextIdx].text,
+          prevIdx: nextIdx
+        });
+      }
+    } else {
+      if (prevIdx !== undefined) {
+        this.setState({
+          prevIdx: undefined
+        });
+      }
     }
   }
 
@@ -326,7 +369,12 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
                     {
                       i.who === 'me' ?
                         <>
-                          <span className="Message MessageRight">{i.text}</span>
+                          <span
+                            className="Message MessageRight"
+                            onClick={ () => this.setState({ text: i.text, prevIdx: undefined })}
+                          >
+                            {i.text}
+                          </span>
                           <span className="Circle">{i.who}</span>
                         </>
                       :
@@ -356,7 +404,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
               spellCheck={false}
               value={this.state.text}
               onKeyPress={this.onInputPressEnter}
-              onKeyDown={this.onInputArrowUp}
+              onKeyDown={this.onInputKeyDown}
               onChange={this.onInputChange}
             />
           </div>

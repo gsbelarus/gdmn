@@ -73,6 +73,8 @@ interface IStatements {
   getFK?: AStatement;
 
   ddlUniqueSequence?: AStatement;
+  ddlTriggercrossSequence?: AStatement;
+  ddlDBIDSequence?: AStatement;
 
   tableATExists?: AStatement;
   columnATExists?: AStatement;
@@ -266,6 +268,30 @@ export class CachedStatements {
       `);
     }
     const result = await this._statements.ddlUniqueSequence.executeReturning();
+    return (await result.getAll())[0];
+  }
+
+  public async nextDDLTriggercross(): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.ddlTriggercrossSequence) {
+      this._statements.ddlTriggercrossSequence = await this._connection.prepare(this._transaction, `
+        SELECT NEXT VALUE FOR ${Constants.GLOBAL_TRIGGERCROSS_GENERATOR} FROM RDB$DATABASE
+      `);
+    }
+    const result = await this._statements.ddlTriggercrossSequence.executeReturning();
+    return (await result.getAll())[0];
+  }
+
+  public async DDLdbID(): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.ddlDBIDSequence) {
+      this._statements.ddlDBIDSequence = await this._connection.prepare(this._transaction, `
+        SELECT  GEN_ID(${Constants.GLOBAL_DBID_GENERATOR}, 0) FROM RDB$DATABASE
+      `);
+    }
+    const result = await this._statements.ddlDBIDSequence.executeReturning();
     return (await result.getAll())[0];
   }
 
@@ -575,14 +601,22 @@ export class CachedStatements {
     if (!this._statements.updateATFields) {
       this._statements.updateATFields = await this._connection.prepare(this._transaction, `
         UPDATE AT_FIELDS
-        SET LNAME        = :lName,
-            DESCRIPTION  = :description,
-            REFTABLE     = :refTable,
-            REFCONDITION = :refCondition,
-            SETTABLE     = :setTable,
-            SETLISTFIELD = :setListField,
-            SETCONDITION = :setCondition,
-            NUMERATION   = :numeration
+        SET LNAME           = :lName,
+            DESCRIPTION     = :description,
+            REFTABLE        = :refTable,
+            REFCONDITION    = :refCondition,
+            SETTABLE        = :setTable,
+            SETLISTFIELD    = :setListField,
+            SETCONDITION    = :setCondition,
+            NUMERATION      = :numeration,
+            SETTABLEKEY     = IIF(:setTable = NULL, NULL, (SELECT FIRST 1 ID
+              FROM AT_RELATIONS
+              WHERE RELATIONNAME = :setTable)),
+            SETLISTFIELDKEY = IIF((:setTable = NULL OR :setListField = NULL), NULL, 
+              (SELECT FIRST 1 ID
+                FROM AT_RELATION_FIELDS rf
+                WHERE rf.RELATIONNAME = :setTable
+                AND rf.FIELDNAME = :setListField))
         WHERE FIELDNAME = :fieldName
           RETURNING ID
       `);
@@ -597,7 +631,7 @@ export class CachedStatements {
       setTable: input.setTable,
       setListField: input.setListField,
       setCondition: input.setCondition,
-      numeration: numeration.length ? Buffer.from(numeration) : undefined
+      numeration: numeration.length ? Buffer.from(numeration) : undefined,
     });
     return result.getNumber("ID");
   }

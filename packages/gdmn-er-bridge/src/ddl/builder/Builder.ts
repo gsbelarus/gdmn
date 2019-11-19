@@ -8,6 +8,7 @@ interface IATAttrOptions {
   masterEntity?: Entity;
   crossTable?: string;
   crossField?: string;
+  setTable?: string; 
   lsHortName?: string;
 }
 
@@ -27,11 +28,21 @@ export abstract class Builder {
     return await this.ddlHelper.cachedStatements.nextDDLUnique();
   }
 
+  protected async nextDDLTriggercross(): Promise<number> {
+    return await this.ddlHelper.cachedStatements.nextDDLTriggercross();
+  }
+
+  protected async DDLdbID(): Promise<number> {
+    return await this.ddlHelper.cachedStatements.DDLdbID();
+  }
+
   protected async _updateATAttr(attr: Attribute, options: IATAttrOptions): Promise<void> {
     await this.ddlHelper.cachedStatements.updateATFields({
       fieldName: options.domainName,
       lName: attr.lName.ru && attr.lName.ru.name,
       description: attr.lName.ru && attr.lName.ru.fullName,
+      setTable: options.setTable,
+      setListField: options.crossField,
       numeration: attr.type === "Enum"
         ? (attr as EnumAttribute).values.map(({value, lName}) => ({
           key: value,

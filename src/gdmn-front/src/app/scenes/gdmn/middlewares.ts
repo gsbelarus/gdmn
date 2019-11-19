@@ -197,7 +197,7 @@ const getApiMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => {
           connectionStatusSub = undefined;
         }
 
-        await apiService.signOut({ payload: null });
+        await apiService.signOut();
         break;
       }
     }

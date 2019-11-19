@@ -33,7 +33,7 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse, isValidDateByFormat} from "gdmn-internals";
+import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse, detectAndParseDate} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
 import { SettingsCache } from "./SettingsCache";
@@ -644,8 +644,7 @@ export class Application extends ADatabase {
 
         const params = this.isNamedParams(preParams) ?
           Object.keys(preParams).reduce((map, obj: keyof INamedParams) => {
-            const value = (preParams as INamedParams)[obj];
-            map[obj] = isValidDateByFormat(value) ? new Date(value) : value;
+            map[obj] = detectAndParseDate((preParams as INamedParams)[obj]);
             return map;
           }, {} as INamedParams)
         : preParams;
