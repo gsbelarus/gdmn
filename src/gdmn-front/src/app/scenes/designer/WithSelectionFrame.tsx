@@ -1,11 +1,12 @@
 import { getTheme } from "office-ui-fabric-react";
 import React from "react";
+import { Object } from "./types";
 
 interface IWithSelectionFrameProps {
   children: JSX.Element | null;
   selected: boolean;
   previewMode?: boolean;
-  onSelectObject: () => void;
+  onSelectObject: (object: Object | undefined) => void;
 };
 
 export const WithSelectionFrame = ({ children, selected, previewMode, onSelectObject }: IWithSelectionFrameProps) => (
@@ -17,9 +18,8 @@ export const WithSelectionFrame = ({ children, selected, previewMode, onSelectOb
         border: selected ? '1px dotted ' + getTheme().palette.themePrimary : '1px solid transparent'
       }}
       onClick={ e => {
-        console.log('stopPropagation');
         e.stopPropagation();
-        onSelectObject();
+        onSelectObject(undefined);
       }}
     >
       {children}
