@@ -52,6 +52,8 @@ export const mdgMiddleware = (): TThunkMiddleware => ({ dispatch, getState }) =>
     action.type !== getType(actions.editeValue)
     &&
     action.type !== getType(actions.editeMasterRS)
+    &&
+    action.type !== getType(actions.deleteBinding)
   ) {
     return next(action);
   }
@@ -62,7 +64,9 @@ export const mdgMiddleware = (): TThunkMiddleware => ({ dispatch, getState }) =>
 
       const dRS = getState().recordSet[detailsRS];
 
-      setNewRS(dRS, masterRS, attr, dispatch);
+      if(!getState().recordSet[masterRS]) {
+        setNewRS(dRS, masterRS, attr, dispatch);
+      }
 
       next(action);
       const findBinding = getState().mdgState.bindMasterDetails.find(md => md.masterRS === masterRS && md.detailsRS === detailsRS && md.attr === attr);
@@ -80,14 +84,25 @@ export const mdgMiddleware = (): TThunkMiddleware => ({ dispatch, getState }) =>
     }
 
     case getType(actions.editeMasterRS): {
-      const { masterRS, detailsRS, newAttr } = action.payload;
+      const { masterRS, detailsRS, newAttr, oldAttr } = action.payload;
+      const findOldBinding = getState().mdgState.bindMasterDetails.find(md =>md.detailsRS === detailsRS && md.attr === oldAttr);
       next(action);
       const dRS = getState().recordSet[detailsRS];
       const mRS = getState().recordSet[masterRS];
       !mRS ? setNewRS(dRS, masterRS, newAttr, dispatch) : undefined;
 
       const findBinding = getState().mdgState.bindMasterDetails.find(md => md.masterRS === masterRS && md.detailsRS === detailsRS && md.attr === newAttr);
-      findBinding ? dispatch(loadRSActions.attachRS({name: detailsRS, eq: findBinding.entityQuery, override: true})) : undefined;
+      if(findBinding) {
+        dispatch(loadRSActions.attachRS({name: detailsRS, eq: findBinding.entityQuery, override: true}))
+        findOldBinding && findOldBinding.masterRS !== masterRS ? dispatch(loadRSActions.deleteRS({name: findOldBinding.masterRS})) : undefined;
+      }
+      break;
+    }
+    
+    case getType(actions.deleteBinding): {
+      const { masterRS } = action.payload;
+      next(action);
+      dispatch(loadRSActions.deleteRS({name: masterRS}));
       break;
     }
   }

@@ -153,6 +153,19 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       filterByFieldLink(value);
     }
   }, [rsMaster])
+
+  useEffect( () => {
+    if(rsMaster && entityMaster) {
+      if (viewTab && viewTab.rs && viewTab.rs.length && !viewTab.rs.find(vtr => vtr === rsMaster!.name)) {
+        dispatch(gdmnActions.updateViewTab({
+          url,
+          viewTab: {
+            rs: [ ...viewTab.rs, rsMaster.name]
+          }
+        }));
+      }
+    }
+  }, [entityMaster])
   
   useEffect( () => {
     if (currRS) {
@@ -391,7 +404,17 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         if(currRS && entity) {
                           if(option.key.toString() === 'noSelected' && linkField && rsMaster) {
                             const findAttr = entity.attribute(linkField);
+                            
                             dispatch(mdgActions.deleteBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr}));
+                            if(viewTab && viewTab.rs) {
+                              const findIdxRS = viewTab.rs.findIndex(vtr => vtr === rsMaster!.name)
+                              findIdxRS !== -1 ? dispatch(gdmnActions.updateViewTab({
+                                url,
+                                viewTab: {
+                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS)]
+                                }
+                              })) : undefined;
+                            }
                             applyPhrase();
                           } else if((!linkField || linkField === 'noSelected') && option.key.toString() !== 'noSelected') {
                             const findAttr = entity.attribute(option.key.toString());
@@ -410,6 +433,15 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                             if(findLF && findLF.links && findLF.links.length !== 0) {
                               const findEntityMaster = findLF.links[0].entity;
                               dispatch(mdgActions.editeMasterRS({masterRS: findEntityMaster.name, detailsRS: currRS.name, oldAttr: findOldAttr, newAttr: findNewAttr }))
+                            }
+                            if(viewTab && viewTab.rs) {
+                              const findIdxRS = viewTab.rs.findIndex(vtr => vtr === rsMaster!.name)
+                              findIdxRS !== -1 ? dispatch(gdmnActions.updateViewTab({
+                                url,
+                                viewTab: {
+                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS)]
+                                }
+                              })) : undefined;
                             }
                           }
                         }
