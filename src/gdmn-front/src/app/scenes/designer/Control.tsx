@@ -4,10 +4,10 @@ import React from "react";
 import { object2style, object2ITextFieldStyles, object2ILabelStyles } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
 import { EntityAttribute, Entity } from 'gdmn-orm';
-import { SetLookupComboBox } from '@src/app/components/SetLookupComboBox/SetLookupComboBox';
 import { TFieldType, RecordSet } from 'gdmn-recordset';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { FrameBox } from "./FrameBox";
+import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 
 interface IInternalControlProps {
   object: Object;
@@ -17,7 +17,7 @@ interface IInternalControlProps {
   gridMode?: boolean;
   previewMode?: boolean;
   selectedObject?: Object;
-  onSelectObject: (object: Object) => void;
+  onSelectObject: (object: Object | undefined) => void;
 };
 
 const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string, rs?: RecordSet, entity?: Entity /*fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection*/ }): JSX.Element | null => {
@@ -32,7 +32,7 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
 
       if (attr instanceof EntityAttribute) {
         return (
-          <SetLookupComboBox
+          <LookupComboBox
             key={props.label}
             label={props.label}
             name={fkFieldName}
@@ -86,14 +86,15 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
   }
 }
 
-const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewMode, gridMode, selectedObject }: IInternalControlProps) => {
-  console.log('InternalControl');
+const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewMode, selectedObject }: IInternalControlProps) => {
+
   switch (object.type) {
     case 'LABEL':
       return (
         <Label
           key={object.name}
           styles={object2ILabelStyles(object, objects)}
+          onClick={ () => onSelectObject(object) }
         >
           {object.text}
         </Label>
@@ -101,7 +102,7 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
 
     case 'FIELD':
       return (
-        <div>
+        <div onClick={ () => onSelectObject(object)} >
           <Field
             styles={object2ITextFieldStyles(object, objects)}
             label={object.label !== "" ? object.label : object.fieldName}
@@ -114,7 +115,7 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
 
     case 'IMAGE':
       return (
-        <div>
+        <div onClick={ () => onSelectObject(object) } >
           <img
             src={object.url}
             alt={object.alt}
@@ -123,20 +124,19 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
         </div>
       )
 
-       case 'FRAME':
-         return (
-          <FrameBox
-            key={object.name}
-            previewMode={previewMode}
-            gridMode={gridMode}
-            selectedObject={selectedObject}
-            objects={objects}
-            frame={object}
-            rs={rs}
-            entity={entity}
-            onSelectObject={onSelectObject}
-          />
-         )
+    case 'FRAME':
+      return (
+        <FrameBox
+          key={object.name}
+          previewMode={previewMode}
+          selectedObject={selectedObject}
+          objects={objects}
+          frame={object}
+          rs={rs}
+          entity={entity}
+          onSelectObject={onSelectObject}
+        />
+      )
 
     default:
       return null;
@@ -151,10 +151,11 @@ interface IControlProps {
   selected: boolean;
   previewMode?: boolean;
   selectedObject?: Object;
-  onSelectObject: () => void;
+  onSelectObject: (object: Object | undefined) => void;
 };
 
 export const Control = ({ object, objects, rs, entity, onSelectObject, selected, previewMode, selectedObject }: IControlProps) =>
-  <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject}>
-    <InternalControl object={object} objects={objects} rs={rs} entity={entity} previewMode={previewMode} onSelectObject={onSelectObject} selectedObject={selectedObject}/>
+  <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject} >
+    <InternalControl object={object} objects={objects} rs={rs} entity={entity} previewMode={previewMode}
+      onSelectObject={onSelectObject} selectedObject={selectedObject}/>
   </WithSelectionFrame>

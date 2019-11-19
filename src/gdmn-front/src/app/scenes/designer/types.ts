@@ -32,8 +32,8 @@ export interface IObject {
   name: string;
   parent?: string;
   type: TObjectType;
-  color?: string;
-  backgroundColor?: string;
+  // color?: string;
+  // backgroundColor?: string;
 };
 
 export interface IWindow extends IObject {
@@ -74,6 +74,7 @@ export interface IFrame extends IObject {
   marginTop?: boolean;
   marginRight?: boolean;
   marginBottom?: boolean;
+  scroll?: boolean;
 };
 
 export function isFrame(x: IObject | undefined): x is IFrame {

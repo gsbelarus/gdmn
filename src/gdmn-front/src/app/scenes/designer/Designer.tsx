@@ -185,7 +185,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     const { selectedObject } = state;
 
-    if (!isArea(selectedObject)) {
+    if (!isArea(selectedObject) && !isFrame(selectedObject)) {
       return state;
     }
 
@@ -588,7 +588,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       area={area}
       rs={rs}
       entity={entity}
-      onSelectObject={ object =>{console.log(object.name);console.log(object.name); designerDispatch({ type: 'SELECT_OBJECT', object })} }
+      onSelectObject={ object => designerDispatch({ type: 'SELECT_OBJECT', object }) }
     />
   );
 
@@ -631,7 +631,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertField',
-      disabled: previewMode || gridMode || !selectedObject || !(isArea(selectedObject) || isFrame(selectedObject)) || !erModel,
+      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)) || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
@@ -639,7 +639,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertLabel',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
+      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)),
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
@@ -647,7 +647,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertPicture',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
+      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)),
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
@@ -655,7 +655,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertFrame',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
+      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)),
       text: 'Insert Frame',
       iconOnly: true,
       iconProps: { iconName: 'Picture' },
@@ -797,7 +797,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
   ], [previewMode, gridMode, objects, selectedObject, grid, gridSelection]);
 
   const window = objects.find( object => isWindow(object) ) as IWindow;
-  console.log(selectedObject);
+
   return (
     <>
       <CommandBar items={commandBarItems} />

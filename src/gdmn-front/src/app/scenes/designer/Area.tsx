@@ -93,7 +93,7 @@ export const Area = (props: IAreaProps) => {
                     selected={object === selectedObject}
                     previewMode={previewMode}
                     selectedObject={selectedObject}
-                    onSelectObject={ () =>{console.log(object.name); console.log('Area');onSelectObject(object)} }
+                    onSelectObject={ obj => obj && onSelectObject(obj) }
                   />
                 )
             }
