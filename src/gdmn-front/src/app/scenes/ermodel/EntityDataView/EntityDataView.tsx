@@ -77,7 +77,7 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
 
-  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors } = props;
+  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors, allBinding } = props;
   const currRS: RecordSet | undefined = rs ? rs[entityName] : undefined;
   const locked = currRS ? currRS.locked : false;
   const error = viewTab ? viewTab.error : undefined;
@@ -152,20 +152,19 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       const value = rsMaster.getString(rsMaster.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rsMaster.params.currentRow);
       filterByFieldLink(value);
     }
-  }, [rsMaster])
-
-  useEffect( () => {
-    if(rsMaster && entityMaster) {
+    if(rsMaster && entityMaster && currRS && linkField && entity) {
       if (viewTab && viewTab.rs && viewTab.rs.length && !viewTab.rs.find(vtr => vtr === rsMaster!.name)) {
+        const findAttr = entity.attribute(linkField);
         dispatch(gdmnActions.updateViewTab({
           url,
           viewTab: {
-            rs: [ ...viewTab.rs, rsMaster.name]
+            rs: [ ...viewTab.rs, rsMaster.name],
+            bindingMD: allBinding ? allBinding.find(bindMD => bindMD.detailsRS === currRS.name && bindMD.attr === findAttr) : undefined
           }
         }));
       }
     }
-  }, [entityMaster])
+  }, [rsMaster])
   
   useEffect( () => {
     if (currRS) {
@@ -404,14 +403,14 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         if(currRS && entity) {
                           if(option.key.toString() === 'noSelected' && linkField && rsMaster) {
                             const findAttr = entity.attribute(linkField);
-                            
                             dispatch(mdgActions.deleteBinding({masterRS: rsMaster.name, detailsRS: currRS.name, attr: findAttr}));
                             if(viewTab && viewTab.rs) {
                               const findIdxRS = viewTab.rs.findIndex(vtr => vtr === rsMaster!.name)
                               findIdxRS !== -1 ? dispatch(gdmnActions.updateViewTab({
                                 url,
                                 viewTab: {
-                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS)]
+                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS)],
+                                  bindingMD: undefined
                                 }
                               })) : undefined;
                             }
@@ -433,15 +432,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                             if(findLF && findLF.links && findLF.links.length !== 0) {
                               const findEntityMaster = findLF.links[0].entity;
                               dispatch(mdgActions.editeMasterRS({masterRS: findEntityMaster.name, detailsRS: currRS.name, oldAttr: findOldAttr, newAttr: findNewAttr }))
-                            }
-                            if(viewTab && viewTab.rs) {
-                              const findIdxRS = viewTab.rs.findIndex(vtr => vtr === rsMaster!.name)
-                              findIdxRS !== -1 ? dispatch(gdmnActions.updateViewTab({
-                                url,
-                                viewTab: {
-                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS)]
-                                }
-                              })) : undefined;
                             }
                           }
                         }

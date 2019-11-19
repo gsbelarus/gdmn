@@ -8,6 +8,7 @@ import { GdmnAction } from "../../gdmn/actions";
 import { LoadRSActions } from "@src/app/store/loadRSActions";
 import { GridComponentState, GridAction, IGridColors } from "gdmn-grid";
 import { MDGAction } from '../actions';
+import { IBindMD } from '../reducer';
 
 export interface IEntityDataViewRouteProps {
   entityName: string
@@ -25,6 +26,7 @@ export interface IEntityDataViewStateProps {
   erModel?: ERModel;
   gcs: GridComponentState;
   gridColors: IGridColors;
+  allBinding?: IBindMD[];
 };
 
 export interface IEntityDataViewProps extends IEntityDataViewContainerProps, IEntityDataViewStateProps {

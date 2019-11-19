@@ -10,6 +10,7 @@ export const EntityDataViewContainer = connect(
     viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
     erModel: state.gdmnState.erModel,
     gcs: state.grid[ownProps.entityName],
-    gridColors: state.gdmnState.gridColors
+    gridColors: state.gdmnState.gridColors,
+    allBinding: state.mdgState.bindMasterDetails
   })
 )(EntityDataView);

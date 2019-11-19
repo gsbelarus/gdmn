@@ -27,7 +27,7 @@ export function reducer(state: TMDGState = initialState, action: MDGAction): TMD
       if(state.bindMasterDetails.find( bmd => bmd.masterRS === masterRS && bmd.detailsRS === detailsRS && bmd.attr === attr)) {
         return state;
       }
-      
+
       return {
         ...state,
         bindMasterDetails: [...state.bindMasterDetails, {masterRS, detailsRS, attr, entityQuery } as IBindMD]
@@ -101,11 +101,11 @@ export function reducer(state: TMDGState = initialState, action: MDGAction): TMD
     case getType(mdgActions.deleteBinding): {
       const {masterRS, detailsRS, attr} = action.payload;
       
-      const findBinding = state.bindMasterDetails.findIndex( bmd => bmd.masterRS == masterRS && detailsRS === bmd.detailsRS && bmd.attr == attr);
+      const findBinding = state.bindMasterDetails.findIndex( bmd => bmd.masterRS === masterRS && detailsRS === bmd.detailsRS && bmd.attr === attr);
       if(findBinding >= 0) {
         return {
           ...state,
-          bindMasterDetails: state.bindMasterDetails.splice(findBinding, 1)
+          bindMasterDetails: [...state.bindMasterDetails.splice(0, findBinding), ...state.bindMasterDetails.splice(findBinding)]
         };
       } else {
         return state;

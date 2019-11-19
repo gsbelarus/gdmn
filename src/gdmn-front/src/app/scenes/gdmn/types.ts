@@ -1,4 +1,5 @@
 import {AppAction, ICmd} from "@gdmn/server-api";
+import { IBindMD } from '../ermodel/reducer';
 
 export interface ISessionData {
   [name: string]: any;
@@ -11,6 +12,7 @@ export interface IViewTab {
   rs?: string[];
   error?: string;
   sessionData?: ISessionData;
+  bindingMD?: IBindMD;
 };
 
 export interface ISessionInfo {
