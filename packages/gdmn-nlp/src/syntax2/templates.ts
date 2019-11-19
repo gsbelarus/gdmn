@@ -73,16 +73,22 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
     examples: ['Покажи все организации и банки из Минска и Пинска'],
     phrases: [
       {
-        id: 'verb',
-        template: phraseTemplates.VERB_SHOW
+        alt: [{
+          id: 'verb',
+          template: phraseTemplates.VERB_SHOW
+        }]
       },
       {
-        id: 'entity',
-        template: phraseTemplates.QUALIFIED_ENTITY_NAME
+        alt: [{
+          id: 'entity',
+          template: phraseTemplates.QUALIFIED_ENTITY_NAME
+        }]
       },
       {
-        id: 'fromPlace',
-        template: phraseTemplates.FROM_PLACE_TEMPLATE,
+        alt: [{
+          id: 'fromPlace',
+          template: phraseTemplates.FROM_PLACE_TEMPLATE,
+        }],
         optional: true
       },
     ]

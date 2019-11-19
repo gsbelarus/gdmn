@@ -1,25 +1,14 @@
-.NLPDialog {
-  display: grid;
-  grid-template-columns: auto;
-  grid-template-rows: auto 120px;
-  grid-gap: 0;
-  padding: 0;
-  margin: 0;
-  font-size: 12px;
-  width: 100%;
-  height: 100%;
-  text-align: left;
-}
-
 .NLPItems {
   grid-column: 1;
   grid-row: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background-color: aquamarine;
   position: relative;
   overflow: hidden;
+  border: 1px solid navy;
+  border-radius: 4px;
+  margin: 4px;
 }
 
 .NLPItem {
@@ -57,6 +46,7 @@
   position: relative;
   display: inline-block;
   background-color: antiquewhite;
+  border: '1px solid navy';
   border-radius: 6px 6px 6px 0;
   padding: 4px 8px;
   box-shadow: 0 2px 1px 0 rgba(93,196,82,.5);
@@ -68,6 +58,7 @@
   display: inline-block;
   background-color: antiquewhite;
   border-radius: 6px 6px 6px 0;
+  border: '1px solid navy';
   padding: 4px 8px;
   box-shadow: 2px 2px 1px 0 rgba(93,196,82,.5);
   max-width: calc(100% - 4em);
@@ -128,15 +119,6 @@
   padding-top: 2px;
   overflow: hidden;
   border: 1px gray solid;
-}
-
-.NLPInput textarea {
-  border: none;
-  min-width: calc(100% - 4px);
-  resize: none;
-  font-family: inherit;
-  font-size: 12px;
-  min-height: 120px;
 }
 
 .NLPScrollBar {

@@ -1,13 +1,13 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, StackItem, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { rsActions, TStatus } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
-import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
-import { ERTranslatorRU } from 'gdmn-nlp-agent';
+import { nlpTokenize, nlpParse, sentenceTemplates } from 'gdmn-nlp';
+import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
 import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
@@ -95,16 +95,27 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     if (erModel && entity) {
       if (phrase) {
         try {
-          const parsedText: ParsedText[] = parsePhrase(phrase);
-          const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-          if (phrases.length) {
-            const erTranslatorRU = new ERTranslatorRU(erModel)
-            const command = erTranslatorRU.process(phrases);
+          const tokens = nlpTokenize(phrase, true);
+          const parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
+          if (parsed.length) {
+            const erTranslatorRU = new ERTranslatorRU2(erModel)
+            const command = erTranslatorRU.process(parsed);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
               dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
             }
           }
+
+          // const parsedText: ParsedText[] = parsePhrase(phrase);
+          // const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
+          // if (phrases.length) {
+          //   const erTranslatorRU = new ERTranslatorRU(erModel)
+          //   const command = erTranslatorRU.process(phrases);
+          //   const eq = command[0] ? command[0].payload : undefined;
+          //   if (eq) {
+          //     dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+          //   }
+          // }
         }
         catch (e) {
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
@@ -291,7 +302,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
         <div styleName="SGridTop">
           <CommandBar items={commandBarItems} />
-          
+
           {
             error
             &&

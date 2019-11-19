@@ -1,8 +1,9 @@
-import { INLPToken, IRusSentenceTemplate, RusPhraseElement, RusNoun, RusVerb, AnyWord, IRusSentence } from "..";
+import { INLPToken, IRusSentenceTemplate, RusPhraseElement, RusNoun, RusVerb, IRusSentence, Word } from "..";
 import { nlpWhiteSpace, nlpLineBreak, nlpCyrillicWord, nlpIDToken } from "./tokenizer";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
-import { RusWordTemplate, RusPhraseWord } from "./types";
+import { RusWordTemplate, RusSentenceWordOrToken } from "./types";
+import { RusConjunction } from "../morphology/rusConjunction";
 
 const match = (token: INLPToken, srcElements: RusPhraseElement[]) => {
   switch (token.tokenType) {
@@ -71,32 +72,75 @@ export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[])
       }
 
       const phrase = template.phrases[phraseIdx++];
+      const foundWords: RusSentenceWordOrToken[] = [];
+      const savedTokenIdx = tokenIdx;
 
-      let phraseElementIdx = 0;
-      const foundWords: RusPhraseWord[] = [];
-      while (tokenIdx < tokens.length && phraseElementIdx < phrase.template.elements.length) {
-        token = tokens[tokenIdx];
+      for (const altPhrase of phrase.alt) {
+        let phraseElementIdx = 0;
+        foundWords.length = 0;
+        matched = true;
 
-        if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
-          tokenIdx++;
-          continue;
-        }
+        while (tokenIdx < tokens.length && phraseElementIdx < altPhrase.template.elements.length) {
+          token = tokens[tokenIdx];
 
-        const phraseElement = phrase.template.elements[phraseElementIdx];
-        const found = match(token, phraseElement.alt);
+          if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
+            tokenIdx++;
+            continue;
+          }
 
-        if (found) {
-          foundWords.push(found);
-          tokenIdx++;
-          phraseElementIdx++;
-        } else {
-          if (phraseElement.optional) {
-            foundWords.push(null);
+          const phraseElement = altPhrase.template.elements[phraseElementIdx];
+          const found = match(token, phraseElement.alt);
+
+          if (found) {
+            if (found instanceof Word) {
+              foundWords.push({ type: 'WORD', word: found, token });
+
+              if (token.uniformPOS) {
+                token.uniformPOS.forEach( u => {
+                  if (u.words) {
+                    const matchedUniform = u.words.find( mu => mu.getSignature() === found.getSignature() );
+
+                    if (matchedUniform) {
+                      foundWords.push({ type: 'WORD', word: matchedUniform, token: u });
+                    }
+                    else if (u.words[0] instanceof RusConjunction) {
+                      foundWords.push({ type: 'WORD', word: u.words[0], token: u });
+                    }
+                    else {
+                      throw new Error(`Invaid token ${u}`);
+                    }
+                  } else {
+                    if (u.tokenType !== nlpWhiteSpace && u.tokenType !== nlpLineBreak) {
+                      foundWords.push({ type: 'TOKEN', token: u });
+                    }
+                  }
+                });
+              }
+            } else {
+              foundWords.push({ type: 'TOKEN', token });
+            }
+            tokenIdx++;
             phraseElementIdx++;
           } else {
-            matched = false;
-            break;
+            if (phraseElement.optional) {
+              foundWords.push({ type: 'EMPTY' });
+              phraseElementIdx++;
+            } else {
+              matched = false;
+              break;
+            }
           }
+        }
+
+        if (matched && foundWords.length) {
+          sentence.phrases.push({
+            phraseId: altPhrase.id,
+            phraseTemplateId: altPhrase.template.id,
+            wordOrToken: foundWords
+          });
+          break;
+        } else {
+          tokenIdx = savedTokenIdx;
         }
       }
 
@@ -105,12 +149,6 @@ export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[])
         break;
       }
 
-      if (foundWords.length) {
-        sentence.phrases.push({
-          phraseId: phrase.id,
-          words: foundWords
-        });
-      }
     }
 
     if (matched && sentence.phrases.length) {
