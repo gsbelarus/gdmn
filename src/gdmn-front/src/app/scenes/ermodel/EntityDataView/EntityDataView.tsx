@@ -409,7 +409,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                               findIdxRS !== -1 ? dispatch(gdmnActions.updateViewTab({
                                 url,
                                 viewTab: {
-                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS)],
+                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS + 1)],
                                   bindingMD: undefined
                                 }
                               })) : undefined;

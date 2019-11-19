@@ -14,6 +14,7 @@ import { loadRSActions } from '@src/app/store/loadRSActions';
 import { themes } from '../themeeditor/themes';
 import { loadTheme } from '@uifabric/styling';
 import { calcGridColors } from '@src/app/utils/calcGridColors';
+import { mdgActions } from '../ermodel/actions';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
@@ -270,11 +271,16 @@ const viewTabMiddleware: TThunkMiddleware = ({ dispatch, getState }) => next => 
       }
 
       const viewTab = viewTabs[foundIdx];
+      let masterRs: string | undefined = undefined;
+      if(viewTab.bindingMD) {
+        masterRs = viewTab.bindingMD.masterRS;
+        dispatch(mdgActions.deleteBinding({masterRS: viewTab.bindingMD.masterRS, detailsRS: viewTab.bindingMD.detailsRS, attr: viewTab.bindingMD.attr}));
+      }
 
       if (viewTab.rs) {
         viewTab.rs
           .filter( name => !viewTabs.find( t => t !== viewTab && !!t.rs && !!t.rs.find( n => n === name ) ) )
-          .forEach( name => dispatch(loadRSActions.deleteRS({ name })) );
+          .forEach( name => masterRs !== name ? dispatch(loadRSActions.deleteRS({ name })) : undefined );
       }
     }
   }

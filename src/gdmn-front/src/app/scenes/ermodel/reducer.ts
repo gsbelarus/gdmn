@@ -105,7 +105,7 @@ export function reducer(state: TMDGState = initialState, action: MDGAction): TMD
       if(findBinding >= 0) {
         return {
           ...state,
-          bindMasterDetails: [...state.bindMasterDetails.splice(0, findBinding), ...state.bindMasterDetails.splice(findBinding)]
+          bindMasterDetails: [...state.bindMasterDetails.slice(0, findBinding), ...state.bindMasterDetails.slice(findBinding + 1)]
         };
       } else {
         return state;
