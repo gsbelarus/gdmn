@@ -6,7 +6,7 @@ interface IWithSelectionFrameProps {
   children: JSX.Element | null;
   selected: boolean;
   previewMode?: boolean;
-  onSelectObject: (object: Object | undefined) => void;
+  onSelectObject: (object?: Object) => void;
 };
 
 export const WithSelectionFrame = ({ children, selected, previewMode, onSelectObject }: IWithSelectionFrameProps) => (
@@ -19,7 +19,7 @@ export const WithSelectionFrame = ({ children, selected, previewMode, onSelectOb
       }}
       onClick={ e => {
         e.stopPropagation();
-        onSelectObject(undefined);
+        onSelectObject();
       }}
     >
       {children}

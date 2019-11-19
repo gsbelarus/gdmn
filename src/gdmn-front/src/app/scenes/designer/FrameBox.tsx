@@ -1,11 +1,9 @@
-import { getTheme, Stack } from "office-ui-fabric-react";
-import { Object, IArea, Objects, isFrame, IFrame } from "./types";
-import { object2style } from "./utils";
+import { Object, Objects, IFrame } from "./types";
 import React from "react";
-import { Control } from "./Control";
 import { RecordSet } from 'gdmn-recordset';
 import { Entity } from 'gdmn-orm';
 import { Frame } from "../gdmn/components/Frame";
+import { Controls } from "./Controls";
 
 interface IFrameProps {
   gridMode?: boolean;
@@ -15,7 +13,7 @@ interface IFrameProps {
   rs?: RecordSet;
   entity?: Entity;
   objects: Objects;
-  onSelectObject: (object: Object | undefined) => void;
+  onSelectObject: (object?: Object) => void;
 };
 
 export const FrameBox = (props: IFrameProps) => {
@@ -42,24 +40,15 @@ export const FrameBox = (props: IFrameProps) => {
         height={`${frame.height}px`}
         scroll={frame.scroll}
       >
-        <Stack>
-          {
-            objects
-              .filter( object => object.parent === frame.name)
-              .map( object =>
-                <Control
-                  key={object.name}
-                  object={object}
-                  objects={objects}
-                  rs={rs}
-                  entity={entity}
-                  selected={object === selectedObject}
-                  previewMode={previewMode}
-                  onSelectObject={obj => onSelectObject(obj)}
-                />
-              )
-          }
-        </Stack>
+        <Controls
+          object={frame}
+          objects={objects}
+          rs={rs}
+          entity={entity}
+          selectedObject={selectedObject}
+          previewMode={previewMode}
+          onSelectObject={onSelectObject}
+        />
       </Frame>
     </div>
   )

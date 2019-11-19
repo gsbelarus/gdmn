@@ -32,8 +32,6 @@ export interface IObject {
   name: string;
   parent?: string;
   type: TObjectType;
-  // color?: string;
-  // backgroundColor?: string;
 };
 
 export interface IWindow extends IObject {
@@ -79,6 +77,10 @@ export interface IFrame extends IObject {
 
 export function isFrame(x: IObject | undefined): x is IFrame {
   return x instanceof Object && x.type === 'FRAME';
+};
+
+export function isFrameOrArea(x: IObject | undefined): x is IFrame {
+  return x instanceof Object && (x.type === 'FRAME' || x.type === 'AREA');
 };
 
 export interface IField extends IObject {

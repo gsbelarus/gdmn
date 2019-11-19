@@ -1,7 +1,8 @@
 import React, { useReducer, useMemo } from "react";
 import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
-import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField, IFrame, getFrames, isFrame } from "./types";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects,
+  deleteWithChildren, getWindow, IField, IFrame, isFrameOrArea } from "./types";
 import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
@@ -10,8 +11,6 @@ import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { getLName } from "gdmn-internals";
 import { RecordSet } from "gdmn-recordset";
-import { Frame } from "../gdmn/components/Frame";
-import { FrameBox } from "./FrameBox";
 
 /**
  *
@@ -185,7 +184,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     const { selectedObject } = state;
 
-    if (!isArea(selectedObject) && !isFrame(selectedObject)) {
+    if (!isFrameOrArea(selectedObject)) {
       return state;
     }
 
@@ -631,7 +630,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertField',
-      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)) || !erModel,
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)) || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
@@ -639,7 +638,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertLabel',
-      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)),
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
@@ -647,7 +646,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertPicture',
-      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)),
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
@@ -655,11 +654,11 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertFrame',
-      disabled: previewMode || gridMode || !selectedObject || (!isArea(selectedObject) && !isFrame(selectedObject)),
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
       text: 'Insert Frame',
       iconOnly: true,
       iconProps: { iconName: 'Picture' },
-      onClick: () => designerDispatch({ type: 'CREATE_FRAME'})
+      onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FRAME' })
     },
     {
       key: 'split1',
@@ -831,9 +830,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
           } }
         >
           {
-            previewMode
-              ? renderAreas()
-              : gridMode
+            gridMode
               ? gridCells.concat(renderAreas())
               : renderAreas()
           }

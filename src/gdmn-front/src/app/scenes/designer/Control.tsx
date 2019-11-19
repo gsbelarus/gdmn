@@ -9,7 +9,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { FrameBox } from "./FrameBox";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 
-interface IInternalControlProps {
+export interface IInternalControlProps {
   object: Object;
   objects: Objects;
   entity?: Entity;
@@ -17,7 +17,7 @@ interface IInternalControlProps {
   gridMode?: boolean;
   previewMode?: boolean;
   selectedObject?: Object;
-  onSelectObject: (object: Object | undefined) => void;
+  onSelectObject: (object?: Object) => void;
 };
 
 const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string, rs?: RecordSet, entity?: Entity /*fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection*/ }): JSX.Element | null => {
@@ -94,7 +94,12 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
         <Label
           key={object.name}
           styles={object2ILabelStyles(object, objects)}
-          onClick={ () => onSelectObject(object) }
+          onClick={
+            e => {
+              e.stopPropagation();
+              onSelectObject(object);
+            }
+          }
         >
           {object.text}
         </Label>
@@ -102,7 +107,14 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
 
     case 'FIELD':
       return (
-        <div onClick={ () => onSelectObject(object)} >
+        <div
+          onClick={
+            e => {
+              e.stopPropagation();
+              onSelectObject(object);
+            }
+          }
+        >
           <Field
             styles={object2ITextFieldStyles(object, objects)}
             label={object.label !== "" ? object.label : object.fieldName}
@@ -115,7 +127,14 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
 
     case 'IMAGE':
       return (
-        <div onClick={ () => onSelectObject(object) } >
+        <div
+          onClick={
+            e => {
+              e.stopPropagation();
+              onSelectObject(object);
+            }
+          }
+        >
           <img
             src={object.url}
             alt={object.alt}
@@ -148,14 +167,13 @@ interface IControlProps {
   objects: Objects;
   rs?: RecordSet;
   entity?: Entity;
-  selected: boolean;
   previewMode?: boolean;
   selectedObject?: Object;
-  onSelectObject: (object: Object | undefined) => void;
+  onSelectObject: (object?: Object) => void;
 };
 
-export const Control = ({ object, objects, rs, entity, onSelectObject, selected, previewMode, selectedObject }: IControlProps) =>
-  <WithSelectionFrame selected={selected} previewMode={previewMode} onSelectObject={onSelectObject} >
+export const Control = ({ object, objects, rs, entity, onSelectObject, previewMode, selectedObject }: IControlProps) =>
+  <WithSelectionFrame selected={selectedObject === object} previewMode={previewMode} onSelectObject={onSelectObject} >
     <InternalControl object={object} objects={objects} rs={rs} entity={entity} previewMode={previewMode}
       onSelectObject={onSelectObject} selectedObject={selectedObject}/>
   </WithSelectionFrame>
