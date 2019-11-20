@@ -278,10 +278,10 @@ export class EntityBuilder extends Builder {
             setTable: setTable
           });
           const presLen = setAttr.presLen;
-          const triggerName = Prefix.triggerBeforeInsert(relationName);
+          const triggerName = Constants.DEFAULT_USR_PREFIX.concat(Prefix.triggerBeforeInsert(relationName));
           if (presLen > 0) {
             await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable,
-              crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk);
+              crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk, true);
           }
 
           // add foreign keys for cross table
