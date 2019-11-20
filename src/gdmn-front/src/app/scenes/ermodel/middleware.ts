@@ -69,8 +69,6 @@ export const mdgMiddleware = (): TThunkMiddleware => ({ dispatch, getState }) =>
       }
 
       next(action);
-      const findBinding = getState().mdgState.bindMasterDetails.find(md => md.masterRS === masterRS && md.detailsRS === detailsRS && md.attr === attr);
-      findBinding ? dispatch(loadRSActions.attachRS({name: detailsRS, eq: findBinding.entityQuery, override: true})) : undefined;
       break;
     }
 

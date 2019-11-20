@@ -164,6 +164,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }));
       }
     }
+    if(viewTab && viewTab.bindingMD && !rsMaster && !linkField) {
+      viewDispatch({ type: 'SET_LINK_FIELD', linkField: viewTab.bindingMD.attr.name })
+    }
   }, [rsMaster])
   
   useEffect( () => {
@@ -432,6 +435,15 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                             if(findLF && findLF.links && findLF.links.length !== 0) {
                               const findEntityMaster = findLF.links[0].entity;
                               dispatch(mdgActions.editeMasterRS({masterRS: findEntityMaster.name, detailsRS: currRS.name, oldAttr: findOldAttr, newAttr: findNewAttr }))
+                            }
+                            if(viewTab && viewTab.rs) {
+                              const findIdxRS = viewTab.rs.findIndex(vtr => vtr === rsMaster!.name)
+                              findIdxRS !== -1 ? dispatch(gdmnActions.updateViewTab({
+                                url,
+                                viewTab: {
+                                  rs: [ ...viewTab.rs.slice(0, findIdxRS), ...viewTab.rs.slice(findIdxRS + 1)]
+                                }
+                              })) : undefined;
                             }
                           }
                         }
