@@ -94,7 +94,7 @@ export class ERTranslatorRU2 {
 
   public process(sentences: IRusSentence[]): ICommand[] {
     if (sentences[0].templateId === 'VPShowByPlace') {
-      return this.processImperativeVPShowByPlace(sentences);
+      return [this.processVPShowByPlace(sentences[0])];
     } else {
       throw new Error(`Unsupported phrase type`);
     }
@@ -115,8 +115,8 @@ export class ERTranslatorRU2 {
    *
    * Пример: "[все] организации"
    */
-  public processImperativeVPShowByPlace(sentences: IRusSentence[]): ICommand[] {
-    const sentence = sentences[0];
+  public processVPShowByPlace(sentence: IRusSentence): ICommand {
+    const rootAlias = 'root';
     const getPhrase = this._getPhrase(sentence);
 
     const entityPhrase = getPhrase('entity');
@@ -126,58 +126,56 @@ export class ERTranslatorRU2 {
       throw new Error(`Can't find entity ${this._getImage(entityPhrase, 1)}`);
     }
 
-    if (entities.length !== 1) {
+    if (entities.length > 1) {
       throw new Error(`More than one entity in a query isn't supported.`);
     }
 
+    const entity = entities[0];
+    const fields = prepareDefaultEntityLinkFields(entity);
+    let equals: IEntityQueryWhereValue[] | undefined = undefined;
+
     const fromPlacePhrase = getPhrase('fromPlace');
+    if (fromPlacePhrase) {
+      const geoAttr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
+      const value = this._getNoun(fromPlacePhrase, 1).lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
 
-    return entities.map(entity => {
-      const fields = prepareDefaultEntityLinkFields(entity);
-      let equals: IEntityQueryWhereValue[] | undefined = undefined;
-
-      if (fromPlacePhrase) {
-        const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
-        const value = this._getNoun(fromPlacePhrase, 1).lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
-
-        if (!equals) {
-          equals = [];
-        }
-
-        if (attr instanceof EntityAttribute) {
-          const linkEntity = attr.entities[0];
-          const linkAlias = "alias2";
-
-          if (
-            !fields
-              .filter( field => field.links )
-              .some( field => field.links!.some( fLink => fLink.alias === linkAlias && field.attribute === attr) )
-          ) {
-            fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
-          }
-
-          equals.push({
-            alias: linkAlias,
-            attribute: linkEntity.presentAttribute(),
-            value
-          });
-        } else {
-          equals.push({
-            alias: "alias1",
-            attribute: attr,
-            value
-          });
-        }
+      if (!equals) {
+        equals = [];
       }
 
-      const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+      if (geoAttr instanceof EntityAttribute) {
+        const linkEntity = geoAttr.entities[0];
+        const linkAlias = "alias2";
 
-      const entityLink = new EntityLink(entity, "alias1", fields);
-      return {
-        action: 'QUERY',
-        payload: new EntityQuery(entityLink, options)
-      };
-    });
+        if (
+          !fields
+            .filter( field => field.links )
+            .some( field => field.links!.some( fLink => fLink.alias === linkAlias && field.attribute === geoAttr) )
+        ) {
+          fields.push(new EntityLinkField(geoAttr, [new EntityLink(linkEntity, linkAlias, [])]));
+        }
+
+        equals.push({
+          alias: linkAlias,
+          attribute: linkEntity.presentAttribute(),
+          value
+        });
+      } else {
+        equals.push({
+          alias: "alias1",
+          attribute: geoAttr,
+          value
+        });
+      }
+    }
+
+    const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+    const entityLink = new EntityLink(entity, "alias1", fields);
+
+    return {
+      action: 'QUERY',
+      payload: new EntityQuery(entityLink, options)
+    };
   }
 }
 
