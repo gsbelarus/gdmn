@@ -22,8 +22,10 @@ export interface IRusSentenceTemplate {
   label?: string;
   examples?: string[];
   phrases: {
-    id: string;
-    template: IRusPhraseTemplate;
+    alt: {
+      id: string;
+      template: IRusPhraseTemplate;
+    }[];
     optional?: boolean;
   }[]
 };
@@ -89,12 +91,34 @@ export type RusPhraseElement = IIdentifierTemplate
   | IRusSubPhraseTemplate
   | RusWordTemplate;
 
-export type RusPhraseWord = AnyWord | string | null;
+interface IRusSentenceWordBase {
+  type: 'EMPTY' | 'WORD' | 'TOKEN';
+};
+
+export interface IRusSentenceEmpty extends IRusSentenceWordBase {
+  type: 'EMPTY';
+};
+
+export interface IRusSentenceWord extends IRusSentenceWordBase {
+  type: 'WORD';
+  word: AnyWord;
+  token: INLPToken;
+};
+
+export interface IRusSentenceToken extends IRusSentenceWordBase {
+  type: 'TOKEN';
+  token: INLPToken;
+};
+
+export type RusSentenceWordOrToken = IRusSentenceEmpty | IRusSentenceToken | IRusSentenceWord;
+
+export interface IRusSentencePhrase {
+  phraseId: string;
+  phraseTemplateId: string;
+  wordOrToken: RusSentenceWordOrToken[];
+};
 
 export interface IRusSentence {
   templateId: string;
-  phrases: {
-    phraseId: string;
-    words: RusPhraseWord[];
-  }[];
+  phrases: IRusSentencePhrase[];
 };
