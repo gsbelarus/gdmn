@@ -1,18 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import { EntityQuery, EntityLinkField } from "gdmn-orm";
 import { Frame } from "../../gdmn/components/Frame";
-import { Stack, getTheme } from "office-ui-fabric-react";
+import { Stack, getTheme, Icon } from "office-ui-fabric-react";
 
 const ELField = ({ f }: { f: EntityLinkField }) => {
+  const [open, setOpen] = useState(false);
+
   return (
     <div
       style={{
         border: '1px solid ' + getTheme().palette.themeDarker,
         borderRadius: '2px',
-        padding: '0 2px 0 2px'
+        padding: '2px 4px 2px 4px'
       }}
     >
-      {f.attribute.name}
+      <Stack horizontal verticalAlign='center' tokens={{ childrenGap: '4px' }}>
+        <Stack.Item>
+          {f.attribute.name}
+        </Stack.Item>
+        {
+          f.links && open ?
+            <Stack.Item>
+              {f.links.map( l => `[${l.entity.name}=${l.alias}] `)}
+            </Stack.Item>
+          : null
+        }
+        {
+          f.links ?
+            <Stack.Item grow>
+              <Stack verticalAlign='center'>
+                <Icon
+                  styles={{
+                    root: {
+                      transform: open ? 'none' : 'rotate(180deg)',
+                      color: getTheme().palette.themePrimary
+                    }
+                  }}
+                  iconName='SkypeCircleArrow'
+                  onClick={ () => setOpen(!open) }
+                />
+              </Stack>
+            </Stack.Item>
+          : null
+        }
+      </Stack>
     </div>
   )
 };
@@ -26,7 +57,7 @@ export const EQ = ({ eq }: { eq: EntityQuery }) => {
       <Frame border marginTop caption="Fields">
         <Stack horizontal wrap tokens={{ childrenGap: '2px' }}>
           {
-            eq.link.fields.map( f => <ELField key={f.attribute.name} f={f} /> )
+            eq.link.fields.map( (f, idx) => <ELField key={`${f.attribute.name}-${idx}`} f={f} /> )
           }
         </Stack>
       </Frame>
