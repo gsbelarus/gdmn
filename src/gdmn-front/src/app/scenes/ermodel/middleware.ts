@@ -27,14 +27,14 @@ const getRS = async (name: string, eq: EntityQuery) => {
   });
 }
 
-const setNewRS = (detailsRS: RecordSet, nameMasterRS: string, attr: Attribute<any>, dispatch: ThunkDispatch<IState, { apiService: GdmnPubSubApi; }, AnyAction>) => {
+const setNewRS = async (detailsRS: RecordSet, nameMasterRS: string, attr: Attribute<any>, dispatch: ThunkDispatch<IState, { apiService: GdmnPubSubApi; }, AnyAction>) => {
 
   const linkfields = detailsRS.params.eq ? detailsRS.params.eq.link.fields.filter(fd => fd.links) : [];
   const findLF = linkfields.find(lf => lf.attribute.name === attr.name);
   if(findLF && findLF.links && findLF.links.length !== 0) {
     const entityMaster = findLF.links[0].entity;
     const eq = prepareDefaultEntityQuery(entityMaster);
-    getRS(nameMasterRS, eq).then(
+    await getRS(nameMasterRS, eq).then(
       rs => {
         const value = rs.getString(rs.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rs.params.currentRow);
         dispatch(mdgActions.editeValue({masterRS: nameMasterRS, detailsRS: detailsRS.name, attr, value}));
@@ -65,7 +65,7 @@ export const mdgMiddleware = (): TThunkMiddleware => ({ dispatch, getState }) =>
       const dRS = getState().recordSet[detailsRS];
 
       if(!getState().recordSet[masterRS]) {
-        setNewRS(dRS, masterRS, attr, dispatch);
+        await setNewRS(dRS, masterRS, attr, dispatch);
       }
 
       next(action);
@@ -87,7 +87,7 @@ export const mdgMiddleware = (): TThunkMiddleware => ({ dispatch, getState }) =>
       next(action);
       const dRS = getState().recordSet[detailsRS];
       const mRS = getState().recordSet[masterRS];
-      !mRS ? setNewRS(dRS, masterRS, newAttr, dispatch) : undefined;
+      !mRS ? await setNewRS(dRS, masterRS, newAttr, dispatch) : undefined;
 
       const findBinding = getState().mdgState.bindMasterDetails.find(md => md.masterRS === masterRS && md.detailsRS === detailsRS && md.attr === newAttr);
       if(findBinding) {
