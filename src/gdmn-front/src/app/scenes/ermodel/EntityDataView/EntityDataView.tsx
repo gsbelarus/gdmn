@@ -270,7 +270,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
-  const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter(fd => fd.links) : [];
+  const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter( fd => fd.links ) : [];
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
@@ -331,11 +331,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   placeholder="Select link field"
                   allowFreeform
                   autoComplete="on"
-                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
+                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.key as string : '' })}
                   options={
-                    linkfields.length !== 0
-                      ? linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
-                      : undefined
+                    linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
                   }
                 />
                 <TextField

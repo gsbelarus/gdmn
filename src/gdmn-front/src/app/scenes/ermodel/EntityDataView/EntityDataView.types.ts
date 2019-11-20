@@ -19,6 +19,7 @@ export interface IEntityDataViewContainerProps extends RouteComponentProps<IEnti
 
 export interface IEntityDataViewStateProps {
   rs?: RecordSet;
+  masterRs?: RecordSet;
   entity?: Entity;
   viewTab?: IViewTab;
   erModel?: ERModel;
