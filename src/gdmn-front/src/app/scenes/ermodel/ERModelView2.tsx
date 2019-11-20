@@ -4,7 +4,7 @@ import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
 import {List} from "immutable";
 import {createGrid, GDMNGrid, IUserColumnsSettings} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
-import {CommandBar, ICommandBarItemProps, TextField} from "office-ui-fabric-react";
+import {CommandBar, ICommandBarItemProps, TextField, getTheme} from "office-ui-fabric-react";
 import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
@@ -331,7 +331,12 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
   return (
-    <div styleName="MDGrid">
+    <div
+      styleName="MDGrid"
+      style={{
+        borderLeft: '1px solid ' + getTheme().palette.themeDarker
+      }}
+    >
       <div styleName="MDGridTop">
         <CommandBar items={commandBarItems} />
         <MessageBox />

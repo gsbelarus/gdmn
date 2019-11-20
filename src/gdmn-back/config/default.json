@@ -24,6 +24,7 @@
       }
     },
     "publicDir": "./public",
+    "settingDir": "./setting",
     "session": {
       "timeout": "3h",
       "maxConnections": 10

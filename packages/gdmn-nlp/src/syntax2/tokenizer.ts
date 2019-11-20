@@ -328,7 +328,7 @@ const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
   return tokens;
 };
 
-export function nlpTokenize(text: string): INLPToken[][] {
+export function nlpTokenize(text: string, uniform = true): INLPToken[][] {
   /**
    * Поочередно проверяем строку на регулярные выражения
    * из массива типов токенов. Если регулярное выражение срабатывает,
@@ -363,5 +363,8 @@ export function nlpTokenize(text: string): INLPToken[][] {
     }
   }
 
-  return separateByPOS(transform(tokens)).map( t => replaceUniform(replaceNumerals(t)) );
+  return separateByPOS(transform(tokens)).map( t => {
+    const processed = replaceNumerals(t);
+    return uniform ? replaceUniform(processed) : processed;
+   } );
 };

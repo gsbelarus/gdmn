@@ -1,12 +1,13 @@
 import { ISyntaxProps } from "./Syntax.types";
 import { useTab } from "@src/app/hooks/useTab";
 import React, { useReducer, useEffect } from "react";
-import { CommandBar, ComboBox, Stack } from "office-ui-fabric-react";
+import { CommandBar, ComboBox, Stack, Checkbox } from "office-ui-fabric-react";
 import { Frame } from "../../gdmn/components/Frame";
 import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates } from "gdmn-nlp";
 import { NLPToken } from "./NLPToken";
 import { NLPSentence } from "./NLPSentence";
 import { ERTranslatorRU2, ICommand } from "gdmn-nlp-agent";
+import { EQ } from "./EntityQuery";
 
 const predefinedPhrases = [
   'название не содержит ООО',
@@ -16,6 +17,8 @@ const predefinedPhrases = [
   'покажи все организации и банки из минска и пинска',
   'покажи все организации, банки из минска, пинска',
   'покажи все организации из минска',
+  'покажи все организации из минска или пинска',
+  'покажи все организации из минска, пинска',
   'покажи сто двадцать пять организаций из минска',
   'покажи пятую организацию из минска',
   'отсортируй по названию',
@@ -35,16 +38,18 @@ interface ISyntaxState {
   translator?: ERTranslatorRU2;
   command: ICommand[];
   errorMessage?: string;
+  processUniform: boolean;
 };
 
 type Action = { type: 'SET_TEXT', text: string }
-  | { type: 'SET_TRANSLATOR', translator: ERTranslatorRU2 };
+  | { type: 'SET_TRANSLATOR', translator: ERTranslatorRU2 }
+  | { type: 'TOGGLE_PROCESS_UNIFORM' };
 
 function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
   switch (action.type) {
     case 'SET_TEXT': {
-      const tokens = action.text ? nlpTokenize(action.text) : [];
+      const tokens = action.text ? nlpTokenize(action.text, state.processUniform) : [];
       const { translator } = state;
 
       const parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
@@ -71,6 +76,18 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
       };
     }
 
+    case 'TOGGLE_PROCESS_UNIFORM': {
+      return {
+        ...state,
+        text: '',
+        tokens: [],
+        parsed: [],
+        command: [],
+        errorMessage: undefined,
+        processUniform: !state.processUniform
+      };
+    }
+
     case 'SET_TRANSLATOR': {
       return {
         ...state,
@@ -88,14 +105,15 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
   const { viewTab, url, dispatch, theme, history, erModel } = props;
-  const [{ text, tokens, selectedTokensIdx, parsed, translator, command, errorMessage }, reactDispatch] = useReducer(reducer,
+  const [{ text, tokens, selectedTokensIdx, parsed, translator, command, errorMessage, processUniform }, reactDispatch] = useReducer(reducer,
     {
       text: '',
       tokens: [],
       selectedTokensIdx: 0,
       parsed: [],
       translator: erModel && new ERTranslatorRU2(erModel),
-      command: []
+      command: [],
+      processUniform: true
     }
   );
 
@@ -140,6 +158,11 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
               : reactDispatch({ type: 'SET_TEXT', text: '' })
           }
         />
+        <Checkbox
+          label="Обрабатывать однородные части речи"
+          checked={processUniform}
+          onChange={ () => reactDispatch({ type: 'TOGGLE_PROCESS_UNIFORM' }) }
+        />
         {
           tokens.map( (t, idx) =>
             <Frame key={idx} marginTop border selected={idx === selectedTokensIdx}>
@@ -165,10 +188,8 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
         }
         {
           command.length ?
-            <Frame border marginTop caption="Command" scroll height={'200px'}>
-              <pre>
-                {JSON.stringify(command[0].payload.inspect(), undefined, 2)}
-              </pre>
+            <Frame border marginTop caption="Command" scroll height={'400px'}>
+              <EQ eq={command[0].payload} />
             </Frame>
           :
             null

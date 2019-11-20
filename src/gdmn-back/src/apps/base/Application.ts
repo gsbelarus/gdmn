@@ -38,6 +38,7 @@ import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
 import { SettingsCache } from "./SettingsCache";
 import { settingsCacheManager } from "./SettingsCacheManager";
+import config from "config";
 
 export type AppAction =
   "DEMO"
@@ -112,9 +113,36 @@ export class Application extends ADatabase {
   constructor(dbDetail: IDBDetail) {
     super(dbDetail);
 
-    const dbFullPath = dbDetail.connectionOptions.path;
-    this.settingsCache = settingsCacheManager.add
-      (dbFullPath, dbFullPath.slice(0, dbFullPath.length - path.parse(dbFullPath).ext.length));
+    /**
+     * Если сервер файреберд расположен на том же компьютере,
+     * что и gdmn-back, то расположим файлы настроек рядом
+     * с файлом базы данных в папке с именем как у файла базы данных,
+     * только без расширения.
+     *
+     * Если gdmn-back расположен на одном компьютере, а сервер файреберд
+     * на другом, то файлы настроек будем располагать внутри папки
+     * заданной параметром server.settingDir в файле конфигурации.
+     *
+     * Пример, база данных находится на сервере MYSERVER, имя файла бд:
+     * d:\bases\enterprise\dbase.fdb
+     *
+     * Тогда ее настройки буду в папке взятой из параметра server.settingDir
+     * в следующей подпапке:
+     *
+     * myserver\bases\enterprise\dbase
+     */
+    const { server, path: dbPath } = dbDetail.connectionOptions;
+    const parsed = path.parse(dbPath);
+    if (server) {
+      let dir = parsed.dir.slice(parsed.root.length);
+      if (dir) {
+        dir = '/' + dir;
+      }
+      const id = `${server}${dir}/${parsed.name}`;
+      this.settingsCache = settingsCacheManager.add(id, path.dirname(config.get("server.settingDir")) + '/' + id);
+    } else {
+      this.settingsCache = settingsCacheManager.add(dbPath, dbPath.slice(0, dbPath.length - parsed.ext.length));
+    }
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {

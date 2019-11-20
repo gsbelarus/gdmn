@@ -1,5 +1,6 @@
 import React, { Component, Fragment, ReactNode } from 'react';
 import { NLPDialog } from 'gdmn-nlp-agent';
+import { getTheme } from 'office-ui-fabric-react';
 // import  './NLPDialogScroll.css';
 
 const topGap = 24;
@@ -356,7 +357,20 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
 
     return (
       <Fragment>
-        <div className="NLPDialog">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'auto',
+            gridTemplateRows: 'auto 120px',
+            gridGap: 0,
+            padding: 0,
+            margin: 0,
+            fontSize: '12px',
+            width: '100%',
+            height: '100%',
+            textAlign: 'left',
+          }}
+        >
           <div className="NLPItems" onWheel={this.onWheel}>
             {nlpDialog &&
               nlpDialog.map(
@@ -399,13 +413,27 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
               />
             </div>
           </div>
-          <div className="NLPInput">
+          <div
+            style={{
+              border: '1px solid ' + getTheme().palette.themeDarker,
+              borderRadius: '4px',
+              margin: '4px',
+              padding: '2px'
+            }}
+          >
             <textarea
               spellCheck={false}
               value={this.state.text}
               onKeyPress={this.onInputPressEnter}
               onKeyDown={this.onInputKeyDown}
               onChange={this.onInputChange}
+              style={{
+                border: 'none',
+                minWidth: '100%',
+                resize: 'none',
+                fontSize: '12px',
+                minHeight: '106px',
+              }}
             />
           </div>
         </div>
