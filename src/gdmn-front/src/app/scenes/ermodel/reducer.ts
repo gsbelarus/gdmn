@@ -42,9 +42,11 @@ export function reducer(state: TMDGState = initialState, action: MDGAction): TMD
         const whereObj = findBinding.entityQuery.options && findBinding.entityQuery.options.where ? findBinding.entityQuery.options.where : [];
         const orderObj = findBinding.entityQuery.options && findBinding.entityQuery.options.order ? findBinding.entityQuery.options.order : undefined;
         let editeBinding = state.bindMasterDetails;
-        if(whereObj.find(wo => wo.equals && wo.equals.find(woe => woe.attribute === oldAttr))) {
-          whereObj.map(wo => wo.equals ? wo.equals.splice( wo.equals.findIndex(woe => woe.attribute === oldAttr), 1) : wo)
-        }
+          whereObj.map(wo => 
+            wo.equals
+              ? wo.equals.filter(woe => { console.log(woe); return woe.attribute !== oldAttr})
+              : wo
+          )
         const newEntityQuery: EntityQuery = new EntityQuery(
           findBinding.entityQuery.link,
           new EntityQueryOptions( undefined, undefined, whereObj, orderObj )
@@ -82,7 +84,7 @@ export function reducer(state: TMDGState = initialState, action: MDGAction): TMD
             }]
           })
         }
-          
+
         const newEntityQuery: EntityQuery = new EntityQuery(
           findBinding.entityQuery.link,
           new EntityQueryOptions( undefined, undefined, whereObj, orderObj )

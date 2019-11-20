@@ -34,13 +34,13 @@ const setNewRS = (detailsRS: RecordSet, nameMasterRS: string, attr: Attribute<an
   if(findLF && findLF.links && findLF.links.length !== 0) {
     const entityMaster = findLF.links[0].entity;
     const eq = prepareDefaultEntityQuery(entityMaster);
-    dispatch(loadRSActions.attachRS({ name: nameMasterRS, eq }));
     getRS(nameMasterRS, eq).then(
       rs => {
         const value = rs.getString(rs.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, rs.params.currentRow);
         dispatch(mdgActions.editeValue({masterRS: nameMasterRS, detailsRS: detailsRS.name, attr, value}));
       }
     );
+    dispatch(loadRSActions.attachRS({ name: nameMasterRS, eq }));
   }
 }
 
