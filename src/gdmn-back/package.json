@@ -63,7 +63,7 @@
     "@types/node": "^12",
     "@types/uuid": "^3",
     "@types/ws": "^6",
-    "nodemon": "^1",
+    "nodemon": "^2",
     "shx": "^0",
     "ts-node": "^8",
     "tslint": "^5",
