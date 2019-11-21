@@ -21,6 +21,7 @@ export interface IEntityDataViewStateProps {
   rs?: RecordSet;
   masterRs?: RecordSet;
   entity?: Entity;
+  masterEntity?: Entity;
   viewTab?: IViewTab;
   erModel?: ERModel;
   gcs: GridComponentState;

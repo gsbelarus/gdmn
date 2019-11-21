@@ -12,6 +12,7 @@ export const EntityDataViewContainer = connect(
       rs,
       masterRs,
       entity: state.gdmnState.erModel.entities[ownProps.entityName],
+      masterEntity: masterRs ? state.gdmnState.erModel.entities[masterRs.name] : undefined,
       viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
       erModel: state.gdmnState.erModel,
       gcs: state.grid[ownProps.entityName],
