@@ -131,23 +131,22 @@ export class Application extends ADatabase {
      *
      * myserver\bases\enterprise\dbase
      */
-    const { server, path: dbPath } = dbDetail.connectionOptions;
-    const parsed = path.parse(dbPath);
-    if (server && server.host) {
-      const settingDir = config.get("server.settingDir");
+    const host = dbDetail.connectionOptions.server && dbDetail.connectionOptions.server.host;
+    const dbFullName = path.normalize(dbDetail.connectionOptions.path);
+    if (host) {
+      const configSettingBaseDir = config.get("server.settingDir");
 
-      if (typeof settingDir !== 'string' || !settingDir) {
+      if (typeof configSettingBaseDir !== 'string' || !configSettingBaseDir) {
         throw new Error('Param "server.settingDir" not found in configuration file "config/default.json"');
       }
 
-      let dir = parsed.dir.slice(parsed.root.length);
-      if (dir) {
-        dir = '/' + dir;
-      }
-      const id = `${server.host}${dir}/${parsed.name}`;
-      this.settingsCache = settingsCacheManager.add(id, path.dirname(settingDir) + '/' + id);
+      const settingBaseDir = path.normalize(configSettingBaseDir);
+      const parsed = path.parse(dbFullName);
+      const dbPath = parsed.dir.slice(parsed.root.length);
+      const settingDir = path.resolve(settingBaseDir, host, dbPath, parsed.name);
+      this.settingsCache = settingsCacheManager.add(`${host}:${dbFullName}`, settingDir);
     } else {
-      this.settingsCache = settingsCacheManager.add(dbPath, dbPath.slice(0, dbPath.length - parsed.ext.length));
+      this.settingsCache = settingsCacheManager.add(dbFullName, dbFullName.slice(0, dbFullName.length - path.extname(dbFullName).length));
     }
   }
 

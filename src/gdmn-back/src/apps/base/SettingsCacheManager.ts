@@ -14,11 +14,14 @@ class SettingsCacheManager {
       return res;
     }
 
+    console.log(`Settings cache for db id: ${id}, path: ${path}`);
+
     const newCache = new SettingsCache(path);
     this._settingsCaches[id] = newCache;
     return newCache;
   }
 
+  /*
   get(id: string) {
     const res = this._settingsCaches[id];
 
@@ -28,6 +31,7 @@ class SettingsCacheManager {
 
     return res;
   }
+  */
 
   flush(clear?: boolean) {
     Object.values(this._settingsCaches).forEach( s => s.flush(clear) );
