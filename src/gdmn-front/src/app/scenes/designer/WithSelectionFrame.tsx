@@ -6,7 +6,7 @@ interface IWithSelectionFrameProps {
   children: JSX.Element | null;
   selected: boolean;
   previewMode?: boolean;
-  onSelectObject: (object?: Object) => void;
+  onSelectObject: () => void;
 };
 
 export const WithSelectionFrame = ({ children, selected, previewMode, onSelectObject }: IWithSelectionFrameProps) => (

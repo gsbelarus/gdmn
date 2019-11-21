@@ -1,12 +1,13 @@
 import { IInternalControlProps, Control } from "./Control";
 import { Stack } from "office-ui-fabric-react";
 import React from "react";
+import { isArea } from "./types";
 
 export const Controls = (props: IInternalControlProps) => {
   const { selectedObject, previewMode, object, objects, rs, entity, onSelectObject } = props;
 
   return (
-    <Stack>
+    <Stack horizontal={isArea(object) && object.horizontal}>
     {
       objects
         .filter( obj => obj.parent === object.name)

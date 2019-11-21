@@ -27,11 +27,12 @@ import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLook
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
-import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea } from '../../designer/types';
+import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
 import { IDesignerSetting } from '../../designer/Designer.types';
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { Frame } from "../../gdmn/components/Frame";
 
 interface ILastEdited {
   fieldName: string;
@@ -648,10 +649,46 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           </div>
         )
 
+      case 'FRAME':
+        return (
+          <div key={object.name}>
+            {frameBox({frame: object, objects})}
+          </div>
+        )
+
       default:
         return undefined;
     }
   };
+
+  const frameBox = ({ frame, objects }: { frame: Object, objects: Objects }): JSX.Element | undefined => {
+    if (isFrame(frame))
+      return (
+        <Frame
+          key={frame.name}
+          caption={frame.caption}
+          border={frame.border}
+          marginTop={frame.marginTop}
+          marginRight={frame.marginRight}
+          marginBottom={frame.marginBottom}
+          marginLeft={frame.marginLeft}
+          height={`${frame.height}px`}
+          scroll={frame.scroll}
+        >
+          <Stack>
+            {
+              objects
+                .filter( object => object.parent === frame.name )
+                .map( object =>
+                  internalControl({object, objects})
+                )
+            }
+          </Stack>
+        </Frame>
+      )
+    else
+      return undefined;
+  }
 
   const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
     const fieldName = props.fieldName;
@@ -1097,7 +1134,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                               objects
                                 .filter( object => object.parent === area.name )
                                 .map( object =>
-                                  internalControl({object: object, objects: objects})
+                                  internalControl({object, objects})
                                 )
                             }
                           </Stack>

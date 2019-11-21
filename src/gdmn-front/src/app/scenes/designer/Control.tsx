@@ -66,6 +66,7 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
         <Checkbox
           key={props.label}
           label={props.label}
+          styles={{root: {margin: '8px 0'}}}
           disabled={locked}
           defaultChecked={props.rs!.getBoolean(fd!.fieldName)}
         />
@@ -94,12 +95,6 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
         <Label
           key={object.name}
           styles={object2ILabelStyles(object, objects)}
-          onClick={
-            e => {
-              e.stopPropagation();
-              onSelectObject(object);
-            }
-          }
         >
           {object.text}
         </Label>
@@ -107,14 +102,7 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
 
     case 'FIELD':
       return (
-        <div
-          onClick={
-            e => {
-              e.stopPropagation();
-              onSelectObject(object);
-            }
-          }
-        >
+        <div>
           <Field
             styles={object2ITextFieldStyles(object, objects)}
             label={object.label !== "" ? object.label : object.fieldName}
@@ -127,14 +115,7 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
 
     case 'IMAGE':
       return (
-        <div
-          onClick={
-            e => {
-              e.stopPropagation();
-              onSelectObject(object);
-            }
-          }
-        >
+        <div>
           <img
             src={object.url}
             alt={object.alt}
@@ -173,7 +154,7 @@ interface IControlProps {
 };
 
 export const Control = ({ object, objects, rs, entity, onSelectObject, previewMode, selectedObject }: IControlProps) =>
-  <WithSelectionFrame selected={selectedObject === object} previewMode={previewMode} onSelectObject={onSelectObject} >
+  <WithSelectionFrame selected={selectedObject === object} previewMode={previewMode} onSelectObject={ () => onSelectObject(object) } >
     <InternalControl object={object} objects={objects} rs={rs} entity={entity} previewMode={previewMode}
       onSelectObject={onSelectObject} selectedObject={selectedObject}/>
   </WithSelectionFrame>
