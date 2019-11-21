@@ -47,7 +47,7 @@ export class EntityBuilder extends Builder {
 
   public async createAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr): Promise<Attr> {
     const tableName = AdapterUtils.getOwnRelationName(entity);
-    const tablePk = entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ? Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME; 
+    const tablePk = entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ? Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME;
 
     if (attribute instanceof ScalarAttribute) {
       // if (attribute.name === "RB") {
@@ -258,13 +258,14 @@ export class EntityBuilder extends Builder {
 
           // Находим поле для отображения в множестве из Entity в Referense
           // NAME либо USR$NAME либо ALIAS либо первое строковое поле, либо DEFAULT_ID_NAME
-          const scalarFields = Object.values(setAttr.entities[0].attributes)
-           .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
-          const crossFieldAttr =  scalarFields.find((attr) => attr.name === "NAME") ||  
-            scalarFields.find((attr) => attr.name === "USR$NAME") ||
-            scalarFields.find((attr) => attr.name === "ALIAS") ||
-            scalarFields.find((attr) =>  attr.type === "String");
-          const crossField = crossFieldAttr? AdapterUtils.getFieldName(crossFieldAttr) : Constants.DEFAULT_ID_NAME; 
+          // const scalarFields = Object.values(setAttr.entities[0].attributes)
+          //  .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
+          // const crossFieldAttr =  scalarFields.find((attr) => attr.name === "NAME") ||
+          //   scalarFields.find((attr) => attr.name === "USR$NAME") ||
+          //   scalarFields.find((attr) => attr.name === "ALIAS") ||
+          //   scalarFields.find((attr) =>  attr.type === "String");
+          const crossFieldAttr = setAttr.entities[0].presentAttribute();
+          const crossField = crossFieldAttr? AdapterUtils.getFieldName(crossFieldAttr) : Constants.DEFAULT_ID_NAME;
           const domainName = Prefix.domain(await this.nextDDLUnique());
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(setAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -279,10 +280,10 @@ export class EntityBuilder extends Builder {
           const presLen = setAttr.presLen;
           const triggerName = Prefix.triggerBeforeInsert(relationName);
           if (presLen > 0) {
-            await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable, 
+            await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable,
               crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk);
           }
-          
+
           // add foreign keys for cross table
           const crossFKOwnConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(crossFKOwnConstName, {

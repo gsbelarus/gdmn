@@ -4,6 +4,9 @@ import {IEntityAdapter} from "../rdbadapter";
 import {IEntity} from "../serialize";
 import {IBaseSemOptions} from "../types";
 import {Attribute} from "./Attribute";
+import { StringAttribute } from "./scalar/StringAttribute";
+import { ScalarAttribute } from "./scalar/ScalarAttribute";
+import { BlobAttribute } from "./scalar/BlobAttribute";
 
 export interface IAttributes {
   [name: string]: Attribute;
@@ -102,6 +105,23 @@ export class Entity {
       throw new Error(`Unknown attribute ${name} of entity ${this.name}`);
     }
     return attribute;
+  }
+
+  /**
+   * Возвращает атрибут с названием объекта.
+   */
+  public presentAttribute(): Attribute {
+    const attr = this._attributes['NAME']
+      || this._attributes['USR$NAME']
+      || this._attributes['ALIAS']
+      || Object.values(this._attributes).find( attr => attr instanceof StringAttribute )
+      || this._pk[0];
+
+    if (attr instanceof ScalarAttribute && !(attr instanceof BlobAttribute)) {
+      return attr;
+    }
+
+    throw new Error('Can\'t find presentational attribute');
   }
 
   public hasAttribute(name: string): boolean {

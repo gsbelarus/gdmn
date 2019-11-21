@@ -32,9 +32,9 @@ export const NLPSentence = (props: INLPSentenceProps) => {
               </div>
               <Stack horizontal tokens={{ childrenGap: '4px' }}>
                 {
-                  phrase.words.map(
-                    (word, idx) =>
-                      word && <div
+                  phrase.wordOrToken.map(
+                    (w, idx) =>
+                      w && <div
                         key={idx}
                         style={{
                           border: '1px dotted ' + getTheme().palette.themeDark,
@@ -42,7 +42,7 @@ export const NLPSentence = (props: INLPSentenceProps) => {
                           padding: '0 2px 0 2px'
                         }}
                       >
-                        {typeof word === 'string' ? word : word.getText()}
+                        {w.type === 'EMPTY' ? null : w.type === 'WORD' ? w.word.getText() : w.token.image}
                       </div>
                   )
                 }

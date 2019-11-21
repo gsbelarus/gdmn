@@ -22,47 +22,58 @@ type MessageBoxComponent = (props: IMessageBoxProps) => JSX.Element | null;
 type MessageBoxFunc = (msgBoxParams: IMessageBoxParams | string) => Promise<MBResult>;
 type ResolveFunc = (result: MBResult) => void;
 
+const iconNames: { [name: string]: string } = {
+  'Information': 'Info',
+  'Warning': 'Warning',
+  'Error': 'ErrorBadge',
+  'Attention': 'IncidentTriangle'
+};
+
+const maxLineLength = 80;
+
 export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
 
-  const [params, setParams] = useState<IMessageBoxParams | null>(null);
-  const resolve = useRef<ResolveFunc | null>(null);
+  const [params, setParams] = useState<IMessageBoxParams | undefined>();
+  const resolve = useRef<ResolveFunc | undefined>();
 
-  const getOnClick = (result: MBResult) => () => { setParams(null); if (resolve.current) resolve.current(result); };
+  const getOnClick = (result: MBResult) => () => { setParams(undefined); if (resolve.current) resolve.current(result); };
   const getButton = (text: string, result: MBResult = 'OK', n: number = 0) => params && ((params.defButton === undefined && !n) || params.defButton === n)
     ? <PrimaryButton onClick={getOnClick(result)} text={text}/>
     : <DefaultButton onClick={getOnClick(result)} text={text}/>;
-  const getIconName = () => {
-    if (!params || !params.icon) {
-      return undefined;
-    }
+  const getIconName = () => params && params.icon && (iconNames[params.icon] || 'StatusCircleQuestionMark');
 
-    switch (params.icon) {
-      case 'Information':
-        return 'Info';
+  let message: JSX.Element | null = null;
+  let maxLen = 0;
 
-      case 'Warning':
-        return 'Warning';
-
-      case 'Error':
-        return 'ErrorBadge';
-
-      case 'Attention':
-        return 'IncidentTriangle';
-
-      default:
-        return 'StatusCircleQuestionMark'
-    }
-  };
-
-  const message = params
-    ? params.code
-      ? <Frame border>
+  if (params) {
+    if (params.code) {
+      message =
+        <Frame border>
           <pre>
             {params.message}
           </pre>
         </Frame>
-      : <span>{params.message}</span>
-    : null;
+    }
+    else if (params.message.length > maxLineLength) {
+      const divided = params.message.split(' ');
+      const arr: string[] = [''];
+      for (const w of divided) {
+        const l = arr[arr.length - 1].length;
+        if ((l + w.length) > maxLineLength) {
+          if (l > maxLen) {
+            maxLen = l;
+          }
+          arr.push(w);
+        } else {
+          arr[arr.length - 1] = arr[arr.length - 1] + ' ' + w;
+        }
+      }
+      message = <Stack>{arr.map( l => <Stack.Item>{l}</Stack.Item> )}</Stack>;
+    }
+    else {
+      message = <span>{params.message}</span>;
+    }
+  }
 
   const MessageBox = (props: IMessageBoxProps) => {
     return params
@@ -85,7 +96,7 @@ export const useMessageBox = (): [MessageBoxComponent, MessageBoxFunc] => {
               menu: ContextualMenu
             },
           }}
-          minWidth={params.code ? '680px' : undefined}
+          minWidth={params.code ? '680px' : maxLen > 35 ? '616px' : undefined}
         >
           {
             params && params.icon

@@ -26,7 +26,7 @@ export class EntityLinkField {
       }
       for (const link of links) {
         if (!attribute.entities.includes(link.entity)) {
-          throw new Error(`Attribute can't link to entity "${link.entity.name}"`);
+          throw new Error(`Attribute can't link to an entity "${link.entity.name}"`);
         }
       }
       if (attribute instanceof SetAttribute) {
@@ -39,7 +39,7 @@ export class EntityLinkField {
         }
       } else {
         if (setAttributes) {
-          throw new Error("EntityLinkField without SetAttribute must hasn't 'setAttributes' property");
+          throw new Error("EntityLinkField without SetAttribute must not has 'setAttributes' property");
         }
       }
     }
