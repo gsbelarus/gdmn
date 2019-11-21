@@ -21,6 +21,7 @@ class SettingsCacheManager {
     return newCache;
   }
 
+  /*
   get(id: string) {
     const res = this._settingsCaches[id];
 
@@ -30,6 +31,7 @@ class SettingsCacheManager {
 
     return res;
   }
+  */
 
   flush(clear?: boolean) {
     Object.values(this._settingsCaches).forEach( s => s.flush(clear) );
