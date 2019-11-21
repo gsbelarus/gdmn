@@ -7,11 +7,10 @@ import { NumberField } from "./NumberField";
 
 interface ISetValueProps {
   entityName: string;
-  presLen: number;
   onDelete?: () => void;
 };
 
-const SetValue = ({ entityName, presLen, onDelete }: ISetValueProps) =>
+const SetValue = ({ entityName, onDelete }: ISetValueProps) =>
   <div
     style={{
       backgroundColor: getTheme().semanticColors.primaryButtonBackground,
@@ -76,6 +75,14 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                     }
                   }}
                 />
+                <NumberField
+                  label="presLen:"
+                  onlyInteger={true}
+                  value={state.presLen}
+                  width="180px"
+                  onInvalidValue={ () => onError }
+                  onChange={ presLen => { presLen !=undefined && presLen > 0 && onChange({ ...attr, presLen}); } }
+                />
                 <PrimaryButton
                   text="Save"
                   disabled={!state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
@@ -94,14 +101,6 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                   text="Cancel"
                   onClick={ () => setState(undefined) }
                 />
-                <NumberField
-                  label="presLen:"
-                  onlyInteger={true}
-                  value={attr.presLen}
-                  width="180px"
-                  onInvalidValue={ () => onError }
-                  onChange={ presLen => { presLen !=undefined && presLen > 0 && onChange({ ...attr, presLen}); } }
-                />
               </>
             :
               <>
@@ -110,7 +109,6 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                     <SetValue
                       key={entityName}
                       entityName={entityName}
-                      presLen={1}
                       onDelete={
                         createAttr ?
                         () => onChange({
@@ -120,9 +118,9 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                         : undefined
                       }
                     />
-                )}
+                    )}
                 {
-                  createAttr ?
+                  !attr.references.length ?
                     <DefaultButton
                       text="Add set"
                       onClick={ () => setState({ idx: attr.references.length, entityName: '', presLen: 1 }) }
