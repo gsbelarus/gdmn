@@ -145,7 +145,8 @@ export class Application extends ADatabase {
         dir = '/' + dir;
       }
       const id = `${server.host}${dir}/${parsed.name}`;
-      this.settingsCache = settingsCacheManager.add(id, path.dirname(settingDir) + '/' + id);
+      const resolvedDir = path.resolve(path.posix.normalize(path.dirname(settingDir) + '/' + id));
+      this.settingsCache = settingsCacheManager.add(id, resolvedDir);
     } else {
       this.settingsCache = settingsCacheManager.add(dbPath, dbPath.slice(0, dbPath.length - parsed.ext.length));
     }
