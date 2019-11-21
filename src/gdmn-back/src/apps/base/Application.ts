@@ -133,7 +133,7 @@ export class Application extends ADatabase {
      */
     const { server, path: dbPath } = dbDetail.connectionOptions;
     const parsed = path.parse(dbPath);
-    if (server) {
+    if (server && server.host) {
       const settingDir = config.get("server.settingDir");
 
       if (typeof settingDir !== 'string' || !settingDir) {
@@ -144,8 +144,8 @@ export class Application extends ADatabase {
       if (dir) {
         dir = '/' + dir;
       }
-      const id = `${server}${dir}/${parsed.name}`;
-      this.settingsCache = settingsCacheManager.add(id, path.dirname(config.get("server.settingDir")) + '/' + id);
+      const id = `${server.host}${dir}/${parsed.name}`;
+      this.settingsCache = settingsCacheManager.add(id, path.dirname(settingDir) + '/' + id);
     } else {
       this.settingsCache = settingsCacheManager.add(dbPath, dbPath.slice(0, dbPath.length - parsed.ext.length));
     }
