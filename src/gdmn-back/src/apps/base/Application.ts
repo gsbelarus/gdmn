@@ -134,6 +134,12 @@ export class Application extends ADatabase {
     const { server, path: dbPath } = dbDetail.connectionOptions;
     const parsed = path.parse(dbPath);
     if (server) {
+      const settingDir = config.get("server.settingDir");
+
+      if (typeof settingDir !== 'string' || !settingDir) {
+        throw new Error('Param "server.settingDir" not found in configuration file "config/default.json"');
+      }
+
       let dir = parsed.dir.slice(parsed.root.length);
       if (dir) {
         dir = '/' + dir;
