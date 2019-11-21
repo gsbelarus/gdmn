@@ -131,23 +131,17 @@ export class Application extends ADatabase {
      *
      * myserver\bases\enterprise\dbase
      */
-    const host = dbDetail.connectionOptions.server && dbDetail.connectionOptions.server.host;
-    const dbFullName = path.normalize(dbDetail.connectionOptions.path);
-    if (host) {
-      const configSettingBaseDir = config.get("server.settingDir");
-
-      if (typeof configSettingBaseDir !== 'string' || !configSettingBaseDir) {
-        throw new Error('Param "server.settingDir" not found in configuration file "config/default.json"');
-      }
-
-      const settingBaseDir = path.normalize(configSettingBaseDir);
-      const parsed = path.parse(dbFullName);
-      const dbPath = parsed.dir.slice(parsed.root.length);
-      const settingDir = path.resolve(settingBaseDir, host, dbPath, parsed.name);
-      this.settingsCache = settingsCacheManager.add(`${host}:${dbFullName}`, settingDir);
-    } else {
-      this.settingsCache = settingsCacheManager.add(dbFullName, dbFullName.slice(0, dbFullName.length - path.extname(dbFullName).length));
+    const configSettingBaseDir = config.get("server.settingDir");
+    if (typeof configSettingBaseDir !== 'string' || !configSettingBaseDir) {
+      throw new Error('Param "server.settingDir" not found in configuration file "config/default.json"');
     }
+    const host = (dbDetail.connectionOptions.server && dbDetail.connectionOptions.server.host) || 'localhost';
+    const dbFullName = path.normalize(dbDetail.connectionOptions.path);
+    const settingBaseDir = path.normalize(configSettingBaseDir);
+    const parsed = path.parse(dbFullName);
+    const dbPath = parsed.dir.slice(parsed.root.length);
+    const settingDir = path.resolve(settingBaseDir, host, dbPath, parsed.name);
+    this.settingsCache = settingsCacheManager.add(`${host}:${dbFullName}`, settingDir);
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
