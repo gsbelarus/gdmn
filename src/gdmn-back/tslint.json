@@ -18,6 +18,7 @@
     ],
     "unified-signatures": false,
     "no-console": false,
+    "arrow-parens": false,
     "typedef": [
       true,
       "call-signature",

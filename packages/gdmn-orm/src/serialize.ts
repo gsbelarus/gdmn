@@ -73,6 +73,7 @@ export interface IStringAttribute extends IAttribute {
 export interface IBlobAttribute extends IAttribute {
   subType: BlobSubTypes;
 }
+
 export interface IEntityAttribute extends IAttribute {
   references: string[];
 }

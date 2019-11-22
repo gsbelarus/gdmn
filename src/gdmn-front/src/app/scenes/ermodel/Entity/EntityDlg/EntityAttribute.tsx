@@ -101,7 +101,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
             label="Type:"
             selectedKey={attr.type}
             options={
-              attributeTypeNames.map( n => ({ key: n, text: n }) )
+              attributeTypeNames.map(n => ({ key: n, text: n }))
             }
             styles={{
               root: {
@@ -145,7 +145,17 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
             />
           </Stack.Item>
         </Stack>
-        <AttrEditor attr={attr as any} attrIdx={attrIdx} createAttr={createAttr} userDefined={userDefined} errorLinks={errorLinks} onChange={onChange} onError={onError} onClearError={onClearError} erModel={erModel} />
+        <AttrEditor
+          attr={attr as any}
+          attrIdx={attrIdx}
+          createAttr={createAttr}
+          userDefined={userDefined}
+          errorLinks={errorLinks}
+          onChange={onChange}
+          onError={onError}
+          onClearError={onClearError}
+          erModel={erModel}
+        />
       </Stack>
     </Frame>
   , [attr, attrIdx, selected, errorLinks, erModel]);
