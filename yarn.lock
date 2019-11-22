@@ -15733,10 +15733,10 @@ stealthy-require@^1.1.1:
   resolved "https://registry.yarnpkg.com/stealthy-require/-/stealthy-require-1.1.1.tgz#35b09875b4ff49f26a777e509b3090a3226bf24b"
   integrity sha1-NbCYdbT/SfJqd35QmzCQoyJr8ks=
 
-stomp-protocol@^0:
-  version "0.4.5"
-  resolved "https://registry.yarnpkg.com/stomp-protocol/-/stomp-protocol-0.4.5.tgz#1d5c08c5ddad00e0f5e007b6e3fe755633d3675d"
-  integrity sha512-Bvvn/UI3Oo+YfiNtnmDsMkCQ5yh0/szTtkQnJ/457LciOsc5qk0qvGRVVTZdkEzDAAGTyqPJ3G3MYG9Xy7YJ+w==
+stomp-protocol@^0.4.6:
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/stomp-protocol/-/stomp-protocol-0.4.6.tgz#2c66ad9e089ca03d652d66b266874ea7a1b758bd"
+  integrity sha512-t6ohkFbqhq/DkQ6zUkBtmsVf0ixQAesXu30/YX9VmRs7kSFOPpuylNusX6+drmo1ObbhpE28Drzjd8eMOsoVDQ==
 
 stream-browserify@^2.0.1:
   version "2.0.2"
