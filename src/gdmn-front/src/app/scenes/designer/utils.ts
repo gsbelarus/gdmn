@@ -65,14 +65,16 @@ export const getColor = (color: string | undefined): string | undefined => {
 export const object2style = (object: IObject, objects: Objects, enabled: boolean = true): React.CSSProperties => enabled ?
   {
     backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
-    color: getColor(inheritValue(object, 'color', objects))
+    color: getColor(inheritValue(object, 'color', objects)),
+    margin: '0 4px 4px 0'
   }
   :
   {};
 
 export const object2IStyle = (object: IObject, objects: Objects): IStyle => ({
   backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
-  color: getColor(inheritValue(object, 'color', objects))
+  color: getColor(inheritValue(object, 'color', objects)),
+  margin: '0 4px 4px 0'
 });
 
 export const object2ITextFieldStyles = (object: IObject, objects: Objects): Partial<ITextFieldStyles> => ({
