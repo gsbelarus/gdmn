@@ -23,13 +23,11 @@ interface IEntityDataViewState {
   phrase: string;
   phraseError?: string;
   showSQL?: boolean;
-  linkField?: string;
 };
 
 type Action = { type: 'SET_PHRASE', phrase: string }
   | { type: 'SET_PHRASE_ERROR', phraseError: string }
-  | { type: 'SET_SHOW_SQL', showSQL: boolean }
-  | { type: 'SET_LINK_FIELD', linkField: string };
+  | { type: 'SET_SHOW_SQL', showSQL: boolean };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
@@ -60,15 +58,6 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
         showSQL
       }
     }
-
-    case 'SET_LINK_FIELD': {
-      const { linkField } = action;
-
-      return {
-        ...state,
-        linkField
-      }
-    }
   }
 
   return state;
@@ -81,6 +70,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const masterLinkRef = useRef<IMasterLink | undefined>(rs && rs.masterLink ? rs.masterLink : undefined);
+  const linkFieldRef = useRef<string | undefined>(undefined);
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
@@ -99,7 +89,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     paramsDialog: false,
     searchIdx: 0
   } : undefined;
-  const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
+  const [{ phrase, phraseError, showSQL }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
       ? rs.queryPhrase
       : entityName
@@ -196,8 +186,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
 
       if(masterLinkRef.current !== newMasterLink) {
-        masterLinkRef.current = newMasterLink;
+        if(masterLinkRef.current && masterLinkRef.current.masterName !== newMasterLink.masterName) {
+          dispatch(loadRSActions.deleteRS({name: masterLinkRef.current.masterName}));
+        }
       }
+        masterLinkRef.current = newMasterLink;
 
     }
   }
@@ -205,17 +198,17 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   //этот метод вызывается для получения новых данных,
   //которые соответствуют выбранной записи в дереве или гриде мастера
   const filterByFieldLink = (row: number) => {
-    if(entity && masterRs && masterEntity && linkField) {
+    if(entity && masterRs && masterEntity && linkFieldRef.current) {
       dispatch(rsActions.setCurrentRow({name: masterRs.name, currentRow: row}));
     }
   }
 
   useEffect(() => {
-    if(masterRs && linkField) {
+    if(masterRs && linkFieldRef.current) {
       const fdID = masterRs.params.fieldDefs.find(fd => fd.caption === 'ID');
       const value = fdID ? masterRs.getString(fdID.fieldName, masterRs.currentRow) : undefined;
-      if( !(rs && rs.masterLink && rs.masterLink.values.find(v => v.fieldName === linkField && v.value === value))) {
-        setMasterLink(linkField, value);
+      if( !(rs && rs.masterLink && rs.masterLink.values.find(v => v.fieldName === linkFieldRef.current && v.value === value))) {
+        setMasterLink(linkFieldRef.current, value);
       }
     }
   }, [masterRs])
@@ -368,16 +361,22 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
   const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter( fd => fd.links ) : [];
+  const lf = linkfields.find(lf => masterLinkRef.current && masterLinkRef.current.values.find(mlr => mlr.fieldName === lf.attribute.name));
+  linkFieldRef.current = lf ? lf.attribute.name : undefined;
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
         {
           rs
-            ? linkfields && linkfields.length !== 0 && linkField && linkField !== '' && linkField && linkField !== 'noSelected'
+            ? linkfields && linkfields.length !== 0 && linkFieldRef.current && linkFieldRef.current !== '' && linkFieldRef.current && linkFieldRef.current !== 'noSelected' || masterLinkRef.current
               ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
                   {
                     masterRs
-                    ? linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
+                    ? linkfields.find( lf =>
+                      linkFieldRef.current
+                          ? lf.attribute.name === linkFieldRef.current
+                          : masterLinkRef.current && masterLinkRef.current.values.find(mlr => mlr.fieldName === lf.attribute.name)
+                      )!.links![0].entity.isTree
                       ? <Tree
                           rs={masterRs}
                           load={() => {
@@ -447,7 +446,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   placeholder="Select link field"
                   allowFreeform
                   autoComplete="on"
-                  selectedKey={linkField}
+                  selectedKey={linkFieldRef.current}
                   onChange={(_, option) => {
                     if (rs && option) {
                       if(option.key === 'noSelected') {
@@ -458,7 +457,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM }));
                       }
                     }
-                    viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.key as string : '' })
+                    linkFieldRef.current = option ? option.key as string : undefined;
                   }}
                   options={
                     linkfields.length !== 0
