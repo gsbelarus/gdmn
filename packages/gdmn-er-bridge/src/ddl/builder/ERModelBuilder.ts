@@ -42,10 +42,15 @@ export class ERModelBuilder extends Builder {
       * если нет адаптера, то добавляем
       **/
       const entity = source;
-      let pkAttrs: Attribute[] = [];
+      let pkAttrs: Attribute[] = []; // Массив аттрибутов для первичного ключа
+      /** 
+      * Если сущность - наследник (указано свойство parent), 
+      * то должен быть обязательный атрибут INHERITEDKEY (ссылка на родительскую сущность)
+      * Если сущность - не наследник, то должен быть обязательный атрибут ID
+      **/
       if (entity.parent) {
         if (!entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME)) {
-          /** если у сущности указан атрибут parent но нет атрибута INHERITEDKEY (ссылка на родителя) то создаём */
+          /** если у сущности нет атрибута INHERITEDKEY, то создаём */
           pkAttrs.push(
             entity.add(new EntityAttribute({
               name: Constants.DEFAULT_INHERITED_KEY_NAME,
@@ -67,7 +72,7 @@ export class ERModelBuilder extends Builder {
           pkAttrs.push(entity.ownAttribute(Constants.DEFAULT_INHERITED_KEY_NAME));
         }
       } else {
-        /** если у сущности не указан атрибут parent и нет атрибута ID то создаём */          
+        /** если у сущности не указано свойство parent и нет атрибута ID то создаём */          
         if (!entity.hasOwnAttribute(Constants.DEFAULT_ID_NAME)) {
           entity.add(new SequenceAttribute({
             name: Constants.DEFAULT_ID_NAME,
@@ -82,27 +87,18 @@ export class ERModelBuilder extends Builder {
         } else {
           const attrId = entity.ownAttribute(Constants.DEFAULT_ID_NAME);
           attrId.adapter = {
-              relation: AdapterUtils.getOwnRelationName(entity),
-              field: Constants.DEFAULT_ID_NAME
+            relation: AdapterUtils.getOwnRelationName(entity),
+            field: Constants.DEFAULT_ID_NAME
           };
 
           pkAttrs.push(attrId);
         }
       }
 
-    /** если у сущности в списке атрибутов есть атрибут PARENT то добавляем к нему адаптер*/      
-    /*       if (entity.hasOwnAttribute(Constants.DEFAULT_PARENT_KEY_NAME)) {        
-        const attrId = entity.ownAttribute(Constants.DEFAULT_PARENT_KEY_NAME);
-        attrId.adapter = {
-            relation: AdapterUtils.getOwnRelationName(entity),
-            field: Constants.DEFAULT_PARENT_KEY_NAME
-        };
+      const tableName = AdapterUtils.getOwnRelationName(entity); 
+      const fields: IFieldProps[] = []; // Массив полей      
 
-        pkAttrs.push(attrId);
-      } */
-
-      const tableName = AdapterUtils.getOwnRelationName(entity);
-      const fields: IFieldProps[] = [];
+      // создание доменов из списка атрибутов для первичного ключа
       for (const pkAttr of pkAttrs) {
         const fieldName = AdapterUtils.getFieldName(pkAttr);
         const domainName = Prefix.domain(await this.nextDDLUnique());
@@ -124,7 +120,7 @@ export class ERModelBuilder extends Builder {
         entityName: entity.name,
         semCategory: entity.semCategories
       });
-      
+      // Создание первичного ключа
       for (const pkAttr of pkAttrs) {
         switch (pkAttr.type) {
           case "Sequence": {
@@ -157,6 +153,10 @@ export class ERModelBuilder extends Builder {
       }
       const pk = [...entity.pk];
 
+      /** 
+      * Удаляем атрибуты (кроме атрибутов из массива pkAttrs). 
+      * Создаём поля из списка атрибутов (без атрибутов для первичного ключа)
+      */
       const attributes = Object.values(entity.ownAttributes);
       attributes.forEach((attr) => entity.remove(attr));
       for (const attr of attributes) {

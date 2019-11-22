@@ -73,14 +73,14 @@ export class VirtualQueries {
       adapter: {relation: [{relationName: "TREE", pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]}
     });
 
-    // queryToTree.add(new StringAttribute({
-    //   name: Constants.DEFAULT_ID_NAME,
-    //   lName: {ru: {name: "Идентификатор"}},
-    //   adapter: {
-    //     relation: AdapterUtils.getOwnRelationName(queryToTree),
-    //     field: Constants.DEFAULT_ID_NAME
-    //   }
-    // }));
+    queryToTree.add(new StringAttribute({
+      name: Constants.DEFAULT_ID_NAME,
+      lName: {ru: {name: "Идентификатор"}},
+      adapter: {
+        relation: AdapterUtils.getOwnRelationName(queryToTree),
+        field: Constants.DEFAULT_ID_NAME
+      }
+    }));
 
     const fieldParent = new IntegerAttribute({
       name: "PARENT",
@@ -137,14 +137,15 @@ export class VirtualQueries {
       }
     });
 
-    // query.add(new StringAttribute({
-    //   name: Constants.DEFAULT_ID_NAME,
-    //   lName: {},
-    //   adapter: {
-    //     relation: AdapterUtils.getOwnRelationName(query),
-    //     field: Constants.DEFAULT_ID_NAME
-    //   }
-    // }));
+    query.add(new StringAttribute({
+      name: Constants.DEFAULT_ID_NAME,
+      lName: {},
+      adapter: {
+        relation: AdapterUtils.getOwnRelationName(query),
+        field: Constants.DEFAULT_ID_NAME
+      }
+    }));
+    
     query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
@@ -197,14 +198,14 @@ export class VirtualQueries {
       }
     });
 
-/*     query.add(new StringAttribute({
+    query.add(new StringAttribute({
       name: Constants.DEFAULT_ID_NAME,
       lName: {},
       adapter: {
         relation: query.adapter!.relation[0].relationName,
         field: Constants.DEFAULT_ID_NAME
       }
-    })); */
+    }));
 
     query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
