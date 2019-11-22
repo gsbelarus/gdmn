@@ -144,33 +144,37 @@ export class ERTranslatorRU2 {
       }
 
       if (geoAttr instanceof EntityAttribute) {
-        const linkEntity = geoAttr.entities[0];
-        const linkAlias = "alias2";
+        const foundLinkField = fields.find( f => f.attribute === geoAttr );
 
-        if (
-          !fields
-            .filter( field => field.links )
-            .some( field => field.links!.some( fLink => fLink.alias === linkAlias && field.attribute === geoAttr) )
-        ) {
+        if (foundLinkField && foundLinkField.links) {
+          equals.push({
+            alias: foundLinkField.links[0].alias,
+            attribute: foundLinkField.links[0].entity.presentAttribute(),
+            value
+          });
+        } else {
+          const linkEntity = geoAttr.entities[0];
+          const linkAlias = "alias2";
+
           fields.push(new EntityLinkField(geoAttr, [new EntityLink(linkEntity, linkAlias, [])]));
-        }
 
-        equals.push({
-          alias: linkAlias,
-          attribute: linkEntity.presentAttribute(),
-          value
-        });
+          equals.push({
+            alias: linkAlias,
+            attribute: linkEntity.presentAttribute(),
+            value
+          });
+        }
       } else {
         equals.push({
-          alias: "alias1",
+          alias: rootAlias,
           attribute: geoAttr,
           value
         });
       }
     }
 
-    const options = new EntityQueryOptions(undefined, undefined, equals ? [{equals}] : []);
-    const entityLink = new EntityLink(entity, "alias1", fields);
+    const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+    const entityLink = new EntityLink(entity, rootAlias, fields);
 
     return {
       action: 'QUERY',

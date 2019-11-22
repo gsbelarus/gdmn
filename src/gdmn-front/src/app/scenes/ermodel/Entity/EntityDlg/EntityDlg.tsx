@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel } from "gdmn-orm";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel, IEntityAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -75,12 +75,13 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     id: getTempID()
   };
 
-  const parent: IAttribute = {
+  const parent: IEntityAttribute = {
     name: 'PARENT',
     type: 'Parent',
     required: false,
     lName: { ru: { name: 'Ссылка на родительский уровень' }},
     semCategories: '',
+    references: [],
     id: getTempID()
   };
 
@@ -370,7 +371,9 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       if (createEntity) {
         const result = await apiService.AddEntity({
           ...entityData,
-          attributes: entityData.attributes.map( attr => isTempID(attr.id) ? {...attr, id: undefined } : attr )
+          attributes: entityData.attributes
+            .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
+            .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
         });
 
         if (result.error) {

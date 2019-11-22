@@ -721,7 +721,6 @@ export class CachedStatements {
     });
   }
 
-
   public async addToATGenerator(input: IATGeneratorInput): Promise<number> {
     this._checkDisposed();
 
@@ -887,7 +886,6 @@ export class CachedStatements {
       }
     });
   }
-
 
   private _checkDisposed(): void | never {
     if (this._disposed) {
