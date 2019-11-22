@@ -9,7 +9,7 @@ export function isValidDateString(value: any) {
 };
 
 export function detectAndParseDate(value: any) {
-  return (typeof value === "string" && value.length >= 24 && value.length <= 29 && dateFormat.test(value))
+  return isValidDateString(value)
     ? new Date(value)
     : value;
 };
