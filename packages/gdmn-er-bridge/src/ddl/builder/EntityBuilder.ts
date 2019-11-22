@@ -46,14 +46,8 @@ export class EntityBuilder extends Builder {
     const tablePk = entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ? Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME;
 
     if (attribute instanceof ScalarAttribute) {      
-      // if (attribute.name === "RB") {
-      //   await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
-      // }
-      // if (attribute.name === "LB") {
-      //    await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
-      // }
-
       const fieldName = AdapterUtils.getFieldName(attribute);
+      // TODO добавлять для системных полей определённые домены: ID: DINTKEY; LB: DLB; RB: DRB; PARENT: DPARENT; etc
       const domainName = Prefix.domain(await this.nextDDLUnique());
       await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attribute));
       await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
@@ -125,18 +119,7 @@ export class EntityBuilder extends Builder {
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
           await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
-
-          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
-          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
-
-          // const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.createIndex(indexName, tableName,[lbField], {sortType: "ASC"});
-          // const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.createIndex(indexName2, tableName, [rbField],{sortType:"DESC"});
-
-          // const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.addTableCheck(checkName ,tableName, `${lbField} <= ${rbField}`);
-          //
+          
           const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(fkConstName, {
             tableName,
@@ -309,16 +292,50 @@ export class EntityBuilder extends Builder {
       }
     }
 
-    if ((attribute.name === "RB" && entity.hasOwnAttribute("LB")) || (attribute.name === "LB" && entity.hasOwnAttribute("RB"))) {
-      // Добавляем 
+    if ((attribute.name === Constants.DEFAULT_RB_NAME && entity.hasOwnAttribute(Constants.DEFAULT_LB_NAME)) ||  
+      (attribute.name === Constants.DEFAULT_LB_NAME && entity.hasOwnAttribute(Constants.DEFAULT_RB_NAME))) {
+      /* 
+        Если присутствуют поля LB RB (entity type "lb-rb tree"), добавляем для поддержки:
+        1) Индексы для LB и RB (DESCENDING)
+        2) check
+        3) bi trigger
+        4) bu trigger
+        5) ХП - USR$_P_RESTRUCT
+        5) ХП - USR$_P_GCHС
+        5) ХП - USR$_P_EL
+      */  
+     
+      // 1) Добавляем indices
+      const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
+      await this.ddlHelper.createIndex(indexName, tableName, [Constants.DEFAULT_LB_NAME], {sortType: "ASC"});
+      const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());
+      await this.ddlHelper.createIndex(indexName2, tableName, [Constants.DEFAULT_RB_NAME], {sortType:"DESC"});
+      // 2) Добавляем check
+      const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
+      await this.ddlHelper.addTableCheck(checkName ,tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
 
+          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
+          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
+
+          // const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.createIndex(indexName, tableName,[lbField], {sortType: "ASC"});
+          // const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.createIndex(indexName2, tableName, [rbField],{sortType:"DESC"});
+
+          // const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
+          // await this.ddlHelper.addTableCheck(checkName ,tableName, `${lbField} <= ${rbField}`);
+          //        
+      // if (attribute.name === "RB") {
+      //   await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
+      // }
+      // if (attribute.name === "LB") {
+      //    await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
+      // }
     }
     return entity.add(attribute);
   }
 
   public async deleteAttribute(entity: Entity, attribute: Attribute): Promise<void> {
-
-
     switch (attribute.type) {
       case "Set":
         await this.ddlHelper.cachedStatements.dropATRelationField(attribute.name);

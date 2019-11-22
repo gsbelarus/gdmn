@@ -742,7 +742,7 @@ export class CachedStatements {
 
     if (!this._statements.addToATIndices) {
       this._statements.addToATIndices = await this.connection.prepare(this._transaction, `
-        INSERT INTO AT_INDICES (INDEXNAME, RELATIONNAME, INDEX_INACTIVE, FIELDLIST, RELATIONKEY, UNIQUE_FLAG)
+        INSERT INTO AT_INDICES (INDEXNAME, RELATIONNAME, INDEX_INACTIVE, FIELDSLIST, RELATIONKEY, UNIQUE_FLAG)
         SELECT FIRST 1 :indexName, :relationName, :indexInactive, :fieldList, ID, :uniqueFlag
         FROM AT_RELATIONS
         WHERE RELATIONNAME = :relationName
