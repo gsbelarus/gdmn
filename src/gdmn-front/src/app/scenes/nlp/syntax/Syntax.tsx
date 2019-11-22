@@ -8,6 +8,8 @@ import { NLPToken } from "./NLPToken";
 import { NLPSentence } from "./NLPSentence";
 import { ERTranslatorRU2, ICommand } from "gdmn-nlp-agent";
 import { EQ } from "./EntityQuery";
+import { apiService } from "@src/app/services/apiService";
+import { IEntityQueryInspector } from "gdmn-orm";
 
 const predefinedPhrases = [
   'название не содержит ООО',
@@ -39,10 +41,12 @@ interface ISyntaxState {
   command: ICommand[];
   errorMessage?: string;
   processUniform: boolean;
+  sql?: string;
 };
 
 type Action = { type: 'SET_TEXT', text: string }
   | { type: 'SET_TRANSLATOR', translator: ERTranslatorRU2 }
+  | { type: 'SET_SQL', sql: string }
   | { type: 'TOGGLE_PROCESS_UNIFORM' };
 
 function reducer(state: ISyntaxState, action: Action): ISyntaxState {
@@ -72,6 +76,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
         selectedTokensIdx: 0,
         parsed,
         command,
+        sql: undefined,
         errorMessage
       };
     }
@@ -84,6 +89,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
         parsed: [],
         command: [],
         errorMessage: undefined,
+        sql: undefined,
         processUniform: !state.processUniform
       };
     }
@@ -96,7 +102,15 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
         parsed: [],
         translator: action.translator,
         command: [],
+        sql: undefined,
         errorMessage: undefined
+      };
+    }
+
+    case 'SET_SQL': {
+      return {
+        ...state,
+        sql: action.sql
       };
     }
   }
@@ -105,7 +119,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
   const { viewTab, url, dispatch, theme, history, erModel } = props;
-  const [{ text, tokens, selectedTokensIdx, parsed, translator, command, errorMessage, processUniform }, reactDispatch] = useReducer(reducer,
+  const [{ text, tokens, selectedTokensIdx, parsed, translator, command, errorMessage, processUniform, sql }, reactDispatch] = useReducer(reducer,
     {
       text: '',
       tokens: [],
@@ -124,6 +138,20 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
       reactDispatch({ type: 'SET_TRANSLATOR', translator: new ERTranslatorRU2(erModel) })
     }
   }, [erModel, translator]);
+
+  useEffect( () => {
+    if (command && command.length) {
+      const inspector = command[0].payload.inspect();
+      const query: IEntityQueryInspector = { ...inspector, options: { ...inspector.options, first: 1 } };
+      apiService.query({ query })
+      .then( res => {
+        if (res.payload && res.payload.result && !res.error) {
+          console.log(res.payload);
+          reactDispatch({ type: 'SET_SQL', sql: res.payload.result.info?.select });
+        }
+      });
+    }
+  }, [command]);
 
   const commandBarItems = [
     {
@@ -190,6 +218,16 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
           command.length ?
             <Frame border marginTop caption="Command" scroll height={'400px'}>
               <EQ eq={command[0].payload} />
+            </Frame>
+          :
+            null
+        }
+        {
+          sql ?
+            <Frame border marginTop caption="SQL" scroll height={'400px'}>
+              <pre>
+                {sql}
+              </pre>
             </Frame>
           :
             null

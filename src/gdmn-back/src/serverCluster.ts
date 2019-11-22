@@ -73,9 +73,13 @@ async function createCluster(
 
         let workerIndex = null;
         /* url = /?appId=1&userId=2&sessionId=3 */
-        const reqSearchParams = new URLSearchParams(
-          url.parse(request.url, true).search
-        );
+        const init = url.parse(request.url, true).search;
+
+        if (init === null) {
+          throw new Error(`Invalid request url ${request.url}`);
+        }
+
+        const reqSearchParams = new URLSearchParams(init);
 
         let pid;
         try {
