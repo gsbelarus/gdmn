@@ -61,7 +61,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
     }
 
     case getType(actions.attachRS): {
-      const { eq, queryPhrase, override } = action.payload;
+      const { eq, queryPhrase, override, masterLink } = action.payload;
 
       const prevRsm = getRsMeta();
 
@@ -117,6 +117,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     data: List(result.data as IDataRow[]),
                     eq,
                     queryPhrase,
+                    masterLink,
                     sql: result.info,
                     sequentially: !!rsm.taskKey
                   });

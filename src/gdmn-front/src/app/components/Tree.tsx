@@ -9,19 +9,17 @@ interface INode {
   row: number;
   rollUp?: boolean;
   children: string[];
-  lb?: number;
-  rb?: number;
 }
 
 interface ITreeProps {
   rs: RecordSet;
   load: () => void;
-  selectNode: (value: string, row: number, lb?: number, rb?: number) => void;
+  selectNode: (row: number) => void;
 }
 
 interface INodeProps {
   node: INode,
-  onClick: (value: string, row: number, lb?: number, rb?: number) => void;
+  onClick: (row: number) => void;
   level: (children: string[], isRoot: boolean) => JSX.Element;
   isLast: boolean;
   isRoot?: boolean;
@@ -61,7 +59,7 @@ const Node = (props: INodeProps) => {
         <div
           style={{marginLeft: '5px'}}
           onClick={() => {
-            props.onClick(props.node.id, props.node.row, props.node.lb, props.node.rb);
+            props.onClick(props.node.row);
           }}
         >
           {props.node.value}
@@ -104,9 +102,7 @@ export const Tree = (props: ITreeProps) => {
           id: findIDParent, 
           value: fdNAME ? props.rs.getString(fdNAME.fieldName, i) : props.rs.getString(fdUSRNAME!.fieldName, i),
           row: i,
-          parent: parent ? parent : props.rs.name,
-          lb: fdLB ? props.rs.getInteger(fdLB.fieldName, i) : undefined,
-          rb: fdRB ? props.rs.getInteger(fdRB.fieldName, i) : undefined
+          parent: parent ? parent : props.rs.name
         } as INode)
     }
   }

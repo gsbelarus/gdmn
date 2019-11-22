@@ -1,10 +1,10 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { rsActions, TStatus, IDataRow } from 'gdmn-recordset';
+import { rsActions, TStatus, IDataRow, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { nlpTokenize, nlpParse, sentenceTemplates } from 'gdmn-nlp';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, EntityQuery, EntityQueryOptions } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, EntityQuery, EntityQueryOptions, IEntityQueryWhere, IEntityQueryWhereValue } from 'gdmn-orm';
 import {List} from "immutable";
 
 interface IEntityDataViewState {
@@ -80,6 +80,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
+  const masterLinkRef = useRef<IMasterLink | undefined>(rs && rs.masterLink ? rs.masterLink : undefined);
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
@@ -106,6 +107,35 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       : ''
   });
 
+  const newEQ = (eq: EntityQuery) => {
+    const whereObj = eq.options && eq.options.where ? eq.options.where : [];
+    const orderObj = eq.options && eq.options.order ? eq.options.order : undefined;
+    if(rs && rs.masterLink && entity) {
+      rs.masterLink.values.forEach( ml => {
+        const findAttr = entity.attributes[ml.fieldName];
+        if(whereObj[0] && whereObj[0].equals) {
+          whereObj[0].equals.push({
+              alias: 'alias1',
+              attribute: findAttr,
+              value: ml.value
+            } as IEntityQueryWhereValue)
+        } else {
+          whereObj.push({
+            equals: [{
+              alias: 'alias1',
+              attribute: findAttr,
+              value: ml.value
+            } as IEntityQueryWhereValue]
+          })
+        }
+      })
+    }
+    return new EntityQuery(
+      eq.link,
+      new EntityQueryOptions( undefined, undefined, whereObj, orderObj )
+    );
+  }
+
   const applyPhrase = () => {
     if (erModel && entity) {
       if (phrase) {
@@ -117,39 +147,82 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             const command = erTranslatorRU.process(parsed);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
-              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+              dispatch(loadRSActions.attachRS({ name: entityName, eq: newEQ(eq), queryPhrase: phrase, override: true, masterLink: masterLinkRef.current }));
             }
           }
-
-          // const parsedText: ParsedText[] = parsePhrase(phrase);
-          // const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-          // if (phrases.length) {
-          //   const erTranslatorRU = new ERTranslatorRU(erModel)
-          //   const command = erTranslatorRU.process(phrases);
-          //   const eq = command[0] ? command[0].payload : undefined;
-          //   if (eq) {
-          //     dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
-          //   }
-          // }
         }
         catch (e) {
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
         }
       } else {
-        const eq = prepareDefaultEntityQuery(entity);
-        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+        dispatch(loadRSActions.attachRS({ name: entityName, eq: newEQ(prepareDefaultEntityQuery(entity)), override: true, masterLink: masterLinkRef.current }));
       }
     }
   };
 
+  const setMasterLink = (attrName: string, value?: string) => {
+    const fMR = linkfields.find( lf => lf.attribute.name === attrName)!.links![0].entity;
+    if(entity && erModel && rs) {
+      const data = entity && erModel.entities[entity.name]
+      ?
+      List(
+        Object.entries(erModel.entities[entity.name].attributes).map(
+          ([name, ent]) =>
+            ({
+              name,
+              description: ent.lName && ent.lName.ru ? ent.lName.ru.name : name
+            } as IDataRow)
+        )
+      )
+      :
+      List<IDataRow>();
+
+      const newMasterLink = {
+        masterName: fMR.name,
+        values: [
+          {
+            fieldName: attrName,
+            value
+          }
+        ]
+      } as IMasterLink;
+
+      dispatch(rsActions.setRecordSet(
+        rs.setData({
+          data,
+          masterLink: newMasterLink
+        })
+      ));
+
+
+      if(masterLinkRef.current !== newMasterLink) {
+        masterLinkRef.current = newMasterLink;
+      }
+
+    }
+  }
+
   //этот метод вызывается для получения новых данных,
   //которые соответствуют выбранной записи в дереве или гриде мастера
-  const filterByFieldLink = (value: string, row: number, lb?: number, rb?: number) => {
+  const filterByFieldLink = (row: number) => {
     if(entity && masterRs && masterEntity && linkField) {
       dispatch(rsActions.setCurrentRow({name: masterRs.name, currentRow: row}));
     }
   }
 
+  useEffect(() => {
+    if(masterRs && linkField) {
+      const fdID = masterRs.params.fieldDefs.find(fd => fd.caption === 'ID');
+      const value = fdID ? masterRs.getString(fdID.fieldName, masterRs.currentRow) : undefined;
+      if( !(rs && rs.masterLink && rs.masterLink.values.find(v => v.fieldName === linkField && v.value === value))) {
+        setMasterLink(linkField, value);
+      }
+    }
+  }, [masterRs])
+
+  useEffect(() => {
+    applyPhrase();
+  }, [masterLinkRef.current])
 
   useEffect( () => {
     if (!rs && entity) {
@@ -260,7 +333,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       iconProps: {
         iconName: 'Refresh'
       },
-      onClick: () => rs && rs.eq && dispatch(loadRSActions.attachRS({ name: rs.name, eq: rs.eq, override: true }))
+      onClick: () => rs && rs.eq && dispatch(loadRSActions.attachRS({ name: rs.name, eq: rs.eq, override: true, masterLink: rs ? rs.masterLink : undefined }))
     },
     {
       key: 'sql',
@@ -300,35 +373,35 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
         {
           rs
-            ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
+            ? linkfields && linkfields.length !== 0 && linkField && linkField !== '' && linkField && linkField !== 'noSelected'
               ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
                   {
                     masterRs
-                    ? linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree ?
-                      <Tree
-                        rs={masterRs}
-                        load={() => {
-                          masterRs ? dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 5000 })) : undefined}
-                        }
-                        selectNode={filterByFieldLink}
-                      />
-                    : 
-                      <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
-                        { gcsRSMaster ?
-                          <GDMNGrid
-                            {...gcsRSMaster}
-                            rs={masterRs}
-                            columns={gcsRSMaster.columns}
-                            ref={ grid => grid && (gridRefEntities.current = grid) }
-                            {...gridActions}
-                            savedState={getSavedStateEntities()}
-                            colors={gridColors}
-                            userColumnsSettings={userColumnsSettingsEntity}
-                            onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsEntity(userSettings) }
-                            onDelUserColumnsSettings={ () => delUserColumnSettingsEntity() }
-                          /> : <div>Not found grid rs-master</div>
-                        }
-                      </div>
+                    ? linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
+                      ? <Tree
+                          rs={masterRs}
+                          load={() => {
+                            masterRs ? dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 5000 })) : undefined}
+                          }
+                          selectNode={filterByFieldLink}
+                        />
+                      : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
+                          { gcsRSMaster
+                            ? <GDMNGrid
+                              {...gcsRSMaster}
+                              rs={masterRs}
+                              columns={gcsRSMaster.columns}
+                              ref={ grid => grid && (gridRefEntities.current = grid) }
+                              {...gridActions}
+                              savedState={getSavedStateEntities()}
+                              colors={gridColors}
+                              userColumnsSettings={userColumnsSettingsEntity}
+                              onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsEntity(userSettings) }
+                              onDelUserColumnsSettings={ () => delUserColumnSettingsEntity() }
+                            />
+                            : <div>Not found grid rs-master</div>
+                          }
+                        </div>
                     : <div>Not found rs-master</div>
                   }
                 </Stack>
@@ -374,53 +447,23 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   placeholder="Select link field"
                   allowFreeform
                   autoComplete="on"
+                  selectedKey={linkField}
                   onChange={(_, option) => {
                     if (rs && option) {
                       if(option.key === 'noSelected') {
-                        applyPhrase();
                       } else {
-                        const fMR = linkfields.find( lf => lf.attribute.name === option.key.toString())!.links![0].entity;
-                        if(entity && erModel) {
-                          const data = entity && erModel.entities[entity.name]
-                          ?
-                          List(
-                            Object.entries(erModel.entities[entity.name].attributes).map(
-                              ([name, ent]) =>
-                                ({
-                                  name,
-                                  description: ent.lName && ent.lName.ru ? ent.lName.ru.name : name
-                                } as IDataRow)
-                            )
-                          )
-                          :
-                          List<IDataRow>();
-                
-                          dispatch(
-                            rsActions.setRecordSet(rs.setData({
-                                data,
-                                masterLink: {
-                                  masterName: fMR.name,
-                                  values: [
-                                    {
-                                      fieldName: option.key.toString(),
-                                      value: undefined
-                                    }
-                                  ]
-                                }
-                              })
-                            )
-                          );
-                
-                
-                          const eqM = prepareDefaultEntityQuery(fMR);
-                          dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM, override: true }));
-                        }
+                        const fMR = linkfields.find( lf => lf.attribute.name === option.key)!.links![0].entity;
+                        const eqM = prepareDefaultEntityQuery(fMR);
+                        setMasterLink(option.key.toString());
+                        dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM }));
                       }
                     }
                     viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.key as string : '' })
                   }}
                   options={
-                    linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
+                    linkfields.length !== 0
+                      ? [{key: 'noSelected', text: 'Не выбрано'} as IComboBoxOption, ...linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})]
+                      : undefined
                   }
                 />
                 <TextField
