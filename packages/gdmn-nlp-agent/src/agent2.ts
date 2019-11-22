@@ -169,7 +169,7 @@ export class ERTranslatorRU2 {
       }
     }
 
-    const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+    const options = new EntityQueryOptions(undefined, undefined, equals ? [{equals}] : []);
     const entityLink = new EntityLink(entity, "alias1", fields);
 
     return {
