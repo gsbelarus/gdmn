@@ -103,17 +103,21 @@ export async function startWsServer(
   server?: HttpServer | HttpsServer,
   stompSessionMeta?: IStompSessionMeta
 ): Promise<{ stompManager: StompManager; wsServer: WebSocket.Server }> {
+  const maxPayload = 1024 * 1024 * 10; // 10 MB
+
   const stompManager = new StompManager(stompSessionMeta);
   await stompManager.create();
 
   const wsServer = new WebSocket.Server(
     server
       ? {
-        server
+        server,
+        maxPayload
       }
       : {
         noServer: true,
-        perMessageDeflate: false // todo
+        perMessageDeflate: false, // todo
+        maxPayload
       }
   ).on("connection", (webSocket) => {
     defaultLogger.info("WebSocket event: 'connection'");

@@ -241,7 +241,7 @@ export class EntityBuilder extends Builder {
 
           await this.ddlHelper.addTable(relationName, fields);
 
-          const crossPKConstName = Prefix.pkConstraint(await this.nextDDLUnique());
+          const crossPKConstName = Prefix.crossPkConstraint(relationName);
           await this.ddlHelper.addPrimaryKey(crossPKConstName, relationName, pkFields.map((i) => i.name));
           for (const field of fields) {
             if (field.attr) {
@@ -258,12 +258,6 @@ export class EntityBuilder extends Builder {
 
           // Находим поле для отображения в множестве из Entity в Referense
           // NAME либо USR$NAME либо ALIAS либо первое строковое поле, либо DEFAULT_ID_NAME
-          // const scalarFields = Object.values(setAttr.entities[0].attributes)
-          //  .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob")
-          // const crossFieldAttr =  scalarFields.find((attr) => attr.name === "NAME") ||
-          //   scalarFields.find((attr) => attr.name === "USR$NAME") ||
-          //   scalarFields.find((attr) => attr.name === "ALIAS") ||
-          //   scalarFields.find((attr) =>  attr.type === "String");
           const crossFieldAttr = setAttr.entities[0].presentAttribute();
           const crossField = crossFieldAttr? AdapterUtils.getFieldName(crossFieldAttr) : Constants.DEFAULT_ID_NAME;
           const domainName = Prefix.domain(await this.nextDDLUnique());
@@ -281,11 +275,11 @@ export class EntityBuilder extends Builder {
           const triggerName = Constants.DEFAULT_USR_PREFIX.concat(Prefix.triggerBeforeInsert(relationName));
           if (presLen > 0) {
             await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable,
-              crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk, true);
+              crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk);
           }
 
           // add foreign keys for cross table
-          const crossFKOwnConstName = Prefix.fkConstraint(await this.nextDDLUnique());
+          const crossFKOwnConstName = Prefix.crossFkConstraint(1, relationName);
           await this.ddlHelper.addForeignKey(crossFKOwnConstName, {
             tableName: relationName,
             fieldName: ownPKName
@@ -296,13 +290,16 @@ export class EntityBuilder extends Builder {
             onUpdate: "CASCADE",
             onDelete: "CASCADE"
           });
-          const crossFKRefConstName = Prefix.fkConstraint(await this.nextDDLUnique());
+          const crossFKRefConstName = Prefix.crossFkConstraint(2, relationName);
           await this.ddlHelper.addForeignKey(crossFKRefConstName, {
             tableName: relationName,
             fieldName: refPKName
           }, {
             tableName: setTable,
             fieldName: AdapterUtils.getPKFieldName(setAttr.entities[0], setTable)
+          }, {
+            onUpdate: "CASCADE",
+            onDelete: "NO ACTION"
           });
 
           if (!attribute.adapter) {

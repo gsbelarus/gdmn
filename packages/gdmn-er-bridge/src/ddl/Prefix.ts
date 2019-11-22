@@ -40,9 +40,17 @@ export class Prefix {
   public static pkConstraint(name: any): string {
     return Prefix.join(name, Prefix.CONSTRAINT, Prefix.PRIMARY_KEY);
   }
+ 
+  public static crossPkConstraint(name: any): string {
+    return Prefix.join(Prefix.PRIMARY_KEY, name);
+  }
 
   public static fkConstraint(name: any): string {
     return Prefix.join(name, Prefix.CONSTRAINT, Prefix.FOREIGN_KEY);
+  }
+
+  public static crossFkConstraint(name: any, constraint: any): string {
+    return Prefix.join(name, constraint, Prefix.FOREIGN_KEY);
   }
 
   public static crossTable(triggerCross: any, bdID: any): string {
