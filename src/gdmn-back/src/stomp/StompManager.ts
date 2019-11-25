@@ -27,7 +27,8 @@ export class StompManager {
       heartbeat: {
         incomingPeriod: Constants.SERVER.STOMP.HEARTBEAT.INCOMING,
         outgoingPeriod: Constants.SERVER.STOMP.HEARTBEAT.OUTGOING
-      }
+      },
+      maxBufferSize: 1024 * 1024 * 10
     });
     const session = stomp.listener as StompSession;
     session.mainApplication = this._mainApplication;

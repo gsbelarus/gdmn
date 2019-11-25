@@ -131,24 +131,17 @@ export class Application extends ADatabase {
      *
      * myserver\bases\enterprise\dbase
      */
-    const { server, path: dbPath } = dbDetail.connectionOptions;
-    const parsed = path.parse(dbPath);
-    if (server && server.host) {
-      const settingDir = config.get("server.settingDir");
-
-      if (typeof settingDir !== 'string' || !settingDir) {
-        throw new Error('Param "server.settingDir" not found in configuration file "config/default.json"');
-      }
-
-      let dir = parsed.dir.slice(parsed.root.length);
-      if (dir) {
-        dir = '/' + dir;
-      }
-      const id = `${server.host}${dir}/${parsed.name}`;
-      this.settingsCache = settingsCacheManager.add(id, path.dirname(settingDir) + '/' + id);
-    } else {
-      this.settingsCache = settingsCacheManager.add(dbPath, dbPath.slice(0, dbPath.length - parsed.ext.length));
+    const configSettingBaseDir = config.get("server.settingDir");
+    if (typeof configSettingBaseDir !== 'string' || !configSettingBaseDir) {
+      throw new Error('Param "server.settingDir" not found in configuration file "config/default.json"');
     }
+    const host = (dbDetail.connectionOptions.server && dbDetail.connectionOptions.server.host) || 'localhost';
+    const dbFullName = path.normalize(dbDetail.connectionOptions.path);
+    const settingBaseDir = path.normalize(configSettingBaseDir);
+    const parsed = path.parse(dbFullName);
+    const dbPath = parsed.dir.slice(parsed.root.length);
+    const settingDir = path.resolve(settingBaseDir, host, dbPath, parsed.name);
+    this.settingsCache = settingsCacheManager.add(`${host}:${dbFullName}`, settingDir);
   }
 
   private static async _reloadProcessERModel(worker: ApplicationProcess, withAdapter?: boolean): Promise<ERModel> {
@@ -399,6 +392,7 @@ export class Application extends ADatabase {
     return task;
   }
 
+  /** Добавление новой сущности */
   public pushAddEntityCmd(session: Session,
                           command: AddEntityCmd
   ): Task<AddEntityCmd, IEntity> {
@@ -423,7 +417,7 @@ export class Application extends ADatabase {
         });
 
         if (attributes) {
-          attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel)).map(attr => preEntity.add(attr));
+          attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel, undefined, preEntity)).map(attr => preEntity.add(attr));
         }
 
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
@@ -432,7 +426,7 @@ export class Application extends ADatabase {
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              const entity = await erBuilder.create(this.erModel, preEntity);
+              await erBuilder.create(this.erModel, preEntity);
             }
           })
         }));
@@ -444,6 +438,7 @@ export class Application extends ADatabase {
     return task;
   }
 
+  /** Удаление сущности */
   public pushDeleteEntityCmd(session: Session,
                              command: DeleteEntityCmd
   ): Task<DeleteEntityCmd, { entityName: string }> {
@@ -476,6 +471,7 @@ export class Application extends ADatabase {
     return task;
   }
 
+  /** Удаление атрибута */
   public pushDeleteAttributeCmd(session: Session,
                                 command: DeleteAttributeCmd
   ): Task<DeleteAttributeCmd, void> {
@@ -661,11 +657,6 @@ export class Application extends ADatabase {
     return task;
   }
 
-  private isNamedParams(s: any): s is INamedParams {
-    return s instanceof Object && !Array.isArray(s);
-  }
-
-  // tslint:disable-next-line: member-ordering
   public pushPrepareSqlQueryCmd(session: Session, command: PrepareSqlQueryCmd): Task<PrepareSqlQueryCmd, void> {
     const task = new Task({
       session,
@@ -819,9 +810,9 @@ export class Application extends ADatabase {
     const entity = this.erModel.entity(entityname);
     return fields.map(f => {
       const attribute = entity.attribute(f.attribute);
-      return f.value !== null && typeof f.value === 'string' && (attribute.type === 'TimeStamp' || attribute.type === 'Date' || attribute.type === 'Time')
+      return f.value !== null && typeof f.value === "string" && (attribute.type === "TimeStamp" || attribute.type === "Date" || attribute.type === "Time")
         ? {...f, value: new Date(f.value)}
-        : f
+        : f;
      });
     }
 
@@ -1112,6 +1103,10 @@ export class Application extends ADatabase {
 
     await this.sessionManager.forceCloseAll();
     this._logger.info("alias#%s (%s) closed all sessions", alias, connectionOptions.path);
+  }
+
+  private isNamedParams(s: any): s is INamedParams {
+    return s instanceof Object && !Array.isArray(s);
   }
 
   private async _readERModel(): Promise<ERModel> {

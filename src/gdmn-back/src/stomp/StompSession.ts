@@ -189,7 +189,7 @@ export class StompSession implements StompClientCommandListener {
       }
       this._session = undefined;
     }
-    
+
     // спорный момент, но пока скидываем весь кэш на диск
     // главное чтобы этот OnEnd не вызывался слишком часто
     // например, после каждой команды
