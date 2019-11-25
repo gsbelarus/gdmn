@@ -3,11 +3,12 @@ import { Label, TextField, Checkbox, ITextFieldStyles } from "office-ui-fabric-r
 import React from "react";
 import { object2style, object2ITextFieldStyles, object2ILabelStyles } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
-import { EntityAttribute, Entity } from 'gdmn-orm';
+import { EntityAttribute, Entity, SetAttribute } from 'gdmn-orm';
 import { TFieldType, RecordSet } from 'gdmn-recordset';
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { FrameBox } from "./FrameBox";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 
 export interface IInternalControlProps {
   object: Object;
@@ -66,7 +67,7 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
         <Checkbox
           key={props.label}
           label={props.label}
-          styles={{root: {margin: '8px 0'}}}
+          styles={{root: {margin: '8px 4px 8px 0'}}}
           disabled={locked}
           defaultChecked={props.rs!.getBoolean(fd!.fieldName)}
         />
@@ -82,9 +83,19 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
         />
       )
     }
-  } else {
+  } else if (props.entity && props.entity.attributes[props.fieldName] instanceof SetAttribute) {
+    return (
+      <SetLookupComboBox
+        key={props.label}
+        label={props.label}
+        name={props.fieldName}
+        onLookup={(filter, limit) => {return Promise.resolve([])}}
+        onChanged={() => {}}
+        styles={props.styles}
+      />
+    );
+  } else
     return null;
-  }
 }
 
 const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewMode, selectedObject }: IInternalControlProps) => {

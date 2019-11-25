@@ -3,13 +3,12 @@ import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects,
   deleteWithChildren, getWindow, IField, IFrame, isFrameOrArea } from "./types";
-import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
+import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid, getFields } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
-import { getLName } from "gdmn-internals";
 import { RecordSet } from "gdmn-recordset";
 
 /**
@@ -69,7 +68,7 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
+const getDefaultState = (entity?: Entity, rs?: RecordSet, setFields?: Objects): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
     type: 'WINDOW'
@@ -85,20 +84,9 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
     bottom: 0
   };
 
-  const fields: IField[] =  rs && entity
-  ? rs.fieldDefs.map(fd => {
-    const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
-    return ({
-      type: 'FIELD',
-      parent: 'Area1',
-      fieldName: fd.caption,
-      label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
-      name: fd.caption
-    } as IField)
-  })
-  : [];
+  const fields: IField[] = getFields(rs, entity);
 
-  const objects: Objects = [window, area, ...fields];
+  const objects: Objects = [window, area, ...fields, ...(setFields ? setFields : [])];
 
   return {
     grid: {
@@ -110,7 +98,7 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
   };
 };
 
-const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?: Entity): IDesignerState => {
+const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?: Entity, setFields?: Objects): IDesignerState => {
   if (setting) {
     const selectedObject = setting.objects.find( object => isWindow(object) );
     return {
@@ -118,7 +106,7 @@ const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?:
       selectedObject
     };
   } else {
-    return getDefaultState(entity, rs);
+    return getDefaultState(entity, rs, setFields);
   }
 };
 
@@ -542,8 +530,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { erModel, rs, entity, setting, onSaveSetting } = props;
-  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity));
+  const { erModel, rs, entity, setting, onSaveSetting, setFields } = props;
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity, setFields));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   const windowStyle = useMemo( (): React.CSSProperties => ({

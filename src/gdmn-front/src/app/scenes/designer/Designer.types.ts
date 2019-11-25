@@ -4,7 +4,7 @@ import { IState } from "@src/app/store/reducer";
 import { GdmnAction } from "../gdmn/actions";
 import { ERModel, Entity } from "gdmn-orm";
 import { RecordSet } from 'gdmn-recordset';
-import { IGrid, IObject, Objects } from './types';
+import { IGrid, Objects } from './types';
 
 /**
  * Объект, с настройками дизайнера, который будет хранится
@@ -32,6 +32,7 @@ export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateP
   dispatch: ThunkDispatch<IState, never, GdmnAction>;
   entityName: string;
   setting?: IDesignerSetting;
+  setFields?: Objects;
   onSaveSetting: (setting: IDesignerSetting) => void;
   onDeleteSetting: () => void;
   onExit: () => void;

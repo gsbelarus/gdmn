@@ -26,7 +26,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
-import { object2style, object2ILabelStyles, object2ITextFieldStyles } from '../../designer/utils';
+import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
@@ -633,7 +633,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         return (
           <div key={object.name}>
             {
-              field({styles: style, label: object.fieldName, fieldName: object.fieldName})
+              field({styles: style, label: object.label, fieldName: object.fieldName})
             }
           </div>
         )
@@ -693,14 +693,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
     const fieldName = props.fieldName;
     const data = setComboBoxData[fieldName];
+    const attr = entity.attributes[fieldName] as EntityAttribute;
+    const label = props.label;
     if (data) {
-      const attr = entity.attributes[fieldName] as EntityAttribute;
       const linkEntity = attr.entities[0];
       return (
         <SetLookupComboBox
           key={fieldName}
           name={fieldName}
-          label={fieldName}
+          label={label}
           preSelectedOption={data}
           getSessionData={
             () => {
@@ -795,7 +796,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           <LookupComboBox
             key={fkFieldName}
             name={fkFieldName}
-            label={`${getLName(attr.lName, ['by', 'ru', 'en'])}`}
+            label={label}
             preSelectedOption={ rs.isNull(refIdFieldAlias)
               ? undefined
               : {
@@ -903,7 +904,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       return (
         <DatepickerJSX
           key={`${fd.fieldName}`}
-          label={props.label}
+          label={label}
           fieldName={`${fd.fieldName}`}
           value={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? String(lastEdited.current.value) : rs.getString(fd.fieldName)}
           onChange={
@@ -944,7 +945,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         <Checkbox
           key={fd.fieldName}
           disabled={locked}
-          label={props.label}
+          label={label}
           defaultChecked={lastEdited.current && lastEdited.current.fieldName === fd.fieldName ? !!lastEdited.current.value : rs.getBoolean(fd.fieldName)}
           onChange={  (_ev?: React.FormEvent<HTMLElement>, isChecked?: boolean) => {
             if (isChecked !== undefined) {
@@ -979,7 +980,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         <TextField
           key={fd.fieldName}
           disabled={locked}
-          label={props.label}
+          label={label}
           defaultValue={
             lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'string'
             ? lastEdited.current.value
@@ -1024,27 +1025,17 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   };
 
   const fields: Objects = !setting
-    ? rs
-      ? rs.fieldDefs.map(fd => {
-        const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
-        return ({
-          type: 'FIELD',
-          parent: 'Area1',
-          fieldName: fd.caption,
-          label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
-          name: fd.caption
-        } as IField)
-      })
-      : []
+    ? getFields(rs, entity)
     : [];
 
   const setFields: Objects = !setting
     ? Object.keys(setComboBoxData).map(fd => {
+      const attr = entity.attributes[fd] as EntityAttribute;
         return ({
           type: 'FIELD',
           parent: 'Area1',
           fieldName: fd,
-          label: fd,
+          label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd,
           name: fd
         } as IField)
       })
@@ -1078,6 +1069,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               url={url}
               entityName={entityName}
               setting={setting}
+              setFields={setFields}
               onSaveSetting={ setting => setSetting(setting) }
               onDeleteSetting={ () => deleteSetting() }
               onExit={ () => setDesigner(false) }
