@@ -1998,6 +1998,34 @@ export class RecordSet {
     }
   }
 
+  public deleteMasterLink(options: IRecordSetDataOptions): RecordSet{
+    this._checkLocked();
+
+    switch (this._params.status) {
+      case TStatus.LOADING:
+        throw new Error("RecordSet is being loaded");
+      case TStatus.PARTIAL:
+      case TStatus.FULL:
+      default:
+        return new RecordSet({
+          ...this._params,
+          data: options.data,
+          status: TStatus.FULL,
+          currentRow: 0,
+          sortFields: [],
+          allRowsSelected: false,
+          selectedRows: [],
+          filter: undefined,
+          savedData: undefined,
+          searchStr: undefined,
+          foundRows: undefined,
+          groups: undefined,
+          aggregates: undefined,
+          masterLink: undefined
+        });
+    }
+  }
+
   public loadingData(): RecordSet{
     this._checkLocked();
 

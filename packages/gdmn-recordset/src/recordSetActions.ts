@@ -26,6 +26,11 @@ export const rsActions = {
   }),
 
 
+  deleteMasterLink: createAction('RECORDSET/SET_DATA', resolve => {
+    return (params: WithComponentName<IRecordSetDataOptions>) => resolve(params);
+  }),
+
+
   loadingData: createAction('RECORDSET/LOADING_DATA', resolve => {
     return (params: WithComponentName) => resolve(params);
   }),

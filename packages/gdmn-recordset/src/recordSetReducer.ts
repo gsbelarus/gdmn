@@ -94,6 +94,10 @@ export const recordSetReducer = (
       return newState(rs.setData(action.payload));
     }
 
+    case getType(actions.deleteMasterLink): {
+      return newState(rs.deleteMasterLink(action.payload));
+    }
+
     case getType(actions.loadingData): {
       return newState(rs.loadingData());
     }

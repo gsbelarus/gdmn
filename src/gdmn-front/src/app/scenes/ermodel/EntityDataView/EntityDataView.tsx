@@ -150,8 +150,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     }
   };
 
-  const setMasterLink = (attrName: string, value?: string) => {
-    const fMR = linkfields.find( lf => lf.attribute.name === attrName)!.links![0].entity;
+  const setMasterLink = (attrName?: string, value?: string) => {
+    const fMR = attrName ? linkfields.find( lf => lf.attribute.name === attrName)!.links![0].entity : undefined;
     if(entity && erModel && rs) {
       const data = entity && erModel.entities[entity.name]
       ?
@@ -167,7 +167,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       :
       List<IDataRow>();
 
-      const newMasterLink = {
+      const newMasterLink = attrName && fMR ? {
         masterName: fMR.name,
         values: [
           {
@@ -175,23 +175,27 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             value
           }
         ]
-      } as IMasterLink;
-
-      dispatch(rsActions.setRecordSet(
+      } as IMasterLink : undefined;
+      newMasterLink
+      ? dispatch(rsActions.setRecordSet(
         rs.setData({
           data,
           masterLink: newMasterLink
+        })
+      ))
+      : dispatch(rsActions.setRecordSet(
+        rs.deleteMasterLink({
+          data
         })
       ));
 
 
       if(masterLinkRef.current !== newMasterLink) {
-        if(masterLinkRef.current && masterLinkRef.current.masterName !== newMasterLink.masterName) {
+        if(masterLinkRef.current && (!newMasterLink || masterLinkRef.current.masterName !== newMasterLink.masterName)) {
           dispatch(loadRSActions.deleteRS({name: `${masterLinkRef.current.masterName}-master`}));
         }
       }
         masterLinkRef.current = newMasterLink;
-
     }
   }
 
@@ -450,6 +454,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   onChange={(_, option) => {
                     if (rs && option) {
                       if(option.key === 'noSelected') {
+                        setMasterLink();
                       } else {
                         const fMR = linkfields.find( lf => lf.attribute.name === option.key)!.links![0].entity;
                         const eqM = prepareDefaultEntityQuery(fMR);
