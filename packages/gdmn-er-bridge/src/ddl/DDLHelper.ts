@@ -1,5 +1,7 @@
 import {AConnection, ATransaction, DeleteRule, IBaseExecuteOptions, UpdateRule} from "gdmn-db";
 import {CachedStatements} from "./CachedStatements";
+import { Constants } from "./Constants";
+import { ddlUtils } from "./utils";
 
 export interface IColumnsProps {
   notNull?: boolean;
@@ -390,36 +392,184 @@ export class DDLHelper {
                                 skipAT: boolean = this._skipAT,
                                 ignore: boolean = this._defaultIgnore): Promise<string> {
     if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
-    await this._loggedExecute(`
-    CREATE TRIGGER ${triggerName} FOR ${tableName}
-    ACTIVE BEFORE UPDATE POSITION ${position}
-    AS
-      DECLARE VARIABLE attr VARCHAR(8192); 
-      DECLARE VARIABLE text VARCHAR(8192) = ''; 
-    BEGIN
-    FOR 
-      SELECT L.${crossField}
-        FROM 
-          ${relationName} C JOIN ${setTable} L ON C.${refPKName} = L.${setTablePk} 
-        WHERE C.${ownPKName} = NEW.${tablePk} AND L.${crossField} > '' 
-        INTO :attr 
-        DO 
-        BEGIN 
-          IF (CHARACTER_LENGTH(:text) > ${presLen}) THEN 
-            LEAVE; 
-          text = :text || SUBSTRING(:attr FROM 1 FOR 254) || ' '; 
-        END 
-        NEW.${fieldName} = TRIM(SUBSTRING(:text FROM 1 FOR ${presLen})); 
-    END
-    `);
-    await this._transaction.commitRetaining();
+      await this._loggedExecute(`
+      CREATE TRIGGER ${triggerName} FOR ${tableName}
+      ACTIVE BEFORE UPDATE POSITION ${position}
+      AS
+        DECLARE VARIABLE attr VARCHAR(8192); 
+        DECLARE VARIABLE text VARCHAR(8192) = ''; 
+      BEGIN
+      FOR 
+        SELECT L.${crossField}
+          FROM 
+            ${relationName} C JOIN ${setTable} L ON C.${refPKName} = L.${setTablePk} 
+          WHERE C.${ownPKName} = NEW.${tablePk} AND L.${crossField} > '' 
+          INTO :attr 
+          DO 
+          BEGIN 
+            IF (CHARACTER_LENGTH(:text) > ${presLen}) THEN 
+              LEAVE; 
+            text = :text || SUBSTRING(:attr FROM 1 FOR 254) || ' '; 
+          END 
+          NEW.${fieldName} = TRIM(SUBSTRING(:text FROM 1 FOR ${presLen})); 
+      END
+      `);
+      await this._transaction.commitRetaining();
     }
 
     if (!skipAT && !(ignore && await this._cachedStatements.isTriggerATExists(triggerName))) {
-    await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
+     await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
     }
     return triggerName;
+  }
+
+  /** Добавление c-el процедуры для поддержки LB-RB дерева */  
+  public async addCELProcedure(tableName: string): Promise<void> {
+    const procedureName = `${Constants.DEFAULT_USR_PREFIX}_P_EL_${ddlUtils.stripUserPrefix(tableName)}`;
+    await this._loggedExecute(`
+      CREATE PROCEDURE ${procedureName}
+          (Parent INTEGER, LB2 INTEGER, RB2 INTEGER)        
+        RETURNS (LeftBorder INTEGER, RightBorder INTEGER)
+      AS
+        DECLARE VARIABLE R     INTEGER = NULL;
+        DECLARE VARIABLE L     INTEGER = NULL;
+        DECLARE VARIABLE Prev  INTEGER;
+        DECLARE VARIABLE LChld INTEGER = NULL;
+        DECLARE VARIABLE RChld INTEGER = NULL;
+        DECLARE VARIABLE Delta INTEGER;
+        DECLARE VARIABLE Dist  INTEGER;
+        DECLARE VARIABLE Diff  INTEGER;
+        DECLARE VARIABLE WasUnlock INTEGER;
+      BEGIN
+        IF (:LB2 = -1 AND :RB2 = -1) THEN
+          Delta = CAST(COALESCE(RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_DELTA), 10) AS INTEGER);
+        ELSE
+          Delta = :RB2 - :LB2;
+
+        SELECT lb, rb
+        FROM ${tableName}
+        WHERE id = :Parent
+        INTO :L, :R;
+
+        IF (:L IS NULL) THEN
+          EXCEPTION tree_e_invalid_parent Invalid parent specified.;
+
+        Prev = :L + 1;
+        LeftBorder = NULL;
+
+        FOR SELECT lb, rb FROM ${tableName} WHERE parent = :Parent ORDER BY lb ASC INTO :LChld, :RChld
+        DO BEGIN
+          IF ((:LChld - :Prev) > :Delta) THEN 
+          BEGIN
+            LeftBorder = :Prev;
+            LEAVE;
+          END ELSE
+            Prev = :RChld + 1;
+        END
+
+        LeftBorder = COALESCE(:LeftBorder, :Prev);
+        RightBorder = :LeftBorder + :Delta;
+
+        WasUnlock = RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK);
+        IF (:WasUnlock IS NULL) THEN
+          RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, 1);
+
+        IF (:RightBorder >= :R) THEN
+        BEGIN
+          Diff = :R - :L;
+          IF (:RightBorder >= (:R + :Diff)) THEN
+            Diff = :RightBorder - :R + 1;
+
+          IF (:Delta < 1000) THEN
+            Diff = :Diff + :Delta * 10;
+          ELSE
+            Diff = :Diff + 10000;
+
+          /* Сдвигаем все интервалы справа */
+          UPDATE ${tableName} SET lb = lb + :Diff, rb = rb + :Diff
+            WHERE lb > :R;
+
+          /* Расширяем родительские интервалы */
+          UPDATE ${tableName} SET rb = rb + :Diff
+            WHERE lb <= :L AND rb >= :R;
+
+          IF (:LB2 <> -1 AND :RB2 <> -1) THEN
+          BEGIN
+            IF (:LB2 > :R) THEN
+            BEGIN
+              LB2 = :LB2 + :Diff;
+              RB2 = :RB2 + :Diff;
+            END
+            Dist = :LeftBorder - :LB2;
+            UPDATE ${tableName} SET lb = lb + :Dist, rb = rb + :Dist 
+              WHERE lb > :LB2 AND rb <= :RB2;
+          END
+        END ELSE
+        BEGIN
+          IF (:LB2 <> -1 AND :RB2 <> -1) THEN
+          BEGIN
+            Dist = :LeftBorder - :LB2;
+            UPDATE ${tableName} SET lb = lb + :Dist, rb = rb + :Dist 
+              WHERE lb > :LB2 AND rb <= :RB2;
+          END
+        END
+
+        IF (:WasUnlock IS NULL) THEN
+          RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, NULL);
+      END;
+    `);
+    await this._transaction.commitRetaining();
+  }
+
+  /** Добавление триггеров для поддержки LB-RB дерева */
+  public async addLBRBBITrigger(triggerName: string,
+                                tableName: string,
+                                position: string = "32000",
+                                skipAT: boolean = this._skipAT,
+                                ignore: boolean = this._defaultIgnore): Promise<string> {
+  if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
+    await this._loggedExecute(`
+      CREATE TRIGGER ${triggerName} FOR ${tableName}
+        ACTIVE BEFORE INSERT POSITION ${position}
+      AS
+        DECLARE VARIABLE D    INTEGER;
+        DECLARE VARIABLE L    INTEGER;
+        DECLARE VARIABLE R    INTEGER;
+        DECLARE VARIABLE Prev INTEGER;
+      BEGIN
+        IF (NEW.parent IS NULL) THEN
+        BEGIN
+          D = CAST(COALESCE(RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_DELTA), 10) AS INTEGER);
+          Prev = 1;
+          NEW.lb = NULL;
+
+          FOR SELECT lb, rb FROM ${tableName} WHERE parent IS NULL ORDER BY lb INTO :L, :R
+          DO BEGIN
+            IF ((:L - :Prev) > :D) THEN 
+            BEGIN
+              NEW.lb = :Prev;
+              LEAVE;
+            END ELSE
+              Prev = :R + 1;
+          END
+
+          NEW.lb = COALESCE(NEW.lb, :Prev);
+          NEW.rb = NEW.lb + :D;
+        END ELSE
+        BEGIN
+          EXECUTE PROCEDURE ::EXLIMNAME (NEW.parent, -1, -1)
+            RETURNING_VALUES NEW.lb, NEW.rb;
+        END
+      END;
+      `);
+      await this._transaction.commitRetaining();
     }
+
+    if (!skipAT && !(ignore && await this._cachedStatements.isTriggerATExists(triggerName))) {
+     await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
+    }
+    return triggerName;
+  }
 
   public async dropTrigger(triggerName: string,
                            skipAT: boolean = this._skipAT,

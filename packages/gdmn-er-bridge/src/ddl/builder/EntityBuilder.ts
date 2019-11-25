@@ -9,8 +9,7 @@ import {
   ParentAttribute,
   ScalarAttribute,
   SequenceAttribute,
-  SetAttribute,
-  isUserDefined
+  SetAttribute
 } from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../Constants";
@@ -18,6 +17,7 @@ import {IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
+import { ddlUtils } from "../utils";
 
 export class EntityBuilder extends Builder {
 
@@ -33,13 +33,6 @@ export class EntityBuilder extends Builder {
     // TODO
     throw new Error("Unsupported yet");
   }
-
-  /**
-  * Функция возвращает имя без префикса.
-  */
-  public stripUserPrefix(name: string) {
-    return isUserDefined(name) ? name.substring(Constants.DEFAULT_USR_PREFIX.length) : name;
-  };
 
   public async createAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr): Promise<Attr> {
     const tableName = AdapterUtils.getOwnRelationName(entity);
@@ -172,9 +165,9 @@ export class EntityBuilder extends Builder {
           const position = await this.nextDDLTriggercross();
           const relationName = setAttr.adapter ? setAttr.adapter.crossRelation : Prefix.crossTable(position, await this.DDLdbID());
           const setTable = AdapterUtils.getOwnRelationName(setAttr.entities[0]);
-          const ownPKName = setAttr.adapter ? setAttr.adapter.crossPk[0] : Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(tableName)).concat("KEY");
+          const ownPKName = setAttr.adapter ? setAttr.adapter.crossPk[0] : Constants.DEFAULT_USR_PREFIX.concat(ddlUtils.stripUserPrefix(tableName)).concat("KEY");
           const refPKName = setAttr.adapter ? setAttr.adapter.crossPk[1] :
-            setTable ? Constants.DEFAULT_USR_PREFIX.concat(this.stripUserPrefix(setTable)).concat("KEY") :
+            setTable ? Constants.DEFAULT_USR_PREFIX.concat(ddlUtils.stripUserPrefix(setTable)).concat("KEY") :
               Constants.DEFAULT_CROSS_PK_REF_NAME;
           const setTablePk = setAttr.entities[0].hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ?
              Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME;
@@ -298,11 +291,11 @@ export class EntityBuilder extends Builder {
         Если присутствуют поля LB RB (entity type "lb-rb tree"), добавляем для поддержки:
         1) Индексы для LB и RB (DESCENDING)
         2) check
-        3) bi trigger
-        4) bu trigger
-        5) ХП - USR$_P_RESTRUCT
-        5) ХП - USR$_P_GCHС
-        5) ХП - USR$_P_EL
+        3) ХП - USR$_P_EL        
+        4) ХП - USR$_P_GCHС        
+        5) ХП - USR$_P_RESTRUCT        
+        6) bi trigger
+        7) bu trigger        
       */  
      
       // 1) Добавляем indices
@@ -313,6 +306,9 @@ export class EntityBuilder extends Builder {
       // 2) Добавляем check
       const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
       await this.ddlHelper.addTableCheck(checkName ,tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
+      // 3) Добавляем процедуры
+      // 3.1) c-el
+      await this.ddlHelper.addCELProcedure(tableName);
 
           // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
           // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);

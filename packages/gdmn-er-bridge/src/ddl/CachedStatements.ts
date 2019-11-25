@@ -790,6 +790,65 @@ export class CachedStatements {
       indexName: input.indexName
     });
   }
+  /** Обработка процедур */  
+  /** Добавление процедуры в системную таблицу платформы - at_procuderes */
+  public async addToATProcuderes(input: IATTriggersInput): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.addToATTriggers) {
+      this._statements.addToATTriggers = await this.connection.prepare(this._transaction, `
+        INSERT INTO AT_TRIGGERS AT_PROCEDURES(PROCEDURENAME)
+         
+        SELECT FIRST 1 :relationName, :triggerName, :triggerInactive, ID
+        FROM AT_RELATIONS
+        WHERE RELATIONNAME = :relationName
+          RETURNING ID
+      `);
+    }
+    const result = await this._statements.addToATTriggers.executeReturning({
+      relationName: input.relationName,
+      triggerName: input.triggerName,
+      triggerInactive: input.triggerInactive
+    });
+    return result.getNumber("ID");
+  }
+
+  public async updateATProcuderes(input: IATTriggersInput): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.updateATTriggers) {
+      this._statements.updateATTriggers = await this.connection.prepare(this._transaction, `
+        UPDATE AT_TRIGGERS
+        SET TRIGGER_INACTIVE = :triggerInactive,
+            RELATIONNAME     = :relationName
+        WHERE TRIGGERNAME = :triggerName
+      `);
+    }
+    const result = await this._statements.updateATTriggers.executeReturning({
+      relationName: input.relationName,
+      triggerName: input.triggerName,
+      triggerInactive: input.triggerInactive
+    });
+    return result.getNumber("ID");
+  }
+
+  public async dropATProcuderes(input: IATTriggersInput): Promise<void> {
+    this._checkDisposed();
+
+    if (!this._statements.dropATTriggers) {
+      this._statements.dropATTriggers = await this.connection.prepare(this._transaction, `
+        DELETE
+        FROM AT_TRIGGERS
+        WHERE TRIGGERNAME = :triggerName
+          AND RELATIONNAME = :relationName
+
+      `);
+    }
+    await this._statements.dropATTriggers.execute({
+      relationName: input.relationName,
+      triggerName: input.triggerName
+    });
+  }
 
   public async getDependencies(tableName: string): Promise<IDependence[]> {
     this._checkDisposed();
