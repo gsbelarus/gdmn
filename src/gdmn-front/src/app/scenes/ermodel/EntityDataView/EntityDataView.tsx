@@ -74,7 +74,6 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
 };
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
-
   const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
@@ -125,6 +124,28 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
       }
     }
+    // if (erModel && entity) {
+    //   if (phrase) {
+    //     try {
+    //       const parsedText: ParsedText[] = parsePhrase(phrase);
+    //       const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
+    //       if (phrases.length) {
+    //         const erTranslatorRU = new ERTranslatorRU(erModel)
+    //         const command = erTranslatorRU.process(phrases);
+    //         const eq = command[0] ? command[0].payload : undefined;
+    //         if (eq) {
+    //           dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+    //         }
+    //       }
+    //     }
+    //     catch (e) {
+    //       viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
+    //     }
+    //   } else {
+    //     const eq = prepareDefaultEntityQuery(entity);
+    //     dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+    //   }
+    // }
   };
 
   useEffect( () => {

@@ -145,6 +145,7 @@ export class VirtualQueries {
         field: Constants.DEFAULT_ID_NAME
       }
     }));
+    
     query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
@@ -205,6 +206,7 @@ export class VirtualQueries {
         field: Constants.DEFAULT_ID_NAME
       }
     }));
+
     query.add(new IntegerAttribute({
       name: Constants.DEFAULT_PARENT_KEY_NAME,
       lName: {},
@@ -242,14 +244,15 @@ export class VirtualQueries {
   }
 
   private static _makeVirtualFields(queryToTree: Entity, nameFields: string): Entity {
-    const field = new StringAttribute({
-      name: nameFields,
-      required: true,
-      lName: {},
-      adapter: {"relation": queryToTree.name, "field": nameFields}
-    });
-    queryToTree.add(field);
-
+    if (!queryToTree.hasOwnAttribute(nameFields)) {
+      const field = new StringAttribute({
+        name: nameFields,
+        required: true,
+        lName: {},
+        adapter: {"relation": queryToTree.name, "field": nameFields}
+      });
+      queryToTree.add(field);
+    }
     return queryToTree;
   }
 }

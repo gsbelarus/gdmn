@@ -35,21 +35,17 @@ export class EntityBuilder extends Builder {
   }
 
   /**
- * Функция возвращает имя без префикса.
- */
+  * Функция возвращает имя без префикса.
+  */
   public stripUserPrefix(name: string) {
-    if (isUserDefined(name)) {
-      return name.substring(Constants.DEFAULT_USR_PREFIX.length);
-    } else {
-      return name;
-    }
+    return isUserDefined(name) ? name.substring(Constants.DEFAULT_USR_PREFIX.length) : name;
   };
 
   public async createAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr): Promise<Attr> {
     const tableName = AdapterUtils.getOwnRelationName(entity);
     const tablePk = entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ? Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME;
 
-    if (attribute instanceof ScalarAttribute) {
+    if (attribute instanceof ScalarAttribute) {      
       // if (attribute.name === "RB") {
       //   await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
       // }
@@ -145,8 +141,8 @@ export class EntityBuilder extends Builder {
           await this.ddlHelper.addForeignKey(fkConstName, {
             tableName,
             fieldName
-          }, {
-            tableName: AdapterUtils.getOwnRelationName(pAttr.entities[0]),
+          }, {            
+            tableName: AdapterUtils.getOwnRelationName(pAttr.entities[0]),            
             fieldName: AdapterUtils.getPKFieldName(pAttr.entities[0], AdapterUtils.getOwnRelationName(pAttr.entities[0]))
           }, {
             onUpdate: "CASCADE",
@@ -313,6 +309,10 @@ export class EntityBuilder extends Builder {
       }
     }
 
+    if ((attribute.name === "RB" && entity.hasOwnAttribute("LB")) || (attribute.name === "LB" && entity.hasOwnAttribute("RB"))) {
+      // Добавляем 
+
+    }
     return entity.add(attribute);
   }
 
