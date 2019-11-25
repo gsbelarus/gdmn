@@ -105,14 +105,14 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         const findAttr = entity.attributes[ml.fieldName];
         if(whereObj[0] && whereObj[0].equals) {
           whereObj[0].equals.push({
-              alias: 'alias1',
+              alias: eq.link.alias,
               attribute: findAttr,
               value: ml.value
             } as IEntityQueryWhereValue)
         } else {
           whereObj.push({
             equals: [{
-              alias: 'alias1',
+              alias: eq.link.alias,
               attribute: findAttr,
               value: ml.value
             } as IEntityQueryWhereValue]
