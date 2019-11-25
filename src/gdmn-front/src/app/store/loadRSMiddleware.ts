@@ -16,8 +16,8 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
   }
 
   const { name } = action.payload;
-  const getRsMeta = () => getState().rsMeta[name];
-  const setRsMeta = (rsMeta: IRsMeta) => dispatch(rsMetaActions.setRsMeta(name, rsMeta));
+  const getRsMeta = (sufix?: string) => getState().rsMeta[sufix ? `${name}-${sufix}` : name];
+  const setRsMeta = (rsMeta: IRsMeta, sufix?: string) => dispatch(rsMetaActions.setRsMeta(sufix ? `${name}-${sufix}` : name, rsMeta));
 
   switch (action.type) {
     case getType(actions.loadRS): {
@@ -61,18 +61,18 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
     }
 
     case getType(actions.attachRS): {
-      const { eq, queryPhrase, override, masterLink } = action.payload;
+      const { eq, queryPhrase, override, masterLink, sufix } = action.payload;
 
-      const prevRsm = getRsMeta();
+      const prevRsm = getRsMeta(sufix);
 
       if (prevRsm && prevRsm.taskKey) {
-        setRsMeta({});
+        setRsMeta({}, sufix);
         const res = await apiService.interruptTask({ taskKey: prevRsm.taskKey });
         if (res.error) {
           throw new Error(`Can't interrup task. Error: ${res.error.message}`);
         }
       } else {
-        setRsMeta({});
+        setRsMeta({}, sufix);
       }
 
       apiService
@@ -87,19 +87,19 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                * ViewTab could be closed before we get a response
                * from a server. Interrupt task then.
                */
-              if (!getRsMeta()) {
+              if (!getRsMeta(sufix)) {
                 apiService.interruptTask({ taskKey }).catch(console.error);
                 return;
               }
 
-              setRsMeta({ taskKey });
+              setRsMeta({ taskKey }, sufix);
 
               const response = await apiService.fetchQuery({
                 rowsCount: 100,
                 taskKey
               });
 
-              const rsm = getRsMeta();
+              const rsm = getRsMeta(sufix);
 
               if (!rsm) {
                 apiService.interruptTask({ taskKey }).catch(console.error);
@@ -112,7 +112,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                   const result = response.payload.result!;
                   const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data.linkAlias, data.attribute) );
                   const rs = RecordSet.create({
-                    name,
+                    name: sufix ? `${name}-${sufix}` : name,
                     fieldDefs,
                     data: List(result.data as IDataRow[]),
                     eq,
@@ -122,12 +122,12 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     sequentially: !!rsm.taskKey
                   });
 
-                  dispatch(rsActions.createRecordSet({ name, rs, override }));
+                  dispatch(rsActions.createRecordSet({ name: sufix ? `${name}-${sufix}` : name, rs, override }));
 
-                  if (override || !getState().grid[name]) {
+                  if (override || !getState().grid[sufix ? `${name}-${sufix}` : name]) {
                     dispatch(
                       createGrid({
-                        name,
+                        name: sufix ? `${name}-${sufix}` : name,
                         columns: rs.fieldDefs.map(fd => ({
                           name: fd.fieldName,
                           caption: [fd.caption || fd.fieldName],
@@ -147,7 +147,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
 
                 case TTaskStatus.FAILED: {
                   if (rsm) {
-                    setRsMeta({ error: response.error ? `code: ${response.error.code}, message: ${response.error.message}` : 'Unknown task error.' });
+                    setRsMeta({ error: response.error ? `code: ${response.error.code}, message: ${response.error.message}` : 'Unknown task error.' }, sufix);
                   }
 
                   break;
@@ -163,22 +163,22 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
             }
 
             case TTaskStatus.INTERRUPTED: {
-              if (getRsMeta()) {
-                setRsMeta({});
+              if (getRsMeta(sufix)) {
+                setRsMeta({}, sufix);
               }
               break;
             }
 
             case TTaskStatus.FAILED: {
-              if (getRsMeta()) {
-                setRsMeta({ error: value.error ? `code: ${value.error.code}, message: ${value.error.message}` : 'Unknown task error.' });
+              if (getRsMeta(sufix)) {
+                setRsMeta({ error: value.error ? `code: ${value.error.code}, message: ${value.error.message}` : 'Unknown task error.' }, sufix);
               }
               break;
             }
 
             case TTaskStatus.SUCCESS: {
-              if (getRsMeta()) {
-                setRsMeta({});
+              if (getRsMeta(sufix)) {
+                setRsMeta({}, sufix);
               }
               break;
             }
@@ -195,6 +195,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
     }
 
     case getType(actions.loadMoreRsData): {
+      const { rowsCount } = action.payload;
       const rsm = getRsMeta();
 
       if (rsm) {
@@ -203,8 +204,6 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
         }
 
         dispatch(rsActions.loadingData({ name }));
-
-        const { rowsCount } = action.payload;
 
         const response = await apiService.fetchQuery({
           rowsCount,

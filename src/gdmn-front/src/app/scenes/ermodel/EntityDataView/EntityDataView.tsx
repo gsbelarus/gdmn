@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, EntityQuery, EntityQueryOptions, IEntityQueryWhere, IEntityQueryWhereValue } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue } from 'gdmn-orm';
 import {List} from "immutable";
 
 interface IEntityDataViewState {
@@ -187,7 +187,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
       if(masterLinkRef.current !== newMasterLink) {
         if(masterLinkRef.current && masterLinkRef.current.masterName !== newMasterLink.masterName) {
-          dispatch(loadRSActions.deleteRS({name: masterLinkRef.current.masterName}));
+          dispatch(loadRSActions.deleteRS({name: `${masterLinkRef.current.masterName}-master`}));
         }
       }
         masterLinkRef.current = newMasterLink;
@@ -374,8 +374,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                     masterRs
                     ? linkfields.find( lf =>
                       linkFieldRef.current
-                          ? lf.attribute.name === linkFieldRef.current
-                          : masterLinkRef.current && masterLinkRef.current.values.find(mlr => mlr.fieldName === lf.attribute.name)
+                        ? lf.attribute.name === linkFieldRef.current
+                        : masterLinkRef.current && masterLinkRef.current.values.find(mlr => mlr.fieldName === lf.attribute.name)
                       )!.links![0].entity.isTree
                       ? <Tree
                           rs={masterRs}
@@ -454,7 +454,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         const fMR = linkfields.find( lf => lf.attribute.name === option.key)!.links![0].entity;
                         const eqM = prepareDefaultEntityQuery(fMR);
                         setMasterLink(option.key.toString());
-                        dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM }));
+                        dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM, sufix: 'master' }));
                       }
                     }
                     linkFieldRef.current = option ? option.key as string : undefined;

@@ -6,7 +6,7 @@ import { EntityDataView } from "./EntityDataView";
 export const EntityDataViewContainer = connect(
   (state: IState, ownProps: IEntityDataViewContainerProps): IEntityDataViewStateProps => {
     const rs = state.recordSet[ownProps.entityName];
-    const masterRs = rs && rs.masterLink && state.recordSet[rs.masterLink.masterName];
+    const masterRs = rs && rs.masterLink && state.recordSet[`${rs.masterLink.masterName}-master`];
 
     return {
       rs,
