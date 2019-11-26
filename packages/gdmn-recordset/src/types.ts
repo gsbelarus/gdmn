@@ -1,5 +1,5 @@
 import { List } from "immutable";
-import { IEntityQueryResponseFieldAlias } from "gdmn-orm";
+import { IEntityQueryResponseFieldAlias, Attribute } from "gdmn-orm";
 import { ISqlQueryResponseAliasesRdb, ISqlQueryResponseAliasesOrm, INumberFormat, IDateFormat } from 'gdmn-internals';
 
 export enum TStatus {
@@ -148,12 +148,37 @@ export interface IMeasure {
 
 export type Measures = IMeasure[];
 
+/**
+ * Мы имеем две ситуации, когда рекорд сет наполнен данными
+ * из произвольного источника (например, список сущностей,
+ * взятых их erModel) и когда рекорд сет содержит результат
+ * выполнения EntityQuery. Соответственно и связка мастер-дитэйл
+ * сделана так, чтобы поддерживат оба случая.
+ */
 export interface IMasterLink {
+  /**
+   * Имя мастер рекордсета.
+   */
   masterName: string;
-  values: {
-    fieldName: string,
-    value: TDataType | undefined
-  }[]
+  /**
+   * Имя поля в мастер рекордсете. Может отсутствовать,
+   * если связка устанавливается между результатами двух
+   * EntityQuery и мы берем значение первичного ключа
+   * из мастер query.
+   */
+  masterField?: string;
+  /**
+   * Вместо detailField может указываться detailAttribute.
+   */
+  detailField?: string;
+  detailAttribute?: Attribute;
+  /**
+   * Значение, для которого установлена связь. Сравнивая его
+   * со значением masterField или первичного ключа текущей записи
+   * из masterName мы можем понять надо ли нам перестраивать
+   * детальный набор данных.
+   */
+  value: TDataType | undefined;
 };
 
 /**
@@ -190,4 +215,3 @@ export enum TCommitResult {
 };
 
 export type TCommitFunc = (row: IDataRow) => Promise<TCommitResult>;
-

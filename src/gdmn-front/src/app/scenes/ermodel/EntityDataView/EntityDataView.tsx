@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, IComboBoxOption } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -16,19 +16,141 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
+import { List } from 'immutable';
+
+/*
+
+Мы должны предотвратить повторный запуск (параллельное выполнение)
+запросов для одного и того же рекордсета. Для этого введем в стэйте
+состояние, которое будем выставлять перед началом взаимодействия с
+сервером и проверять перед выполнением операций, и при формировании
+пользовательского интерфейса.
+
+состояние: INITIAL, QUERY_RS, QUERY_MASTER.
+
+Таким образом мы имеем к обработке следующие ситуации:
+
+1. отсутствует erModel и/или entity. Мы в состоянии загрузки
+   платформы или перезагрузки по hot-reloading. Выводим
+   сообщение о загрузке и будем ждать пока не появится
+   erModel.
+
+   Состояние запроса скидываем до INITIAL.
+
+2. rs отсутствует. masterRs отсутствует. Мы в состоянии
+   начальной инициализации формы.
+
+   Проверим, не идет ли уже выполнение запроса к серверу.
+   Если уже идет, то ничего не предпринимаем, выходим.
+
+   Обратимся к сохраненным настройкам, может пользователь
+   уже настроил эту форму как мастер-дитэйл?
+
+   а) Если да, то из настроек возьмем информацию для
+   конструирования EntityQuery для masterRs. Запустим
+   запрос на выполнение. Надо будет в middleware выполнения
+   запроса и формирования рекодсета еще предусмотреть возможность
+   сразу устанавливать курсор на заданную запись, чтобы
+   пользователь мог открыть форму прямо в том состоянии, в котором
+   он ее закрыл.
+
+   б) Если нет, то формируем EntityQuery для загрузки rs и
+   отсылаем ее в middleware.
+
+   Перед отсылкой запроса в мидлвэр, выставляем
+   в стэйте состояние QUERY_MASTER, чтобы предотвратить
+   повторный запуск.
+
+3. masterRs присутствует. rs отсутствует. Мы в процессе загрузки
+   пользовательских настроек, см. п. 2, а)
+
+   Проверяем, не находимся ли мы уже в состоянии загрузки rs
+   (состояние QUERY_RS).
+
+   Формируем EntityQuery для загрузки rs с учетом текущей записи
+   в masterRs. Отсылаем ее в middleware. API middleware надо
+   доработать, чтобы была возможность передать masterLink
+   или информацию для его формирования.
+
+   Перед выполнением запроса (отсылкой его в мидлвэр), выставляем
+   в стэйте соответствующее состояние, чтобы предотвратить
+   повторный запуск.
+
+4. masterRs отсутствует. rs присутствует. masterLink отсутствует.
+
+   Связь м-д не установлена, мы просто отображаем данные rs.
+
+   Скидываем состояние загрузки rs в INITIAL, если оно было установлено.
+
+5. masterRs отсутствует. rs присутствует. masterLink присутствует.
+
+   Это промежуточное состояние установки связи м-д. masterLink
+   создается в момент выбора пользователем позиции в выпадающем списке.
+
+   Проверяем, не находимся ли мы уже в состоянии загрузки.
+
+   а) Если да, то выходим из обработчика.
+
+   б) Если нет, значит пользователь выбрал поле для связи
+   и теперь мы должны загрузить masterRs. Формируем для него
+   EntityQuery, устанавливаем состояние загрузки и посылаем
+   экшен в мидлвэр.
+
+6. masterRs присутствует. rs присутствует. masterLink присутствует.
+   значение masterLink.masterName не соответствует masterRs.name.
+
+   Это ситуация, когда связь м-д была установлена по одному полю
+   и пользователь выбрал из выпадающего списка другое.
+
+   Проверяем, если мы в состоянии загрузки, то выходим из обработчика.
+
+   Если нет, то удаляем masterRs.
+
+7. masterRs присутствует. rs присутствует. masterLink присутствует,
+   masterRs пуст.
+
+   Скидываем состояние загрузки rs, если оно было установлено.
+
+   Очищаем rs, если он не пуст.
+
+8. masterRs присутствует. rs присутствует. masterLink присутствует,
+   значение из мастер линк соответствует текущей записи из masterRs.
+
+   Связь м-д установлена. Содержимое детального набора данных
+   соответствует текущей записи в мастер рекордсете.
+
+   Скидываем состояние загрузки rs, если оно было установлено.
+
+9. masterRs присутствует. rs присутствует. masterLink присутствует,
+   значение из мастер линк не соответствует текущей записи из masterRs.
+
+   Это либо ситуация установки связи м-д, когда мы загрузили мастер
+   рекордсет, но еще не синхронизировали с ним детальный, либо
+   ситуация, когда пользователь переместил курсор в мастер рекордсете.
+
+   Проверяем, не находимся ли мы уже в состоянии загрузки rs.
+
+   а) если да, то выходим из обработчика.
+
+   б) если нет, то формируем EntityQuery для загрузки rs с учетом
+   текущей записи в masterRs. Выставляем состояние QUERY_RS и отсылаем
+   запрос в middleware.
+*/
+
+type QueryState = 'INITIAL' | 'QUERY_RS' | 'QUERY_MASTER';
 
 interface IEntityDataViewState {
   phrase: string;
   phraseError?: string;
   showSQL?: boolean;
-  linkField?: string;
+  queryState: QueryState;
 };
 
 type Action = { type: 'SET_PHRASE', phrase: string }
   | { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
-  | { type: 'SET_LINK_FIELD', linkField: string };
+  | { type: 'SET_QUERY_STATE', queryState: QueryState };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
@@ -60,21 +182,19 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
       }
     }
 
-    case 'SET_LINK_FIELD': {
-      const { linkField } = action;
+    case 'SET_QUERY_STATE': {
+      const { queryState } = action;
 
       return {
         ...state,
-        linkField
+        queryState
       }
     }
   }
-
-  return state;
 };
 
 export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Element => {
-  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors } = props;
+  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors, masterRs, gcsMaster } = props;
   const locked = rs ? rs.locked : false;
   const error = viewTab ? viewTab.error : undefined;
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
@@ -82,12 +202,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
 
-  const [{ phrase, phraseError, showSQL, linkField }, viewDispatch] = useReducer(reducer, {
+  const [{ phrase, phraseError, showSQL, queryState }, viewDispatch] = useReducer(reducer, {
     phrase: rs && rs.queryPhrase
       ? rs.queryPhrase
       : entityName
       ? `покажи все ${entityName}`
-      : ''
+      : '',
+    queryState: 'INITIAL'
   });
 
   const applyPhrase = () => {
@@ -101,58 +222,123 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             const command = erTranslatorRU.process(parsed);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
+              viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
               dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
             }
           }
-
-          // const parsedText: ParsedText[] = parsePhrase(phrase);
-          // const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-          // if (phrases.length) {
-          //   const erTranslatorRU = new ERTranslatorRU(erModel)
-          //   const command = erTranslatorRU.process(phrases);
-          //   const eq = command[0] ? command[0].payload : undefined;
-          //   if (eq) {
-          //     dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
-          //   }
-          // }
         }
         catch (e) {
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
         }
       } else {
         const eq = prepareDefaultEntityQuery(entity);
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
         dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
       }
     }
-    // if (erModel && entity) {
-    //   if (phrase) {
-    //     try {
-    //       const parsedText: ParsedText[] = parsePhrase(phrase);
-    //       const phrases = parsedText.reduce( (p, i) => i.phrase instanceof RusPhrase ? [...p, i.phrase as RusPhrase] : p, [] as RusPhrase[]);
-    //       if (phrases.length) {
-    //         const erTranslatorRU = new ERTranslatorRU(erModel)
-    //         const command = erTranslatorRU.process(phrases);
-    //         const eq = command[0] ? command[0].payload : undefined;
-    //         if (eq) {
-    //           dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
-    //         }
-    //       }
-    //     }
-    //     catch (e) {
-    //       viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
-    //     }
-    //   } else {
-    //     const eq = prepareDefaultEntityQuery(entity);
-    //     dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
-    //   }
-    // }
   };
 
   useEffect( () => {
-    if (!rs && entity) {
-      applyPhrase();
+    // 1
+    if (!erModel || !entity) {
+      if (queryState !== 'INITIAL') {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
+      }
+      console.log(queryState + ' --1');
+      return;
     }
-  }, [rs, entity]);
+
+    // 2
+    if (!rs && !masterRs) {
+      if (queryState === 'INITIAL') {
+        // 2, a)
+        // TODO: add reading of user settings
+
+        // 2, b)
+        applyPhrase();
+      }
+      console.log(queryState + ' --2');
+      return;
+    }
+
+    // 3
+    if (masterRs && !rs) {
+      // TODO
+      console.log(queryState + ' --3');
+      return;
+    }
+
+    // 4
+    if (rs && !masterRs && !rs.masterLink) {
+      if (queryState === 'QUERY_RS') {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
+      }
+      console.log(queryState + ' --4');
+      return;
+    }
+
+    // 5
+    if (rs && rs.masterLink && !masterRs) {
+      if (queryState === 'INITIAL') {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_MASTER' });
+
+        const detailAttr = rs.masterLink.detailAttribute as EntityAttribute;
+        const masterEntity = detailAttr.entities[0];
+        // TODO: нам не нужны все поля из masterEntity.
+        // только ИД, поля для деревьев и название.
+        const eq = prepareDefaultEntityQuery(masterEntity);
+        dispatch(loadRSActions.attachRS({ name: rs.masterLink.masterName, eq, override: true }));
+      }
+
+      console.log(queryState + ' --5');
+      return;
+    }
+
+    // 6
+    if (rs && rs.masterLink && masterRs && masterRs.name !== rs.masterLink.masterName) {
+      if (queryState === 'INITIAL') {
+        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+      }
+
+      console.log(queryState + ' --6');
+      return;
+    }
+
+    // 7
+    if (rs && rs.masterLink && masterRs && !masterRs.size) {
+      if (queryState !== 'INITIAL') {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
+      }
+
+      if (rs.size) {
+        dispatch(rsActions.setData({ name: rs.name, data: undefined }));
+      }
+
+      console.log(queryState + ' --7');
+      return;
+    }
+
+    // 8
+    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value) {
+      if (queryState !== 'INITIAL') {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
+      }
+      console.log(queryState + ' --8');
+      return;
+    }
+
+    // 9
+    if (masterRs && rs && rs.masterLink) {
+      if (queryState === 'INITIAL') {
+        //
+      }
+
+      console.log(queryState + ' --9');
+      return;
+    }
+
+    throw new Error('Unkonw state');
+  }, [erModel, rs, masterRs, entity, queryState]);
 
   useEffect( () => {
     if (rs) {
@@ -231,7 +417,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         iconName: 'Edit'
       },
       onClick: () => !!rs && !!rs.size && history.push(`${url}/edit/${rs.pk2s().join('-')}`)
-      //commandBarButtonAs: rs && rs.size ? linkCommandBarButton(`${url}/edit/${rs.pk2s().join('-')}`) : undefined
     },
     {
       key: `delete`,
@@ -291,28 +476,31 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   ];
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
-  const linkfields = rs && rs.params.eq ? rs.params.eq.link.fields.filter(fd => fd.links) : [];
 
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
-        {
-          rs
-            ? linkfields && linkfields.length !== 0 && linkField && linkField !== ''
-              ? <Stack styles={{root: {overflow: 'auto', width: '400px', height: '100%'}}}>
-                  {
-                    linkfields.find( lf => lf.attribute.name === linkField)!.links![0].entity.isTree
-                    ?
-                      <Tree
-                        rs={rs}
-                        load={() => gridRef.current && gridRef.current.loadFully(5000) as any}
-                        loadedAll={!gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL}
-                      />
-                    : <div>List</div>
-                  }
-                </Stack>
-              : undefined
-            : undefined
-        }
+      {
+        masterRs && rs && rs.masterLink && entity && rs.masterLink.detailAttribute
+        ? (rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
+          ? <Tree
+              rs={masterRs}
+              load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
+              selectNode={ () => {} }
+            />
+          : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
+              { gcsMaster
+                ? <GDMNGrid
+                  {...gcsMaster}
+                  rs={masterRs}
+                  columns={gcsMaster.columns}
+                  {...gridActions}
+                  colors={gridColors}
+                />
+                : <div>Not found grid rs-master</div>
+              }
+            </div>
+        : <div>Not found rs-master</div>
+      }
       <div styleName="SGrid">
         {
           showSQL && rs && rs.sql &&
@@ -323,7 +511,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }
         <div styleName="SGridTop">
           <CommandBar items={commandBarItems} />
-
           {
             error
             &&
@@ -336,54 +523,84 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               {error}
             </MessageBar>
           }
-              <Stack
-                horizontal
-                tokens={{ childrenGap: '12px' }}
-                styles={{
-                  root: {
-                    paddingLeft: '8px',
-                    paddingRight: '8px',
-                    paddingBottom: '8px',
+            <div>
+              <span>
+                {rs ? 'rs,' : ''}
+              </span>
+              <span>
+                {rs && rs.masterLink ? 'rs.masterLink,' : ''}
+              </span>
+              <span>
+                {rs && rs.masterLink && rs.masterLink.value ? 'rs.masterLink.value,' : ''}
+              </span>
+              <span>
+                {masterRs ? 'masterRs,' : ''}
+              </span>
+              <span>
+                {queryState}
+              </span>
+            </div>
+            <Stack
+              horizontal
+              tokens={{ childrenGap: '12px' }}
+              styles={{
+                root: {
+                  paddingLeft: '8px',
+                  paddingRight: '8px',
+                  paddingBottom: '8px',
+                }
+              }}
+            >
+              <ComboBox
+                label="Link field:"
+                placeholder="Select link field"
+                allowFreeform
+                autoComplete="on"
+                disabled={queryState !== 'INITIAL'}
+                selectedKey={rs && rs.masterLink && rs.masterLink.detailField}
+                onChange={ (_, option) => {
+                  if (option && rs) {
+                    dispatch(rsActions.setRecordSet(rs.duplicate({
+                      masterLink: {
+                        masterName: `${rs.name}-${option.key}-master`,
+                        detailAttribute: option.data as EntityAttribute,
+                        value: undefined
+                      }
+                    })));
                   }
-                }}
-              >
-                <ComboBox
-                  label="Link field"
-                  placeholder="Select link field"
-                  allowFreeform
-                  autoComplete="on"
-                  onChange={(_, option) => viewDispatch({ type: 'SET_LINK_FIELD', linkField: option ? option.text : '' })}
-                  options={
-                    linkfields.length !== 0
-                      ? linkfields.map( link => {return {key: link.attribute.name, text: link.attribute.name} as IComboBoxOption})
-                      : undefined
-                  }
-                />
-                <TextField
-                  disabled={!rs || rs.status !== TStatus.FULL}
-                  label="Filter:"
-                  value={filter}
-                  onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
-                />
-                <Stack.Item grow={1}>
-                  <Stack horizontal verticalAlign="end">
-                    <TextField
-                      styles={{
-                        root: {
-                          width: '100%'
-                        }
-                      }}
-                      label="Query:"
-                      value={phrase}
-                      onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
-                      errorMessage={ phraseError ? phraseError : undefined }
-                    />
-                    <DefaultButton onClick={applyPhrase}>
-                      Применить
-                    </DefaultButton>
-                  </Stack>
-                </Stack.Item>
-              </Stack>
+                } }
+                options={
+                  entity && Object
+                    .values(entity.attributes)
+                    .filter( attr => attr instanceof EntityAttribute )
+                    .map( attr => ({ key: attr.name, text: attr.name, data: attr }) )
+                }
+              />
+              <TextField
+                disabled={!rs || rs.status !== TStatus.FULL}
+                label="Filter:"
+                value={filter}
+                onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+              />
+              <Stack.Item grow={1}>
+                <Stack horizontal verticalAlign="end">
+                  <TextField
+                    styles={{
+                      root: {
+                        width: '100%'
+                      }
+                    }}
+                    label="Query:"
+                    value={phrase}
+                    onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
+                    errorMessage={ phraseError ? phraseError : undefined }
+                  />
+                  <DefaultButton onClick={applyPhrase}>
+                    Применить
+                  </DefaultButton>
+                </Stack>
+              </Stack.Item>
+            </Stack>
         </div>
         <MessageBox />
         <div styleName="SGridTable">
