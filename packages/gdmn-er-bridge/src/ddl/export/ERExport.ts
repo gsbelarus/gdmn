@@ -470,6 +470,7 @@ export class ERExport {
                 required: (!!setField && setField.notNull) || (!!setFieldSource && setFieldSource.notNull),
                 entities: referenceEntities,
                 presLen: (setFieldSource && setFieldSource.fieldType === FieldType.VARCHAR) ? setFieldSource.fieldLength : 0,
+                isChar: (setFieldSource && setFieldSource.fieldType === FieldType.VARCHAR) ? true : false,
                 semCategories: atCrossRelation.semCategories,
                 adapter
               }
