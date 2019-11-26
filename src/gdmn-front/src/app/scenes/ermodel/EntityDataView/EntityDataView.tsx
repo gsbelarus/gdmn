@@ -4,7 +4,7 @@ import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { rsActions, TStatus, IDataRow, IMasterLink } from 'gdmn-recordset';
+import { rsActions, TStatus, IDataRow, IMasterLink, RecordSet } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { nlpTokenize, nlpParse, sentenceTemplates } from 'gdmn-nlp';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
@@ -18,6 +18,7 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, EntityQuery, EntityQueryOptions, IEntityQueryWhereValue } from 'gdmn-orm';
 import {List} from "immutable";
+import { attr2fd } from './utils';
 
 interface IEntityDataViewState {
   phrase: string;
@@ -172,52 +173,65 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     // }
   };
 
-  const setMasterLink = (attrName?: string, value?: string) => {
+  const getRS = async (name: string, eq: EntityQuery) => {
+    return apiService.query({ query: eq.inspect() })
+    .then( response => {
+      const result = response.payload.result!;
+      const fieldDefs = Object.entries(result.aliases).map( ([fieldAlias, data]) => attr2fd(eq, fieldAlias, data.linkAlias, data.attribute) );
+      return RecordSet.create({
+        name,
+        fieldDefs,
+        data: List(result.data as IDataRow[]),
+        eq,
+        sql: result.info
+      });
+    });
+  }
+
+  const setMasterLink = async (attrName?: string, value?: string) => {
     const fMR = attrName ? linkfields.find( lf => lf.attribute.name === attrName)!.links![0].entity : undefined;
     if(entity && erModel && rs) {
-      const data = entity && erModel.entities[entity.name]
-      ?
-      List(
-        Object.entries(erModel.entities[entity.name].attributes).map(
-          ([name, ent]) =>
-            ({
-              name,
-              description: ent.lName && ent.lName.ru ? ent.lName.ru.name : name
-            } as IDataRow)
-        )
-      )
-      :
-      List<IDataRow>();
+      const eq = fMR ? prepareDefaultEntityQuery(fMR) : undefined;
+      let newValue = '';
+      fMR && eq ? await getRS(fMR.name, eq).then(
+        master => {
+          newValue = master.getString(master.params.fieldDefs.find(fd => fd.caption === 'ID')!.fieldName, master.params.currentRow);
+        }
+      ) : undefined;
 
       const newMasterLink = attrName && fMR ? {
         masterName: fMR.name,
         values: [
           {
             fieldName: attrName,
-            value
+            value: value ? value : newValue
           }
         ]
       } as IMasterLink : undefined;
-      newMasterLink
-      ? dispatch(rsActions.setRecordSet(
-        rs.setData({
-          data,
-          masterLink: newMasterLink
-        })
-      ))
-      : dispatch(rsActions.setRecordSet(
-        rs.deleteMasterLink({
-          data
-        })
-      ));
 
+      if(newMasterLink !== rs.masterLink) {
+        const data = entity && erModel.entities[entity.name]
+          ? List(
+            Object.entries(erModel.entities[entity.name].attributes).map(
+              ([name, ent]) =>
+                ({
+                  name,
+                  description: ent.lName && ent.lName.ru ? ent.lName.ru.name : name
+                } as IDataRow)
+            )
+          )
+          : List<IDataRow>();
+        newMasterLink
+          ? dispatch(rsActions.setRecordSet( rs.setData({ data, masterLink: newMasterLink }) ))
+          : dispatch(rsActions.setRecordSet( rs.deleteMasterLink({ data }) ));
+      }
 
       if(masterLinkRef.current !== newMasterLink) {
         if(masterLinkRef.current && (!newMasterLink || masterLinkRef.current.masterName !== newMasterLink.masterName)) {
           dispatch(loadRSActions.deleteRS({name: `${masterLinkRef.current.masterName}-master`}));
         }
       }
-        masterLinkRef.current = newMasterLink;
+      masterLinkRef.current = newMasterLink;
     }
   }
 
@@ -228,16 +242,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       dispatch(rsActions.setCurrentRow({name: masterRs.name, currentRow: row}));
     }
   }
-
-  useEffect(() => {
-    if(masterRs && linkFieldRef.current) {
-      const fdID = masterRs.params.fieldDefs.find(fd => fd.caption === 'ID');
-      const value = fdID ? masterRs.getString(fdID.fieldName, masterRs.currentRow) : undefined;
-      if( !(rs && rs.masterLink && rs.masterLink.values.find(v => v.fieldName === linkFieldRef.current && v.value === value))) {
-        setMasterLink(linkFieldRef.current, value);
-      }
-    }
-  }, [masterRs])
 
   useEffect(() => {
     applyPhrase();
@@ -481,7 +485,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                         const fMR = linkfields.find( lf => lf.attribute.name === option.key)!.links![0].entity;
                         const eqM = prepareDefaultEntityQuery(fMR);
                         setMasterLink(option.key.toString());
-                        dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM, sufix: 'master' }));
+                        !masterLinkRef.current || (masterLinkRef.current && fMR.name !== masterLinkRef.current.masterName)
+                          ? dispatch(loadRSActions.attachRS({ name: fMR.name, eq: eqM, sufix: 'master' }))
+                          : undefined;
                       }
                     }
                     linkFieldRef.current = option ? option.key as string : undefined;
