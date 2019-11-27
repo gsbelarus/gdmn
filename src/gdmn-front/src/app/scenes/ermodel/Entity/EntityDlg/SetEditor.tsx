@@ -85,7 +85,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                     }}
                     onChange={ (_, isChar) => { isChar !=undefined  && onChange({ ...attr, isChar}); } }
                   />
-                </Stack.Item>yarn
+                </Stack.Item>
                 <NumberField
                   label="presLen:"
                   onlyInteger={true}
