@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ISetAttribute, ERModel } from "gdmn-orm";
-import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text } from "office-ui-fabric-react";
+import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label, Checkbox } from "office-ui-fabric-react";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { IAttributeEditorProps } from "./EntityAttribute";
 import { NumberField } from "./NumberField";
@@ -50,7 +50,6 @@ const SetValue = ({ entityName, onDelete }: ISetValueProps) =>
 interface ISetEditorState {
   idx: number;
   entityName: string;
-  presLen: number;
 };
 
 export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAttributeEditorProps<ISetAttribute>) => {
@@ -75,10 +74,23 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                     }
                   }}
                 />
+                <Stack.Item>
+                  <label>IsTextField:</label>
+                  <Checkbox
+                    checked={attr.isChar}
+                    styles={{
+                      root: {
+                        marginBottom: '12px', width: '64px'
+                      }
+                    }}
+                    onChange={ (_, isChar) => { isChar !=undefined  && onChange({ ...attr, isChar}); } }
+                  />
+                </Stack.Item>
                 <NumberField
                   label="presLen:"
                   onlyInteger={true}
-                  value={state.presLen}
+                  value={attr.presLen}
+                  readOnly={!attr.isChar}
                   width="180px"
                   onInvalidValue={ () => onError }
                   onChange={ presLen => { presLen !=undefined && presLen > 0 && onChange({ ...attr, presLen}); } }
@@ -88,11 +100,11 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                   disabled={!state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
                   onClick={ () => {
                     if (state.idx >= attr.references.length) {
-                      onChange({ ...attr, references: [...attr.references, state.entityName] });
+                      onChange({...attr, references: [...attr.references, state.entityName]});
                     } else {
                       const values = [...attr.references];
                       values[state.idx] = state.entityName;
-                      onChange({ ...attr, references: values });
+                      onChange({...attr, references: values});
                     }
                     setState(undefined);
                   } }
@@ -123,7 +135,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                   !attr.references.length ?
                     <DefaultButton
                       text="Add set"
-                      onClick={ () => setState({ idx: attr.references.length, entityName: '', presLen: 1 }) }
+                      onClick={ () => { attr.isChar = true; attr.presLen = 1; setState({ idx: attr.references.length, entityName: ''}) } }
                     />
                   :
                     null

@@ -43,7 +43,7 @@ export class DomainResolver {
       }
       case "Set": {
         const _attr = attr as SetAttribute;
-        return `VARCHAR(${_attr.presLen})`;
+        return _attr.isChar ? `VARCHAR(${_attr.presLen})` : `SMALLINT`;
       }
       case "Integer": {
         const _attr = attr as IntegerAttribute;
