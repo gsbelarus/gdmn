@@ -354,21 +354,31 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   }, [erModel, rs, masterRs, entity, queryState]);
 
   useEffect( () => {
-    if (rs) {
-      if (viewTab && (!viewTab.rs || !viewTab.rs.length)) {
-        dispatch(gdmnActions.updateViewTab({
-          url,
-          viewTab: {
-            rs: [rs.name]
-          }
-        }));
+    if (rs || masterRs) {
+      const rsNames: string[] = [];
+
+      if (masterRs) {
+        rsNames.push(masterRs.name);
       }
-      else if (!viewTab) {
+
+      if (rs) {
+        rsNames.push(rs.name);
+      }
+
+      if (!viewTab) {
         dispatch(gdmnActions.addViewTab({
           url,
           caption: `${entityName}`,
           canClose: true,
-          rs: [rs.name]
+          rs: rsNames
+        }));
+      }
+      else if (viewTab.rs?.[0] !== rsNames[0] || viewTab.rs?.[1] !== rsNames[1]) {
+        dispatch(gdmnActions.updateViewTab({
+          url,
+          viewTab: {
+            rs: rsNames
+          }
         }));
       }
     } else {
@@ -380,7 +390,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         }));
       }
     }
-  }, [rs, viewTab]);
+  }, [rs, masterRs, viewTab]);
 
   const addRecord = () => {
     if (entityName) {
