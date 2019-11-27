@@ -1,5 +1,6 @@
 import { getTheme } from "office-ui-fabric-react";
 import React from "react";
+import { Object } from "./types";
 
 interface IWithSelectionFrameProps {
   children: JSX.Element | null;

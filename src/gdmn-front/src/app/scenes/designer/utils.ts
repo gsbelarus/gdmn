@@ -1,5 +1,8 @@
-import { IRectangle, IObject, Objects, IGrid } from "./types";
+import { IRectangle, IObject, Objects, IGrid, IField } from "./types";
 import { getTheme, IStyle, ITextFieldStyles, ILabelStyles } from "office-ui-fabric-react";
+import { EntityAttribute, Entity } from "gdmn-orm";
+import { getLName } from "gdmn-internals";
+import { RecordSet } from "gdmn-recordset";
 
 export const isSingleCell = (rect?: IRectangle) => rect && rect.left === rect.right && rect.top === rect.bottom;
 export const inRect = (rect: IRectangle | undefined, x: number, y: number) => rect && x >= rect.left && y >= rect.top && x <= rect.right && y <= rect.bottom;
@@ -65,14 +68,15 @@ export const getColor = (color: string | undefined): string | undefined => {
 export const object2style = (object: IObject, objects: Objects, enabled: boolean = true): React.CSSProperties => enabled ?
   {
     backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
-    color: getColor(inheritValue(object, 'color', objects))
+    color: getColor(inheritValue(object, 'color', objects)),
+    margin: '0 4px 4px 0'
   }
   :
   {};
 
 export const object2IStyle = (object: IObject, objects: Objects): IStyle => ({
   backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
-  color: getColor(inheritValue(object, 'color', objects))
+  color: getColor(inheritValue(object, 'color', objects)),
 });
 
 export const object2ITextFieldStyles = (object: IObject, objects: Objects): Partial<ITextFieldStyles> => ({
@@ -86,3 +90,23 @@ export const object2ITextFieldStyles = (object: IObject, objects: Objects): Part
 export const object2ILabelStyles = (object: IObject, objects: Objects): Partial<ILabelStyles> => ({
   root: object2IStyle(object, objects)
 });
+
+export const getFields = (rs?: RecordSet, entity?: Entity): IField[] => {
+  return (
+    rs && entity
+      ? rs.fieldDefs.map(fd => {
+        // Если поле-ссылка, то атрибут находим через alias
+        // для остальных полей - по caption
+        const attr = (fd && fd.eqfa && fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID')
+          ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
+          : entity.attributes[fd.caption ? fd.caption : fd.fieldName];
+        return ({
+          type: 'FIELD',
+          parent: 'Area1',
+          fieldName: fd.caption,
+          label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
+          name: fd.caption
+        } as IField)
+      })
+      : []
+  )};

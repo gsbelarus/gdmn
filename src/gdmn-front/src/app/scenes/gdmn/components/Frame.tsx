@@ -20,8 +20,7 @@ interface IFrameProps {
 
 export const Frame = (props: IFrameProps): JSX.Element => {
   const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle, children, scroll, height, onClick, readOnly, caption } = props;
-
-  const ifMargin = (m?: boolean) => m ? '16px' : 'none';
+  const ifMargin = (m?: boolean) => m ? '16px' : 'inherit';
   const ifBorder = (defPadding = '16px') => border ? defPadding : 'inherit';
 
   const withMargin = (ch: ReactNode) => {

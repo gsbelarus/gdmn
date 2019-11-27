@@ -17,22 +17,21 @@ export interface IRectangle {
   bottom: number;
 };
 
-export type TObjectType = 'WINDOW' | 'AREA' | 'LABEL' | 'IMAGE' | 'FIELD';
+export type TObjectType = 'WINDOW' | 'AREA' | 'LABEL' | 'IMAGE' | 'FIELD' | 'FRAME';
 
 export const objectNamePrefixes = {
   'WINDOW': 'Window',
   'AREA': 'Area',
   'LABEL': 'Label',
   'IMAGE': 'Image',
-  'FIELD': 'Field'
+  'FIELD': 'Field',
+  'FRAME': 'Frame'
 };
 
 export interface IObject {
   name: string;
   parent?: string;
   type: TObjectType;
-  color?: string;
-  backgroundColor?: string;
 };
 
 export interface IWindow extends IObject {
@@ -64,6 +63,26 @@ export function isImage(x: IObject | undefined): x is IImage {
   return x instanceof Object && x.type === 'IMAGE';
 };
 
+export interface IFrame extends IObject {
+  type: 'FRAME';
+  caption?: string;
+  border?: boolean;
+  height?: string;
+  marginLeft?: boolean;
+  marginTop?: boolean;
+  marginRight?: boolean;
+  marginBottom?: boolean;
+  scroll?: boolean;
+};
+
+export function isFrame(x: IObject | undefined): x is IFrame {
+  return x instanceof Object && x.type === 'FRAME';
+};
+
+export function isFrameOrArea(x: IObject | undefined): x is IFrame {
+  return x instanceof Object && (x.type === 'FRAME' || x.type === 'AREA');
+};
+
 export interface IField extends IObject {
   type: 'FIELD';
   fieldName: string;
@@ -85,11 +104,12 @@ export function isArea(x: IObject | undefined): x is IArea {
   return x instanceof Object && x.type === 'AREA';
 };
 
-export type Object = IWindow | IArea | ILabel | IImage | IField;
+export type Object = IWindow | IArea | ILabel | IImage | IField | IFrame;
 
 export type Objects = Object[];
 
 export const getAreas = (objects: Objects): IArea[] => objects.filter( object => isArea(object) ) as IArea[];
+export const getFrames = (objects: Objects): IFrame[] => objects.filter( object => isFrame(object) ) as IFrame[];
 export const getWindow = (objects: Objects): IWindow => objects.find( object => isWindow(object) ) as IWindow;
 
 export type OnUpdateSelectedObject = (newProps: Partial<Object>) => void;
