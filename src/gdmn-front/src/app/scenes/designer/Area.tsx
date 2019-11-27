@@ -1,10 +1,10 @@
-import { getTheme, Stack } from "office-ui-fabric-react";
+import { getTheme } from "office-ui-fabric-react";
 import { Object, IArea, Objects } from "./types";
 import { object2style } from "./utils";
 import React from "react";
-import { Control } from "./Control";
 import { RecordSet } from 'gdmn-recordset';
 import { Entity } from 'gdmn-orm';
+import { Controls } from "./Controls";
 
 interface IAreaProps {
   gridMode?: boolean;
@@ -14,7 +14,7 @@ interface IAreaProps {
   rs?: RecordSet;
   entity?: Entity;
   objects: Objects;
-  onSelectObject: (object: Object) => void;
+  onSelectObject: (object?: Object) => void;
 };
 
 export const Area = (props: IAreaProps) => {
@@ -43,7 +43,6 @@ export const Area = (props: IAreaProps) => {
       borderRadius: '4px',
       padding: '4px'
     };
-
   return (
     <div
       key={area.name}
@@ -79,24 +78,15 @@ export const Area = (props: IAreaProps) => {
             </div>
           </div>
         :
-          <Stack horizontal={area.horizontal}>
-            {
-              objects
-                .filter( object => object.parent === area.name )
-                .map( object =>
-                  <Control
-                    key={object.name}
-                    object={object}
-                    objects={objects}
-                    rs={rs}
-                    entity={entity}
-                    selected={object === selectedObject}
-                    previewMode={previewMode}
-                    onSelectObject={ () => onSelectObject(object) }
-                  />
-                )
-            }
-          </Stack>
+          <Controls
+            object={area}
+            objects={objects}
+            rs={rs}
+            entity={entity}
+            selectedObject={selectedObject}
+            previewMode={previewMode}
+            onSelectObject={onSelectObject}
+          />
       }
     </div>
   )

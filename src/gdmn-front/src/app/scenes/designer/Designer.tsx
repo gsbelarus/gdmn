@@ -1,14 +1,14 @@
 import React, { useReducer, useMemo } from "react";
 import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
-import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects, IImage, deleteWithChildren, getWindow, IField } from "./types";
-import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid } from "./utils";
+import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects,
+  deleteWithChildren, getWindow, IField, IFrame, isFrameOrArea } from "./types";
+import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid, getFields } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
-import { getLName } from "gdmn-internals";
 import { RecordSet } from "gdmn-recordset";
 
 /**
@@ -68,7 +68,7 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
+const getDefaultState = (entity?: Entity, rs?: RecordSet, setFields?: Objects): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
     type: 'WINDOW'
@@ -84,20 +84,9 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
     bottom: 0
   };
 
-  const fields: IField[] =  rs && entity 
-  ? rs.fieldDefs.map(fd => {
-    const findFD = Object.entries(entity.attributes).find(([name, _]) => name === fd.caption);
-    return ({
-      type: 'FIELD',
-      parent: 'Area1',
-      fieldName: fd.caption,
-      label: findFD ? getLName(findFD[1].lName, ['by', 'ru', 'en']) : fd.caption,
-      name: fd.caption
-    } as IField)
-  })
-  : [];
+  const fields: IField[] = getFields(rs, entity);
 
-  const objects: Objects = [window, area, ...fields];
+  const objects: Objects = [window, area, ...fields, ...(setFields ? setFields : [])];
 
   return {
     grid: {
@@ -109,7 +98,7 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet): IDesignerState => {
   };
 };
 
-const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?: Entity): IDesignerState => {
+const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?: Entity, setFields?: Objects): IDesignerState => {
   if (setting) {
     const selectedObject = setting.objects.find( object => isWindow(object) );
     return {
@@ -117,8 +106,8 @@ const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?:
       selectedObject
     };
   } else {
-    return getDefaultState(entity, rs);
-  }  
+    return getDefaultState(entity, rs, setFields);
+  }
 };
 
 type Action = { type: 'TOGGLE_PREVIEW_MODE' }
@@ -127,6 +116,7 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'UPDATE_GRID', updateColumn: boolean, idx: number, newSize: ISize }
   | { type: 'SELECT_OBJECT', object?: Object }
   | { type: 'CREATE_LABEL' }
+  | { type: 'CREATE_FRAME', newProps?: Partial<IFrame>}
   | { type: 'CREATE_OBJECT', objectType: TObjectType, newProps?: Partial<Object>, makeSelected?: boolean }
   | { type: 'UPDATE_OBJECT', newProps: Partial<Object> }
   | { type: 'TOGGLE_SELECT_FIELDS' }
@@ -182,7 +172,7 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
     const { selectedObject } = state;
 
-    if (!isArea(selectedObject)) {
+    if (!isFrameOrArea(selectedObject)) {
       return state;
     }
 
@@ -344,6 +334,11 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
     case 'CREATE_LABEL': {
       const name = getObjectName('LABEL');
       return createObject('LABEL', { name, text: name });
+    }
+
+    case 'CREATE_FRAME': {
+      const { newProps } = action;
+      return createObject('FRAME', newProps);
     }
 
     case 'CREATE_OBJECT': {
@@ -535,8 +530,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { erModel, rs, entity, setting, onSaveSetting } = props;
-  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity));     
+  const { erModel, rs, entity, setting, onSaveSetting, setFields } = props;
+  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity, setFields));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
@@ -623,7 +618,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertField',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject) || !erModel,
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)) || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
@@ -631,7 +626,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertLabel',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
@@ -639,11 +634,19 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertPicture',
-      disabled: previewMode || gridMode || !selectedObject || !isArea(selectedObject),
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
       onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'IMAGE' })
+    },
+    {
+      key: 'insertFrame',
+      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
+      text: 'Insert Frame',
+      iconOnly: true,
+      iconProps: { iconName: 'Picture' },
+      onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FRAME' })
     },
     {
       key: 'split1',
@@ -815,9 +818,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
           } }
         >
           {
-            previewMode
-              ? renderAreas()
-              : gridMode
+            gridMode
               ? gridCells.concat(renderAreas())
               : renderAreas()
           }

@@ -94,7 +94,7 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     id: getTempID()
   };
 
-  const temp = attributes.filter( attr => attr.name !== 'PARENT' && attr.name !== 'LB' && attr.name !== 'RB' && attr.name !== 'ID' && attr.name !== 'EDITIONDATE');
+  const temp = attributes.filter( attr => attr.name !== 'PARENT' && attr.name !== 'LB' && attr.name !== 'RB' && attr.name !== 'ID' && attr.name !== 'EDITIONDATE' && attr.name !== 'INHERITEDKEY' );
 
   switch (newEntityType) {
     case 'INHERITED':
