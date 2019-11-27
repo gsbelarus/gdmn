@@ -67,7 +67,8 @@ export const initAttr = (type: AttributeTypes, prevAttr?: IAttribute) => {
         ...attr,
         references: [],
         attributes: [],
-        presLen: 1
+        presLen: 1,
+        isChar: true
       } as ISetAttribute;
   }
 

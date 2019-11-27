@@ -81,6 +81,7 @@ export interface IEntityAttribute extends IAttribute {
 export interface ISetAttribute extends IEntityAttribute {
   attributes: IAttribute[];
   presLen: number;
+  isChar: boolean;
 }
 
 export interface IEntity {
@@ -172,9 +173,9 @@ export const deserializeEntity = (erModel: ERModel, serializedEntity: IEntity, w
     }
 
     case "Set": {
-      const {presLen, attributes, references} = _attr as ISetAttribute;
+      const {presLen, isChar, attributes, references} = _attr as ISetAttribute;
       const entities = references.map((e) => erModel.entities[e]);
-      const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories, adapter});
+      const setAttribute = new SetAttribute({name, lName, required, presLen, isChar, entities, semCategories, adapter});
       attributes.forEach((a) => setAttribute.add(deserializeAttribute(erModel, a, withAdapter)));
       return setAttribute;
     }
