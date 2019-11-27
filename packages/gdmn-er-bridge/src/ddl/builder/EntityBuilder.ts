@@ -307,26 +307,17 @@ export class EntityBuilder extends Builder {
       const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
       await this.ddlHelper.addTableCheck(checkName ,tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
       // 3) Добавляем процедуры
-      // 3.1) c-el
-      await this.ddlHelper.addCELProcedure(tableName);
-
-          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
-          // await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
-
-          // const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.createIndex(indexName, tableName,[lbField], {sortType: "ASC"});
-          // const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.createIndex(indexName2, tableName, [rbField],{sortType:"DESC"});
-
-          // const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
-          // await this.ddlHelper.addTableCheck(checkName ,tableName, `${lbField} <= ${rbField}`);
-          //        
-      // if (attribute.name === "RB") {
-      //   await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_RB_NAME, domain: "DRB"}]);
-      // }
-      // if (attribute.name === "LB") {
-      //    await this.ddlHelper.addColumns(tableName, [{name: Constants.DEFAULT_LB_NAME, domain: "DLB"}]);
-      // }
+      // 3.1) el
+      await this.ddlHelper.addELProcedure(tableName);
+      // 3.2) gchc
+      await this.ddlHelper.addGCHCProcedure(tableName);      
+      // 3.2) restruct
+      await this.ddlHelper.addRestructProcedure(tableName);            
+      // 4) Добавляем триггеры
+      // 4.1) bi
+      await this.ddlHelper.addLBRBBITrigger(tableName);      
+      // 4.2) bu
+      await this.ddlHelper.addLBRBBUTrigger(tableName);      
     }
     return entity.add(attribute);
   }

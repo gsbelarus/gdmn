@@ -200,7 +200,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "INDEX_INACTIVE", domain: "DBOOLEAN"},
       {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
       {name: "INDEXNAME", domain: "DINDEXNAME"},
-      {name: "FIELDLIST", domain: "DTEXT255"},
+      {name: "FIELDSLIST", domain: "DTEXT255"},
       {name: "RELATIONKEY", domain: "DMASTERKEY"},
       {name: "UNIQUE_FLAG", domain: "DBOOLEAN"}
     ], true);
