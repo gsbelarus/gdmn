@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, EntityAttribute, Attribute, IEntityQueryWhereValue, EntityQuery } from 'gdmn-orm';
 import { List } from 'immutable';
 
 /*
@@ -211,7 +211,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     queryState: 'INITIAL'
   });
 
-  const applyPhrase = () => {
+  const applyPhrase = (detailAttribute?: Attribute, value?: any) => {
     if (erModel && entity) {
       if (phrase) {
         try {
@@ -222,6 +222,16 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             const command = erTranslatorRU.process(parsed);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
+              if (detailAttribute && value !== undefined) {
+                eq.addWhereCondition({
+                  equals: [{
+                    alias: eq.link.alias,
+                    attribute: detailAttribute,
+                    value
+                  }]
+                });
+              }
+
               viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
               dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
             }
@@ -231,7 +241,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
         }
       } else {
-        const eq = prepareDefaultEntityQuery(entity);
+        const eq = prepareDefaultEntityQuery(entity, undefined, undefined, undefined, detailAttribute, value);
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
         dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
       }
@@ -329,8 +339,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
     // 9
     if (masterRs && rs && rs.masterLink) {
-      if (queryState === 'INITIAL') {
-        //
+      if (queryState === 'QUERY_MASTER' && rs.masterLink.value === undefined) {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
+      }
+      else if (queryState === 'INITIAL') {
+        applyPhrase(rs.masterLink.detailAttribute, masterRs.pkValue()[0]);
       }
 
       console.log(queryState + ' --9');
@@ -595,7 +608,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                     onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
                     errorMessage={ phraseError ? phraseError : undefined }
                   />
-                  <DefaultButton onClick={applyPhrase}>
+                  <DefaultButton onClick={ () => applyPhrase() }>
                     Применить
                   </DefaultButton>
                 </Stack>
