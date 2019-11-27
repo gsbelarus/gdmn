@@ -4,7 +4,7 @@ import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { rsActions, TStatus } from 'gdmn-recordset';
+import { rsActions, TStatus, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { nlpTokenize, nlpParse, sentenceTemplates } from 'gdmn-nlp';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
@@ -211,7 +211,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     queryState: 'INITIAL'
   });
 
-  const applyPhrase = (detailAttribute?: Attribute, value?: any) => {
+  const applyPhrase = (masterLink?: IMasterLink) => {
     if (erModel && entity) {
       if (phrase) {
         try {
@@ -222,18 +222,18 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             const command = erTranslatorRU.process(parsed);
             const eq = command[0] ? command[0].payload : undefined;
             if (eq) {
-              if (detailAttribute && value !== undefined) {
+              if (masterLink && masterLink.detailAttribute && masterLink.value !== undefined) {
                 eq.addWhereCondition({
                   equals: [{
                     alias: eq.link.alias,
-                    attribute: detailAttribute,
-                    value
+                    attribute: masterLink.detailAttribute,
+                    value: masterLink.value
                   }]
                 });
               }
 
               viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
-              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true }));
+              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, masterLink }));
             }
           }
         }
@@ -241,9 +241,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
         }
       } else {
-        const eq = prepareDefaultEntityQuery(entity, undefined, undefined, undefined, detailAttribute, value);
+        const eq = prepareDefaultEntityQuery(entity, undefined, undefined, undefined, masterLink?.detailAttribute, masterLink?.value);
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
-        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true }));
+        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, masterLink }));
       }
     }
   };
@@ -343,7 +343,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
       else if (queryState === 'INITIAL') {
-        applyPhrase(rs.masterLink.detailAttribute, masterRs.pkValue()[0]);
+        applyPhrase({ ...rs.masterLink, value: masterRs.pkValue()[0] });
       }
 
       console.log(queryState + ' --9');
@@ -498,7 +498,9 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           ? <Tree
               rs={masterRs}
               load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
-              selectNode={ () => {} }
+              selectNode={ currentRow => {
+                dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
+              } }
             />
           : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
               { gcsMaster
@@ -512,7 +514,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                 : <div>Not found grid rs-master</div>
               }
             </div>
-        : <div>Not found rs-master</div>
+        : undefined
       }
       <div styleName="SGrid">
         {
