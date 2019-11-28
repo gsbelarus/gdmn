@@ -7,6 +7,7 @@ import {EntityAttribute, IEntityAttributeOptions} from "./EntityAttribute";
 
 export interface ISetAttributeOptions extends IEntityAttributeOptions<ISetAttributeAdapter> {
   presLen?: number;
+  isChar?: boolean;
 }
 
 export class SetAttribute extends EntityAttribute<ISetAttributeAdapter> {
@@ -15,10 +16,12 @@ export class SetAttribute extends EntityAttribute<ISetAttributeAdapter> {
 
   public readonly attributes: IAttributes = {};
   public readonly presLen: number;
+  public readonly isChar: boolean;
 
   constructor(options: ISetAttributeOptions) {
     super(options);
-    this.presLen = options.presLen || 1;
+    this.presLen = (options.isChar || false) ? options.presLen || 1 : 1;
+    this.isChar = options.isChar || false;
   }
 
   public attribute(name: string): Attribute | never {
@@ -41,7 +44,8 @@ export class SetAttribute extends EntityAttribute<ISetAttributeAdapter> {
     return {
       ...super.serialize(withAdapter),
       attributes: Object.entries(this.attributes).map((a) => a[1].serialize(withAdapter)),
-      presLen: this.presLen
+      presLen: this.presLen,
+      isChar: this.isChar
     };
   }
 

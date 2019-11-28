@@ -76,9 +76,9 @@ export class EntityUtils {
       }
 
       case "Set": {
-        const {presLen, attributes, references} = _attr as ISetAttribute;
+        const {presLen, isChar, attributes, references} = _attr as ISetAttribute;
         const entities = references.map((e) => erModel.entities[e]);
-        const setAttribute = new SetAttribute({name, lName, required, presLen, entities, semCategories, adapter});
+        const setAttribute = new SetAttribute({name, lName, required, presLen, isChar, entities, semCategories, adapter});
         attributes.forEach((a) => setAttribute.add(EntityUtils.createAttribute(a, erModel)));
         return setAttribute;
       }

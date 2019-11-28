@@ -1,4 +1,4 @@
-import { Entity, EntityLinkField, ScalarAttribute, EntityAttribute, EntityLink, ParentAttribute, EntityQueryOrderType, EntityQuery, IEntityQueryOrder, EntityQueryOptions, EntityQuerySet, EntityQuerySetOptions } from "..";
+import { Entity, EntityLinkField, ScalarAttribute, EntityAttribute, EntityLink, ParentAttribute, EntityQueryOrderType, EntityQuery, IEntityQueryOrder, EntityQueryOptions, EntityQuerySet, EntityQuerySetOptions, Attribute, IEntityQueryWhere, IEntityQueryWhereValue } from "..";
 
 export function prepareDefaultEntityLinkFields(entity: Entity): EntityLinkField[] {
   const scalarFields = Object.values(entity.attributes)
@@ -49,28 +49,40 @@ export function prepareDefaultEntityLinkFields(entity: Entity): EntityLinkField[
   return scalarFields.concat(linkFields);
 }
 
-export function prepareDefaultEntityQuery(entity: Entity, pkValues?: any[], alias: string = 'root', orderFields?: {name: string, order: EntityQueryOrderType}[]): EntityQuery {
-
+export function prepareDefaultEntityQuery(
+  entity: Entity,
+  pkValues?: any[],
+  alias: string = 'root',
+  orderFields?: {name: string, order: EntityQueryOrderType}[],
+  attr?: Attribute,
+  attrValue?: any): EntityQuery
+{
   const orderObj: IEntityQueryOrder[] = [];
   orderFields && orderFields.forEach(fd => {
     const sortAttrs = Object.values(entity.attributes).find(attr => attr.name === fd.name);
     sortAttrs && orderObj.push({alias, type: fd.order, attribute: sortAttrs});
   });
 
-  const whereObj = pkValues && [{
-    equals: pkValues.map((value, index) => ({
+  const equals: IEntityQueryWhereValue[] = pkValues ? pkValues.map( (value, index) => ({
+    alias,
+    attribute: entity.pk[index],
+    value
+  })) : [];
+
+  if (attr && attrValue !== undefined) {
+    equals.push({
       alias,
-      attribute: entity.pk[index],
-      value
-    }))
-  }];
+      attribute: attr,
+      value: attrValue
+    });
+  }
 
   return new EntityQuery(
     new EntityLink(entity, alias, prepareDefaultEntityLinkFields(entity)),
     new EntityQueryOptions(
     undefined,
     undefined,
-    whereObj,
+    equals.length ? [{equals}] : undefined,
     orderObj)
   );
 }

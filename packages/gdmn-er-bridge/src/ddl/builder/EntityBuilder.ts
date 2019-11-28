@@ -245,7 +245,7 @@ export class EntityBuilder extends Builder {
           });
           const presLen = setAttr.presLen;
           const triggerName = Constants.DEFAULT_USR_PREFIX.concat(Prefix.triggerBeforeInsert(relationName));
-          if (presLen > 0) {
+          if (setAttr.isChar) {
             await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable,
               crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk);
           }

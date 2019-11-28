@@ -48,6 +48,22 @@ export class Internals extends View<IInternalsProps, {}> {
             }
           </ol>
         </Frame>
+        {rsMeta &&
+        <Frame border marginTop marginLeft marginRight caption="rsMeta">
+          <ol>
+            {
+              Object.entries(rsMeta).map(([name, rsm]) => (
+                rsm ?
+                  <li key={name}>
+                    {name} -- {rsm.taskKey !== undefined ? `taskKey: ${rsm.taskKey}` : 'no task key'}{rsm.error ? `, error: ${rsm.error}` : ''}
+                  </li>
+                  :
+                  <li>{name}, no meta info</li>
+              ))
+            }
+          </ol>
+        </Frame>
+        }
         <Frame border marginTop marginLeft marginRight caption="ViewTabs">
           <ol>
             {
@@ -59,22 +75,6 @@ export class Internals extends View<IInternalsProps, {}> {
             }
           </ol>
         </Frame>
-        {rsMeta &&
-        <Frame border marginTop marginLeft marginRight caption="rsMeta">
-          <ol>
-            {
-              Object.entries(rsMeta).map(([name, rsm]) => (
-                rsm ?
-                  <li key={name}>
-                    {name} -- taskKey: {rsm.taskKey}
-                  </li>
-                  :
-                  <li>{name}</li>
-              ))
-            }
-          </ol>
-        </Frame>
-        }
         <Frame border marginTop marginLeft marginRight caption="Session info">
           <div>
             Refresh
