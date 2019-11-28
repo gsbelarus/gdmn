@@ -214,12 +214,16 @@ export class Update1 extends BaseSimpleUpdate {
       {onUpdate: "CASCADE", onDelete: "CASCADE"}
     );
 
+    await ddlHelper.addDomain('DPROCEDURENAME', {type: "VARCHAR(31)"});
     await ddlHelper.addTable("AT_PROCEDURES", [
       {name: "ID", domain: "DINTKEY"},
-      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"}
+      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
+      {name: "PROCEDURENAME", domain: "DPROCEDURENAME"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_PROCEDURES", "AT_PROCEDURES", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_PROCEDURES", "AT_PROCEDURES", "ID", Constants.GLOBAL_GENERATOR, true);
+    await ddlHelper.createIndex("AT_X_PROCEDURES_PN", "AT_PROCEDURES", ["PROCEDURENAME"], {unique: true}, true);
+  
 
     ///////////////////////////
     await ddlHelper.addForeignKey("AT_FK_FIELDS_RLF",

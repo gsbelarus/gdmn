@@ -296,7 +296,7 @@ export class EntityBuilder extends Builder {
         5) ХП - USR$_P_RESTRUCT        
         6) bi trigger
         7) bu trigger        
-      */  
+      
      
       // 1) Добавляем indices
       const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
@@ -318,7 +318,8 @@ export class EntityBuilder extends Builder {
       await this.ddlHelper.addLBRBBITrigger(tableName);      
       // 4.2) bu
       await this.ddlHelper.addLBRBBUTrigger(tableName);      
-    }
+    */        
+    }    
     return entity.add(attribute);
   }
 
