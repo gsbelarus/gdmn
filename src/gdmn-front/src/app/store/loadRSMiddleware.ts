@@ -61,7 +61,7 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
     }
 
     case getType(actions.attachRS): {
-      const { eq, queryPhrase, override } = action.payload;
+      const { eq, queryPhrase, override, masterLink } = action.payload;
 
       const prevRsm = getRsMeta();
 
@@ -83,11 +83,22 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
             case TTaskStatus.RUNNING: {
               const taskKey = value.meta!.taskKey!;
 
+              const intermediateRsMeta = getRsMeta();
+
               /**
                * ViewTab could be closed before we get a response
                * from a server. Interrupt task then.
                */
-              if (!getRsMeta()) {
+              if (!intermediateRsMeta) {
+                apiService.interruptTask({ taskKey }).catch(console.error);
+                return;
+              }
+
+              /**
+               * Other parallel request could be run at the same time.
+               * If that request is served first we cancel our request.
+               */
+              if (intermediateRsMeta.taskKey) {
                 apiService.interruptTask({ taskKey }).catch(console.error);
                 return;
               }
@@ -118,7 +129,8 @@ export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
                     eq,
                     queryPhrase,
                     sql: result.info,
-                    sequentially: !!rsm.taskKey
+                    sequentially: !!rsm.taskKey,
+                    masterLink
                   });
 
                   dispatch(rsActions.createRecordSet({ name, rs, override }));
