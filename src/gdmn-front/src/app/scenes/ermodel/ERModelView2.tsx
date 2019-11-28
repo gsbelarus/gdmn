@@ -160,7 +160,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         throw new Error(`Invalid master-detail link for entities-attributes rs`);
       }
 
-      if (attributes.masterLink.values[0].value !== currEntity) {
+      if (!attributes.masterLink.value || attributes.masterLink.value !== currEntity) {
         const data = currEntity && erModel.entities[currEntity]
           ?
           List(
@@ -180,12 +180,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
               data,
               masterLink: {
                 masterName: entities.name,
-                values: [
-                  {
-                    fieldName: "name",
-                    value: currEntity
-                  }
-                ]
+                value: currEntity
               }
             })
           )
@@ -225,12 +220,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             List<IDataRow>(),
           masterLink: {
             masterName: entities.name,
-            values: [
-              {
-                fieldName: 'name',
-                value: currEntity
-              }
-            ]
+            value: currEntity
           }
         })
       }));
