@@ -1,6 +1,6 @@
 import {ERModel} from "../model/ERModel";
 import {EntityLink, IEntityLinkInspector} from "./EntityLink";
-import {EntityQueryOptions, IEntityQueryOptionsInspector} from "./EntityQueryOptions";
+import {EntityQueryOptions, IEntityQueryOptionsInspector, IEntityQueryWhere} from "./EntityQueryOptions";
 
 export interface IEntityQueryResponseFieldAlias {
   linkAlias: string;
@@ -30,11 +30,15 @@ export interface IEntityQueryInspector {
 export class EntityQuery {
 
   public readonly link: EntityLink;
-  public readonly options?: EntityQueryOptions;
+  private _options?: EntityQueryOptions;
 
   constructor(query: EntityLink, options?: EntityQueryOptions) {
     this.link = query;
-    this.options = options;
+    this._options = options;
+  }
+
+  public get options() {
+    return this._options;
   }
 
   public static deserialize(erModel: ERModel, text: string): EntityQuery {
@@ -60,5 +64,13 @@ export class EntityQuery {
       inspect.options = this.options.inspect();
     }
     return inspect;
+  }
+
+  public addWhereCondition(cond: IEntityQueryWhere) {
+    if (!this._options) {
+      this._options = new EntityQueryOptions();
+    }
+
+    this._options.addWhereCondition(cond);
   }
 }

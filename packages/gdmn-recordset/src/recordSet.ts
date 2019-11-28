@@ -49,7 +49,7 @@ export interface IRecordSetOptions {
 };
 
 export interface IRecordSetDataOptions {
-  data: Data;
+  data: Data | undefined;
   masterLink?: IMasterLink;
 };
 
@@ -94,12 +94,12 @@ export class RecordSet {
     }
   }
 
-  public static create(options: IRecordSetOptions): RecordSet{
-    const withCalcFunc = options.fieldDefs.filter(fd => fd.calcFunc);
+  public static create(params: IRecordSetOptions): RecordSet{
+    const withCalcFunc = params.fieldDefs.filter(fd => fd.calcFunc);
 
     if (withCalcFunc.length) {
       return new RecordSet({
-        ...options,
+        ...params,
         calcFields: (row: IDataRow): IDataRow => {
           const res = Object.assign({} as IDataRow, row);
 
@@ -107,7 +107,7 @@ export class RecordSet {
 
           return res;
         },
-        status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
+        status: params.sequentially ? TStatus.PARTIAL : TStatus.FULL,
         currentRow: 0,
         sortFields: [],
         allRowsSelected: false,
@@ -116,8 +116,8 @@ export class RecordSet {
       });
     } else {
       return new RecordSet({
-        ...options,
-        status: options.sequentially ? TStatus.PARTIAL : TStatus.FULL,
+        ...params,
+        status: params.sequentially ? TStatus.PARTIAL : TStatus.FULL,
         calcFields: undefined,
         currentRow: 0,
         sortFields: [],
@@ -1981,7 +1981,7 @@ export class RecordSet {
       default:
         return new RecordSet({
           ...this._params,
-          data: options.data,
+          data: options.data || List<IDataRow>(),
           status: TStatus.FULL,
           currentRow: 0,
           sortFields: [],
@@ -2037,6 +2037,13 @@ export class RecordSet {
     return new RecordSet({
       ...this._params,
       locked
+    });
+  }
+
+  public duplicate(params: Partial<IRecordSetParams>): RecordSet {
+    return new RecordSet({
+      ...this._params,
+      ...params
     });
   }
 }

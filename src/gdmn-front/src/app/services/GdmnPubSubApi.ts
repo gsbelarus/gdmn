@@ -584,7 +584,7 @@ export class GdmnPubSubApi {
     taskCmd: TTaskCmd<TActionName>,
     replyMode: boolean = false
   ) {
-    console.log('run task: ', JSON.stringify(taskCmd.payload.payload, undefined, 2));
+    //console.log('run task: ', JSON.stringify(taskCmd.payload.payload, undefined, 2));
 
     const observ = this.pubSubClient
       .publish<IPubSubMessage<TGdmnPublishMessageMeta>>(TGdmnTopic.TASK, {

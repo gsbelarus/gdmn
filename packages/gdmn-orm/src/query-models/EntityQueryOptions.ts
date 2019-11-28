@@ -118,7 +118,7 @@ export class EntityQueryOptions {
 
   public readonly first?: number;
   public readonly skip?: number;
-  public readonly where?: IEntityQueryWhere[];
+  private _where?: IEntityQueryWhere[];
   public readonly order?: IEntityQueryOrder[];
 
   constructor(first?: number,
@@ -127,8 +127,12 @@ export class EntityQueryOptions {
               order?: IEntityQueryOrder[]) {
     this.first = first;
     this.skip = skip;
-    this.where = where;
+    this._where = where;
     this.order = order;
+  }
+
+  public get where() {
+    return this._where;
   }
 
   public static inspectorToObject(link: EntityLink,
@@ -501,5 +505,13 @@ export class EntityQueryOptions {
       }));
     }
     return options;
+  }
+
+  public addWhereCondition(cond: IEntityQueryWhere) {
+    if (this._where) {
+      this._where.push(cond);
+    } else {
+      this._where = [cond];
+    }
   }
 }
