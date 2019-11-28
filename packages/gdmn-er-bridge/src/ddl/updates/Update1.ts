@@ -200,7 +200,7 @@ export class Update1 extends BaseSimpleUpdate {
       {name: "INDEX_INACTIVE", domain: "DBOOLEAN"},
       {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
       {name: "INDEXNAME", domain: "DINDEXNAME"},
-      {name: "FIELDLIST", domain: "DTEXT255"},
+      {name: "FIELDSLIST", domain: "DTEXT255"},
       {name: "RELATIONKEY", domain: "DMASTERKEY"},
       {name: "UNIQUE_FLAG", domain: "DBOOLEAN"}
     ], true);
@@ -214,12 +214,16 @@ export class Update1 extends BaseSimpleUpdate {
       {onUpdate: "CASCADE", onDelete: "CASCADE"}
     );
 
+    await ddlHelper.addDomain('DPROCEDURENAME', {type: "VARCHAR(31)"});
     await ddlHelper.addTable("AT_PROCEDURES", [
       {name: "ID", domain: "DINTKEY"},
-      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"}
+      {name: "EDITIONDATE", domain: "DTIMESTAMP_NOTNULL", default: "CURRENT_TIMESTAMP"},
+      {name: "PROCEDURENAME", domain: "DPROCEDURENAME"}
     ], true);
     await ddlHelper.addPrimaryKey("AT_PK_PROCEDURES", "AT_PROCEDURES", ["ID"]);
     await ddlHelper.addAutoIncrementTrigger("AT_BI_PROCEDURES", "AT_PROCEDURES", "ID", Constants.GLOBAL_GENERATOR, true);
+    await ddlHelper.createIndex("AT_X_PROCEDURES_PN", "AT_PROCEDURES", ["PROCEDURENAME"], {unique: true}, true);
+  
 
     ///////////////////////////
     await ddlHelper.addForeignKey("AT_FK_FIELDS_RLF",
