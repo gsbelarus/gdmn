@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useState, useCallback } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
@@ -16,8 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, EntityAttribute, Attribute, IEntityQueryWhereValue, EntityQuery } from 'gdmn-orm';
-import { List } from 'immutable';
+import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
 
 /*
 
@@ -53,7 +52,7 @@ import { List } from 'immutable';
    запроса и формирования рекодсета еще предусмотреть возможность
    сразу устанавливать курсор на заданную запись, чтобы
    пользователь мог открыть форму прямо в том состоянии, в котором
-   он ее закрыл.
+   он ее закрыл. Подумать над этим вопросом.
 
    б) Если нет, то формируем EntityQuery для загрузки rs и
    отсылаем ее в middleware.
@@ -78,12 +77,20 @@ import { List } from 'immutable';
    повторный запуск.
 
 4. masterRs отсутствует. rs присутствует. masterLink отсутствует.
+   Фраза в rs соответствует фразе в стэйте формы.
 
    Связь м-д не установлена, мы просто отображаем данные rs.
 
    Скидываем состояние загрузки rs в INITIAL, если оно было установлено.
 
-5. masterRs отсутствует. rs присутствует. masterLink присутствует.
+5. masterRs отсутствует. rs присутствует. masterLink отсутствует.
+   Фраза в rs не соответствует фразе в стэйте формы.
+
+   Если состояние загрузки INITIAL, то формируем новую EntityQuery с учетом
+   измененной фразы. Выставляем состояние загрузки и отсылаем запрос в
+   мидлвэр.
+
+6. masterRs отсутствует. rs присутствует. masterLink присутствует.
 
    Это промежуточное состояние установки связи м-д. masterLink
    создается в момент выбора пользователем позиции в выпадающем списке.
@@ -97,7 +104,7 @@ import { List } from 'immutable';
    EntityQuery, устанавливаем состояние загрузки и посылаем
    экшен в мидлвэр.
 
-6. masterRs присутствует. rs присутствует. masterLink присутствует.
+7. masterRs присутствует. rs присутствует. masterLink присутствует.
    значение masterLink.masterName не соответствует masterRs.name.
 
    Это ситуация, когда связь м-д была установлена по одному полю
@@ -107,22 +114,31 @@ import { List } from 'immutable';
 
    Если нет, то удаляем masterRs.
 
-7. masterRs присутствует. rs присутствует. masterLink присутствует,
+8. masterRs присутствует. rs присутствует. masterLink присутствует,
    masterRs пуст.
 
    Скидываем состояние загрузки rs, если оно было установлено.
 
    Очищаем rs, если он не пуст.
 
-8. masterRs присутствует. rs присутствует. masterLink присутствует,
+9. masterRs присутствует. rs присутствует. masterLink присутствует,
    значение из мастер линк соответствует текущей записи из masterRs.
+   Фраза из rs соответствует фразе из стэйта формы.
 
    Связь м-д установлена. Содержимое детального набора данных
    соответствует текущей записи в мастер рекордсете.
 
    Скидываем состояние загрузки rs, если оно было установлено.
 
-9. masterRs присутствует. rs присутствует. masterLink присутствует,
+10. masterRs присутствует. rs присутствует. masterLink присутствует,
+   значение из мастер линк соответствует текущей записи из masterRs.
+   Фраза из rs не соответствует фразе из стэйта формы.
+
+   Если состояние загрузки INITIAL, то формируем новую EntityQuery с учетом
+   измененной фразы. Выставляем состояние загрузки и отсылаем запрос в
+   мидлвэр.
+
+11. masterRs присутствует. rs присутствует. masterLink присутствует,
    значение из мастер линк не соответствует текущей записи из masterRs.
 
    Это либо ситуация установки связи м-д, когда мы загрузили мастер
@@ -141,29 +157,17 @@ import { List } from 'immutable';
 type QueryState = 'INITIAL' | 'QUERY_RS' | 'QUERY_MASTER';
 
 interface IEntityDataViewState {
-  phrase: string;
   phraseError?: string;
   showSQL?: boolean;
   queryState: QueryState;
 };
 
-type Action = { type: 'SET_PHRASE', phrase: string }
-  | { type: 'SET_PHRASE_ERROR', phraseError: string }
+type Action = { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
   | { type: 'SET_QUERY_STATE', queryState: QueryState };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
   switch (action.type) {
-    case 'SET_PHRASE': {
-      const { phrase } = action;
-
-      return {
-        ...state,
-        phrase,
-        phraseError: undefined
-      }
-    }
-
     case 'SET_PHRASE_ERROR': {
       const { phraseError } = action;
 
@@ -201,17 +205,15 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
+  const [{ phraseError, showSQL, queryState }, viewDispatch] = useReducer(reducer, { queryState: 'INITIAL' });
+  const [phrase, setPhrase] = useState(rs && rs.queryPhrase
+    ? rs.queryPhrase
+    : entityName
+    ? `покажи все ${entityName}`
+    : ''
+  );
 
-  const [{ phrase, phraseError, showSQL, queryState }, viewDispatch] = useReducer(reducer, {
-    phrase: rs && rs.queryPhrase
-      ? rs.queryPhrase
-      : entityName
-      ? `покажи все ${entityName}`
-      : '',
-    queryState: 'INITIAL'
-  });
-
-  const applyPhrase = (masterLink?: IMasterLink) => {
+  const applyPhrase = useCallback( (masterLink?: IMasterLink) => {
     if (erModel && entity) {
       if (phrase) {
         try {
@@ -246,15 +248,18 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, masterLink }));
       }
     }
-  };
+  }, [erModel, entity, phrase]);
 
   useEffect( () => {
+    const log = (step: number) =>
+      console.log(`${step} -- ${queryState}${entity ? ',entity' : ''}${rs ? ',rs' : ''}${rs?.masterLink ? ',masterLink' : ''}${rs?.masterLink?.value ? ',value' : ''}${masterRs ? ',masterRs' : ''}`)
+
     // 1
     if (!erModel || !entity) {
       if (queryState !== 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
-      console.log(queryState + ' --1');
+      log(1);
       return;
     }
 
@@ -267,27 +272,36 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         // 2, b)
         applyPhrase();
       }
-      console.log(queryState + ' --2');
+      log(2);
       return;
     }
 
     // 3
     if (masterRs && !rs) {
       // TODO
-      console.log(queryState + ' --3');
+      log(3);
       return;
     }
 
     // 4
-    if (rs && !masterRs && !rs.masterLink) {
+    if (rs && !masterRs && !rs.masterLink && rs.queryPhrase === phrase) {
       if (queryState === 'QUERY_RS') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
-      console.log(queryState + ' --4');
+      log(4);
       return;
     }
 
     // 5
+    if (rs && !masterRs && !rs.masterLink && rs.queryPhrase !== phrase) {
+      if (queryState === 'INITIAL') {
+        applyPhrase();
+      }
+      log(5);
+      return;
+    }
+
+    // 6
     if (rs && rs.masterLink && !masterRs) {
       if (queryState === 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_MASTER' });
@@ -300,21 +314,21 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         dispatch(loadRSActions.attachRS({ name: rs.masterLink.masterName, eq, override: true }));
       }
 
-      console.log(queryState + ' --5');
+      log(6);
       return;
     }
 
-    // 6
+    // 7
     if (rs && rs.masterLink && masterRs && masterRs.name !== rs.masterLink.masterName) {
       if (queryState === 'INITIAL') {
         dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
       }
 
-      console.log(queryState + ' --6');
+      log(7);
       return;
     }
 
-    // 7
+    // 8
     if (rs && rs.masterLink && masterRs && !masterRs.size) {
       if (queryState !== 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
@@ -324,20 +338,29 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         dispatch(rsActions.setData({ name: rs.name, data: undefined }));
       }
 
-      console.log(queryState + ' --7');
-      return;
-    }
-
-    // 8
-    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value) {
-      if (queryState !== 'INITIAL') {
-        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
-      }
-      console.log(queryState + ' --8');
+      log(8);
       return;
     }
 
     // 9
+    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value && rs.queryPhrase === phrase) {
+      if (queryState !== 'INITIAL') {
+        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
+      }
+      log(9);
+      return;
+    }
+
+    // 10
+    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value && rs.queryPhrase !== phrase) {
+      if (queryState === 'INITIAL') {
+        applyPhrase({ ...rs.masterLink, value: masterRs.pkValue()[0] });
+      }
+      log(10);
+      return;
+    }
+
+    // 11
     if (masterRs && rs && rs.masterLink) {
       if (queryState === 'QUERY_MASTER' && rs.masterLink.value === undefined) {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
@@ -346,7 +369,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         applyPhrase({ ...rs.masterLink, value: masterRs.pkValue()[0] });
       }
 
-      console.log(queryState + ' --9');
+      log(11);
       return;
     }
 
@@ -548,23 +571,6 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
               {error}
             </MessageBar>
           }
-            <div>
-              <span>
-                {rs ? 'rs,' : ''}
-              </span>
-              <span>
-                {rs && rs.masterLink ? 'rs.masterLink,' : ''}
-              </span>
-              <span>
-                {rs && rs.masterLink && rs.masterLink.value ? 'rs.masterLink.value,' : ''}
-              </span>
-              <span>
-                {masterRs ? 'masterRs,' : ''}
-              </span>
-              <span>
-                {queryState}
-              </span>
-            </div>
             <Stack
               horizontal
               tokens={{ childrenGap: '12px' }}
@@ -581,9 +587,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                 placeholder="Select link field"
                 allowFreeform
                 autoComplete="on"
-                disabled={queryState !== 'INITIAL'}
-                selectedKey={rs && rs.masterLink && rs.masterLink.detailField}
-                onChange={ (_, option) => {
+                selectedKey={rs?.masterLink?.detailAttribute?.name}
+                onChange={ queryState !== 'INITIAL' ? undefined : (_, option) => {
                   if (option && rs) {
                     dispatch(rsActions.setRecordSet(rs.duplicate({
                       masterLink: {
@@ -617,7 +622,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                     }}
                     label="Query:"
                     value={phrase}
-                    onChange={ (_, newValue) => viewDispatch({ type: 'SET_PHRASE', phrase: newValue ? newValue : '' }) }
+                    onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
                     errorMessage={ phraseError ? phraseError : undefined }
                   />
                   <DefaultButton onClick={ () => applyPhrase() }>
