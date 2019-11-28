@@ -70,24 +70,24 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError }: IAtt
                   options={erModel ? Object.keys(erModel.entities).map( name => ({ key: name, text: name }) ) : []}
                   styles={{
                     dropdown: {
-                      width: 300
+                      width: 240
                     }
                   }}
                 />
-                <Stack.Item>
+                <Stack.Item styles = {{root : { margin: '12px', fontWeight: '600' }}}>
                   <label>IsTextField:</label>
                   <Checkbox
                     checked={attr.isChar}
                     styles={{
                       root: {
-                        marginBottom: '12px', width: '64px'
+                        marginTop: '5px', width: '80px'
                       }
                     }}
                     onChange={ (_, isChar) => { isChar !=undefined  && onChange({ ...attr, isChar}); } }
                   />
                 </Stack.Item>
                 <NumberField
-                  label="presLen:"
+                  label="PresLen:"
                   onlyInteger={true}
                   value={attr.presLen}
                   readOnly={!attr.isChar}
