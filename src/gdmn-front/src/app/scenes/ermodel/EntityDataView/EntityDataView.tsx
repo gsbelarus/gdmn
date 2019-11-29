@@ -17,6 +17,7 @@ import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, EntityAttribute, Attribute } from 'gdmn-orm';
+import SplitPane from '@src/app/components/SplitPane';
 
 /*
 
@@ -531,157 +532,168 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
+  const contentView = () => {
+    return <div styleName="SGrid">
+    {
+      showSQL && rs && rs.sql &&
+      <SQLForm
+        rs={rs}
+        onCloseSQL={onCloseSQL}
+      />
+    }
+    <div styleName="SGridTop">
+      <CommandBar items={commandBarItems} />
+      {
+        error
+        &&
+        <MessageBar
+          messageBarType={MessageBarType.error}
+          isMultiline={false}
+          onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
+          dismissButtonAriaLabel="Close"
+        >
+          {error}
+        </MessageBar>
+      }
+        <Stack
+          horizontal
+          tokens={{ childrenGap: '12px' }}
+          styles={{
+            root: {
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              paddingBottom: '8px',
+            }
+          }}
+        >
+          {console.log(rs?.masterLink)}
+          <ComboBox
+            label="Link field:"
+            placeholder="Select link field"
+            allowFreeform
+            autoComplete="on"
+            selectedKey={rs?.masterLink?.detailAttribute?.name}
+            onChange={ queryState !== 'INITIAL' ? undefined : (_, option) => {
+              if (option && rs) {
+                dispatch(rsActions.setRecordSet(rs.duplicate({
+                  masterLink: {
+                    masterName: `${rs.name}-${option.key}-master`,
+                    detailAttribute: option.data as EntityAttribute,
+                    value: undefined
+                  }
+                })));
+              }
+            } }
+            options={
+              entity && Object
+                .values(entity.attributes)
+                .filter( attr => attr instanceof EntityAttribute )
+                .map( attr => ({ key: attr.name, text: attr.name, data: attr }) )
+            }
+          />
+          <TextField
+            disabled={!rs || rs.status !== TStatus.FULL}
+            label="Filter:"
+            value={filter}
+            onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+          />
+          <Stack.Item grow={1}>
+            <Stack horizontal verticalAlign="end">
+              <TextField
+                styles={{
+                  root: {
+                    width: '100%'
+                  }
+                }}
+                label="Query:"
+                value={phrase}
+                onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
+                errorMessage={ phraseError ? phraseError : undefined }
+              />
+              <DefaultButton onClick={ () => applyPhrase() }>
+                Применить
+              </DefaultButton>
+            </Stack>
+          </Stack.Item>
+        </Stack>
+    </div>
+    <MessageBox />
+    <div styleName="SGridTable">
+      { rs && gcs ?
+        <GDMNGrid
+          {...gcs}
+          columns={gcs.columns}
+          rs={rs}
+          loadMoreRsData={loadMoreRsData}
+          {...gridActions}
+          onDelete={onDelete}
+          onInsert={onInsert}
+          onCancel={onCancel}
+          onSetFieldValue={onSetFieldValue}
+          ref={ grid => grid && (gridRef.current = grid) }
+          savedState={getSavedState()}
+          colors={gridColors}
+          userColumnsSettings={userColumnsSettings}
+          onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
+          onDelUserColumnsSettings={ () => delUserColumnSettings() }
+        />
+        : null
+      }
+    </div>
+  </div>
+  }
+
   return (
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
       {
         masterRs && rs && rs.masterLink && entity && rs.masterLink.detailAttribute
-        ? <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
-          <div
-            style={{
-              background: getTheme().palette.red,
-              color: getTheme().palette.white,
-              width: '18px',
-              height: '18px',
-              textAlign: 'center',
-              justifyContent: 'flex-end',
-              cursor: 'pointer'
-            }}
-            onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({
-              masterLink: undefined
-            })))}
-          >x</div>
-          {(rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
-            ? <Tree
-                rs={masterRs}
-                load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
-                selectNode={ currentRow => {
-                  dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
-                } }
-              />
-            : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
-                { gcsMaster
-                  ? <GDMNGrid
-                    {...gcsMaster}
-                    rs={masterRs}
-                    columns={gcsMaster.columns}
-                    {...gridActions}
-                    colors={gridColors}
-                  />
-                  : <div>Not found grid rs-master</div>
-              }
-            </div>
-            }
-          </div>
-        : undefined
-      }
-      <div styleName="SGrid">
-        {
-          showSQL && rs && rs.sql &&
-          <SQLForm
-            rs={rs}
-            onCloseSQL={onCloseSQL}
-          />
-        }
-        <div styleName="SGridTop">
-          <CommandBar items={commandBarItems} />
-          {
-            error
-            &&
-            <MessageBar
-              messageBarType={MessageBarType.error}
-              isMultiline={false}
-              onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
-              dismissButtonAriaLabel="Close"
-            >
-              {error}
-            </MessageBar>
-          }
-            <Stack
-              horizontal
-              tokens={{ childrenGap: '12px' }}
-              styles={{
-                root: {
-                  paddingLeft: '8px',
-                  paddingRight: '8px',
-                  paddingBottom: '8px',
-                }
-              }}
-            >
-              {console.log(rs?.masterLink)}
-              <ComboBox
-                label="Link field:"
-                placeholder="Select link field"
-                allowFreeform
-                autoComplete="on"
-                selectedKey={rs?.masterLink?.detailAttribute?.name}
-                onChange={ queryState !== 'INITIAL' ? undefined : (_, option) => {
-                  if (option && rs) {
-                    dispatch(rsActions.setRecordSet(rs.duplicate({
-                      masterLink: {
-                        masterName: `${rs.name}-${option.key}-master`,
-                        detailAttribute: option.data as EntityAttribute,
-                        value: undefined
-                      }
-                    })));
+        ? <SplitPane>
+            <SplitPane.Left>
+              <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
+                <div
+                  style={{
+                    background: getTheme().palette.red,
+                    color: getTheme().palette.white,
+                    width: '18px',
+                    height: '18px',
+                    textAlign: 'center',
+                    justifyContent: 'flex-end',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({
+                    masterLink: undefined
+                  })))}
+                >x</div>
+                {(rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
+                  ? <Tree
+                      rs={masterRs}
+                      load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
+                      selectNode={ currentRow => {
+                        dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
+                      } }
+                    />
+                  : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
+                      { gcsMaster
+                        ? <GDMNGrid
+                          {...gcsMaster}
+                          rs={masterRs}
+                          columns={gcsMaster.columns}
+                          {...gridActions}
+                          colors={gridColors}
+                        />
+                        : <div>Not found grid rs-master</div>
+                    }
+                  </div>
                   }
-                } }
-                options={
-                  entity && Object
-                    .values(entity.attributes)
-                    .filter( attr => attr instanceof EntityAttribute )
-                    .map( attr => ({ key: attr.name, text: attr.name, data: attr }) )
-                }
-              />
-              <TextField
-                disabled={!rs || rs.status !== TStatus.FULL}
-                label="Filter:"
-                value={filter}
-                onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
-              />
-              <Stack.Item grow={1}>
-                <Stack horizontal verticalAlign="end">
-                  <TextField
-                    styles={{
-                      root: {
-                        width: '100%'
-                      }
-                    }}
-                    label="Query:"
-                    value={phrase}
-                    onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
-                    errorMessage={ phraseError ? phraseError : undefined }
-                  />
-                  <DefaultButton onClick={ () => applyPhrase() }>
-                    Применить
-                  </DefaultButton>
-                </Stack>
-              </Stack.Item>
-            </Stack>
-        </div>
-        <MessageBox />
-        <div styleName="SGridTable">
-          { rs && gcs ?
-            <GDMNGrid
-              {...gcs}
-              columns={gcs.columns}
-              rs={rs}
-              loadMoreRsData={loadMoreRsData}
-              {...gridActions}
-              onDelete={onDelete}
-              onInsert={onInsert}
-              onCancel={onCancel}
-              onSetFieldValue={onSetFieldValue}
-              ref={ grid => grid && (gridRef.current = grid) }
-              savedState={getSavedState()}
-              colors={gridColors}
-              userColumnsSettings={userColumnsSettings}
-              onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
-              onDelUserColumnsSettings={ () => delUserColumnSettings() }
-            />
-            : null
-          }
-        </div>
-      </div>
+                </div>
+            </SplitPane.Left>
+            <SplitPane.Right>
+              {contentView()}
+            </SplitPane.Right>
+          </SplitPane>
+        
+        : contentView()
+      }
     </Stack>
   );
 }, styles, { allowMultiple: true });
