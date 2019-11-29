@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState, useCallback } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, getTheme, flatten } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -16,7 +16,7 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, EntityAttribute, Attribute } from 'gdmn-orm';
 
 /*
 
@@ -373,6 +373,14 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       return;
     }
 
+    //12
+    if(masterRs && rs && !rs.masterLink) {
+      if (queryState === 'INITIAL') {
+        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+      }
+      //dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, masterLink }));
+    }
+
     throw new Error('Unkonw state');
   }, [erModel, rs, masterRs, entity, queryState]);
 
@@ -527,26 +535,43 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
       {
         masterRs && rs && rs.masterLink && entity && rs.masterLink.detailAttribute
-        ? (rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
-          ? <Tree
-              rs={masterRs}
-              load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
-              selectNode={ currentRow => {
-                dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
-              } }
-            />
-          : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
-              { gcsMaster
-                ? <GDMNGrid
-                  {...gcsMaster}
-                  rs={masterRs}
-                  columns={gcsMaster.columns}
-                  {...gridActions}
-                  colors={gridColors}
-                />
-                : <div>Not found grid rs-master</div>
+        ? <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
+          <div
+            style={{
+              background: getTheme().palette.red,
+              color: getTheme().palette.white,
+              width: '18px',
+              height: '18px',
+              textAlign: 'center',
+              justifyContent: 'flex-end',
+              cursor: 'pointer'
+            }}
+            onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({
+              masterLink: undefined
+            })))}
+          >x</div>
+          {(rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
+            ? <Tree
+                rs={masterRs}
+                load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
+                selectNode={ currentRow => {
+                  dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
+                } }
+              />
+            : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
+                { gcsMaster
+                  ? <GDMNGrid
+                    {...gcsMaster}
+                    rs={masterRs}
+                    columns={gcsMaster.columns}
+                    {...gridActions}
+                    colors={gridColors}
+                  />
+                  : <div>Not found grid rs-master</div>
               }
             </div>
+            }
+          </div>
         : undefined
       }
       <div styleName="SGrid">
@@ -582,6 +607,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                 }
               }}
             >
+              {console.log(rs?.masterLink)}
               <ComboBox
                 label="Link field:"
                 placeholder="Select link field"
