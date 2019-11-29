@@ -1,5 +1,5 @@
 import {IERModelView2Props} from "./ERModelView2.types";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState, useRef} from "react";
 import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
 import {List} from "immutable";
 import {createGrid, GDMNGrid, IUserColumnsSettings} from "gdmn-grid";
@@ -19,14 +19,41 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
   const { entities, attributes, viewTab, erModel, dispatch, gcsEntities, gcsAttributes, match, gridColors, history } = props;
   const [showInspector, setShowInspector] = useState(false);
-  const entitiesFilter = entities && entities.filter && entities.filter.conditions.length ? entities.filter.conditions[0].value : '';
-  const attributesFilter = attributes && attributes.filter && attributes.filter.conditions.length ? attributes.filter.conditions[0].value : '';
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
   const [MessageBox, messageBox] = useMessageBox();
 
   const [userColumnsSettingsEntity, setUserColumnsSettingsEntity, delUserColumnSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
   const [userColumnsSettingsAttr, setUserColumnsSettingsAttr, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
+
+  const getSavedEntitiesFilter = (): string => {
+    if (viewTab && viewTab.sessionData && typeof(viewTab.sessionData.entitiesFilter) === 'string') {
+      return viewTab.sessionData.entitiesFilter as string;
+    }
+    return '';
+  };
+
+  const getSavedAttributesFilter = (): string => {
+    if (viewTab && viewTab.sessionData && typeof(viewTab.sessionData.attributesFilter) === 'string') {
+      return viewTab.sessionData.attributesFilter as string;
+    }
+    return '';
+  };
+
+  const entitiesFilter = useRef(getSavedEntitiesFilter());
+  const attributesFilter = useRef(getSavedAttributesFilter());
+
+  useEffect( () => {
+    return () => {
+      dispatch(gdmnActions.saveSessionData({
+        viewTabURL: match.url,
+        sessionData: {
+          entitiesFilter: entitiesFilter.current,
+          attributesFilter: attributesFilter.current
+        }
+      }));
+    };
+  }, []);
 
   const deleteRecord = useCallback( () => {
     if (entities && entities.size && erModel) {
@@ -62,7 +89,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
           if (!result.error) {
             const newERModel = new ERModel(erModel);
-            erModel.remove(entity);
+            newERModel.remove(entity);
             dispatch(gdmnActions.setSchema(newERModel));
             dispatch(rsActions.setRecordSet(entities.delete(true)));
           } else {
@@ -112,6 +139,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         )
       })
     }));
+
+    if (entities) onSetFilter({ rs: entities, filter: entitiesFilter.current })
 
   }, [erModel]);
 
@@ -195,6 +224,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           }
         })
       }));
+      if (attributes) onSetFilter({ rs: attributes, filter: attributesFilter.current })
     }
   }, [erModel, entities]);
 
@@ -349,8 +379,12 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         <TextField
           disabled={!entities}
           label="Filter:"
-          value={entitiesFilter}
-          onChange={ entities ? (_, newValue) => onSetFilter({ rs: entities, filter: newValue ? newValue : '' }) : undefined }
+          value={entitiesFilter.current}
+          onChange={ entities
+            ? (_, newValue) => {
+              onSetFilter({ rs: entities, filter: newValue ? newValue : '' });
+              entitiesFilter.current = newValue ? newValue : ''}
+            : undefined }
         />
       </div>
       <div styleName="MDGridMasterTable">
@@ -381,8 +415,12 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         <TextField
           disabled={!attributes}
           label="Filter:"
-          value={attributesFilter}
-          onChange={ attributes ? (_, newValue) => onSetFilter({ rs: attributes, filter: newValue ? newValue : '' }) : undefined }
+          value={attributesFilter.current}
+          onChange={ attributes
+            ? (_, newValue) => {
+              onSetFilter({ rs: attributes, filter: newValue ? newValue : '' });
+              attributesFilter.current = newValue ? newValue : ''}
+            : undefined }
         />
       </div>
       <div styleName="MDGridDetailTable">
