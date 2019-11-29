@@ -89,7 +89,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
 
           if (!result.error) {
             const newERModel = new ERModel(erModel);
-            erModel.remove(entity);
+            newERModel.remove(entity);
             dispatch(gdmnActions.setSchema(newERModel));
             dispatch(rsActions.setRecordSet(entities.delete(true)));
           } else {
