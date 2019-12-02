@@ -59,7 +59,7 @@ export class DomainResolver {
       case "Detail":
         return `INTEGER`;
       case "Enum":
-        return `VARCHAR(1)`;
+        return `CHAR(1)`;
       case "Date":
         return `DATE`;
       case "Time":
@@ -94,7 +94,7 @@ export class DomainResolver {
         }
         case "Enum": {
           const _attr = attr as EnumAttribute;
-          return `CHECK(VALUE IN (${_attr.values.map((item) => `'${item.value}'`).join(", ")}))`;
+          return `CHECK((VALUE IS NULL) OR (VALUE IN (${_attr.values.map((item) => `'${item.value}'`).join(", ")})))`;
         }
         case "Boolean": {
           return `CHECK(VALUE IN (0, 1))`;
