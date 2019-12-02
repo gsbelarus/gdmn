@@ -635,9 +635,9 @@ export class ERExport {
         if (fieldSource.fieldLength === 1) {
           const values = check2Enum(fieldSource.validationSource);
           if (values.length) {
-            const dif = atField.numeration ? atField.numeration.split("#13#10") : [];
+            const dif = atField.numeration ? atField.numeration.split("\r\n") : [];
             const mapValues = dif.reduce((map, item) => {
-              const [key, value] = item.split("=");
+              const [key, value] = item.split(";");
               map[key] = value;
               return map;
             }, {} as { [field: string]: string });

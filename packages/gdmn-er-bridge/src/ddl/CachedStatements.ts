@@ -464,7 +464,7 @@ export class CachedStatements {
           RETURNING ID
       `);
     }
-    const numeration = (input.numeration || []).map(({key, value}) => `${key}=${value}`).join("#13#10");
+    const numeration = (input.numeration || []).map(({key, value}) => `${key};${value}`).join("\r\n");
     const result = await this._statements.addToATFields.executeReturning({
       fieldName: input.fieldName,
       lName: input.lName || input.fieldName,
@@ -474,7 +474,7 @@ export class CachedStatements {
       setTable: input.setTable,
       setListField: input.setListField,
       setCondition: input.setCondition,
-      numeration: numeration.length ? Buffer.from(numeration) : undefined
+      numeration: numeration.length ? Buffer.from(numeration.concat("\r\n")) : undefined,
     });
     return result.getNumber("ID");
   }
@@ -663,7 +663,7 @@ export class CachedStatements {
           RETURNING ID
       `);
     }
-    const numeration = (input.numeration || []).map(({key, value}) => `${key}=${value}`).join("#13#10");
+    const numeration = (input.numeration || []).map(({key, value}) => `${key};${value}`).join("\r\n");
     const result = await this._statements.updateATFields.executeReturning({
       fieldName: input.fieldName,
       lName: input.lName || input.fieldName,
@@ -673,7 +673,7 @@ export class CachedStatements {
       setTable: input.setTable,
       setListField: input.setListField,
       setCondition: input.setCondition,
-      numeration: numeration.length ? Buffer.from(numeration) : undefined,
+      numeration: numeration.length ? Buffer.from(numeration.concat("\r\n")) : undefined,
     });
     return result.getNumber("ID");
   }
