@@ -61,6 +61,7 @@ import {
   IRange,
   isCheckForBoolean
 } from "./util";
+import { SemCategory } from "gdmn-nlp";
 
 export class ERExport {
 
@@ -96,6 +97,7 @@ export class ERExport {
       .forEach(entity => this._createAttributes(entity));
     this._createDetailAttributes();
     this._createSetAttributes();
+    this._assignSemCategories();
 
     return this._erModel;
   }
@@ -487,6 +489,22 @@ export class ERExport {
         });
       }
     });
+  }
+
+  /**
+   * Если в базе данных не заполнены семантические категории для нужных нам полей
+   * и таблиц, мы добавим их в ERModel на стадии ее загрузки.
+   */
+  private _assignSemCategories() {
+    const gdcPlace = this._erModel.entities['TgdcPlace'];
+    gdcPlace && (gdcPlace.semCategories.length || (gdcPlace.semCategories = [SemCategory.Place]));
+
+    const gdcCompany = this._erModel.entities['TgdcCompany'];
+    gdcCompany && (gdcCompany.semCategories.length || (gdcCompany.semCategories = [SemCategory.Organization, SemCategory.Company]));
+
+    const gdcBaseContact = this._erModel.entities['TgdcBaseContact'];
+    const gdcBaseContactPlaceKey = gdcBaseContact && gdcBaseContact.attributes['PLACEKEY'];
+    gdcBaseContactPlaceKey && (gdcBaseContactPlaceKey.semCategories.length || (gdcBaseContactPlaceKey.semCategories = [SemCategory.ObjectLocation]));
   }
 
   private _isCrossRelation(relation: Relation): boolean {

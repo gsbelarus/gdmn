@@ -31,15 +31,24 @@ export abstract class Attribute<Adapter = any> {
   public readonly name: string;
   public readonly lName: LName;
   public readonly required: boolean;
-  public readonly semCategories: SemCategory[];
   public adapter?: Adapter;
+
+  private _semCategories: SemCategory[];
 
   protected constructor(options: IAttributeOptions<Adapter>) {
     this.name = options.name;
     this.lName = options.lName;
     this.required = options.required || false;
-    this.semCategories = options.semCategories || [];
+    this._semCategories = options.semCategories || [];
     this.adapter = options.adapter;
+  }
+
+  get semCategories(): SemCategory[] {
+    return this._semCategories;
+  }
+
+  set semCategories(value: SemCategory[]) {
+    this._semCategories = value;
   }
 
   public serialize(withAdapter?: boolean): IAttribute {
@@ -48,7 +57,7 @@ export abstract class Attribute<Adapter = any> {
       type: this.type,
       lName: this.lName,
       required: this.required,
-      semCategories: semCategories2Str(this.semCategories),
+      semCategories: semCategories2Str(this._semCategories),
       adapter: withAdapter ? this.adapter : undefined
     };
   }
@@ -61,7 +70,7 @@ export abstract class Attribute<Adapter = any> {
   public inspect(indent: string = "    "): string[] {
     const adapter = this.adapter ? ", " + JSON.stringify(this.adapter) : "";
     const lName = this.lName.ru ? " - " + this.lName.ru.name : "";
-    const cat = this.semCategories.length ? `, categories: ${semCategories2Str(this.semCategories)}` : "";
+    const cat = this._semCategories.length ? `, categories: ${semCategories2Str(this._semCategories)}` : "";
 
     return [
       `${indent}${this.name}${this.required ? "*" : ""}${lName}: ${this.inspectDataType()}${cat}${adapter}`
