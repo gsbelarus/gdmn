@@ -140,8 +140,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       })
     }));
 
-    if (entities) onSetFilter({ rs: entities, filter: entitiesFilter.current })
-
+    entities && onSetFilter({ rs: entities, filter: entitiesFilter.current });
   }, [erModel]);
 
   useEffect( () => {
@@ -224,7 +223,8 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           }
         })
       }));
-      if (attributes) onSetFilter({ rs: attributes, filter: attributesFilter.current })
+
+      attributes && onSetFilter({ rs: attributes, filter: attributesFilter.current });
     }
   }, [erModel, entities]);
 
@@ -380,11 +380,12 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           disabled={!entities}
           label="Filter:"
           value={entitiesFilter.current}
-          onChange={ entities
-            ? (_, newValue) => {
-              onSetFilter({ rs: entities, filter: newValue ? newValue : '' });
-              entitiesFilter.current = newValue ? newValue : ''}
-            : undefined }
+          onChange={ (_, filter) => {
+              if (filter !== undefined && entities) {
+                entitiesFilter.current = filter;
+                onSetFilter({ rs: entities, filter });
+              }
+          } }
         />
       </div>
       <div styleName="MDGridMasterTable">
@@ -416,11 +417,12 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
           disabled={!attributes}
           label="Filter:"
           value={attributesFilter.current}
-          onChange={ attributes
-            ? (_, newValue) => {
-              onSetFilter({ rs: attributes, filter: newValue ? newValue : '' });
-              attributesFilter.current = newValue ? newValue : ''}
-            : undefined }
+          onChange={ (_, filter) => {
+            if (filter !== undefined && attributes) {
+              onSetFilter({ rs: attributes, filter });
+              attributesFilter.current = filter;
+            }
+          } }
         />
       </div>
       <div styleName="MDGridDetailTable">
