@@ -115,13 +115,13 @@ describe("Query", () => {
               name: "TEST_STRING1",
               lName: {}
             }));
-            await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "RB", lName: {}}));
-            await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "LB", lName: {}}));
             await eBuilder.createAttribute(ChildEntity, new ParentAttribute({
               name: "PARENT",
               lName: {},
               entities: [ChildEntity]
-            }));
+            }));            
+            await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "RB", lName: {}}));
+            await eBuilder.createAttribute(ChildEntity, new StringAttribute({name: "LB", lName: {}}));
             const ChildEntity2 = await erBuilder.create(erModel, new Entity({
               name: "CHILD_ENTITY2",
               lName: {},
