@@ -43,6 +43,10 @@ export interface IATTriggersInput {
   triggerInactive?: boolean;
 }
 
+export interface IATProceduresInput {
+  procedureName: string;
+}
+
 export interface IATGeneratorInput {
   generatorName: string;
 }
@@ -68,6 +72,7 @@ interface IStatements {
   indexExists?: AStatement;
   domainExists?: AStatement;
   triggerExists?: AStatement;
+  procedureExists?: AStatement;  
   getDependencies?: AStatement;
   checkDependencies?: AStatement;
   getFK?: AStatement;
@@ -82,6 +87,7 @@ interface IStatements {
   indexATExists?: AStatement;
   domainATExists?: AStatement;
   triggerATExists?: AStatement;
+  procedureATExists?: AStatement;  
 
   addToATFields?: AStatement;
   addToATRelations?: AStatement;
@@ -89,6 +95,7 @@ interface IStatements {
   addToATTriggers?: AStatement;
   addToATGenerator?: AStatement;
   addToATIndices?: AStatement;
+  addToATProcedures?: AStatement;
 
   updateATFields?: AStatement;
   updateATRelations?: AStatement;
@@ -101,6 +108,7 @@ interface IStatements {
   dropATTriggers?: AStatement;
   dropATGenerator?: AStatement;
   dropATIndices?: AStatement;
+  dropATProcedures?: AStatement;  
 
   getDomainName?: AStatement;
 }
@@ -259,6 +267,24 @@ export class CachedStatements {
     });
   }
 
+  /** Проверка, существует ли процедура */
+  public async isProcedureExists(procedureName: string): Promise<boolean> {
+    this._checkDisposed();
+
+    if (!this._statements.procedureExists) {
+      this._statements.procedureExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM RDB$PROCEDURES
+        WHERE RDB$PROCEDURE_NAME = :procedureName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.procedureExists,
+      params: {procedureName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }  
+
   public async nextDDLUnique(): Promise<number> {
     this._checkDisposed();
 
@@ -395,6 +421,22 @@ export class CachedStatements {
       callback: (resultSet) => resultSet.next()
     });
   }
+
+  public async isProcudereATExists(procedureName: string): Promise<boolean> {
+    this._checkDisposed();
+    if (!this._statements.procedureATExists) {
+      this._statements.procedureATExists = await this._connection.prepare(this._transaction, `
+        SELECT FIRST 1 0
+        FROM AT_PROCEDURES
+        WHERE PROCEDURENAME = :procedureName
+      `);
+    }
+    return await AStatement.executeQueryResultSet({
+      statement: this._statements.procedureATExists,
+      params: {procedureName},
+      callback: (resultSet) => resultSet.next()
+    });
+  }  
 
   public async addToATFields(input: IATFieldsInput): Promise<number> {
     this._checkDisposed();
@@ -742,7 +784,7 @@ export class CachedStatements {
 
     if (!this._statements.addToATIndices) {
       this._statements.addToATIndices = await this.connection.prepare(this._transaction, `
-        INSERT INTO AT_INDICES (INDEXNAME, RELATIONNAME, INDEX_INACTIVE, FIELDLIST, RELATIONKEY, UNIQUE_FLAG)
+        INSERT INTO AT_INDICES (INDEXNAME, RELATIONNAME, INDEX_INACTIVE, FIELDSLIST, RELATIONKEY, UNIQUE_FLAG)
         SELECT FIRST 1 :indexName, :relationName, :indexInactive, :fieldList, ID, :uniqueFlag
         FROM AT_RELATIONS
         WHERE RELATIONNAME = :relationName
@@ -788,6 +830,39 @@ export class CachedStatements {
     }
     await this._statements.dropATIndices.execute({
       indexName: input.indexName
+    });
+  }
+  /** 
+  * Обработка процедур 
+  */  
+  /** Добавление процедуры в системную таблицу платформы - at_procuderes */
+  public async addToATProcuderes(input: IATProceduresInput): Promise<number> {
+    this._checkDisposed();
+
+    if (!this._statements.addToATProcedures) {
+      this._statements.addToATProcedures = await this.connection.prepare(this._transaction, `
+        INSERT INTO AT_PROCEDURES (PROCEDURENAME)
+        VALUES (:procedureName)
+        RETURNING ID
+      `);
+    }
+    const result = await this._statements.addToATProcedures.executeReturning({
+      relationName: input.procedureName
+    });
+    return result.getNumber("ID");
+  }
+  /** Удаление процедуры из системной таблицы платформы - at_procuderes */
+  public async dropATProcuderes(input: IATProceduresInput): Promise<void> {
+    this._checkDisposed();
+
+    if (!this._statements.dropATProcedures) {
+      this._statements.dropATProcedures = await this.connection.prepare(this._transaction, `
+        DELETE FROM AT_PROCEDURES
+        WHERE PROCEDURENAME = :procedureName
+      `);
+    }
+    await this._statements.dropATProcedures.execute({
+      procedureName: input.procedureName,
     });
   }
 

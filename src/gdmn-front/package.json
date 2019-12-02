@@ -27,7 +27,7 @@
     "@uifabric/fluent-theme": "^7",
     "dagre": "^0.8.4",
     "es6-error": "^4",
-    "fast-deep-equal": "^3.0.0-beta.2",
+    "fast-deep-equal": "^3",
     "gdmn-grid": "1.0.0",
     "gdmn-internals": "1.0.0",
     "gdmn-nlp": "1.0.0",
