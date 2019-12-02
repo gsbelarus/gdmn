@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState, useCallback } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, getTheme, flatten } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, getTheme, flatten, Icon, IconButton } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -650,28 +650,25 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         ? <SplitPane>
             <SplitPane.Left>
               <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
-                <div
+                <Icon
+                  iconName='ChromeClose'
+                  onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({ masterLink: undefined })))}
                   style={{
                     background: getTheme().palette.red,
                     color: getTheme().palette.white,
-                    width: '18px',
-                    height: '18px',
-                    textAlign: 'center',
-                    justifyContent: 'flex-end',
-                    cursor: 'pointer'
+                    fontSize: '12px',
+                    width: '12px',
+                    height: '12px'
                   }}
-                  onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({
-                    masterLink: undefined
-                  })))}
-                >x</div>
+                />
                 {(rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
-                  ? <Tree
+                  ? <div style={{height: '100%', width: '100%', overflow: 'auto'}}><Tree
                       rs={masterRs}
                       load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
                       selectNode={ currentRow => {
                         dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
                       } }
-                    />
+                    /></div>
                   : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
                       { gcsMaster
                         ? <GDMNGrid

@@ -1,4 +1,5 @@
 import React, {useRef, useState, useEffect, createRef, createContext, useContext, ReactNode} from 'react';
+import { getTheme } from 'office-ui-fabric-react';
 
 export interface ISplitPaneContext {
   leftWidth: number,
@@ -59,15 +60,15 @@ export default function SplitPane(props: ISplitPaneProps) {
       className="split-pane"
       ref={splitPaneRef}
       style={{
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         display: 'flex',
         flexDirection: 'row'
       }}
     >
       <splitPaneContext.Provider value={{ leftWidth, setLeftWidth }}>
         {props.children[0]}
-        <div className="separator" onMouseDown={onMouseDown} style={{border: '5px solid black', cursor: 'col-resize'}} />
+        <div className="separator" onMouseDown={onMouseDown} style={{cursor: 'col-resize',  width: '6px', height: '100%', background: `linear-gradient(90deg, ${getTheme().palette.white} 0%, ${getTheme().palette.neutralSecondaryAlt} 50%, ${getTheme().palette.white} 100%)`}} />
         {props.children[1]}
       </splitPaneContext.Provider>
     </div>
@@ -92,5 +93,5 @@ SplitPane.Left = function SplitPaneTop(props: any) {
 };
 
 SplitPane.Right = function SplitPaneBottom(props: any) {
-  return <div {...props} className="split-pane-right" />;
+  return <div {...props} className="split-pane-right" style={{width: '100%'}} />;
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, Icon, getTheme } from 'office-ui-fabric-react';
-import { RecordSet, TStatus, rsActions } from 'gdmn-recordset';
+import { RecordSet, TStatus } from 'gdmn-recordset';
 
 interface INode {
   id: string;
