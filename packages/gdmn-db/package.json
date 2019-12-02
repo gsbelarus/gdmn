@@ -29,14 +29,14 @@
   "dependencies": {
     "gdmn-internals": "^1",
     "generic-pool": "^3",
-    "node-firebird-native-api": "^1.1.0-beta.1"
+    "node-firebird-native-api": "^2.0.0-beta.0"
   },
   "devDependencies": {
     "@types/generic-pool": "^3",
     "@types/jest": "^24",
     "@types/node": "^12",
     "jest": "^24",
-    "jest-junit": "^9",
+    "jest-junit": "^10",
     "shx": "^0",
     "ts-jest": "^24",
     "tslint": "^5",
