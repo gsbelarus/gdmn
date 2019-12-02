@@ -12,6 +12,7 @@ export interface ISetLookupComboBoxProps {
   getSessionData?: () => ISessionData;
   onChanged: (option: IComboBoxOption[] | undefined) => void;
   componentRef?: (ref: IComboBox | null) => void;
+  onFocus?: () => void;
   styles?: Partial<IComboBoxStyles>;
 };
 
@@ -110,7 +111,7 @@ function init(preSelectedOption: IComboBoxOption[] | undefined): ISetLookupCombo
 
 export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, componentRef, onChanged, styles } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, componentRef, onChanged, styles, onFocus } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOptions, queryState, text, limit } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -247,6 +248,14 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
           ref.current = r;
           if (componentRef) {
             componentRef(r)
+          }
+        }
+      }
+      onFocus={
+        () => {
+          hasFocus.current = true;
+          if (onFocus) {
+            onFocus();
           }
         }
       }
