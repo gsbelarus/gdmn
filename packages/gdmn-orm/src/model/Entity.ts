@@ -23,19 +23,19 @@ export class Entity {
   public readonly name: string;
   public readonly lName: LName;
   public readonly isAbstract: boolean;
-  public readonly semCategories: SemCategory[];
   public adapter?: IEntityAdapter;
 
   private readonly _pk: Attribute[] = [];
   private readonly _attributes: IAttributes = {};
   private readonly _unique: Attribute[][] = [];
+  private _semCategories: SemCategory[];
 
   constructor(options: IEntityOptions) {
     this.parent = options.parent || undefined;
     this.name = options.name;
     this.lName = options.lName;
     this.isAbstract = options.isAbstract || false;
-    this.semCategories = options.semCategories || [];
+    this._semCategories = options.semCategories || [];
     this.adapter = options.adapter;
   }
 
@@ -85,6 +85,14 @@ export class Entity {
     return this.isTree
       && Object.values(this.attributes).some((attr) => attr.name === "RB")
       && Object.values(this.attributes).some((attr) => attr.name === "LB");
+  }
+
+  get semCategories(): SemCategory[] {
+    return this._semCategories;
+  }
+
+  set semCategories(value: SemCategory[]) {
+    this._semCategories = value;
   }
 
   public attributesBySemCategory(cat: SemCategory): Attribute[] {
@@ -194,7 +202,7 @@ export class Entity {
       name: this.name,
       lName: this.lName,
       isAbstract: this.isAbstract,
-      semCategories: semCategories2Str(this.semCategories),
+      semCategories: semCategories2Str(this._semCategories),
       unique: this.ownUnique.map((values) => values.map((attr) => attr.name)),
       attributes: Object.values(this.ownAttributes).map((attr) => attr.serialize(withAdapter)),
       adapter: withAdapter ? this.adapter : undefined
@@ -211,8 +219,8 @@ export class Entity {
         return [...p, ...attr.inspect()];
       }, [] as string[])
     ];
-    if (this.semCategories.length) {
-      result.splice(1, 0, `  categories: ${semCategories2Str(this.semCategories)}`);
+    if (this._semCategories.length) {
+      result.splice(1, 0, `  categories: ${semCategories2Str(this._semCategories)}`);
     }
     return result;
   }
