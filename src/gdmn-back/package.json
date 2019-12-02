@@ -6,9 +6,9 @@
   "main": "./dist/src/index.js",
   "types": "./dist/definitions/index.d.ts",
   "scripts": {
-    "start": "yarn build && node ./dist/src/index.js",
-    "start:debug": "yarn build && node --inspect-brk=5858 ./dist/src/index.js",
-    "inspect": "yarn build && node --inspect ./dist/src/index.js",
+    "start": "yarn build && node --harmony ./dist/src/index.js",
+    "start:debug": "yarn build && node --harmony --inspect-brk=5858 ./dist/src/index.js",
+    "inspect": "yarn build && node --harmony --inspect ./dist/src/index.js",
     "nodemon": "nodemon",
     "clean": "shx rm -rf ./dist",
     "build": "tsc",
