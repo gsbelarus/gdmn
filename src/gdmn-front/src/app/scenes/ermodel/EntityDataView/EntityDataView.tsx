@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState, useCallback } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
-import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox } from 'office-ui-fabric-react';
+import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, getTheme, Icon } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
@@ -17,6 +17,7 @@ import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
+import Split from 'react-split';
 
 /*
 
@@ -152,6 +153,11 @@ import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
    б) если нет, то формируем EntityQuery для загрузки rs с учетом
    текущей записи в masterRs. Выставляем состояние QUERY_RS и отсылаем
    запрос в middleware.
+
+  12. masterRs присутствует, rs присутствует, а rs.masterLink отсутствует.
+    Если masterLink удалён, значит необходимо удалить и masterRs.
+    Такая ситуация возникает, когда пользователь закрывает окно с отображением
+    masterRs.
 */
 
 type QueryState = 'INITIAL' | 'QUERY_RS' | 'QUERY_MASTER';
@@ -373,6 +379,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
       return;
     }
 
+    //12
+    if(masterRs && rs && !rs.masterLink) {
+      if (queryState === 'INITIAL') {
+        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+      }
+    }
+
     throw new Error('Unkonw state');
   }, [erModel, rs, masterRs, entity, queryState]);
 
@@ -523,18 +536,157 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
 
   const { onSetFilter, ...gridActions } = bindGridActions(dispatch);
 
-  return (
-    <Stack horizontal styles={{root: {width: '100%', height: '100%'}}}>
+  const contentView = () => {
+    return <div styleName="SGrid">
+    {
+      showSQL && rs && rs.sql &&
+      <SQLForm
+        rs={rs}
+        onCloseSQL={onCloseSQL}
+      />
+    }
+    <div styleName="SGridTop">
+      <CommandBar items={commandBarItems} />
       {
-        masterRs && rs && rs.masterLink && entity && rs.masterLink.detailAttribute
-        ? (rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
-          ? <Tree
-              rs={masterRs}
-              load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
-              selectNode={ currentRow => {
-                dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
-              } }
-            />
+        error
+        &&
+        <MessageBar
+          messageBarType={MessageBarType.error}
+          isMultiline={false}
+          onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
+          dismissButtonAriaLabel="Close"
+        >
+          {error}
+        </MessageBar>
+      }
+        <Stack
+          horizontal
+          tokens={{ childrenGap: '12px' }}
+          styles={{
+            root: {
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              paddingBottom: '8px',
+              background: getTheme().palette.white
+            }
+          }}
+        >
+          <ComboBox
+            label="Link field:"
+            placeholder="Select link field"
+            allowFreeform
+            autoComplete="on"
+            selectedKey={rs?.masterLink?.detailAttribute?.name}
+            onChange={ queryState !== 'INITIAL' ? undefined : (_, option) => {
+              if (option && rs) {
+                dispatch(rsActions.setRecordSet(rs.duplicate({
+                  masterLink: {
+                    masterName: `${rs.name}-${option.key}-master`,
+                    detailAttribute: option.data as EntityAttribute,
+                    value: undefined
+                  }
+                })));
+              }
+            } }
+            options={
+              entity && Object
+                .values(entity.attributes)
+                .filter( attr => attr instanceof EntityAttribute )
+                .map( attr => ({ key: attr.name, text: attr.name, data: attr }) )
+            }
+          />
+          <TextField
+            disabled={!rs || rs.status !== TStatus.FULL}
+            label="Filter:"
+            value={filter}
+            onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+          />
+          <Stack.Item grow={1}>
+            <Stack horizontal verticalAlign="end">
+              <TextField
+                styles={{
+                  root: {
+                    width: '100%'
+                  }
+                }}
+                label="Query:"
+                value={phrase}
+                onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
+                errorMessage={ phraseError ? phraseError : undefined }
+              />
+              <DefaultButton onClick={ () => applyPhrase() }>
+                Применить
+              </DefaultButton>
+            </Stack>
+          </Stack.Item>
+        </Stack>
+    </div>
+    <MessageBox />
+    <div styleName="SGridTable">
+      { rs && gcs ?
+        <GDMNGrid
+          {...gcs}
+          columns={gcs.columns}
+          rs={rs}
+          loadMoreRsData={loadMoreRsData}
+          {...gridActions}
+          onDelete={onDelete}
+          onInsert={onInsert}
+          onCancel={onCancel}
+          onSetFieldValue={onSetFieldValue}
+          ref={ grid => grid && (gridRef.current = grid) }
+          savedState={getSavedState()}
+          colors={gridColors}
+          userColumnsSettings={userColumnsSettings}
+          onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
+          onDelUserColumnsSettings={ () => delUserColumnSettings() }
+        />
+        : null
+      }
+    </div>
+  </div>
+  }
+
+  return masterRs && rs && rs.masterLink && entity && rs.masterLink.detailAttribute
+    ? <Split
+        sizes={[25, 75]}
+        gutterSize={8}
+        gutterAlign="center"
+        minSize={[ 100 , 500 ]}
+        style={{
+          width: '100%',
+          height: '100%',
+          cursor: 'w-resize',
+          display: 'flex',
+          flexDirection: 'row',
+          background: getTheme().palette.themeDark
+        }}
+      >
+        <div style={{width: '100%', height: '100%', display: 'flex', cursor: 'default', flexDirection: 'column', background: getTheme().palette.white}}>
+        <Icon
+          iconName='ChromeClose'
+          onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({ masterLink: undefined })))}
+          style={{
+            background: getTheme().palette.red,
+            color: getTheme().palette.white,
+            fontSize: '12px',
+            width: '16px',
+            height: '16px',
+            alignSelf: 'flex-end',
+            paddingTop: '1px',
+            paddingLeft: '2px'
+          }}
+        />
+        {(rs.masterLink.detailAttribute as EntityAttribute).entities[0].isTree
+          ? <div style={{width: '100%', height: '100%', overflow: 'auto'}}>
+              <Tree
+                rs={masterRs}
+                load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
+                selectNode={ currentRow => {
+                  dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
+                } }
+              />
+            </div>
           : <div styleName="MDGridMasterTable" style={{width: '100%', height: '100%'}}>
               { gcsMaster
                 ? <GDMNGrid
@@ -545,117 +697,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                   colors={gridColors}
                 />
                 : <div>Not found grid rs-master</div>
-              }
-            </div>
-        : undefined
-      }
-      <div styleName="SGrid">
-        {
-          showSQL && rs && rs.sql &&
-          <SQLForm
-            rs={rs}
-            onCloseSQL={onCloseSQL}
-          />
-        }
-        <div styleName="SGridTop">
-          <CommandBar items={commandBarItems} />
-          {
-            error
-            &&
-            <MessageBar
-              messageBarType={MessageBarType.error}
-              isMultiline={false}
-              onDismiss={ () => viewTab && dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: undefined } })) }
-              dismissButtonAriaLabel="Close"
-            >
-              {error}
-            </MessageBar>
-          }
-            <Stack
-              horizontal
-              tokens={{ childrenGap: '12px' }}
-              styles={{
-                root: {
-                  paddingLeft: '8px',
-                  paddingRight: '8px',
-                  paddingBottom: '8px',
-                }
-              }}
-            >
-              <ComboBox
-                label="Link field:"
-                placeholder="Select link field"
-                allowFreeform
-                autoComplete="on"
-                selectedKey={rs?.masterLink?.detailAttribute?.name}
-                onChange={ queryState !== 'INITIAL' ? undefined : (_, option) => {
-                  if (option && rs) {
-                    dispatch(rsActions.setRecordSet(rs.duplicate({
-                      masterLink: {
-                        masterName: `${rs.name}-${option.key}-master`,
-                        detailAttribute: option.data as EntityAttribute,
-                        value: undefined
-                      }
-                    })));
-                  }
-                } }
-                options={
-                  entity && Object
-                    .values(entity.attributes)
-                    .filter( attr => attr instanceof EntityAttribute )
-                    .map( attr => ({ key: attr.name, text: attr.name, data: attr }) )
-                }
-              />
-              <TextField
-                disabled={!rs || rs.status !== TStatus.FULL}
-                label="Filter:"
-                value={filter}
-                onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
-              />
-              <Stack.Item grow={1}>
-                <Stack horizontal verticalAlign="end">
-                  <TextField
-                    styles={{
-                      root: {
-                        width: '100%'
-                      }
-                    }}
-                    label="Query:"
-                    value={phrase}
-                    onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
-                    errorMessage={ phraseError ? phraseError : undefined }
-                  />
-                  <DefaultButton onClick={ () => applyPhrase() }>
-                    Применить
-                  </DefaultButton>
-                </Stack>
-              </Stack.Item>
-            </Stack>
-        </div>
-        <MessageBox />
-        <div styleName="SGridTable">
-          { rs && gcs ?
-            <GDMNGrid
-              {...gcs}
-              columns={gcs.columns}
-              rs={rs}
-              loadMoreRsData={loadMoreRsData}
-              {...gridActions}
-              onDelete={onDelete}
-              onInsert={onInsert}
-              onCancel={onCancel}
-              onSetFieldValue={onSetFieldValue}
-              ref={ grid => grid && (gridRef.current = grid) }
-              savedState={getSavedState()}
-              colors={gridColors}
-              userColumnsSettings={userColumnsSettings}
-              onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
-              onDelUserColumnsSettings={ () => delUserColumnSettings() }
-            />
-            : null
+            }
+          </div>
           }
         </div>
+      <div style={{width: '100%', height: '100%'}}>
+        {contentView()}
       </div>
-    </Stack>
-  );
+      </Split>
+    : contentView()
 }, styles, { allowMultiple: true });
