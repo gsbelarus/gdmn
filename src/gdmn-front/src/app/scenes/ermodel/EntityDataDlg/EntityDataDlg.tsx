@@ -1,8 +1,8 @@
 import { IEntityDataDlgProps } from "./EntityDataDlg.types";
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, FormEvent } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label, ComboBox } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import { attr2fd } from "../EntityDataView/utils";
@@ -20,6 +20,7 @@ import {
   IEntityQueryResponse,
   prepareDefaultEntityQuery,
   prepareDefaultEntityQuerySetAttr,
+  EnumAttribute,
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
@@ -353,6 +354,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   }, []);
 
   useEffect( () => {
+
     if (needFocus.current) {
       needFocus.current.focus();
       needFocus.current = undefined;
@@ -692,11 +694,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
   const field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string }): JSX.Element | undefined => {
     const fieldName = props.fieldName;
-    const data = setComboBoxData[fieldName];
-    const attr = entity.attributes[fieldName] as EntityAttribute;
     const label = props.label;
+    //Множество
+    const data = setComboBoxData[fieldName];
     if (data) {
-      const linkEntity = attr.entities[0];
+      const attrEntity = entity.attributes[fieldName] as EntityAttribute;
+      const linkEntity = attrEntity.entities[0];
       return (
         <SetLookupComboBox
           key={fieldName}
@@ -769,8 +772,16 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           }
           componentRef={
             ref => {
-              if (ref && lastFocused.current === linkEntity.name) {
+              if (ref && lastFocused.current === fieldName) {
                 needFocus.current = ref;
+              }
+            }
+          }
+          onFocus={
+            () => {
+              lastFocused.current = fieldName;
+              if (lastEdited.current && lastEdited.current.fieldName !== fieldName) {
+                applyLastEdited();
               }
             }
           }
@@ -784,6 +795,51 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     if (!fd || !fd.eqfa) {
       return undefined;
     }
+    //Перечисление
+    const attrEnum = entity.attributes[fieldName] as EnumAttribute;
+    if (attrEnum && attrEnum.type === 'Enum') {
+      const caption = attrEnum.values.find(e => e.value === rs.getString(fd.fieldName));
+      return (
+        <ComboBox
+          label={label}
+          options={attrEnum.values.map( (r): IComboBoxOption => ({
+            key: r.value,
+            text: r.lName ? getLName(r.lName, ['by', 'ru', 'en']) : r.value.toString()
+          }))}
+          text={caption && caption.lName
+            ? getLName(caption.lName , ['by', 'ru', 'en'])
+            : rs.getString(fd.fieldName)}
+          allowFreeform
+          autoComplete="on"
+          componentRef={
+            ref => {
+              if (ref && lastFocused.current === fd.fieldName) {
+                needFocus.current = ref;
+              }
+            }
+          }
+          onChange={ (_event: FormEvent<IComboBox>, option?: IComboBoxOption, _index?: number, _value?: string) => {
+            lastEdited.current = {
+              fieldName: fd.fieldName,
+              value: option ? option.key.toString() : ''
+            };
+            changedFields.current[fd.fieldName] = true;
+            setChanged(true);
+            applyLastEdited();
+          }
+        }
+        onFocus={
+          () => {
+            lastFocused.current = fd.fieldName;
+            if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+              applyLastEdited();
+            }
+          }
+        }
+        />
+      )
+    }
+    //Ссылка
     if (fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID') {
       const fkFieldName = fd.eqfa.linkAlias;
       const refIdFieldAlias = fd.fieldName;
@@ -899,7 +955,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     if (fd.eqfa.linkAlias !== rs.eq!.link.alias) {
       return undefined;
     }
-
+    //Дата
     if (fd.dataType === TFieldType.Date) {
       return (
         <DatepickerJSX
@@ -941,6 +997,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         root: {marginTop: '10px'},
         borderWidth: '1px'
       };
+      //Логическое
       return (
         <Checkbox
           key={fd.fieldName}
@@ -976,6 +1033,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         />
       )
     } else {
+      //Текстовое
       return (
         <TextField
           key={fd.fieldName}
