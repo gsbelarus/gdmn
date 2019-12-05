@@ -847,7 +847,7 @@ export class CachedStatements {
       `);
     }
     const result = await this._statements.addToATProcedures.executeReturning({
-      relationName: input.procedureName
+      procedureName: input.procedureName
     });
     return result.getNumber("ID");
   }
