@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { IEntityAttribute, ERModel } from "gdmn-orm";
-import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text } from "office-ui-fabric-react";
+import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label } from "office-ui-fabric-react";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { IAttributeEditorProps } from "./EntityAttribute";
+import { getErrorMessage } from "./utils";
 
 interface IEntityValueProps {
   entityName: string;
@@ -51,77 +52,89 @@ interface IEntityEditorState {
   entityName: string;
 };
 
-export const EntityEditor = ({ attr, createAttr, onChange, erModel }: IAttributeEditorProps<IEntityAttribute>) => {
+export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, attrIdx }: IAttributeEditorProps<IEntityAttribute>) => {
   const [state, setState] = useState<IEntityEditorState | undefined>();
+  const errRef = getErrorMessage(attrIdx, 'references', errorLinks);
 
   return (
-    <Frame border marginTop>
-      {
-        <Stack horizontal verticalAlign="end" tokens={{ childrenGap: '8px' }}>
-          {
-            state
-            ?
-              <>
-                <Dropdown
-                  label="Entity:"
-                  selectedKey={state.entityName ? state.entityName : undefined}
-                  onChange={ (_, option) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
-                  options={erModel ? Object.keys(erModel.entities).map( name => ({ key: name, text: name }) ) : []}
-                  styles={{
-                    dropdown: {
-                      width: 300
-                    }
-                  }}
-                />
-                <PrimaryButton
-                  text="Save"
-                  disabled={!state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
-                  onClick={ () => {
-                    if (state.idx >= attr.references.length) {
-                      onChange({ ...attr, references: [...attr.references, state.entityName] });
-                    } else {
-                      const values = [...attr.references];
-                      values[state.idx] = state.entityName;
-                      onChange({ ...attr, references: values });
-                    }
-                    setState(undefined);
-                  } }
-                />
-                <DefaultButton
-                  text="Cancel"
-                  onClick={ () => setState(undefined) }
-                />
-              </>
-            :
-              <>
-                {attr.references && attr.references.map(
-                  entityName =>
-                    <EntityValue
-                      key={entityName}
-                      entityName={entityName}
-                      onDelete={
-                        createAttr ?
-                        () => onChange({
-                            ...attr,
-                            references: attr.references.filter( fv => fv !== entityName )
-                          })
-                        : undefined
+    <div>
+      <Frame border marginTop attention={!!errRef}>
+        {
+          <Stack horizontal verticalAlign="end" tokens={{ childrenGap: '8px' }}>
+            {
+              state
+              ?
+                <>
+                  <Dropdown
+                    label="Entity:"
+                    selectedKey={state.entityName ? state.entityName : undefined}
+                    onChange={ (_, option) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
+                    options={erModel ? Object.keys(erModel.entities).map( name => ({ key: name, text: name }) ) : []}
+                    styles={{
+                      dropdown: {
+                        width: 300
                       }
-                    />
-                )}
-                {
-                  createAttr ?
-                    <DefaultButton
-                      text="Add entity"
-                      onClick={ () => setState({ idx: attr.references.length, entityName: '' }) }
-                    />
-                  :
-                    null
-                }
-              </>
-          }
-        </Stack>
-      }
-    </Frame>
+                    }}
+                  />
+                  <PrimaryButton
+                    text="Save"
+                    disabled={!state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
+                    onClick={ () => {
+                      if (state.idx >= attr.references.length) {
+                        onChange({ ...attr, references: [...attr.references, state.entityName] });
+                      } else {
+                        const values = [...attr.references];
+                        values[state.idx] = state.entityName;
+                        onChange({ ...attr, references: values });
+                      }
+                      setState(undefined);
+                    } }
+                  />
+                  <DefaultButton
+                    text="Cancel"
+                    onClick={ () => setState(undefined) }
+                  />
+                </>
+              :
+                <>
+                  {attr.references && attr.references.map(
+                    entityName =>
+                      <EntityValue
+                        key={entityName}
+                        entityName={entityName}
+                        onDelete={
+                          createAttr ?
+                          () => onChange({
+                              ...attr,
+                              references: attr.references.filter( fv => fv !== entityName )
+                            })
+                          : undefined
+                        }
+                      />
+                  )}
+                  {
+                    createAttr ?
+                      <DefaultButton
+                        text="Add entity"
+                        onClick={ () => setState({ idx: attr.references.length, entityName: '' }) }
+                      />
+                    :
+                      null
+                  }
+                </>
+            }
+          </Stack>
+        }
+      </Frame>
+      <Label styles={
+          { root: {
+            color: getTheme().semanticColors.errorText,
+            fontSize: getTheme().fonts.small.fontSize,
+            fontWeight:  getTheme().fonts.medium.fontWeight
+          }}
+        }>
+        {errRef}
+      </Label>
+    </div>
   );
 };

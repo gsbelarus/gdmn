@@ -10,7 +10,7 @@ import { DateEditor } from "./DateEditor";
 import { BooleanEditor } from "./BooleanEditor";
 import { EntityEditor } from "./EntityEditor";
 import { SetEditor } from "./SetEditor";
-import { initAttr, ErrorLinks, getErrorMessage, stripUserPrefix, addUserPrefix } from "./utils";
+import { initAttr, ErrorLinks, getErrorMessage } from "./utils";
 import { BlobEditor } from "./BlobEditor";
 
 type Attr = IAttribute | IEnumAttribute | IStringAttribute | IBooleanAttribute | INumberAttribute<number> | IDateAttribute | IEntityAttribute | ISetAttribute;

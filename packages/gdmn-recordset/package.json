@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
-    "fast-deep-equal": "^2",
+    "fast-deep-equal": "^3",
     "gdmn-orm": "^1",
     "immutable": "^3",
     "typesafe-actions": "^4"
@@ -34,7 +34,7 @@
     "@types/jest": "^24",
     "@types/node": "^12",
     "jest": "^24",
-    "jest-junit": "^9",
+    "jest-junit": "^10",
     "shx": "^0",
     "ts-jest": "^24",
     "ts-node": "^8",

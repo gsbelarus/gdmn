@@ -48,7 +48,7 @@
     "@types/react-redux": "^7",
     "@types/react-virtualized": "^9",
     "jest": "^24",
-    "jest-junit": "^9",
+    "jest-junit": "^10",
     "shx": "^0",
     "ts-jest": "^24",
     "ts-node": "^8",
