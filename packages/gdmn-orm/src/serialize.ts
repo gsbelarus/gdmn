@@ -78,10 +78,18 @@ export interface IEntityAttribute extends IAttribute {
   references: string[];
 }
 
+export function isEntityAttribute(attr: IAttribute): attr is IEntityAttribute {
+  return attr.type === 'Entity' && Array.isArray((attr as any).references);
+}
+
 export interface ISetAttribute extends IEntityAttribute {
   attributes: IAttribute[];
   presLen: number;
   isChar: boolean;
+}
+
+export function isSetAttribute(attr: IAttribute): attr is ISetAttribute {
+  return attr.type === 'Set' && Array.isArray((attr as any).attributes) && Array.isArray((attr as any).references);
 }
 
 export interface IEntity {

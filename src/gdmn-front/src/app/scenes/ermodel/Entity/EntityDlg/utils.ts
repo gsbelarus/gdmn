@@ -1,6 +1,6 @@
 import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
   INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
-  IDateAttribute, IEntityAttribute, isUserDefined, getGedeminEntityType, ISetAttribute } from "gdmn-orm";
+  IDateAttribute, IEntityAttribute, isUserDefined, getGedeminEntityType, ISetAttribute, isEntityAttribute, isSetAttribute } from "gdmn-orm";
 import equal from "fast-deep-equal";
 
 export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
@@ -156,6 +156,17 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
           }
           break;
         }
+
+        case 'Entity':
+        case 'Set':
+          if ((isEntityAttribute(attr) || isSetAttribute(attr)) && attr.references.length === 0) {
+            p.push({
+              attrIdx,
+              field: 'references',
+              message: "References can't be empty",
+              internal: false
+            });
+          }
 
         case 'Integer':
         case 'Float':
