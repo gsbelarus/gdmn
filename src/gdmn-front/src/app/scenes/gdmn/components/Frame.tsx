@@ -33,7 +33,7 @@ export const Frame = (props: IFrameProps): JSX.Element => {
           marginTop: ifMargin(marginTop),
           marginRight: ifMargin(marginRight),
           marginBottom: ifMargin(marginBottom),
-          border: ifBorder('1px solid ' + (attention ? getTheme().palette.red : getTheme().palette.themeDark)),
+          border: ifBorder('1px solid ' + (attention ? getTheme().palette.redDark : getTheme().palette.themeDark)),
           borderRadius: border
             ? scroll
             ? '4px 0 0 4px'
