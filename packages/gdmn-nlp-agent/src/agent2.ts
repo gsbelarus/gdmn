@@ -132,22 +132,22 @@ export class ERTranslatorRU2 {
 
     const entity = entities[0];
     const fields = prepareDefaultEntityLinkFields(entity);
-    let equals: IEntityQueryWhereValue[] | undefined = undefined;
+    let contains: IEntityQueryWhereValue[] | undefined = undefined;
 
     const fromPlacePhrase = getPhrase('fromPlace');
     if (fromPlacePhrase) {
       const geoAttr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
       const value = this._getNoun(fromPlacePhrase, 1).lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
 
-      if (!equals) {
-        equals = [];
+      if (!contains) {
+        contains = [];
       }
 
       if (geoAttr instanceof EntityAttribute) {
         const foundLinkField = fields.find( f => f.attribute === geoAttr );
 
         if (foundLinkField && foundLinkField.links) {
-          equals.push({
+          contains.push({
             alias: foundLinkField.links[0].alias,
             attribute: foundLinkField.links[0].entity.presentAttribute(),
             value
@@ -158,14 +158,14 @@ export class ERTranslatorRU2 {
 
           fields.push(new EntityLinkField(geoAttr, [new EntityLink(linkEntity, linkAlias, [])]));
 
-          equals.push({
+          contains.push({
             alias: linkAlias,
             attribute: linkEntity.presentAttribute(),
             value
           });
         }
       } else {
-        equals.push({
+        contains.push({
           alias: rootAlias,
           attribute: geoAttr,
           value
@@ -173,7 +173,7 @@ export class ERTranslatorRU2 {
       }
     }
 
-    const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+    const options = new EntityQueryOptions(undefined, undefined, [{contains}]);
     const entityLink = new EntityLink(entity, rootAlias, fields);
 
     return {
