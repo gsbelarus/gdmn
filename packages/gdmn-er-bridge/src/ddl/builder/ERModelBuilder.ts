@@ -15,6 +15,7 @@ import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
 import {EntityBuilder} from "./EntityBuilder";
+import { ddlUtils } from "../utils";
 
 export class ERModelBuilder extends Builder {
 
@@ -99,10 +100,13 @@ export class ERModelBuilder extends Builder {
       const fields: IFieldProps[] = []; // Массив полей      
 
       // создание доменов из списка атрибутов для первичного ключа
-      for (const pkAttr of pkAttrs) {
+      for (const pkAttr of pkAttrs) {     
         const fieldName = AdapterUtils.getFieldName(pkAttr);
-        const domainName = Prefix.domain(await this.nextDDLUnique());
-        await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
+        const domainName = "DINTKEY"
+        const domainProps = {notNull: true, type: 'INTEGER', check: 'CHECK (VALUE > 0)'};        
+        // const domainName = Prefix.domain(await this.nextDDLUnique());
+        // await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
+        await this.ddlHelper.addDomain(domainName, domainProps, false, true);
         await this._updateATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
         fields.push({
           name: fieldName,
@@ -154,8 +158,10 @@ export class ERModelBuilder extends Builder {
       const pk = [...entity.pk];
 
       /** 
-      * Удаляем атрибуты (кроме атрибутов из массива pkAttrs). 
-      * Создаём поля из списка атрибутов (без атрибутов для первичного ключа)
+      * 1. Предварительно сохраняем атрибуты сущности в новый объект 
+      * 2. Удаляем у сущности все атрибуты
+      * 3. Добавляем в сущность атрибуты из полей первичного ключа
+      * 4. Создаём атрибуты и добавляем к сущности
       */
       const attributes = Object.values(entity.ownAttributes);
       attributes.forEach((attr) => entity.remove(attr));
@@ -179,6 +185,41 @@ export class ERModelBuilder extends Builder {
           ? appendAdapter(entity.parent.adapter!, tableName, adapterPK)
           : relationName2Adapter(tableName, adapterPK);
       }
+
+      if (entity.hasOwnAttribute(Constants.DEFAULT_LB_NAME) &&
+        entity.hasOwnAttribute(Constants.DEFAULT_RB_NAME) && 
+        entity.hasOwnAttribute(Constants.DEFAULT_PARENT_KEY_NAME)) {
+        /* 
+          Если присутствуют поля PARENT, LB и RB (entity type "lb-rb tree"), то добавляем для поддержки дерева:
+            1) Индексы для LB и RB (DESCENDING)
+            2) check
+            3) ХП - USR$_P_EL        
+            4) ХП - USR$_P_GCHС        
+            5) ХП - USR$_P_RESTRUCT        
+            6) bi trigger
+            7) bu trigger        
+        */
+        // 1) indices
+        const indexLBName = `${Constants.DEFAULT_USR_PREFIX}_X_${ddlUtils.stripUserPrefix(tableName)}_LB`;
+        await this.ddlHelper.createIndex(indexLBName, tableName, [Constants.DEFAULT_LB_NAME], {sortType: "ASC"});
+        const indexRBName = `${Constants.DEFAULT_USR_PREFIX}_X_${ddlUtils.stripUserPrefix(tableName)}_RB`;
+        await this.ddlHelper.createIndex(indexRBName, tableName, [Constants.DEFAULT_RB_NAME], {sortType:"DESC"});
+        // 2) check
+        const checkName = `${Constants.DEFAULT_USR_PREFIX}_CHK_${ddlUtils.stripUserPrefix(tableName)}_TR_LMT`;
+        await this.ddlHelper.addTableCheck(checkName, tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
+        // 3) процедуры
+        // 3.1) el
+        await this.ddlHelper.addELProcedure(tableName);
+        // 3.2) gchc
+        await this.ddlHelper.addGCHCProcedure(tableName);      
+        // 3.2) restruct
+        await this.ddlHelper.addRestructProcedure(tableName);            
+        // 4) триггеры
+        // 4.1) bi
+        await this.ddlHelper.addLBRBBITrigger(tableName);      
+        // 4.2) bu
+        await this.ddlHelper.addLBRBBUTrigger(tableName);      
+      }    
       return erModel.add(entity);
     } else {
       throw new Error("Unknown type of arg");

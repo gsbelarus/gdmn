@@ -446,7 +446,7 @@ export class DDLHelper {
           DECLARE VARIABLE WasUnlock INTEGER;
         BEGIN
           IF (:LB2 = -1 AND :RB2 = -1) THEN
-            Delta = CAST(COALESCE(RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_DELTA), 10) AS INTEGER);
+            Delta = CAST(COALESCE(RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_DELTA'), 10) AS INTEGER);
           ELSE
             Delta = :RB2 - :LB2;
 
@@ -456,7 +456,7 @@ export class DDLHelper {
           INTO :L, :R;
 
           IF (:L IS NULL) THEN
-            EXCEPTION tree_e_invalid_parent Invalid parent specified.;
+            EXCEPTION tree_e_invalid_parent 'Invalid parent specified.';
 
           Prev = :L + 1;
           LeftBorder = NULL;
@@ -474,9 +474,9 @@ export class DDLHelper {
           LeftBorder = COALESCE(:LeftBorder, :Prev);
           RightBorder = :LeftBorder + :Delta;
 
-          WasUnlock = RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK);
+          WasUnlock = RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK');
           IF (:WasUnlock IS NULL) THEN
-            RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, 1);
+            RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', 1);
 
           IF (:RightBorder >= :R) THEN
           BEGIN
@@ -519,14 +519,14 @@ export class DDLHelper {
           END
 
           IF (:WasUnlock IS NULL) THEN
-            RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, NULL);
+            RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', NULL);
         END;
       `);        
       await this._transaction.commitRetaining();
     }
 
     if (!skipAT && !(ignore && await this._cachedStatements.isProcudereATExists(procedureName))) {
-      await this._cachedStatements.addToATProcuderes({procedureName});
+      await this._cachedStatements.addToATProcuderes({procedureName: procedureName});
     }
   }
 
@@ -557,7 +557,7 @@ export class DDLHelper {
               RETURNING_VALUES :LastIndex;
           END
         
-          LastIndex = :LastIndex + CAST(COALESCE(RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_DELTA), 10) AS INTEGER) - 1;
+          LastIndex = :LastIndex + CAST(COALESCE(RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_DELTA'), 10) AS INTEGER) - 1;
         
           /* Изменяем границы родителя */
           UPDATE ${tableName} SET lb = :FirstIndex + 1, rb = :LastIndex
@@ -568,7 +568,7 @@ export class DDLHelper {
     }
 
     if (!skipAT && !(ignore && await this._cachedStatements.isProcudereATExists(procedureName))) {
-      await this._cachedStatements.addToATProcuderes({procedureName});
+      await this._cachedStatements.addToATProcuderes({procedureName: procedureName});
     }
   }  
 
@@ -577,6 +577,7 @@ export class DDLHelper {
                                skipAT: boolean = this._skipAT,
                                ignore: boolean = this._defaultIgnore): Promise<void> {
     const procedureName = `${Constants.DEFAULT_USR_PREFIX}_P_RESTRUCT_${ddlUtils.stripUserPrefix(tableName)}`;
+    const gchcprocedureName = `${Constants.DEFAULT_USR_PREFIX}_P_GCHC_${ddlUtils.stripUserPrefix(tableName)}`;    
     if (!(ignore && await this._cachedStatements.isProcedureExists(procedureName))) {                            
       await this._loggedExecute(`
         CREATE PROCEDURE ${procedureName}
@@ -587,9 +588,9 @@ export class DDLHelper {
         BEGIN
           CurrentIndex = 1;
 
-          WasUnlock = RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK);
+          WasUnlock = RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK');
           IF (:WasUnlock IS NULL) THEN
-            RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, 1);
+            RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', 1);
 
           /* Для всех корневых элементов ... */
           FOR
@@ -600,19 +601,19 @@ export class DDLHelper {
           DO
           BEGIN
             /* ... меняем границы детей */
-            EXECUTE PROCEDURE ${procedureName} (:ChildKey, :CurrentIndex)
+            EXECUTE PROCEDURE ${gchcprocedureName} (:ChildKey, :CurrentIndex)
               RETURNING_VALUES :CurrentIndex;
           END
 
           IF (:WasUnlock IS NULL) THEN
-            RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, NULL);
+            RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', NULL);
         END;
       `);        
       await this._transaction.commitRetaining();
     }
 
     if (!skipAT && !(ignore && await this._cachedStatements.isProcudereATExists(procedureName))) {
-      await this._cachedStatements.addToATProcuderes({procedureName});
+      await this._cachedStatements.addToATProcuderes({procedureName: procedureName});
     }
   }    
 
@@ -636,7 +637,7 @@ export class DDLHelper {
         BEGIN
           IF (NEW.parent IS NULL) THEN
           BEGIN
-            D = CAST(COALESCE(RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_DELTA), 10) AS INTEGER);
+            D = CAST(COALESCE(RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_DELTA'), 10) AS INTEGER);
             Prev = 1;
             NEW.lb = NULL;
 
@@ -671,7 +672,7 @@ export class DDLHelper {
   public async addLBRBBUTrigger(tableName: string,
                                 skipAT: boolean = this._skipAT,
                                 ignore: boolean = this._defaultIgnore): Promise<void> {
-    const triggerName = `${Constants.DEFAULT_USR_PREFIX}__BI_${ddlUtils.stripUserPrefix(tableName)}`;    
+    const triggerName = `${Constants.DEFAULT_USR_PREFIX}__BU_${ddlUtils.stripUserPrefix(tableName)}`;    
     const exlimProcedureName = `${Constants.DEFAULT_USR_PREFIX}_P_EL_${ddlUtils.stripUserPrefix(tableName)}`;
     if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
       await this._loggedExecute(`
@@ -692,7 +693,7 @@ export class DDLHelper {
             /* Делаем проверку на зацикливание */
             IF (EXISTS (SELECT * FROM ${tableName}
                   WHERE id = NEW.parent AND lb >= OLD.lb AND rb <= OLD.rb)) THEN
-              EXCEPTION tree_e_invalid_parent Attempt to cycle branch in table ${tableName}.;
+              EXCEPTION tree_e_invalid_parent 'Attempt to cycle branch in table ${tableName}.';
     
             IF (NEW.parent IS NULL) THEN
             BEGIN
@@ -716,13 +717,13 @@ export class DDLHelper {
               /* Определяем величину сдвига */
               OldDelta = NEW.lb - OLD.lb;
               /* Сдвигаем границы детей */
-              WasUnlock = RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK);
+              WasUnlock = RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK');
               IF (:WasUnlock IS NULL) THEN
-                RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, 1);
+                RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', 1);
               UPDATE ${tableName} SET lb = lb + :OldDelta, rb = rb + :OldDelta
                 WHERE lb > OLD.lb AND rb <= OLD.rb;
               IF (:WasUnlock IS NULL) THEN
-                RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, NULL);
+                RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', NULL);
             END ELSE
               EXECUTE PROCEDURE ${exlimProcedureName} (NEW.parent, OLD.lb, OLD.rb)
                 RETURNING_VALUES NEW.lb, NEW.rb;
@@ -730,7 +731,7 @@ export class DDLHelper {
           BEGIN
             IF ((NEW.rb <> OLD.rb) OR (NEW.lb <> OLD.lb)) THEN
             BEGIN
-              IF (RDB$GET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK) IS NULL) THEN
+              IF (RDB$GET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK') IS NULL) THEN
               BEGIN
                 NEW.lb = OLD.lb;
                 NEW.rb = OLD.rb;
@@ -740,7 +741,7 @@ export class DDLHelper {
     
           WHEN ANY DO
           BEGIN
-            RDB$SET_CONTEXT(USER_TRANSACTION, LBRB_UNLOCK, NULL);
+            RDB$SET_CONTEXT('USER_TRANSACTION', 'LBRB_UNLOCK', NULL);
             EXCEPTION;
           END
         END;      
