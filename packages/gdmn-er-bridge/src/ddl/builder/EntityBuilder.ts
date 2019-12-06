@@ -40,11 +40,32 @@ export class EntityBuilder extends Builder {
 
     if (attribute instanceof ScalarAttribute) {      
       const fieldName = AdapterUtils.getFieldName(attribute);
-      // TODO добавлять для системных полей определённые домены: ID: DINTKEY; LB: DLB; RB: DRB; PARENT: DPARENT; etc
-      const domainName = Prefix.domain(await this.nextDDLUnique());
-      await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(attribute));
+      // для системных полей определённые домены: ID: DINTKEY; LB: DLB; RB: DRB; PARENT: DPARENT; 
+      let domainName;
+      let domainProps;
+      
+      switch (fieldName) {               
+        case Constants.DEFAULT_LB_NAME: 
+          domainName = "DLB"
+          domainProps = {default: '1', notNull: true, type: 'INTEGER'};
+          break;        
+
+        case Constants.DEFAULT_RB_NAME:
+          domainName = "DRB"
+          domainProps = {default: '2', notNull: true, type: 'INTEGER'};
+          break;
+      
+        default:
+          domainName = Prefix.domain(await this.nextDDLUnique());          
+          domainProps = DomainResolver.resolve(attribute)                    
+          break;        
+      }   
+
+      await this.ddlHelper.addDomain(domainName, domainProps, false, true);
+
       await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
-      await this._updateATAttr(attribute, {relationName: tableName, fieldName, domainName});
+      await this._updateATAttr(attribute, {relationName: tableName, fieldName, domainName});      
+
       if (attribute.type === "Sequence" && attribute instanceof SequenceAttribute) {
         const seqName = attribute.sequence.adapter ? attribute.sequence.adapter.sequence : attribute.sequence.name;
         const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
@@ -108,8 +129,11 @@ export class EntityBuilder extends Builder {
           //throw new Error("Unsupported yet");
           const pAttr = attribute as ParentAttribute;
           const fieldName = AdapterUtils.getFieldName(pAttr);
-          const domainName = Prefix.domain(await this.nextDDLUnique());
-          await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));
+          // const domainName = Prefix.domain(await this.nextDDLUnique());
+          // await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pAttr));          
+          const domainName = "DPARENT";
+          const domainProps = {type: 'INTEGER'};          
+          await this.ddlHelper.addDomain(domainName, domainProps, false, true);
           await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
           await this._updateATAttr(pAttr, {relationName: tableName, fieldName, domainName});
           
@@ -285,41 +309,40 @@ export class EntityBuilder extends Builder {
       }
     }
 
-    if ((attribute.name === Constants.DEFAULT_RB_NAME && entity.hasOwnAttribute(Constants.DEFAULT_LB_NAME)) ||  
-      (attribute.name === Constants.DEFAULT_LB_NAME && entity.hasOwnAttribute(Constants.DEFAULT_RB_NAME))) {
-      /* 
-        Если присутствуют поля LB RB (entity type "lb-rb tree"), добавляем для поддержки:
-        1) Индексы для LB и RB (DESCENDING)
-        2) check
-        3) ХП - USR$_P_EL        
-        4) ХП - USR$_P_GCHС        
-        5) ХП - USR$_P_RESTRUCT        
-        6) bi trigger
-        7) bu trigger        
-      
-     
-      // 1) Добавляем indices
-      const indexName = Prefix.indexConstraint(await this.nextDDLUnique());
-      await this.ddlHelper.createIndex(indexName, tableName, [Constants.DEFAULT_LB_NAME], {sortType: "ASC"});
-      const indexName2 = Prefix.indexConstraint(await this.nextDDLUnique());
-      await this.ddlHelper.createIndex(indexName2, tableName, [Constants.DEFAULT_RB_NAME], {sortType:"DESC"});
-      // 2) Добавляем check
-      const checkName =  Prefix.uniqueConstraint(await this.nextDDLUnique());
-      await this.ddlHelper.addTableCheck(checkName ,tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
-      // 3) Добавляем процедуры
-      // 3.1) el
-      await this.ddlHelper.addELProcedure(tableName);
-      // 3.2) gchc
-      await this.ddlHelper.addGCHCProcedure(tableName);      
-      // 3.2) restruct
-      await this.ddlHelper.addRestructProcedure(tableName);            
-      // 4) Добавляем триггеры
-      // 4.1) bi
-      await this.ddlHelper.addLBRBBITrigger(tableName);      
-      // 4.2) bu
-      await this.ddlHelper.addLBRBBUTrigger(tableName);      
-    */        
-    }    
+    // if (entity.hasOwnAttribute(Constants.DEFAULT_LB_NAME) &&
+    //     entity.hasOwnAttribute(Constants.DEFAULT_RB_NAME) && 
+    //     entity.hasOwnAttribute(Constants.DEFAULT_PARENT_KEY_NAME)) {
+    //   /* 
+    //     Если присутствуют поля PARENT, LB и RB (entity type "lb-rb tree"), то добавляем для поддержки дерева:
+    //       1) Индексы для LB и RB (DESCENDING)
+    //       2) check
+    //       3) ХП - USR$_P_EL        
+    //       4) ХП - USR$_P_GCHС        
+    //       5) ХП - USR$_P_RESTRUCT        
+    //       6) bi trigger
+    //       7) bu trigger        
+    //   */
+    //   // 1) indices
+    //   const indexLBName = `${Constants.DEFAULT_USR_PREFIX}_X_${ddlUtils.stripUserPrefix(tableName)}_LB`;
+    //   await this.ddlHelper.createIndex(indexLBName, tableName, [Constants.DEFAULT_LB_NAME], {sortType: "ASC"});
+    //   const indexRBName = `${Constants.DEFAULT_USR_PREFIX}_X_${ddlUtils.stripUserPrefix(tableName)}_RB`;
+    //   await this.ddlHelper.createIndex(indexRBName, tableName, [Constants.DEFAULT_RB_NAME], {sortType:"DESC"});
+    //   // 2) check
+    //   const checkName = `${Constants.DEFAULT_USR_PREFIX}_CHK_${ddlUtils.stripUserPrefix(tableName)}_TR_LMT`;
+    //   await this.ddlHelper.addTableCheck(checkName, tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
+    //   // 3) процедуры
+    //   // 3.1) el
+    //   // await this.ddlHelper.addELProcedure(tableName);
+    //   // 3.2) gchc
+    //   // await this.ddlHelper.addGCHCProcedure(tableName);      
+    //   // 3.2) restruct
+    //   // await this.ddlHelper.addRestructProcedure(tableName);            
+    //   // 4) триггеры
+    //   // 4.1) bi
+    //   // await this.ddlHelper.addLBRBBITrigger(tableName);      
+    //   // 4.2) bu
+    //   // await this.ddlHelper.addLBRBBUTrigger(tableName);      
+    // }    
     return entity.add(attribute);
   }
 
