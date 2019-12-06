@@ -11825,10 +11825,10 @@ node-fetch@^2.3.0, node-fetch@^2.5.0, node-fetch@^2.6.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
   integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
 
-node-firebird-native-api@^2.0.0-beta.0:
-  version "2.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-2.0.0-beta.0.tgz#97a28f62fc4a39f080689e9a4de1d1fcc3d5e199"
-  integrity sha512-SxILlmWF85tv0XETQ7xer9VIcjEhDio9IOwCNxc5E8CisT2t72Pw4feCci6bEKkUhlr3SQISLMVdQy2gH7gDlQ==
+node-firebird-native-api@^2:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/node-firebird-native-api/-/node-firebird-native-api-2.0.0.tgz#e1641bebcc22e94dfd18f50e1632ecdd636f7b0e"
+  integrity sha512-Kw/17KoTPd8ncgx1vI1eb1AG9SEDbDRwR2aqH31YktJTGcqNHVR/h9nHbKkVSjkw1Wgdj5Bw09fF5u61IOUzmA==
   dependencies:
     "@types/node" "^12.12.12"
     bindings "^1.5.0"
