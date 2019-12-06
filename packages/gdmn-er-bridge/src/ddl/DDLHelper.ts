@@ -2,6 +2,7 @@ import {AConnection, ATransaction, DeleteRule, IBaseExecuteOptions, UpdateRule} 
 import {CachedStatements} from "./CachedStatements";
 import { Constants } from "./Constants";
 import { ddlUtils } from "./utils";
+import {Prefix} from "./Prefix";
 
 export interface IColumnsProps {
   notNull?: boolean;
@@ -377,8 +378,7 @@ export class DDLHelper {
     return triggerName;
   }
 
-  public async addBICrossTrigger(triggerName: string,
-                                tableName: string,
+  public async addBICrossTrigger(tableName: string,
                                 fieldName: string,
                                 setTable: string,
                                 crossField: string,
@@ -391,6 +391,7 @@ export class DDLHelper {
                                 setTablePk: string,
                                 skipAT: boolean = this._skipAT,
                                 ignore: boolean = this._defaultIgnore): Promise<string> {
+    const triggerName = `${Constants.DEFAULT_USR_PREFIX}${Prefix.triggerBeforeInsert(relationName)}`;
     if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
       await this._loggedExecute(`
       CREATE TRIGGER ${triggerName} FOR ${tableName}
@@ -403,7 +404,7 @@ export class DDLHelper {
         SELECT L.${crossField}
           FROM 
             ${relationName} C JOIN ${setTable} L ON C.${refPKName} = L.${setTablePk} 
-          WHERE C.${ownPKName} = NEW.${tablePk} AND L.${crossField} > '' 
+          WHERE C.${ownPKName} = NEW.${tablePk} AND COALESCE(L.${crossField}, '') > '' 
           INTO :attr 
           DO 
           BEGIN 
