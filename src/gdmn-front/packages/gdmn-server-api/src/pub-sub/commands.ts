@@ -223,14 +223,31 @@ export type TAddEntityTaskCmd = TTaskCmd<TTaskActionNames.ADD_ENTITY>;
 
 export type TAddEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.ADD_ENTITY>;
 
-
 // entity: delete
 
 export type TDeleteEntityTaskCmd = TTaskCmd<TTaskActionNames.DELETE_ENTITY>;
 
 export type TDeleteEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELETE_ENTITY>;
 
-// entity: edit
+// entity: update
+
+export type TUpdateEntityTaskCmd = TTaskCmd<TTaskActionNames.UPDATE_ENTITY>;
+
+export type TUpdateEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.UPDATE_ENTITY>;
+
+// attribute: add
+
+export type TAddAttributeTaskCmd = TTaskCmd<TTaskActionNames.ADD_ATTRIBUTE>;
+
+export type TAddAttributeTaskCmdResult = TTaskCmdResult<TTaskActionNames.ADD_ATTRIBUTE>;
+
+// attribute: update
+
+export type TUpdateAttributeTaskCmd = TTaskCmd<TTaskActionNames.UPDATE_ATTRIBUTE>;
+
+export type TUpdateAttributeTaskCmdResult = TTaskCmdResult<TTaskActionNames.UPDATE_ATTRIBUTE>;
+
+// attribute: delete
 
 export type TDeleteAttributeTaskCmd = TTaskCmd<TTaskActionNames.DELETE_ATTRIBUTE>;
 

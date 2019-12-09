@@ -26,7 +26,9 @@ import {
   QuerySettingCmd,
   SaveSettingCmd,
   DeleteSettingCmd,
-  SqlPrepareCmd
+  SqlPrepareCmd,
+  AddAttributeCmd,
+  UpdateAttributeCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -198,6 +200,16 @@ export class AppCommandProvider {
       && typeof command.payload.entityName === "string";
     // TODO
   }
+  
+  private static _verifyAddAttributeCmd(command: ICmd<AppAction, any>): command is AddAttributeCmd {
+    return command.payload instanceof Object
+      && instanceOfIEntity(command.payload.entityData);
+  }
+
+  private static _verifyUpdateAttributeCmd(command: ICmd<AppAction, any>): command is UpdateAttributeCmd {
+    return command.payload instanceof Object
+      && instanceOfIEntity(command.payload.entityData);
+  }
 
   private static _verifyDeleteAttributeCmd(command: ICmd<AppAction, any>): command is DeleteAttributeCmd {
     return command.payload instanceof Object
@@ -345,11 +357,29 @@ export class AppCommandProvider {
         }
         return this._application.pushAddEntityCmd(session, command);
       }
+      case "UPDATE_ENTITY": {
+        if (!AppCommandProvider._verifyAddEntityCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushUpdateEntityCmd(session, command);
+      }
       case "DELETE_ENTITY": {
         if (!AppCommandProvider._verifyDeleteEntityCmd(command)) {
           throw new Error(`Incorrect ${command.action} command`);
         }
         return this._application.pushDeleteEntityCmd(session, command);
+      }
+      case "ADD_ATTRIBUTE": {
+        if (!AppCommandProvider._verifyAddAttributeCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushAddAttributeCmd(session, command);
+      }
+      case "UPDATE_ATTRIBUTE": {
+        if (!AppCommandProvider._verifyUpdateAttributeCmd(command)) {
+          throw new Error(`Incorrect ${command.action} command`);
+        }
+        return this._application.pushUpdateAttributeCmd(session, command);
       }
       case "DELETE_ATTRIBUTE": {
         if (!AppCommandProvider._verifyDeleteAttributeCmd(command)) {

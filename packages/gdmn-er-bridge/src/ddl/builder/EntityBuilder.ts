@@ -308,41 +308,7 @@ export class EntityBuilder extends Builder {
         }
       }
     }
-
-    // if (entity.hasOwnAttribute(Constants.DEFAULT_LB_NAME) &&
-    //     entity.hasOwnAttribute(Constants.DEFAULT_RB_NAME) && 
-    //     entity.hasOwnAttribute(Constants.DEFAULT_PARENT_KEY_NAME)) {
-    //   /* 
-    //     Если присутствуют поля PARENT, LB и RB (entity type "lb-rb tree"), то добавляем для поддержки дерева:
-    //       1) Индексы для LB и RB (DESCENDING)
-    //       2) check
-    //       3) ХП - USR$_P_EL        
-    //       4) ХП - USR$_P_GCHС        
-    //       5) ХП - USR$_P_RESTRUCT        
-    //       6) bi trigger
-    //       7) bu trigger        
-    //   */
-    //   // 1) indices
-    //   const indexLBName = `${Constants.DEFAULT_USR_PREFIX}_X_${ddlUtils.stripUserPrefix(tableName)}_LB`;
-    //   await this.ddlHelper.createIndex(indexLBName, tableName, [Constants.DEFAULT_LB_NAME], {sortType: "ASC"});
-    //   const indexRBName = `${Constants.DEFAULT_USR_PREFIX}_X_${ddlUtils.stripUserPrefix(tableName)}_RB`;
-    //   await this.ddlHelper.createIndex(indexRBName, tableName, [Constants.DEFAULT_RB_NAME], {sortType:"DESC"});
-    //   // 2) check
-    //   const checkName = `${Constants.DEFAULT_USR_PREFIX}_CHK_${ddlUtils.stripUserPrefix(tableName)}_TR_LMT`;
-    //   await this.ddlHelper.addTableCheck(checkName, tableName, `${Constants.DEFAULT_LB_NAME} <= ${Constants.DEFAULT_RB_NAME}`);
-    //   // 3) процедуры
-    //   // 3.1) el
-    //   // await this.ddlHelper.addELProcedure(tableName);
-    //   // 3.2) gchc
-    //   // await this.ddlHelper.addGCHCProcedure(tableName);      
-    //   // 3.2) restruct
-    //   // await this.ddlHelper.addRestructProcedure(tableName);            
-    //   // 4) триггеры
-    //   // 4.1) bi
-    //   // await this.ddlHelper.addLBRBBITrigger(tableName);      
-    //   // 4.2) bu
-    //   // await this.ddlHelper.addLBRBBUTrigger(tableName);      
-    // }    
+    
     return entity.add(attribute);
   }
 

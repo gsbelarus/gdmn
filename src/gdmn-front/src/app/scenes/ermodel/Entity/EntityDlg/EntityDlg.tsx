@@ -144,7 +144,7 @@ type Action =
   | { type: 'CREATE_ENTITY_DATA' }
   // мы в процессе создания/редактирования сущности
   // что-то меняется, например ее название
-  | { type: 'EDIT_ENTITY_DATA', entityData: IEntity }
+  | { type: 'UPDATE_ENTITY_DATA', entityData: IEntity }
   | { type: 'SET_STATE', state: IEntityDlgState }
   | { type: 'SELECT_ATTR', selectedAttr: number }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
@@ -203,7 +203,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     }
 
     // вызывается при реактировании entity
-    case 'EDIT_ENTITY_DATA': {
+    case 'UPDATE_ENTITY_DATA': {
       const { initialData, errorLinks } = state;
 
       return {
@@ -390,9 +390,37 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             throw new Error("Wrong type of data");
           }
         }
+      } else {
+        console.log('update entity');
+        // 1. Добавляем новые атрибуты
+        addAtribute();
+        // 2. Обновляем изменённые атрибуты
+
+        // 3. Сохраняем измения сущности
       }
     }
   }, [changed, entityData, createEntity, erModel]);
+
+  const addAtribute = useCallback(async () => {
+    if (entityData && erModel && selectedAttr !== undefined) {
+      // TODO: мы никак пока не отображаем ошибки при удалении атрибута
+      // TODO: после удаления атрибута надо обновить ERModel
+      if (!createEntity) {
+        const newEntityData = {...entityData};
+        const result = await apiService.addAttribute({
+          entityData: newEntityData,
+          attrData: newEntityData.attributes[selectedAttr]
+        });
+        if (!result.error) {
+          dlgDispatch({type: 'ADD_ATTR'})
+        } else {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        }
+      } else {
+        dlgDispatch({type: 'ADD_ATTR'})
+      }
+    }
+  }, [selectedAttr, entityData, createEntity, erModel]);
 
   const deleteAtribute = useCallback(async () => {
     if (entityData && erModel && selectedAttr !== undefined) {
@@ -541,7 +569,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                       return;
                     }
                     dlgDispatch({
-                      type: 'EDIT_ENTITY_DATA',
+                      type: 'UPDATE_ENTITY_DATA',
                       entityData: { ...entityData, name: name /*newValue addUserPrefix(newValue)*/ }})
                   }
                 }}
@@ -578,7 +606,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 selectedKey={entityData.parent}
                 errorMessage={getErrorMessage(undefined, 'entityParent', errorLinks)}
                 disabled={!createEntity || entityType !== 'INHERITED'}
-                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
+                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
                 styles={{
                   root: {
                     width: '240px'
@@ -590,7 +618,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Semantic categories:"
                 value={entityData.semCategories}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
                 styles={{
                   root: {
                     width: '240px'
@@ -602,7 +630,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Description:"
                 value={getLName(entityData.lName, ['ru'])}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
               />
             </Stack.Item>
           </Stack>
