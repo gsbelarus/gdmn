@@ -95,18 +95,32 @@ export class SelectSet {
 
           const linkFirstRelationName = AdapterUtils.getMainRelationName(fLink.entity);
           const linkFirstPKFieldName = AdapterUtils.getPKFieldName(fLink.entity, linkFirstRelationName);
+          const linkLastRelationName = AdapterUtils.getOwnRelationName(fLink.entity);
+          const linkLastPKFieldName = AdapterUtils.getPKFieldName(fLink.entity, linkLastRelationName);
           if(field.attribute.type === "Set"){
-                const attr = field.attribute as SetAttribute;
-                joins.push(
-                  SQLTemplates.join(
-                    linkFirstRelationName,
-                    this._getTableAlias(fLink, linkFirstRelationName),
-                    linkFirstPKFieldName,
-                    this._getTableAlias(link, attr.adapter!.crossRelation),
-                    attr.adapter!.crossPk[1],
-                    "LEFT"
-                  )
-                );
+            const attr = field.attribute as SetAttribute;
+            joins.push(
+              SQLTemplates.join(
+                linkFirstRelationName,
+                this._getTableAlias(fLink, linkFirstRelationName),
+                linkFirstPKFieldName,
+                this._getTableAlias(link, attr.adapter!.crossRelation),
+                attr.adapter!.crossPk[1],
+                "LEFT"
+              )
+            );
+            if (linkFirstRelationName != linkLastRelationName) {
+              joins.push(
+                SQLTemplates.join(
+                  linkLastRelationName,
+                  this._getTableAlias(fLink, linkLastRelationName),
+                  linkLastPKFieldName,
+                  this._getTableAlias(link, attr.adapter!.crossRelation),
+                  attr.adapter!.crossPk[1],
+                  "LEFT"
+                )
+              );
+            }
           }
         }
         return joins;
