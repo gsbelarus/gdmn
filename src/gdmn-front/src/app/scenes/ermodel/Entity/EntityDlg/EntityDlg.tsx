@@ -393,39 +393,45 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       } else {
         console.log('update entity');
         // 1. Добавляем новые атрибуты
-        addAtribute();
+        await addAtributes();
         // 2. Обновляем изменённые атрибуты
 
         // 3. Сохраняем измения сущности
+
+        close && deleteViewTab();
       }
     }
   }, [changed, entityData, createEntity, erModel]);
 
-  const addAtribute = useCallback(async () => {
-    if (entityData && erModel && selectedAttr !== undefined) {
-      // TODO: мы никак пока не отображаем ошибки при удалении атрибута
-      // TODO: после удаления атрибута надо обновить ERModel
-      if (!createEntity) {
-        const newEntityData = {...entityData};
-        const result = await apiService.addAttribute({
-          entityData: newEntityData,
-          attrData: newEntityData.attributes[selectedAttr]
-        });
-        if (!result.error) {
-          dlgDispatch({type: 'ADD_ATTR'})
-        } else {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        }
+  const addAtributes = useCallback(async () => {
+    if (!entityData || !erModel) return;
+    const newEntityData = {...entityData};
+
+    const newAttr = entityData.attributes.filter((attr, attrIdx) => !initialData || !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
+    console.log(newAttr);
+
+    for (const attr of newAttr) {
+      const result = await apiService.addAttribute({
+        entityData: newEntityData,
+        attrData: attr
+      });
+
+      if (!result.error) {
+        // dlgDispatch({type: 'ADD_ATTR'})
+        // TODO: Добавляем атрибут в ERModel
       } else {
-        dlgDispatch({type: 'ADD_ATTR'})
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
       }
     }
-  }, [selectedAttr, entityData, createEntity, erModel]);
+
+  }, [entityData, erModel]);
 
   const deleteAtribute = useCallback(async () => {
     if (entityData && erModel && selectedAttr !== undefined) {
       // TODO: мы никак пока не отображаем ошибки при удалении атрибута
       // TODO: после удаления атрибута надо обновить ERModel
+      // TODO: Если сущность уже создана и мы удаляем атрибут который только что
+      //       добавили то просто удаляем его из ERModel без обращения к серверу
       if (!createEntity) {
         const newEntityData = {...entityData};
         const result = await apiService.deleteAttribute({
@@ -453,7 +459,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     }
   }, [viewTab, entityName, createEntity]);
 
-  useEffect( () => {
+  useEffect(() => {
     return () => {
       dispatch(gdmnActions.saveSessionData({
         viewTabURL: url,
