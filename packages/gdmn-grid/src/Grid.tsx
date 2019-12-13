@@ -56,7 +56,8 @@ export interface IGridEvent {
 export type TRevertColumnsEvent = IGridEvent & {oldColumns: Columns};
 export type TCancelSortDialogEvent = IGridEvent;
 export type TApplySortDialogEvent = IGridEvent & {sortFields: SortFields};
-export type TColumnResizeEvent = IGridEvent & {columnIndex: number, newWidth: number};
+// export type TColumnResizeEvent = IGridEvent & {columnIndex: number, newWidth: number};
+// export type TColumnMoveEvent = IGridEvent & {oldIndex: number, newIndex: number};
 export type TSetCursorPosEvent = IGridEvent & {cursorCol: number, cursorRow: number};
 export type TSortEvent = IGridEvent & {sortFields: SortFields};
 export type TSelectRowEvent = IGridEvent & {idx: number, selected: boolean};
@@ -82,7 +83,8 @@ export interface IGridProps {
   readOnly?: boolean;
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
-  onColumnResize: TEventCallback<TColumnResizeEvent>;
+  // onColumnResize: TEventCallback<TColumnResizeEvent>;
+  // onColumnMove: TEventCallback<TColumnMoveEvent>;
   onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
   onSort: TEventCallback<TSortEvent>;
   onSelectRow: TEventCallback<TSelectRowEvent>;
@@ -150,12 +152,12 @@ export function getSettingsWithNewWidth(columns: Columns, columnName: string, us
   let newUserColumnSettings = userColumnsSettings;
 
   // нет настроек и ничего не надо устанавливать
-  if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldWidth === newWidth) {
+  if (!newUserColumnSettings?.columns?.[columnName] && oldWidth === newWidth) {
     //
   }
 
   // нет настроек, но их надо установить
-  else if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldWidth !== newWidth) {
+  else if (!newUserColumnSettings?.columns?.[columnName] && oldWidth !== newWidth) {
     if (!newUserColumnSettings) {
       newUserColumnSettings = {};
     }
@@ -163,12 +165,12 @@ export function getSettingsWithNewWidth(columns: Columns, columnName: string, us
   }
 
   // есть настройки, но их надо изменить
-  else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && oldWidth !== newWidth && newWidth !== initialColumnWidth) {
+  else if (newUserColumnSettings?.columns?.[columnName] && oldWidth !== newWidth && newWidth !== initialColumnWidth) {
     newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: {...newUserColumnSettings.columns[columnName], width: newWidth}}};
   }
 
   // есть настройки, но их можно удалять
-  else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && (newWidth === initialColumnWidth || newWidth === oldWidth)) {
+  else if (newUserColumnSettings?.columns?.[columnName] && (newWidth === initialColumnWidth || newWidth === oldWidth)) {
     const { width, ...noWidth } = newUserColumnSettings.columns[columnName];
     newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: noWidth}};
   }
@@ -218,14 +220,13 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
           }
         }
         //если есть order, отличный от начальных данных, записываем в настройки
-        if (userSettings.order && userSettings.order.length && JSON.stringify(columns.map(c => c.name)) !== JSON.stringify(userSettings.order)) {
+        if (userSettings.order?.length && JSON.stringify(columns.map(c => c.name)) !== JSON.stringify(userSettings.order)) {
           newSettings = {...newSettings, order: userSettings.order};
         }
         //если есть columns или order, сохраняем настройки
         //иначе - удаляем
-        if (Object.keys(newSettings).length) {
-          onSetUserColumnsSettings(newSettings)
-        }
+        if (Object.keys(newSettings).length)
+          onSetUserColumnsSettings(newSettings);
         else
           onDelUserColumnsSettings();
       }
@@ -1120,7 +1121,6 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       onSelectAllRows,
       rightSideColumns,
       leftSideColumns,
-      onDelUserColumnsSettings,
       userColumnsSettings,
       columns
     } = this.props;
@@ -1143,47 +1143,9 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
             this._columnSizingDeltaX += deltaX;
             const newWidth = getColumnWidth({ index: columnIndex }) + this._columnSizingDeltaX;
             if (newWidth > MIN_GRID_COLUMN_WIDTH) {
-
               const columnName = column.name;
               const newUserColumnSettings = getSettingsWithNewWidth(columns, columnName, userColumnsSettings, this.state.columnWidth, newWidth);
-              // const selectedColumn = this.props.columns.find(c => c.name === columnName);
-
-              // if (!selectedColumn) {
-              //   /**
-              //    * Это какая-то ошибка в нашем коде, если мы не нашли колонку по имени
-              //    */
-              //   throw new Error(`Unknown column ${columnName}`);
-              // }
-
-              // const oldWidth = selectedColumn.width ? selectedColumn.width : 0;
-
-              // let newUserColumnSettings = userColumnsSettings;
-
-              // // нет настроек и ничего не надо устанавливать
-              // if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldWidth === newWidth) {
-              //   //
-              // }
-
-              // // нет настроек, но их надо установить
-              // else if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldWidth !== newWidth) {
-              //   if (!newUserColumnSettings) {
-              //     newUserColumnSettings = {};
-              //   }
-              //   newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: { width: newWidth }}};
-              // }
-
-              // // есть настройки, но их надо изменить
-              // else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && oldWidth !== newWidth && newWidth !== this.state.columnWidth) {
-              //   newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: {...newUserColumnSettings.columns[columnName], width: newWidth}}};
-              // }
-
-              // // есть настройки, но их можно удалять
-              // else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && newWidth === this.state.columnWidth) {
-              //   const { width, ...noWidth } = newUserColumnSettings.columns[columnName];
-              //   newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: noWidth}};
-              // }
               this._updateUserSettings(newUserColumnSettings);
-
               this._columnSizingDeltaX = 0;
             }
           }}
@@ -1330,7 +1292,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
                 };
                 let valueReturn = '';
                 let value = '';
-                let order = newUserColumnSettings.order!.map((s, idx) => {
+                const order = newUserColumnSettings.order!.map((s, idx) => {
                   valueReturn = s;
                   //если перетаскиваем колонку вправо, то колонки с oldSortNumber по newSortNumber смещаем на один влево
                   //если перетаскиваем колонку влево, то колонки с newSortNumber по oldSortNumber смещаем на один вправо

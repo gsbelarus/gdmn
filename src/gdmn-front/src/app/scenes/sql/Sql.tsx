@@ -1,4 +1,4 @@
-import { createGrid, deleteGrid, GDMNGrid } from 'gdmn-grid';
+import { createGrid, deleteGrid, GDMNGrid, IUserColumnsSettings } from 'gdmn-grid';
 import { IEntityInsertFieldInspector } from 'gdmn-orm';
 import { IDataRow, RecordSet, rsActions, TFieldType } from 'gdmn-recordset';
 import { List } from 'immutable';
@@ -42,6 +42,7 @@ interface ISQLViewState {
   showParams: boolean;
   showPlan: boolean;
   showHistory: boolean;
+  columnsSettings?: IUserColumnsSettings;
 }
 
 type Action =
@@ -54,7 +55,9 @@ type Action =
   | { type: 'SHOW_PARAMS'; showParams: boolean }
   | { type: 'SET_PLAN'; plan: string }
   | { type: 'SHOW_PLAN'; showPlan: boolean }
-  | { type: 'SHOW_HISTORY'; showHistory: boolean };
+  | { type: 'SHOW_HISTORY'; showHistory: boolean }
+  | { type: 'DEL_COLUMNS_SETTINGS' }
+  | { type: 'SET_COLUMNS_SETTINGS'; columnsSettings: IUserColumnsSettings | undefined };
 
 function reducer(state: ISQLViewState, action: Action): ISQLViewState {
   switch (action.type) {
@@ -78,6 +81,10 @@ function reducer(state: ISQLViewState, action: Action): ISQLViewState {
       return { ...state, viewMode: state.viewMode === 'horizontal' ? 'vertical' : 'horizontal' };
     case 'SHOW_HISTORY':
       return { ...state, showHistory: action.showHistory };
+    case 'SET_COLUMNS_SETTINGS':
+      return { ...state, columnsSettings: action.columnsSettings };
+    case 'DEL_COLUMNS_SETTINGS':
+        return { ...state, columnsSettings: undefined};
     default:
       return state;
   }
@@ -92,7 +99,8 @@ const initialState: ISQLViewState = {
   viewMode: 'vertical',
   showPlan: false,
   showParams: false,
-  showHistory: false
+  showHistory: false,
+  columnsSettings: {}
 };
 
 export const Sql = CSSModules(
@@ -529,7 +537,15 @@ export const Sql = CSSModules(
             />
             <Text block>{state.plan}</Text>
           </div>
-          {rs && gcs && <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors}/>}
+          {rs && gcs &&
+            <GDMNGrid
+            {...gcs}
+            rs={rs}
+            {...gridActions}
+            userColumnsSettings={state.columnsSettings}
+            onSetUserColumnsSettings={ columnsSettings => setState({ type: 'SET_COLUMNS_SETTINGS', columnsSettings }) }
+            onDelUserColumnsSettings={ () => setState({ type: 'DEL_COLUMNS_SETTINGS' }) }
+            colors={gridColors}/>}
         </SplitView>
       </>
     );

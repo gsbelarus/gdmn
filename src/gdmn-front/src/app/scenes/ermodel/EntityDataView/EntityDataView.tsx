@@ -639,7 +639,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           colors={gridColors}
           userColumnsSettings={userColumnsSettings}
           onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
-          onDelUserColumnsSettings={ () => delUserColumnSettings() }
+          onDelUserColumnsSettings={ delUserColumnSettings }
         />
         : null
       }

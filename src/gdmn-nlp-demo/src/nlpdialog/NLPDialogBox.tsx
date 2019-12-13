@@ -4,7 +4,7 @@ import "./NLPDialogBox.css";
 import { INLPDialogState } from "./reducer";
 import { PhraseSyntaxTree } from "../components/PhraseSyntaxTree";
 import { RecordSet } from "gdmn-recordset";
-import { GridComponentState, TEventCallback, TCancelSortDialogEvent, TApplySortDialogEvent, TColumnResizeEvent, TColumnMoveEvent, TSelectRowEvent,
+import { GridComponentState, TEventCallback, TCancelSortDialogEvent, TApplySortDialogEvent, TSelectRowEvent,
   TSelectAllRowsEvent, TSetCursorPosEvent, TSortEvent, TToggleGroupEvent, GDMNGrid } from "gdmn-grid";
 
 export interface IChatBoxProps {
@@ -13,8 +13,6 @@ export interface IChatBoxProps {
   grid?: GridComponentState;
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
-  onColumnResize: TEventCallback<TColumnResizeEvent>;
-  onColumnMove: TEventCallback<TColumnMoveEvent>;
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
@@ -35,8 +33,8 @@ export class ChatBox extends Component<IChatBoxProps, {}> {
         </div>
         <div className="NLPDialogResultColumn">
           {
-            parsedText && 
-            parsedText.forEach( phrase => {<PhraseSyntaxTree parsedText={phrase} />} ) 
+            parsedText &&
+            parsedText.forEach( phrase => {<PhraseSyntaxTree parsedText={phrase} />} )
           }
           {
             rs && grid &&

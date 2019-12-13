@@ -103,12 +103,12 @@ export const OptionsPanel = (props: IOptionsPanelProps): JSX.Element => {
             const oldCaption = selectedColumn.caption ? selectedColumn.caption[0] : '';
 
             // нет настроек и ничего не надо устанавливать
-            if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldCaption === newCaption) {
+            if ((!newUserColumnSettings?.columns?.[columnName]) && oldCaption === newCaption) {
               //
             }
 
             // нет настроек, но их надо установить
-            else if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldCaption !== newCaption) {
+            else if ((!newUserColumnSettings?.columns?.[columnName]) && oldCaption !== newCaption) {
               if (!newUserColumnSettings) {
                 newUserColumnSettings = {};
               }
@@ -116,12 +116,12 @@ export const OptionsPanel = (props: IOptionsPanelProps): JSX.Element => {
             }
 
             // есть настройки, но их надо изменить
-            else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && oldCaption !== newCaption) {
+            else if (newUserColumnSettings?.columns?.[columnName] && oldCaption !== newCaption) {
               newUserColumnSettings = {...newUserColumnSettings, columns: { ...newUserColumnSettings.columns, [columnName]: {...newUserColumnSettings.columns[columnName], caption: [newCaption]}}};
             }
 
             // есть настройки, но их можно удалять
-            else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && oldCaption === newCaption) {
+            else if (newUserColumnSettings?.columns?.[columnName] && oldCaption === newCaption) {
               const { caption, ...noCaption } = newUserColumnSettings.columns[columnName];
               newUserColumnSettings = {...newUserColumnSettings, columns: { ...newUserColumnSettings.columns, [columnName]: noCaption}};
             }
@@ -155,12 +155,12 @@ export const OptionsPanel = (props: IOptionsPanelProps): JSX.Element => {
             const oldHidden = !!selectedColumn.hidden;
 
             // нет настроек и ничего не надо устанавливать
-            if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldHidden === newHidden) {
+            if ((!newUserColumnSettings?.columns?.[columnName]) && oldHidden === newHidden) {
               //
             }
 
             // нет настроек, но их надо установить
-            else if ((!newUserColumnSettings || !newUserColumnSettings.columns || !newUserColumnSettings.columns[columnName]) && oldHidden !== newHidden) {
+            else if ((!newUserColumnSettings?.columns?.[columnName]) && oldHidden !== newHidden) {
               if (!newUserColumnSettings) {
                 newUserColumnSettings = {};
               }
@@ -168,23 +168,23 @@ export const OptionsPanel = (props: IOptionsPanelProps): JSX.Element => {
             }
 
             // есть настройки, но их надо изменить
-            else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && oldHidden !== newHidden) {
+            else if (newUserColumnSettings?.columns?.[columnName] && oldHidden !== newHidden) {
               newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: {...newUserColumnSettings.columns[columnName], hidden: newHidden}}};
             }
 
             // есть настройки, но их можно удалять
-            else if (newUserColumnSettings && newUserColumnSettings.columns && newUserColumnSettings.columns[columnName] && oldHidden === newHidden) {
+            else if (newUserColumnSettings?.columns?.[columnName] && oldHidden === newHidden) {
               const { hidden, ...noHidden } = newUserColumnSettings.columns[columnName];
               newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: noHidden}};
             }
             //если есть сортировка, удалим\добавим колонку в order
-            if (newUserColumnSettings && newUserColumnSettings.order) {
+            if (newUserColumnSettings?.order) {
               if (newHidden)
                 newUserColumnSettings = {...newUserColumnSettings, order: newUserColumnSettings.order.filter(s => s !== columnName)}
               else if (!newUserColumnSettings.order.find(s => s === columnName))
                 newUserColumnSettings = {...newUserColumnSettings, order: [...newUserColumnSettings.order, columnName]};
               //если после удаления массив пустой, удалим order из настроек
-              if (newUserColumnSettings.order && !newUserColumnSettings.order.length)
+              if (!newUserColumnSettings.order?.length)
                 newUserColumnSettings = {columns: {...newUserColumnSettings.columns}}
             }
 

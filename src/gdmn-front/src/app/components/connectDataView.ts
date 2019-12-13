@@ -4,14 +4,10 @@ import { compose } from 'recompose';
 import {
   applySortDialog,
   cancelSortDialog,
-  columnMove,
   GridAction,
-  resizeColumn,
   setCursorCol,
   TApplySortDialogEvent,
   TCancelSortDialogEvent,
-  TColumnMoveEvent,
-  TColumnResizeEvent,
   TSelectAllRowsEvent,
   TSelectRowEvent,
   TSetCursorPosEvent,
@@ -58,24 +54,6 @@ export const connectDataView = compose<any, IDataViewProps<any>>(
 
           event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
         }),
-
-      onColumnResize: (event: TColumnResizeEvent) =>
-        dispatch(
-          resizeColumn({
-            name: event.rs.name,
-            columnIndex: event.columnIndex,
-            newWidth: event.newWidth
-          })
-        ),
-
-      onColumnMove: (event: TColumnMoveEvent) =>
-        dispatch(
-          columnMove({
-            name: event.rs.name,
-            oldIndex: event.oldIndex,
-            newIndex: event.newIndex
-          })
-        ),
 
       onSelectRow: (event: TSelectRowEvent) =>
         dispatch(

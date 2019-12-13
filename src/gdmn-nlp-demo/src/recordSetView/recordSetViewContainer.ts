@@ -6,13 +6,9 @@ import {
   GridAction,
   cancelSortDialog,
   applySortDialog,
-  resizeColumn,
-  columnMove,
   setCursorCol,
   TCancelSortDialogEvent,
   TApplySortDialogEvent,
-  TColumnResizeEvent,
-  TColumnMoveEvent,
   TSelectRowEvent,
   TSelectAllRowsEvent,
   TSetCursorPosEvent,
@@ -41,12 +37,6 @@ export const RecordSetViewContainer = connect(
         dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
         event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
       }
-    ),
-    onColumnResize: (event: TColumnResizeEvent) => thunkDispatch(
-      resizeColumn({name: event.rs.name, columnIndex: event.columnIndex, newWidth: event.newWidth})
-    ),
-    onColumnMove: (event: TColumnMoveEvent) => thunkDispatch(
-      columnMove({name: event.rs.name, oldIndex: event.oldIndex, newIndex: event.newIndex})
     ),
     onSelectRow: (event: TSelectRowEvent) => thunkDispatch(
       rsActions.selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})

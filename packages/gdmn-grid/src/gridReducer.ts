@@ -1,6 +1,7 @@
 import { Columns, visibleToIndex } from '.';
 import { ActionType, getType } from 'typesafe-actions';
 import * as actions from './gridActions';
+import { IUserColumnSetting } from './types';
 
 export type GridAction = ActionType<typeof actions>;
 
@@ -15,6 +16,7 @@ export interface GridComponentState {
   sortDialog: boolean;
   paramsDialog: boolean;
   searchIdx: number;
+  columnsSettings: IUserColumnSetting | undefined;
 }
 
 export interface GridReducerState {
@@ -47,7 +49,8 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         hideFooter,
         sortDialog: false,
         paramsDialog: false,
-        searchIdx: 0
+        searchIdx: 0,
+        columnsSettings: undefined
       }
     };
   }
@@ -139,45 +142,6 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
             ...componentState,
             rightSideColumns,
             currentCol: leftSideColumns
-          }
-        };
-      } else {
-        return state;
-      }
-    }
-
-    case getType(actions.resizeColumn): {
-      const { columns } = componentState;
-      const { columnIndex, newWidth } = action.payload;
-      const newColumns = [...columns];
-      const adjustedIndex = visibleToIndex(newColumns, columnIndex);
-      newColumns[adjustedIndex] = { ...newColumns[adjustedIndex], width: newWidth };
-      return {
-        ...state,
-        [componentName]: {
-          ...componentState,
-          columns: newColumns
-        }
-      };
-    }
-
-    case getType(actions.columnMove): {
-      const { columns, currentCol } = componentState;
-
-      const oldIndex = visibleToIndex(columns, action.payload.oldIndex);
-      const newIndex = visibleToIndex(columns, action.payload.newIndex);
-
-      if (newIndex !== oldIndex) {
-        const newColumns = [...columns];
-        const temp = newColumns[oldIndex];
-        newColumns[oldIndex] = newColumns[newIndex];
-        newColumns[newIndex] = temp;
-        return {
-          ...state,
-          [componentName]: {
-            ...componentState,
-            columns: newColumns,
-            currentCol: currentCol === oldIndex ? newIndex : currentCol
           }
         };
       } else {

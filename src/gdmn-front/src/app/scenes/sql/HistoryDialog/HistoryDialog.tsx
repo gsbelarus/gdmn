@@ -2,9 +2,8 @@ import {
   GDMNGrid,
   TSetCursorPosEvent,
   setCursorCol,
-  resizeColumn,
-  TColumnResizeEvent,
-  deleteGrid
+  deleteGrid,
+  IUserColumnsSettings
 } from 'gdmn-grid';
 import { rsActions } from 'gdmn-recordset';
 import { TextField, Stack } from 'office-ui-fabric-react';
@@ -16,24 +15,21 @@ import { IHistoryProps } from './HistoryDialog.types';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { prepareDefaultEntityQuery } from 'gdmn-orm';
 
+interface IHistoryDialogState {
+  expression: string;
+  columnsSettings?: IUserColumnsSettings;
+};
+
 export const HistoryDialog = (props: IHistoryProps) => {
   const { rs, gcs, onClose, onSelect, erModel, dispatch, id } = props;
 
-  const [state, setState] = useState({ expression: '' });
+  const [{ expression, columnsSettings }, setState] = useState<IHistoryDialogState>({ expression: ''});
 
   useEffect(() => {
     if (rs) {
       // в textarea подставляем sql из активной записи
       const sqlField = rs.fieldDefs.find(i => i.caption === 'SQL_TEXT');
-      sqlField && setState({ expression: rs.getString(sqlField.fieldName) });
-
-      dispatch(
-        resizeColumn({
-          name: rs.name,
-          columnIndex: 1,
-          newWidth: 500
-        })
-      );
+      sqlField && setState({ expression: rs.getString(sqlField.fieldName), columnsSettings: sqlField ? {columns: {[sqlField.fieldName]: {width: 500}}} : {}});
     }
   }, [rs]);
 
@@ -61,16 +57,6 @@ export const HistoryDialog = (props: IHistoryProps) => {
     });
   };
 
-  const handleColumnResize = (event: TColumnResizeEvent) => {
-    dispatch(
-      resizeColumn({
-        name: event.rs.name,
-        columnIndex: event.columnIndex,
-        newWidth: event.newWidth
-      })
-    );
-  };
-
   return (
     <Modal
       containerClassName={styles['history-wrapper']}
@@ -92,7 +78,9 @@ export const HistoryDialog = (props: IHistoryProps) => {
                 columns={gcs.columns.filter(c => ['SQL_TEXT', 'EDITIONDATE'].includes(c.caption!.join(',')))}
                 rs={rs}
                 onSetCursorPos={handleGridSelect}
-                onColumnResize={handleColumnResize}
+                userColumnsSettings={columnsSettings}
+                onSetUserColumnsSettings={ columnsSettings => setState({ expression, columnsSettings }) }
+                onDelUserColumnsSettings={ () => setState({ expression }) }
               />
             )}
           </div>
@@ -101,7 +89,7 @@ export const HistoryDialog = (props: IHistoryProps) => {
               resizable={false}
               multiline
               rows={8}
-              value={state.expression}
+              value={expression}
               onChange={(_e, newValue?: string) => {
                 if (newValue !== undefined) {
                   setState({ expression: newValue });
@@ -111,7 +99,7 @@ export const HistoryDialog = (props: IHistoryProps) => {
           </div>
         </div>
         <div className={styles['history-buttons']}>
-          <PrimaryButton onClick={() => onSelect(state.expression)} text="OK" />
+          <PrimaryButton onClick={() => onSelect(expression)} text="OK" />
           <DefaultButton onClick={onClose} text="Close" />
         </div>
       </Stack>

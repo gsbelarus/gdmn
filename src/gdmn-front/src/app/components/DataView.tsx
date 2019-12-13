@@ -9,8 +9,6 @@ import {
   TEventCallback,
   TApplySortDialogEvent,
   TCancelSortDialogEvent,
-  TColumnMoveEvent,
-  TColumnResizeEvent,
   TSelectAllRowsEvent,
   TSelectRowEvent,
   TSetCursorPosEvent,
@@ -40,8 +38,6 @@ export interface IDataViewProps<R> extends IViewProps<R> {
   refreshRs?: (rs: RecordSet) => void;
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
-  onColumnResize: TEventCallback<TColumnResizeEvent>;
-  onColumnMove: TEventCallback<TColumnMoveEvent>;
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onSetCursorPos: TEventCallback<TSetCursorPosEvent>;
@@ -247,8 +243,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
     const {
       onCancelSortDialog,
       onApplySortDialog,
-      onColumnResize,
-      onColumnMove,
       onSelectRow,
       onSelectAllRows,
       onSetCursorPos,
@@ -270,8 +264,6 @@ export abstract class DataView<P extends IDataViewProps<R>, S, R = any> extends 
             loadMoreRsData={loadMoreRsData}
             onCancelSortDialog={onCancelSortDialog}
             onApplySortDialog={onApplySortDialog}
-            onColumnResize={onColumnResize}
-            onColumnMove={onColumnMove}
             onSelectRow={onSelectRow}
             onSelectAllRows={onSelectAllRows}
             onSetCursorPos={onSetCursorPos}
