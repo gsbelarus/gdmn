@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
-import { gdmnActions } from "@src/app/scenes/gdmn/actions";
+import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
 import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel, IEntityAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -367,86 +367,81 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }))};
 
   const postChanges = useCallback(async (close: boolean) => {
-    if (entityData && erModel) {
-      if (createEntity) {
-        const result = await apiService.AddEntity({
-          ...entityData,
-          attributes: entityData.attributes
-            .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
-            .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
-        });
+    if (!entityData || !erModel) return;
 
-        if (result.error) {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        } else {
-          const sEntity = result.payload.result;
-          if (isIEntity(sEntity)) {
-            const newERModel = new ERModel(erModel);
-            newERModel.add(deserializeEntity(newERModel, sEntity, true));
-            deserializeAttributes(newERModel, sEntity, true);
-            dispatch(gdmnActions.setSchema(newERModel));
-            close && deleteViewTab();
-          } else {
-            throw new Error("Wrong type of data");
-          }
-        }
+    if (createEntity) {
+      const result = await apiService.AddEntity({
+        ...entityData,
+        attributes: entityData.attributes
+          .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
+          .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
       } else {
-        console.log('update entity');
-        // 1. Добавляем новые атрибуты
-        await addAtributes();
-        // 2. Обновляем изменённые атрибуты
-
-        // 3. Сохраняем измения сущности
-
+        dispatch(gdmnActionsAsync.apiGetSchema());
+        // const sEntity = result.payload.result;
+        // if (!isIEntity(sEntity)) throw new Error('Wrong type of data');
+        // const newERModel = new ERModel(erModel);
+        // newERModel.add(deserializeEntity(newERModel, sEntity, true));
+        // deserializeAttributes(newERModel, sEntity, true);
+        // dispatch(gdmnActions.setSchema(newERModel));
         close && deleteViewTab();
       }
+    } else {
+      console.log('update entity');
+      // 1. Добавляем новые атрибуты
+      await addAtributes();
+      // 2. Обновляем изменённые атрибуты
+
+      // 3. Сохраняем измения сущности
+
+      close && deleteViewTab();
     }
+
+    if (!close) dlgDispatch({ type: 'SET_ENTITY_DATA', entityData });
   }, [changed, entityData, createEntity, erModel]);
 
   const addAtributes = useCallback(async () => {
     if (!entityData || !erModel) return;
-    const newEntityData = {...entityData};
 
-    const newAttr = entityData.attributes.filter((attr, attrIdx) => !initialData || !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
-    console.log(newAttr);
+    const newAttr = entityData.attributes.filter((attr) => !initialData || !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
 
     for (const attr of newAttr) {
       const result = await apiService.addAttribute({
-        entityData: newEntityData,
+        entityData,
         attrData: attr
       });
 
-      if (!result.error) {
-        // dlgDispatch({type: 'ADD_ATTR'})
-        // TODO: Добавляем атрибут в ERModel
-      } else {
+      if (result.error) {
         dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        throw new Error(result.error.message);
       }
-    }
 
+      dispatch(gdmnActionsAsync.apiGetSchema());
+    }
   }, [entityData, erModel]);
 
   const deleteAtribute = useCallback(async () => {
-    if (entityData && erModel && selectedAttr !== undefined) {
-      // TODO: мы никак пока не отображаем ошибки при удалении атрибута
-      // TODO: после удаления атрибута надо обновить ERModel
-      // TODO: Если сущность уже создана и мы удаляем атрибут который только что
-      //       добавили то просто удаляем его из ERModel без обращения к серверу
-      if (!createEntity) {
-        const newEntityData = {...entityData};
-        const result = await apiService.deleteAttribute({
-          entityData: newEntityData,
-          attrName: newEntityData.attributes[selectedAttr].name
-        });
-        if (!result.error) {
-          dlgDispatch({type: 'DELETE_ATTR'})
-        } else {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        }
-      } else {
-        dlgDispatch({type: 'DELETE_ATTR'})
+    if (!(entityData && erModel && selectedAttr !== undefined)) return;
+    // TODO: Если сущность уже создана и мы удаляем атрибут который только что
+    //       добавили то просто удаляем его из ERModel без обращения к серверу
+    const isNewAttr = !initialData?.attributes.find(prevAttr => prevAttr.name === entityData?.attributes[selectedAttr].name);
+
+    if (!createEntity && !isNewAttr) {
+      const newEntityData = {...entityData};
+      const result = await apiService.deleteAttribute({
+        entityData: newEntityData,
+        attrName: newEntityData.attributes[selectedAttr].name
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
       }
+      dispatch(gdmnActionsAsync.apiGetSchema());
     }
+    dlgDispatch({type: 'DELETE_ATTR'});
   }, [selectedAttr, entityData, createEntity, erModel]);
 
   useEffect( () => {
@@ -512,6 +507,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       iconProps: {
         iconName: 'CheckMark'
       },
+      onClick: ()=> postChanges(false)
     },
     {
       key: 'revert',
