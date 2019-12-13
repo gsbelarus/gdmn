@@ -10,11 +10,12 @@ interface IParamsDialogProps {
   onChanged: (userColunsSettings: IUserColumnsSettings | undefined) => void;
   onDismiss: () => void;
   columns: Columns;
+  initialColumnsWidth: number;
   userSettings?: IUserColumnsSettings;
 };
 
 export const ParamsDialog = (props: IParamsDialogProps): JSX.Element => {
-  const { onRevert, columns, onDismiss, userSettings, onChanged } = props;
+  const { onRevert, columns, onDismiss, userSettings, onChanged, initialColumnsWidth } = props;
 
   return (
     <div>
@@ -40,6 +41,7 @@ export const ParamsDialog = (props: IParamsDialogProps): JSX.Element => {
             columns={columns}
             onChanged={onChanged}
             userSettings={userSettings}
+            initialColumnsWidth={initialColumnsWidth}
           />
         </div>
       </Panel>

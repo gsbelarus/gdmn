@@ -15,6 +15,7 @@ export interface IParamsPanelProps {
   columns: Columns;
   onChanged: (userColumnsSettings: IUserColumnsSettings| undefined) => void;
   userSettings?: IUserColumnsSettings;
+  initialColumnsWidth: number;
 }
 
 export interface IParamsField {
@@ -24,7 +25,7 @@ export interface IParamsField {
 }
 
 export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
-  const {columns, userSettings, onChanged} = props;
+  const {columns, userSettings, onChanged, initialColumnsWidth} = props;
 
   const columnsParams = [
     {
@@ -111,6 +112,7 @@ export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
         onChanged={onChanged}
         userSettings={userSettings}
         selectedItems={selectedItems}
+        initialColumnsWidth={initialColumnsWidth}
       />
     </div>
   )
