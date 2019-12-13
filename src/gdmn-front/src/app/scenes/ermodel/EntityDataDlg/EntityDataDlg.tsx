@@ -454,15 +454,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 if (result) {
                   const attrSet = entity.attributes[attr.name] as EntityAttribute;
                   const linkEntity = attrSet.entities[0];
-                  const scalarAttrs = Object.values(linkEntity.attributes)
+                  /*const scalarAttrs = Object.values(linkEntity.attributes)
                     .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
+                 
                   const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
                     || scalarAttrs.find((attr) => attr.name === "USR$NAME")
                     || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                    || scalarAttrs.find((attr) => attr.type === "String");
-
-                  const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name && data.attribute === 'ID')![0];
+                    || scalarAttrs.find((attr) => attr.type === "String")
+                    || scalarAttrs.find((attr) => attr.name === "ID")
+                    || scalarAttrs.find((attr) => attr.name === "INHERITEDKEY");*/
+                  const presentField = linkEntity.presentAttribute();
+                 
+                  const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name && data.attribute === "ID")![0];
                   const nameAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name
                     && (data.attribute === presentField!.name))![0];
 
@@ -728,12 +731,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           onLookup={
             (filter: string, limit: number) => {
               const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-              const scalarAttrs = Object.values(linkEntity.attributes)
-                .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-              const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                || scalarAttrs.find((attr) => attr.type === "String");
+              const presentField = linkEntity.presentAttribute();
               if (presentField) {
                 linkFields.push(new EntityLinkField(presentField));
               }
@@ -898,13 +896,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             onLookup={
               (filter: string, limit: number) => {
                 const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                const scalarAttrs = Object.values(linkEntity.attributes)
-                  .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
-                const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                  || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                  || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                  || scalarAttrs.find((attr) => attr.type === "String");
+                const presentField = linkEntity.presentAttribute();
                 if (presentField) {
                   linkFields.push(new EntityLinkField(presentField));
                 }

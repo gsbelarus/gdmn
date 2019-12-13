@@ -92,15 +92,17 @@ export function prepareDefaultEntityQuerySetAttr(entity: Entity, fieldname?: str
   .filter((attr) => attr.type === "Set" && (fieldname? attr.name === fieldname : true))
   .map((attr) => {
     const linkAttr = attr as EntityAttribute;
-    const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
-      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
+    /*const scalarAttrs = Object.values(linkAttr.entities[0].attributes)
+      .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");*/
 
     const fields: EntityLinkField[] = linkAttr.entities[0].pk.map((attr) => new EntityLinkField(attr));
 
-    const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
+    /*const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
       || scalarAttrs.find((attr) => attr.name === "USR$NAME")
       || scalarAttrs.find((attr) => attr.name === "ALIAS")
-      || scalarAttrs.find((attr) => attr.type === "String");
+      || scalarAttrs.find((attr) => attr.type === "String");*/
+
+    const presentField = linkAttr.entities[0].presentAttribute();
     if (presentField) {
       fields.push(new EntityLinkField(presentField));
     }
