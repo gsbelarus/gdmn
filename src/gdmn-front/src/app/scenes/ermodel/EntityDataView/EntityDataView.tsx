@@ -6,7 +6,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { rsActions, TStatus, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
-import { nlpTokenize, nlpParse, sentenceTemplates } from 'gdmn-nlp';
+import { nlpTokenize, nlpParse, sentenceTemplates, text2Tokens } from 'gdmn-nlp';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
 import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
@@ -223,7 +223,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     if (erModel && entity) {
       if (phrase) {
         try {
-          const tokens = nlpTokenize(phrase, true);
+          const tokens = nlpTokenize(text2Tokens(phrase), true);
           const parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
           if (parsed.length) {
             const erTranslatorRU = new ERTranslatorRU2(erModel)
