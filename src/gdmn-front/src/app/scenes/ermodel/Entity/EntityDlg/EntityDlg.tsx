@@ -391,10 +391,12 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       }
     } else {
       console.log('update entity');
+      // 1. Удаляем атрибуты
+      await deleteAtributes()
       // 1. Добавляем новые атрибуты
       await addAtributes();
       // 2. Обновляем изменённые атрибуты
-
+      await updateAtributes();
       // 3. Сохраняем измения сущности
 
       close && deleteViewTab();
@@ -404,11 +406,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }, [changed, entityData, createEntity, erModel]);
 
   const addAtributes = useCallback(async () => {
-    if (!entityData || !erModel) return;
+    if (!entityData || !erModel || !initialData) return;
 
-    const newAttr = entityData.attributes.filter((attr) => !initialData || !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
+    const attrList = entityData.attributes.filter((attr) => !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
 
-    for (const attr of newAttr) {
+    for (const attr of attrList) {
       const result = await apiService.addAttribute({
         entityData,
         attrData: attr
@@ -421,26 +423,52 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
       dispatch(gdmnActionsAsync.apiGetSchema());
     }
-  }, [entityData, erModel]);
+  }, [entityData, erModel, initialData]);
 
-  const deleteAtribute = useCallback(async () => {
-    if (!(entityData && erModel && selectedAttr !== undefined)) return;
-    // TODO: Если сущность уже создана и мы удаляем атрибут который только что
-    //       добавили то просто удаляем его из ERModel без обращения к серверу
-    const isNewAttr = !initialData?.attributes.find(prevAttr => prevAttr.name === entityData?.attributes[selectedAttr].name);
+  const deleteAtributes = useCallback(async () => {
+    if (!entityData || !erModel || !initialData) return;
 
-    if (!createEntity && !isNewAttr) {
-      const newEntityData = {...entityData};
+    const attrList = initialData.attributes.filter((attr) => !entityData || !entityData.attributes.find( prevAttr => prevAttr.name === attr.name));
+
+    for (const attr of attrList) {
       const result = await apiService.deleteAttribute({
-        entityData: newEntityData,
-        attrName: newEntityData.attributes[selectedAttr].name
+        entityData,
+        attrName: attr.name
       });
 
       if (result.error) {
         dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        throw new Error(result.error.message);
       }
+
       dispatch(gdmnActionsAsync.apiGetSchema());
     }
+  }, [entityData, erModel, initialData]);
+
+  const updateAtributes = useCallback(async () => {
+    if (!entityData || !erModel || !initialData) return;
+
+    const attrList = entityData.attributes.filter(attr => initialData.attributes.find(prevAttr => prevAttr.name === attr.name))
+      .filter(attr => JSON.stringify(initialData.attributes.find(a => a.name === attr.name)) !== JSON.stringify(attr));
+
+    for (const attr of attrList) {
+      const result = await apiService.updateAttribute({
+        entityData,
+        attrData: attr
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        throw new Error(result.error.message);
+      }
+
+      dispatch(gdmnActionsAsync.apiGetSchema());
+    }
+  }, [entityData, erModel, initialData]);
+
+  const deleteAtribute = useCallback(async () => {
+    if (!(entityData && erModel && selectedAttr !== undefined)) return;
+
     dlgDispatch({type: 'DELETE_ATTR'});
   }, [selectedAttr, entityData, createEntity, erModel]);
 

@@ -486,7 +486,7 @@ export class Application extends ADatabase {
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              await erBuilder.create(this.erModel, entity);
+              await erBuilder.update(this.erModel, entity);
             }
           })
         }));
@@ -575,10 +575,10 @@ export class Application extends ADatabase {
       level: Level.SESSION,
       logger: this.taskLogger,
       worker: async (context) => {
-        // await this.waitUnlock();
-        // this.checkSession(context.session);
+        await this.waitUnlock();
+        this.checkSession(context.session);
 
-        // const {entityData, attrData} = context.command.payload;
+        const {entityData, attrData} = context.command.payload;
         // await context.session.executeConnection((connection) => AConnection.executeTransaction({
         //   connection,
         //   callback: (transaction) => ERBridge.executeSelf({
