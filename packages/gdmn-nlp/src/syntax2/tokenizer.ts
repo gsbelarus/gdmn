@@ -20,9 +20,14 @@ export const nlpComma: INLPTokenType = {
   pattern: /^,/
 };
 
+export const nlpPeriod: INLPTokenType = {
+  name: 'Period',
+  pattern: /^\./
+};
+
 export const nlpPunctuationMark: INLPTokenType = {
   name: 'PunctuationMark',
-  pattern: /^[.?!]/
+  pattern: /^[?!]/
 };
 
 export const nlpCyrillicWord: INLPTokenType = {
@@ -49,6 +54,7 @@ const allTokens = [
   nlpWhiteSpace,
   nlpCyrillicWord,
   nlpComma,
+  nlpPeriod,
   nlpIDToken,
   nlpLineBreak,
   nlpDateToken,
@@ -328,13 +334,16 @@ const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
   return tokens;
 };
 
-export function nlpTokenize(text: string, uniform = true): INLPToken[][] {
+/**
+ * Только токенизация текста без морфологического разбора слов.
+ * @param text Исходный текст.
+ */
+export function text2Tokens(text: string): INLPToken[] {
   /**
    * Поочередно проверяем строку на регулярные выражения
    * из массива типов токенов. Если регулярное выражение срабатывает,
-   * то создаем токен соответствующего типа. Для чисел -- получаем
-   * значение преобразованием из строки, для слов -- определяем массив
-   * словоформ. Передвигаем указатель на следующую позицию (после
+   * то создаем токен соответствующего типа.
+   * Передвигаем указатель на следующую позицию (после
    * найденного токена) и повторяем цикл пока не достигнем конца строки.
    */
   const tokens: INLPToken[] = [];
@@ -348,9 +357,7 @@ export function nlpTokenize(text: string, uniform = true): INLPToken[][] {
         tokens.push({
           image: match[0],
           startOffset,
-          tokenType,
-          words: tokenType === nlpCyrillicWord ?  morphAnalyzer(match[0]) : undefined,
-          value: tokenType === nlpNumber ? Number(match[0]) : undefined
+          tokenType
         });
         startOffset += match[0].length;
         found = true;
@@ -360,6 +367,50 @@ export function nlpTokenize(text: string, uniform = true): INLPToken[][] {
 
     if (!found) {
       throw new Error(`Invalid text "${text}"`);
+    }
+  }
+
+  return tokens;
+};
+
+/**
+ * Берет последовательность токенов и разбивает на предложения.
+ * Символ "точка" считается окончанием предложения.
+ * @param tokens Исходный набор токенов.
+ */
+export function tokens2sentenceTokens(tokens: INLPToken[]): INLPToken[][] {
+  const res: INLPToken[][] = [[]];
+  let i = 0;
+  let newSentence = false;
+
+  for (const token of tokens) {
+    if (newSentence) {
+      i++;
+      res.push([]);
+      newSentence = false;
+    }
+
+    if (token.tokenType === nlpPeriod) {
+      newSentence = true;
+    } else {
+      res[i].push(token);
+    }
+  }
+
+  return res;
+};
+
+export function nlpTokenize(tokens: INLPToken[], uniform = true): INLPToken[][] {
+  /**
+   * Для чисел -- получаем значение преобразованием из строки,
+   * для слов -- определяем массив словоформ.
+   */
+  for (const token of tokens) {
+    if (token.tokenType === nlpCyrillicWord) {
+      token.words = morphAnalyzer(token.image);
+    }
+    else if (token.tokenType === nlpNumber) {
+      token.value = Number(token.image);
     }
   }
 

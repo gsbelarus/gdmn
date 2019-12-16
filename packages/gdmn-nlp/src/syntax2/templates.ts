@@ -14,6 +14,19 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
     ]
   },
 
+  'VERB_SORT': {
+    id: 'VERB_SORT',
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'VERB',
+          image: 'отсортируй'
+        }]
+      }
+    ]
+  },
+
   'QUALIFIED_ENTITY_NAME': {
     id: 'QUALIFIED_ENTITY_NAME',
     examples: ['все организации'],
@@ -63,13 +76,35 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
         }],
       }
     ]
+  },
+
+  'BY_FIELD_TEMPLATE': {
+    id: 'BY_FIELD_TEMPLATE',
+    examples: ['по названию'],
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'PREP',
+          image: 'по'
+        }],
+      },
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'NOUN',
+          case: RusCase.Datv,
+          number: 'SINGULAR',
+        }],
+      }
+    ]
   }
 };
 
 export const sentenceTemplates: IRusSentenceTemplate[] = [
   {
     id: 'VPShowByPlace',
-    label: 'Глагольное предложение',
+    label: 'Глагольное предложение #1',
     examples: ['Покажи все организации и банки из Минска и Пинска'],
     phrases: [
       {
@@ -90,6 +125,25 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
           template: phraseTemplates.FROM_PLACE_TEMPLATE,
         }],
         optional: true
+      },
+    ]
+  },
+  {
+    id: 'VPSortBy',
+    label: 'Глагольное предложение #2',
+    examples: ['Отсортируй по названию'],
+    phrases: [
+      {
+        alt: [{
+          id: 'verb',
+          template: phraseTemplates.VERB_SORT
+        }]
+      },
+      {
+        alt: [{
+          id: 'byField',
+          template: phraseTemplates.BY_FIELD_TEMPLATE,
+        }]
       },
     ]
   }

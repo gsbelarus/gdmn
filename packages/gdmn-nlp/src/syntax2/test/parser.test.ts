@@ -1,9 +1,12 @@
 import { sentenceTemplates } from "../templates";
 import { nlpParse } from "../parser";
-import { nlpTokenize, RusVerb, RusNoun, RusPreposition, RusAdjective, IRusSentenceWord, IRusSentenceToken } from "../..";
+import { nlpTokenize, text2Tokens, RusVerb, RusNoun, RusPreposition, RusAdjective, IRusSentenceWord, IRusSentenceToken, tokens2sentenceTokens } from "../..";
 
 test('nlpParser2', () => {
-  let tokens = nlpTokenize('покажи организации из минска');
+
+  const f = (text: string) => nlpTokenize(tokens2sentenceTokens(text2Tokens(text))[0]);
+
+  let tokens = f('покажи организации из минска');
   expect(tokens.length).toEqual(1);
 
   let sentences = nlpParse(tokens[0], sentenceTemplates);
@@ -23,7 +26,7 @@ test('nlpParser2', () => {
   expect((sentences[0].phrases[2].wordOrToken[1] as IRusSentenceWord).word).toBeInstanceOf(RusNoun);
   expect(((sentences[0].phrases[2].wordOrToken[1] as IRusSentenceWord).word as RusNoun).getText()).toEqual('минска');
 
-  tokens = nlpTokenize('покажи все TgdcFunction');
+  tokens = f('покажи все TgdcFunction');
   expect(tokens.length).toEqual(1);
 
   sentences = nlpParse(tokens[0], sentenceTemplates);
@@ -39,12 +42,24 @@ test('nlpParser2', () => {
   expect((sentences[0].phrases[1].wordOrToken[1] as IRusSentenceToken).token.tokenType.name).toEqual('IDToken');
   expect((sentences[0].phrases[1].wordOrToken[1] as IRusSentenceToken).token.image).toEqual('TgdcFunction');
 
-  tokens = nlpTokenize('покажи все организации из минска');
+  tokens = f('покажи все организации из минска');
   expect(tokens.length).toEqual(1);
   sentences = nlpParse(tokens[0], sentenceTemplates);
   expect(sentences.length).toEqual(1);
 
-  tokens = nlpTokenize('покажи все организации из минска и пинска');
+  tokens = f('покажи все организации из минска и пинска');
+  expect(tokens.length).toEqual(1);
+  sentences = nlpParse(tokens[0], sentenceTemplates);
+  expect(sentences.length).toEqual(1);
+
+  /*
+  tokens = f('покажи все организации и банки из минска и пинска');
+  expect(tokens.length).toEqual(1);
+  sentences = nlpParse(tokens[0], sentenceTemplates);
+  expect(sentences.length).toEqual(0);
+  */
+
+  tokens = f('отсортируй по названию');
   expect(tokens.length).toEqual(1);
   sentences = nlpParse(tokens[0], sentenceTemplates);
   expect(sentences.length).toEqual(1);
