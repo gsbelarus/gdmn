@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
-import { gdmnActions } from "@src/app/scenes/gdmn/actions";
+import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
 import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel, IEntityAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -144,7 +144,7 @@ type Action =
   | { type: 'CREATE_ENTITY_DATA' }
   // мы в процессе создания/редактирования сущности
   // что-то меняется, например ее название
-  | { type: 'EDIT_ENTITY_DATA', entityData: IEntity }
+  | { type: 'UPDATE_ENTITY_DATA', entityData: IEntity }
   | { type: 'SET_STATE', state: IEntityDlgState }
   | { type: 'SELECT_ATTR', selectedAttr: number }
   | { type: 'UPDATE_ATTR', newAttr: IAttribute }
@@ -203,7 +203,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     }
 
     // вызывается при реактировании entity
-    case 'EDIT_ENTITY_DATA': {
+    case 'UPDATE_ENTITY_DATA': {
       const { initialData, errorLinks } = state;
 
       return {
@@ -367,52 +367,109 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   }))};
 
   const postChanges = useCallback(async (close: boolean) => {
-    if (entityData && erModel) {
-      if (createEntity) {
-        const result = await apiService.AddEntity({
-          ...entityData,
-          attributes: entityData.attributes
-            .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
-            .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
-        });
+    if (!entityData || !erModel) return;
 
-        if (result.error) {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        } else {
-          const sEntity = result.payload.result;
-          if (isIEntity(sEntity)) {
-            const newERModel = new ERModel(erModel);
-            newERModel.add(deserializeEntity(newERModel, sEntity, true));
-            deserializeAttributes(newERModel, sEntity, true);
-            dispatch(gdmnActions.setSchema(newERModel));
-            close && deleteViewTab();
-          } else {
-            throw new Error("Wrong type of data");
-          }
-        }
+    if (createEntity) {
+      const result = await apiService.AddEntity({
+        ...entityData,
+        attributes: entityData.attributes
+          .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
+          .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+      } else {
+        dispatch(gdmnActionsAsync.apiGetSchema());
+        // const sEntity = result.payload.result;
+        // if (!isIEntity(sEntity)) throw new Error('Wrong type of data');
+        // const newERModel = new ERModel(erModel);
+        // newERModel.add(deserializeEntity(newERModel, sEntity, true));
+        // deserializeAttributes(newERModel, sEntity, true);
+        // dispatch(gdmnActions.setSchema(newERModel));
+        close && deleteViewTab();
       }
+    } else {
+      console.log('update entity');
+      // 1. Удаляем атрибуты
+      await deleteAtributes()
+      // 1. Добавляем новые атрибуты
+      await addAtributes();
+      // 2. Обновляем изменённые атрибуты
+      await updateAtributes();
+      // 3. Сохраняем измения сущности
+
+      close && deleteViewTab();
     }
+
+    if (!close) dlgDispatch({ type: 'SET_ENTITY_DATA', entityData });
   }, [changed, entityData, createEntity, erModel]);
 
-  const deleteAtribute = useCallback(async () => {
-    if (entityData && erModel && selectedAttr !== undefined) {
-      // TODO: мы никак пока не отображаем ошибки при удалении атрибута
-      // TODO: после удаления атрибута надо обновить ERModel
-      if (!createEntity) {
-        const newEntityData = {...entityData};
-        const result = await apiService.deleteAttribute({
-          entityData: newEntityData,
-          attrName: newEntityData.attributes[selectedAttr].name
-        });
-        if (!result.error) {
-          dlgDispatch({type: 'DELETE_ATTR'})
-        } else {
-          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        }
-      } else {
-        dlgDispatch({type: 'DELETE_ATTR'})
+  const addAtributes = useCallback(async () => {
+    if (!entityData || !erModel || !initialData) return;
+
+    const attrList = entityData.attributes.filter((attr) => !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
+
+    for (const attr of attrList) {
+      const result = await apiService.addAttribute({
+        entityData,
+        attrData: attr
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        throw new Error(result.error.message);
       }
+
+      dispatch(gdmnActionsAsync.apiGetSchema());
     }
+  }, [entityData, erModel, initialData]);
+
+  const deleteAtributes = useCallback(async () => {
+    if (!entityData || !erModel || !initialData) return;
+
+    const attrList = initialData.attributes.filter((attr) => !entityData || !entityData.attributes.find( prevAttr => prevAttr.name === attr.name));
+
+    for (const attr of attrList) {
+      const result = await apiService.deleteAttribute({
+        entityData,
+        attrName: attr.name
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        throw new Error(result.error.message);
+      }
+
+      dispatch(gdmnActionsAsync.apiGetSchema());
+    }
+  }, [entityData, erModel, initialData]);
+
+  const updateAtributes = useCallback(async () => {
+    if (!entityData || !erModel || !initialData) return;
+
+    const attrList = entityData.attributes.filter(attr => initialData.attributes.find(prevAttr => prevAttr.name === attr.name))
+      .filter(attr => JSON.stringify(initialData.attributes.find(a => a.name === attr.name)) !== JSON.stringify(attr));
+
+    for (const attr of attrList) {
+      const result = await apiService.updateAttribute({
+        entityData,
+        attrData: attr
+      });
+
+      if (result.error) {
+        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+        throw new Error(result.error.message);
+      }
+
+      dispatch(gdmnActionsAsync.apiGetSchema());
+    }
+  }, [entityData, erModel, initialData]);
+
+  const deleteAtribute = useCallback(async () => {
+    if (!(entityData && erModel && selectedAttr !== undefined)) return;
+
+    dlgDispatch({type: 'DELETE_ATTR'});
   }, [selectedAttr, entityData, createEntity, erModel]);
 
   useEffect( () => {
@@ -425,7 +482,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     }
   }, [viewTab, entityName, createEntity]);
 
-  useEffect( () => {
+  useEffect(() => {
     return () => {
       dispatch(gdmnActions.saveSessionData({
         viewTabURL: url,
@@ -478,6 +535,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       iconProps: {
         iconName: 'CheckMark'
       },
+      onClick: ()=> postChanges(false)
     },
     {
       key: 'revert',
@@ -541,7 +599,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                       return;
                     }
                     dlgDispatch({
-                      type: 'EDIT_ENTITY_DATA',
+                      type: 'UPDATE_ENTITY_DATA',
                       entityData: { ...entityData, name: name /*newValue addUserPrefix(newValue)*/ }})
                   }
                 }}
@@ -578,7 +636,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 selectedKey={entityData.parent}
                 errorMessage={getErrorMessage(undefined, 'entityParent', errorLinks)}
                 disabled={!createEntity || entityType !== 'INHERITED'}
-                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
+                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
                 styles={{
                   root: {
                     width: '240px'
@@ -590,7 +648,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Semantic categories:"
                 value={entityData.semCategories}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
                 styles={{
                   root: {
                     width: '240px'
@@ -602,7 +660,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Description:"
                 value={getLName(entityData.lName, ['ru'])}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'EDIT_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
+                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
               />
             </Stack.Item>
           </Stack>

@@ -198,13 +198,13 @@ export const NewEntity = CSSModules((props: INewEntityProps): JSX.Element => {
     } else {
       dispatch(async () => {
         if (parent) {
-          await apiService.editEntity({
+          await apiService.UpdateEntity({
             entityName: name.value.toUpperCase(),
             changedFields: changedFields.current,
             attributes: refAttribute.current
           })
         } else {
-          await apiService.editEntity({
+          await apiService.UpdateEntity({
             entityName: name.value.toUpperCase(),
             changedFields: changedFields.current,
             attributes: refAttribute.current

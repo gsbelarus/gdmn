@@ -66,7 +66,10 @@ export const enum TTaskActionNames {
   GET_MAIN_SESSIONS_INFO = 'GET_MAIN_SESSIONS_INFO',
   GET_NEXT_ID = 'GET_NEXT_ID',
   ADD_ENTITY = 'ADD_ENTITY',
+  UPDATE_ENTITY = 'UPDATE_ENTITY',
   DELETE_ENTITY = 'DELETE_ENTITY',
+  ADD_ATTRIBUTE = 'ADD_ATTRIBUTE',
+  UPDATE_ATTRIBUTE = 'UPDATE_ATTRIBUTE',
   DELETE_ATTRIBUTE = 'DELETE_ATTRIBUTE',
   QUERY_SETTING = 'QUERY_SETTING',
   SAVE_SETTING = 'SAVE_SETTING',
@@ -172,9 +175,18 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.GET_NEXT_ID]: {
   };
   [TTaskActionNames.ADD_ENTITY]: IEntity;
+  [TTaskActionNames.UPDATE_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: {
     entityName: string;
   };
+  [TTaskActionNames.ADD_ATTRIBUTE]: {
+    entityData: IEntity;
+    attrData: IAttribute;
+  };
+  [TTaskActionNames.UPDATE_ATTRIBUTE]: {
+    entityData: IEntity;
+    attrData: IAttribute;
+  }
   [TTaskActionNames.DELETE_ATTRIBUTE]: {
     entityData: IEntity;
     attrName: string;
@@ -221,7 +233,10 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.GET_MAIN_SESSIONS_INFO]: any[];
   [TTaskActionNames.GET_NEXT_ID]: INextId;
   [TTaskActionNames.ADD_ENTITY]: IEntity;
+  [TTaskActionNames.UPDATE_ENTITY]: IEntity;
   [TTaskActionNames.DELETE_ENTITY]: IDeleteEntity;
+  [TTaskActionNames.ADD_ATTRIBUTE]: IAttribute;
+  [TTaskActionNames.UPDATE_ATTRIBUTE]: IAttribute;
   [TTaskActionNames.DELETE_ATTRIBUTE]: void;
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
   [TTaskActionNames.SAVE_SETTING]: void;
@@ -281,6 +296,7 @@ export type AppAction =
   | "GET_SESSIONS_INFO"
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
+  | "UPDATE_ENTITY"
   | "DELETE_ENTITY"
   | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"

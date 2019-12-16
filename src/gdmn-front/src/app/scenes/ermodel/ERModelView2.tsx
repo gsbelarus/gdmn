@@ -324,7 +324,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       //commandBarButtonAs: linkCommandBarButton(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
     },
     {
-      key: 'editEntity',
+      key: 'UpdateEntity',
       disabled: !entities || !entities.size,
       text: 'Edit',
       iconProps: {

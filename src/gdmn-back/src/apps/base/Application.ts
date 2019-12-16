@@ -23,7 +23,8 @@ import {
   ISequenceQueryResponse,
   SequenceQuery,
   IEntity,
-  IEntityInsertFieldInspector
+  IEntityInsertFieldInspector,
+  IAttribute
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -63,7 +64,10 @@ export type AppAction =
   | "GET_MAIN_SESSIONS_INFO"
   | "GET_NEXT_ID"
   | "ADD_ENTITY"
+  | "UPDATE_ENTITY"
   | "DELETE_ENTITY"
+  | "ADD_ATTRIBUTE"
+  | "UPDATE_ATTRIBUTE"  
   | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
   | "SAVE_SETTING"
@@ -92,7 +96,10 @@ export type SequenceQueryCmd = AppCmd<"SEQUENCE_QUERY", { query: ISequenceQueryI
 export type GetSessionsInfoCmd = AppCmd<"GET_SESSIONS_INFO", { withError: boolean }>;
 export type GetNextIdCmd = AppCmd<"GET_NEXT_ID", { withError: boolean }>;
 export type AddEntityCmd = AppCmd<"ADD_ENTITY", IEntity>;
+export type UpdateEntityCmd = AppCmd<"UPDATE_ENTITY", IEntity>;
 export type DeleteEntityCmd = AppCmd<"DELETE_ENTITY", { entityName: string }>;
+export type AddAttributeCmd = AppCmd<"ADD_ATTRIBUTE", { entityData: IEntity, attrData: IAttribute }>;
+export type UpdateAttributeCmd = AppCmd<"UPDATE_ATTRIBUTE", { entityData: IEntity, attrData: IAttribute }>;
 export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: string }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
@@ -438,6 +445,59 @@ export class Application extends ADatabase {
     return task;
   }
 
+  /** Обновление сущности */
+  public pushUpdateEntityCmd(session: Session,
+                          command: AddEntityCmd
+  ): Task<AddEntityCmd, IEntity> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
+
+        const entity = this.erModel.entity(name);
+
+        if (!entity) {
+          throw new Error("Entity is not found");
+        }
+
+        // entity.attributes = attributes;
+        // const preEntity = new Entity({
+        //   parent: parent ? this.erModel.entity(parent) : undefined,
+        //   name,
+        //   lName,
+        //   adapter,
+        //   isAbstract,
+        //   unique,
+        //   semCategories: semCategories ? str2SemCategories(semCategories) : undefined
+        // });
+
+        // if (attributes) {
+        //   attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel, undefined, preEntity)).map(attr => preEntity.add(attr));
+        // }
+
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async ({erBuilder, eBuilder}) => {
+              await erBuilder.update(this.erModel, entity);
+            }
+          })
+        }));
+        return this.erModel.entity(name).serialize(true);
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   /** Удаление сущности */
   public pushDeleteEntityCmd(session: Session,
                              command: DeleteEntityCmd
@@ -471,7 +531,74 @@ export class Application extends ADatabase {
     return task;
   }
 
-  /** Удаление атрибута */
+  /** Добавление атрибута в существующую сущность*/
+  public pushAddAttributeCmd(session: Session,
+                                command: AddAttributeCmd
+  ): Task<AddAttributeCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {entityData, attrData} = context.command.payload;
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async ({erBuilder, eBuilder}) => {
+              const entity = this.erModel.entity(entityData.name);
+              const attribute = EntityUtils.createAttribute(attrData, this.erModel, undefined, entity);
+              
+              await erBuilder.eBuilder.createAttribute(entity, attribute);
+            }
+          })
+        }));
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  /** Обновление атрибута в существующей сущности*/
+  public pushUpdateAttributeCmd(session: Session,
+                                command: UpdateAttributeCmd
+  ): Task<UpdateAttributeCmd, void> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+
+        const {entityData, attrData} = context.command.payload;
+        // await context.session.executeConnection((connection) => AConnection.executeTransaction({
+        //   connection,
+        //   callback: (transaction) => ERBridge.executeSelf({
+        //     connection,
+        //     transaction,
+        //     callback: async ({erBuilder, eBuilder}) => {
+        //       const entity = this.erModel.entity(entityData.name);
+        //       const attribute = entity.attribute(attrData.name);
+        //       await erBuilder.eBuilder.deleteAttribute(entity, attribute);
+        //     }
+        //   })
+        // }));
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  /** Удаление атрибута из существующей сущности */
   public pushDeleteAttributeCmd(session: Session,
                                 command: DeleteAttributeCmd
   ): Task<DeleteAttributeCmd, void> {

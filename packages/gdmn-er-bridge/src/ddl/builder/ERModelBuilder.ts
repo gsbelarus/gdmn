@@ -226,6 +226,20 @@ export class ERModelBuilder extends Builder {
     }
   }
 
+  /** Обновление сущности или Sequence */
+  public async update(erModel: ERModel, sequence: Sequence): Promise<void>;
+  public async update(erModel: ERModel, entity: Entity): Promise<void>;
+  public async update(erModel: ERModel, source: Sequence | Entity): Promise<void> {
+    if (source instanceof Sequence) {
+      // TODO
+      throw new Error("Unsupported yet");
+
+    } else if (source instanceof Entity) {
+
+    }
+  }
+
+  /** Удаление сущности или Sequence */
   public async delete(erModel: ERModel, sequence: Sequence): Promise<void>;
   public async delete(erModel: ERModel, entity: Entity): Promise<void>;
   public async delete(erModel: ERModel, source: Sequence | Entity): Promise<void> {
