@@ -31,7 +31,12 @@ export class ERTranslatorRU2 {
     this.erModel = erModel;
     this.neMap = new Map<NounLexeme, Entity[]>();
 
-    Object.entries(this.erModel.entities).forEach(([, e]) =>
+    // TODO: this code executes too long
+    // move it out of constructor
+    // we should change logic that neMap initially is
+    // empty and filled upon successful search for
+    // given noun
+    Object.values(this.erModel.entities).forEach( e =>
       e.lName.ru && e.lName.ru.name.split(",").forEach(n =>
         morphAnalyzer(n.trim()).forEach(w => {
           if (w instanceof Noun) {
@@ -180,6 +185,22 @@ export class ERTranslatorRU2 {
       action: 'QUERY',
       payload: new EntityQuery(entityLink, options)
     };
+  }
+
+  /**
+   *
+   * |verb       |byField           |
+   *  Отсортируй  по названию
+   *
+   * В шаблоне предложения зашито, что оно начинается с глагола
+   * "отсортируй". Нет необходимости анализировать это отдельно.
+   *
+   * Фраза byField вторым словом содержит или существительное,
+   * локализованное название по которому мы ищем атрибут сущности
+   * в erModel или имя атрибута в модели.
+   */
+  public processVPSortBy(sentence: IRusSentence, command: ICommand): ICommand {
+    return command;
   }
 }
 
