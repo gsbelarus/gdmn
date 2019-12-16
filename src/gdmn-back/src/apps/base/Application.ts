@@ -579,18 +579,18 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
 
         const {entityData, attrData} = context.command.payload;
-        // await context.session.executeConnection((connection) => AConnection.executeTransaction({
-        //   connection,
-        //   callback: (transaction) => ERBridge.executeSelf({
-        //     connection,
-        //     transaction,
-        //     callback: async ({erBuilder, eBuilder}) => {
-        //       const entity = this.erModel.entity(entityData.name);
-        //       const attribute = entity.attribute(attrData.name);
-        //       await erBuilder.eBuilder.deleteAttribute(entity, attribute);
-        //     }
-        //   })
-        // }));
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async ({erBuilder, eBuilder}) => {
+              const entity = this.erModel.entity(entityData.name);
+              const attribute = entity.attribute(attrData.name);
+              await erBuilder.eBuilder.updateAttribute(entity, attribute, attrData);
+            }
+          })
+        }));
       }
     });
     session.taskManager.add(task);

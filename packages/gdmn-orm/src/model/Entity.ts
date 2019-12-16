@@ -185,6 +185,17 @@ export class Entity {
     attributes.forEach((attribute) => this.add(attribute));
   }
 
+  public update<T extends Attribute>(attribute: T): T {
+    if (!this.hasOwnAttribute(attribute.name)) {
+      throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
+    }
+
+    /** На данный момент разрешаем изменять только атрибут: "lname" */    
+    console.log(`update: ${attribute}`);
+    // return this._attributes[attribute.name] = {...this._attributes[attribute.name], lName: attribute.lName} as T;
+    return this._attributes[attribute.name] = attribute;
+  }
+
   public remove(attribute: Attribute): void {
     if (!this.hasOwnAttribute(attribute.name)) {
       throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);

@@ -9,7 +9,8 @@ import {
   ParentAttribute,
   ScalarAttribute,
   SequenceAttribute,
-  SetAttribute
+  SetAttribute,
+  IAttribute
 } from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../Constants";
@@ -310,6 +311,12 @@ export class EntityBuilder extends Builder {
     }
     
     return entity.add(attribute);
+  }
+
+  public async updateAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr, attrData: IAttribute): Promise<Attr> {
+    /** На данный момент разрешаем изменять только атрибут: "lname" */
+    const attr = {...attribute, lName: attrData.lName};
+    return entity.update(attr);
   }
 
   public async deleteAttribute(entity: Entity, attribute: Attribute): Promise<void> {
