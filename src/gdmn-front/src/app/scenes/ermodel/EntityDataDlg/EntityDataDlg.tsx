@@ -13,7 +13,6 @@ import {
   EntityLink,
   EntityQueryOptions,
   IEntityUpdateFieldInspector,
-  ScalarAttribute,
   SetAttribute,
   EntityAttribute,
   EntityLinkField,
@@ -335,7 +334,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
   };
 
-  const [setting, setSetting, deleteSetting] = useSettings<IDesignerSetting>({ type: 'DESIGNER', objectID: entityName });
+  const [setting, setSetting] = useSettings<IDesignerSetting | undefined>({ type: 'DESIGNER', objectID: entityName });
 
   useEffect( () => {
     return () => {
@@ -456,7 +455,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                   const linkEntity = attrSet.entities[0];
                   /*const scalarAttrs = Object.values(linkEntity.attributes)
                     .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-                 
+
                   const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
                     || scalarAttrs.find((attr) => attr.name === "USR$NAME")
                     || scalarAttrs.find((attr) => attr.name === "ALIAS")
@@ -464,7 +463,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     || scalarAttrs.find((attr) => attr.name === "ID")
                     || scalarAttrs.find((attr) => attr.name === "INHERITEDKEY");*/
                   const presentField = linkEntity.presentAttribute();
-                 
+
                   const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name && data.attribute === "ID")![0];
                   const nameAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name
                     && (data.attribute === presentField!.name))![0];
@@ -1121,7 +1120,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               setting={setting}
               setFields={setFields}
               onSaveSetting={ setting => setSetting(setting) }
-              onDeleteSetting={ () => deleteSetting() }
+              onDeleteSetting={ () => setSetting(undefined) }
               onExit={ () => setDesigner(false) }
             />
           : <>

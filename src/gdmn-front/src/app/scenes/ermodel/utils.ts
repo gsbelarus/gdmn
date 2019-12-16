@@ -2,7 +2,7 @@ import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
 import { RSAction, rsActions } from "gdmn-recordset";
 import { GridAction, cancelSortDialog, TApplySortDialogEvent, applySortDialog,
-  TColumnResizeEvent, resizeColumn, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent,
+  TSelectRowEvent, TSelectAllRowsEvent,
   TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent, TCancelSortDialogEvent } from "gdmn-grid";
 import {IComboBoxOption} from "office-ui-fabric-react";
 
@@ -70,22 +70,6 @@ export function bindGridActions(dispatch: ThunkDispatch<IState, never, RSAction 
 
         event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
       }
-    ),
-
-    onColumnResize: (event: TColumnResizeEvent) => {
-      return dispatch(resizeColumn({
-        name: event.rs.name,
-        columnIndex: event.columnIndex,
-        newWidth: event.newWidth
-      }));
-    },
-
-    onColumnMove: (event: TColumnMoveEvent) => dispatch(
-      columnMove({
-        name: event.rs.name,
-        oldIndex: event.oldIndex,
-        newIndex: event.newIndex
-      })
     ),
 
     onSelectRow: (event: TSelectRowEvent) => dispatch(

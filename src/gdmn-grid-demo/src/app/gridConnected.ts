@@ -1,13 +1,10 @@
 import {
   GDMNGrid,
-  IColumn,
   Columns,
   setSearchIdx,
   GetGridRef,
   TCancelSortDialogEvent,
   TApplySortDialogEvent,
-  TColumnResizeEvent,
-  TColumnMoveEvent,
   TSelectRowEvent,
   TSelectAllRowsEvent,
   TSetCursorPosEvent,
@@ -20,8 +17,6 @@ import store, { State } from "../app/store";
 import { GridAction } from "gdmn-grid";
 import { ThunkDispatch } from "redux-thunk";
 import {
-  resizeColumn,
-  columnMove,
   setCursorCol,
   createGrid,
   deleteGrid,
@@ -58,7 +53,7 @@ export function connectGrid(name: string, rs: RecordSet, columns: Columns | unde
       const gridComponentState = state.grid[name];
       return {
         ...gridComponentState,
-        columns: gridComponentState.columns.filter( c => !c.hidden )
+        columns: gridComponentState.columns//.filter( c => !c.hidden )
       }
     },
     (thunkDispatch: ThunkDispatch<State, never, GridAction | RSAction>) => ({
@@ -71,12 +66,6 @@ export function connectGrid(name: string, rs: RecordSet, columns: Columns | unde
             dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
             event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
           }
-        ),
-      onColumnResize: (event: TColumnResizeEvent) => thunkDispatch(
-          resizeColumn({name: event.rs.name, columnIndex: event.columnIndex, newWidth: event.newWidth})
-        ),
-      onColumnMove: (event: TColumnMoveEvent) => thunkDispatch(
-          columnMove({name: event.rs.name, oldIndex: event.oldIndex, newIndex: event.newIndex})
         ),
       onSelectRow: (event: TSelectRowEvent) => thunkDispatch(
           rsActions.selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})
@@ -105,7 +94,8 @@ export function connectGrid(name: string, rs: RecordSet, columns: Columns | unde
       onInsert: () => thunkDispatch(rsActions.insert({ name: rs.name })),
       onDelete: () => thunkDispatch(rsActions.deleteRows({ name: rs.name })),
       onCancel: () => thunkDispatch(rsActions.cancel({ name: rs.name })),
-      onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(rsActions.setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value }))
+      onSetFieldValue: (event: TRecordsetSetFieldValue) => thunkDispatch(rsActions.setFieldValue({ name: rs.name, fieldName: event.fieldName, value: event.value })),
+
     }),
     undefined,
     {forwardRef: true}

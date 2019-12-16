@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 
 /**
- * Возвращает массив из трех элементов: данные, функция обновления и функция удаления.
+ * Возвращает массив из двух элементов: данные и функция обновления.
  */
-export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data: ST) => void, () => void] {
+export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data: ST) => void] {
 
   const saveToLocaStorage = (se: ISettingEnvelope) => {
     localStorage.setItem(`setting/${type}/${objectID}`, JSON.stringify(se));
@@ -58,14 +58,15 @@ export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data:
         _changed: d,
         _accessed: d
       };
-      setSettingEnvelope(se);
-      apiService.saveSetting({ newData: se });
-      saveToLocaStorage(se);
-    },
-    () => {
-      localStorage.removeItem(`setting/${type}/${objectID}`);
-      setSettingEnvelope(undefined);
-      apiService.deleteSetting({ data: {type, objectID} });
+      if (data) {
+        setSettingEnvelope(se);
+        apiService.saveSetting({ newData: se });
+        saveToLocaStorage(se);
+      } else {
+        localStorage.removeItem(`setting/${type}/${objectID}`);
+        setSettingEnvelope(undefined);
+        apiService.deleteSetting({ data: {type, objectID} });
+      }
     }
   ];
 };

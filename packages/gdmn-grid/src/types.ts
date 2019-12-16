@@ -1,7 +1,7 @@
 import { mergeStyleSets } from '@uifabric/merge-styles';
 import { IDateFormat } from 'gdmn-internals';
 
-export interface IUserColumnSetting {
+export interface IColumnSetting {
   hidden?: boolean;
   caption?: string[];
   width?: number;
@@ -9,13 +9,33 @@ export interface IUserColumnSetting {
   dateFormat?: IDateFormat;
 }
 
-export interface IUserColumnsSettings {
-  [columnName: string]: IUserColumnSetting;
+export interface IColumnsSettings {
+  /**
+   * Если пользователь что-то поменял в визуальном
+   * отображении колонки, то сохраним измененные
+   * пераметры здесь. Результирующие параметры
+   * будут получаться после наложения пользовательских
+   * изменений на дефолтные параметры, которые
+   * получились, когда мы создавали колонки,
+   * когда данные рекордсета пришли к нам с сервера.
+   */
+  columns?: {
+    [columnName: string]: IColumnSetting;
+  },
+  /**
+   * Если пользователь перетащил колонку,то новый
+   * порядок всех колонок сохраним в этом массиве.
+   * Если его нет, то используем порядок из дефолтных
+   * настроек.
+   * Если он есть, то содержит имена колонок в нужном
+   * порядке.
+   */
+  order?: string[];
 }
 
-export interface IUserColumnsSettingsEnvelope {
+export interface IColumnsSettingsEnvelope {
   _changed: Date;
-  data: IUserColumnsSettings;
+  data: IColumnsSettings;
 };
 
 export interface IGridColors {

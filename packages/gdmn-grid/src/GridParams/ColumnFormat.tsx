@@ -8,13 +8,13 @@ import { TFieldType } from 'gdmn-recordset';
 import { Columns } from '../Grid';
 import { applyUserSettings } from '../applyUserSettings';
 import { dateFormats, numberFormats } from "gdmn-internals";
-import { IUserColumnsSettings } from "../types";
+import { IColumnsSettings } from "../types";
 
 export interface IColumnFormatProps {
   columns: Columns;
-  userSettings?: IUserColumnsSettings;
+  userSettings?: IColumnsSettings;
   selectedItems: string[];
-  onChanged: (userColumnsSettings: IUserColumnsSettings| undefined) => void;
+  onChanged: (userColumnsSettings: IColumnsSettings| undefined) => void;
 }
 
 
@@ -139,30 +139,29 @@ export const ColumnFormat = (props: IColumnFormatProps): JSX.Element => {
                   const oldNumberFormatName = selectedFields && selectedFields.numberFormat && selectedFields.numberFormat.name ? selectedFields.numberFormat.name : '';
 
                   // нет настроек и ничего не надо устанавливать
-                  if ((!newUserColumnSettings || !newUserColumnSettings[columnName]) && oldNumberFormatName === newNumberFormatName) {
+                  if (!newUserColumnSettings?.columns?.[columnName] && oldNumberFormatName === newNumberFormatName) {
                     //
                   }
 
                   // нет настроек, но их надо установить
-                  else if ((!newUserColumnSettings || !newUserColumnSettings[columnName]) && oldNumberFormatName !== newNumberFormatName) {
+                  else if (!newUserColumnSettings?.columns?.[columnName] && oldNumberFormatName !== newNumberFormatName) {
                     if (!newUserColumnSettings) {
                       newUserColumnSettings = {};
                     }
-                    newUserColumnSettings = {...newUserColumnSettings, [columnName]: { numberFormatName: newNumberFormatName}};
+                    newUserColumnSettings = {...newUserColumnSettings, columns: { ...newUserColumnSettings.columns, [columnName]: { numberFormatName: newNumberFormatName}}};
                   }
 
                   // есть настройки, но их надо изменить
-                  else if (newUserColumnSettings && newUserColumnSettings[columnName] && oldNumberFormatName !== newNumberFormatName) {
-                    newUserColumnSettings = {...newUserColumnSettings,  [columnName]: {...newUserColumnSettings[columnName], numberFormatName: newNumberFormatName}};
+                  else if (newUserColumnSettings?.columns?.[columnName] && oldNumberFormatName !== newNumberFormatName) {
+                    newUserColumnSettings = {...newUserColumnSettings,  columns: {...newUserColumnSettings.columns, [columnName]: {...newUserColumnSettings.columns[columnName], numberFormatName: newNumberFormatName}}};
                   }
 
                   // есть настройки, но их можно удалять
-                  else if (newUserColumnSettings && newUserColumnSettings[columnName] && oldNumberFormatName === newNumberFormatName) {
-                    const { numberFormatName, ...noNumberFormatName } = newUserColumnSettings[columnName];
-                    newUserColumnSettings = {...newUserColumnSettings, [columnName]: noNumberFormatName};
+                  else if (newUserColumnSettings?.columns?.[columnName] && oldNumberFormatName === newNumberFormatName) {
+                    const { numberFormatName, ...noNumberFormatName } = newUserColumnSettings.columns[columnName];
+                    newUserColumnSettings = {...newUserColumnSettings, columns: { ...newUserColumnSettings.columns, [columnName]: noNumberFormatName}};
                   }
-                  // if (newUserColumnSettings && Object.getOwnPropertyNames(newUserColumnSettings[columnName]).length === 0)
-                  //   delete newUserColumnSettings[columnName];
+
                 });
                 if (newUserColumnSettings !== userSettings) {
                   onChanged(newUserColumnSettings);
@@ -179,30 +178,30 @@ export const ColumnFormat = (props: IColumnFormatProps): JSX.Element => {
                     throw new Error(`Unknown column ${columnName}`);
                   }
                   const selectedFields = selectedColumn.fields.find(f => f.fieldName === columnName && f.dataType === selectedType)
-                  const oldDateFormat = selectedFields && selectedFields.dateFormat ? selectedFields.dateFormat : '';
+                  const oldDateFormat = selectedFields?.dateFormat ? selectedFields.dateFormat : '';
 
                   // нет настроек и ничего не надо устанавливать
-                  if ((!newUserColumnSettings || !newUserColumnSettings[columnName]) && oldDateFormat === newDateFormat) {
+                  if (!newUserColumnSettings?.columns?.[columnName] && oldDateFormat === newDateFormat) {
                     //
                   }
 
                   // нет настроек, но их надо установить
-                  else if ((!newUserColumnSettings || !newUserColumnSettings[columnName]) && oldDateFormat !== newDateFormat) {
+                  else if (!newUserColumnSettings?.columns?.[columnName] && oldDateFormat !== newDateFormat) {
                     if (!newUserColumnSettings) {
                       newUserColumnSettings = {};
                     }
-                    newUserColumnSettings = {...newUserColumnSettings, [columnName]: { dateFormat: newDateFormat }};
+                    newUserColumnSettings = {...newUserColumnSettings, columns: { ...newUserColumnSettings.columns, [columnName]: { dateFormat: newDateFormat }}};
                   }
 
                   // есть настройки, но их надо изменить
-                  else if (newUserColumnSettings && newUserColumnSettings[columnName] && oldDateFormat !== newDateFormat) {
-                    newUserColumnSettings = {...newUserColumnSettings,  [columnName]: {...newUserColumnSettings[columnName], dateFormat: newDateFormat}};
+                  else if (newUserColumnSettings?.columns?.[columnName] && oldDateFormat !== newDateFormat) {
+                    newUserColumnSettings = {...newUserColumnSettings, columns: {...newUserColumnSettings.columns, [columnName]: {...newUserColumnSettings.columns[columnName], dateFormat: newDateFormat}}};
                   }
 
                   // есть настройки, но их можно удалять
-                  else if (newUserColumnSettings && newUserColumnSettings[columnName] && oldDateFormat === newDateFormat) {
-                    const { dateFormat, ...noDateFormat } = newUserColumnSettings[columnName];
-                    newUserColumnSettings = {...newUserColumnSettings, [columnName]: noDateFormat};
+                  else if (newUserColumnSettings?.columns?.[columnName] && oldDateFormat === newDateFormat) {
+                    const { dateFormat, ...noDateFormat } = newUserColumnSettings.columns[columnName];
+                    newUserColumnSettings = {...newUserColumnSettings, columns: {[columnName]: noDateFormat}};
                   }
                 });
 

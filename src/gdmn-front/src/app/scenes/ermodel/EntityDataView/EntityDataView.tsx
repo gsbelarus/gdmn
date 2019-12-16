@@ -8,7 +8,7 @@ import { rsActions, TStatus, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { nlpTokenize, nlpParse, sentenceTemplates, text2Tokens } from 'gdmn-nlp';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IUserColumnsSettings } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from './useSavedGridState';
@@ -210,7 +210,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
-  const [userColumnsSettings, setUserColumnsSettings, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
+  const [userColumnsSettings, setColumnsSettings] = useSettings<IColumnsSettings | undefined>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
   const [{ phraseError, showSQL, queryState }, viewDispatch] = useReducer(reducer, { queryState: 'INITIAL' });
   const [phrase, setPhrase] = useState(rs && rs.queryPhrase
     ? rs.queryPhrase
@@ -637,9 +637,8 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           ref={ grid => grid && (gridRef.current = grid) }
           savedState={getSavedState()}
           colors={gridColors}
-          userColumnsSettings={userColumnsSettings}
-          onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettings(userSettings) }
-          onDelUserColumnsSettings={ () => delUserColumnSettings() }
+          columnsSettings={userColumnsSettings}
+          onSetColumnsSettings={ userSettings => userSettings ? setColumnsSettings(userSettings) : setColumnsSettings(undefined) }
         />
         : null
       }

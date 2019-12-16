@@ -30,18 +30,6 @@ export const setFixedTailColumns = createAction('GRID/SET_FIXED_TAIL_COLUMNS', r
 
 export type SetFixedTailColumns = typeof setFixedTailColumns;
 
-export const resizeColumn = createAction('GRID/RESIZE_COLUMN', resolve => {
-  return (params: WithComponentName<{ columnIndex: number; newWidth: number }>) => resolve(params);
-});
-
-export type ResizeColumn = typeof resizeColumn;
-
-export const columnMove = createAction('GRID/COLUMN_MOVE', resolve => {
-  return (params: WithComponentName<{ oldIndex: number; newIndex: number }>) => resolve(params);
-});
-
-export type ColumnMove = typeof columnMove;
-
 export const toggleColumn = createAction('GRID/TOGGLE_COLUMN', resolve => {
   return (params: WithComponentName<{ columnName: string }>) => resolve(params);
 });

@@ -6,8 +6,6 @@ import {
   TEventCallback,
   TCancelSortDialogEvent,
   TApplySortDialogEvent,
-  TColumnResizeEvent,
-  TColumnMoveEvent,
   TSelectRowEvent,
   TSelectAllRowsEvent,
   TSetCursorPosEvent,
@@ -21,8 +19,6 @@ export interface IRecordSetViewProps {
   grid: GridComponentState,
   onCancelSortDialog: TEventCallback<TCancelSortDialogEvent>;
   onApplySortDialog: TEventCallback<TApplySortDialogEvent>;
-  onColumnResize: TEventCallback<TColumnResizeEvent>;
-  onColumnMove: TEventCallback<TColumnMoveEvent>;
   onSelectRow: TEventCallback<TSelectRowEvent>;
   onSelectAllRows: TEventCallback<TSelectAllRowsEvent>;
   onSetCursorPos: TEventCallback<TSetCursorPosEvent>;

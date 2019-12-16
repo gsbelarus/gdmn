@@ -1,5 +1,5 @@
 import { Columns } from "./Grid";
-import { IUserColumnsSettings } from "./types";
+import { IColumnsSettings } from "./types";
 
 
 /**
@@ -9,11 +9,15 @@ import { IUserColumnsSettings } from "./types";
  *
  * Возвращаем объединенные настройки колонок, глобальные с настройками пользователя
  */
-export function applyUserSettings(columns: Columns, userSettings: IUserColumnsSettings): Columns {
+export function applyUserSettings(columns: Columns, userSettings: IColumnsSettings): Columns {
 
-  return columns.map(c => {
+  return columns.map((c, idx) => {
 
-    const userColumnSettings = userSettings[c.name];
+    if (!userSettings.columns) {
+      return c;
+    }
+
+    const userColumnSettings = userSettings.columns[c.name];
 
     if (!userColumnSettings) {
       return c;
@@ -32,5 +36,10 @@ export function applyUserSettings(columns: Columns, userSettings: IUserColumnsSe
         : f
       )
     };
-  });
+  })
+  .sort((a, b) => {
+    return userSettings.order
+      ? userSettings.order.findIndex(o => o === a.name) > userSettings.order.findIndex(o => o === b.name) ? 1 : -1
+      : 1
+    });
 }

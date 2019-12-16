@@ -146,45 +146,6 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
       }
     }
 
-    case getType(actions.resizeColumn): {
-      const { columns } = componentState;
-      const { columnIndex, newWidth } = action.payload;
-      const newColumns = [...columns];
-      const adjustedIndex = visibleToIndex(newColumns, columnIndex);
-      newColumns[adjustedIndex] = { ...newColumns[adjustedIndex], width: newWidth };
-      return {
-        ...state,
-        [componentName]: {
-          ...componentState,
-          columns: newColumns
-        }
-      };
-    }
-
-    case getType(actions.columnMove): {
-      const { columns, currentCol } = componentState;
-
-      const oldIndex = visibleToIndex(columns, action.payload.oldIndex);
-      const newIndex = visibleToIndex(columns, action.payload.newIndex);
-
-      if (newIndex !== oldIndex) {
-        const newColumns = [...columns];
-        const temp = newColumns[oldIndex];
-        newColumns[oldIndex] = newColumns[newIndex];
-        newColumns[newIndex] = temp;
-        return {
-          ...state,
-          [componentName]: {
-            ...componentState,
-            columns: newColumns,
-            currentCol: currentCol === oldIndex ? newIndex : currentCol
-          }
-        };
-      } else {
-        return state;
-      }
-    }
-
     case getType(actions.toggleColumn): {
       const { columns, leftSideColumns, rightSideColumns, currentCol } = componentState;
       const { columnName } = action.payload;

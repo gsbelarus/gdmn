@@ -1,4 +1,4 @@
-import { createGrid, deleteGrid, GDMNGrid } from 'gdmn-grid';
+import { createGrid, deleteGrid, GDMNGrid, IColumnsSettings } from 'gdmn-grid';
 import { IEntityInsertFieldInspector } from 'gdmn-orm';
 import { IDataRow, RecordSet, rsActions, TFieldType } from 'gdmn-recordset';
 import { List } from 'immutable';
@@ -54,7 +54,7 @@ type Action =
   | { type: 'SHOW_PARAMS'; showParams: boolean }
   | { type: 'SET_PLAN'; plan: string }
   | { type: 'SHOW_PLAN'; showPlan: boolean }
-  | { type: 'SHOW_HISTORY'; showHistory: boolean };
+  | { type: 'SHOW_HISTORY'; showHistory: boolean }
 
 function reducer(state: ISQLViewState, action: Action): ISQLViewState {
   switch (action.type) {
@@ -529,7 +529,12 @@ export const Sql = CSSModules(
             />
             <Text block>{state.plan}</Text>
           </div>
-          {rs && gcs && <GDMNGrid {...gcs} rs={rs} {...gridActions} colors={gridColors}/>}
+          {rs && gcs &&
+            <GDMNGrid
+            {...gcs}
+            rs={rs}
+            {...gridActions}
+            colors={gridColors}/>}
         </SplitView>
       </>
     );
