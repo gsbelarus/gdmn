@@ -2,7 +2,7 @@ import {IERModelView2Props} from "./ERModelView2.types";
 import React, {useCallback, useEffect, useState, useRef} from "react";
 import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
 import {List} from "immutable";
-import {createGrid, GDMNGrid, IUserColumnsSettings} from "gdmn-grid";
+import {createGrid, GDMNGrid, IColumnsSettings} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
 import {CommandBar, ICommandBarItemProps, TextField, getTheme} from "office-ui-fabric-react";
 import {bindGridActions} from "./utils";
@@ -11,7 +11,6 @@ import styles from './EntityDataView/styles.css';
 import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "./EntityDataView/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
-import { useSettings } from "@src/app/hooks/useSettings";
 import { ERModel } from "gdmn-orm";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
 
@@ -22,9 +21,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
   const [gridRefEntities, getSavedStateEntities] = useSaveGridState(dispatch, match.url, viewTab, 'entities');
   const [gridRefAttributes, getSavedStateAttributes] = useSaveGridState(dispatch, match.url, viewTab, 'attributes');
   const [MessageBox, messageBox] = useMessageBox();
-
-  const [userColumnsSettingsEntity, setUserColumnsSettingsEntity, delUserColumnSettingsEntity] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/entity' });
-  const [userColumnsSettingsAttr, setUserColumnsSettingsAttr, delUserColumnSettings] = useSettings<IUserColumnsSettings>({ type: 'GRID.v1', objectID: 'erModel/attr' });
 
   const getSavedEntitiesFilter = (): string => {
     if (viewTab && viewTab.sessionData && typeof(viewTab.sessionData.entitiesFilter) === 'string') {
@@ -399,9 +395,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             ref={ grid => grid && (gridRefEntities.current = grid) }
             savedState={getSavedStateEntities()}
             colors={gridColors}
-            userColumnsSettings={userColumnsSettingsEntity}
-            onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsEntity(userSettings) }
-            onDelUserColumnsSettings={ () => delUserColumnSettingsEntity() }
           />
         }
       </div>
@@ -435,9 +428,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             ref={ grid => grid && (gridRefAttributes.current = grid) }
             savedState={getSavedStateAttributes()}
             colors={gridColors}
-            userColumnsSettings={userColumnsSettingsAttr}
-            onSetUserColumnsSettings={ userSettings => userSettings && setUserColumnsSettingsAttr(userSettings) }
-            onDelUserColumnsSettings={ () => delUserColumnSettings() }
           />
         }
       </div>

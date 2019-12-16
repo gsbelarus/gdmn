@@ -9,12 +9,13 @@ import {
 } from 'office-ui-fabric-react';
 import { OptionsPanel } from "./OptionsPanel";
 import { Columns } from '../Grid';
-import { IUserColumnsSettings } from '../types';
+import { IColumnsSettings } from '../types';
 
 export interface IParamsPanelProps {
   columns: Columns;
-  onChanged: (userColumnsSettings: IUserColumnsSettings| undefined) => void;
-  userSettings?: IUserColumnsSettings;
+  onChanged: (userColumnsSettings: IColumnsSettings| undefined) => void;
+  userSettings?: IColumnsSettings;
+  initialColumnsWidth: number;
 }
 
 export interface IParamsField {
@@ -24,7 +25,7 @@ export interface IParamsField {
 }
 
 export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
-  const {columns, userSettings, onChanged} = props;
+  const {columns, userSettings, onChanged, initialColumnsWidth} = props;
 
   const columnsParams = [
     {
@@ -111,6 +112,7 @@ export const ParamsPanel = (props: IParamsPanelProps): JSX.Element => {
         onChanged={onChanged}
         userSettings={userSettings}
         selectedItems={selectedItems}
+        initialColumnsWidth={initialColumnsWidth}
       />
     </div>
   )

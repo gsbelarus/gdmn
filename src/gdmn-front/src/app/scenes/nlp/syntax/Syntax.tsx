@@ -3,7 +3,7 @@ import { useTab } from "@src/app/hooks/useTab";
 import React, { useReducer, useEffect } from "react";
 import { CommandBar, ComboBox, Stack, Checkbox } from "office-ui-fabric-react";
 import { Frame } from "../../gdmn/components/Frame";
-import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates } from "gdmn-nlp";
+import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates, text2Tokens } from "gdmn-nlp";
 import { NLPToken } from "./NLPToken";
 import { NLPSentence } from "./NLPSentence";
 import { ERTranslatorRU2, ICommand } from "gdmn-nlp-agent";
@@ -53,14 +53,16 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
   switch (action.type) {
     case 'SET_TEXT': {
-      const tokens = action.text ? nlpTokenize(action.text, state.processUniform) : [];
+      const tokens = action.text ? nlpTokenize(text2Tokens(action.text), state.processUniform) : [];
       const { translator } = state;
 
-      const parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
-      let command: ICommand[] = [];
       let errorMessage: string | undefined = undefined;
+      let parsed: IRusSentence[] = [];
+      let command: ICommand[] = [];
 
       try {
+        parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
+
         if (translator && parsed.length) {
           command = translator.process(parsed);
         }

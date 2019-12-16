@@ -6,7 +6,7 @@ import { addNLPItem } from './actions';
 import { ThunkDispatch } from 'redux-thunk';
 import { Dispatch } from 'redux';
 import { parsePhrase, ParsedText, RusPhrase } from 'gdmn-nlp';
-import { TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, TColumnResizeEvent, resizeColumn, GridAction, applySortDialog, TColumnMoveEvent, columnMove, TSelectRowEvent, TSelectAllRowsEvent, TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent } from 'gdmn-grid';
+import { TCancelSortDialogEvent, cancelSortDialog, TApplySortDialogEvent, GridAction, applySortDialog, TSelectRowEvent, TSelectAllRowsEvent, TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent } from 'gdmn-grid';
 import { RSAction, rsActions } from 'gdmn-recordset';
 import { ICommand } from 'gdmn-nlp-agent';
 import { ExecuteCommand } from '../engine/types';
@@ -27,12 +27,6 @@ export const ChatBoxContainer = connect(
         dispatch(rsActions.sortRecordSet({ name: event.rs.name, sortFields: event.sortFields }));
         event.ref.scrollIntoView(getState().recordSet[event.rs.name].currentRow);
       }
-    ),
-    onColumnResize: (event: TColumnResizeEvent) => dispatch(
-      resizeColumn({name: event.rs.name, columnIndex: event.columnIndex, newWidth: event.newWidth})
-    ),
-    onColumnMove: (event: TColumnMoveEvent) => dispatch(
-      columnMove({name: event.rs.name, oldIndex: event.oldIndex, newIndex: event.newIndex})
     ),
     onSelectRow: (event: TSelectRowEvent) => dispatch(
       rsActions.selectRow({name: event.rs.name, idx: event.idx, selected: event.selected})

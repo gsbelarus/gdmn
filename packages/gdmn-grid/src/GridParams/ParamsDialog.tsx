@@ -1,20 +1,21 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
 import { ParamsPanel } from './ParamsPanel';
 import { PrimaryButton } from 'office-ui-fabric-react';
 import { Columns } from '../Grid';
-import { IUserColumnsSettings } from '../types';
+import { IColumnsSettings } from '../types';
 
 interface IParamsDialogProps {
   onRevert: () => void;
-  onChanged: (userColunsSettings: IUserColumnsSettings | undefined) => void;
+  onChanged: (userColunsSettings: IColumnsSettings | undefined) => void;
   onDismiss: () => void;
   columns: Columns;
-  userSettings?: IUserColumnsSettings;
+  initialColumnsWidth: number;
+  userSettings?: IColumnsSettings;
 };
 
 export const ParamsDialog = (props: IParamsDialogProps): JSX.Element => {
-  const { onRevert, columns, onDismiss, userSettings, onChanged } = props;
+  const { onRevert, columns, onDismiss, userSettings, onChanged, initialColumnsWidth } = props;
 
   return (
     <div>
@@ -40,6 +41,7 @@ export const ParamsDialog = (props: IParamsDialogProps): JSX.Element => {
             columns={columns}
             onChanged={onChanged}
             userSettings={userSettings}
+            initialColumnsWidth={initialColumnsWidth}
           />
         </div>
       </Panel>

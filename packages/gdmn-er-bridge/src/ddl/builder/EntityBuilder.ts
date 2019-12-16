@@ -193,11 +193,11 @@ export class EntityBuilder extends Builder {
           const refPKName = setAttr.adapter ? setAttr.adapter.crossPk[1] :
             setTable ? Constants.DEFAULT_USR_PREFIX.concat(ddlUtils.stripUserPrefix(setTable)).concat("KEY") :
               Constants.DEFAULT_CROSS_PK_REF_NAME;
-          const setTablePk = setAttr.entities[0].hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ?
-             Constants.DEFAULT_INHERITED_KEY_NAME : Constants.DEFAULT_ID_NAME;
-
+          /*const setTablePk = setAttr.entities[0].hasOwnAttribute(c) ?
+             Constants.DEFAULT_INHERITED_KEY_NAME : setAttr.entities[0].hasOwnAttribute(Constants.DEFAULT_ID_NAME);*/
+          const setTablePk =  AdapterUtils.getPKFieldName(setAttr.entities[0], setTable);
           // create cross table
-          const fields: Array<IFieldProps & { attr?: Attribute }> = [];
+          const fields: Array<IFieldProps & { attr?: Attribute }> = []; 
           const pkFields: IFieldProps[] = [];
 
           const ownPKDomainName = Prefix.domain(await this.nextDDLUnique());
@@ -268,9 +268,9 @@ export class EntityBuilder extends Builder {
             setTable: setTable
           });
           const presLen = setAttr.presLen;
-          const triggerName = Constants.DEFAULT_USR_PREFIX.concat(Prefix.triggerBeforeInsert(relationName));
+          //const triggerName = Constants.DEFAULT_USR_PREFIX.concat(Prefix.triggerBeforeInsert(relationName));
           if (setAttr.isChar) {
-            await this.ddlHelper.addBICrossTrigger(triggerName, tableName, fieldName, setTable,
+            await this.ddlHelper.addBICrossTrigger(tableName, fieldName, setTable,
               crossField, relationName, ownPKName, refPKName, presLen, String(position), tablePk, setTablePk);
           }
 
