@@ -8,13 +8,13 @@ import { TFieldType } from 'gdmn-recordset';
 import { Columns } from '../Grid';
 import { applyUserSettings } from '../applyUserSettings';
 import { dateFormats, numberFormats } from "gdmn-internals";
-import { IUserColumnsSettings } from "../types";
+import { IColumnsSettings } from "../types";
 
 export interface IColumnFormatProps {
   columns: Columns;
-  userSettings?: IUserColumnsSettings;
+  userSettings?: IColumnsSettings;
   selectedItems: string[];
-  onChanged: (userColumnsSettings: IUserColumnsSettings| undefined) => void;
+  onChanged: (userColumnsSettings: IColumnsSettings| undefined) => void;
 }
 
 

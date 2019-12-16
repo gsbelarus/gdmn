@@ -9,12 +9,12 @@ import {
 } from 'office-ui-fabric-react';
 import { OptionsPanel } from "./OptionsPanel";
 import { Columns } from '../Grid';
-import { IUserColumnsSettings } from '../types';
+import { IColumnsSettings } from '../types';
 
 export interface IParamsPanelProps {
   columns: Columns;
-  onChanged: (userColumnsSettings: IUserColumnsSettings| undefined) => void;
-  userSettings?: IUserColumnsSettings;
+  onChanged: (userColumnsSettings: IColumnsSettings| undefined) => void;
+  userSettings?: IColumnsSettings;
   initialColumnsWidth: number;
 }
 

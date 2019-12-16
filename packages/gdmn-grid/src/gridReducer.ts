@@ -1,7 +1,6 @@
 import { Columns, visibleToIndex } from '.';
 import { ActionType, getType } from 'typesafe-actions';
 import * as actions from './gridActions';
-import { IUserColumnSetting } from './types';
 
 export type GridAction = ActionType<typeof actions>;
 
@@ -16,7 +15,6 @@ export interface GridComponentState {
   sortDialog: boolean;
   paramsDialog: boolean;
   searchIdx: number;
-  columnsSettings: IUserColumnSetting | undefined;
 }
 
 export interface GridReducerState {
@@ -49,8 +47,7 @@ export const gridReducer = (state: GridReducerState = {}, action: GridAction): G
         hideFooter,
         sortDialog: false,
         paramsDialog: false,
-        searchIdx: 0,
-        columnsSettings: undefined
+        searchIdx: 0
       }
     };
   }

@@ -7,14 +7,14 @@ import { Columns, getSettingsWithNewWidth } from '../Grid';
 import { applyUserSettings } from "../applyUserSettings";
 import { ColumnFormat } from "./ColumnFormat";
 import './ParamsPanel.css';
-import { IUserColumnsSettings } from "../types";
+import { IColumnsSettings } from "../types";
 
 export interface IOptionsPanelProps {
   columns: Columns;
-  userSettings?: IUserColumnsSettings;
+  userSettings?: IColumnsSettings;
   selectedItems: string[];
   initialColumnsWidth: number;
-  onChanged: (userColumnsSettings: IUserColumnsSettings| undefined) => void;
+  onChanged: (userColumnsSettings: IColumnsSettings| undefined) => void;
 }
 
 export interface IParamsField {

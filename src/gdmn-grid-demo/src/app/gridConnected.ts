@@ -10,9 +10,7 @@ import {
   TSetCursorPosEvent,
   TSortEvent,
   TToggleGroupEvent,
-  TRecordsetSetFieldValue,
-  IUserColumnsSettings,
-  IUserColumnSetting
+  TRecordsetSetFieldValue
 } from "gdmn-grid";
 import { connect } from "react-redux";
 import store, { State } from "../app/store";
@@ -49,8 +47,6 @@ export function connectGrid(name: string, rs: RecordSet, columns: Columns | unde
     rightSideColumns: 0,
     hideFooter: false
   }));
-
-  const columnsSettings: IUserColumnsSettings = {};
 
   return connect(
     (state: State) => {

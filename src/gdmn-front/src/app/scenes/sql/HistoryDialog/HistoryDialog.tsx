@@ -3,7 +3,7 @@ import {
   TSetCursorPosEvent,
   setCursorCol,
   deleteGrid,
-  IUserColumnsSettings
+  IColumnsSettings
 } from 'gdmn-grid';
 import { rsActions } from 'gdmn-recordset';
 import { TextField, Stack } from 'office-ui-fabric-react';
@@ -17,7 +17,7 @@ import { prepareDefaultEntityQuery } from 'gdmn-orm';
 
 interface IHistoryDialogState {
   expression: string;
-  columnsSettings?: IUserColumnsSettings;
+  columnsSettings?: IColumnsSettings;
 };
 
 export const HistoryDialog = (props: IHistoryProps) => {
@@ -78,9 +78,8 @@ export const HistoryDialog = (props: IHistoryProps) => {
                 columns={gcs.columns.filter(c => ['SQL_TEXT', 'EDITIONDATE'].includes(c.caption!.join(',')))}
                 rs={rs}
                 onSetCursorPos={handleGridSelect}
-                userColumnsSettings={columnsSettings}
-                onSetUserColumnsSettings={ columnsSettings => setState({ expression, columnsSettings }) }
-                onDelUserColumnsSettings={ () => setState({ expression }) }
+                columnsSettings={columnsSettings}
+                onSetColumnsSettings={ columnsSettings => setState({ expression, columnsSettings }) }
               />
             )}
           </div>
