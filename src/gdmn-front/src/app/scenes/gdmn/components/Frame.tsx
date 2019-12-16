@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import { getTheme, Label } from "office-ui-fabric-react";
 
 interface IFrameProps {
@@ -15,20 +15,23 @@ interface IFrameProps {
   children: ReactNode;
   readOnly?: boolean;
   caption?: string;
+  canMinimize?: boolean;
   onClick?: () => void;
 };
 
 export const Frame = (props: IFrameProps): JSX.Element => {
-  const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle, children, scroll, height, onClick, readOnly, caption } = props;
+  const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle,
+    children, scroll, height, onClick, readOnly, caption, canMinimize } = props;
   const ifMargin = (m?: boolean) => m ? '16px' : 'inherit';
   const ifBorder = (defPadding = '16px') => border ? defPadding : 'inherit';
+  const [minimized, setMinimized] = useState(false);
 
   const withMargin = (ch: ReactNode) => {
     return (
       <div
         style={{
           position: 'relative',
-          height,
+          height: minimized ? '24px' : height,
           marginLeft: ifMargin(marginLeft),
           marginTop: ifMargin(marginTop),
           marginRight: ifMargin(marginRight),
@@ -63,26 +66,57 @@ export const Frame = (props: IFrameProps): JSX.Element => {
                   paddingRight: '4px',
                   paddingBottom: '2px',
                   backgroundColor: getTheme().palette.themeLighter,
-                  color: getTheme().semanticColors.bodyText
+                  color: getTheme().semanticColors.bodyText,
+                  cursor: 'default'
                 }}
               >
                 {caption}
               </div>
           : undefined
         }
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            overflowY: scroll ? 'scroll' : 'hidden',
-            paddingLeft: ifBorder(),
-            paddingTop: ifBorder(subTitle ? '8px' : '16px'),
-            paddingRight: ifBorder(),
-            paddingBottom: ifBorder(),
-          }}
-        >
-          {ch}
-        </div>
+        {
+          canMinimize && border
+            ?
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '16px',
+                  top: '-10px',
+                  marginBottom: ifMargin(marginBottom),
+                  height: '22px',
+                  width: '22px',
+                  border: '1px solid ' + getTheme().palette.themeDark,
+                  borderRadius: '3px',
+                  paddingBottom: '2px',
+                  backgroundColor: getTheme().palette.themeLighter,
+                  color: getTheme().semanticColors.bodyText,
+                  cursor: 'default',
+                  textAlign: 'center'
+                }}
+                onClick={ () => setMinimized(!minimized) }
+              >
+                { minimized ? '🗔' : '_' }
+              </div>
+          : undefined
+        }
+        {
+          minimized
+          ? undefined
+          :
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                overflowY: scroll ? 'scroll' : 'hidden',
+                paddingLeft: ifBorder(),
+                paddingTop: ifBorder(subTitle ? '8px' : '16px'),
+                paddingRight: ifBorder(),
+                paddingBottom: ifBorder(),
+              }}
+            >
+              {ch}
+            </div>
+        }
       </div>
     );
   };

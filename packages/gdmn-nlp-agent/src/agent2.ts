@@ -18,9 +18,11 @@ import {
   EntityQueryOptions,
   ERModel,
   IEntityQueryWhereValue,
-  prepareDefaultEntityLinkFields
+  prepareDefaultEntityLinkFields,
+  Attribute
 } from "gdmn-orm";
 import {ICommand} from "./command";
+import { getLName } from "gdmn-internals";
 
 export class ERTranslatorRU2 {
 
@@ -85,6 +87,13 @@ export class ERTranslatorRU2 {
       : wt.token.image;
   }
 
+  /**
+   * Извлекает и возвращает существительное из фразы.
+   * Если, по указанному индексу нет слова или это слово
+   * не существительное -- генерирует исключение.
+   * @param phrase Фраза, из которой извлекается существительное.
+   * @param idx Индекс словоместа в фразе. Начинается с 0.
+   */
   private _getNoun(phrase: IRusSentencePhrase | undefined, idx: number) {
     if (phrase) {
       const wt = phrase.wordOrToken[idx];
@@ -98,11 +107,21 @@ export class ERTranslatorRU2 {
   }
 
   public process(sentences: IRusSentence[]): ICommand[] {
-    if (sentences[0].templateId === 'VPShowByPlace') {
-      return [this.processVPShowByPlace(sentences[0])];
-    } else {
+    let res: ICommand | undefined = undefined;
+
+    if (sentences[0]?.templateId === 'VPShowByPlace') {
+      res = this.processVPShowByPlace(sentences[0]);
+    }
+
+    if (sentences[1]?.templateId === 'VPSortBy' && res) {
+      res = this.processVPSortBy(sentences[1], res);
+    }
+
+    if (!res) {
       throw new Error(`Unsupported phrase type`);
     }
+
+    return [res];
   }
 
   /**
@@ -200,6 +219,39 @@ export class ERTranslatorRU2 {
    * в erModel или имя атрибута в модели.
    */
   public processVPSortBy(sentence: IRusSentence, command: ICommand): ICommand {
+    if (!command.payload.options) {
+      throw new Error('Invalid command');
+    }
+
+    const entity = command.payload.link.entity;
+    const getPhrase = this._getPhrase(sentence);
+
+    const byFieldPhrase = getPhrase('byField');
+    const noun = this._getNoun(byFieldPhrase, 1);
+    let foundAttr: Attribute | undefined = undefined;
+
+    for (const attr of Object.values(entity.attributes)) {
+      for (const name of getLName(attr.lName, ['ru']).split(',')) {
+        const tempWords = morphAnalyzer(name.trim());
+        if (tempWords.length && tempWords[0].lexeme === noun.lexeme) {
+          foundAttr = attr;
+          break;
+        }
+      }
+
+      if (foundAttr) {
+        break;
+      }
+    }
+
+    if (foundAttr) {
+      command.payload.options.addOrder({
+        alias: command.payload.link.alias,
+        attribute: foundAttr,
+        type: 'ASC'
+      });
+    }
+
     return command;
   }
 }

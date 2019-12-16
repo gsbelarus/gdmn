@@ -17,13 +17,14 @@ const predefinedPhrases = [
   'покажи 10 первых организаций',
   'покажи 10 первых организаций, банков из минска и пинска',
   'покажи все организации и банки из минска и пинска',
+  'покажи все организации и банки из минска и пинска. отсортируй по наименованию.',
   'покажи все организации, банки из минска, пинска',
   'покажи все организации из минска',
   'покажи все организации из минска или пинска',
   'покажи все организации из минска, пинска',
   'покажи сто двадцать пять организаций из минска',
   'покажи пятую организацию из минска',
-  'отсортируй по названию',
+  'отсортируй по наименованию',
   'покажи курсы на 10.10.2018',
   'покажи все TgdcUserDocument147134915_1757699501',
   'покажи пятьсот двадцать три  миллиарда шестьсот восемьдесят восемь миллионов триста тридцать тысяч сто сорок одну организацию',
@@ -211,14 +212,14 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
         }
         {
           parsed.map( sentence =>
-            <Frame key={sentence.templateId} marginTop border caption={sentence.templateId}>
+            <Frame key={sentence.templateId} marginTop border caption={sentence.templateId} canMinimize>
               <NLPSentence sentence={sentence} />
             </Frame>
           )
         }
         {
           command.length ?
-            <Frame border marginTop caption="Command" scroll height={'400px'}>
+            <Frame border marginTop caption="Command" scroll height={'400px'} canMinimize>
               <EQ eq={command[0].payload} />
             </Frame>
           :
@@ -226,7 +227,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
         }
         {
           sql ?
-            <Frame border marginTop caption="SQL" scroll height={'400px'}>
+            <Frame border marginTop caption="SQL" scroll height={'400px'} canMinimize>
               <pre>
                 {sql}
               </pre>
