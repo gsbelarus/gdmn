@@ -27,7 +27,7 @@ export interface IATRelationsInput {
 export interface IATRelationFieldsInput {
   fieldName: string;
   relationName: string;
-  fieldSource: string;
+  fieldSource?: string;
   lName?: string;
   description?: string;
   attrName?: string;
@@ -605,21 +605,23 @@ export class CachedStatements {
 
     if (!this._statements.updateATRelationField) {
       this._statements.updateATRelationField = await this.connection.prepare(this._transaction, `
-        UPDATE AT_RELATION_FIELDS
-        SET LNAME            = :lName,
-            DESCRIPTION      = :description,
-            ATTRNAME         = :attrName,
-            MASTERENTITYNAME = :masterEntityName,
-            SEMCATEGORY      = :semCategory,
-            CROSSTABLE       = :crossTable,
-            CROSSTABLEKEY    = IIF(:crossTable = NULL, NULL, (SELECT FIRST 1 ID
-                                                              FROM AT_RELATIONS
-                                                              WHERE RELATIONNAME = :crossTable)),
-            CROSSFIELD       = :crossField
-        WHERE FIELDNAME = :fieldName
+        UPDATE 
+          AT_RELATION_FIELDS
+        SET 
+          LNAME            = :lName,
+          DESCRIPTION      = :description,
+          ATTRNAME         = :attrName,
+          MASTERENTITYNAME = :masterEntityName,
+          SEMCATEGORY      = :semCategory,
+          CROSSTABLE       = :crossTable,
+          CROSSTABLEKEY    = IIF(:crossTable = NULL, NULL, (SELECT FIRST 1 ID
+                                                            FROM AT_RELATIONS
+                                                            WHERE RELATIONNAME = :crossTable)),
+          CROSSFIELD       = :crossField
+        WHERE 
+          FIELDNAME = :fieldName
           AND RELATIONNAME = :relationName
-          AND FIELDSOURCE = :fieldSource
-          RETURNING ID
+        RETURNING ID
       `);
     }
     const result = await this._statements.updateATRelationField.executeReturning({
@@ -627,7 +629,6 @@ export class CachedStatements {
       relationName: input.relationName,
       lName: input.lName || input.fieldName,
       description: input.description,
-      fieldSource: input.fieldSource,
       attrName: input.fieldName !== input.attrName ? input.attrName : undefined,
       masterEntityName: input.masterEntityName,
       semCategory: semCategories2Str(input.semCategory || []),

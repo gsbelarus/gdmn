@@ -19,6 +19,7 @@ import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
 import { ddlUtils } from "../utils";
+import { Lang, LName, ITName } from "gdmn-internals";
 
 export class EntityBuilder extends Builder {
 
@@ -314,9 +315,21 @@ export class EntityBuilder extends Builder {
   }
 
   public async updateAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr, attrData: IAttribute): Promise<Attr> {
-    /** На данный момент разрешаем изменять только атрибут: "lname" */
-    const attr = {...attribute, lName: attrData.lName};
-    return entity.update(attr);
+    /** На данный момент разрешаем изменять только свойство: "lname" */
+    Object.keys(attribute.lName).forEach((i: string) => attribute.lName[i as Lang] = attrData.lName[i as Lang]);
+    
+    switch (attribute.type) {
+      default:
+        const id = this.ddlHelper.cachedStatements.updateATRelationField({
+          fieldName: attribute.adapter!.field,
+          relationName: attribute.adapter!.relation,
+          lName: attribute.lName.ru?.name          
+        });
+            
+        console.log(`field id: ${id}`)
+    }
+
+    return entity.update(attribute);
   }
 
   public async deleteAttribute(entity: Entity, attribute: Attribute): Promise<void> {
