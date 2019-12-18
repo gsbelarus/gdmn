@@ -393,7 +393,9 @@ export function tokens2sentenceTokens(tokens: INLPToken[]): INLPToken[][] {
     if (token.tokenType === nlpPeriod) {
       newSentence = true;
     } else {
-      res[i].push(token);
+      if (res[i].length || (token.tokenType !== nlpWhiteSpace && token.tokenType !== nlpLineBreak)) {
+        res[i].push(token);
+      }
     }
   }
 

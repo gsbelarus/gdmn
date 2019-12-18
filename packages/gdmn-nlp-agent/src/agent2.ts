@@ -7,7 +7,12 @@ import {
   SemCategory,
   IRusSentence,
   nlpIDToken,
-  IRusSentencePhrase
+  IRusSentencePhrase,
+  text2Tokens,
+  tokens2sentenceTokens,
+  nlpTokenize,
+  sentenceTemplates,
+  nlpParse
 } from "gdmn-nlp";
 import {
   Entity,
@@ -28,6 +33,8 @@ export class ERTranslatorRU2 {
 
   readonly erModel: ERModel;
   readonly neMap: Map<NounLexeme, Entity[]>;
+
+  private _command?: ICommand;
 
   constructor(erModel: ERModel) {
     this.erModel = erModel;
@@ -54,6 +61,10 @@ export class ERTranslatorRU2 {
         })
       )
     );
+  }
+
+  get command() {
+    return this._command;
   }
 
   private _getPhrase(sentence: IRusSentence) {
@@ -106,22 +117,54 @@ export class ERTranslatorRU2 {
     throw new Error(`Unknown phrase structure`);
   }
 
-  public process(sentences: IRusSentence[]): ICommand[] {
-    let res: ICommand | undefined = undefined;
+  public clear() {
+    this._command = undefined;
+  }
 
-    if (sentences[0]?.templateId === 'VPShowByPlace') {
-      res = this.processVPShowByPlace(sentences[0]);
+  public process(sentence: IRusSentence): ICommand {
+    switch (sentence.templateId) {
+      case 'VPShowByPlace':
+        this._command = this.processVPShowByPlace(sentence);
+        break;
+
+      case 'VPSortBy':
+        this._command = this._command && this.processVPSortBy(sentence, this._command);
+        break;
     }
 
-    if (sentences[1]?.templateId === 'VPSortBy' && res) {
-      res = this.processVPSortBy(sentences[1], res);
-    }
-
-    if (!res) {
+    if (!this._command) {
       throw new Error(`Unsupported phrase type`);
     }
 
-    return [res];
+    return this._command;
+  }
+
+  public processText(text: string, processUniform = true): ICommand {
+    // весь текст разбиваем на токены
+    const tokens = text2Tokens(text);
+
+    // разбиваем на фразы используя точку как разделитель
+    const sentences = tokens2sentenceTokens(tokens).filter( s => s.length );
+
+    for (const sentence of sentences) {
+      // разбиваем на варианты, если некоторое слово может быть
+      // разными частями речи. преобразуем однородные части
+      // речи и превращаем числительные в значения
+      const variants = nlpTokenize(sentence, processUniform);
+
+      // TODO: пока обрабатываем только первый вариант
+      const parsed = nlpParse(variants[0], sentenceTemplates);
+
+      // TODO: обрабатываем только первый нашедшийся
+      // вариант разбора предложения
+      this.process(parsed[0]);
+    }
+
+    if (!this._command) {
+      throw new Error(`Unsupported phrase type`);
+    }
+
+    return this._command;
   }
 
   /**

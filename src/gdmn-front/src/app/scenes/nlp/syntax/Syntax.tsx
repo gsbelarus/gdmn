@@ -1,15 +1,16 @@
 import { ISyntaxProps } from "./Syntax.types";
 import { useTab } from "@src/app/hooks/useTab";
 import React, { useReducer, useEffect } from "react";
-import { CommandBar, ComboBox, Stack, Checkbox } from "office-ui-fabric-react";
+import { CommandBar, ComboBox, Stack, Checkbox, Label, getTheme } from "office-ui-fabric-react";
 import { Frame } from "../../gdmn/components/Frame";
-import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates, text2Tokens } from "gdmn-nlp";
+import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates, text2Tokens, tokens2sentenceTokens } from "gdmn-nlp";
 import { NLPToken } from "./NLPToken";
 import { NLPSentence } from "./NLPSentence";
-import { ERTranslatorRU2, ICommand } from "gdmn-nlp-agent";
+import { ERTranslatorRU2 } from "gdmn-nlp-agent";
 import { EQ } from "./EntityQuery";
 import { apiService } from "@src/app/services/apiService";
 import { IEntityQueryInspector } from "gdmn-orm";
+import * as H from 'history';
 
 const predefinedPhrases = [
   'название не содержит ООО',
@@ -17,10 +18,10 @@ const predefinedPhrases = [
   'покажи 10 первых организаций',
   'покажи 10 первых организаций, банков из минска и пинска',
   'покажи все организации и банки из минска и пинска',
-  'покажи все организации и банки из минска и пинска. отсортируй по наименованию.',
+  'покажи все организации и банки из минска и пинска',
   'покажи все организации, банки из минска, пинска',
   'покажи все организации из минска',
-  'покажи все организации из минска или пинска',
+  'покажи все организации из минска или пинска. отсортируй по наименованию.',
   'покажи все организации из минска, пинска',
   'покажи сто двадцать пять организаций из минска',
   'покажи пятую организацию из минска',
@@ -33,14 +34,66 @@ const predefinedPhrases = [
   'три доску',
 ];
 
-interface ISyntaxState {
-  text: string;
+interface ISentence {
   tokens: INLPToken[][];
   selectedTokensIdx: number;
   parsed: IRusSentence[];
-  translator?: ERTranslatorRU2;
-  command: ICommand[];
   errorMessage?: string;
+};
+
+interface ISentenceProps extends ISentence {
+  history: H.History;
+};
+
+function Sentence({ tokens, selectedTokensIdx, parsed, errorMessage, history }: ISentenceProps) {
+  return (
+    <>
+      {
+        errorMessage ?
+          <Label styles={{ root: { color: getTheme().palette.red } }}>
+            {errorMessage}
+          </Label>
+        :
+          undefined
+      }
+      {
+        tokens.map( (t, idx) =>
+          <Frame key={idx} marginTop border selected={idx === selectedTokensIdx} canMinimize>
+            <Stack
+              horizontal
+              wrap
+              tokens={{ childrenGap: '4px' }}
+              styles={{
+                root: { overflow: 'hidden' }
+              }}
+            >
+              {t.map( (w, idx) => <NLPToken key={idx} token={w} onClick={ () => history.push(`/spa/gdmn/morphology/${w.image}`) } /> )}
+            </Stack>
+          </Frame>
+        )
+      }
+      {
+        parsed.map( sentence =>
+          <Frame key={sentence.templateId} marginTop border caption={sentence.templateId} canMinimize>
+            <NLPSentence sentence={sentence} />
+          </Frame>
+        )
+      }
+    </>
+  )
+};
+
+interface ISyntaxState {
+  text: string;
+  /**
+   * Текст может состоять из предложений.
+   * Каждое предложение может иметь несколько вариантов
+   * если какое-нибудь слово может быть несколькими частями
+   * речи.
+   * Каждый вариант -- это последовательность токенов.
+   */
+  sentences: ISentence[];
+  translator?: ERTranslatorRU2;
   processUniform: boolean;
   sql?: string;
 };
@@ -54,33 +107,43 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
   switch (action.type) {
     case 'SET_TEXT': {
-      const tokens = action.text ? nlpTokenize(text2Tokens(action.text), state.processUniform) : [];
-      const { translator } = state;
+      const { translator, processUniform } = state;
+      const { text } = action;
+      const rawTokens = text ? text2Tokens(text) : undefined;
+      const sentenceTokens = rawTokens ? tokens2sentenceTokens(rawTokens) : [];
+      const sentences: ISentence[] = [];
 
-      let errorMessage: string | undefined = undefined;
-      let parsed: IRusSentence[] = [];
-      let command: ICommand[] = [];
-
-      try {
-        parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
-
-        if (translator && parsed.length) {
-          command = translator.process(parsed);
-        }
+      if (translator) {
+        translator.clear();
       }
-      catch (e) {
-        errorMessage = e.message;
+
+      for (const st of sentenceTokens) {
+        const tokens = nlpTokenize(st, processUniform);
+        let errorMessage: string | undefined = undefined;
+        let parsed: IRusSentence[] = [];
+        try {
+          parsed = nlpParse(tokens[0], sentenceTemplates);
+
+          if (translator) {
+            translator.process(parsed[0]);
+          }
+        }
+        catch (e) {
+          errorMessage = e.message;
+        }
+        sentences.push({
+          tokens,
+          selectedTokensIdx: 0,
+          parsed,
+          errorMessage
+        });
       }
 
       return {
         ...state,
-        text: action.text,
-        tokens,
-        selectedTokensIdx: 0,
-        parsed,
-        command,
-        sql: undefined,
-        errorMessage
+        text,
+        sentences,
+        sql: undefined
       };
     }
 
@@ -88,10 +151,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
       return {
         ...state,
         text: '',
-        tokens: [],
-        parsed: [],
-        command: [],
-        errorMessage: undefined,
+        sentences: [],
         sql: undefined,
         processUniform: !state.processUniform
       };
@@ -101,12 +161,9 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
       return {
         ...state,
         text: '',
-        tokens: [],
-        parsed: [],
+        sentences: [],
         translator: action.translator,
-        command: [],
-        sql: undefined,
-        errorMessage: undefined
+        sql: undefined
       };
     }
 
@@ -121,18 +178,16 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
 export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
-  const { viewTab, url, dispatch, theme, history, erModel } = props;
-  const [{ text, tokens, selectedTokensIdx, parsed, translator, command, errorMessage, processUniform, sql }, reactDispatch] = useReducer(reducer,
+  const { viewTab, url, dispatch, history, erModel } = props;
+  const [{ text, sentences, translator, processUniform, sql }, reactDispatch] = useReducer(reducer,
     {
       text: '',
-      tokens: [],
-      selectedTokensIdx: 0,
-      parsed: [],
+      sentences: [],
       translator: erModel && new ERTranslatorRU2(erModel),
-      command: [],
       processUniform: true
     }
   );
+  const command = translator?.command;
 
   useTab(viewTab, url, 'Syntax', true, dispatch);
 
@@ -143,8 +198,8 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
   }, [erModel, translator]);
 
   useEffect( () => {
-    if (command && command.length) {
-      const inspector = command[0].payload.inspect();
+    if (command) {
+      const inspector = command.payload.inspect();
       const query: IEntityQueryInspector = { ...inspector, options: { ...inspector.options, first: 1 } };
       apiService.query({ query })
       .then( res => {
@@ -179,7 +234,6 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
           allowFreeform
           autoComplete={'off'}
           options={predefinedPhrases.map( p => ({ key: p, text: p }) )}
-          errorMessage={erModel ? errorMessage : 'erModel isn\'t loaded'}
           onChange={
             (_event, option, _index, text) =>
               text
@@ -195,32 +249,12 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
           onChange={ () => reactDispatch({ type: 'TOGGLE_PROCESS_UNIFORM' }) }
         />
         {
-          tokens.map( (t, idx) =>
-            <Frame key={idx} marginTop border selected={idx === selectedTokensIdx}>
-              <Stack
-                horizontal
-                wrap
-                tokens={{ childrenGap: '4px' }}
-                styles={{
-                  root: { overflow: 'hidden' }
-                }}
-              >
-                {t.map( (w, idx) => <NLPToken key={idx} token={w} onClick={ () => history.push(`/spa/gdmn/morphology/${w.image}`) } /> )}
-              </Stack>
-            </Frame>
-          )
+          sentences.map( s => <Sentence {...{...s, history}} /> )
         }
         {
-          parsed.map( sentence =>
-            <Frame key={sentence.templateId} marginTop border caption={sentence.templateId} canMinimize>
-              <NLPSentence sentence={sentence} />
-            </Frame>
-          )
-        }
-        {
-          command.length ?
+          command ?
             <Frame border marginTop caption="Command" scroll height={'400px'} canMinimize>
-              <EQ eq={command[0].payload} />
+              <EQ eq={command.payload} />
             </Frame>
           :
             null
