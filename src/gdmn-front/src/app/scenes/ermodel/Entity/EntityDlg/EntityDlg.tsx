@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useReducer } from "react";
+import React, { useCallback, useEffect, useReducer, useMemo } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
 import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel, IEntityAttribute } from "gdmn-orm";
@@ -360,6 +360,14 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const [MessageBox, messageBox] = useMessageBox();
   const { entityData, changed, selectedAttr, errorLinks, initialData } = state;
 
+  const newAttributes = useMemo(() => {
+    if (!initialData || !entityData) return;
+
+    return initialData.attributes.filter(attr =>
+      !entityData.attributes.find(prevAttr => prevAttr.name === attr.name)
+    )
+  }, [initialData, entityData]);
+
   const deleteViewTab = () => { dispatch(gdmnActions.deleteViewTab({
     viewTabURL: url,
     locationPath: location.pathname,
@@ -408,8 +416,13 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
 
   const updateEntity = useCallback(async () => {
     if (!entityData || !erModel || !initialData) return;
-    // проверять всё кроме аттрибутов
-    if (JSON.stringify(initialData) === JSON.stringify(entityData)) return;
+    // проверять всё кроме атрибутов
+    const checkInitialData = {...initialData};
+    delete checkInitialData.attributes;
+    const checkEntityData = {...entityData};
+    delete checkEntityData.attributes;
+
+    if (JSON.stringify(checkInitialData) === JSON.stringify(checkEntityData)) return;
 
     const result = await apiService.updateEntity({
       ...entityData,
@@ -427,7 +440,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const addAtributes = useCallback(async () => {
     if (!entityData || !erModel || !initialData) return;
 
-    const attrList = entityData.attributes.filter((attr) => !initialData.attributes.find( prevAttr => prevAttr.name === attr.name));
+    const attrList = entityData.attributes.filter((attr) => !initialData.attributes.find(prevAttr => prevAttr.name === attr.name));
 
     for (const attr of attrList) {
       const result = await apiService.addAttribute({
@@ -447,7 +460,9 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const deleteAtributes = useCallback(async () => {
     if (!entityData || !erModel || !initialData) return;
 
-    const attrList = initialData.attributes.filter((attr) => !entityData || !entityData.attributes.find( prevAttr => prevAttr.name === attr.name));
+    const attrList = initialData.attributes.filter(attr =>
+      !entityData.attributes.find(prevAttr => prevAttr.name === attr.name)
+    );
 
     for (const attr of attrList) {
       const result = await apiService.deleteAttribute({
@@ -611,7 +626,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 value={entityData.name}
                 errorMessage={getErrorMessage(undefined, 'entityName', errorLinks)}
                 readOnly={!createEntity}
-                onChange={ (_, newValue) => {
+                onChange={(_, newValue) => {
                   if (newValue !== undefined) {
                     let name = newValue.toUpperCase();
                     if (!isUserDefined(name)) {
