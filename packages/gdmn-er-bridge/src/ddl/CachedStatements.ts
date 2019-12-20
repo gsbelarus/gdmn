@@ -11,7 +11,7 @@ export interface IATFieldsInput {
   setTable?: string;
   setListField?: string;
   setCondition?: string;
-  numeration?: Array<{ key: string | number, value: string }>;
+  numeration?: Array<{ key: string | number; value: string }>;
 }
 
 export interface IATRelationsInput {
@@ -118,7 +118,7 @@ export class CachedStatements {
   private readonly _connection: AConnection;
   private readonly _transaction: ATransaction;
   private _statements: IStatements = {};
-  private _disposed: boolean = false;
+  private _disposed = false;
 
   constructor(connection: AConnection, transaction: ATransaction) {
     this._connection = connection;

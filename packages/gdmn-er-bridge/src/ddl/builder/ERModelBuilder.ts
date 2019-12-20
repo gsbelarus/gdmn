@@ -6,16 +6,19 @@ import {
   ERModel,
   relationName2Adapter,
   Sequence,
-  SequenceAttribute
+  SequenceAttribute,
+  ISequence,
+  IEntity,
+  isIEntity
 } from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../Constants";
 import {DDLHelper, IFieldProps} from "../DDLHelper";
 import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
-import {DomainResolver} from "./DomainResolver";
 import {EntityBuilder} from "./EntityBuilder";
 import { ddlUtils } from "../utils";
+import { Lang } from "gdmn-internals";
 
 export class ERModelBuilder extends Builder {
 
@@ -104,8 +107,6 @@ export class ERModelBuilder extends Builder {
         const fieldName = AdapterUtils.getFieldName(pkAttr);
         const domainName = "DINTKEY"
         const domainProps = {notNull: true, type: 'INTEGER', check: 'CHECK (VALUE > 0)'};        
-        // const domainName = Prefix.domain(await this.nextDDLUnique());
-        // await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(pkAttr));
         await this.ddlHelper.addDomain(domainName, domainProps, false, true);
         await this._updateATAttr(pkAttr, {relationName: tableName, fieldName, domainName});
         fields.push({
@@ -226,16 +227,26 @@ export class ERModelBuilder extends Builder {
     }
   }
 
+
   /** Обновление сущности или Sequence */
-  public async update(erModel: ERModel, sequence: Sequence): Promise<void>;
-  public async update(erModel: ERModel, entity: Entity): Promise<void>;
-  public async update(erModel: ERModel, source: Sequence | Entity): Promise<void> {
+  public async update(erModel: ERModel, sequence: Sequence, data: ISequence): Promise<Sequence>;
+  public async update(erModel: ERModel, entity: Entity, data: IEntity): Promise<Entity>;
+  public async update(erModel: ERModel, source: Sequence | Entity, data: IEntity | ISequence): Promise<Entity | Sequence> {
     if (source instanceof Sequence) {
-      // TODO
-      throw new Error("Unsupported yet");
+      return erModel.update(source)
+    } else if (source instanceof Entity && isIEntity(data)) {
+      // Обновляем только поле lName  
+ 
+      Object.keys(source.lName).forEach((i: string) => source.lName[i as Lang] = data.lName[i as Lang]);
 
-    } else if (source instanceof Entity) {
+      await this.ddlHelper.cachedStatements.updateATRelations({        
+        relationName: source.adapter!.relation[0].relationName,
+        lName: source.lName.ru?.name          
+      });  
 
+      return erModel.update(source)
+    } else {
+      throw new Error("Unknown type of arg");
     }
   }
 

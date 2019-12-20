@@ -19,7 +19,7 @@ import {Prefix} from "../Prefix";
 import {Builder} from "./Builder";
 import {DomainResolver} from "./DomainResolver";
 import { ddlUtils } from "../utils";
-import { Lang, LName, ITName } from "gdmn-internals";
+import { Lang } from "gdmn-internals";
 
 export class EntityBuilder extends Builder {
 
@@ -317,16 +317,14 @@ export class EntityBuilder extends Builder {
   public async updateAttribute<Attr extends Attribute>(entity: Entity, attribute: Attr, attrData: IAttribute): Promise<Attr> {
     /** На данный момент разрешаем изменять только свойство: "lname" */
     Object.keys(attribute.lName).forEach((i: string) => attribute.lName[i as Lang] = attrData.lName[i as Lang]);
-    
+
     switch (attribute.type) {
       default:
-        const id = this.ddlHelper.cachedStatements.updateATRelationField({
+        await this.ddlHelper.cachedStatements.updateATRelationField({
           fieldName: attribute.adapter!.field,
           relationName: attribute.adapter!.relation,
           lName: attribute.lName.ru?.name          
         });
-            
-        console.log(`field id: ${id}`)
     }
 
     return entity.update(attribute);
@@ -341,13 +339,14 @@ export class EntityBuilder extends Builder {
         await this.ddlHelper.dropColumns(entity.name, [attribute.name]);
         break;
       case "Entity":
-      case "Parent":
+      case "Parent": {
         const arrFF = await this.ddlHelper.cachedStatements.getFK(attribute.adapter!.relation, attribute.adapter!.field);
         for await (const fk of arrFF) {
           await this.ddlHelper.dropConstraint(fk, attribute.adapter!.relation);
         }
         await this.ddlHelper.dropColumns(attribute.adapter!.relation, [attribute.adapter!.field]);
         break;
+      }
       default:
         await this.ddlHelper.dropColumns(attribute.adapter!.relation, [attribute.adapter!.field]);
     }

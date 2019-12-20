@@ -370,7 +370,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     if (!entityData || !erModel) return;
 
     if (createEntity) {
-      const result = await apiService.AddEntity({
+      const result = await apiService.addEntity({
         ...entityData,
         attributes: entityData.attributes
           .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
@@ -398,12 +398,31 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
       // 2. Обновляем изменённые атрибуты
       await updateAtributes();
       // 3. Сохраняем измения сущности
+      await updateEntity();
 
       close && deleteViewTab();
     }
 
     if (!close) dlgDispatch({ type: 'SET_ENTITY_DATA', entityData });
   }, [changed, entityData, createEntity, erModel]);
+
+  const updateEntity = useCallback(async () => {
+    if (!entityData || !erModel || !initialData) return;
+    // проверять всё кроме аттрибутов
+    if (JSON.stringify(initialData) === JSON.stringify(entityData)) return;
+
+    const result = await apiService.updateEntity({
+      ...entityData,
+    });
+
+    if (result.error) {
+      dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+      throw new Error(result.error.message);
+    }
+
+    dispatch(gdmnActionsAsync.apiGetSchema());
+  }, [entityData, erModel, initialData]);
+
 
   const addAtributes = useCallback(async () => {
     if (!entityData || !erModel || !initialData) return;
