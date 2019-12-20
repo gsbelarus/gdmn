@@ -17,8 +17,8 @@ import {
   BlobAttribute
 } from "gdmn-orm";
 import moment from "moment";
-import {Constants} from "../Constants";
-import {IDomainProps} from "../DDLHelper";
+import { Constants } from "../Constants";
+import { IDomainProps } from "../DDLHelper";
 
 export class DomainResolver {
 
@@ -122,7 +122,7 @@ export class DomainResolver {
   private static _getDefaultValue(attr: any): string {
     let expr = "";
     if (attr.defaultValue !== undefined) {
-      expr = `${DomainResolver._val2Str(attr, attr.defaultValue)}`;
+      expr = `${DomainResolver._defVal2Str(attr, attr.defaultValue)}`;
     }
     return expr;
   }
@@ -136,6 +136,30 @@ export class DomainResolver {
       case "TimeStamp":
         return DomainResolver._dateTime2Str(value);
       case "String":
+        return `'${value}'`;
+      case "Boolean":
+        return `${+value}`;
+      case "Enum":
+        return `'${value}'`;
+      default:
+        if (attr instanceof NumberAttribute) {
+          return `${value}`;
+        }
+        break;
+    }
+  }
+
+  private static _defVal2Str(attr: ScalarAttribute, value: any): string | undefined {
+    switch (attr.type) {
+      case "Date":
+        return DomainResolver._date2Str(value);
+      case "Time":
+        return DomainResolver._time2Str(value);
+      case "TimeStamp":
+        return DomainResolver._dateTime2Str(value);
+      case "String":
+      case "Numeric":
+      case "Float":
         return `'${value}'`;
       case "Boolean":
         return `${+value}`;
@@ -170,23 +194,26 @@ export class DomainResolver {
   }
 
   private static _date2Str(date: Date | ContextVariables): string {
-    if (date instanceof Date) {
-      return `'${moment(date).utc().format(Constants.DATE_TEMPLATE)}'`;
+    if (date === "CURRENT_DATE") {
+      return date;
     }
-    return date;
+    return `'${moment(date).utc().format(Constants.DATE_TEMPLATE)}'`;
   }
 
   private static _dateTime2Str(date: Date | ContextVariables): string {
-    if (date instanceof Date) {
-      return `'${moment(date).utc().format(Constants.TIMESTAMP_TEMPLATE)}'`;
+    if (date === "CURRENT_TIMESTAMP") {
+      return date;
     }
-    return date;
+    if (date === "CURRENT_TIMESTAMP(0)") {
+      return date;
+    }
+    return `'${moment(date).utc().format(Constants.TIMESTAMP_TEMPLATE)}'`;
   }
 
   private static _time2Str(date: Date | ContextVariables): string {
-    if (date instanceof Date) {
-      return `'${moment(date).utc().format(Constants.TIME_TEMPLATE)}'`;
+    if (date === "CURRENT_TIME") {
+      return date; 
     }
-    return date;
+    return `'${moment(date).utc().format(Constants.TIME_TEMPLATE)}'`;
   }
 }
