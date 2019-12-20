@@ -1,5 +1,4 @@
 export * from './components/form/PasswordInput';
-export * from './components/form/TextField';
 export * from './components/form/withField';
 export * from './components/ErrorBoundary';
 export * from './components/ProtectedRoute';

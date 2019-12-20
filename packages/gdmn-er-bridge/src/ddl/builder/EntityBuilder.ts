@@ -45,27 +45,31 @@ export class EntityBuilder extends Builder {
       // для системных полей определённые домены: ID: DINTKEY; LB: DLB; RB: DRB; PARENT: DPARENT; 
       let domainName;
       let domainProps;
+      let fieldProps;
       
       switch (fieldName) {               
         case Constants.DEFAULT_LB_NAME: 
           domainName = "DLB"
           domainProps = {default: '1', notNull: true, type: 'INTEGER'};
+          fieldProps ={name: fieldName, domain: domainName}
           break;        
 
         case Constants.DEFAULT_RB_NAME:
           domainName = "DRB"
           domainProps = {default: '2', notNull: true, type: 'INTEGER'};
+          fieldProps ={name: fieldName, domain: domainName}
           break;
       
         default:
           domainName = Prefix.domain(await this.nextDDLUnique());          
-          domainProps = DomainResolver.resolve(attribute)                    
+          domainProps = DomainResolver.resolve(attribute)   
+          fieldProps ={name: fieldName, domain: domainName, default: domainProps.default, notNull: domainProps.notNull }                 
           break;        
       }   
 
       await this.ddlHelper.addDomain(domainName, domainProps, false, true);
 
-      await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
+      await this.ddlHelper.addColumns(tableName, [fieldProps]);
       await this._updateATAttr(attribute, {relationName: tableName, fieldName, domainName});      
 
       if (attribute.type === "Sequence" && attribute instanceof SequenceAttribute) {

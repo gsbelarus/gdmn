@@ -6,7 +6,6 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { rsActions, TStatus, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
-import { nlpTokenize, nlpParse, sentenceTemplates, text2Tokens } from 'gdmn-nlp';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
 import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
@@ -223,27 +222,22 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     if (erModel && entity) {
       if (phrase) {
         try {
-          const tokens = nlpTokenize(text2Tokens(phrase), true);
-          const parsed = tokens.length ? nlpParse(tokens[0], sentenceTemplates) : [];
-          if (parsed.length) {
-            const erTranslatorRU = new ERTranslatorRU2(erModel)
-            const command = erTranslatorRU.process(parsed);
-            const eq = command[0] ? command[0].payload : undefined;
-            if (eq) {
-              if (masterLink && masterLink.detailAttribute && masterLink.value !== undefined) {
-                eq.addWhereCondition({
-                  equals: [{
-                    alias: eq.link.alias,
-                    attribute: masterLink.detailAttribute,
-                    value: masterLink.value
-                  }]
-                });
-              }
+          const erTranslatorRU = new ERTranslatorRU2(erModel)
+          const command = erTranslatorRU.processText(phrase);
+          const eq = command.payload;
 
-              viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
-              dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, masterLink }));
-            }
+          if (masterLink && masterLink.detailAttribute && masterLink.value !== undefined) {
+            eq.addWhereCondition({
+              equals: [{
+                alias: eq.link.alias,
+                attribute: masterLink.detailAttribute,
+                value: masterLink.value
+              }]
+            });
           }
+
+          viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
+          dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, masterLink }));
         }
         catch (e) {
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });

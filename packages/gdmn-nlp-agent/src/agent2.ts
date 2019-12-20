@@ -7,7 +7,12 @@ import {
   SemCategory,
   IRusSentence,
   nlpIDToken,
-  IRusSentencePhrase
+  IRusSentencePhrase,
+  text2Tokens,
+  tokens2sentenceTokens,
+  nlpTokenize,
+  sentenceTemplates,
+  nlpParse
 } from "gdmn-nlp";
 import {
   Entity,
@@ -18,14 +23,18 @@ import {
   EntityQueryOptions,
   ERModel,
   IEntityQueryWhereValue,
-  prepareDefaultEntityLinkFields
+  prepareDefaultEntityLinkFields,
+  Attribute
 } from "gdmn-orm";
 import {ICommand} from "./command";
+import { getLName } from "gdmn-internals";
 
 export class ERTranslatorRU2 {
 
   readonly erModel: ERModel;
   readonly neMap: Map<NounLexeme, Entity[]>;
+
+  private _command?: ICommand;
 
   constructor(erModel: ERModel) {
     this.erModel = erModel;
@@ -52,6 +61,10 @@ export class ERTranslatorRU2 {
         })
       )
     );
+  }
+
+  get command() {
+    return this._command;
   }
 
   private _getPhrase(sentence: IRusSentence) {
@@ -85,6 +98,13 @@ export class ERTranslatorRU2 {
       : wt.token.image;
   }
 
+  /**
+   * Извлекает и возвращает существительное из фразы.
+   * Если, по указанному индексу нет слова или это слово
+   * не существительное -- генерирует исключение.
+   * @param phrase Фраза, из которой извлекается существительное.
+   * @param idx Индекс словоместа в фразе. Начинается с 0.
+   */
   private _getNoun(phrase: IRusSentencePhrase | undefined, idx: number) {
     if (phrase) {
       const wt = phrase.wordOrToken[idx];
@@ -97,12 +117,54 @@ export class ERTranslatorRU2 {
     throw new Error(`Unknown phrase structure`);
   }
 
-  public process(sentences: IRusSentence[]): ICommand[] {
-    if (sentences[0].templateId === 'VPShowByPlace') {
-      return [this.processVPShowByPlace(sentences[0])];
-    } else {
+  public clear() {
+    this._command = undefined;
+  }
+
+  public process(sentence: IRusSentence): ICommand {
+    switch (sentence.templateId) {
+      case 'VPShowByPlace':
+        this._command = this.processVPShowByPlace(sentence);
+        break;
+
+      case 'VPSortBy':
+        this._command = this._command && this.processVPSortBy(sentence, this._command);
+        break;
+    }
+
+    if (!this._command) {
       throw new Error(`Unsupported phrase type`);
     }
+
+    return this._command;
+  }
+
+  public processText(text: string, processUniform = true): ICommand {
+    // весь текст разбиваем на токены
+    const tokens = text2Tokens(text);
+
+    // разбиваем на фразы используя точку как разделитель
+    const sentences = tokens2sentenceTokens(tokens).filter( s => s.length );
+
+    for (const sentence of sentences) {
+      // разбиваем на варианты, если некоторое слово может быть
+      // разными частями речи. преобразуем однородные части
+      // речи и превращаем числительные в значения
+      const variants = nlpTokenize(sentence, processUniform);
+
+      // TODO: пока обрабатываем только первый вариант
+      const parsed = nlpParse(variants[0], sentenceTemplates);
+
+      // TODO: обрабатываем только первый нашедшийся
+      // вариант разбора предложения
+      this.process(parsed[0]);
+    }
+
+    if (!this._command) {
+      throw new Error(`Unsupported phrase type`);
+    }
+
+    return this._command;
   }
 
   /**
@@ -200,6 +262,39 @@ export class ERTranslatorRU2 {
    * в erModel или имя атрибута в модели.
    */
   public processVPSortBy(sentence: IRusSentence, command: ICommand): ICommand {
+    if (!command.payload.options) {
+      throw new Error('Invalid command');
+    }
+
+    const entity = command.payload.link.entity;
+    const getPhrase = this._getPhrase(sentence);
+
+    const byFieldPhrase = getPhrase('byField');
+    const noun = this._getNoun(byFieldPhrase, 1);
+    let foundAttr: Attribute | undefined = undefined;
+
+    for (const attr of Object.values(entity.attributes)) {
+      for (const name of getLName(attr.lName, ['ru']).split(',')) {
+        const tempWords = morphAnalyzer(name.trim());
+        if (tempWords.length && tempWords[0].lexeme === noun.lexeme) {
+          foundAttr = attr;
+          break;
+        }
+      }
+
+      if (foundAttr) {
+        break;
+      }
+    }
+
+    if (foundAttr) {
+      command.payload.options.addOrder({
+        alias: command.payload.link.alias,
+        attribute: foundAttr,
+        type: 'ASC'
+      });
+    }
+
     return command;
   }
 }

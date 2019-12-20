@@ -49,6 +49,12 @@ const match = (token: INLPToken, srcElements: RusPhraseElement[]) => {
   }
 };
 
+/**
+ * Возвращает все возможные варианты разбора предложения
+ * в соответствии с заданными шаблонами.
+ * @param tokens Предложение для разбора.
+ * @param templates Набор шаблонов.
+ */
 export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[]): IRusSentence[] => {
   const res: IRusSentence[] = [];
 

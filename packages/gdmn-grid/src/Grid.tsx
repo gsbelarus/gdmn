@@ -114,9 +114,9 @@ export interface IGridState {
   fieldEditor: boolean;
   displayColumns: Columns;
   prevColumns: Columns;
-  prevColumnsSettings: IColumnsSettings | undefined;
-  deltaWidth: number;
   columnsSettings?: IColumnsSettings;
+  prevColumnsSettings?: IColumnsSettings;
+  deltaWidth: number;
 }
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
