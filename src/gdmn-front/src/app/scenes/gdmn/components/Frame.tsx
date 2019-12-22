@@ -22,8 +22,9 @@ interface IFrameProps {
 export const Frame = (props: IFrameProps): JSX.Element => {
   const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle,
     children, scroll, height, onClick, readOnly, caption, canMinimize } = props;
-  const ifMargin = (m?: boolean) => m ? '16px' : 'inherit';
-  const ifBorder = (defPadding = '16px') => border ? defPadding : 'inherit';
+  const defGap = '16px';
+  const ifMargin = (m?: boolean) => m ? defGap : 'inherit';
+  const ifBorder = (padding?: string) => border ? (padding ?? defGap) : 'inherit';
   const [minimized, setMinimized] = useState(false);
 
   const withMargin = (ch: ReactNode) => {
@@ -110,7 +111,7 @@ export const Frame = (props: IFrameProps): JSX.Element => {
                 overflowY: scroll ? 'scroll' : 'hidden',
                 paddingLeft: ifBorder(),
                 paddingTop: ifBorder(subTitle ? '8px' : '16px'),
-                paddingRight: ifBorder(),
+                paddingRight: scroll ? defGap : ifBorder(),
                 paddingBottom: ifBorder(),
               }}
             >

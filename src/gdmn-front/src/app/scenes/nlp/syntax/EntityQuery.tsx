@@ -50,7 +50,7 @@ const ELField = ({ f }: { f: EntityLinkField }) => {
 
 export const EQ = ({ eq }: { eq: EntityQuery }) => {
   return (
-    <>
+    <div>
       <div>
         {`${eq.link.alias} -- ${eq.link.entity.name}`}
       </div>
@@ -64,6 +64,6 @@ export const EQ = ({ eq }: { eq: EntityQuery }) => {
       <pre>
         {JSON.stringify(eq.inspect().options, undefined, 2)}
       </pre>
-    </>
+    </div>
   )
 };

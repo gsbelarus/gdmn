@@ -86,16 +86,31 @@ export class ERTranslatorRU2 {
     );
   }
 
-  private _getImage(phrase: IRusSentencePhrase | undefined, idx: number) {
+  private _findAttr(entity: Entity, noun: RusNoun) {
+    for (const attr of Object.values(entity.attributes)) {
+      for (const name of getLName(attr.lName, ['ru']).split(',')) {
+        const tempWords = morphAnalyzer(name.trim());
+        if (tempWords.length && tempWords[0].lexeme === noun.lexeme) {
+          return attr;
+        }
+      }
+    }
+  }
+
+  private _getImage(phrase: IRusSentencePhrase | undefined, idx: number, stripQuotes = false) {
     if (!phrase) {
       return 'phrase undefined';
     }
 
     const wt = phrase.wordOrToken[idx];
 
-    return wt.type === 'EMPTY'
+    const res = wt.type === 'EMPTY'
       ? 'EMPTY'
       : wt.token.image;
+
+    return stripQuotes && res.substring(0, 1) === '"' && res.substring(res.length - 1) === '"'
+      ? res.substring(1, res.length - 1)
+      : res;
   }
 
   /**
@@ -130,6 +145,10 @@ export class ERTranslatorRU2 {
       case 'VPSortBy':
         this._command = this._command && this.processVPSortBy(sentence, this._command);
         break;
+
+      case 'VPContains':
+        this._command = this._command && this.processVPContains(sentence, this._command);
+        break;
     }
 
     if (!this._command) {
@@ -143,7 +162,8 @@ export class ERTranslatorRU2 {
     // весь текст разбиваем на токены
     const tokens = text2Tokens(text);
 
-    // разбиваем на фразы используя точку как разделитель
+    // разбиваем на предложения используя точку как разделитель
+    // убираем пустые предложения
     const sentences = tokens2sentenceTokens(tokens).filter( s => s.length );
 
     for (const sentence of sentences) {
@@ -271,27 +291,42 @@ export class ERTranslatorRU2 {
 
     const byFieldPhrase = getPhrase('byField');
     const noun = this._getNoun(byFieldPhrase, 1);
-    let foundAttr: Attribute | undefined = undefined;
-
-    for (const attr of Object.values(entity.attributes)) {
-      for (const name of getLName(attr.lName, ['ru']).split(',')) {
-        const tempWords = morphAnalyzer(name.trim());
-        if (tempWords.length && tempWords[0].lexeme === noun.lexeme) {
-          foundAttr = attr;
-          break;
-        }
-      }
-
-      if (foundAttr) {
-        break;
-      }
-    }
+    const foundAttr = this._findAttr(entity, noun);
 
     if (foundAttr) {
       command.payload.options.addOrder({
         alias: command.payload.link.alias,
         attribute: foundAttr,
         type: 'ASC'
+      });
+    }
+
+    return command;
+  }
+
+  /**
+   * |subject   |predicate |value           |
+   *  Название   содержит   "строка"
+   */
+  public processVPContains(sentence: IRusSentence, command: ICommand): ICommand {
+    if (!command.payload.options) {
+      throw new Error('Invalid command');
+    }
+
+    const entity = command.payload.link.entity;
+    const getPhrase = this._getPhrase(sentence);
+
+    const subjectPhrase = getPhrase('subject');
+    const noun = this._getNoun(subjectPhrase, 0);
+    const foundAttr = this._findAttr(entity, noun);
+
+    if (foundAttr) {
+      command.payload.options.addWhereCondition({
+        contains: [{
+          alias: command.payload.link.alias,
+          attribute: foundAttr,
+          value: this._getImage(getPhrase('value'), 0, true)
+        }]
       });
     }
 
