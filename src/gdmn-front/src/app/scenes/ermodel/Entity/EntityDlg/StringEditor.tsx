@@ -5,14 +5,14 @@ import { getErrorMessage } from "./utils";
 import { NumberField } from "./NumberField";
 import { IAttributeEditorProps } from "./EntityAttribute";
 
-export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange, onError, onClearError }: IAttributeEditorProps<IStringAttribute>) =>
+export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange, createAttr, onError, onClearError }: IAttributeEditorProps<IStringAttribute>) =>
   <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
     <NumberField
       label="Min length:"
       onlyInteger
       noNegative
       value={attr.minLength}
-      readOnly={!userDefined}
+      readOnly={!userDefined || !createAttr}
       errorMessage={getErrorMessage(attrIdx, 'minLength', errorLinks)}
       width="180px"
       onChange={ minLength => { onChange({ ...attr, minLength }); onClearError && onClearError('minLength'); } }
@@ -23,7 +23,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       onlyInteger
       noNegative
       value={attr.maxLength}
-      readOnly={!userDefined}
+      readOnly={!userDefined || !createAttr}
       errorMessage={getErrorMessage(attrIdx, 'maxLength', errorLinks)}
       width="180px"
       onChange={ maxLength => { onChange({ ...attr, maxLength }); onClearError && onClearError('maxLength'); } }
@@ -33,6 +33,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       <Label>Auto trim:</Label>
       <Checkbox
         checked={attr.autoTrim}
+        disabled={!createAttr}
         styles={{
           root: {
             width: '64px'
@@ -46,7 +47,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
     <TextField
       label="Mask:"
       value={attr.mask ? attr.mask.source : ''}
-      readOnly={!userDefined}
+      readOnly={!userDefined || !createAttr}
       styles={{
         root: {
           width: '240px'
@@ -58,7 +59,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       <TextField
         label="Default value:"
         value={attr.defaultValue}
-        readOnly={!userDefined}
+        readOnly={!userDefined || !createAttr}
         onChange={ (_, defaultValue) => defaultValue !== undefined && onChange({ ...attr, defaultValue }) }
       />
     </Stack.Item>

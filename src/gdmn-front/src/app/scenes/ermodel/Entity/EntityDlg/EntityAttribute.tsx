@@ -69,7 +69,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           <TextField
             label="Name:"
             value={attr.name}
-            readOnly={!userDefined}
+            readOnly={!userDefined || !createAttr}
             autoFocus={selected}
             errorMessage={getErrorMessage(attrIdx, 'name', errorLinks)}
             styles={{
@@ -115,6 +115,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           <Stack.Item>
             <Label>Required:</Label>
             <Checkbox
+              disabled={!createAttr}
               checked={attr.required}
               styles={{
                 root: {
@@ -128,6 +129,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           </Stack.Item>
           <TextField
             label="Sem categories:"
+            readOnly={!createAttr}
             value={attr.semCategories}
             styles={{
               root: {

@@ -11,7 +11,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
       label="Min value:"
       onlyInteger={attr.type === 'Integer'}
       value={attr.minValue}
-      readOnly={!userDefined}
+      readOnly={!userDefined || !createAttr}
       errorMessage={getErrorMessage(attrIdx, 'minValue', errorLinks)}
       width="180px"
       onChange={ minValue => { onChange({ ...attr, minValue }); onClearError && onClearError('minValue'); } }
@@ -21,7 +21,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
       label="Max value:"
       onlyInteger={attr.type === 'Integer'}
       value={attr.maxValue}
-      readOnly={!userDefined}
+      readOnly={!userDefined || !createAttr}
       errorMessage={getErrorMessage(attrIdx, 'maxValue', errorLinks)}
       width="180px"
       onChange={ maxValue => { onChange({ ...attr, maxValue }); onClearError && onClearError('maxValue'); } }
@@ -57,7 +57,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
             onChange={
               createAttr ? (_, newValue) => newValue && onChange({ ...attr, scale: newValue.key as number }) : undefined
             }
-          /> 
+          />
         </>
       : null
     }
@@ -66,7 +66,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
         label="Default value:"
         onlyInteger={attr.type === 'Integer'}
         value={attr.defaultValue}
-        readOnly={!userDefined}
+        readOnly={!userDefined || !createAttr}
         errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
         onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
         onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }
