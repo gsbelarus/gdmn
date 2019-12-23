@@ -17,6 +17,7 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
 import Split from 'react-split';
+import { getLName } from 'gdmn-internals';
 
 /*
 
@@ -165,10 +166,12 @@ interface IEntityDataViewState {
   phraseError?: string;
   showSQL?: boolean;
   queryState: QueryState;
+  phrase?: string;
 };
 
 type Action = { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
+  | { type: 'SET_PHRASE', phrase?: string }
   | { type: 'SET_QUERY_STATE', queryState: QueryState };
 
 function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewState {
@@ -191,6 +194,16 @@ function reducer(state: IEntityDataViewState, action: Action): IEntityDataViewSt
       }
     }
 
+    case 'SET_PHRASE': {
+      const { phrase } = action;
+
+      return {
+        ...state,
+        phrase,
+        phraseError: undefined
+      }
+    }
+
     case 'SET_QUERY_STATE': {
       const { queryState } = action;
 
@@ -210,13 +223,14 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setColumnsSettings] = useSettings<IColumnsSettings | undefined>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
-  const [{ phraseError, showSQL, queryState }, viewDispatch] = useReducer(reducer, { queryState: 'INITIAL' });
-  const [phrase, setPhrase] = useState(rs && rs.queryPhrase
-    ? rs.queryPhrase
-    : entityName
-    ? `покажи все ${entityName}`
-    : ''
-  );
+  const [{ phraseError, showSQL, queryState, phrase }, viewDispatch] = useReducer(reducer, {
+    queryState: 'INITIAL',
+    phrase: rs?.queryPhrase
+      ? rs.queryPhrase
+      : entityName
+      ? `покажи все ${entityName}`
+      : undefined
+  });
 
   const applyPhrase = useCallback( (masterLink?: IMasterLink) => {
     if (erModel && entity) {
@@ -225,6 +239,11 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
           const erTranslatorRU = new ERTranslatorRU2(erModel)
           const command = erTranslatorRU.processText(phrase);
           const eq = command.payload;
+
+          if (eq.link.entity !== entity) {
+            viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: `В предложении должна использоваться сущность ${entity.name} (${getLName(entity.lName, ['ru'])}).` });
+            return;
+          }
 
           if (masterLink && masterLink.detailAttribute && masterLink.value !== undefined) {
             eq.addWhereCondition({
@@ -596,7 +615,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
             onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
           />
           <Stack.Item grow={1}>
-            <Stack horizontal verticalAlign="end">
+            <Stack horizontal verticalAlign="end" tokens={{ childrenGap: '8px' }}>
               <TextField
                 styles={{
                   root: {
@@ -605,7 +624,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
                 }}
                 label="Query:"
                 value={phrase}
-                onChange={ (_, newValue) => setPhrase(newValue ? newValue : '') }
+                onChange={ (_, phrase) => viewDispatch({ type: 'SET_PHRASE', phrase }) }
                 errorMessage={ phraseError ? phraseError : undefined }
               />
               <DefaultButton onClick={ () => applyPhrase() }>

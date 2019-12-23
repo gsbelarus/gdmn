@@ -11,6 +11,7 @@ import { EQ } from "./EntityQuery";
 import { apiService } from "@src/app/services/apiService";
 import { IEntityQueryInspector } from "gdmn-orm";
 import * as H from 'history';
+import { IRSSQLSelect } from "gdmn-recordset";
 
 const predefinedPhrases = [
   'название не содержит ООО',
@@ -18,10 +19,11 @@ const predefinedPhrases = [
   'покажи 10 первых организаций',
   'покажи 10 первых организаций, банков из минска и пинска',
   'покажи все организации и банки из минска и пинска',
-  'покажи все организации и банки из минска и пинска',
   'покажи все организации, банки из минска, пинска',
   'покажи все организации из минска',
   'покажи все организации из минска или пинска. отсортируй по наименованию.',
+  'покажи все организации из минска или пинска. отсортируй по наименованию. наименование содержит "ООО".',
+  'покажи все организации из минска или пинска. наименование содержит "ООО". отсортируй по наименованию.',
   'покажи все организации из минска, пинска',
   'покажи сто двадцать пять организаций из минска',
   'покажи пятую организацию из минска',
@@ -95,12 +97,12 @@ interface ISyntaxState {
   sentences: ISentence[];
   translator?: ERTranslatorRU2;
   processUniform: boolean;
-  sql?: string;
+  sql?: IRSSQLSelect;
 };
 
 type Action = { type: 'SET_TEXT', text: string }
   | { type: 'SET_TRANSLATOR', translator: ERTranslatorRU2 }
-  | { type: 'SET_SQL', sql: string }
+  | { type: 'SET_SQL', sql?: IRSSQLSelect }
   | { type: 'TOGGLE_PROCESS_UNIFORM' };
 
 function reducer(state: ISyntaxState, action: Action): ISyntaxState {
@@ -204,8 +206,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
       apiService.query({ query })
       .then( res => {
         if (res.payload && res.payload.result && !res.error) {
-          console.log(res.payload);
-          reactDispatch({ type: 'SET_SQL', sql: res.payload.result.info?.select });
+          reactDispatch({ type: 'SET_SQL', sql: res.payload.result.info });
         }
       });
     }
@@ -227,7 +228,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
       <CommandBar
         items={commandBarItems}
       />
-      <Frame marginLeft marginRight>
+      <Frame marginLeft marginRight marginBottom>
         <ComboBox
           label="Text"
           text={text}
@@ -248,23 +249,19 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
           checked={processUniform}
           onChange={ () => reactDispatch({ type: 'TOGGLE_PROCESS_UNIFORM' }) }
         />
+      </Frame>
+      <Frame scroll height='748px' marginLeft>
         {
-          sentences.map( s => <Sentence {...{...s, history}} /> )
+          sentences.map( (s, idx) => <Sentence key={idx} {...{...s, history}} /> )
         }
         {
-          command ?
-            <Frame border marginTop caption="Command" scroll height={'400px'} canMinimize>
-              <EQ eq={command.payload} />
-            </Frame>
-          :
-            null
-        }
-        {
-          sql ?
-            <Frame border marginTop caption="SQL" scroll height={'400px'} canMinimize>
-              <pre>
-                {sql}
-              </pre>
+          command || sql
+          ?
+            <Frame border marginTop caption="Command and SQL" canMinimize>
+              <Stack horizontal tokens={{ childrenGap: '8px' }}>
+                {command ? <EQ eq={command.payload} /> : null}
+                {sql ? <Stack><pre>{sql.select}</pre><pre>{JSON.stringify(sql.params, undefined, 2)}</pre></Stack> : null}
+              </Stack>
             </Frame>
           :
             null

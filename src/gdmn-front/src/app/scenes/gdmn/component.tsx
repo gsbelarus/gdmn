@@ -33,6 +33,7 @@ import { IMorphologyRouteProps } from '../nlp/morphology/Morphology.types';
 import { MorphologyContainer } from '../nlp/morphology/MorphologyContainer';
 import { ISyntaxRouteProps } from '../nlp/syntax/Syntax.types';
 import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
+import { ERModel } from 'gdmn-orm';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -43,6 +44,7 @@ export interface IGdmnViewProps extends RouteComponentProps<any> {
   application?: IApplicationInfo;
   theme: string;
   nlpDialog: NLPDialog;
+  erModel: ERModel;
 };
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
@@ -50,7 +52,7 @@ const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 //@CSSModules(styles, { allowMultiple: true })
 export function GdmnView (props: IGdmnViewProps) {
-  const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened, theme, nlpDialog } = props;
+  const { match, history, dispatch, loading, location, errorMessage, lostConnectWarnOpened, theme, nlpDialog, erModel } = props;
   if (!match) return null;
 
   const topAreaHeight = 56 + /* 36 + */ ((errorMessage && errorMessage.length > 0) ? 48 : 0) + (lostConnectWarnOpened ? 48 : 0);
@@ -185,8 +187,8 @@ export function GdmnView (props: IGdmnViewProps) {
           {importantMenu(commandToLink('applications', match.url), !!props.application)}
           {importantMenu(commandToLink('webStomp', match.url))}
           {importantMenu(commandToLink('bp', match.url))}
-          {importantMenu(commandToLink('erModel', match.url))}
-          {importantMenu(commandToLink('erModel2', match.url))}
+          {importantMenu(commandToLink('erModel', match.url), !erModel || !Object.keys(erModel.entities).length)}
+          {importantMenu(commandToLink('erModel2', match.url), !erModel || !Object.keys(erModel.entities).length)}
           {importantMenu(commandToLink('internals', match.url))}
           {importantMenu(commandToLink('sql', match.url))}
           <div className="RightSideHeaderPart">

@@ -44,8 +44,9 @@ export const NLPToken = ({ token, onClick }: INLPTokenProps) => {
       </div>
       {
         token.words &&
-        token.words.map( w =>
+        token.words.map( (w, idx) =>
           <div
+            key={idx}
             style={{
               border: '1px dotted ' + getTheme().palette.black,
               borderRadius: '2px',

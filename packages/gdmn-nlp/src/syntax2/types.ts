@@ -41,7 +41,7 @@ export interface IRusPhraseTemplate {
 };
 
 export interface IRusPhraseTemplateElement {
-  type: 'PHRASE' | 'WORD' | 'ID';
+  type: 'PHRASE' | 'WORD' | 'ID' | 'QUOTED_LITERAL';
 };
 
 export interface IRusSubPhraseTemplate extends IRusPhraseTemplateElement {
@@ -51,6 +51,11 @@ export interface IRusSubPhraseTemplate extends IRusPhraseTemplateElement {
 
 export interface IIdentifierTemplate extends IRusPhraseTemplateElement {
   type: 'ID';
+  image?: string;
+};
+
+export interface IQuotedLiteralTemplate extends IRusPhraseTemplateElement {
+  type: 'QUOTED_LITERAL';
   image?: string;
 };
 
@@ -88,6 +93,7 @@ export type RusWordTemplate = IRusNounTemplate
   | IRusPrepositionTemplate;
 
 export type RusPhraseElement = IIdentifierTemplate
+  | IQuotedLiteralTemplate
   | IRusSubPhraseTemplate
   | RusWordTemplate;
 

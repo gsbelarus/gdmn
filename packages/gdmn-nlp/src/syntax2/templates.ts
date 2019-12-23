@@ -27,6 +27,19 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
     ]
   },
 
+  'VERB_CONTAINS': {
+    id: 'VERB_CONTAINS',
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'VERB',
+          image: 'содержит'
+        }]
+      }
+    ]
+  },
+
   'QUALIFIED_ENTITY_NAME': {
     id: 'QUALIFIED_ENTITY_NAME',
     examples: ['все организации'],
@@ -98,6 +111,33 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
         }],
       }
     ]
+  },
+
+  'NOUN_SUBJECT_SING': {
+    id: 'NOUN_SUBJECT_SING',
+    examples: ['название'],
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'NOUN',
+          case: RusCase.Nomn,
+          number: 'SINGULAR',
+        }],
+      }
+    ]
+  },
+
+  'QUOTED_LITERAL': {
+    id: 'QUOTED_LITERAL',
+    examples: ['"некоторый текст"'],
+    elements: [
+      {
+        alt: [{
+          type: 'QUOTED_LITERAL'
+        }],
+      }
+    ]
   }
 };
 
@@ -145,6 +185,31 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
           template: phraseTemplates.BY_FIELD_TEMPLATE,
         }]
       },
+    ]
+  },
+  {
+    id: 'VPContains',
+    label: 'Глагольное предложение #3',
+    examples: ['Название содержит "некоторое_значение"'],
+    phrases: [
+      {
+        alt: [{
+          id: 'subject',
+          template: phraseTemplates.NOUN_SUBJECT_SING
+        }]
+      },
+      {
+        alt: [{
+          id: 'predicate',
+          template: phraseTemplates.VERB_CONTAINS,
+        }]
+      },
+      {
+        alt: [{
+          id: 'value',
+          template: phraseTemplates.QUOTED_LITERAL,
+        }]
+      }
     ]
   }
 ];

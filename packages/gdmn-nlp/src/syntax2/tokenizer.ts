@@ -30,6 +30,11 @@ export const nlpPunctuationMark: INLPTokenType = {
   pattern: /^[?!]/
 };
 
+export const nlpQuotedLiteral: INLPTokenType = {
+  name: 'QuotedLiteral',
+  pattern: /^\".+\"/
+};
+
 export const nlpCyrillicWord: INLPTokenType = {
   name: 'CyrillicWord',
   pattern: /^((?:[А-ЯЎІЁа-яўіё]+-[А-ЯЎІЁа-яўіё]+)|(?:[А-ЯЎІЁа-яўіё]+))/
@@ -55,11 +60,12 @@ const allTokens = [
   nlpCyrillicWord,
   nlpComma,
   nlpPeriod,
+  nlpPunctuationMark,
   nlpIDToken,
+  nlpQuotedLiteral,
   nlpLineBreak,
   nlpDateToken,
-  nlpNumber,
-  nlpPunctuationMark
+  nlpNumber
 ];
 
 const isUniformPOS = (w1: AnyWord, w2: AnyWord) => {

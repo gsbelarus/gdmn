@@ -89,4 +89,9 @@ test('nlpTokenizer2', () => {
   tokens = f('покажи все организации из Минска и Пинска');
   expect(tokens.length).toEqual(1);
   expect(tokens[0].length).toEqual(9);
+
+  tokens = f('название содержит "название"');
+  expect(tokens.length).toEqual(1);
+  expect(tokens[0].length).toEqual(5);
+  expect(tokens[0][4].tokenType!.name).toEqual('QuotedLiteral');
 });
