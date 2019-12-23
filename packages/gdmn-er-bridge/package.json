@@ -10,7 +10,9 @@
     "build": "tsc",
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
-    "test": "jest"
+    "test": "jest",
+    "prettier:cli": "prettier \"**/*.@(ts|tsx|js|jsx)\"",
+    "prettier:lint": "yarn run prettier:cli -l"
   },
   "repository": {
     "type": "git",
@@ -34,8 +36,13 @@
   "devDependencies": {
     "@types/jest": "^24",
     "@types/node": "^12",
+    "@typescript-eslint/eslint-plugin": "^2.12.0",
+    "@typescript-eslint/parser": "^2.12.0",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "jest": "^24",
     "jest-junit": "^10",
+    "prettier": "^1.19.1",
     "shx": "^0",
     "ts-jest": "^24",
     "typescript": "^3"

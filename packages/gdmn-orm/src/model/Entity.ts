@@ -185,6 +185,14 @@ export class Entity {
     attributes.forEach((attribute) => this.add(attribute));
   }
 
+  public update<T extends Attribute>(attribute: T): T {
+    if (!this.hasOwnAttribute(attribute.name)) {
+      throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
+    }
+    
+    return this._attributes[attribute.name] = attribute;
+  }
+
   public remove(attribute: Attribute): void {
     if (!this.hasOwnAttribute(attribute.name)) {
       throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);

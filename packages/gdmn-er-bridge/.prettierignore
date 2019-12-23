@@ -1,0 +1,5 @@
+*.json
+*.md
+packages/*/dist
+dist
+build

@@ -1,7 +1,6 @@
 import {Attribute, EntityUpdate, EntityUpdateField, IRelation, ScalarAttribute, TEntityUpdateFieldSet} from "gdmn-orm";
 import {AdapterUtils} from "../../AdapterUtils";
 import {DomainResolver} from "../../ddl/builder/DomainResolver";
-import {Constants} from "../../ddl/Constants";
 import {SQLTemplates} from "../query/SQLTemplates";
 
 export interface IParamsUpdate {

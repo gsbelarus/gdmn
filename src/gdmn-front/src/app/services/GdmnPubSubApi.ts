@@ -408,7 +408,7 @@ export class GdmnPubSubApi {
     });
   }
 
-  public AddEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.ADD_ENTITY]): Promise<TAddEntityTaskCmdResult> {
+  public addEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.ADD_ENTITY]): Promise<TAddEntityTaskCmdResult> {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.ADD_ENTITY,
@@ -417,7 +417,7 @@ export class GdmnPubSubApi {
     });
   }
 
-  public UpdateEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.UPDATE_ENTITY]): Promise<TUpdateEntityTaskCmdResult> {
+  public updateEntity(payload: TTaskActionPayloadTypes[TTaskActionNames.UPDATE_ENTITY]): Promise<TUpdateEntityTaskCmdResult> {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.UPDATE_ENTITY,

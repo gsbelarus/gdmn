@@ -115,6 +115,26 @@ export class ERModel {
     }
   }
 
+  public update(sequence: Sequence): Sequence;
+  public update(entity: Entity): Entity;
+  public update(source: Sequence | Entity): Sequence | Entity {
+    if (source instanceof Sequence) {
+      const sequence = source;
+      if (!this.has(sequence)) {
+        throw new Error(`Sequence ${sequence.name} not found`);
+      }
+      return this._sequencies[sequence.name] = source;
+    } else if (source instanceof Entity) {
+      const entity = source;
+      if (!this.has(entity)) {
+        throw new Error(`Entity ${entity.name} not found`);
+      }
+      return this._entities[entity.name] = source;
+    } else {
+      throw new Error("Unknown arg of type");
+    }
+  }
+
   public remove(sequence: Sequence): void;
   public remove(entity: Entity): void;
   public remove(source: Sequence | Entity): void {

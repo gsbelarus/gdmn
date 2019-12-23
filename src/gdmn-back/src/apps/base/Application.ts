@@ -457,40 +457,25 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const {name, parent, attributes, lName, isAbstract, adapter, semCategories, unique} = context.command.payload;
+        const {...entityData} = context.command.payload;
 
-        const entity = this.erModel.entity(name);
+        const entity = this.erModel.entity(entityData.name);
 
         if (!entity) {
           throw new Error("Entity is not found");
         }
-
-        // entity.attributes = attributes;
-        // const preEntity = new Entity({
-        //   parent: parent ? this.erModel.entity(parent) : undefined,
-        //   name,
-        //   lName,
-        //   adapter,
-        //   isAbstract,
-        //   unique,
-        //   semCategories: semCategories ? str2SemCategories(semCategories) : undefined
-        // });
-
-        // if (attributes) {
-        //   attributes.map(attr => EntityUtils.createAttribute(attr, this.erModel, undefined, preEntity)).map(attr => preEntity.add(attr));
-        // }
-
+        
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
             connection,
             transaction,
             callback: async ({erBuilder, eBuilder}) => {
-              await erBuilder.update(this.erModel, entity);
+              await erBuilder.update(this.erModel, entity, entityData);
             }
           })
         }));
-        return this.erModel.entity(name).serialize(true);
+        return this.erModel.entity(entityData.name).serialize(true);
       }
     });
     session.taskManager.add(task);
@@ -579,18 +564,18 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
 
         const {entityData, attrData} = context.command.payload;
-        // await context.session.executeConnection((connection) => AConnection.executeTransaction({
-        //   connection,
-        //   callback: (transaction) => ERBridge.executeSelf({
-        //     connection,
-        //     transaction,
-        //     callback: async ({erBuilder, eBuilder}) => {
-        //       const entity = this.erModel.entity(entityData.name);
-        //       const attribute = entity.attribute(attrData.name);
-        //       await erBuilder.eBuilder.deleteAttribute(entity, attribute);
-        //     }
-        //   })
-        // }));
+        await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async ({erBuilder, eBuilder}) => {
+              const entity = this.erModel.entity(entityData.name);
+              const attribute = entity.attribute(attrData.name);
+              await erBuilder.eBuilder.updateAttribute(entity, attribute, attrData);
+            }
+          })
+        }));
       }
     });
     session.taskManager.add(task);
