@@ -1527,6 +1527,7 @@
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '7a',
+    semMeanings: [{ semCategory: SemCategory.Name }],
   },
   {
     stem: 'возрастан',
@@ -1554,6 +1555,7 @@
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '7a',
+    semMeanings: [{ semCategory: SemCategory.Name }],
   },
   {
     stem: 'существ',
@@ -1803,10 +1805,10 @@
     stem1: 'имен',
     stem2: '',
     animate: false,
-    gender: RusGender.Femn,
-    declension: 1,
+    gender: RusGender.Neut,
+    declension: 2,
     declensionZ: '8°c',
-    semMeanings: '[{ semCategory: SemCategory.Name }]',
+    semMeanings: [{ semCategory: SemCategory.Name }],
   },
   {
     stem: 'яблок',

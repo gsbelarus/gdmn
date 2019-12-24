@@ -64,6 +64,26 @@ test('nlpParser2', () => {
   sentences = nlpParse(tokens[0], sentenceTemplates);
   expect(sentences.length).toEqual(1);
 
+  tokens = f('сортируй по названию');
+  expect(tokens.length).toEqual(1);
+  sentences = nlpParse(tokens[0], sentenceTemplates);
+  expect(sentences.length).toEqual(1);
+
+  tokens = f('сортируй по названию по убыванию');
+  expect(tokens.length).toEqual(1);
+  sentences = nlpParse(tokens[0], sentenceTemplates);
+  expect(sentences.length).toEqual(1);
+
+  tokens = f('сортируй по названию по возрастанию');
+  expect(tokens.length).toEqual(1);
+  sentences = nlpParse(tokens[0], sentenceTemplates);
+  expect(sentences.length).toEqual(1);
+
+  tokens = f('сортируй по названию по алфавиту');
+  expect(tokens.length).toEqual(1);
+  sentences = nlpParse(tokens[0], sentenceTemplates);
+  expect(sentences.length).toEqual(1);
+
   tokens = f('название содержит "значение"');
   expect(tokens.length).toEqual(1);
   sentences = nlpParse(tokens[0], sentenceTemplates);

@@ -1,4 +1,4 @@
-import { INLPToken, IRusSentenceTemplate, RusPhraseElement, RusNoun, RusVerb, IRusSentence, Word } from "..";
+import { INLPToken, IRusSentenceTemplate, RusPhraseElement, RusNoun, RusVerb, IRusSentence, Word, AnyWord } from "..";
 import { nlpWhiteSpace, nlpLineBreak, nlpCyrillicWord, nlpIDToken, nlpQuotedLiteral } from "./tokenizer";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
@@ -8,39 +8,50 @@ import { RusConjunction } from "../morphology/rusConjunction";
 const match = (token: INLPToken, srcElements: RusPhraseElement[]) => {
   switch (token.tokenType) {
     case nlpCyrillicWord: {
+
       for (const element of srcElements.filter( e => e.type === 'WORD' )) {
+        let res: AnyWord | undefined = undefined;
         const word = element as RusWordTemplate;
 
         switch (word.pos) {
           case 'NOUN':
-            return token.words && token.words.find(
+            res = token.words && token.words.find(
               w => w instanceof RusNoun
                 && (!word.image || word.image === w.getText())
                 && (word.case === undefined || word.case === w.grammCase)
                 && (word.number === undefined || (word.number === 'SINGULAR' && w.singular) || (word.number === 'PLURAL' && !w.singular))
             );
+            break;
 
           case 'VERB':
-            return token.words && token.words.find(
+            res = token.words && token.words.find(
               w => w instanceof RusVerb
                 && (!word.image || word.image === w.getText())
                 && (word.mood === undefined || word.mood === w.mood)
             );
+            break;
 
           case 'ADJF':
-            return token.words && token.words.find(
+            res = token.words && token.words.find(
               w => w instanceof RusAdjective
                 && (!word.image || word.image === w.getText())
                 && (word.case === undefined || word.case === w.grammCase)
             );
+            break;
 
           case 'PREP':
-            return token.words && token.words.find(
+            res = token.words && token.words.find(
               w => w instanceof RusPreposition
                 && (!word.image || word.image === w.getText())
             );
         }
+
+        if (res) {
+          return res;
+        }
       }
+
+      return undefined;
     }
 
     case nlpIDToken: {

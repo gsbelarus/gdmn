@@ -1,7 +1,5 @@
 import {
   morphAnalyzer,
-  Noun,
-  NounLexeme,
   RusCase,
   RusNoun,
   SemCategory,
@@ -23,44 +21,18 @@ import {
   EntityQueryOptions,
   ERModel,
   IEntityQueryWhereValue,
-  prepareDefaultEntityLinkFields,
-  Attribute
-} from "gdmn-orm";
+  prepareDefaultEntityLinkFields} from "gdmn-orm";
 import {ICommand} from "./command";
 import { getLName } from "gdmn-internals";
 
 export class ERTranslatorRU2 {
 
   readonly erModel: ERModel;
-  readonly neMap: Map<NounLexeme, Entity[]>;
 
   private _command?: ICommand;
 
   constructor(erModel: ERModel) {
     this.erModel = erModel;
-    this.neMap = new Map<NounLexeme, Entity[]>();
-
-    // TODO: this code executes too long
-    // move it out of constructor
-    // we should change logic that neMap initially is
-    // empty and filled upon successful search for
-    // given noun
-    Object.values(this.erModel.entities).forEach( e =>
-      e.lName.ru && e.lName.ru.name.split(",").forEach(n =>
-        morphAnalyzer(n.trim()).forEach(w => {
-          if (w instanceof Noun) {
-            const entities = this.neMap.get(w.lexeme);
-            if (!entities) {
-              this.neMap.set(w.lexeme, [e]);
-            } else {
-              if (!entities.find(f => f === e)) {
-                entities.push(e);
-              }
-            }
-          }
-        })
-      )
-    );
   }
 
   get command() {
@@ -78,20 +50,65 @@ export class ERTranslatorRU2 {
 
     const wt = phrase.wordOrToken[idx];
 
-    return (wt.type === 'WORD' && wt.word instanceof RusNoun
-      ? this.neMap.get((wt.word as RusNoun).lexeme)
+    return wt.type === 'WORD' && wt.word instanceof RusNoun
+      ? this._findEntity2(wt.word)
       : wt.type === 'TOKEN' && wt.token.tokenType === nlpIDToken && this.erModel.entities[wt.token.image]
-      ? [this.erModel.entities[wt.token.image]]
-      : undefined
-    );
+      ? this.erModel.entities[wt.token.image]
+      : undefined;
+  }
+
+  /**
+   * Поиск сущности в модели по заданному названию.
+   * @param noun
+   */
+  private _findEntity2(noun: RusNoun) {
+    const semMeanings = noun.lexeme.semMeanings;
+
+    for (const entity of Object.values(this.erModel.entities)) {
+      // сначала ищем по заданной в модели семантической категории
+      if (entity.semCategories.some( esc => semMeanings?.find( sm => sm.semCategory === esc ) )) {
+        return entity;
+      }
+
+      // затем по названию
+      for (const name of getLName(entity.lName, ['ru']).split(',')) {
+        const tempWord = morphAnalyzer(name.trim())[0];
+        if (tempWord) {
+          // сначала ищем по соответствию слова
+          if (tempWord.lexeme === noun.lexeme) {
+            return entity;
+          }
+
+          // потом по синонимам (словам с одинаковым значением)
+          if (tempWord.lexeme?.semMeanings?.some( ({ semCategory: c1 }) => semMeanings?.find( ({ semCategory: c2 }) => c1 === c2 ) )) {
+            return entity;
+          }
+        }
+      }
+    }
   }
 
   private _findAttr(entity: Entity, noun: RusNoun) {
+    const semMeanings = noun.lexeme.semMeanings;
+
     for (const attr of Object.values(entity.attributes)) {
+      // сначала ищем по заданной в модели семантической категории
+      if (attr.semCategories.some( asc => semMeanings?.find( sm => sm.semCategory === asc ) )) {
+        return attr;
+      }
+
       for (const name of getLName(attr.lName, ['ru']).split(',')) {
-        const tempWords = morphAnalyzer(name.trim());
-        if (tempWords.length && tempWords[0].lexeme === noun.lexeme) {
-          return attr;
+        const tempWord = morphAnalyzer(name.trim())[0];
+        if (tempWord) {
+          // сначала ищем по соответствию слова
+          if (tempWord.lexeme === noun.lexeme) {
+            return attr;
+          }
+
+          // потом по синонимам (словам с одинаковым значением)
+          if (tempWord.lexeme?.semMeanings?.some( ({ semCategory: c1 }) => semMeanings?.find( ({ semCategory: c2 }) => c1 === c2 ) )) {
+            return attr;
+          }
         }
       }
     }
@@ -207,17 +224,12 @@ export class ERTranslatorRU2 {
     const getPhrase = this._getPhrase(sentence);
 
     const entityPhrase = getPhrase('entity');
-    const entities = this._findEntity(entityPhrase, 1);
+    const entity = this._findEntity(entityPhrase, 1);
 
-    if (!entities) {
+    if (!entity) {
       throw new Error(`Can't find entity ${this._getImage(entityPhrase, 1)}`);
     }
 
-    if (entities.length > 1) {
-      throw new Error(`More than one entity in a query isn't supported.`);
-    }
-
-    const entity = entities[0];
     const fields = prepareDefaultEntityLinkFields(entity);
     let contains: IEntityQueryWhereValue[] | undefined = undefined;
 

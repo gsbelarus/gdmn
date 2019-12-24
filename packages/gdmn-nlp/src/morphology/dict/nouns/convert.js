@@ -18,7 +18,9 @@ const rusNounSemCategory = {
   'пинск': '[{ semCategory: SemCategory.Place }]',
   'организаци': '[{ semCategory: SemCategory.Organization }]',
   'школ': '[{ semCategory: SemCategory.Organization }]',
-  'им': '[{ semCategory: SemCategory.Name }]'
+  'им': '[{ semCategory: SemCategory.Name }]',
+  'назван': '[{ semCategory: SemCategory.Name }]',
+  'наименован': '[{ semCategory: SemCategory.Name }]'
 };
 
 const nouns = rawFile.replace(/́/g, '').split('{{ШаблонДемо').reduce( (p, s, idx) => {

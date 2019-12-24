@@ -145,7 +145,6 @@ export const rusNouns: IRusNoun[] = [
 
 
   /* extracted from wikidictionary */
-
   {
     stem: 'ветеринар',
     stem1: '',
@@ -1675,6 +1674,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '7a',
+    semMeanings: [{ semCategory: SemCategory.Name }],
   },
   {
     stem: 'возрастан',
@@ -1702,6 +1702,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '7a',
+    semMeanings: [{ semCategory: SemCategory.Name }],
   },
   {
     stem: 'существ',
@@ -1951,10 +1952,10 @@ export const rusNouns: IRusNoun[] = [
     stem1: 'имен',
     stem2: '',
     animate: false,
-    gender: RusGender.Femn,
-    declension: 1,
+    gender: RusGender.Neut,
+    declension: 2,
     declensionZ: '8°c',
-    semMeanings: [{ semCategory: SemCategory.Name }]
+    semMeanings: [{ semCategory: SemCategory.Name }],
   },
   {
     stem: 'яблок',

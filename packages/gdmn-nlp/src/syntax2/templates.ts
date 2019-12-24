@@ -18,11 +18,18 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
     id: 'VERB_SORT',
     elements: [
       {
-        alt: [{
-          type: 'WORD',
-          pos: 'VERB',
-          image: 'отсортируй'
-        }]
+        alt: [
+          {
+            type: 'WORD',
+            pos: 'VERB',
+            image: 'отсортируй'
+          },
+          {
+            type: 'WORD',
+            pos: 'VERB',
+            image: 'сортируй'
+          },
+        ]
       }
     ]
   },
@@ -113,6 +120,39 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
     ]
   },
 
+  'SORT_ORDER_TEMPLATE': {
+    id: 'SORT_ORDER_TEMPLATE',
+    examples: ['по возрастанию', 'по убыванию'],
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'PREP',
+          image: 'по'
+        }],
+      },
+      {
+        alt: [
+          {
+            type: 'WORD',
+            pos: 'NOUN',
+            image: 'возрастанию'
+          },
+          {
+            type: 'WORD',
+            pos: 'NOUN',
+            image: 'убыванию'
+          },
+          {
+            type: 'WORD',
+            pos: 'NOUN',
+            image: 'алфавиту'
+          },
+        ],
+      }
+    ]
+  },
+
   'NOUN_SUBJECT_SING': {
     id: 'NOUN_SUBJECT_SING',
     examples: ['название'],
@@ -171,7 +211,7 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
   {
     id: 'VPSortBy',
     label: 'Глагольное предложение #2',
-    examples: ['Отсортируй по названию'],
+    examples: ['Отсортируй по названию', 'Сортируй по названию'],
     phrases: [
       {
         alt: [{
@@ -184,6 +224,13 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
           id: 'byField',
           template: phraseTemplates.BY_FIELD_TEMPLATE,
         }]
+      },
+      {
+        alt: [{
+          id: 'sortOrder',
+          template: phraseTemplates.SORT_ORDER_TEMPLATE,
+        }],
+        optional: true
       },
     ]
   },
