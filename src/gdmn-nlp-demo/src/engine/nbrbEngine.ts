@@ -32,7 +32,8 @@ export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RSAction
 
   return (
     fetch(`http://www.nbrb.by/API/ExRates/Rates?onDate=${year.toString()}-${month.toString()}-${day.toString()}&Periodicity=0`)
-    .then( response => response.json() as IJSONResult )
+    .then( response => response.json() )
+    .then( responseJson => responseJson as JSONResult )
     .then( responseJson => {
       const rs = RecordSet.create({
         name,
@@ -69,11 +70,11 @@ export const executeCommand: ExecuteCommand = async (dispatch: Dispatch<RSAction
   );
 };
 
-interface IJSONResult {
+type JSONResult = {
   [name: string]: any
 }[];
 
-const jsonResult2fieldDefs = (_query: EntityQuery, res: IJSONResult): IFieldDef[] => {
+const jsonResult2fieldDefs = (_query: EntityQuery, res: JSONResult): IFieldDef[] => {
   if (!res.length) return [];
 
   return Object.keys(res[0]).map( key => {
@@ -85,6 +86,3 @@ const jsonResult2fieldDefs = (_query: EntityQuery, res: IJSONResult): IFieldDef[
     };
   });
 };
-
-
-

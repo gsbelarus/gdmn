@@ -1,8 +1,7 @@
 import { morphAnalyzer } from "../../morphology/morphAnalyzer";
-import { SemContext } from '../types';
 import { hasMeaning } from '../rusVerbSynonyms';
 import { RusVerb } from "../../morphology/rusVerb";
-import { semCategoryNames, str2SemCategory, semCategory2Str } from "../categories";
+import { semCategoryNames, str2SemCategory, semCategory2Str, SemContext } from "../categories";
 
 describe('синонимы', () => {
   test("синонимы для слова покажи", () => {

@@ -1,5 +1,5 @@
-import { SemContext } from "./types";
 import { RusVerbLexeme, RusVerbLexemes, RusVerb } from "../morphology/rusVerb";
+import { SemContext } from "./categories";
 
 function v(word: string): RusVerbLexeme {
   const found = RusVerbLexemes.find( l => l.matchStems(word) );

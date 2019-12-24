@@ -151,7 +151,7 @@ export class ERTranslatorRU {
           first = adjective.quantity;
         } else if ((adjective.lexeme as RusAdjectiveLexeme).category === RusAdjectiveCategory.Rel) {
           const nounLexeme = (adjective.lexeme as RusAdjectiveLexeme).getNounLexeme();
-          if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
+          if (nounLexeme && nounLexeme.semMeanings?.find( sm => sm.semCategory === SemCategory.Place )) {
             const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
             const words = nounLexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
             if (attr instanceof EntityAttribute) {
@@ -240,7 +240,7 @@ export class ERTranslatorRU {
         const preposition = (np.pp as RusPP).prep;
         if ((preposition.lexeme as RusPrepositionLexeme).prepositionType === PrepositionType.Place) {
           const nounLexeme = (np.pp as RusPP).noun.lexeme;
-          if (nounLexeme && nounLexeme.semCategories.find(sc => sc === SemCategory.Place)) {
+          if (nounLexeme && nounLexeme.semMeanings?.find( sm => sm.semCategory === SemCategory.Place )) {
             const attr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
             if (hsm instanceof RusHmNouns) {
               hsm.items.map(item => {

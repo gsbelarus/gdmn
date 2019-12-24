@@ -1799,6 +1799,16 @@
     declensionZ: '8°c',
   },
   {
+    stem: 'им',
+    stem1: 'имен',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Femn,
+    declension: 1,
+    declensionZ: '8°c',
+    semMeanings: '[{ semCategory: SemCategory.Name }]',
+  },
+  {
     stem: 'яблок',
     stem1: '',
     stem2: '',

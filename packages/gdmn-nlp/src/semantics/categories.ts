@@ -1,3 +1,9 @@
+/**
+ * Семантические категории мы используем для присвоения
+ * некоторого смысла (значения) слову. Некоторые слова
+ * в разных контекстах могут иметь разный смысл.
+ * Слова с одинаковым смыслом являются синонимами.
+ */
 export enum SemCategory {
   /**
    * Место расположения объекта в пространстве (географическое).
@@ -12,18 +18,34 @@ export enum SemCategory {
   /**
    * Любая организация. Коммерческая, некомерческая,
    * правительственное учреждение, школа, университет и т.п.
+   * Юридическое лицо.
    */
   Organization,
 
   /**
-   * Компания. Коммерческая организация.
+   * Коммерческая организация. Юридическое лицо.
    */
   Company,
 
   /**
-   * Дата 
+   * Дата
    */
-  Date
+  Date,
+
+  /**
+   * Имя, название, наименование.
+   */
+  Name
+};
+
+export enum SemContext {
+  Common = 0,
+  QueryDB
+};
+
+export interface ISemMeaning {
+  semCategory: SemCategory;
+  semContext?: SemContext;
 };
 
 export const semCategoryNames = [
@@ -31,7 +53,8 @@ export const semCategoryNames = [
   'place',
   'organization',
   'company',
-  'date'
+  'date',
+  'name'
 ];
 
 export function semCategory2Str(cat: SemCategory): string {

@@ -1,6 +1,6 @@
 import { getType, ActionType } from 'typesafe-actions';
 import * as actions from './actions';
-import { ERModel, IERModel } from 'gdmn-orm';
+import { ERModel } from 'gdmn-orm';
 import { ICommand, ERTranslatorRU } from 'gdmn-nlp-agent';
 import { ExecuteCommand } from '../engine/types';
 

@@ -1,4 +1,3 @@
-import { ThunkDispatch } from "redux-thunk";
 import { State } from "../store";
 import { RSAction, rsActions, RecordSet, IDataRow, TFieldType, IFieldDef } from "gdmn-recordset";
 import { GridAction, deleteGrid, createGrid } from "gdmn-grid";
@@ -107,8 +106,3 @@ const sqlResult2fieldDefs = (query: EntityQuery, res: IEntityQueryResponse): IFi
     return {fieldName: alias, dataType, size, caption, eqfa};
   });
 };
-
-
-
-
-

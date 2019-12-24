@@ -168,7 +168,7 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
   }, []);
 
   const getCategoryWords = useCallback( (w: AnyWord) => {
-    return w.lexeme.semCategories.length
+    return w.lexeme.semMeanings?.length
       ?
         <Stack
           horizontal
@@ -180,8 +180,8 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
             }
           }}
         >
-          {w.lexeme.semCategories.map(
-            (c, idx) =>
+          {w.lexeme.semMeanings?.map(
+            ({ semCategory }, idx) =>
               <span
                 key={idx}
                 style={{
@@ -190,7 +190,7 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
                   color: getTheme().palette.white
                 }}
               >
-                {semCategory2Str(c)}
+                {semCategory2Str(semCategory)}
               </span>
           )}
         </Stack>
@@ -676,9 +676,9 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
                 key={`${l.word}${idx}`}
                 text={l.word}
                 onRenderText={
-                  l.lexeme.semCategories.length
+                  l.lexeme.semMeanings?.length
                 ? () => {
-                    return <>{l.word}<sup>{l.lexeme.semCategories.length}</sup></>;
+                    return <>{l.word}<sup>{l.lexeme.semMeanings?.length}</sup></>;
                   }
                   : undefined
                 }

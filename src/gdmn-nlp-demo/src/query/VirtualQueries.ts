@@ -97,7 +97,7 @@ export class VirtualQueries {
 
     link.fields
       .filter((field) => !field.links)
-      .map((field) => {
+      .forEach((field) => {
         const attribute = field.attribute as ScalarAttribute;
         if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
           queryToTree = VirtualQueries._makeVirtualFields(queryToTree, attribute.adapter!.field);
@@ -109,7 +109,7 @@ export class VirtualQueries {
         for (const link of field.links) {
           link.fields
             .filter((field) => !field.links)
-            .map((field) => {
+            .forEach((field) => {
               const attribute = field.attribute as ScalarAttribute;
               if (!link.entity.isIntervalTree && link.entity.isTree && queryToTree) {
                 queryToTree = VirtualQueries._makeVirtualFields(queryToTree, attribute.adapter!.field);
@@ -152,7 +152,7 @@ export class VirtualQueries {
 
     link.fields
       .filter((field) => !field.links)
-      .map((field) => {
+      .forEach((field) => {
         const attribute = field.attribute as ScalarAttribute;
         if (!link.entity.isIntervalTree && link.entity.isTree && query) {
           query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
@@ -164,7 +164,7 @@ export class VirtualQueries {
         for (const link of field.links) {
           link.fields
             .filter((field) => !field.links)
-            .map((field) => {
+            .forEach((field) => {
               const attribute = field.attribute as ScalarAttribute;
               if (!link.entity.isIntervalTree && link.entity.isTree && query) {
                 query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
@@ -212,7 +212,7 @@ export class VirtualQueries {
 
     link.fields
       .filter((field) => !field.links)
-      .map((field) => {
+      .forEach((field) => {
         const attribute = field.attribute as ScalarAttribute;
         if (!link.entity.isIntervalTree && link.entity.isTree && query) {
           query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);
@@ -224,7 +224,7 @@ export class VirtualQueries {
         for (const link of field.links) {
           link.fields
             .filter((field) => !field.links)
-            .map((field) => {
+            .forEach((field) => {
               const attribute = field.attribute as ScalarAttribute;
               if (!link.entity.isIntervalTree && link.entity.isTree && query) {
                 query = VirtualQueries._makeVirtualFields(query, attribute.adapter!.field);

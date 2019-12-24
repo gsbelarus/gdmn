@@ -1,4 +1,5 @@
 import { RusGender, IRusNoun } from './types';
+import { SemCategory } from '../semantics/categories';
 
 export const rusNouns: IRusNoun[] = [
   {
@@ -27,6 +28,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Femn,
     declension: 1,
     declensionZ: '7a',
+    semMeanings: [{ semCategory: SemCategory.Organization }]
   },
   {
     stem: 'компани',
@@ -36,6 +38,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Femn,
     declension: 1,
     declensionZ: '7a',
+    semMeanings: [{ semCategory: SemCategory.Organization }]
   },
   {
     stem: 'город',
@@ -54,6 +57,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Masc,
     declension: 2,
     declensionZ: '3a',
+    semMeanings: [{ semCategory: SemCategory.Place }]
   },
   {
     stem: 'пинск',
@@ -63,6 +67,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Masc,
     declension: 2,
     declensionZ: '3a',
+    semMeanings: [{ semCategory: SemCategory.Place }]
   },
   {
     stem: 'берез',
@@ -81,6 +86,7 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Femn,
     declension: 1,
     declensionZ: '1a',
+    semMeanings: [{ semCategory: SemCategory.Organization }]
   },
   {
     stem: 'ведр',
@@ -1939,6 +1945,16 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '8°c',
+  },
+  {
+    stem: 'им',
+    stem1: 'имен',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Femn,
+    declension: 1,
+    declensionZ: '8°c',
+    semMeanings: [{ semCategory: SemCategory.Name }]
   },
   {
     stem: 'яблок',

@@ -1,7 +1,6 @@
 import {
   Attribute,
   DetailAttribute,
-  Entity,
   EntityAttribute,
   EntityLink,
   EntityLinkField,
@@ -118,7 +117,7 @@ export class Select {
 
     const mainRelation = Utils.getMainRelation(link.entity);
     const from = link.entity.adapter!.relation.map((rel) => {
-      if (rel.relationName == mainRelation.relationName) {
+      if (rel.relationName === mainRelation.relationName) {
         if (!link.entity.isIntervalTree && link.entity.isTree && first) {
 
           const virtualTree = this.query.link.fields
@@ -131,7 +130,7 @@ export class Select {
               const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
               const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
-                if (rel.relationName == mainRelation.relationName) {
+                if (rel.relationName === mainRelation.relationName) {
                   const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
                   const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
                   const tableWithRecursive = this._getSelect(virtualQuery, false, true);
@@ -139,6 +138,8 @@ export class Select {
                   // TODO field.links![0]
                   return SQLTemplates.fromWithTree(this._getTableAlias(field.links![0], this.query.link.entity.name),
                     rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
+                } else {
+                  return undefined;
                 }
               });
               return from.join("\n");
@@ -196,7 +197,7 @@ export class Select {
                   )
                 );
               }
-              if (linkFirstRelationName !== attr.adapter!.relation || !(fLink.options
+              if ((linkFirstRelationName !== attr.adapter!.relation) || !(fLink.options
                 && fLink.options.hasRoot) && link.entity.isIntervalTree) {
                 joins.push(
                   SQLTemplates.join(
@@ -263,29 +264,6 @@ export class Select {
                 const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(forTreeQuery, false);
 
                 const mainRelation = Utils.getMainRelation(virtualQuery.link.entity);
-                const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
-
-                  if (rel.relationName == mainRelation.relationName) {
-                    const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
-                    const rightTableWithRecursive = this._getSelect(virtualQuery3, false, true);
-                    const tableWithRecursive = this._getSelect(virtualQuery, false, true);
-
-
-                    const sqlText = SQLTemplates.joinWithSimpleTree(this._getTableAlias(fLink, this.query.link.entity.name),
-                      rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
-
-                    const attr = field.attribute as EntityAttribute;
-                    joins.push(
-                      SQLTemplates.join(
-                        sqlText,
-                        this._getTableAlias(fLink, linkFirstRelationName),
-                        linkFirstPKFieldName,
-                        this._getTableAlias(link, attr.adapter!.relation),
-                        attr.adapter!.field
-                      )
-                    );
-                  }
-                });
                 break;
               }
 

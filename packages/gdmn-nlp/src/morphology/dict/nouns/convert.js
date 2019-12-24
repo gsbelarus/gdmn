@@ -13,6 +13,14 @@
 var fs = require('fs');
 var rawFile = fs.readFileSync('./data-all.txt', 'utf-8').replace(/ё/g, 'е');
 
+const rusNounSemCategory = {
+  'минск': '[{ semCategory: SemCategory.Place }]',
+  'пинск': '[{ semCategory: SemCategory.Place }]',
+  'организаци': '[{ semCategory: SemCategory.Organization }]',
+  'школ': '[{ semCategory: SemCategory.Organization }]',
+  'им': '[{ semCategory: SemCategory.Name }]'
+};
+
 const nouns = rawFile.replace(/́/g, '').split('{{ШаблонДемо').reduce( (p, s, idx) => {
     if (s) {
       const rg = /\s*\|имя=сущ ru ([mfn]{1}) (\w+) (.+)\s+.+основа=(.+)(?:\s+.+основа1=(.+))?(?:\s+.+основа2=(.+))?\s.+(?:\s.*)?слова=(?:(?:\[\[)?([^\]]+)(?:\]\])?,?\s?){1}(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\([^\]]+\))?\s+\}\}/g;
@@ -114,6 +122,7 @@ fs.writeFileSync('./rusnoun.txt', nouns.reduce(
       } else {
         decl = 2;
       }
+      const semMeanings = rusNounSemCategory[l[5]];
       let s =
         ''.padEnd(2) + '{\n' +
         ''.padEnd(4) + 'stem: \'' + l[5] + '\',\n' +
@@ -123,6 +132,7 @@ fs.writeFileSync('./rusnoun.txt', nouns.reduce(
         ''.padEnd(4) + 'gender: ' + (l[0] === 'm' ? 'RusGender.Masc' : (l[0] === 'f' ? 'RusGender.Femn' : 'RusGender.Neut')) + ',\n' +
         ''.padEnd(4) + 'declension: ' + decl + ',\n' +
         ''.padEnd(4) + 'declensionZ: \'' + d + '\',\n' +
+        (semMeanings ? ''.padEnd(4) + 'semMeanings: ' + semMeanings + ',\n' : '') +
         ''.padEnd(2) + '},\n';
     return p + s;
     },

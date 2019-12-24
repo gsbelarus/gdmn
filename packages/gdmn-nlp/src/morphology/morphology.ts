@@ -1,12 +1,12 @@
 import { getNextID } from '../utils/idGenerator';
-import { SemCategory } from '../semantics/categories';
+import { ISemMeaning } from '../semantics/categories';
 
 export abstract class Lexeme {
   constructor (
     public readonly stem: string = '',
     public readonly stem1: string = '',
     public readonly stem2: string = '',
-    public readonly semCategories: SemCategory[] = []
+    public readonly semMeanings?: ISemMeaning[]
   ) { }
 
   public matchStems(word: string): boolean {
@@ -41,7 +41,7 @@ export abstract class ParticleLexeme extends Lexeme { }
 
 export abstract class AdverbLexeme extends Lexeme { }
 
-export abstract class NumeralLexeme extends Lexeme { 
+export abstract class NumeralLexeme extends Lexeme {
   public readonly value: number;
 
   constructor (
@@ -49,10 +49,10 @@ export abstract class NumeralLexeme extends Lexeme {
     stem: string = '',
     stem1: string = '',
     stem2: string = '',
-  ) { 
+  ) {
     super(stem, stem1, stem2);
     this.value = value;
-  }  
+  }
 }
 
 export abstract class Word<L extends Lexeme> {

@@ -7,10 +7,7 @@ import { Selection, SelectionMode, SelectionZone } from 'office-ui-fabric-react/
 import { Toggle } from 'office-ui-fabric-react/lib/Toggle';
 
 //import { IExampleItem } from 'office-ui-fabric-react/lib/utilities/exampleData';
-import { createGroups, IExampleItem } from 'office-ui-fabric-react/lib/utilities/exampleData';
-
-const groupCount = 2;
-const groupDepth = 3;
+import { IExampleItem } from 'office-ui-fabric-react/lib/utilities/exampleData';
 
 export interface IGroupedListExampleState {
   isCompactMode?: boolean;
@@ -219,7 +216,7 @@ export class GroupedListComponent extends React.Component<{}, IGroupedListExampl
     super(props);
 
     this.items = myListEtem;
-    
+
     //this.groups = createGroups(4, groupDepth, 0, groupCount);
 
     this.groups = this.createGroups();

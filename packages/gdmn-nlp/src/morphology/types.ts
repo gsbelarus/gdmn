@@ -1,3 +1,5 @@
+import { ISemMeaning } from "../semantics/categories";
+
 /*
   Description of tags found in open corpora dictionary
   could be find here:
@@ -42,6 +44,7 @@ export interface IRusNoun {
   readonly gender: RusGender;
   readonly declension: RusDeclension;
   readonly declensionZ: RusDeclensionZ;
+  readonly semMeanings?: ISemMeaning[];
 }
 export interface RusNounMorphSigns {
   c: RusCase;

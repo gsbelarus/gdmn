@@ -31,7 +31,5 @@ export * from './syntax2/tokenizer';
 export * from './syntax2/types';
 export * from './syntax2/templates';
 export * from './syntax2/parser';
-export * from './semantics/types';
 export * from './semantics/categories';
 export * from './semantics/rusVerbSynonyms';
-export * from './semantics/rusNounSemCategory';

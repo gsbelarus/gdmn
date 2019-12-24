@@ -146,9 +146,9 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
                     key={idx}
                     text={l.word}
                     onRenderText={
-                      l.lexeme.semCategories.length
+                      l.lexeme.semMeanings?.length
                     ? () => {
-                        return <>{l.word}<sup>{l.lexeme.semCategories.length}</sup></>;
+                        return <>{l.word}<sup>{l.lexeme.semMeanings?.length}</sup></>;
                       }
                       : undefined
                     }
@@ -199,10 +199,10 @@ export class MorphBox extends Component<IMorphBoxProps, IMorphBoxState> {
   }
 
   private getCategoryWords(w: AnyWord) : JSX.Element | undefined {
-    return w.lexeme.semCategories.length
+    return w.lexeme.semMeanings?.length
       ?
         <div className="SemCategories">
-          {w.lexeme.semCategories.map( (c, idx) => <span key={idx}>{semCategory2Str(c)}</span>)}
+          {w.lexeme.semMeanings?.map( ({ semCategory }, idx) => <span key={idx}>{semCategory2Str(semCategory)}</span>)}
         </div>
       : undefined;
   }

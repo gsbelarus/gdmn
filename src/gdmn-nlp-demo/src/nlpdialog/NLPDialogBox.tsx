@@ -34,7 +34,7 @@ export class ChatBox extends Component<IChatBoxProps, {}> {
         <div className="NLPDialogResultColumn">
           {
             parsedText &&
-            parsedText.forEach( phrase => {<PhraseSyntaxTree parsedText={phrase} />} )
+            parsedText.forEach( phrase => <PhraseSyntaxTree parsedText={phrase} /> )
           }
           {
             rs && grid &&

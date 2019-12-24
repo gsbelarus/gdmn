@@ -32,7 +32,10 @@ export function reducer(state: ISetParameterState = initialState, action: Parame
           ...state
         }
       }
+
+      break;
     }
+
     case getType(actions.parametersLoading): {
       const { host, port, isReadFile } = action.payload;
       if (isReadFile) {
