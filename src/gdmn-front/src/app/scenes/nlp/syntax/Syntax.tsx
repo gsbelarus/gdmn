@@ -6,7 +6,7 @@ import { Frame } from "../../gdmn/components/Frame";
 import { INLPToken, nlpTokenize, IRusSentence, nlpParse, sentenceTemplates, text2Tokens, tokens2sentenceTokens } from "gdmn-nlp";
 import { NLPToken } from "./NLPToken";
 import { NLPSentence } from "./NLPSentence";
-import { ERTranslatorRU2 } from "gdmn-nlp-agent";
+import { ERTranslatorRU2, command2Text } from "gdmn-nlp-agent";
 import { EQ } from "./EntityQuery";
 import { apiService } from "@src/app/services/apiService";
 import { IEntityQueryInspector } from "gdmn-orm";
@@ -258,6 +258,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
           command || sql
           ?
             <Frame border marginTop caption="Command and SQL" canMinimize>
+              {command && command2Text(command, erModel)}
               <Stack horizontal tokens={{ childrenGap: '8px' }}>
                 {command ? <EQ eq={command.payload} /> : null}
                 {sql ? <Stack><pre>{sql.select}</pre><pre>{JSON.stringify(sql.params, undefined, 2)}</pre></Stack> : null}

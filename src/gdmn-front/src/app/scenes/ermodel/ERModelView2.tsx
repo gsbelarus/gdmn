@@ -2,7 +2,7 @@ import {IERModelView2Props} from "./ERModelView2.types";
 import React, {useCallback, useEffect, useState, useRef} from "react";
 import {IDataRow, RecordSet, rsActions, TFieldType} from "gdmn-recordset";
 import {List} from "immutable";
-import {createGrid, GDMNGrid, IColumnsSettings} from "gdmn-grid";
+import {createGrid, GDMNGrid} from "gdmn-grid";
 import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
 import {CommandBar, ICommandBarItemProps, TextField, getTheme} from "office-ui-fabric-react";
 import {bindGridActions} from "./utils";
@@ -295,7 +295,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'Table'
       },
       onClick: () => !!entities && !!entities.size && history.push(`entity/${entities.getString('name')}`)
-      //commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entity/${entities.getString('name')}`) : undefined
     },
     {
       key: 'reloadERModel',
@@ -321,7 +320,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'Add'
       },
       onClick: () => history.push(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
-      //commandBarButtonAs: linkCommandBarButton(`entityDlg/create/${Math.floor(Math.random() * 999_999_999_999)}`)
     },
     {
       key: 'UpdateEntity',
@@ -331,7 +329,6 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
         iconName: 'Edit'
       },
       onClick: () => !!entities && !!entities.size && history.push(`entityDlg/${entities.getString('name')}`)
-      //commandBarButtonAs: entities && entities.size ? linkCommandBarButton(`entityDlg/${entities.getString('name')}`) : undefined
     },
     {
       key: 'deleteEntity',

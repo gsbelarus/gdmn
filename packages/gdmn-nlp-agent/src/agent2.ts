@@ -344,18 +344,12 @@ export class ERTranslatorRU2 {
 
     return command;
   }
-}
+};
 
-/**
- * С помощью данных этого объекта мы сообщаем агенту
- * как построить запрос к данным Entity. Как определить,
- * что за Entity нам надо и какие условия должны быть
- * применены.
- */
+export function command2Text(command: ICommand, erModel: ERModel): string {
+  if (command.action !== 'QUERY') {
+    throw new Error('Unsupported command type');
+  }
 
-//export interface IMapSentence2EQ {
-  /**
-   * Список идентификаторов шаблонов предложений.
-   */
-//  templatesIds: string[];
-//};
+  return 'test';
+};

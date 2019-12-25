@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { EntityQuery, EntityLinkField } from "gdmn-orm";
 import { Frame } from "../../gdmn/components/Frame";
-import { Stack, getTheme, Icon } from "office-ui-fabric-react";
+import { Stack, getTheme, Icon, Checkbox } from "office-ui-fabric-react";
 
 const ELField = ({ f }: { f: EntityLinkField }) => {
   const [open, setOpen] = useState(false);
@@ -49,21 +49,37 @@ const ELField = ({ f }: { f: EntityLinkField }) => {
 };
 
 export const EQ = ({ eq }: { eq: EntityQuery }) => {
+  const [showRawEQ, setShowRawEQ] = useState(false);
+
   return (
     <div>
-      <div>
-        {`${eq.link.alias} -- ${eq.link.entity.name}`}
-      </div>
-      <Frame border marginTop caption="Fields">
-        <Stack horizontal wrap tokens={{ childrenGap: '2px' }}>
-          {
-            eq.link.fields.map( (f, idx) => <ELField key={`${f.attribute.name}-${idx}`} f={f} /> )
-          }
-        </Stack>
-      </Frame>
-      <pre>
-        {JSON.stringify(eq.inspect().options, undefined, 2)}
-      </pre>
+      <Checkbox
+        label="Show raw entity query"
+        checked={showRawEQ}
+        onChange={ (_, checked) => setShowRawEQ(!!checked) }
+      />
+      {
+        showRawEQ ?
+          <pre>
+            {JSON.stringify(eq.inspect(), undefined, 2)}
+          </pre>
+        :
+          <>
+            <div>
+              {`${eq.link.alias} -- ${eq.link.entity.name}`}
+            </div>
+            <Frame border marginTop caption="Fields">
+              <Stack horizontal wrap tokens={{ childrenGap: '2px' }}>
+                {
+                  eq.link.fields.map( (f, idx) => <ELField key={`${f.attribute.name}-${idx}`} f={f} /> )
+                }
+              </Stack>
+            </Frame>
+            <pre>
+              {JSON.stringify(eq.inspect().options, undefined, 2)}
+            </pre>
+          </>
+      }
     </div>
   )
 };
