@@ -32,7 +32,7 @@ export const nlpPunctuationMark: INLPTokenType = {
 
 export const nlpQuotedLiteral: INLPTokenType = {
   name: 'QuotedLiteral',
-  pattern: /^\".+\"/
+  pattern: /^\"(?:(?:[^"])|\"\")+\"/
 };
 
 export const nlpCyrillicWord: INLPTokenType = {

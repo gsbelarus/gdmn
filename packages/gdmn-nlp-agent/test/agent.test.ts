@@ -32,7 +32,7 @@ describe("erModel", () => {
 
     if (fs.existsSync("c:/temp/test")) {
       fs.writeFileSync("c:/temp/test/ermodel.json",
-        erModel2.inspect().reduce((p, s) => `${p}${s}\n`, "")
+        erModel2.inspect().join('\n')
       );
       console.log("ERModel has been written to c:/temp/test/ermodel.json");
 
@@ -431,7 +431,7 @@ describe("erModel", () => {
   it("phrase14", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
-    
+
     const phrases = parsePhrase("Покажи первые 10 организаций. Адрес не содержит Минск.")
       .map((pars) => {return pars.phrase});
     expect(phrases).toBeDefined();

@@ -34,14 +34,20 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
     ]
   },
 
-  'VERB_CONTAINS': {
-    id: 'VERB_CONTAINS',
+  'CONTAINS_VALUE': {
+    id: 'CONTAINS_VALUE',
+    examples: ['содержит "ООО"'],
     elements: [
       {
         alt: [{
           type: 'WORD',
           pos: 'VERB',
           image: 'содержит'
+        }]
+      },
+      {
+        alt: [{
+          type: 'QUOTED_LITERAL'
         }]
       }
     ]
@@ -110,12 +116,17 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
         }],
       },
       {
-        alt: [{
-          type: 'WORD',
-          pos: 'NOUN',
-          case: RusCase.Datv,
-          number: 'SINGULAR',
-        }],
+        alt: [
+          {
+            type: 'WORD',
+            pos: 'NOUN',
+            case: RusCase.Datv,
+            number: 'SINGULAR',
+          },
+          {
+            type: 'ID'
+          }
+        ],
       }
     ]
   },
@@ -163,6 +174,44 @@ export const phraseTemplates: { [id: string]: IRusPhraseTemplate } = {
           pos: 'NOUN',
           case: RusCase.Nomn,
           number: 'SINGULAR',
+        }],
+      }
+    ]
+  },
+
+  'ATTR_ID_SUBJECT': {
+    id: 'ATTR_ID_SUBJECT',
+    examples: ['атрибут NAME'],
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'NOUN',
+          image: 'атрибут'
+        }],
+      },
+      {
+        alt: [{
+          type: 'ID'
+        }],
+      }
+    ]
+  },
+
+  'ATTR_ID_OBJECT': {
+    id: 'ATTR_ID_OBJECT',
+    examples: ['атрибута PLACEKEY'],
+    elements: [
+      {
+        alt: [{
+          type: 'WORD',
+          pos: 'NOUN',
+          image: 'атрибута'
+        }],
+      },
+      {
+        alt: [{
+          type: 'ID'
         }],
       }
     ]
@@ -248,13 +297,33 @@ export const sentenceTemplates: IRusSentenceTemplate[] = [
       {
         alt: [{
           id: 'predicate',
-          template: phraseTemplates.VERB_CONTAINS,
+          template: phraseTemplates.CONTAINS_VALUE,
+        }]
+      }
+    ]
+  },
+  {
+    id: 'VPAttrContains',
+    label: 'Глагольное предложение #4',
+    examples: ['Атрибут NAME атрибута PLACEKEY содержит "некоторое_значение"'],
+    phrases: [
+      {
+        alt: [{
+          id: 'subject',
+          template: phraseTemplates.ATTR_ID_SUBJECT
         }]
       },
       {
         alt: [{
+          id: 'object',
+          template: phraseTemplates.ATTR_ID_OBJECT,
+        }],
+        optional: true
+      },
+      {
+        alt: [{
           id: 'value',
-          template: phraseTemplates.QUOTED_LITERAL,
+          template: phraseTemplates.CONTAINS_VALUE,
         }]
       }
     ]

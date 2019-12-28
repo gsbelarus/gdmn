@@ -671,7 +671,7 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
       <Frame marginTop marginLeft marginRight>
         <Stack horizontal wrap tokens={{ childrenGap: '4px' }} styles={{ root: { overflowX: 'hidden' } }}>
           {
-            vocabulary && vocabulary.map((l, idx) =>
+            vocabulary && vocabulary.sort( (a, b) => a.word.localeCompare(b.word) ).map((l, idx) =>
               <DefaultButton
                 key={`${l.word}${idx}`}
                 text={l.word}

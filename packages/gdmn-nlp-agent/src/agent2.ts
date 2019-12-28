@@ -21,7 +21,8 @@ import {
   EntityQueryOptions,
   ERModel,
   IEntityQueryWhereValue,
-  prepareDefaultEntityLinkFields} from "gdmn-orm";
+  prepareDefaultEntityLinkFields,
+  IEntityQueryWhere} from "gdmn-orm";
 import {ICommand} from "./command";
 import { getLName } from "gdmn-internals";
 
@@ -88,7 +89,21 @@ export class ERTranslatorRU2 {
     }
   }
 
-  private _findAttr(entity: Entity, noun: RusNoun) {
+  private _findAttr(entity: Entity, phrase: IRusSentencePhrase | undefined, idx: number) {
+    if (!phrase) {
+      return undefined;
+    }
+
+    const wt = phrase.wordOrToken[idx];
+
+    return wt.type === 'WORD' && wt.word instanceof RusNoun
+      ? this._findAttr2(entity, wt.word)
+      : wt.type === 'TOKEN' && wt.token.tokenType === nlpIDToken && entity.attributes[wt.token.image]
+      ? entity.attributes[wt.token.image]
+      : undefined;
+  }
+
+  private _findAttr2(entity: Entity, noun: RusNoun) {
     const semMeanings = noun.lexeme.semMeanings;
 
     for (const attr of Object.values(entity.attributes)) {
@@ -231,48 +246,61 @@ export class ERTranslatorRU2 {
     }
 
     const fields = prepareDefaultEntityLinkFields(entity);
-    let contains: IEntityQueryWhereValue[] | undefined = undefined;
+    let where: IEntityQueryWhere[] | undefined = undefined;
 
     const fromPlacePhrase = getPhrase('fromPlace');
     if (fromPlacePhrase) {
-      const geoAttr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
-      const value = this._getNoun(fromPlacePhrase, 1).lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
-
-      if (!contains) {
-        contains = [];
+      if (!where) {
+        where = [];
       }
 
-      if (geoAttr instanceof EntityAttribute) {
-        const foundLinkField = fields.find( f => f.attribute === geoAttr );
+      const geoAttr = entity.attributesBySemCategory(SemCategory.ObjectLocation)[0];
 
-        if (foundLinkField && foundLinkField.links) {
-          contains.push({
-            alias: foundLinkField.links[0].alias,
-            attribute: foundLinkField.links[0].entity.presentAttribute(),
-            value
-          });
+      let i = 1;
+      while (i < fromPlacePhrase.wordOrToken.length) {
+        const value = this._getNoun(fromPlacePhrase, i).lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
+
+        if (geoAttr instanceof EntityAttribute) {
+          const foundLinkField = fields.find( f => f.attribute === geoAttr );
+
+          if (foundLinkField && foundLinkField.links) {
+            where.push({
+              contains: [{
+                alias: foundLinkField.links[0].alias,
+                attribute: foundLinkField.links[0].entity.presentAttribute(),
+                value
+              }]
+            });
+          } else {
+            const linkEntity = geoAttr.entities[0];
+            const linkAlias = "alias2";
+
+            fields.push(new EntityLinkField(geoAttr, [new EntityLink(linkEntity, linkAlias, [])]));
+
+            where.push({
+              contains: [{
+                alias: linkAlias,
+                attribute: linkEntity.presentAttribute(),
+                value
+              }]
+            });
+          }
         } else {
-          const linkEntity = geoAttr.entities[0];
-          const linkAlias = "alias2";
-
-          fields.push(new EntityLinkField(geoAttr, [new EntityLink(linkEntity, linkAlias, [])]));
-
-          contains.push({
-            alias: linkAlias,
-            attribute: linkEntity.presentAttribute(),
-            value
+          where.push({
+            contains: [{
+              alias: rootAlias,
+              attribute: geoAttr,
+              value
+            }]
           });
         }
-      } else {
-        contains.push({
-          alias: rootAlias,
-          attribute: geoAttr,
-          value
-        });
+
+        while (++i < fromPlacePhrase.wordOrToken.length
+          && !((fromPlacePhrase.wordOrToken[i] as any).word instanceof RusNoun)) { }
       }
     }
 
-    const options = new EntityQueryOptions(undefined, undefined, [{contains}]);
+    const options = new EntityQueryOptions(undefined, undefined, (where && where.length > 1) ? [{ or: where }] : where);
     const entityLink = new EntityLink(entity, rootAlias, fields);
 
     return {
@@ -302,8 +330,7 @@ export class ERTranslatorRU2 {
     const getPhrase = this._getPhrase(sentence);
 
     const byFieldPhrase = getPhrase('byField');
-    const noun = this._getNoun(byFieldPhrase, 1);
-    const foundAttr = this._findAttr(entity, noun);
+    const foundAttr = this._findAttr(entity, byFieldPhrase, 1);
 
     if (foundAttr) {
       command.payload.options.addOrder({
@@ -317,8 +344,8 @@ export class ERTranslatorRU2 {
   }
 
   /**
-   * |subject   |predicate |value           |
-   *  Название   содержит   "строка"
+   * |subject   |contains value           |
+   *  Название   содержит "строка"
    */
   public processVPContains(sentence: IRusSentence, command: ICommand): ICommand {
     if (!command.payload.options) {
@@ -330,16 +357,63 @@ export class ERTranslatorRU2 {
 
     const subjectPhrase = getPhrase('subject');
     const noun = this._getNoun(subjectPhrase, 0);
-    const foundAttr = this._findAttr(entity, noun);
+    const foundAttr = this._findAttr2(entity, noun);
 
     if (foundAttr) {
       command.payload.options.addWhereCondition({
         contains: [{
           alias: command.payload.link.alias,
           attribute: foundAttr,
-          value: this._getImage(getPhrase('value'), 0, true)
+          value: this._getImage(getPhrase('predicate'), 1, true)
         }]
       });
+    }
+
+    return command;
+  }
+
+  /**
+   * |subject      |[object]          |contains value           |
+   *  Атрибут NAME  атрибута PLACEKEY  содержит "строка"
+   */
+  public processVPAttrContains(sentence: IRusSentence, command: ICommand): ICommand {
+    if (!command.payload.options) {
+      throw new Error('Invalid command');
+    }
+
+    const entity = command.payload.link.entity;
+    const getPhrase = this._getPhrase(sentence);
+
+    const subjectPhrase = getPhrase('subject');
+    const objectPhrase = getPhrase('object');
+
+    if (objectPhrase) {
+      const linkAttr = this._findAttr(entity, objectPhrase, 1);
+
+      if (linkAttr instanceof EntityAttribute) {
+        const foundAttr = this._findAttr(linkAttr.entities[0], subjectPhrase, 1);
+        if (foundAttr) {
+          command.payload.options.addWhereCondition({
+            contains: [{
+              alias: linkAttr.name,
+              attribute: foundAttr,
+              value: this._getImage(getPhrase('value'), 1, true)
+            }]
+          });
+        }
+      }
+    } else {
+      const foundAttr = this._findAttr(entity, subjectPhrase, 1);
+
+      if (foundAttr) {
+        command.payload.options.addWhereCondition({
+          contains: [{
+            alias: command.payload.link.alias,
+            attribute: foundAttr,
+            value: this._getImage(getPhrase('value'), 1, true)
+          }]
+        });
+      }
     }
 
     return command;
@@ -351,5 +425,32 @@ export function command2Text(command: ICommand, erModel: ERModel): string {
     throw new Error('Unsupported command type');
   }
 
-  return 'test';
+  const eq = command.payload;
+  const entity = eq.link.entity;
+  const res = [`Покажи все ${entity.name}.`];
+
+  // TODO: не обрабатываются цепочки условий OR, AND
+  if (eq.options?.where?.length) {
+    for (const { contains } of eq.options.where) {
+      if (contains?.length) {
+        for (const { alias, attribute, value } of contains) {
+          if (alias === eq.link.alias) {
+            res.push(`Атрибут ${attribute.name} содержит "${value}".`);
+          } else {
+            const attrLink = entity.attributes[alias];
+            if (attrLink) {
+              res.push(`Атрибут ${attribute.name} атрибута ${attrLink.name} содержит "${value}".`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (eq.options?.order?.length) {
+    const ordr = eq.options.order[0];
+    res.push(`Отсортируй по ${ordr.attribute.name}${ordr.type === 'DESC' ? ', по убыванию.' : '.'}`);
+  }
+
+  return res.join(' ');
 };

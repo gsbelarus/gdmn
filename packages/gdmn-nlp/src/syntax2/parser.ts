@@ -55,11 +55,11 @@ const match = (token: INLPToken, srcElements: RusPhraseElement[]) => {
     }
 
     case nlpIDToken: {
-      return token.image;
+      return srcElements.some( e => e.type === 'ID' );
     }
 
     case nlpQuotedLiteral: {
-      return token.image;
+      return srcElements.some( e => e.type === 'QUOTED_LITERAL' );
     }
   }
 };
