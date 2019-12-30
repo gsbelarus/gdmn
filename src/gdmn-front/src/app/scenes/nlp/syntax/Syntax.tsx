@@ -128,7 +128,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
           parsed = nlpParse(tokens[0], sentenceTemplates);
 
           if (translator) {
-            translator.process(parsed[0]);
+            translator.process(parsed[0], tokens[0].map( t => t.image ).join(' '));
           }
         }
         catch (e) {
