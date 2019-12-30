@@ -1,0 +1,2681 @@
+[
+  {
+    "type": "DESIGNER",
+    "objectID": "TgdcPlace",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area1",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "ID",
+          "label": "Идентификатор",
+          "name": "ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "LB",
+          "label": "Левая граница",
+          "name": "LB"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "RB",
+          "label": "Правая граница",
+          "name": "RB"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "NAME",
+          "label": "Наименование",
+          "name": "NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "PLACETYPE",
+          "label": "Тип административно-территориальной единицы",
+          "name": "PLACETYPE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "TELPREFIX",
+          "label": "Телефонный префикс",
+          "name": "TELPREFIX"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "CODE",
+          "label": "CODE",
+          "name": "CODE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "LAT",
+          "label": "LAT",
+          "name": "LAT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "LON",
+          "label": "LON",
+          "name": "LON"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "EDITIONDATE",
+          "label": "EDITIONDATE",
+          "name": "EDITIONDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ETTN_CODE",
+          "label": "Код страны ISO3166",
+          "name": "USR$ETTN_CODE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$EVAT_OFFSHORE",
+          "label": "Офшор",
+          "name": "USR$EVAT_OFFSHORE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$EVAT_EAEU",
+          "label": "Входит в ЕАЭС",
+          "name": "USR$EVAT_EAEU"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ETTN_CODE_INT",
+          "label": "Код страны ISO3166(число)",
+          "name": "USR$ETTN_CODE_INT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "PARENT.ID",
+          "label": "Ссылка на родителя",
+          "name": "PARENT.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "PARENT.NAME",
+          "label": "PARENT.NAME",
+          "name": "PARENT.NAME"
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        }
+      ]
+    },
+    "_changed": 1574676512612,
+    "_accessed": 1574676512612
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "USR$TEST",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area1",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "ID",
+          "label": "Идентификатор",
+          "name": "ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "EDITIONDATE",
+          "label": "Дата модификации",
+          "name": "EDITIONDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$DATE",
+          "label": "дата",
+          "name": "USR$DATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$SUM",
+          "label": "Сумма",
+          "name": "USR$SUM"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TEXT",
+          "label": "Строка",
+          "name": "USR$TEXT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$BLOB",
+          "label": "Большая строка",
+          "name": "USR$BLOB"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$BOOLEAN",
+          "label": "Логическое",
+          "name": "USR$BOOLEAN"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$QUANTITY",
+          "label": "Кол-во",
+          "name": "USR$QUANTITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TESTDATE",
+          "label": "Тест",
+          "name": "USR$TESTDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$CONTACTKEY.ID",
+          "label": "контакт",
+          "name": "USR$CONTACTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$CONTACTKEY.NAME",
+          "label": "USR$CONTACTKEY.NAME",
+          "name": "USR$CONTACTKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$DEPARTMENTKEY.ID",
+          "label": "Подразделение",
+          "name": "USR$DEPARTMENTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$DEPARTMENTKEY.NAME",
+          "label": "USR$DEPARTMENTKEY.NAME",
+          "name": "USR$DEPARTMENTKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ACCKEY.ID",
+          "label": "Балансовый счет",
+          "name": "USR$ACCKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ACCKEY.NAME",
+          "label": "USR$ACCKEY.NAME",
+          "name": "USR$ACCKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "USR$PLACEKEYS",
+          "label": "Множество мест",
+          "name": "USR$PLACEKEYS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$GOODSKEY",
+          "label": "Множество товаров",
+          "name": "USR$GOODSKEY"
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        }
+      ]
+    },
+    "_changed": 1574690928173,
+    "_accessed": 1574690928173
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "TgdcGood",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 140
+          },
+          {
+            "unit": "PX",
+            "value": 260
+          },
+          {
+            "unit": "PX",
+            "value": 140
+          },
+          {
+            "unit": "PX",
+            "value": 140
+          },
+          {
+            "unit": "PX",
+            "value": 50
+          },
+          {
+            "unit": "PX",
+            "value": 40
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          },
+          {
+            "unit": "AUTO",
+            "value": 255
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 1,
+          "right": 0,
+          "bottom": 1
+        },
+        {
+          "name": "Area3",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 1,
+          "right": 1,
+          "bottom": 1
+        },
+        {
+          "name": "Area4",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 2,
+          "right": 1,
+          "bottom": 2
+        },
+        {
+          "name": "Area5",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 3,
+          "right": 0,
+          "bottom": 3
+        },
+        {
+          "name": "Area6",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 3,
+          "right": 1,
+          "bottom": 3
+        },
+        {
+          "name": "Area7",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 4,
+          "right": 1,
+          "bottom": 4
+        },
+        {
+          "name": "Area8",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        },
+        {
+          "name": "Area9",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 5,
+          "right": 0,
+          "bottom": 5,
+          "horizontal": false
+        },
+        {
+          "name": "Area10",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 5,
+          "right": 1,
+          "bottom": 5
+        },
+        {
+          "name": "Area11",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 7,
+          "right": 0,
+          "bottom": 7
+        },
+        {
+          "name": "Area12",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 7,
+          "right": 1,
+          "bottom": 7
+        },
+        {
+          "name": "Area13",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 8,
+          "right": 0,
+          "bottom": 8
+        },
+        {
+          "name": "Area14",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 8,
+          "right": 1,
+          "bottom": 8
+        },
+        {
+          "name": "Area15",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 9,
+          "right": 1,
+          "bottom": 9
+        },
+        {
+          "name": "Area16",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 10,
+          "right": 1,
+          "bottom": 10
+        },
+        {
+          "name": "Area17",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 11,
+          "right": 0,
+          "bottom": 11
+        },
+        {
+          "name": "Area18",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 11,
+          "right": 1,
+          "bottom": 11
+        },
+        {
+          "name": "Area19",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 6,
+          "right": 1,
+          "bottom": 6
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area6",
+          "fieldName": "USR$INV_OPTPERC",
+          "label": "Оптовая надбавка",
+          "name": "USR$INV_OPTPERC"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area8",
+          "fieldName": "NAME",
+          "label": "Наименование",
+          "name": "NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "USR$FULLNAME",
+          "label": "Полное наименование",
+          "name": "USR$FULLNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area6",
+          "fieldName": "ALIAS",
+          "label": "Шифр ТМЦ",
+          "name": "ALIAS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "USR$INV_PERCKEY.ID",
+          "label": "Наценочная группа",
+          "name": "USR$INV_PERCKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "SHORTNAME",
+          "label": "Краткое наименование ТМЦ",
+          "name": "SHORTNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "USR$FOREIGNNAME",
+          "label": "Наименование (англ.)",
+          "name": "USR$FOREIGNNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "DESCRIPTION",
+          "label": "Описание",
+          "name": "DESCRIPTION"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "BARCODE",
+          "label": "Штрих код",
+          "name": "BARCODE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area9",
+          "fieldName": "ISASSEMBLY",
+          "label": "Является компл",
+          "name": "ISASSEMBLY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area10",
+          "fieldName": "DISABLED",
+          "label": "DISABLED",
+          "name": "DISABLED"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "USR$INV_WEIGHT",
+          "label": "Вес товара",
+          "name": "USR$INV_WEIGHT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area17",
+          "fieldName": "USR$CONTENT",
+          "label": "Состав",
+          "name": "USR$CONTENT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame3",
+          "fieldName": "USR$MN_VITAMIN_A",
+          "label": "Витамин А",
+          "name": "USR$MN_VITAMIN_A"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_WATER",
+          "label": "Вода",
+          "name": "USR$MN_WATER"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_IRON",
+          "label": "Железо",
+          "name": "USR$MN_IRON"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_PHOSPHORUS",
+          "label": "Фосфор",
+          "name": "USR$MN_PHOSPHORUS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_NATRIUM",
+          "label": "Натрий",
+          "name": "USR$MN_NATRIUM"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_POTASSIUM",
+          "label": "Калий",
+          "name": "USR$MN_POTASSIUM"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_CALCIUM",
+          "label": "Кальций",
+          "name": "USR$MN_CALCIUM"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_MAGNESIUM",
+          "label": "Магний",
+          "name": "USR$MN_MAGNESIUM"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame3",
+          "fieldName": "USR$MN_VITAMIN_B1",
+          "label": "Витамин B1",
+          "name": "USR$MN_VITAMIN_B1"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_ASHES",
+          "label": "Зола",
+          "name": "USR$MN_ASHES"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame3",
+          "fieldName": "USR$MN_VITAMIN_B2",
+          "label": "Витамин B2",
+          "name": "USR$MN_VITAMIN_B2"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame3",
+          "fieldName": "USR$MN_VITAMIN_C",
+          "label": "Витамин C",
+          "name": "USR$MN_VITAMIN_C"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame3",
+          "fieldName": "USR$MN_VITAMIN_PP",
+          "label": "Витамин PP",
+          "name": "USR$MN_VITAMIN_PP"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame3",
+          "fieldName": "USR$MN_CAROTIN",
+          "label": "Каротин",
+          "name": "USR$MN_CAROTIN"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_MAINGOODKEY.ID",
+          "label": "Базовый товар",
+          "name": "USR$MN_MAINGOODKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_PORTIONS",
+          "label": "Кол-во порций",
+          "name": "USR$MN_PORTIONS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame2",
+          "fieldName": "USR$MN_PROTEIN",
+          "label": "Белок",
+          "name": "USR$MN_PROTEIN"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_CELLULOSE",
+          "label": "Целлюлоза",
+          "name": "USR$MN_CELLULOSE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_EMPTY",
+          "label": "Вес пустой",
+          "name": "USR$MN_EMPTY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame2",
+          "fieldName": "USR$MN_FAT",
+          "label": "Жир",
+          "name": "USR$MN_FAT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_FULL",
+          "label": "Вес полный",
+          "name": "USR$MN_FULL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_MEASURE",
+          "label": "Мера",
+          "name": "USR$MN_MEASURE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_LOSSKOEFF",
+          "label": "Коэф. отхода",
+          "name": "USR$MN_LOSSKOEFF"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame4",
+          "fieldName": "USR$MN_STARCH",
+          "label": "Крахмал",
+          "name": "USR$MN_STARCH"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame2",
+          "fieldName": "USR$MN_UGLEVOD",
+          "label": "Углеводы",
+          "name": "USR$MN_UGLEVOD"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame2",
+          "fieldName": "USR$MN_CALORIE",
+          "label": "Калорийность",
+          "name": "USR$MN_CALORIE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$MN_ONLY",
+          "label": "Штучный",
+          "name": "USR$MN_ONLY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame2",
+          "fieldName": "USR$MN_SUGAR",
+          "label": "Сахар",
+          "name": "USR$MN_SUGAR"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area17",
+          "fieldName": "USR$INV_LOSS",
+          "label": "Ест. убыль",
+          "name": "USR$INV_LOSS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area17",
+          "fieldName": "USR$INV_PERCROPE",
+          "label": "Процент веревок",
+          "name": "USR$INV_PERCROPE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area17",
+          "fieldName": "USR$CLITICALDAYS",
+          "label": "Кол-во критичных дней",
+          "name": "USR$CLITICALDAYS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame5",
+          "fieldName": "USR$INV_COEFF",
+          "label": "Коэфициент к отчету",
+          "name": "USR$INV_COEFF"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "VALUEKEY.ID",
+          "label": "Ед. изм.",
+          "name": "VALUEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "GROUPKEY.ID",
+          "label": "Группа",
+          "name": "GROUPKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area7",
+          "fieldName": "TNVDKEY.ID",
+          "label": "Код ТНВД",
+          "name": "TNVDKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area7",
+          "fieldName": "DISCIPLINE",
+          "label": "Метод списания",
+          "name": "DISCIPLINE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area17",
+          "fieldName": "USR$OUTVALUEKEY.ID",
+          "label": "Ед. изм. отпуска",
+          "name": "USR$OUTVALUEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area18",
+          "fieldName": "USR$NATURALLOSSGROUP.ID",
+          "label": "Группа товара для убыли",
+          "name": "USR$NATURALLOSSGROUP.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "USR$INV_ACCOUNTKEY.ID",
+          "label": "Балансовый счет",
+          "name": "USR$INV_ACCOUNTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame5",
+          "fieldName": "USR$INV_REFFORMTORGKEY.ID",
+          "label": "Группа по форме №3-торг",
+          "name": "USR$INV_REFFORMTORGKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area18",
+          "fieldName": "GD_GOODPRMETAL",
+          "label": "Драг. металлы по товару",
+          "name": "GD_GOODPRMETAL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area18",
+          "fieldName": "GD_GOODTAX",
+          "label": "Налоги-товар",
+          "name": "GD_GOODTAX"
+        },
+        {
+          "name": "Frame1",
+          "parent": "Area11",
+          "type": "FRAME",
+          "border": true,
+          "caption": "Количественные показатели",
+          "marginTop": true,
+          "height": "440"
+        },
+        {
+          "name": "Frame2",
+          "parent": "Area12",
+          "type": "FRAME",
+          "border": true,
+          "caption": "Энергетическая ценность",
+          "marginTop": true,
+          "height": "440"
+        },
+        {
+          "name": "Frame3",
+          "parent": "Area13",
+          "type": "FRAME",
+          "border": true,
+          "marginTop": true,
+          "caption": "Витамины",
+          "height": "660"
+        },
+        {
+          "name": "Frame4",
+          "parent": "Area14",
+          "type": "FRAME",
+          "border": true,
+          "caption": "Минералы",
+          "marginTop": true,
+          "height": "660"
+        },
+        {
+          "name": "Frame5",
+          "parent": "Area15",
+          "type": "FRAME",
+          "border": true,
+          "caption": "Статистика",
+          "marginTop": true
+        },
+        {
+          "name": "Label1",
+          "parent": "Area16",
+          "type": "LABEL",
+          "text": "Атрибуты"
+        },
+        {
+          "name": "Label2",
+          "parent": "Area19",
+          "type": "LABEL",
+          "text": "Общепит"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area18",
+          "fieldName": "GD_GOODSET",
+          "label": "Комплектация",
+          "name": "GD_GOODSET"
+        }
+      ]
+    },
+    "_changed": 1577173067836,
+    "_accessed": 1577173067836
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "TgdcGoodGroup",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 40
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "horizontal": false
+        },
+        {
+          "name": "Area3",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 2,
+          "right": 0,
+          "bottom": 2,
+          "horizontal": false
+        },
+        {
+          "name": "Area4",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        },
+        {
+          "name": "Area5",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 2,
+          "right": 1,
+          "bottom": 2
+        },
+        {
+          "name": "Area1",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 1,
+          "right": 1,
+          "bottom": 1
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "NAME",
+          "label": "Наименование группы",
+          "name": "NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "USR$FOREIGNNAME",
+          "label": "Наименование (англ.)",
+          "name": "USR$FOREIGNNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "DESCRIPTION",
+          "label": "Описание группы",
+          "name": "DESCRIPTION"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "ALIAS",
+          "label": "Шифр группы",
+          "name": "ALIAS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "PARENT.ID",
+          "label": "Входит в группу",
+          "name": "PARENT.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "DISABLED",
+          "label": "Отключена",
+          "name": "DISABLED"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "USR$INV_OPTPERC",
+          "label": "Оптовая надбавка",
+          "name": "USR$INV_OPTPERC"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "USR$INV_PERCKEY.ID",
+          "label": "Наценочная группа",
+          "name": "USR$INV_PERCKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "USR$INV_ACCOUNTKEY.ID",
+          "label": "Балансовый счет",
+          "name": "USR$INV_ACCOUNTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "USR$INV_PERCROPE",
+          "label": "Процент веревок",
+          "name": "USR$INV_PERCROPE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "USR$INV_LOSS",
+          "label": "Ест. убыль",
+          "name": "USR$INV_LOSS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "USR$NATURALLOSSGROUP.ID",
+          "label": "Группа товара для убыли",
+          "name": "USR$NATURALLOSSGROUP.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "USR$INV_REFFORMTORGKEY.ID",
+          "label": "Ссылка на стат. группу ",
+          "name": "USR$INV_REFFORMTORGKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "USR$INV_REFFORMTORGKOEFF",
+          "label": "Коэффициент к статотчету",
+          "name": "USR$INV_REFFORMTORGKOEFF"
+        },
+        {
+          "name": "Label1",
+          "parent": "Area1",
+          "type": "LABEL",
+          "text": "Атрибуты"
+        }
+      ]
+    },
+    "_changed": 1577173148748,
+    "_accessed": 1577173148748
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "TgdcContact",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          }
+        ],
+        "rows": [
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 140
+          },
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 110
+          },
+          {
+            "unit": "PX",
+            "value": 50
+          },
+          {
+            "unit": "PX",
+            "value": 140
+          },
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 50
+          },
+          {
+            "unit": "PX",
+            "value": 140
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        {
+          "name": "Area3",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        },
+        {
+          "name": "Area4",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 0,
+          "right": 2,
+          "bottom": 0
+        },
+        {
+          "name": "Area5",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 0,
+          "right": 3,
+          "bottom": 0
+        },
+        {
+          "name": "Area6",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 1,
+          "right": 1,
+          "bottom": 1
+        },
+        {
+          "name": "Area7",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 1,
+          "right": 2,
+          "bottom": 1
+        },
+        {
+          "name": "Area8",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 1,
+          "right": 3,
+          "bottom": 1
+        },
+        {
+          "name": "Area9",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 2,
+          "right": 1,
+          "bottom": 2
+        },
+        {
+          "name": "Area10",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 2,
+          "right": 3,
+          "bottom": 2
+        },
+        {
+          "name": "Area11",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 3,
+          "right": 1,
+          "bottom": 3
+        },
+        {
+          "name": "Area12",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 3,
+          "right": 2,
+          "bottom": 3,
+          "horizontal": false
+        },
+        {
+          "name": "Area13",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 3,
+          "right": 3,
+          "bottom": 3
+        },
+        {
+          "name": "Area14",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 4,
+          "right": 0,
+          "bottom": 4,
+          "horizontal": true
+        },
+        {
+          "name": "Area15",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 4,
+          "right": 2,
+          "bottom": 4,
+          "horizontal": true
+        },
+        {
+          "name": "Area16",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 4,
+          "right": 1,
+          "bottom": 4
+        },
+        {
+          "name": "Area17",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 4,
+          "right": 3,
+          "bottom": 4
+        },
+        {
+          "name": "Area18",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 5,
+          "right": 3,
+          "bottom": 5
+        },
+        {
+          "name": "Area19",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 6,
+          "right": 3,
+          "bottom": 6
+        },
+        {
+          "name": "Area20",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 7,
+          "right": 1,
+          "bottom": 7
+        },
+        {
+          "name": "Area21",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 7,
+          "right": 2,
+          "bottom": 7
+        },
+        {
+          "name": "Area22",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 7,
+          "right": 3,
+          "bottom": 7
+        },
+        {
+          "name": "Area23",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 8,
+          "right": 1,
+          "bottom": 8
+        },
+        {
+          "name": "Area24",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 8,
+          "right": 3,
+          "bottom": 8
+        },
+        {
+          "name": "Area25",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 9,
+          "right": 3,
+          "bottom": 9
+        },
+        {
+          "name": "Area26",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 10,
+          "right": 0,
+          "bottom": 10
+        },
+        {
+          "name": "Area27",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 10,
+          "right": 1,
+          "bottom": 10
+        },
+        {
+          "name": "Area28",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 10,
+          "right": 2,
+          "bottom": 10
+        },
+        {
+          "name": "Area29",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 10,
+          "right": 3,
+          "bottom": 10
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area11",
+          "fieldName": "PLACEKEY.ID",
+          "label": "Страна, область, населенный пункт",
+          "name": "PLACEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area12",
+          "fieldName": "COUNTRY",
+          "label": "Страна",
+          "name": "COUNTRY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area6",
+          "fieldName": "NAME",
+          "label": "Наименование",
+          "name": "NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area13",
+          "fieldName": "REGION",
+          "label": "Область, респ.",
+          "name": "REGION"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area11",
+          "fieldName": "ADDRESS",
+          "label": "Адрес",
+          "name": "ADDRESS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area12",
+          "fieldName": "DISTRICT",
+          "label": "Район",
+          "name": "DISTRICT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area13",
+          "fieldName": "CITY",
+          "label": "Город, населенный пункт",
+          "name": "CITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area14",
+          "fieldName": "ZIP",
+          "label": "Индекс",
+          "name": "ZIP"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area18",
+          "fieldName": "NOTE",
+          "label": "Описание",
+          "name": "NOTE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area16",
+          "fieldName": "EMAIL",
+          "label": "Электронный адрес",
+          "name": "EMAIL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area15",
+          "fieldName": "URL",
+          "label": "Сайт",
+          "name": "URL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area7",
+          "fieldName": "PHONE",
+          "label": "Телефон",
+          "name": "PHONE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area8",
+          "fieldName": "FAX",
+          "label": "Факс",
+          "name": "FAX"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area18",
+          "fieldName": "DISABLED",
+          "label": "DISABLED",
+          "name": "DISABLED"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "FIRSTNAME",
+          "label": "Имя",
+          "name": "FIRSTNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "SURNAME",
+          "label": "Фамилия",
+          "name": "SURNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "MIDDLENAME",
+          "label": "Отчество",
+          "name": "MIDDLENAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area20",
+          "fieldName": "HPLACEKEY.ID",
+          "label": "Страна, область, населенный пункт",
+          "name": "HPLACEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "NICKNAME",
+          "label": "Коротко",
+          "name": "NICKNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area22",
+          "fieldName": "HREGION",
+          "label": "Область (проживания)",
+          "name": "HREGION"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area20",
+          "fieldName": "HADDRESS",
+          "label": "Дом. адрес",
+          "name": "HADDRESS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area22",
+          "fieldName": "HCITY",
+          "label": "Город (домашний)",
+          "name": "HCITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area23",
+          "fieldName": "HZIP",
+          "label": "Индекс (проживания)",
+          "name": "HZIP"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area21",
+          "fieldName": "HCOUNTRY",
+          "label": "Страна (прожив)",
+          "name": "HCOUNTRY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area21",
+          "fieldName": "HDISTRICT",
+          "label": "Район (проживания)",
+          "name": "HDISTRICT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area17",
+          "fieldName": "HPHONE",
+          "label": "Дом. телефон",
+          "name": "HPHONE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area26",
+          "fieldName": "PASSPORTNUMBER",
+          "label": "Номер паспорта",
+          "name": "PASSPORTNUMBER"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area27",
+          "fieldName": "PASSPORTEXPDATE",
+          "label": "Дата действия пасп",
+          "name": "PASSPORTEXPDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area28",
+          "fieldName": "PASSPORTISSDATE",
+          "label": "Дата выдачи",
+          "name": "PASSPORTISSDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area29",
+          "fieldName": "PASSPORTISSUER",
+          "label": "Кто выдал",
+          "name": "PASSPORTISSUER"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area29",
+          "fieldName": "USR$BANK.ID",
+          "label": "Банк",
+          "name": "USR$BANK.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area26",
+          "fieldName": "PASSPORTISSCITY",
+          "label": "Город выдачи",
+          "name": "PASSPORTISSCITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area27",
+          "fieldName": "PERSONALNUMBER",
+          "label": "Персональный номер",
+          "name": "PERSONALNUMBER"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area28",
+          "fieldName": "USR$ACCOUNT",
+          "label": "Банковский счет",
+          "name": "USR$ACCOUNT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area10",
+          "fieldName": "WCOMPANYKEY.ID",
+          "label": "Рабочая организация",
+          "name": "WCOMPANYKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area24",
+          "fieldName": "WPOSITIONKEY.ID",
+          "label": "Должность",
+          "name": "WPOSITIONKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area9",
+          "fieldName": "PARENT.ID",
+          "label": "Папка",
+          "name": "PARENT.ID"
+        },
+        {
+          "name": "Label1",
+          "parent": "Area19",
+          "type": "LABEL",
+          "text": "Паспорт. Домашний адрес"
+        },
+        {
+          "name": "Label2",
+          "parent": "Area25",
+          "type": "LABEL",
+          "text": "Паспорт. Личные данные"
+        }
+      ]
+    },
+    "_changed": 1577173105651,
+    "_accessed": 1577173105651
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "TgdcDepartment",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "PX",
+            "value": 200
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "PX",
+            "value": 150
+          },
+          {
+            "unit": "PX",
+            "value": 75
+          },
+          {
+            "unit": "PX",
+            "value": 150
+          },
+          {
+            "unit": "PX",
+            "value": 120
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          },
+          {
+            "unit": "PX",
+            "value": 50
+          },
+          {
+            "unit": "AUTO",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area1",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 6,
+          "right": 1,
+          "bottom": 6,
+          "horizontal": false
+        },
+        {
+          "name": "Area3",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 0,
+          "right": 3,
+          "bottom": 0
+        },
+        {
+          "name": "Area5",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 2,
+          "right": 0,
+          "bottom": 2
+        },
+        {
+          "name": "Area4",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 2,
+          "right": 2,
+          "bottom": 2
+        },
+        {
+          "name": "Area6",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 2,
+          "right": 3,
+          "bottom": 2
+        },
+        {
+          "name": "Area7",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 2,
+          "right": 1,
+          "bottom": 2
+        },
+        {
+          "name": "Area8",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 3,
+          "right": 3,
+          "bottom": 3
+        },
+        {
+          "name": "Area9",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 1,
+          "right": 1,
+          "bottom": 1
+        },
+        {
+          "name": "Area10",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 2,
+          "top": 1,
+          "right": 2,
+          "bottom": 1
+        },
+        {
+          "name": "Area11",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 3,
+          "top": 1,
+          "right": 3,
+          "bottom": 1
+        },
+        {
+          "name": "Area12",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 4,
+          "right": 1,
+          "bottom": 4
+        },
+        {
+          "name": "Area13",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 5,
+          "right": 1,
+          "bottom": 5
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "ID",
+          "label": "Идентификатор",
+          "name": "ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "LB",
+          "label": "Левая граница",
+          "name": "LB"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "RB",
+          "label": "Правая граница",
+          "name": "RB"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "CONTACTTYPE",
+          "label": "Тип контакта",
+          "name": "CONTACTTYPE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area10",
+          "fieldName": "COUNTRY",
+          "label": "Страна",
+          "name": "COUNTRY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "NAME",
+          "label": "Наименование",
+          "name": "NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area9",
+          "fieldName": "ADDRESS",
+          "label": "Адрес",
+          "name": "ADDRESS"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "DISTRICT",
+          "label": "Район",
+          "name": "DISTRICT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area11",
+          "fieldName": "REGION",
+          "label": "Область/республика",
+          "name": "REGION"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area4",
+          "fieldName": "ZIP",
+          "label": "Индекс",
+          "name": "ZIP"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "NOTE",
+          "label": "Описание",
+          "name": "NOTE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area6",
+          "fieldName": "CITY",
+          "label": "Город/населенный пункт",
+          "name": "CITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "EXTERNALKEY",
+          "label": "Внешний ключ",
+          "name": "EXTERNALKEY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area6",
+          "fieldName": "POBOX",
+          "label": "Почтовый ящик",
+          "name": "POBOX"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "PHONE",
+          "label": "Телефон",
+          "name": "PHONE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "EMAIL",
+          "label": "email",
+          "name": "EMAIL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area7",
+          "fieldName": "FAX",
+          "label": "Факс",
+          "name": "FAX"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "LAT",
+          "label": "LAT",
+          "name": "LAT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area7",
+          "fieldName": "URL",
+          "label": "http://",
+          "name": "URL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "LON",
+          "label": "LON",
+          "name": "LON"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "CREATIONDATE",
+          "label": "CREATIONDATE",
+          "name": "CREATIONDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "EDITIONDATE",
+          "label": "Дата изменения",
+          "name": "EDITIONDATE"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "AFULL",
+          "label": "Полный доступ",
+          "name": "AFULL"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "ACHAG",
+          "label": "Просмотр и редактирование",
+          "name": "ACHAG"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "AVIEW",
+          "label": "Только просмотр",
+          "name": "AVIEW"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area8",
+          "fieldName": "USR$RESPKEY.ID",
+          "label": "Материально ответственный",
+          "name": "USR$RESPKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "RESERVED",
+          "label": "Зарезервировано",
+          "name": "RESERVED"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ETTN_GLN",
+          "label": "GLN номер",
+          "name": "USR$ETTN_GLN"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$WG_LISTNUM",
+          "label": "Табельный номер",
+          "name": "USR$WG_LISTNUM"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$WAGE_OLDEMPLKEY",
+          "label": "Ключ сотрудника из ЗА",
+          "name": "USR$WAGE_OLDEMPLKEY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$WAGE_OLDDEPTKEY",
+          "label": "Ключ подразделения из ЗА",
+          "name": "USR$WAGE_OLDDEPTKEY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$MN_USEPORTION",
+          "label": "Использовать порционность",
+          "name": "USR$MN_USEPORTION"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$FA_OKONH",
+          "label": "Код ОКОНХ",
+          "name": "USR$FA_OKONH"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area8",
+          "fieldName": "DISABLED",
+          "label": "Подразделение не активно",
+          "name": "DISABLED"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area3",
+          "fieldName": "PLACEKEY.ID",
+          "label": "Страна, область, район, город (нас. пункт)",
+          "name": "PLACEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "PLACEKEY.NAME",
+          "label": "PLACEKEY.NAME",
+          "name": "PLACEKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "CREATORKEY.ID",
+          "label": "CREATORKEY",
+          "name": "CREATORKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "CREATORKEY.NAME",
+          "label": "CREATORKEY.NAME",
+          "name": "CREATORKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "EDITORKEY.ID",
+          "label": "Кто исправил",
+          "name": "EDITORKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "EDITORKEY.NAME",
+          "label": "EDITORKEY.NAME",
+          "name": "EDITORKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$RESPKEY.NAME",
+          "label": "USR$RESPKEY.NAME",
+          "name": "USR$RESPKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$IMNSKEY.ID",
+          "label": "Налоговая инспекция",
+          "name": "USR$IMNSKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$IMNSKEY.USR$NAME",
+          "label": "USR$IMNSKEY.USR$NAME",
+          "name": "USR$IMNSKEY.USR$NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ACCOUNTKEY.ID",
+          "label": "Счет",
+          "name": "USR$ACCOUNTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ACCOUNTKEY.NAME",
+          "label": "USR$ACCOUNTKEY.NAME",
+          "name": "USR$ACCOUNTKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TRANSACTIONKEY.ID",
+          "label": "Типовая операция",
+          "name": "USR$TRANSACTIONKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TRANSACTIONKEY.NAME",
+          "label": "USR$TRANSACTIONKEY.NAME",
+          "name": "USR$TRANSACTIONKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$INV_TYPEDEPART.USR$NAME",
+          "label": "USR$INV_TYPEDEPART.USR$NAME",
+          "name": "USR$INV_TYPEDEPART.USR$NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$MN_EXTRACATEGORYKEY.ID",
+          "label": "Наценочную категория",
+          "name": "USR$MN_EXTRACATEGORYKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$MN_EXTRACATEGORYKEY.USR$NAME",
+          "label": "USR$MN_EXTRACATEGORYKEY.USR$NAME",
+          "name": "USR$MN_EXTRACATEGORYKEY.USR$NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$INV_ACCOUNTKEY.NAME",
+          "label": "USR$INV_ACCOUNTKEY.NAME",
+          "name": "USR$INV_ACCOUNTKEY.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$FA_OKEDKEY.USR$NAME",
+          "label": "USR$FA_OKEDKEY.USR$NAME",
+          "name": "USR$FA_OKEDKEY.USR$NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$FA_OKEDKEY.ID",
+          "label": "Код ОКЭД",
+          "name": "USR$FA_OKEDKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$INV_ACCOUNTKEY.ID",
+          "label": "Счет затрат",
+          "name": "USR$INV_ACCOUNTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Frame1",
+          "fieldName": "USR$INV_TYPEDEPART.ID",
+          "label": "Тип подразделения",
+          "name": "USR$INV_TYPEDEPART.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area5",
+          "fieldName": "PARENT.ID",
+          "label": "Входит в подразделение",
+          "name": "PARENT.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "PARENT.NAME",
+          "label": "PARENT.NAME",
+          "name": "PARENT.NAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "GD_CONTACTLIST",
+          "label": "Список контактов",
+          "name": "GD_CONTACTLIST"
+        },
+        {
+          "name": "Frame1",
+          "parent": "Area12",
+          "type": "FRAME",
+          "border": true,
+          "caption": "Дополнительные",
+          "marginTop": true
+        },
+        {
+          "name": "Label1",
+          "parent": "Area13",
+          "type": "LABEL",
+          "text": "Атрибуты"
+        }
+      ]
+    },
+    "_changed": 1577173178617,
+    "_accessed": 1577173178617
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "USR$NOTICE10",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "FR",
+            "value": 1
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area1",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$CONTACTKEY.ID",
+          "label": "Контакт",
+          "name": "USR$CONTACTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$CONTACTKEY.FIRSTNAME",
+          "label": "USR$CONTACTKEY.FIRSTNAME",
+          "name": "USR$CONTACTKEY.FIRSTNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ADMINKEY.ID",
+          "label": "Администратор",
+          "name": "USR$ADMINKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TYPEKEY",
+          "label": "Тип",
+          "name": "USR$TYPEKEY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$PRIORITY",
+          "label": "Приоритет",
+          "name": "USR$PRIORITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ADMINKEY.FIRSTNAME",
+          "label": "USR$ADMINKEY.FIRSTNAME",
+          "name": "USR$ADMINKEY.FIRSTNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$STATEKEY.ID",
+          "label": "Состояние",
+          "name": "USR$STATEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$STATEKEY.USR$NAME",
+          "label": "USR$STATEKEY.USR$NAME",
+          "name": "USR$STATEKEY.USR$NAME"
+        },
+        {
+          "name": "Field1",
+          "parent": "Area2",
+          "type": "FIELD",
+          "fieldName": "USR$PRIORITY",
+          "label": "Приоритет"
+        }
+      ]
+    },
+    "_changed": 1575286684543,
+    "_accessed": 1575286684543
+  },
+  {
+    "type": "DESIGNER",
+    "objectID": "USR$TASKS",
+    "data": {
+      "grid": {
+        "columns": [
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "PX",
+            "value": 320
+          },
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ],
+        "rows": [
+          {
+            "unit": "FR",
+            "value": 1
+          }
+        ]
+      },
+      "objects": [
+        {
+          "name": "Window",
+          "type": "WINDOW"
+        },
+        {
+          "name": "Area1",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0
+        },
+        {
+          "name": "Area2",
+          "type": "AREA",
+          "parent": "Window",
+          "left": 1,
+          "top": 0,
+          "right": 1,
+          "bottom": 0
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$CONTACTKEY.ID",
+          "label": "Контакт",
+          "name": "USR$CONTACTKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TYPEKEY",
+          "label": "Тип",
+          "name": "USR$TYPEKEY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$TEXT",
+          "label": "Текст",
+          "name": "USR$TEXT"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$CONTACTKEY.FIRSTNAME",
+          "label": "USR$CONTACTKEY.FIRSTNAME",
+          "name": "USR$CONTACTKEY.FIRSTNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "USR$ADMINKEY.ID",
+          "label": "Администратор",
+          "name": "USR$ADMINKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$ADMINKEY.FIRSTNAME",
+          "label": "USR$ADMINKEY.FIRSTNAME",
+          "name": "USR$ADMINKEY.FIRSTNAME"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "USR$STATEKEY.ID",
+          "label": "Состояние",
+          "name": "USR$STATEKEY.ID"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area2",
+          "fieldName": "USR$PRIORITY",
+          "label": "Приоритет",
+          "name": "USR$PRIORITY"
+        },
+        {
+          "type": "FIELD",
+          "parent": "Area1",
+          "fieldName": "USR$STATEKEY.USR$NAME",
+          "label": "USR$STATEKEY.USR$NAME",
+          "name": "USR$STATEKEY.USR$NAME"
+        }
+      ]
+    },
+    "_changed": 1575536095676,
+    "_accessed": 1575536095676
+  }
+]
