@@ -3,11 +3,11 @@ import { TThunkMiddleware } from "./middlewares";
 import { getType } from "typesafe-actions";
 import { loadRSActions as actions, LoadRSActions } from "./loadRSActions";
 import { TTaskStatus } from "@gdmn/server-api";
-import { attr2fd } from "../scenes/ermodel/EntityDataView/utils";
 import { RecordSet, IDataRow, TFieldType, TStatus, rsActions, TCommitResult } from "gdmn-recordset";
 import { List } from "immutable";
 import { createGrid } from "gdmn-grid";
 import { rsMetaActions, IRsMeta } from "./rsmeta";
+import { attr2fd } from "../scenes/ermodel/utils";
 
 export const loadRsMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware => ({ dispatch, getState }) => next => async (action: LoadRSActions) => {
 

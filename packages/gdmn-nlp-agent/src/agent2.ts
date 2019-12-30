@@ -31,6 +31,7 @@ export class ERTranslatorRU2 {
   readonly erModel: ERModel;
 
   private _command?: ICommand;
+  private _text?: string[];
 
   constructor(erModel: ERModel) {
     this.erModel = erModel;
@@ -40,6 +41,11 @@ export class ERTranslatorRU2 {
     return this._command;
   }
 
+  /**
+   * Returns a function which returns a given by name
+   * phrase from the sentence.
+   * @param sentence
+   */
   private _getPhrase(sentence: IRusSentence) {
     return (phraseId: string) => sentence.phrases.find( p => p.phraseId === phraseId );
   }
@@ -168,7 +174,7 @@ export class ERTranslatorRU2 {
     this._command = undefined;
   }
 
-  public process(sentence: IRusSentence): ICommand {
+  public process(sentence: IRusSentence, sentenceImage: string): ICommand {
     switch (sentence.templateId) {
       case 'VPShowByPlace':
         this._command = this.processVPShowByPlace(sentence);
@@ -187,6 +193,12 @@ export class ERTranslatorRU2 {
       throw new Error(`Unsupported phrase type`);
     }
 
+    if (this._text) {
+      this._text.push(sentenceImage);
+    } else {
+      this._text = [sentenceImage];
+    }
+
     return this._command;
   }
 
@@ -197,6 +209,8 @@ export class ERTranslatorRU2 {
     // разбиваем на предложения используя точку как разделитель
     // убираем пустые предложения
     const sentences = tokens2sentenceTokens(tokens).filter( s => s.length );
+
+    this._text = [];
 
     for (const sentence of sentences) {
       // разбиваем на варианты, если некоторое слово может быть
@@ -209,7 +223,7 @@ export class ERTranslatorRU2 {
 
       // TODO: обрабатываем только первый нашедшийся
       // вариант разбора предложения
-      this.process(parsed[0]);
+      this.process(parsed[0], sentence.map( t => t.image ).join(' '));
     }
 
     if (!this._command) {

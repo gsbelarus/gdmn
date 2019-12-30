@@ -1,8 +1,8 @@
 import { Dispatch } from "redux";
-import { GdmnAction, gdmnActions } from "../../gdmn/actions";
+import { GdmnAction, gdmnActions } from "../scenes/gdmn/actions";
 import { GDMNGrid, IGridState } from "gdmn-grid";
 import { useRef, useEffect, MutableRefObject } from "react";
-import { IViewTab } from "../../gdmn/types";
+import { IViewTab } from "../scenes/gdmn/types";
 
 type TRefGrid = MutableRefObject<GDMNGrid | undefined>;
 type TGetSavedState = () => IGridState | undefined;

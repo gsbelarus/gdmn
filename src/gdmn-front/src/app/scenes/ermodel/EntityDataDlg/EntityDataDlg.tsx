@@ -5,7 +5,6 @@ import styles from './styles.css';
 import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label, ComboBox } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
-import { attr2fd } from "../EntityDataView/utils";
 import { apiService } from "@src/app/services/apiService";
 import { List } from "immutable";
 import {
@@ -33,6 +32,7 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { IDesignerSetting } from '../../designer/Designer.types';
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { Frame } from "../../gdmn/components/Frame";
+import { attr2fd } from "../utils";
 
 interface ILastEdited {
   fieldName: string;

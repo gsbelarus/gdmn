@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState, useCallback } from 'react';
+import React, { useEffect, useReducer, useCallback } from 'react';
 import { IEntityDataViewProps } from './EntityDataView.types';
 import { CommandBar, MessageBar, MessageBarType, ICommandBarItemProps, TextField, Stack, DefaultButton, ComboBox, getTheme, Icon } from 'office-ui-fabric-react';
 import { gdmnActions } from '../../gdmn/actions';
@@ -10,7 +10,7 @@ import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
 import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
-import { useSaveGridState } from './useSavedGridState';
+import { useSaveGridState } from '../../../hooks/useSavedGridState';
 import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';

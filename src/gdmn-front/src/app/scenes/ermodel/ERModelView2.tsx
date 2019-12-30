@@ -9,7 +9,7 @@ import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
 import styles from './EntityDataView/styles.css';
 import {InspectorForm} from "@src/app/components/InspectorForm";
-import {useSaveGridState} from "./EntityDataView/useSavedGridState";
+import {useSaveGridState} from "../../hooks/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";
 import { ERModel } from "gdmn-orm";
 import { useMessageBox } from "@src/app/components/MessageBox/MessageBox";
