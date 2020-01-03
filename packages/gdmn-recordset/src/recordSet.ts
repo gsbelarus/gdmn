@@ -1090,7 +1090,7 @@ export class RecordSet {
 
       case TFieldType.Float:
       case TFieldType.Currency: {
-        const v = Number(value);
+        const v = Number(value.replace(',', '.'));
 
         if (isNaN(v) || !value) {
           throw new Error(`Invalid type cast`);
