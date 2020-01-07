@@ -20,25 +20,69 @@ import {
   EntityQuery,
   EntityQueryOptions,
   ERModel,
-  IEntityQueryWhereValue,
   prepareDefaultEntityLinkFields,
   IEntityQueryWhere} from "gdmn-orm";
 import {ICommand} from "./command";
 import { getLName } from "gdmn-internals";
 
+export type ERTranslatorErrorCode = 'INVALID_PHRASE_STRUCTURE'
+  | 'UNKNOWN_PHRASE'
+  | 'UNKNOWN_ENTITY'
+  | 'UNKNOWN_ATTR'
+  | 'UNSUPPORTED_COMMAND_TYPE'
+  | 'NO_CONTEXT';
+
+export class ERTranslatorError extends Error {
+  constructor(readonly code: ERTranslatorErrorCode, ...params: any[]) {
+    super(...params)
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ERTranslatorError)
+    }
+
+    this.name = 'ERTranslatorError'
+
+    if (!this.message) {
+      this.message = code;
+    }
+  }
+};
+
+interface IERTranslatorRUParams {
+  erModel: ERModel;
+  command?: ICommand;
+  text?: string[];
+};
+
 export class ERTranslatorRU2 {
 
-  readonly erModel: ERModel;
+  private _params: IERTranslatorRUParams;
 
-  private _command?: ICommand;
-  private _text?: string[];
+  constructor(params: IERTranslatorRUParams) {
+    this._params = params;
+  }
 
-  constructor(erModel: ERModel) {
-    this.erModel = erModel;
+  get erModel() {
+    return this._params.erModel;
   }
 
   get command() {
-    return this._command;
+    if (!this._params.command) {
+      throw new Error('Translator is empty');
+    }
+    return this._params.command;
+  }
+
+  get text() {
+    if (!this._params.text) {
+      throw new Error('Translator is empty');
+    }
+    return this._params.text;
+  }
+
+  get valid() {
+    return !!this._params.command && !!this._params.text?.length;
   }
 
   /**
@@ -104,8 +148,8 @@ export class ERTranslatorRU2 {
 
     return wt.type === 'WORD' && wt.word instanceof RusNoun
       ? this._findAttr2(entity, wt.word)
-      : wt.type === 'TOKEN' && wt.token.tokenType === nlpIDToken && entity.attributes[wt.token.image]
-      ? entity.attributes[wt.token.image]
+      : wt.type === 'TOKEN' && wt.token.tokenType === nlpIDToken
+      ? entity.attributes[wt.token.image.toUpperCase()]
       : undefined;
   }
 
@@ -167,42 +211,38 @@ export class ERTranslatorRU2 {
       }
     }
 
-    throw new Error(`Unknown phrase structure`);
+    throw new ERTranslatorError('INVALID_PHRASE_STRUCTURE');
+  }
+
+  private _checkContext() {
+    if (!this._params.command?.payload.options || !this._params.text) {
+      console.log(this._params.command?.payload);
+      console.log(this._params.text);
+      throw new ERTranslatorError('NO_CONTEXT');
+    }
   }
 
   public clear() {
-    this._command = undefined;
+    return new ERTranslatorRU2({ erModel: this.erModel });
   }
 
-  public process(sentence: IRusSentence, sentenceImage: string): ICommand {
+  public process(sentence: IRusSentence) {
     switch (sentence.templateId) {
       case 'VPShowByPlace':
-        this._command = this.processVPShowByPlace(sentence);
-        break;
+        return this.processVPShowByPlace(sentence);
 
       case 'VPSortBy':
-        this._command = this._command && this.processVPSortBy(sentence, this._command);
-        break;
+        return this.processVPSortBy(sentence);
 
       case 'VPContains':
-        this._command = this._command && this.processVPContains(sentence, this._command);
-        break;
-    }
+        return this.processVPContains(sentence);
 
-    if (!this._command) {
-      throw new Error(`Unsupported phrase type`);
+      default:
+        throw new ERTranslatorError('UNKNOWN_PHRASE');
     }
-
-    if (this._text) {
-      this._text.push(sentenceImage);
-    } else {
-      this._text = [sentenceImage];
-    }
-
-    return this._command;
   }
 
-  public processText(text: string, processUniform = true): ICommand {
+  public processText(text: string, processUniform = true) {
     // весь текст разбиваем на токены
     const tokens = text2Tokens(text);
 
@@ -210,7 +250,7 @@ export class ERTranslatorRU2 {
     // убираем пустые предложения
     const sentences = tokens2sentenceTokens(tokens).filter( s => s.length );
 
-    this._text = [];
+    let res: ERTranslatorRU2 = this;
 
     for (const sentence of sentences) {
       // разбиваем на варианты, если некоторое слово может быть
@@ -223,14 +263,10 @@ export class ERTranslatorRU2 {
 
       // TODO: обрабатываем только первый нашедшийся
       // вариант разбора предложения
-      this.process(parsed[0], sentence.map( t => t.image ).join(' '));
+      res = res.process(parsed[0]);
     }
 
-    if (!this._command) {
-      throw new Error(`Unsupported phrase type`);
-    }
-
-    return this._command;
+    return res;
   }
 
   /**
@@ -248,7 +284,7 @@ export class ERTranslatorRU2 {
    *
    * Пример: "[все] организации"
    */
-  public processVPShowByPlace(sentence: IRusSentence): ICommand {
+  public processVPShowByPlace(sentence: IRusSentence) {
     const rootAlias = 'root';
     const getPhrase = this._getPhrase(sentence);
 
@@ -256,7 +292,7 @@ export class ERTranslatorRU2 {
     const entity = this._findEntity(entityPhrase, 1);
 
     if (!entity) {
-      throw new Error(`Can't find entity ${this._getImage(entityPhrase, 1)}`);
+      throw new ERTranslatorError('UNKNOWN_ENTITY', `Can't find entity ${this._getImage(entityPhrase, 1)}`);
     }
 
     const fields = prepareDefaultEntityLinkFields(entity);
@@ -317,10 +353,14 @@ export class ERTranslatorRU2 {
     const options = new EntityQueryOptions(undefined, undefined, (where && where.length > 1) ? [{ or: where }] : where);
     const entityLink = new EntityLink(entity, rootAlias, fields);
 
-    return {
-      action: 'QUERY',
-      payload: new EntityQuery(entityLink, options)
-    };
+    return new ERTranslatorRU2({
+      erModel: this.erModel,
+      command: {
+        action: 'QUERY',
+        payload: new EntityQuery(entityLink, options)
+      },
+      text: sentence.image ? [sentence.image] : undefined
+    });
   }
 
   /**
@@ -335,38 +375,42 @@ export class ERTranslatorRU2 {
    * локализованное название по которому мы ищем атрибут сущности
    * в erModel или имя атрибута в модели.
    */
-  public processVPSortBy(sentence: IRusSentence, command: ICommand): ICommand {
-    if (!command.payload.options) {
-      throw new Error('Invalid command');
-    }
+  public processVPSortBy(sentence: IRusSentence) {
+    this._checkContext();
 
-    const entity = command.payload.link.entity;
+    const entity = this.command.payload.link.entity;
     const getPhrase = this._getPhrase(sentence);
 
     const byFieldPhrase = getPhrase('byField');
     const foundAttr = this._findAttr(entity, byFieldPhrase, 1);
 
     if (foundAttr) {
-      command.payload.options.addOrder({
-        alias: command.payload.link.alias,
+      const eq = EntityQuery.inspectorToObject(this.erModel, this.command.payload.inspect());
+
+      eq.options!.addOrder({
+        alias: eq.link.alias,
         attribute: foundAttr,
         type: 'ASC'
       });
+
+      return new ERTranslatorRU2({
+        erModel: this.erModel,
+        command: {...this.command, payload: eq},
+        text: sentence.image ? [...this.text, sentence.image] : this.text
+      });
     }
 
-    return command;
+    throw new ERTranslatorError('UNKNOWN_ATTR');
   }
 
   /**
    * |subject   |contains value           |
    *  Название   содержит "строка"
    */
-  public processVPContains(sentence: IRusSentence, command: ICommand): ICommand {
-    if (!command.payload.options) {
-      throw new Error('Invalid command');
-    }
+  public processVPContains(sentence: IRusSentence) {
+    this._checkContext();
 
-    const entity = command.payload.link.entity;
+    const entity = this.command.payload.link.entity;
     const getPhrase = this._getPhrase(sentence);
 
     const subjectPhrase = getPhrase('subject');
@@ -374,32 +418,40 @@ export class ERTranslatorRU2 {
     const foundAttr = this._findAttr2(entity, noun);
 
     if (foundAttr) {
-      command.payload.options.addWhereCondition({
+      const eq = EntityQuery.inspectorToObject(this.erModel, this.command.payload.inspect());
+
+      eq.options!.addWhereCondition({
         contains: [{
-          alias: command.payload.link.alias,
+          alias: this.command.payload.link.alias,
           attribute: foundAttr,
           value: this._getImage(getPhrase('predicate'), 1, true)
         }]
       });
+
+      return new ERTranslatorRU2({
+        erModel: this.erModel,
+        command: {...this.command, payload: eq},
+        text: sentence.image ? [...this.text, sentence.image] : this.text
+      });
     }
 
-    return command;
+    throw new ERTranslatorError('UNKNOWN_ATTR');
   }
 
   /**
    * |subject      |[object]          |contains value           |
    *  Атрибут NAME  атрибута PLACEKEY  содержит "строка"
    */
-  public processVPAttrContains(sentence: IRusSentence, command: ICommand): ICommand {
-    if (!command.payload.options) {
-      throw new Error('Invalid command');
-    }
+  public processVPAttrContains(sentence: IRusSentence) {
+    this._checkContext();
 
-    const entity = command.payload.link.entity;
+    const entity = this.command.payload.link.entity;
     const getPhrase = this._getPhrase(sentence);
 
     const subjectPhrase = getPhrase('subject');
     const objectPhrase = getPhrase('object');
+
+    const eq = EntityQuery.inspectorToObject(this.erModel, this.command.payload.inspect());
 
     if (objectPhrase) {
       const linkAttr = this._findAttr(entity, objectPhrase, 1);
@@ -407,12 +459,18 @@ export class ERTranslatorRU2 {
       if (linkAttr instanceof EntityAttribute) {
         const foundAttr = this._findAttr(linkAttr.entities[0], subjectPhrase, 1);
         if (foundAttr) {
-          command.payload.options.addWhereCondition({
+          eq.options!.addWhereCondition({
             contains: [{
               alias: linkAttr.name,
               attribute: foundAttr,
               value: this._getImage(getPhrase('value'), 1, true)
             }]
+          });
+
+          return new ERTranslatorRU2({
+            erModel: this.erModel,
+            command: {...this.command, payload: eq},
+            text: sentence.image ? [...this.text, sentence.image] : this.text
           });
         }
       }
@@ -420,23 +478,29 @@ export class ERTranslatorRU2 {
       const foundAttr = this._findAttr(entity, subjectPhrase, 1);
 
       if (foundAttr) {
-        command.payload.options.addWhereCondition({
+        eq.options!.addWhereCondition({
           contains: [{
-            alias: command.payload.link.alias,
+            alias: this.command.payload.link.alias,
             attribute: foundAttr,
             value: this._getImage(getPhrase('value'), 1, true)
           }]
         });
+
+        return new ERTranslatorRU2({
+          erModel: this.erModel,
+          command: {...this.command, payload: eq},
+          text: sentence.image ? [...this.text, sentence.image] : this.text
+        });
       }
     }
 
-    return command;
+    throw new ERTranslatorError('UNKNOWN_ATTR');
   }
 };
 
-export function command2Text(command: ICommand, erModel: ERModel): string {
+export function command2Text(command: ICommand): string {
   if (command.action !== 'QUERY') {
-    throw new Error('Unsupported command type');
+    throw new ERTranslatorError('UNSUPPORTED_COMMAND_TYPE');
   }
 
   const eq = command.payload;

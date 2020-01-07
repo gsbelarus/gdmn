@@ -1,4 +1,5 @@
 import {AppAction, ICmd} from "@gdmn/server-api";
+import { ERTranslatorRU2 } from "gdmn-nlp-agent";
 
 export interface ISessionData {
   [name: string]: any;
@@ -8,6 +9,7 @@ export interface IViewTab {
   caption: string;
   url: string;
   canClose: boolean;
+  translator?: ERTranslatorRU2;
   rs?: string[];
   error?: string;
   sessionData?: ISessionData;

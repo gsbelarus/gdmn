@@ -23,6 +23,9 @@ export class ERModel {
   private _sequencies: ISequencies;
   private _relation2Entity: IRelation2Entity;
 
+  // Несмотря на такой конструктор ERModel
+  // не является полностью immutable объектом
+  // и это надо учитывать
   constructor(erModel?: ERModel) {
     if (erModel) {
       this._entities = erModel._entities;

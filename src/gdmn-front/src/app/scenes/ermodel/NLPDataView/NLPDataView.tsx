@@ -6,8 +6,7 @@ import CSSModules from 'react-css-modules';
 import styles from './styles.css';
 import { rsActions, TStatus, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
-import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings, deleteGrid } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from '../../../hooks/useSavedGridState';
@@ -15,9 +14,9 @@ import { useMessageBox } from '@src/app/components/MessageBox/MessageBox';
 import { apiService } from "@src/app/services/apiService";
 import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
-import { prepareDefaultEntityQuery, EntityAttribute } from 'gdmn-orm';
+import { prepareDefaultEntityQuery, EntityAttribute, EntityQuery } from 'gdmn-orm';
 import Split from 'react-split';
-import { getLName } from 'gdmn-internals';
+import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
 
 /*
 
@@ -31,12 +30,18 @@ import { getLName } from 'gdmn-internals';
 
 Таким образом мы имеем к обработке следующие ситуации:
 
-1. отсутствует erModel и/или entity. Мы в состоянии загрузки
+1. отсутствует erModel и/или translator. Мы в состоянии загрузки
    платформы или перезагрузки по hot-reloading. Выводим
    сообщение о загрузке и будем ждать пока не появится
    erModel.
 
    Состояние запроса скидываем до INITIAL.
+
+101.Translator не равен prevTranslator. Изменился текст запроса.
+   Или снаружи, в nlpDialog, или внутри окна. Проверяем
+   поменялось ли entity в запросе. Если да, то удаляем рекорд сеты
+   и гриды и начинаем всю загрузку с нуля. Если entity тот же,
+   то просто подгружаем новые данные в рекордсет.
 
 2. rs отсутствует. masterRs отсутствует. Мы в состоянии
    начальной инициализации формы.
@@ -78,18 +83,10 @@ import { getLName } from 'gdmn-internals';
    повторный запуск.
 
 4. masterRs отсутствует. rs присутствует. masterLink отсутствует.
-   Фраза в rs соответствует фразе в стэйте формы.
 
    Связь м-д не установлена, мы просто отображаем данные rs.
 
    Скидываем состояние загрузки rs в INITIAL, если оно было установлено.
-
-5. masterRs отсутствует. rs присутствует. masterLink отсутствует.
-   Фраза в rs не соответствует фразе в стэйте формы.
-
-   Если состояние загрузки INITIAL, то формируем новую EntityQuery с учетом
-   измененной фразы. Выставляем состояние загрузки и отсылаем запрос в
-   мидлвэр.
 
 6. masterRs отсутствует. rs присутствует. masterLink присутствует.
 
@@ -131,14 +128,6 @@ import { getLName } from 'gdmn-internals';
 
    Скидываем состояние загрузки rs, если оно было установлено.
 
-10. masterRs присутствует. rs присутствует. masterLink присутствует,
-   значение из мастер линк соответствует текущей записи из masterRs.
-   Фраза из rs не соответствует фразе из стэйта формы.
-
-   Если состояние загрузки INITIAL, то формируем новую EntityQuery с учетом
-   измененной фразы. Выставляем состояние загрузки и отсылаем запрос в
-   мидлвэр.
-
 11. masterRs присутствует. rs присутствует. masterLink присутствует,
    значение из мастер линк не соответствует текущей записи из masterRs.
 
@@ -167,12 +156,13 @@ interface INLPDataViewState {
   showSQL?: boolean;
   queryState: QueryState;
   phrase?: string;
+  prevTranslator?: ERTranslatorRU2;
 };
 
 type Action = { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
   | { type: 'SET_PHRASE', phrase?: string }
-  | { type: 'SET_QUERY_STATE', queryState: QueryState };
+  | { type: 'SET_QUERY_STATE', queryState: QueryState, prevTranslator?: ERTranslatorRU2, setPhrase?: boolean };
 
 function reducer(state: INLPDataViewState, action: Action): INLPDataViewState {
   switch (action.type) {
@@ -205,80 +195,126 @@ function reducer(state: INLPDataViewState, action: Action): INLPDataViewState {
     }
 
     case 'SET_QUERY_STATE': {
-      const { queryState } = action;
+      const { queryState, prevTranslator, setPhrase } = action;
 
       return {
         ...state,
-        queryState
+        queryState,
+        prevTranslator: prevTranslator ?? state.prevTranslator,
+        phrase: setPhrase && prevTranslator ? prevTranslator.text.join(' ') : state.phrase,
+        phraseError: undefined
       }
     }
   }
 };
 
 export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element => {
-  const { url, entityName, rs, entity, dispatch, viewTab, erModel, gcs, history, gridColors, masterRs, gcsMaster } = props;
-  const locked = rs ? rs.locked : false;
-  const error = viewTab ? viewTab.error : undefined;
-  const filter = rs && rs.filter && rs.filter.conditions.length ? rs.filter.conditions[0].value : '';
+  const { url, rs, dispatch, viewTab, erModel, gcs, history, gridColors, masterRs, gcsMaster, viewID } = props;
+  const translator = viewTab?.translator;
+  const ent = translator?.command.payload.link.entity;
+  const locked = !!rs?.locked;
+  const error = viewTab?.error;
+  const filter = rs?.filter?.conditions[0]?.value ?? '';
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
-  const [userColumnsSettings, setColumnsSettings] = useSettings<IColumnsSettings | undefined>({ type: 'GRID.v1', objectID: `${entityName}/viewForm` });
-  const [{ phraseError, showSQL, queryState, phrase }, viewDispatch] = useReducer(reducer, {
-    queryState: 'INITIAL',
-    phrase: rs?.queryPhrase
-      ? rs.queryPhrase
-      : entityName
-      ? `покажи все ${entityName}`
-      : undefined
+  const [userColumnsSettings, setColumnsSettings] = useSettings<IColumnsSettings | undefined>({ type: 'GRID.v1', objectID: ent ? `${ent.name}/viewForm` : undefined });
+  const [{ phraseError, showSQL, queryState, phrase, prevTranslator }, viewDispatch] = useReducer(reducer, {
+    queryState: 'INITIAL'
   });
 
-  const applyPhrase = useCallback( (masterLink?: IMasterLink) => {
-    if (erModel && entity) {
-      if (phrase) {
-        try {
-          const erTranslatorRU = new ERTranslatorRU2(erModel)
-          const command = erTranslatorRU.processText(phrase);
-          const eq = command.payload;
+  const applyTranslator = useCallback( (masterLink?: IMasterLink) => {
+    if (erModel && translator) {
+      let eq;
 
-          if (eq.link.entity !== entity) {
-            viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: `В предложении должна использоваться сущность ${entity.name} (${getLName(entity.lName, ['ru'])}).` });
-            return;
-          }
-
-          if (masterLink && masterLink.detailAttribute && masterLink.value !== undefined) {
-            eq.addWhereCondition({
-              equals: [{
-                alias: eq.link.alias,
-                attribute: masterLink.detailAttribute,
-                value: masterLink.value
-              }]
-            });
-          }
-
-          viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
-          dispatch(loadRSActions.attachRS({ name: entityName, eq, queryPhrase: phrase, override: true, masterLink }));
-        }
-        catch (e) {
-          viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
-        }
+      if (masterLink && masterLink.detailAttribute && masterLink.value !== undefined) {
+        // так мы делаем копию объекта, чтобы не изменить исходный
+        eq = EntityQuery.inspectorToObject(erModel, translator.command.payload.inspect());
+        eq.addWhereCondition({
+          equals: [{
+            alias: eq.link.alias,
+            attribute: masterLink.detailAttribute,
+            value: masterLink.value
+          }]
+        });
       } else {
-        const eq = prepareDefaultEntityQuery(entity, undefined, undefined, undefined, masterLink?.detailAttribute, masterLink?.value);
-        viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS' });
-        dispatch(loadRSActions.attachRS({ name: entityName, eq, override: true, masterLink }));
+        eq = translator.command.payload;
+      }
+
+      viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS', prevTranslator: translator, setPhrase: true  });
+      dispatch(loadRSActions.attachRS({ name: viewID, eq, override: true, masterLink }));
+    }
+  }, [erModel, translator]);
+
+  const applyPhrase = useCallback( () => {
+    if (erModel && translator && viewTab && phrase) {
+      try {
+        let newTranslator = new ERTranslatorRU2({ erModel });
+        newTranslator = newTranslator.processText(phrase, true);
+        dispatch(gdmnActions.updateViewTab({
+          url,
+          viewTab: {
+            translator: newTranslator
+          }
+        }));
+      }
+      catch (e) {
+        viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
       }
     }
-  }, [erModel, entity, phrase]);
+  }, [erModel, translator, viewTab, phrase]);
 
   useEffect( () => {
     const log = (step: number) =>
-      console.log(`${step} -- ${queryState}${entity ? ',entity' : ''}${rs ? ',rs' : ''}${rs?.masterLink ? ',masterLink' : ''}${rs?.masterLink?.value ? ',value' : ''}${masterRs ? ',masterRs' : ''}`)
+      console.log(`${step} -- ${queryState}${translator ? ',translator' : ''}${rs ? ',rs' : ''}${rs?.masterLink ? ',masterLink' : ''}${rs?.masterLink?.value ? ',value' : ''}${masterRs ? ',masterRs' : ''}`)
 
     // 1
-    if (!erModel || !entity) {
+    if (!erModel || !translator?.valid) {
       if (queryState !== 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
       log(1);
+      return;
+    }
+
+    // 101
+    if (prevTranslator !== translator) {
+      if (prevTranslator?.command.payload.link.entity !== translator.command.payload.link.entity) {
+        if (rs) {
+          dispatch( dispatch => {
+            dispatch(rsActions.deleteRecordSet({ name: rs.name }));
+
+            if (gcs) {
+              dispatch(deleteGrid({ name: rs.name }));
+            }
+
+            if (masterRs) {
+              dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+              if (gcsMaster) {
+                dispatch(deleteGrid({ name: masterRs.name }));
+              }
+            }
+
+            dispatch(gdmnActions.updateViewTab({
+              url,
+              viewTab: {
+                rs: undefined
+              }
+            }));
+          });
+        }
+
+        viewDispatch({
+          type: 'SET_QUERY_STATE',
+          queryState: 'INITIAL',
+          prevTranslator: translator,
+          setPhrase: true
+        });
+      } else {
+        applyTranslator();
+      }
+
+      log(101);
       return;
     }
 
@@ -289,7 +325,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
         // TODO: add reading of user settings
 
         // 2, b)
-        applyPhrase();
+        applyTranslator();
       }
       log(2);
       return;
@@ -303,20 +339,11 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     }
 
     // 4
-    if (rs && !masterRs && !rs.masterLink && rs.queryPhrase === phrase) {
+    if (rs && !masterRs && !rs.masterLink) {
       if (queryState === 'QUERY_RS') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
       log(4);
-      return;
-    }
-
-    // 5
-    if (rs && !masterRs && !rs.masterLink && rs.queryPhrase !== phrase) {
-      if (queryState === 'INITIAL') {
-        applyPhrase();
-      }
-      log(5);
       return;
     }
 
@@ -340,7 +367,13 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     // 7
     if (rs && rs.masterLink && masterRs && masterRs.name !== rs.masterLink.masterName) {
       if (queryState === 'INITIAL') {
-        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+        dispatch( dispatch => {
+          dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+          if (gcsMaster) {
+            dispatch(deleteGrid({ name: masterRs.name }));
+          }
+        });
       }
 
       log(7);
@@ -362,20 +395,11 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     }
 
     // 9
-    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value && rs.queryPhrase === phrase) {
+    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value) {
       if (queryState !== 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
       log(9);
-      return;
-    }
-
-    // 10
-    if (rs && rs.masterLink && masterRs && masterRs.pkValue()[0] === rs.masterLink.value && rs.queryPhrase !== phrase) {
-      if (queryState === 'INITIAL') {
-        applyPhrase({ ...rs.masterLink, value: masterRs.pkValue()[0] });
-      }
-      log(10);
       return;
     }
 
@@ -385,7 +409,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
       else if (queryState === 'INITIAL') {
-        applyPhrase({ ...rs.masterLink, value: masterRs.pkValue()[0] });
+        applyTranslator({ ...rs.masterLink, value: masterRs.pkValue()[0] });
       }
 
       log(11);
@@ -395,60 +419,51 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     //12
     if(masterRs && rs && !rs.masterLink) {
       if (queryState === 'INITIAL') {
-        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+        dispatch( dispatch => {
+          dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+          if (gcsMaster) {
+            dispatch(deleteGrid({ name: masterRs.name }));
+          }
+        });
       }
     }
 
-    throw new Error('Unkonw state');
-  }, [erModel, rs, masterRs, entity, queryState]);
+    throw new Error('Unknown state');
+  }, [erModel, translator, prevTranslator, rs, masterRs, queryState]);
 
   useEffect( () => {
-    if (rs || masterRs) {
-      const rsNames: string[] = [];
+    if (viewTab) {
+      if (rs || masterRs) {
+        const rsNames: string[] = [];
 
-      if (masterRs) {
-        rsNames.push(masterRs.name);
-      }
+        if (masterRs) {
+          rsNames.push(masterRs.name);
+        }
 
-      if (rs) {
-        rsNames.push(rs.name);
-      }
+        if (rs) {
+          rsNames.push(rs.name);
+        }
 
-      if (!viewTab) {
-        dispatch(gdmnActions.addViewTab({
-          url,
-          caption: `${entityName}`,
-          canClose: true,
-          rs: rsNames
-        }));
-      }
-      else if (viewTab.rs?.[0] !== rsNames[0] || viewTab.rs?.[1] !== rsNames[1]) {
-        dispatch(gdmnActions.updateViewTab({
-          url,
-          viewTab: {
-            rs: rsNames
-          }
-        }));
-      }
-    } else {
-      if (!viewTab) {
-        dispatch(gdmnActions.addViewTab({
-          url,
-          caption: `${entityName}`,
-          canClose: true
-        }));
+        if (viewTab.rs?.[0] !== rsNames[0] || viewTab.rs?.[1] !== rsNames[1]) {
+          dispatch(gdmnActions.updateViewTab({
+            url,
+            viewTab: {
+              rs: rsNames
+            }
+          }));
+        }
       }
     }
   }, [rs, masterRs, viewTab]);
 
   const addRecord = () => {
-    if (entityName) {
-
+    if (ent) {
       const f = async () => {
         const result = await apiService.getNextID({withError: false});
         const newID = result.payload.result!.id;
         if (newID) {
-          history.push(`/spa/gdmn/entity/${entityName}/add/${newID}`);
+          history.push(`/spa/gdmn/entity/${ent.name}/add/${newID}`);
         }
       };
 
@@ -602,8 +617,8 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
               }
             } }
             options={
-              entity && Object
-                .values(entity.attributes)
+              ent && Object
+                .values(ent.attributes)
                 .filter( attr => attr instanceof EntityAttribute )
                 .map( attr => ({ key: attr.name, text: attr.name, data: attr }) )
             }
@@ -627,7 +642,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
                 onChange={ (_, phrase) => viewDispatch({ type: 'SET_PHRASE', phrase }) }
                 errorMessage={ phraseError ? phraseError : undefined }
               />
-              <DefaultButton onClick={ () => applyPhrase() }>
+              <DefaultButton onClick={ applyPhrase }>
                 Применить
               </DefaultButton>
             </Stack>
@@ -659,7 +674,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
   </div>
   }
 
-  return masterRs && rs && rs.masterLink && entity && rs.masterLink.detailAttribute
+  return translator && masterRs && rs && rs.masterLink && rs.masterLink.detailAttribute
     ? <Split
         sizes={[25, 75]}
         gutterSize={8}

@@ -1,11 +1,16 @@
-import { ISettingParams, isISettingEnvelope, ISettingEnvelope } from 'gdmn-internals';
+import { isISettingEnvelope, ISettingEnvelope } from 'gdmn-internals';
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
+
+interface ISettingsHookParams {
+  type: string;
+  objectID?: string;
+};
 
 /**
  * Возвращает массив из двух элементов: данные и функция обновления.
  */
-export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data: ST) => void] {
+export function useSettings<ST>({ type, objectID }: ISettingsHookParams): [ST, (data: ST) => void] {
 
   const saveToLocaStorage = (se: ISettingEnvelope) => {
     localStorage.setItem(`setting/${type}/${objectID}`, JSON.stringify(se));
@@ -14,6 +19,11 @@ export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data:
   const [settingEnvelope, setSettingEnvelope] = useState<ISettingEnvelope | undefined>();
 
   useEffect( () => {
+
+    if (objectID === undefined) {
+      setSettingEnvelope(undefined);
+      return;
+    }
 
     const rawData = localStorage.getItem(`setting/${type}/${objectID}`);
     const parsedData = rawData ? JSON.parse(rawData) : undefined;
@@ -45,27 +55,29 @@ export function useSettings<ST>({ type, objectID }: ISettingParams): [ST, (data:
         }
       }
     });
-  }, []);
+  }, [type, objectID]);
 
   return [
-    settingEnvelope ? settingEnvelope.data : undefined,
+    settingEnvelope?.data,
     (data: ST) => {
-      const d = new Date().getTime();
-      const se: ISettingEnvelope = {
-        type,
-        objectID,
-        data,
-        _changed: d,
-        _accessed: d
-      };
-      if (data) {
-        setSettingEnvelope(se);
-        apiService.saveSetting({ newData: se });
-        saveToLocaStorage(se);
-      } else {
-        localStorage.removeItem(`setting/${type}/${objectID}`);
-        setSettingEnvelope(undefined);
-        apiService.deleteSetting({ data: {type, objectID} });
+      if (objectID !== undefined) {
+        const d = new Date().getTime();
+        const se: ISettingEnvelope = {
+          type,
+          objectID,
+          data,
+          _changed: d,
+          _accessed: d
+        };
+        if (data) {
+          setSettingEnvelope(se);
+          apiService.saveSetting({ newData: se });
+          saveToLocaStorage(se);
+        } else {
+          localStorage.removeItem(`setting/${type}/${objectID}`);
+          setSettingEnvelope(undefined);
+          apiService.deleteSetting({ data: {type, objectID} });
+        }
       }
     }
   ];

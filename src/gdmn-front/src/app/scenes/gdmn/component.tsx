@@ -34,6 +34,7 @@ import { MorphologyContainer } from '../nlp/morphology/MorphologyContainer';
 import { ISyntaxRouteProps } from '../nlp/syntax/Syntax.types';
 import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
 import { ERModel } from 'gdmn-orm';
+import { NLPDataViewContainer } from '../ermodel/NLPDataView/NLPDataViewContainer';
 
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
@@ -425,8 +426,22 @@ export function GdmnView (props: IGdmnViewProps) {
                     )}
                   />
                   <Route
+                    exact={true}
+                    path={`${match.path}/nlp-data-view/:viewID`}
+                    render={props => erModel && Object.keys(erModel.entities).length ?
+                      <NLPDataViewContainer
+                        {...props}
+                        key={props.match.url}
+                        url={props.match.url}
+                        viewID={props.match.params.viewID}
+                      />
+                      :
+                      <Redirect to={match.path} push />
+                    }
+                  />
+                  <Route
                     path={`${match.path}/entity/:entityName/add/:id`}
-                    render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) => (
+                    render={ (props: RouteComponentProps<IEntityDataDlgRouteProps>) =>
                       <EntityDataDlgContainer
                         {...props}
                         key={props.match.url}
@@ -435,7 +450,7 @@ export function GdmnView (props: IGdmnViewProps) {
                         url={props.match.url}
                         newRecord={true}
                       />
-                    )}
+                    }
                   />
                   <Route
                     path={`${match.path}/entity/:entityName/edit/:id`}

@@ -39,7 +39,9 @@ import {
   RusNounMorphSigns,
   getSynonyms,
   SemContext,
-  semCategory2Str
+  semCategory2Str,
+  Lexeme,
+  RusAdverbLexeme
 } from 'gdmn-nlp';
 import { CommandBar, TextField, Stack, DefaultButton, getTheme, mergeStyleSets } from 'office-ui-fabric-react';
 import { Frame } from '../../gdmn/components/Frame';
@@ -156,12 +158,66 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
   ];
 
   const getSynonymWords = useCallback( (w: AnyWord) => {
-    return (w instanceof RusVerb && getSynonyms(w, SemContext.QueryDB) !== undefined)
-      ? <Stack horizontal>
-          {getSynonyms(w, SemContext.QueryDB)!.map(
-            w => w.getWordForm({ infn: true })).filter(
-              word => word.word !== w.word ).map(
-            s => <span onClick = { () => setWord(s.word) }>{s.word}</span>
+
+    const lexemesByPOS: [any, Lexeme[]][] = [
+      [RusNoun, RusNounLexemes],
+      [RusVerb, RusVerbLexemes],
+      [RusAdjective, RusAdjectiveLexemes],
+      [RusAdverb, RusAdverbLexemes]
+    ];
+
+    const lexemes = lexemesByPOS.find( ([pos]) => w instanceof pos )?.[1];
+
+    if (!lexemes || !w.lexeme.semMeanings?.length) {
+      return undefined;
+    }
+
+    const synonyms = lexemes.filter( l => w.lexeme !== l && l.semMeanings?.some( m => w.lexeme.semMeanings?.some( lm => lm.semCategory === m.semCategory && lm.semContext === m.semContext ) ) );
+
+    return synonyms.length
+      ?
+        <Stack
+          horizontal
+          wrap
+          styles={{
+            root: {
+              padding: '4px',
+            }
+          }}
+          tokens={{
+            childrenGap: '4px'
+          }}
+        >
+          {synonyms.map(
+            (l, idx) => {
+              let word: string | undefined = undefined;
+
+              if (l instanceof RusNounLexeme) {
+                word = l.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+              }
+              else if (l instanceof RusVerbLexeme) {
+                word = l.getWordForm({ infn: true }).word;
+              }
+              else if (l instanceof RusAdjectiveLexeme) {
+                word = l.getWordForm({ c: RusCase.Nomn, singular: true }).word;
+              }
+              else if (l instanceof RusAdverbLexeme) {
+                word = l.getWordForm().word;
+              }
+
+              return (word &&
+                <span
+                  key={idx}
+                  style={{
+                    border: '1px solid ' + getTheme().palette.black,
+                    padding: '2px', borderRadius: '2px'
+                  }}
+                  onClick = { () => setWord(word!) }
+                >
+                  {word}
+                </span>
+              );
+            }
           )}
         </Stack>
       : undefined;
@@ -178,6 +234,9 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
               padding: '4px',
               backgroundColor: getTheme().palette.black
             }
+          }}
+          tokens={{
+            childrenGap: '4px'
           }}
         >
           {w.lexeme.semMeanings?.map(

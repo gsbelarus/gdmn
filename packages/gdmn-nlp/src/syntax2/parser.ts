@@ -1,5 +1,5 @@
 import { INLPToken, IRusSentenceTemplate, RusPhraseElement, RusNoun, RusVerb, IRusSentence, Word, AnyWord } from "..";
-import { nlpWhiteSpace, nlpLineBreak, nlpCyrillicWord, nlpIDToken, nlpQuotedLiteral } from "./tokenizer";
+import { nlpWhiteSpace, nlpLineBreak, nlpCyrillicWord, nlpIDToken, nlpQuotedLiteral, nlpPeriod } from "./tokenizer";
 import { RusAdjective } from "../morphology/rusAdjective";
 import { RusPreposition } from "../morphology/rusPreposition";
 import { RusWordTemplate, RusSentenceWordOrToken } from "./types";
@@ -172,8 +172,14 @@ export const nlpParse = (tokens: INLPToken[], templates: IRusSentenceTemplate[])
 
     }
 
+    let image = tokens.map( t => t.image ).join('');
+
+    if (tokens[tokens.length - 1].tokenType !== nlpPeriod) {
+      image += '.';
+    }
+
     if (matched && sentence.phrases.length) {
-      res.push(sentence);
+      res.push({...sentence, image});
     }
   }
 

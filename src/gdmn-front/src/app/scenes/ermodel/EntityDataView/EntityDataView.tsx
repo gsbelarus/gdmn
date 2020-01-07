@@ -7,7 +7,7 @@ import styles from './styles.css';
 import { rsActions, TStatus, IMasterLink } from 'gdmn-recordset';
 import { loadRSActions } from '@src/app/store/loadRSActions';
 import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
-import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings } from 'gdmn-grid';
+import { GDMNGrid, TLoadMoreRsDataEvent, TRecordsetEvent, TRecordsetSetFieldValue, IColumnsSettings, deleteGrid } from 'gdmn-grid';
 import { SQLForm } from '@src/app/components/SQLForm';
 import { bindGridActions } from '../utils';
 import { useSaveGridState } from '../../../hooks/useSavedGridState';
@@ -236,9 +236,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     if (erModel && entity) {
       if (phrase) {
         try {
-          const erTranslatorRU = new ERTranslatorRU2(erModel)
-          const command = erTranslatorRU.processText(phrase);
-          const eq = command.payload;
+          const eq = new ERTranslatorRU2({erModel}).processText(phrase).command.payload;
 
           if (eq.link.entity !== entity) {
             viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: `В предложении должна использоваться сущность ${entity.name} (${getLName(entity.lName, ['ru'])}).` });
@@ -340,7 +338,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     // 7
     if (rs && rs.masterLink && masterRs && masterRs.name !== rs.masterLink.masterName) {
       if (queryState === 'INITIAL') {
-        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+        dispatch( dispatch => {
+          dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+          if (gcsMaster) {
+            dispatch(deleteGrid({ name: masterRs.name }));
+          }
+        });
       }
 
       log(7);
@@ -395,7 +399,13 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     //12
     if(masterRs && rs && !rs.masterLink) {
       if (queryState === 'INITIAL') {
-        dispatch(loadRSActions.deleteRS({ name: masterRs.name }));
+        dispatch( dispatch => {
+          dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+          if (gcsMaster) {
+            dispatch(deleteGrid({ name: masterRs.name }));
+          }
+        });
       }
     }
 

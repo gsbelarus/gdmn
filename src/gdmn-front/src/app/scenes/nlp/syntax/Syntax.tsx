@@ -110,14 +110,15 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
 
   switch (action.type) {
     case 'SET_TEXT': {
-      const { translator, processUniform } = state;
+      let { translator } = state;
+      const { processUniform } = state;
       const { text } = action;
       const rawTokens = text ? text2Tokens(text) : undefined;
       const sentenceTokens = rawTokens ? tokens2sentenceTokens(rawTokens) : [];
       const sentences: ISentence[] = [];
 
       if (translator) {
-        translator.clear();
+        translator = translator.clear();
       }
 
       for (const st of sentenceTokens) {
@@ -128,7 +129,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
           parsed = nlpParse(tokens[0], sentenceTemplates);
 
           if (translator) {
-            translator.process(parsed[0], tokens[0].map( t => t.image ).join(' '));
+            translator = translator.process(parsed[0]);
           }
         }
         catch (e) {
@@ -146,6 +147,7 @@ function reducer(state: ISyntaxState, action: Action): ISyntaxState {
         ...state,
         text,
         sentences,
+        translator,
         sql: undefined
       };
     }
@@ -186,7 +188,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
     {
       text: '',
       sentences: [],
-      translator: erModel && new ERTranslatorRU2(erModel),
+      translator: erModel && new ERTranslatorRU2({erModel}),
       processUniform: true
     }
   );
@@ -196,7 +198,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
 
   useEffect( () => {
     if (erModel && (!translator || translator.erModel !== erModel)) {
-      reactDispatch({ type: 'SET_TRANSLATOR', translator: new ERTranslatorRU2(erModel) })
+      reactDispatch({ type: 'SET_TRANSLATOR', translator: new ERTranslatorRU2({erModel}) })
     }
   }, [erModel, translator]);
 
@@ -259,7 +261,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
           command || sql
           ?
             <Frame border marginTop caption="Command and SQL" canMinimize>
-              {command && command2Text(command, erModel)}
+              {command && command2Text(command)}
               <Stack horizontal tokens={{ childrenGap: '8px' }}>
                 {command ? <EQ eq={command.payload} /> : null}
                 {sql ? <Stack><pre>{sql.select}</pre><pre>{JSON.stringify(sql.params, undefined, 2)}</pre></Stack> : null}

@@ -122,6 +122,7 @@ export function bindGridActions(dispatch: ThunkDispatch<IState, never, RSAction 
         rowIdx: event.rowIdx
       })
     ),
+
     onSetFilter: (event: TOnFilterEvent) => {
       if (event.filter) {
         dispatch(rsActions.setFilter({name: event.rs.name, filter: { conditions: [ { value: event.filter } ] } }))

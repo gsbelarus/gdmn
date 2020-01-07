@@ -127,4 +127,5 @@ export interface IRusSentencePhrase {
 export interface IRusSentence {
   templateId: string;
   phrases: IRusSentencePhrase[];
+  image?: string;
 };

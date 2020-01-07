@@ -24,3 +24,5 @@
 6. После окончания работы скрипта из **rusverb.txt** копируем массив слов в файл **/src/morphology/rusVerbsData.ts**
 
 7. Сравниваем файлы **rusconjugation.txt** и **rusconjend.txt** с предыдущими версиями. Если появились какие-то изменения (возможно, обнаружены новые склонения, неиспользуемые ранее), то стоит внести соответствующие изменения в файлы **/src/morphology/rusVerbEndings.ts** и **src/morphology/types.ts**.
+
+8. Сокращения, используемые в файле dict.opcorpora.txt, разъяснены здесь: [https://github.com/OpenCorpora/opencorpora/blob/master/doc/articles/2011_Dialog.tex]

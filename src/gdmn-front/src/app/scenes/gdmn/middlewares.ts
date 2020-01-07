@@ -14,6 +14,7 @@ import { loadRSActions } from '@src/app/store/loadRSActions';
 import { themes } from '../themeeditor/themes';
 import { loadTheme } from '@uifabric/styling';
 import { calcGridColors } from '@src/app/utils/calcGridColors';
+import { nlpDialogMiddleware } from './nlpDialogMiddleware';
 
 const MAX_INTERNAL_ERROR_RECONNECT_COUNT: number = 5;
 
@@ -293,94 +294,6 @@ const selectThemeMiddleware: TThunkMiddleware = () => next => (action: ActionTyp
     loadTheme(namedTheme.theme);
 
     return next(gdmnActions.setThemeAndGridColors(action.payload, calcGridColors()));
-  }
-
-  return next(action);
-};
-
-const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) => next => (action: ActionType<typeof gdmnActions.nlpProcess>) => {
-  if (action.type === getType(gdmnActions.nlpProcess)) {
-    const { item: { text }, history } = action.payload;
-
-    switch (text) {
-      case 'close': {
-        const { viewTabs } = getState().gdmnState;
-
-        const tab = viewTabs.find( t => t.url === history.location.pathname );
-
-        if (tab && tab.canClose) {
-          dispatch(gdmnActions.deleteViewTab({
-            viewTabURL: history.location.pathname,
-            locationPath: history.location.pathname,
-            historyPush: history.push
-          }));
-          dispatch(gdmnActions.nlpAdd([
-            { who: 'me', text },
-            { who: 'it', text: `Вкладка ${tab.caption} закрыта` }
-          ]));
-        }
-
-        return;
-      }
-
-      case 'sql': {
-        history.push(`/spa/gdmn/sql`);
-        dispatch(gdmnActions.nlpAdd([
-          { who: 'me', text }
-        ]));
-
-        return;
-      }
-
-      case 'morphology': {
-        history.push(`/spa/gdmn/morphology`);
-        dispatch(gdmnActions.nlpAdd([
-          { who: 'me', text }
-        ]));
-
-        return;
-      }
-
-      case 'syntax': {
-        history.push(`/spa/gdmn/syntax`);
-        dispatch(gdmnActions.nlpAdd([
-          { who: 'me', text }
-        ]));
-
-        return;
-      }
-
-      case 'clear': {
-        dispatch(gdmnActions.nlpClear());
-        return;
-      }
-    }
-
-    const { erModel } = getState().gdmnState;
-    const entity = erModel.entities[text];
-
-    if (entity) {
-      history.push(`/spa/gdmn/entity/${entity.name}`);
-      dispatch(gdmnActions.nlpAdd([
-        { who: 'me', text },
-        { who: 'it', text: 'Открыта таблица с данными.' }
-      ]));
-      return;
-    }
-
-    if (/[А-Яа-я]+/.test(text)) {
-      history.push(`/spa/gdmn/morphology/${text}`);
-      dispatch(gdmnActions.nlpAdd([
-        { who: 'me', text }
-      ]));
-
-      return;
-    }
-
-    dispatch(gdmnActions.nlpAdd([
-      { who: 'me', text },
-      { who: 'it', text: 'Неизвестная команда!' }
-    ]));
   }
 
   return next(action);

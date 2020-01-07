@@ -1,4 +1,4 @@
-import { Columns, visibleToIndex } from '.';
+import { Columns } from '.';
 import { ActionType, getType } from 'typesafe-actions';
 import * as actions from './gridActions';
 
