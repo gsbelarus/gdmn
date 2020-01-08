@@ -33,10 +33,11 @@ import { IDesignerSetting } from '../../designer/Designer.types';
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { Frame } from "../../gdmn/components/Frame";
 import { attr2fd } from "../utils";
+import { NumberField, INumberField } from "../Entity/EntityDlg/NumberField";
 
 interface ILastEdited {
   fieldName: string;
-  value: string | boolean ;
+  value: string | boolean | number ;
 };
 
 /**
@@ -108,7 +109,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const isDesigner = useRef(getSavedIsDesigner());
   const changesDesigner = useRef(getSavedChangesDesigner());
   const [designer, setDesigner] = useState(isDesigner.current);
-  const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
+  const needFocus = useRef<ITextField | IComboBox | ICheckbox | INumberField | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
@@ -137,15 +138,19 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       // или булевское значений.
       // по идее, значение от DatePicker должно храниться/передаваться
       // как Date, но это пока не сделано
+      // делаем еще тип number
       if (typeof value === "string") {
         if (value === '' && def.dataType !== TFieldType.String && !def.required) {
           dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
         } else {
           dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
         }
-      } else {
-        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
-      }
+      } else if (typeof value === "number") {
+        dispatch(rsActions.setRecordSet(value !== Math.trunc(value) ? 
+          rs.setCurrency(fieldName, value) : rs.setInteger(fieldName, value)));
+        } else {
+          dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+        }
       lastEdited.current = undefined;
     }
   };
@@ -163,6 +168,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           } else {
             tempRs = tempRs.setString(fieldName, value);
           }
+        } else if (typeof value === "number") {
+          tempRs = value !== Math.trunc(value) ? tempRs.setCurrency(fieldName, value) : tempRs.setInteger(fieldName, value);
         } else {
           tempRs = tempRs.setBoolean(fieldName, value);
         }
@@ -1023,6 +1030,48 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           styles={subComponentStyle}
         />
       )
+    } else if (fd.dataType === TFieldType.Float || fd.dataType === TFieldType.Currency ) {
+         //Number
+         return (
+          <NumberField
+            key={fd.fieldName}
+            label={label}
+            value={
+              lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'number'
+              ? lastEdited.current.value
+              : rs.getCurrency(fd.fieldName)
+            }
+            onChange={
+              (_e, newValue?: number) => {
+                if (newValue !== undefined) {
+                  lastEdited.current = {
+                    fieldName: fd.fieldName,
+                    value: newValue
+                  };
+                  changedFields.current[fd.fieldName] = true;
+                  setChanged(true);
+                }
+              }
+            }
+            onFocus={
+              () => {
+                lastFocused.current = fd.fieldName;
+                if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                  applyLastEdited();
+                }
+              }
+            }
+            componentRef={
+              ref => {
+                if (ref && lastFocused.current === fd.fieldName) {
+                  needFocus.current = ref;
+                }
+              }
+            }
+            onInvalidValue={ () => undefined}
+          />
+        )
+
     } else {
       //Текстовое
       return (
