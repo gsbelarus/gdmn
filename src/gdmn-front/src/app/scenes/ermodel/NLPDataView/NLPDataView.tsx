@@ -16,7 +16,8 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, EntityAttribute, EntityQuery } from 'gdmn-orm';
 import Split from 'react-split';
-import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
+import { ERTranslatorRU2, command2Text } from 'gdmn-nlp-agent';
+import { getLName } from 'gdmn-internals';
 
 /*
 
@@ -298,10 +299,18 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
             dispatch(gdmnActions.updateViewTab({
               url,
               viewTab: {
+                caption: getLName(translator.command.payload.link.entity.lName, ['ru']),
                 rs: undefined
               }
             }));
           });
+        } else {
+          dispatch(gdmnActions.updateViewTab({
+            url,
+            viewTab: {
+              caption: getLName(translator.command.payload.link.entity.lName, ['ru'])
+            }
+          }));
         }
 
         viewDispatch({
@@ -331,12 +340,40 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
       return;
     }
 
+    if (viewTab?.rs?.[0] !== rs?.name || viewTab?.rs?.[1] !== masterRs?.name) {
+      if (rs && masterRs) {
+        dispatch(gdmnActions.updateViewTab({
+          url,
+          viewTab: {
+            rs: [rs.name, masterRs.name]
+          }
+        }));
+      }
+      else if (rs) {
+        dispatch(gdmnActions.updateViewTab({
+          url,
+          viewTab: {
+            rs: [rs.name]
+          }
+        }));
+      }
+      else if (masterRs) {
+        dispatch(gdmnActions.updateViewTab({
+          url,
+          viewTab: {
+            rs: [masterRs.name]
+          }
+        }));
+      }
+    }
+
     // 3
     if (masterRs && !rs) {
       // TODO
       log(3);
       return;
     }
+
 
     // 4
     if (rs && !masterRs && !rs.masterLink) {
@@ -399,6 +436,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
       if (queryState !== 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
+
       log(9);
       return;
     }
@@ -430,32 +468,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     }
 
     throw new Error('Unknown state');
-  }, [erModel, translator, prevTranslator, rs, masterRs, queryState]);
-
-  useEffect( () => {
-    if (viewTab) {
-      if (rs || masterRs) {
-        const rsNames: string[] = [];
-
-        if (masterRs) {
-          rsNames.push(masterRs.name);
-        }
-
-        if (rs) {
-          rsNames.push(rs.name);
-        }
-
-        if (viewTab.rs?.[0] !== rsNames[0] || viewTab.rs?.[1] !== rsNames[1]) {
-          dispatch(gdmnActions.updateViewTab({
-            url,
-            viewTab: {
-              rs: rsNames
-            }
-          }));
-        }
-      }
-    }
-  }, [rs, masterRs, viewTab]);
+  }, [erModel, translator, prevTranslator, rs, masterRs, queryState, viewTab]);
 
   const addRecord = () => {
     if (ent) {
@@ -541,6 +554,15 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
       onClick: () => viewDispatch({ type: 'SET_SHOW_SQL', showSQL: true })
     },
     {
+      key: 'command',
+      disabled: !translator,
+      text: 'Make command',
+      iconProps: {
+        iconName: 'FileComment'
+      },
+      onClick: () => viewDispatch({ type: 'SET_PHRASE', phrase: translator && command2Text(translator.command) })
+    },
+    {
       key: 'testMessageBox',
       text: 'Test MessageBox',
       iconProps: {
@@ -624,10 +646,10 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
             }
           />
           <TextField
-            disabled={!rs || rs.status !== TStatus.FULL}
+            disabled={rs?.status !== TStatus.FULL}
             label="Filter:"
             value={filter}
-            onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ? newValue : '' }) }
+            onChange={ (_, newValue) => onSetFilter({ rs: rs!, filter: newValue ?? '' }) }
           />
           <Stack.Item grow={1}>
             <Stack horizontal verticalAlign="end" tokens={{ childrenGap: '8px' }}>
@@ -692,7 +714,30 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
         <div style={{width: '100%', height: '100%', display: 'flex', cursor: 'default', flexDirection: 'column', background: getTheme().palette.white}}>
         <Icon
           iconName='ChromeClose'
-          onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({ masterLink: undefined })))}
+          onClick={ () => {
+            dispatch( dispatch => {
+              dispatch(rsActions.deleteRecordSet({ name: rs.name }));
+
+              if (gcs) {
+                dispatch(deleteGrid({ name: rs.name }));
+              }
+
+              if (masterRs) {
+                dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+                if (gcsMaster) {
+                  dispatch(deleteGrid({ name: masterRs.name }));
+                }
+              }
+
+              dispatch(gdmnActions.updateViewTab({
+                url,
+                viewTab: {
+                  rs: undefined
+                }
+              }));
+            });
+          }}
           style={{
             background: getTheme().palette.red,
             color: getTheme().palette.white,

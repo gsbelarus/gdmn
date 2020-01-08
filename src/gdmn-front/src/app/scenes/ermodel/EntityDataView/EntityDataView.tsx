@@ -687,7 +687,30 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
         <div style={{width: '100%', height: '100%', display: 'flex', cursor: 'default', flexDirection: 'column', background: getTheme().palette.white}}>
         <Icon
           iconName='ChromeClose'
-          onClick={() => dispatch(rsActions.setRecordSet(rs.duplicate({ masterLink: undefined })))}
+          onClick={ () => {
+            dispatch( dispatch => {
+              dispatch(rsActions.deleteRecordSet({ name: rs.name }));
+
+              if (gcs) {
+                dispatch(deleteGrid({ name: rs.name }));
+              }
+
+              if (masterRs) {
+                dispatch(rsActions.deleteRecordSet({ name: masterRs.name }));
+
+                if (gcsMaster) {
+                  dispatch(deleteGrid({ name: masterRs.name }));
+                }
+              }
+
+              dispatch(gdmnActions.updateViewTab({
+                url,
+                viewTab: {
+                  rs: undefined
+                }
+              }));
+            });
+          }}
           style={{
             background: getTheme().palette.red,
             color: getTheme().palette.white,
