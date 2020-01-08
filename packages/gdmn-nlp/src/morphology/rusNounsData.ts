@@ -1,25 +1,8 @@
 import { RusGender, IRusNoun } from './types';
 import { SemCategory } from '../semantics/categories';
+import { NounLabel } from './morphology';
 
 export const rusNouns: IRusNoun[] = [
-  {
-    stem: 'мясокомбинат',
-    stem1: '',
-    stem2: '',
-    animate: true,
-    gender: RusGender.Masc,
-    declension: 2,
-    declensionZ: '1a',
-  },
-  {
-    stem: 'комбинат',
-    stem1: '',
-    stem2: '',
-    animate: false,
-    gender: RusGender.Masc,
-    declension: 2,
-    declensionZ: '1a',
-  },
   {
     stem: 'организаци',
     stem1: '',
@@ -48,26 +31,6 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Masc,
     declension: 2,
     declensionZ: '1c(1)',
-  },
-  {
-    stem: 'минск',
-    stem1: '',
-    stem2: '',
-    animate: false,
-    gender: RusGender.Masc,
-    declension: 2,
-    declensionZ: '3a',
-    semMeanings: [{ semCategory: SemCategory.Place }]
-  },
-  {
-    stem: 'пинск',
-    stem1: '',
-    stem2: '',
-    animate: false,
-    gender: RusGender.Masc,
-    declension: 2,
-    declensionZ: '3a',
-    semMeanings: [{ semCategory: SemCategory.Place }]
   },
   {
     stem: 'берез',
@@ -173,6 +136,24 @@ export const rusNouns: IRusNoun[] = [
     declensionZ: '1a',
   },
   {
+    stem: 'мясокомбинат',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '1a',
+  },
+  {
+    stem: 'комбинат',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '1a',
+  },
+  {
     stem: 'атрибут',
     stem1: '',
     stem2: '',
@@ -261,6 +242,28 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Masc,
     declension: 2,
     declensionZ: '3a',
+  },
+  {
+    stem: 'минск',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '3a',
+    semMeanings: [{ semCategory: SemCategory.Place }],
+    label: NounLabel.Geox,
+  },
+  {
+    stem: 'пинск',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '3a',
+    semMeanings: [{ semCategory: SemCategory.Place }],
+    label: NounLabel.Geox,
   },
   {
     stem: 'товарищ',
@@ -2073,5 +2076,5 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Neut,
     declension: 2,
     declensionZ: '3*b(1)(2)',
-  },
+  }
 ];

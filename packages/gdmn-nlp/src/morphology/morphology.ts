@@ -1,6 +1,10 @@
 import { getNextID } from '../utils/idGenerator';
 import { ISemMeaning } from '../semantics/categories';
 
+export enum NounLabel {
+  Geox = 1
+};
+
 export abstract class Lexeme {
   constructor (
     public readonly stem: string = '',
@@ -27,7 +31,17 @@ export abstract class Lexeme {
 
 export abstract class ConjunctionLexeme extends Lexeme { }
 
-export abstract class NounLexeme extends Lexeme { }
+export abstract class NounLexeme extends Lexeme {
+  constructor (
+    stem: string = '',
+    stem1: string = '',
+    stem2: string = '',
+    semMeanings?: ISemMeaning[],
+    public readonly label?: NounLabel
+  ) {
+    super(stem, stem1, stem2, semMeanings);
+  }
+}
 
 export abstract class VerbLexeme extends Lexeme { }
 

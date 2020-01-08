@@ -3,7 +3,7 @@ import {
   RusCaseNames, RusGenderNames, RusNounMorphSigns, ShortCaseNames, ShortGenderNames
 } from './types';
 import { RusDeclensionZEndings } from './rusNounEndings';
-import { NounLexeme, Noun } from './morphology';
+import { NounLexeme, Noun, NounLabel } from './morphology';
 import { rusNouns } from './rusNounsData';
 import { ISemMeaning } from '../semantics/categories';
 
@@ -14,11 +14,11 @@ export class RusNounLexeme extends NounLexeme {
   public readonly declensionZ: RusDeclensionZ;
 
   constructor (stem: string, stem1: string, stem2: string,
-    semMeanings: ISemMeaning[] | undefined,
+    semMeanings: ISemMeaning[] | undefined, label: NounLabel | undefined,
     animacy: boolean, gender: RusGender,
     declension: RusDeclension, declensionZ: RusDeclensionZ)
   {
-    super(stem, stem1, stem2, semMeanings);
+    super(stem, stem1, stem2, semMeanings, label);
     this.animate = animacy;
     this.gender = gender;
     this.declension = declension;
@@ -165,7 +165,7 @@ export class RusNounLexeme extends NounLexeme {
 }
 
 export const RusNounLexemes: RusNounLexeme[] = rusNouns.map(
-  n => new RusNounLexeme(n.stem, n.stem1, n.stem2, n.semMeanings, n.animate, n.gender, n.declension, n.declensionZ)
+  n => new RusNounLexeme(n.stem, n.stem1, n.stem2, n.semMeanings, n.label, n.animate, n.gender, n.declension, n.declensionZ)
 );
 
 export class RusNoun extends Noun<RusNounLexeme> {

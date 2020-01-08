@@ -41,7 +41,8 @@ import {
   SemContext,
   semCategory2Str,
   Lexeme,
-  RusAdverbLexeme
+  RusAdverbLexeme,
+  NounLabel
 } from 'gdmn-nlp';
 import { CommandBar, TextField, Stack, DefaultButton, getTheme, mergeStyleSets } from 'office-ui-fabric-react';
 import { Frame } from '../../gdmn/components/Frame';
@@ -172,7 +173,13 @@ export const Morphology = (props: IMorphologyProps): JSX.Element => {
       return undefined;
     }
 
-    const synonyms = lexemes.filter( l => w.lexeme !== l && l.semMeanings?.some( m => w.lexeme.semMeanings?.some( lm => lm.semCategory === m.semCategory && lm.semContext === m.semContext ) ) );
+    const synonyms = lexemes.filter(
+      l => w.lexeme !== l
+        // если это топоним, например Минск, то у него нет синонимов
+        // иначе Минск будет синонимом Пинску и т.п.
+        && (!(w instanceof RusNoun) || (w.lexeme.label !== NounLabel.Geox))
+        && l.semMeanings?.some( m => w.lexeme.semMeanings?.some( lm => lm.semCategory === m.semCategory && lm.semContext === m.semContext ) )
+    );
 
     return synonyms.length
       ?

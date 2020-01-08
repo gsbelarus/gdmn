@@ -1,4 +1,5 @@
 import { ISemMeaning } from "../semantics/categories";
+import { NounLabel } from "./morphology";
 
 /*
   Description of tags found in open corpora dictionary
@@ -45,6 +46,7 @@ export interface IRusNoun {
   readonly declension: RusDeclension;
   readonly declensionZ: RusDeclensionZ;
   readonly semMeanings?: ISemMeaning[];
+  readonly label?: NounLabel;
 }
 export interface RusNounMorphSigns {
   c: RusCase;

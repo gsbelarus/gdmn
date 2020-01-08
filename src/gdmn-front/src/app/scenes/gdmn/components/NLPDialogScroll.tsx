@@ -56,6 +56,20 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     this.onInputPressEnter = this.onInputPressEnter.bind(this);
     this.onInputKeyDown = this.onInputKeyDown.bind(this);
     this.onInputChange = this.onInputChange.bind(this);
+    this.runNLPCommand = this.runNLPCommand.bind(this);
+  }
+
+  private runNLPCommand(cmd: string) {
+    const { addNLPMessage } = this.props;
+    addNLPMessage(cmd);
+
+    this.setState({
+      text: '',
+      showFrom: -1,
+      showTo: -1,
+      partialOK: true,
+      recalc: true
+    });
   }
 
   private onInputPressEnter(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -63,16 +77,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
     const trimText = text.trim();
 
     if (e.key === 'Enter' && trimText) {
-      const { addNLPMessage } = this.props;
-      addNLPMessage(trimText);
-
-      this.setState({
-        text: '',
-        showFrom: -1,
-        showTo: -1,
-        partialOK: true,
-        recalc: true
-      });
+      this.runNLPCommand(trimText);
       e.preventDefault();
     }
   }
@@ -386,6 +391,7 @@ export class NLPDialogScroll extends Component<TNLPDialogScrollProps, INLPDialog
                           <span
                             className="Message MessageRight"
                             onClick={ () => this.setState({ text: i.text, prevIdx: undefined })}
+                            onDoubleClick={ () => this.runNLPCommand(i.text) }
                           >
                             {i.text}
                           </span>

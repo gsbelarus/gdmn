@@ -23,6 +23,11 @@ const rusNounSemCategory = {
   'наименован': '[{ semCategory: SemCategory.Name }]'
 };
 
+// здесь будем хранить топонимы
+// в таком виде:
+// { 'МИНСК': true, 'ПИНСК': true }
+const geox = {};
+
 const nouns = rawFile.replace(/́/g, '').split('{{ШаблонДемо').reduce( (p, s, idx) => {
     if (s) {
       const rg = /\s*\|имя=сущ ru ([mfn]{1}) (\w+) (.+)\s+.+основа=(.+)(?:\s+.+основа1=(.+))?(?:\s+.+основа2=(.+))?\s.+(?:\s.*)?слова=(?:(?:\[\[)?([^\]]+)(?:\]\])?,?\s?){1}(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\[\[([^\]]+)\]\],?\s?)?(?:\([^\]]+\))?\s+\}\}/g;
@@ -94,9 +99,14 @@ while (line = liner.next()) {
   if (nounBlock.length !== 12 && nounBlock.length !== 6) continue;
 
   let w = splitNounString(nounBlock[0]);
-  let n = nouns.find( (e) => e[4].toUpperCase() === w && e.length <= 8 );
+  let n = nouns.find( e => e[4].toUpperCase() === w && e.length <= 8 );
 
   if (!n) continue;
+
+  // МИНСК	NOUN,inan,masc,Geox sing,nomn
+  if (nounBlock[0].includes('Geox')) {
+    geox[w] = true;
+  }
 
   nounBlock.forEach( (nounLine) => {
     w = splitNounString(nounLine);
@@ -135,6 +145,7 @@ fs.writeFileSync('./rusnoun.txt', nouns.reduce(
         ''.padEnd(4) + 'declension: ' + decl + ',\n' +
         ''.padEnd(4) + 'declensionZ: \'' + d + '\',\n' +
         (semMeanings ? ''.padEnd(4) + 'semMeanings: ' + semMeanings + ',\n' : '') +
+        (geox[l[4].toUpperCase()] ? ''.padEnd(4) + 'label: NounLabel.Geox,\n' : '') +
         ''.padEnd(2) + '},\n';
     return p + s;
     },
