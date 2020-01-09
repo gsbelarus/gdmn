@@ -39,7 +39,7 @@
     "@types/koa-bodyparser": "^4",
     "@types/koa-router": "^7",
     "@types/koa2-cors": "^2",
-    "@types/node": "^12",
+    "@types/node": "^13",
     "nodemon": "^2",
     "ts-node": "^8",
     "tslint": "^5",

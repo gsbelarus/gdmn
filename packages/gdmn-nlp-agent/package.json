@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/jest": "^24",
-    "@types/node": "^12",
+    "@types/node": "^13",
     "gdmn-er-bridge": "^1",
     "jest": "^24",
     "jest-junit": "^10",
