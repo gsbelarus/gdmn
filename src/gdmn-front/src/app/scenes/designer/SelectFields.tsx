@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useReducer } from "react";
 import { Entity } from "gdmn-orm";
 import { Dialog, DialogType, ContextualMenu, DialogFooter, PrimaryButton, DefaultButton, MarqueeSelection, DetailsList, Selection, IColumn, SelectionMode, DetailsListLayoutMode, getTheme } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
@@ -9,12 +9,32 @@ interface ISelectFieldsProps {
   onCreate: (fields: { fieldName: string, label: string }[]) => void;
 };
 
+interface ISelectFieldsState {
+  fieldsSelected: boolean;
+  selection: Selection;
+};
+
+type Action = { type: 'UPDATE_SELECTED_FIELDS' };
+
+function reducer(state: ISelectFieldsState, action: Action): ISelectFieldsState {
+  if (action.type === 'UPDATE_SELECTED_FIELDS') {
+    return {
+      ...state,
+      fieldsSelected: !!state.selection.getSelection().length
+    }
+  }
+
+  return state;
+};
+
 export const SelectFields = ({ entity, onCancel, onCreate }: ISelectFieldsProps) => {
 
-  const [fieldsSelected, setFieldsSelected] = useState(false);
-  const [selection] = useState(new Selection({
-    onSelectionChanged: () => setFieldsSelected(!!selection.getSelection().length)
-  }));
+  const [{ fieldsSelected, selection }, dispatch] = useReducer(reducer, {
+    fieldsSelected: false,
+    selection: new Selection({
+      onSelectionChanged: (): any => dispatch({ type: 'UPDATE_SELECTED_FIELDS' })
+  })
+  });
 
   return (
     <Dialog
