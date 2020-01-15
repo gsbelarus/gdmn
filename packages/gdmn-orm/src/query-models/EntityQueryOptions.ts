@@ -511,17 +511,20 @@ export class EntityQueryOptions {
     return options;
   }
 
-  public addWhereCondition(cond: IEntityQueryWhere) {
-    if (this._where) {
+  public addWhereCondition(cond: IEntityQueryWhere, replace = false) {
+    if (this._where && !replace) {
       this._where.push(cond);
     } else {
       this._where = [cond];
     }
   }
 
-  public addOrder(ordr: IEntityQueryOrder) {
-    if (this._order) {
-      this._order.push(ordr);
+  // TODO: тут никак не поддерживается порядок
+  public addOrder(ordr: IEntityQueryOrder, replace = false) {
+    if (this._order && !replace) {
+      if (!this._order.some( o => o.alias === ordr.alias && o.attribute === ordr.attribute )) {
+        this._order.push(ordr);
+      }
     } else {
       this._order = [ordr];
     }

@@ -159,7 +159,15 @@ describe("EntityQuery", () => {
       }
     };
 
-    expect(inspectorQuery).toEqual(EntityQuery.inspectorToObject(erModel, inspectorQuery).inspect());
+    const eq1 = EntityQuery.inspectorToObject(erModel, inspectorQuery);
+
+    expect(inspectorQuery).toEqual(eq1.inspect());
+
+    const eq2 = eq1.duplicate(erModel);
+    expect(eq1 !== eq2).toBeTruthy();
+    expect(eq1.link !== eq2.link).toBeTruthy();
+    expect(eq1.options !== eq2.options).toBeTruthy();
+    expect(eq1.inspect()).toEqual(eq1.inspect());
   });
 
   it("Insert: serialize/deserialize", () => {

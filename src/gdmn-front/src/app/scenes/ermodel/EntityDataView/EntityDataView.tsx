@@ -236,7 +236,7 @@ export const EntityDataView = CSSModules( (props: IEntityDataViewProps): JSX.Ele
     if (erModel && entity) {
       if (phrase) {
         try {
-          const eq = new ERTranslatorRU2({erModel}).processText(phrase).command.payload;
+          const eq = new ERTranslatorRU2({erModel, processUniform: true}).processText(phrase).command.payload;
 
           if (eq.link.entity !== entity) {
             viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: `В предложении должна использоваться сущность ${entity.name} (${getLName(entity.lName, ['ru'])}).` });

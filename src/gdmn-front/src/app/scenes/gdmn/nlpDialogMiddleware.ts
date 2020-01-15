@@ -126,9 +126,9 @@ export const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) =>
 
     const tab = getViewTab();
     const prevTranslator = tab?.translator;
-    let translator = prevTranslator ?? new ERTranslatorRU2({erModel});
+    let translator = prevTranslator ?? new ERTranslatorRU2({erModel, processUniform: true});
     try {
-      translator = translator.processText(text, true);
+      translator = translator.processText(text);
 
       if (prevTranslator?.valid && prevTranslator.command.payload.link.entity === translator.command.payload.link.entity) {
         dispatch(gdmnActions.updateViewTab({

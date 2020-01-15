@@ -249,8 +249,8 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
   const applyPhrase = useCallback( () => {
     if (erModel && translator && viewTab && phrase) {
       try {
-        let newTranslator = new ERTranslatorRU2({ erModel });
-        newTranslator = newTranslator.processText(phrase, true);
+        let newTranslator = new ERTranslatorRU2({ erModel, processUniform: true });
+        newTranslator = newTranslator.processText(phrase);
         dispatch(gdmnActions.updateViewTab({
           url,
           viewTab: {

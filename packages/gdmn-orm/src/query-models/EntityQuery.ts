@@ -66,6 +66,10 @@ export class EntityQuery {
     return inspect;
   }
 
+  public duplicate(erModel: ERModel): EntityQuery {
+    return EntityQuery.inspectorToObject(erModel, this.inspect());
+  }
+
   public addWhereCondition(cond: IEntityQueryWhere) {
     if (!this._options) {
       this._options = new EntityQueryOptions();

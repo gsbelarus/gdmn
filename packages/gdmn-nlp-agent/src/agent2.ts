@@ -53,6 +53,7 @@ interface IERTranslatorRUParams {
   erModel: ERModel;
   command?: ICommand;
   text?: string[];
+  processUniform?: boolean;
 };
 
 export class ERTranslatorRU2 {
@@ -223,7 +224,7 @@ export class ERTranslatorRU2 {
   }
 
   public clear() {
-    return new ERTranslatorRU2({ erModel: this.erModel });
+    return new ERTranslatorRU2({ ...this._params, command: undefined, text: undefined });
   }
 
   public process(sentence: IRusSentence) {
@@ -242,7 +243,7 @@ export class ERTranslatorRU2 {
     }
   }
 
-  public processText(text: string, processUniform = true) {
+  public processText(text: string) {
     // весь текст разбиваем на токены
     const tokens = text2Tokens(text);
 
@@ -256,7 +257,7 @@ export class ERTranslatorRU2 {
       // разбиваем на варианты, если некоторое слово может быть
       // разными частями речи. преобразуем однородные части
       // речи и превращаем числительные в значения
-      const variants = nlpTokenize(sentence, processUniform);
+      const variants = nlpTokenize(sentence, this._params.processUniform);
 
       // TODO: пока обрабатываем только первый вариант
       const parsed = nlpParse(variants[0], sentenceTemplates);
@@ -385,18 +386,20 @@ export class ERTranslatorRU2 {
     const foundAttr = this._findAttr(entity, byFieldPhrase, 1);
 
     if (foundAttr) {
-      const eq = EntityQuery.inspectorToObject(this.erModel, this.command.payload.inspect());
+      const eq = this.command.payload.duplicate(this.erModel);
 
       eq.options!.addOrder({
         alias: eq.link.alias,
         attribute: foundAttr,
         type: 'ASC'
-      });
+      }, true);
+
+      const command = {...this.command, payload: eq};
 
       return new ERTranslatorRU2({
         erModel: this.erModel,
-        command: {...this.command, payload: eq},
-        text: sentence.image ? [...this.text, sentence.image] : this.text
+        command,
+        text: [command2Text(command)]
       });
     }
 
