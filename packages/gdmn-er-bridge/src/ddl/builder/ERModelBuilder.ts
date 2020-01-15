@@ -222,12 +222,19 @@ export class ERModelBuilder extends Builder {
         await this.ddlHelper.addLBRBBUTrigger(tableName);      
       } 
 
-      /* Если есть поле EDITIONDATE добавляем триггеры  */ 
+      /* Если есть поле EDITIONDATE и EDITORKEY добавляем триггеры  */ 
       if (entity.hasOwnAttribute(Constants.DEFAULT_EDITIONDATE_NAME)) {
-        // 1) bi
-        await this.ddlHelper.addBIeditionDateTrigger(tableName);
-        // 2) bu
-        await this.ddlHelper.addBUeditionDateTrigger(tableName);
+        if (entity.hasOwnAttribute(Constants.DEFAULT_EDITORKEY_NAME)) {
+          // 1) bi
+          await this.ddlHelper.addBIeditionDateEditorKeyTrigger(tableName);
+          // 2) bu
+          await this.ddlHelper.addBUeditionDateEditorKeyTrigger(tableName);
+        } else {
+          // 1) bi
+          await this.ddlHelper.addBIeditionDateTrigger(tableName);
+          // 2) bu
+          await this.ddlHelper.addBUeditionDateTrigger(tableName);
+        }
       } 
       return erModel.add(entity);
     } else {
