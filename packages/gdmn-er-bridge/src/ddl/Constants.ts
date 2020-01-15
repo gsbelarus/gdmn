@@ -18,6 +18,7 @@ export class Constants {
   public static DEFAULT_RB_NAME = "RB";
   public static DEFAULT_USR_PREFIX = "USR$";
   public static DEFAULT_EDITIONDATE_NAME = "EDITIONDATE";
+  public static DEFAULT_EDITORKEY_NAME = "EDITORKEY";
 
   public static TIME_TEMPLATE = "HH:mm:ss.SSS";
   public static DATE_TEMPLATE = "DD.MM.YYYY";
