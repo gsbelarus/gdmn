@@ -377,6 +377,52 @@ export class DDLHelper {
     }
     return triggerName;
   }
+  
+   /** Добавление BI триггера для поля EDITIONDATE */
+  public async addBIeditionDateTrigger( tableName: string,
+                                        skipAT: boolean = this._skipAT,
+                                        ignore: boolean = this._defaultIgnore): Promise<string> {
+    const triggerName = `${Constants.DEFAULT_USR_PREFIX}${Prefix.triggerBeforeInsert(ddlUtils.stripUserPrefix(tableName))}5`;
+    if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
+      await this._loggedExecute(`
+      CREATE TRIGGER ${triggerName} FOR ${tableName}
+      ACTIVE BEFORE INSERT POSITION 5
+      AS
+        BEGIN
+          IF (NEW.${Constants.DEFAULT_EDITIONDATE_NAME} IS NULL) THEN NEW.${Constants.DEFAULT_EDITIONDATE_NAME} = CURRENT_TIMESTAMP(0);
+        END
+      `);
+      await this._transaction.commitRetaining();
+    }
+
+    if (!skipAT && !(ignore && await this._cachedStatements.isTriggerATExists(triggerName))) {
+      await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
+    }
+    return triggerName;
+  }
+
+   /** Добавление BU триггера для поля EDITIONDATE */
+  public async addBUeditionDateTrigger( tableName: string,
+                                        skipAT: boolean = this._skipAT,
+                                        ignore: boolean = this._defaultIgnore): Promise<string> {
+    const triggerName = `${Constants.DEFAULT_USR_PREFIX}BU_${ddlUtils.stripUserPrefix(tableName)}5`;
+    if (!(ignore && await this._cachedStatements.isTriggerExists(triggerName))) {
+      await this._loggedExecute(`
+      CREATE TRIGGER ${triggerName} FOR ${tableName}
+      ACTIVE BEFORE UPDATE POSITION 5
+      AS
+      BEGIN
+        IF (NEW.${Constants.DEFAULT_EDITIONDATE_NAME} IS NULL) THEN NEW.${Constants.DEFAULT_EDITIONDATE_NAME} = CURRENT_TIMESTAMP(0);
+      END
+      `);
+      await this._transaction.commitRetaining();
+    }
+
+    if (!skipAT && !(ignore && await this._cachedStatements.isTriggerATExists(triggerName))) {
+      await this._cachedStatements.addToATTriggers({relationName: tableName, triggerName: triggerName});
+    }
+    return triggerName;
+  }
 
   public async addBICrossTrigger(tableName: string,
                                 fieldName: string,

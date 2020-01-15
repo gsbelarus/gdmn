@@ -74,7 +74,7 @@ export class EntityBuilder extends Builder {
 
       if (attribute.type === "Sequence" && attribute instanceof SequenceAttribute) {
         const seqName = attribute.sequence.adapter ? attribute.sequence.adapter.sequence : attribute.sequence.name;
-        const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
+        const triggerName = `${Constants.DEFAULT_USR_PREFIX}${Prefix.triggerBeforeInsert(tableName)}`;
         await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName, seqName);
       }
 
