@@ -132,7 +132,7 @@ export class ERModelBuilder extends Builder {
             const _attr = pkAttr as SequenceAttribute;
             const fieldName = AdapterUtils.getFieldName(pkAttr);
             const seqAdapter = _attr.sequence.adapter;
-            const triggerName = Prefix.triggerBeforeInsert(await this.nextDDLUnique());
+            const triggerName = `${Constants.DEFAULT_USR_PREFIX}${Prefix.triggerBeforeInsert(tableName)}`;
             await this.ddlHelper.addAutoIncrementTrigger(triggerName, tableName, fieldName,
               seqAdapter ? seqAdapter.sequence : _attr.sequence.name);
             break;
@@ -220,7 +220,15 @@ export class ERModelBuilder extends Builder {
         await this.ddlHelper.addLBRBBITrigger(tableName);      
         // 4.2) bu
         await this.ddlHelper.addLBRBBUTrigger(tableName);      
-      }    
+      } 
+
+      /* Если есть поле EDITIONDATE добавляем триггеры  */ 
+      if (entity.hasOwnAttribute(Constants.DEFAULT_EDITIONDATE_NAME)) {
+        // 1) bi
+        await this.ddlHelper.addBIeditionDateTrigger(tableName);
+        // 2) bu
+        await this.ddlHelper.addBUeditionDateTrigger(tableName);
+      } 
       return erModel.add(entity);
     } else {
       throw new Error("Unknown type of arg");
