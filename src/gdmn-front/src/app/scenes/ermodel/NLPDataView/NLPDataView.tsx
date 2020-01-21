@@ -516,7 +516,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
       iconProps: {
         iconName: 'Edit'
       },
-      onClick: () => !!rs && !!rs.size && history.push(`${url}/edit/${rs.pk2s().join('-')}`)
+      onClick: () => !!rs && !!rs.size && ent && history.push(`/spa/gdmn/entity/${ent.name}/edit/${rs.pk2s().join('-')}`)
     },
     {
       key: `delete`,
