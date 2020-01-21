@@ -14,7 +14,8 @@ export interface INLPDataViewRouteProps {
 
 export interface INLPDataViewContainerProps extends RouteComponentProps<INLPDataViewRouteProps> {
   url: string;
-  viewID: string;
+  rsName: string;
+  entityName?: string;
 };
 
 export interface INLPDataViewStateProps {

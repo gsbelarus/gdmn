@@ -21,7 +21,6 @@ import { ApplicationsViewContainer } from './components/ApplicationsViewContaine
 import { IApplicationInfo } from '@gdmn/server-api';
 import { EntityDataDlgContainer } from '../ermodel/EntityDataDlg/EntityDataDlgContainer';
 import { IEntityDataDlgRouteProps } from '../ermodel/EntityDataDlg/EntityDataDlg.types';
-import { EntityDataViewContainer } from '../ermodel/EntityDataView/EntityDataViewContainer';
 import { ERModelView2Container } from '../ermodel/ERModelView2Container';
 import { BPContainer } from '../bp/BPContainer';
 import { ThemeEditorContainer } from '../themeeditor/ThemeEditorContainer';
@@ -416,14 +415,17 @@ export function GdmnView (props: IGdmnViewProps) {
                   <Route
                     exact={true}
                     path={`${match.path}/entity/:entityName`}
-                    render={props => (
-                      <EntityDataViewContainer
+                    render={props => erModel && Object.keys(erModel.entities).length ?
+                      <NLPDataViewContainer
                         {...props}
                         key={props.match.url}
-                        entityName={props.match.params.entityName}
                         url={props.match.url}
+                        rsName={props.match.params.entityName}
+                        entityName={props.match.params.entityName}
                       />
-                    )}
+                      :
+                      <Redirect to={match.path} push />
+                    }
                   />
                   <Route
                     exact={true}
@@ -433,7 +435,7 @@ export function GdmnView (props: IGdmnViewProps) {
                         {...props}
                         key={props.match.url}
                         url={props.match.url}
-                        viewID={props.match.params.viewID}
+                        rsName={props.match.params.viewID}
                       />
                       :
                       <Redirect to={match.path} push />

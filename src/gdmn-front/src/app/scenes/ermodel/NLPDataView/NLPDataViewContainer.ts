@@ -5,7 +5,7 @@ import { NLPDataView } from "./NLPDataView";
 
 export const NLPDataViewContainer = connect(
   (state: IState, ownProps: INLPDataViewContainerProps): INLPDataViewStateProps => {
-    const rs = state.recordSet[ownProps.viewID];
+    const rs = state.recordSet[ownProps.rsName];
     const masterRs = rs?.masterLink && state.recordSet[rs.masterLink.masterName];
 
     return {

@@ -7,7 +7,7 @@ import {gdmnActions, gdmnActionsAsync} from "../gdmn/actions";
 import {CommandBar, ICommandBarItemProps, TextField, getTheme} from "office-ui-fabric-react";
 import {bindGridActions} from "./utils";
 import CSSModules from 'react-css-modules';
-import styles from './EntityDataView/styles.css';
+import styles from './NLPDataView/styles.css';
 import {InspectorForm} from "@src/app/components/InspectorForm";
 import {useSaveGridState} from "../../hooks/useSavedGridState";
 import {apiService} from "@src/app/services/apiService";

@@ -31,12 +31,19 @@ import { getLName } from 'gdmn-internals';
 
 Таким образом мы имеем к обработке следующие ситуации:
 
-1. отсутствует erModel и/или translator. Мы в состоянии загрузки
+1. отсутствует erModel. Мы в состоянии загрузки
    платформы или перезагрузки по hot-reloading. Выводим
    сообщение о загрузке и будем ждать пока не появится
    erModel.
 
    Состояние запроса скидываем до INITIAL.
+
+   TODO: по идее после горячей перезагрузки, надо переделать
+   транслятор и все объекты, которые внутри содержат ссылки на
+   старую erModel. Иначе она останется в оперативной памяти.
+
+1001. отсутствует translator. это ситуация, когда форма открывается
+   для просмотра данных Entity. Создаем translator и viewTab.
 
 101.Translator не равен prevTranslator. Изменился текст запроса.
    Или снаружи, в nlpDialog, или внутри окна. Проверяем
@@ -210,7 +217,7 @@ function reducer(state: INLPDataViewState, action: Action): INLPDataViewState {
 };
 
 export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element => {
-  const { url, rs, dispatch, viewTab, erModel, gcs, history, gridColors, masterRs, gcsMaster, viewID } = props;
+  const { url, rs, dispatch, viewTab, erModel, gcs, history, gridColors, masterRs, gcsMaster, rsName, entityName } = props;
   const translator = viewTab?.translator;
   const ent = translator?.command.payload.link.entity;
   const locked = !!rs?.locked;
@@ -242,38 +249,63 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
       }
 
       viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'QUERY_RS', prevTranslator: translator, setPhrase: true  });
-      dispatch(loadRSActions.attachRS({ name: viewID, eq, override: true, masterLink }));
+      dispatch(loadRSActions.attachRS({ name: rsName, eq, override: true, masterLink }));
     }
   }, [erModel, translator]);
 
-  const applyPhrase = useCallback( () => {
-    if (erModel && translator && viewTab && phrase) {
+  const applyPhrase = useCallback( (text?: string) => {
+    if (erModel && text) {
       try {
-        let newTranslator = new ERTranslatorRU2({ erModel, processUniform: true });
-        newTranslator = newTranslator.processText(phrase);
-        dispatch(gdmnActions.updateViewTab({
-          url,
-          viewTab: {
-            translator: newTranslator
+        let newTranslator = new ERTranslatorRU2({ erModel, processUniform: true }).processText(text);
+
+        if (entityName && newTranslator.command.payload.link.entity.name !== entityName) {
+          viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: "Can't change entity." });
+        } else {
+          if (!viewTab) {
+            dispatch(gdmnActions.addViewTab({
+              url,
+              caption: `${entityName}`,
+              canClose: true,
+              translator: newTranslator
+            }));
+          } else {
+            dispatch(gdmnActions.updateViewTab({
+              url,
+              viewTab: {
+                translator: newTranslator
+              }
+            }));
           }
-        }));
+        }
       }
       catch (e) {
         viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: e.message });
       }
     }
-  }, [erModel, translator, viewTab, phrase]);
+  }, [erModel, translator, viewTab]);
 
   useEffect( () => {
     const log = (step: number) =>
       console.log(`${step} -- ${queryState}${translator ? ',translator' : ''}${rs ? ',rs' : ''}${rs?.masterLink ? ',masterLink' : ''}${rs?.masterLink?.value ? ',value' : ''}${masterRs ? ',masterRs' : ''}`)
 
     // 1
-    if (!erModel || !translator?.valid) {
+    if (!erModel) {
       if (queryState !== 'INITIAL') {
         viewDispatch({ type: 'SET_QUERY_STATE', queryState: 'INITIAL' });
       }
       log(1);
+      return;
+    }
+
+    // 1001
+    if (!translator?.valid) {
+      if (!entityName) {
+        throw new Error('Entity name isn\'t specified.')
+      }
+
+      applyPhrase(`Покажи все ${entityName}`);
+
+      log(1001);
       return;
     }
 
@@ -468,7 +500,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     }
 
     throw new Error('Unknown state');
-  }, [erModel, translator, prevTranslator, rs, masterRs, queryState, viewTab]);
+  }, [erModel, translator, prevTranslator, rs, masterRs, queryState, viewTab, applyPhrase, applyTranslator]);
 
   const addRecord = () => {
     if (ent) {
@@ -664,7 +696,10 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
                 onChange={ (_, phrase) => viewDispatch({ type: 'SET_PHRASE', phrase }) }
                 errorMessage={ phraseError ? phraseError : undefined }
               />
-              <DefaultButton onClick={ applyPhrase }>
+              <DefaultButton
+                disabled={!erModel && !translator}
+                onClick={ () => applyPhrase(phrase) }
+              >
                 Применить
               </DefaultButton>
             </Stack>
