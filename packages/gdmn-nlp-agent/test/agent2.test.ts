@@ -1,8 +1,7 @@
-import fs from "fs";
 import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
-import {parsePhrase, RusPhrase, SemCategory} from "gdmn-nlp";
-import {deserializeERModel, EntityAttribute, ERModel, StringAttribute} from "gdmn-orm";
+import {SemCategory} from "gdmn-nlp";
+import {EntityAttribute, ERModel} from "gdmn-orm";
 import {ERTranslatorRU2} from "../src/agent2";
 import {loadDBDetails} from "./testConfig";
 
@@ -27,7 +26,7 @@ describe("agent2", () => {
       callback: (transaction) => ERBridge.reloadERModel(connection, transaction, new ERModel())
     });
     expect(erModel).toBeDefined();
-    translator = new ERTranslatorRU2({erModel});
+    translator = new ERTranslatorRU2({erModel, processUniform: true});
     expect(translator).toBeDefined();
   });
 
@@ -44,7 +43,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи организации", true);
+    translator = translator.processText("покажи организации");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -60,7 +59,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи все организации", true);
+    translator = translator.processText("покажи все организации");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -76,7 +75,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи организации из минска", true);
+    translator = translator.processText("покажи организации из минска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -100,7 +99,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи организации из минска, пинска", true);
+    translator = translator.processText("покажи организации из минска, пинска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -132,7 +131,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи все организации из минска", true);
+    translator = translator.processText("покажи все организации из минска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -156,7 +155,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи все организации из минска и пинска", true);
+    translator = translator.processText("покажи все организации из минска и пинска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -188,7 +187,7 @@ describe("agent2", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи все организации из минска, пинска", true);
+    translator = translator.processText("покажи все организации из минска, пинска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -273,7 +272,7 @@ describe("agent2", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
-    translator = translator.processText("покажи TgdcCompany", true);
+    translator = translator.processText("покажи TgdcCompany");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -284,7 +283,7 @@ describe("agent2", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
 
-    translator = translator.processText("покажи все TgdcCompany", true);
+    translator = translator.processText("покажи все TgdcCompany");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
