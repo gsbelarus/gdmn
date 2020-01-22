@@ -12,7 +12,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       onlyInteger
       noNegative
       value={attr.minLength}
-      readOnly={!userDefined || !createAttr}
+      disabled={!userDefined}
       errorMessage={getErrorMessage(attrIdx, 'minLength', errorLinks)}
       width="180px"
       onChange={ minLength => { onChange({ ...attr, minLength }); onClearError && onClearError('minLength'); } }
@@ -23,7 +23,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       onlyInteger
       noNegative
       value={attr.maxLength}
-      readOnly={!userDefined || !createAttr}
+      disabled={!userDefined}
       errorMessage={getErrorMessage(attrIdx, 'maxLength', errorLinks)}
       width="180px"
       onChange={ maxLength => { onChange({ ...attr, maxLength }); onClearError && onClearError('maxLength'); } }
@@ -47,7 +47,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
     <TextField
       label="Mask:"
       value={attr.mask ? attr.mask.source : ''}
-      readOnly={!userDefined || !createAttr}
+      disabled={!userDefined}
       styles={{
         root: {
           width: '240px'
@@ -59,7 +59,7 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       <TextField
         label="Default value:"
         value={attr.defaultValue}
-        readOnly={!userDefined || !createAttr}
+        disabled={!userDefined}
         onChange={ (_, defaultValue) => defaultValue !== undefined && onChange({ ...attr, defaultValue }) }
       />
     </Stack.Item>

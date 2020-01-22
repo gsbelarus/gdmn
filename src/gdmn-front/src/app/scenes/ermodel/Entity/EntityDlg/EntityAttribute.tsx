@@ -134,7 +134,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           </Stack.Item>
           <TextField
             label="Sem categories:"
-            disabled={!userDefined || !createAttr}
+            disabled={!userDefined}
             value={attr.semCategories}
             styles={{
               root: {
@@ -143,12 +143,23 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
             }}
             onChange={ (_, semCategories) => semCategories !== undefined && onChange({...attr, semCategories }) }
           />
+          <TextField
+            label="Label:"
+            disabled={!userDefined}
+            value={getLName(attr.lName, ['ru'])}
+            styles={{
+              root: {
+                width: '240px'
+              }
+            }}
+            onChange={ (_, name) => name !== undefined && attr.lName.ru && onChange({...attr, lName: { ru: { ...attr.lName.ru, name } } }) }
+          />
           <Stack.Item grow>
             <TextField
               label="Description:"
-              disabled={!userDefined || !createAttr}
-              value={getLName(attr.lName, ['ru'])}
-              onChange={ (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) }
+              disabled={!userDefined}
+              value={getLName(attr.lName, ['ru'], true)}
+              onChange={ (_, fullName) => fullName !== undefined && attr.lName.ru && onChange({...attr, lName: { ru: { ...attr.lName.ru, fullName } } }) }
             />
           </Stack.Item>
         </Stack>

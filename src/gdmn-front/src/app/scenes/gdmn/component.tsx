@@ -1,4 +1,4 @@
-import React, { Fragment, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Link, Redirect, Route, RouteComponentProps, Switch } from 'react-router-dom';
 import { Icon } from 'office-ui-fabric-react/lib/components/Icon';
 import { IconButton, IButtonStyles } from 'office-ui-fabric-react/lib/components/Button';
@@ -6,7 +6,6 @@ import { gdmnActionsAsync, gdmnActions } from "@src/app/scenes/gdmn/actions";
 import { ContextualMenuItem, IContextualMenuItemProps } from 'office-ui-fabric-react/lib/components/ContextualMenu';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
 import { Dispatch } from 'redux';
-import { ErrorBoundary, isDevMode } from '@gdmn/client-core';
 import { commandsToContextualMenuItems, commandToLink } from '@src/app/services/uiCommands';
 import { ViewTabsContainer } from '@src/app/components/ViewTab/ViewTabsContainer';
 import { StompDemoViewContainer } from './components/StompDemoViewContainer';
@@ -35,6 +34,20 @@ import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
 import { ERModel } from 'gdmn-orm';
 import { NLPDataViewContainer } from '../ermodel/NLPDataView/NLPDataViewContainer';
 
+interface IErrBoundaryProps {
+  onLogError: (error: Error) => void;
+};
+
+class ErrBoundary extends React.Component<IErrBoundaryProps> {
+  componentDidCatch(error: Error) {
+    this.props.onLogError(error);
+  }
+
+  render() {
+    return this.props.children;
+  }
+};
+
 export interface IGdmnViewProps extends RouteComponentProps<any> {
   loading: boolean;
   loadingMessage?: string;
@@ -48,7 +61,7 @@ export interface IGdmnViewProps extends RouteComponentProps<any> {
 };
 
 const NotFoundView = () => <h2>GDMN: 404!</h2>;
-const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
+//const ErrBoundary = !isDevMode() ? ErrorBoundary : Fragment;
 
 //@CSSModules(styles, { allowMultiple: true })
 export function GdmnView (props: IGdmnViewProps) {
@@ -273,7 +286,7 @@ export function GdmnView (props: IGdmnViewProps) {
           color: getTheme().semanticColors.bodyText
         }}
       >
-        <ErrBoundary>
+        <ErrBoundary onLogError={ error => dispatch(rootActions.onError(error)) }>
           <Stack horizontal styles={{ root: { height: '100%' } }}>
             <Stack.Item styles={{ root: { minWidth: '240px' } }}>
               <NLPDialogScroll nlpDialog={nlpDialog} addNLPMessage={ text => dispatch(gdmnActions.nlpProcess({ item: { who: 'me', text }, history })) }/>

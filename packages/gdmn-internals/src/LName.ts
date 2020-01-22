@@ -13,11 +13,11 @@ export function getLName(n: LName, langPref: Lang[] = [], getFullName: boolean =
   for (let i = 0; i < langPref.length; i++) {
     const tn = n[langPref[i]];
     if (tn) {
-      return getFullName && tn.fullName ? tn.fullName : tn.name;
+      return (getFullName && tn.fullName) ? tn.fullName : tn.name;
     }
   }
 
   if (!n.en) return '';
 
-  return getFullName && n.en.fullName ? n.en.fullName : n.en.name;
+  return (getFullName && n.en.fullName) ? n.en.fullName : n.en.name;
 };

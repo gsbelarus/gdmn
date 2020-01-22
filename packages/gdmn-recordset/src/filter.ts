@@ -1,6 +1,6 @@
 
 export interface IFilterCondition {
-  value: string;
+  value: string | RegExp;
 };
 
 export interface IFilter {

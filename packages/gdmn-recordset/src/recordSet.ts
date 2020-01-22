@@ -94,6 +94,10 @@ export class RecordSet {
     }
   }
 
+  private static _escapeRegExp(text: string) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  }
+
   public static create(params: IRecordSetOptions): RecordSet{
     const withCalcFunc = params.fieldDefs.filter(fd => fd.calcFunc);
 
@@ -1781,7 +1785,7 @@ export class RecordSet {
       return this;
     }
 
-    const isFilter = filter && filter.conditions.length;
+    const isFilter = filter?.conditions.length;
     const currentRowData = this.size ? this.get(this.currentRow) : undefined;
     const selectedRowsData = this._params.allRowsSelected
       ? this.toArray()
@@ -1797,8 +1801,11 @@ export class RecordSet {
 
     let newData: Data;
 
+    // TODO: support only first filter condition for now
     if (isFilter) {
-      const re = new RegExp(filter!.conditions[0].value, "i");
+      const re = typeof filter?.conditions[0]?.value === 'string'
+        ? new RegExp(RecordSet._escapeRegExp(filter.conditions[0].value), "i")
+        : filter!.conditions[0].value;
       newData = (this._params.savedData || this._params.data)
         .filter(row =>
           row
@@ -1851,10 +1858,7 @@ export class RecordSet {
     return res;
   }
 
-  public isFiltered = (): boolean =>
-    !!this._params.filter &&
-    !!this._params.filter.conditions.length &&
-    !!this._params.filter.conditions[0].value;
+  public isFiltered = (): boolean => !!this._params.filter?.conditions.length;
 
   public search(searchStr: string | undefined): RecordSet{
     if (!searchStr) {
@@ -1865,7 +1869,7 @@ export class RecordSet {
       });
     }
 
-    const re = RegExp(searchStr, "i");
+    const re = new RegExp(RecordSet._escapeRegExp(searchStr), "i");
     const foundRows: FoundRows = [];
     let foundIdx = 1;
 
@@ -1941,7 +1945,9 @@ export class RecordSet {
     }
 
     if (this.isFiltered()) {
-      const re = new RegExp(this._params.filter!.conditions[0].value, "i");
+      const re = typeof this._params.filter?.conditions[0]?.value === 'string'
+        ? new RegExp(RecordSet._escapeRegExp(this._params.filter.conditions[0].value), "i")
+        : this._params.filter!.conditions[0].value;
       const res: IMatchedSubString[] = [];
       let l = 0;
       let m = re.exec(s);

@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useReducer, useMemo } from "react";
+import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, isIEntity, ISequenceAttribute, deserializeEntity, deserializeAttributes, ERModel, IEntityAttribute } from "gdmn-orm";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, ISequenceAttribute, IEntityAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -704,8 +704,21 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
               <TextField
                 label="Semantic categories:"
                 value={entityData.semCategories}
-                readOnly={!createEntity}
+                disabled={!isUserDefined(entityData.name)}
                 onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
+                styles={{
+                  root: {
+                    width: '240px'
+                  }
+                }}
+              />
+            </Stack.Item>
+            <Stack.Item>
+              <TextField
+                label="Label:"
+                disabled={!isUserDefined(entityData.name)}
+                value={getLName(entityData.lName, ['ru'])}
+                onChange={ (_, name) => name !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { ...entityData.lName.ru, name } } } }) }
                 styles={{
                   root: {
                     width: '240px'
@@ -716,8 +729,9 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
             <Stack.Item grow={1}>
               <TextField
                 label="Description:"
-                value={getLName(entityData.lName, ['ru'])}
-                onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { name: newValue } } } }) }
+                disabled={!isUserDefined(entityData.name)}
+                value={getLName(entityData.lName, ['ru'], true)}
+                onChange={ (_, fullName) => fullName !== undefined && entityData.lName.ru && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { ...entityData.lName.ru, fullName } } } }) }
               />
             </Stack.Item>
           </Stack>
