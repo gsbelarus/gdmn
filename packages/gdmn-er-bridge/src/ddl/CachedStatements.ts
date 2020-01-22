@@ -22,6 +22,7 @@ export interface IATRelationsInput {
   entityName?: string;
   semCategory?: SemCategory[];
   lShortName?: string;
+  referenceTable?: string;
 }
 
 export interface IATRelationFieldsInput {
@@ -690,7 +691,10 @@ export class CachedStatements {
             DESCRIPTION  = :description,
             SEMCATEGORY  = :semCategory,
             ENTITYNAME   = :entityName,
-            LSHORTNAME   = :lShortName
+            LSHORTNAME   = :lShortName,
+            REFERENCEKEY  = IIF(:referenceTable = NULL, NULL, (SELECT FIRST 1 ID
+              FROM AT_RELATIONS
+              WHERE RELATIONNAME = :referenceTable))
         WHERE RELATIONNAME = :relationName
           RETURNING ID
       `);
@@ -702,7 +706,8 @@ export class CachedStatements {
       description: input.description,
       semCategory: semCategories2Str(input.semCategory || []),
       entityName: input.relationName !== input.entityName ? input.entityName : undefined,
-      lShortName: input.lShortName || input.lName || input.relationName
+      lShortName: input.lShortName || input.lName || input.relationName,
+      referenceTable: input.referenceTable
     });
     return result.getNumber("ID");
   }

@@ -61,6 +61,7 @@ interface IEntityAttributeProps extends IAttributeEditorProps<Attr> {
 export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, selected, errorLinks, onChange, onSelect, onError, onClearError, erModel }: IEntityAttributeProps) => {
 
   const AttrEditor = mapEditor[attr.type];
+  const parent = attr.type === "Entity" ? (attr as IEntityAttribute).references : null;
 
   return useMemo( () =>
     <Frame border marginBottom selected={selected} onClick={onSelect} readOnly={!userDefined}>
@@ -165,5 +166,5 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
         />
       </Stack>
     </Frame>
-  , [attr, attrIdx, selected, errorLinks, erModel]);
+  , [attr, attrIdx, selected, errorLinks, erModel, parent]);
 };
