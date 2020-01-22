@@ -204,7 +204,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           unique: [[]],
           attributes: adjustEntityAttributes()
         },
-        selectedAttr: 0,
+        selectedAttr: undefined,
         changed: true,
         errorLinks: [],
         //entityType: 'SIMPLE'

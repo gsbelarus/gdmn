@@ -82,23 +82,30 @@ export const EnumEditor = ({ attr, userDefined, onChange }: IAttributeEditorProp
                 <TextField
                   label="Value:"
                   value={state.value}
+                  disabled={!userDefined}
                   onChange={ (_, value) => value !== undefined && setState({ ...state, value }) }
                 />
                 <TextField
                   label="Caption:"
                   value={state.caption}
+                  disabled={!userDefined}
                   onChange={ (_, caption) => caption !== undefined && setState({ ...state, caption }) }
                 />
                 <Stack.Item align="start">
-                  <Label>Default:</Label>
+                  <Label
+                    disabled={!userDefined}
+                  >
+                    Default:
+                  </Label>
                   <Checkbox
                     checked={state.isDefault}
+                    disabled={!userDefined}
                     onChange={ (_, isDefault) => isDefault !== undefined && setState({ ...state, isDefault }) }
                   />
                 </Stack.Item>
                 <PrimaryButton
                   text="Save"
-                  disabled={!state.value || !!attr.values.find( (v, idx) => idx !== state.idx && v.value === state.value )}
+                  disabled={!userDefined || !state.value || !!attr.values.find( (v, idx) => idx !== state.idx && v.value === state.value )}
                   onClick={ () => {
                     const v = { value: state.value, lName: state.caption ? { ru: { name: state.caption }} : undefined };
                     const defaultValue = state.isDefault ? state.value : attr.defaultValue === state.value ? undefined : attr.defaultValue;
@@ -114,6 +121,7 @@ export const EnumEditor = ({ attr, userDefined, onChange }: IAttributeEditorProp
                 />
                 <DefaultButton
                   text="Cancel"
+                  disabled={!userDefined}
                   onClick={ () => setState(undefined) }
                 />
               </>

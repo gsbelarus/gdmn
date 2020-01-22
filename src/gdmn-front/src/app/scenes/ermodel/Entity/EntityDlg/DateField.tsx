@@ -65,7 +65,7 @@ interface IDateFieldState {
   error?: string;
 };
 
-export const DateField = ({ dateFieldType, label, value, errorMessage, readOnly, onChange,  disabled }: IDateFieldProps) => {
+export const DateField = ({ dateFieldType, label, value, errorMessage, readOnly, onChange, disabled }: IDateFieldProps) => {
 
   const [state, setState] = useState<IDateFieldState>( { text: value === undefined ? '' : date2str(value, dateFieldType) } );
 

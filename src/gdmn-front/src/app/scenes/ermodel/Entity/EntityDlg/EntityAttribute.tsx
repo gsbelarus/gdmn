@@ -100,6 +100,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           <Dropdown
             label="Type:"
             selectedKey={attr.type}
+            disabled={!userDefined || !createAttr}
             options={
               attributeTypeNames.map(n => ({ key: n, text: n }))
             }
@@ -113,9 +114,13 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
             }
           />
           <Stack.Item>
-            <Label>Required:</Label>
+            <Label
+              disabled={!userDefined || !createAttr}
+            >
+              Required:
+            </Label>
             <Checkbox
-              disabled={!createAttr}
+              disabled={!userDefined || !createAttr}
               checked={attr.required}
               styles={{
                 root: {
@@ -129,7 +134,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           </Stack.Item>
           <TextField
             label="Sem categories:"
-            readOnly={!createAttr}
+            disabled={!userDefined || !createAttr}
             value={attr.semCategories}
             styles={{
               root: {
@@ -141,8 +146,8 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           <Stack.Item grow>
             <TextField
               label="Description:"
+              disabled={!userDefined || !createAttr}
               value={getLName(attr.lName, ['ru'])}
-              readOnly={!userDefined}
               onChange={ (_, name) => name !== undefined && onChange({...attr, lName: { ru: { name } } }) }
             />
           </Stack.Item>

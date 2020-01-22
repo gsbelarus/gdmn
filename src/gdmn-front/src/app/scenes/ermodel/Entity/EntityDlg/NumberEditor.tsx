@@ -11,7 +11,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
       label="Min value:"
       onlyInteger={attr.type === 'Integer'}
       value={attr.minValue}
-      readOnly={!userDefined || !createAttr}
+      disabled={!userDefined}
       errorMessage={getErrorMessage(attrIdx, 'minValue', errorLinks)}
       width="180px"
       onChange={ minValue => { onChange({ ...attr, minValue }); onClearError && onClearError('minValue'); } }
@@ -21,7 +21,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
       label="Max value:"
       onlyInteger={attr.type === 'Integer'}
       value={attr.maxValue}
-      readOnly={!userDefined || !createAttr}
+      disabled={!userDefined}
       errorMessage={getErrorMessage(attrIdx, 'maxValue', errorLinks)}
       width="180px"
       onChange={ maxValue => { onChange({ ...attr, maxValue }); onClearError && onClearError('maxValue'); } }
@@ -32,6 +32,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
       ? <>
           <Dropdown
             label="Precision:"
+            disabled={!userDefined}
             selectedKey={attr.precision}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx + 1, text: (idx + 1).toString() }) ) }
             errorMessage={getErrorMessage(attrIdx, 'precision', errorLinks)}
@@ -46,6 +47,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
           />
           <Dropdown
             label="Scale:"
+            disabled={!userDefined}
             selectedKey={attr.scale}
             options={ new Array(18).fill(undefined).map( (_, idx) => ({ key: idx, text: idx.toString() }) ).filter( i => i.key <= attr.precision ) }
             errorMessage={getErrorMessage(attrIdx, 'scale', errorLinks)}
@@ -66,7 +68,7 @@ export const NumberEditor = ({ attr, attrIdx, errorLinks, onChange, createAttr, 
         label="Default value:"
         onlyInteger={attr.type === 'Integer'}
         value={attr.defaultValue}
-        readOnly={!userDefined || !createAttr}
+        disabled={!userDefined}
         errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
         onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
         onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }

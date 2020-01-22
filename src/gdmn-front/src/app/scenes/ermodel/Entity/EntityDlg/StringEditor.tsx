@@ -1,4 +1,4 @@
-import { IStringAttribute, isUserDefined } from "gdmn-orm";
+import { IStringAttribute } from "gdmn-orm";
 import { Stack, TextField, Label, Checkbox } from "office-ui-fabric-react";
 import React from "react";
 import { getErrorMessage } from "./utils";

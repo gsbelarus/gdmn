@@ -7,6 +7,7 @@ import {StompLogPanelContainer, ConnectBtnContainer} from "./container";
 import {IRsMetaState} from "@src/app/store/rsmeta";
 import {IconButton} from 'office-ui-fabric-react/lib/Button';
 import { Frame } from "../gdmn/components/Frame";
+import { command2Text } from "gdmn-nlp-agent";
 
 export interface IInternalsProps extends IViewProps<any> {
   erModel?: ERModel;
@@ -37,16 +38,15 @@ export class Internals extends View<IInternalsProps, {}> {
         <Frame border marginTop marginLeft marginRight caption="erModel">
           erModel: {erModel ? `${Object.entries(erModel.entities).length} entites` : 'not loaded'}
         </Frame>
-        <Frame border marginTop marginLeft marginRight caption="Recordsets">
-          <ol>
-            {
-              Object.entries(recordSet).map(([name, rs]) => (
-                <li key={name}>
-                  {name} -- {rs.size} records, {rs.fieldDefs.length} fields, status: {TStatus[rs.status]}, changed: {rs.changed}, locked: {rs.locked ? 'true' : 'false'}, queryPhrase: {rs.queryPhrase}
-                </li>
-              ))
-            }
-          </ol>
+        <Frame border marginTop marginLeft marginRight caption="Recordsets" canMinimize>
+          {
+            Object.entries(recordSet).map(([name, rs]) => (
+              <Frame key={name} border marginTop caption={name}>
+                <div>Size: {rs.size} records, {rs.fieldDefs.length} fields</div>
+                <div>Status: {TStatus[rs.status]}, changed: {rs.changed}, locked: {rs.locked ? 'true' : 'false'}, queryPhrase: {rs.queryPhrase}</div>
+              </Frame>
+            ))
+          }
         </Frame>
         {rsMeta &&
         <Frame border marginTop marginLeft marginRight caption="rsMeta">
@@ -64,16 +64,21 @@ export class Internals extends View<IInternalsProps, {}> {
           </ol>
         </Frame>
         }
-        <Frame border marginTop marginLeft marginRight caption="ViewTabs">
-          <ol>
-            {
-              viewTabs.map(vt => (
-                <li key={vt.url}>
-                  {vt.caption} -- {vt.url}, {vt.rs ? vt.rs.join() : 'no recordsets'}, {JSON.stringify(vt.sessionData, undefined, 2)}
-                </li>
-              ))
-            }
-          </ol>
+        <Frame border marginTop marginLeft marginRight caption="ViewTabs" canMinimize>
+          {
+            viewTabs.map(vt => (
+              <Frame key={vt.url} border marginTop caption={vt.caption}>
+                <div>URL: {vt.url}</div>
+                <div>{vt.rs ? `Recordsets: [${vt.rs.join()}]` : 'No recordsets'}</div>
+                {vt.translator && <div>NLP comand: {command2Text(vt.translator.command)}</div>}
+                {vt.sessionData &&
+                  <Frame border caption="Session data" marginTop canMinimize initialMinimized>
+                    {JSON.stringify(vt.sessionData, undefined, 2)}
+                  </Frame>
+                }
+              </Frame>
+            ))
+          }
         </Frame>
         <Frame border marginTop marginLeft marginRight caption="Session info">
           <div>

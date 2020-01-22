@@ -8,10 +8,11 @@ import { getErrorMessage } from "./utils";
 
 interface ISetValueProps {
   entityName: string;
+  disabled?: boolean;
   onDelete?: () => void;
 };
 
-const SetValue = ({ entityName, onDelete }: ISetValueProps) =>
+const SetValue = ({ entityName, onDelete, disabled }: ISetValueProps) =>
   <div
     style={{
       backgroundColor: getTheme().semanticColors.primaryButtonBackground,
@@ -27,7 +28,7 @@ const SetValue = ({ entityName, onDelete }: ISetValueProps) =>
         {entityName}
       </Text>
       {
-        onDelete
+        onDelete && !disabled
         ?
           <Icon
             iconName='Cancel'
@@ -53,7 +54,7 @@ interface ISetEditorState {
   entityName: string;
 };
 
-export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorLinks, attrIdx }: IAttributeEditorProps<ISetAttribute>) => {
+export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorLinks, attrIdx, userDefined }: IAttributeEditorProps<ISetAttribute>) => {
   const [state, setState] = useState<ISetEditorState | undefined>();
   const errRef = getErrorMessage(attrIdx, 'references', errorLinks);
 
@@ -68,6 +69,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                 <>
                   <Dropdown
                     label="Entity:"
+                    disabled={!userDefined}
                     selectedKey={state.entityName ? state.entityName : undefined}
                     onChange={ (_, option) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
                     options={erModel ? Object.keys(erModel.entities).map( name => ({ key: name, text: name }) ) : []}
@@ -78,9 +80,14 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                     }}
                   />
                   <Stack.Item styles = {{root : { margin: '12px', fontWeight: '600' }}}>
-                    <label>IsTextField:</label>
+                    <Label
+                      disabled={!userDefined}
+                    >
+                      IsTextField:
+                    </Label>
                     <Checkbox
                       checked={attr.isChar}
+                      disabled={!userDefined}
                       styles={{
                         root: {
                           marginTop: '5px', width: '80px'
@@ -94,13 +101,14 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                     onlyInteger={true}
                     value={attr.presLen}
                     readOnly={!attr.isChar}
+                    disabled={!userDefined}
                     width="180px"
                     onInvalidValue={ () => onError }
                     onChange={ presLen => { presLen !=undefined && presLen > 0 && onChange({ ...attr, presLen}); } }
                   />
                   <PrimaryButton
                     text="Save"
-                    disabled={!state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
+                    disabled={!userDefined || !state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
                     onClick={ () => {
                       if (state.idx >= attr.references.length) {
                         onChange({...attr, references: [...attr.references, state.entityName]});
@@ -114,6 +122,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                   />
                   <DefaultButton
                     text="Cancel"
+                    disabled={!userDefined}
                     onClick={ () => setState(undefined) }
                   />
                 </>
@@ -124,6 +133,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                       <SetValue
                         key={entityName}
                         entityName={entityName}
+                        disabled={!userDefined}
                         onDelete={
                           createAttr ?
                           () => onChange({
@@ -138,6 +148,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                     !attr.references.length ?
                       <DefaultButton
                         text="Add set"
+                        disabled={!userDefined}
                         onClick={ () => { attr.isChar = true; attr.presLen = 1; setState({ idx: attr.references.length, entityName: ''}) } }
                       />
                     :

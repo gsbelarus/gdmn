@@ -24,7 +24,7 @@ export const DateEditor = ({ attr, attrIdx, userDefined, errorLinks, onChange }:
         dateFieldType={attr.type as AttributeDateTimeTypes}
         label="Min value:"
         value={attr.minValue}
-        readOnly={!userDefined}
+        disabled={!userDefined}
         errorMessage={getErrorMessage(attrIdx, 'minValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, minValue: newValue}) }
       />
@@ -32,12 +32,13 @@ export const DateEditor = ({ attr, attrIdx, userDefined, errorLinks, onChange }:
         dateFieldType={attr.type as AttributeDateTimeTypes}
         label="Max value:"
         value={attr.maxValue}
-        readOnly={!userDefined}
+        disabled={!userDefined}
         errorMessage={getErrorMessage(attrIdx, 'maxValue', errorLinks)}
         onChange={ newValue => onChange({ ...attr, maxValue: newValue}) }
       />
       <Dropdown
         label="Default value type:"
+        disabled={!userDefined}
         selectedKey={typeof attr.defaultValue === 'string' ? attr.defaultValue : 'VALUE'}
         options={getOptions(attr.type as AttributeDateTimeTypes)}
         onChange={
@@ -66,7 +67,7 @@ export const DateEditor = ({ attr, attrIdx, userDefined, errorLinks, onChange }:
           label="Default value:"
           dateFieldType={attr.type as AttributeDateTimeTypes}
           value={attr.defaultValue}
-          readOnly={!userDefined}
+          disabled={!userDefined}
           errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
           onChange={ defaultValue => onChange({ ...attr, defaultValue }) }
         />

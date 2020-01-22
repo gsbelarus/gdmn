@@ -5,9 +5,10 @@ import { IAttributeEditorProps } from "./EntityAttribute";
 
 // тип БЛОБ поля можно менять только при его создании
 
-export const BlobEditor = ({ attr, createAttr, onChange }: IAttributeEditorProps<IBlobAttribute>) =>
+export const BlobEditor = ({ attr, createAttr, onChange, userDefined }: IAttributeEditorProps<IBlobAttribute>) =>
   <ChoiceGroup
     label = "Blob type:"
+    disabled={!userDefined}
     selectedKey = {attr.subType}
     defaultSelectedKey = 'Binary'
     options = {[

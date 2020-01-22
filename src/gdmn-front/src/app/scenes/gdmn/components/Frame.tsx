@@ -16,16 +16,17 @@ interface IFrameProps {
   readOnly?: boolean;
   caption?: string;
   canMinimize?: boolean;
+  initialMinimized?: boolean;
   onClick?: () => void;
 };
 
 export const Frame = (props: IFrameProps): JSX.Element => {
   const { marginTop, marginRight, marginBottom, marginLeft, border, attention, selected, subTitle,
-    children, scroll, height, onClick, readOnly, caption, canMinimize } = props;
+    children, scroll, height, onClick, readOnly, caption, canMinimize, initialMinimized } = props;
   const defGap = '16px';
   const ifMargin = (m?: boolean) => m ? defGap : 'inherit';
   const ifBorder = (padding?: string) => border ? (padding ?? defGap) : 'inherit';
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(!!initialMinimized);
 
   const withMargin = (ch: ReactNode) => {
     return (

@@ -5,9 +5,14 @@ import { IAttributeEditorProps } from "./EntityAttribute";
 
 export const BooleanEditor = ({ attr, userDefined, onChange }: IAttributeEditorProps<IBooleanAttribute>) =>
   <div>
-    <Label>Default value:</Label>
+    <Label
+      disabled={!userDefined}
+    >
+      Default value:
+    </Label>
     <Checkbox
       checked={attr.defaultValue}
+      disabled={!userDefined}
       onChange={
         userDefined
         ? (_, defaultValue) => defaultValue !== undefined && onChange({ ...attr, defaultValue })

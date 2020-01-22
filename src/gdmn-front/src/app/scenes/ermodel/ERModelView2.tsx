@@ -144,7 +144,29 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
       return;
     }
 
-    if (!entities || !entities.size) {
+    if (!entities) {
+      if (attributes) {
+        dispatch(
+          rsActions.deleteRecordSet(attributes)
+        );
+      }
+
+      return;
+    }
+
+    if (!entities.size) {
+      if (attributes && attributes.size) {
+        dispatch(
+          rsActions.setRecordSet(attributes.setData({
+            data: undefined,
+            masterLink: {
+              masterName: entities.name,
+              value: undefined
+            }
+          }))
+        );
+      }
+
       return;
     }
 
