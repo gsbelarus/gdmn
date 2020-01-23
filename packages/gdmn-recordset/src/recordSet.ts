@@ -1785,7 +1785,6 @@ export class RecordSet {
       return this;
     }
 
-    const isFilter = filter?.conditions.length;
     const currentRowData = this.size ? this.get(this.currentRow) : undefined;
     const selectedRowsData = this._params.allRowsSelected
       ? this.toArray()
@@ -1802,10 +1801,9 @@ export class RecordSet {
     let newData: Data;
 
     // TODO: support only first filter condition for now
+    const isFilter = filter?.conditions.length;
     if (isFilter) {
-      const re = typeof filter?.conditions[0]?.value === 'string'
-        ? new RegExp(RecordSet._escapeRegExp(filter.conditions[0].value), "i")
-        : filter!.conditions[0].value;
+      const re = new RegExp(RecordSet._escapeRegExp(filter!.conditions[0].value), "i");
       newData = (this._params.savedData || this._params.data)
         .filter(row =>
           row
@@ -1830,7 +1828,7 @@ export class RecordSet {
       allRowsSelected: false,
       selectedRows: [],
       filter: isFilter ? filter : undefined,
-      savedData: isFilter ? this._params.savedData || this._params.data : undefined,
+      savedData: isFilter ? this._params.savedData ?? this._params.data : undefined,
       searchStr: undefined,
       foundRows: undefined,
       groups: undefined,
@@ -1945,9 +1943,7 @@ export class RecordSet {
     }
 
     if (this.isFiltered()) {
-      const re = typeof this._params.filter?.conditions[0]?.value === 'string'
-        ? new RegExp(RecordSet._escapeRegExp(this._params.filter.conditions[0].value), "i")
-        : this._params.filter!.conditions[0].value;
+      const re = new RegExp(RecordSet._escapeRegExp(this._params.filter!.conditions[0].value), "i");
       const res: IMatchedSubString[] = [];
       let l = 0;
       let m = re.exec(s);
