@@ -35,11 +35,11 @@
     "@types/generic-pool": "^3",
     "@types/jest": "^24",
     "@types/node": "^13",
-    "jest": "^24",
+    "jest": "^25",
     "jest-junit": "^10",
     "shx": "^0",
-    "ts-jest": "^24",
-    "tslint": "^5",
+    "ts-jest": "^25",
+    "tslint": "^6",
     "typescript": "^3"
   }
 }

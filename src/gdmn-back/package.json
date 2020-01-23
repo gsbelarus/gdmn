@@ -39,7 +39,7 @@
     "koa-body": "^4",
     "koa-error": "^3",
     "koa-logger": "^3",
-    "koa-router": "^7",
+    "koa-router": "^8",
     "koa-send": "^5",
     "koa-static": "^5",
     "koa2-cors": "^2",
@@ -62,11 +62,11 @@
     "@types/ms": "^0",
     "@types/node": "^13",
     "@types/uuid": "^3",
-    "@types/ws": "^6",
+    "@types/ws": "^7",
     "nodemon": "^2",
     "shx": "^0",
     "ts-node": "^8",
-    "tslint": "^5",
+    "tslint": "^6",
     "typescript": "^3"
   }
 }
