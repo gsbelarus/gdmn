@@ -123,7 +123,9 @@ export class ERModelBuilder extends Builder {
         lName: entity.lName.ru && entity.lName.ru.name,
         description: entity.lName.ru && entity.lName.ru.fullName,
         entityName: entity.name,
-        semCategory: entity.semCategories
+        semCategory: entity.semCategories,
+        referenceTable: entity.hasOwnAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) ? 
+          AdapterUtils.getOwnRelationName((entity.ownAttribute(Constants.DEFAULT_INHERITED_KEY_NAME) as EntityAttribute).entities[0]) : undefined
       });
       // Создание первичного ключа
       for (const pkAttr of pkAttrs) {

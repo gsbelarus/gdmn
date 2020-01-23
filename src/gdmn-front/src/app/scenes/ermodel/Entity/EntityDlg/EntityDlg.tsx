@@ -48,12 +48,23 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     id: getTempID()
   };
 
-  const inheritedKey: IAttribute = {
+  const inheritedKey: IEntityAttribute = {
     name: 'INHERITEDKEY',
-    type: 'Integer',
+    type: 'Entity',
     required: true,
-    lName: { ru: { name: 'Идентификатор' }},
+    lName: { ru: { name: 'Родитель' }},
     semCategories: '',
+    references: [],
+    id: getTempID()
+  };
+
+  const editorKey: IEntityAttribute = {
+    name: 'EDITORKEY',
+    type: 'Entity',
+    required: true,
+    lName: { ru: { name: 'EDITORKEY' }},
+    semCategories: '',
+    references: ["TgdcBaseContact"],
     id: getTempID()
   };
 
@@ -94,7 +105,7 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
     id: getTempID()
   };
 
-  const temp = attributes.filter( attr => attr.name !== 'PARENT' && attr.name !== 'LB' && attr.name !== 'RB' && attr.name !== 'ID' && attr.name !== 'EDITIONDATE' && attr.name !== 'INHERITEDKEY' );
+  const temp = attributes.filter( attr => attr.name !== 'PARENT' && attr.name !== 'LB' && attr.name !== 'RB' && attr.name !== 'ID' && attr.name !== 'EDITIONDATE' && attr.name !== 'INHERITEDKEY' && attr.name !== 'EDITORKEY' );
 
   switch (newEntityType) {
     case 'INHERITED':
@@ -104,10 +115,10 @@ function adjustEntityAttributes(attributes: IAttribute[] = [], newEntityType: Ge
       return [id, editionDate, ...temp];}
 
     case 'LBRBTREE':
-      return [id, parent, lb, rb, editionDate, ...temp];
+      return [id, parent, lb, rb, editionDate, editorKey, ...temp];
 
     case 'TREE':
-      return [id, parent, editionDate, ...temp];
+      return [id, parent, editionDate, editorKey, ...temp];
   }
 };
 
@@ -214,7 +225,9 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     // вызывается при реактировании entity
     case 'UPDATE_ENTITY_DATA': {
       const { initialData, errorLinks } = state;
-
+      const Attributes = [...action.entityData.attributes];
+      Attributes.map(attr => attr.name === 'INHERITEDKEY' ? 
+        (attr as IEntityAttribute).references = action.entityData.parent ? [action.entityData.parent] : [] : attr);
       return {
         ...state,
         entityData: action.entityData,
@@ -692,7 +705,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 selectedKey={entityData.parent}
                 errorMessage={getErrorMessage(undefined, 'entityParent', errorLinks)}
                 disabled={!createEntity || entityType !== 'INHERITED'}
-                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string } }) }
+                onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string} }) }
                 styles={{
                   root: {
                     width: '240px'
