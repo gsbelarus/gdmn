@@ -154,6 +154,15 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
               internal: false
             });
           }
+
+          if (s.maxLength === undefined || s.maxLength === 0) {
+            p.push({
+              attrIdx,
+              field: 'maxLength',
+              message: "max length can't be empty",
+              internal: false
+            });
+          }
           break;
         }
 
