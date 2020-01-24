@@ -70,7 +70,7 @@ export class Internals extends View<IInternalsProps, {}> {
               <Frame key={vt.url} border marginTop caption={vt.caption}>
                 <div>URL: {vt.url}</div>
                 <div>{vt.rs ? `Recordsets: [${vt.rs.join()}]` : 'No recordsets'}</div>
-                {vt.translator && <div>NLP comand: {command2Text(vt.translator.command)}</div>}
+                {vt.translator && <div>NLP command: {command2Text(vt.translator.command)}</div>}
                 {vt.sessionData &&
                   <Frame border caption="Session data" marginTop canMinimize initialMinimized>
                     {JSON.stringify(vt.sessionData, undefined, 2)}

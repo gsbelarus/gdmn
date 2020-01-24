@@ -6,6 +6,7 @@ import { GridAction, cancelSortDialog, TApplySortDialogEvent, applySortDialog,
   TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent, TCancelSortDialogEvent } from "gdmn-grid";
 import {IComboBoxOption} from "office-ui-fabric-react";
 import { EntityQuery } from "gdmn-orm";
+import { getLName } from "gdmn-internals";
 
 export interface ILastEdited {
   fieldName: string;
@@ -173,7 +174,7 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
       throw new Error(`Unsupported attribute type ${attr.type} of ${attr.name}`);
   }
 
-  const caption = query.link === link ? attr.name : `${link.alias}.${attr.name}`;
+  const caption = query.link === link ? getLName(attr.lName, ['ru']) : `${link.alias}.${getLName(attr.lName, ['ru'])}`;
   return {
     fieldName: fieldAlias,
     dataType,

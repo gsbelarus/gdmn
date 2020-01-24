@@ -13,6 +13,13 @@
     plural: ['ы', 'ов', 'ам', 'ы', 'ами', 'ах']
   },
   {
+    animate: false,
+    gender: RusGender.Femn,
+    declensionZ: '1a',
+    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
+    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
+  },
+  {
     animate: true,
     gender: RusGender.Masc,
     declensionZ: '2a',
@@ -522,13 +529,6 @@
     declensionZ: '1a',
     singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
     plural: ['ы', '', 'ам', '', 'ами', 'ах']
-  },
-  {
-    animate: false,
-    gender: RusGender.Femn,
-    declensionZ: '1a',
-    singular: ['а', 'ы', 'е', 'у', 'ой', 'е'],
-    plural: ['ы', '', 'ам', 'ы', 'ами', 'ах']
   },
   {
     animate: true,

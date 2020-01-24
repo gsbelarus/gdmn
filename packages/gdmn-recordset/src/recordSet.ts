@@ -704,13 +704,17 @@ export class RecordSet {
   }
 
   public getFieldDef(fieldName: string): IFieldDef {
-    const fd = this.fieldDefs.find(fd => fd.fieldName === fieldName);
+    const fd = this.findFieldDef(fieldName);
 
     if (!fd) {
       throw new Error(`Unknown field ${fieldName}`);
     }
 
     return fd;
+  }
+
+  public findFieldDef(fieldName: string): IFieldDef | undefined {
+    return this.fieldDefs.find(fd => fd.fieldName === fieldName);
   }
 
   /**

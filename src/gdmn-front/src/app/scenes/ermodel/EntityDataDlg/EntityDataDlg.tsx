@@ -113,9 +113,18 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
+    let lName = entityName;
+
+    if (entity && rs) {
+      const presAttr = entity.presentAttribute().name;
+      if (rs.findFieldDef(presAttr)) {
+        lName = rs.getString(presAttr);
+      }
+    }
+
     dispatch(gdmnActions.addViewTab({
       url,
-      caption: `${entityName}-${id}`,
+      caption: newRecord ? `Создание: ${lName}` : `Редактирование: ${lName}`,
       canClose: false,
       rs: recordSet ? [recordSet.name] : undefined
     }));
