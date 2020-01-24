@@ -155,7 +155,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
             });
           }
 
-          if (s.maxLength === undefined || s.maxLength === 0) {
+          if (!s.maxLength) {
             p.push({
               attrIdx,
               field: 'maxLength',
