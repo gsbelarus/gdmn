@@ -102,9 +102,13 @@ export class Select {
           });
           items = items.concat(crossFields);
         }
-        for (const fLink of field.links) {
-          items = items.concat(this._makeFields(fLink));
+
+        if (!link.entity.isTree) {
+          for (const fLink of field.links) {
+            items = items.concat(this._makeFields(fLink));
+          }
         }
+
         return items;
       }
       return items;
@@ -137,7 +141,9 @@ export class Select {
                   const tableWithRecursive = this._getSelect(virtualQuery, false, true);
 
                   // TODO field.links![0]
-                  return SQLTemplates.fromWithTree(this._getTableAlias(field.links![0], this.query.link.entity.name),
+                  const rootTableAlias = this._getTableAlias(link, link.entity.name);
+                  // this._getTableAlias(field.links![0], this.query.link.entity.name)
+                  return SQLTemplates.fromWithTree(rootTableAlias,
                     rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
                 }
               });
@@ -264,7 +270,7 @@ export class Select {
                 const virtualQuery3 = VirtualQueries.makeThirdVirtualQuery(forTreeQuery, false);
 
                 const mainRelation = AdapterUtils.getMainRelation(virtualQuery.link.entity);
-                const from = virtualQuery.link.entity.adapter!.relation.map((rel) => {
+                virtualQuery.link.entity.adapter!.relation.map((rel) => {
 
                   if (rel.relationName == mainRelation.relationName) {
                     const leftTableWithRecursive = this._getSelect(virtualQuery2, false, true);
