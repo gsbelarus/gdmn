@@ -35,7 +35,12 @@ export enum SemCategory {
   /**
    * Имя, название, наименование.
    */
-  Name
+  Name,
+
+  /**
+   * Товар, ТМЦ.
+   */
+  Good
 };
 
 export enum SemContext {
@@ -54,7 +59,8 @@ export const semCategoryNames = [
   'organization',
   'company',
   'date',
-  'name'
+  'name',
+  'good'
 ];
 
 export function semCategory2Str(cat: SemCategory): string {
@@ -65,7 +71,7 @@ export function str2SemCategory(str: string): SemCategory {
   const idx = semCategoryNames.indexOf(str);
 
   if (idx === -1) {
-    throw new Error(`Unknown category ${str}`);
+    throw new Error(`Unknown semantic category: ${str}`);
   }
 
   return idx;
@@ -81,8 +87,12 @@ export function semCategories2Str(cat: SemCategory[]): string {
 
 export function str2SemCategories(str: string): SemCategory[] {
   if (str) {
-    return str.split(',').map( s => str2SemCategory(s) );
-  } else {
-    return [];
+    try {
+      return str.split(',').map( s => str2SemCategory(s) );
+    }
+    catch (e) {
+      console.log(e);
+    }
   }
+  return [];
 };

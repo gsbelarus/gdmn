@@ -109,6 +109,25 @@ export const rusNouns: IRusNoun[] = [
 
   /* extracted from wikidictionary */
   {
+    stem: 'пальто',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Neut,
+    declension: 2,
+    declensionZ: '0',
+  },
+  {
+    stem: 'тмц',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Neut,
+    declension: 2,
+    declensionZ: '0',
+    semMeanings: [{ semCategory: SemCategory.Good }],
+  },
+  {
     stem: 'ветеринар',
     stem1: '',
     stem2: '',
@@ -134,6 +153,16 @@ export const rusNouns: IRusNoun[] = [
     gender: RusGender.Masc,
     declension: 2,
     declensionZ: '1a',
+  },
+  {
+    stem: 'товар',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '1a',
+    semMeanings: [{ semCategory: SemCategory.Good }],
   },
   {
     stem: 'мясокомбинат',
