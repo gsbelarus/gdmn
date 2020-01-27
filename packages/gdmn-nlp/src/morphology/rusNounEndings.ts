@@ -2,6 +2,13 @@ import { RusGender, RusDeclensionZEnding } from './types';
 
 export const RusDeclensionZEndings: RusDeclensionZEnding[] = [
   {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '0',
+    singular: ['', '', '', '', '', ''],
+    plural: ['', '', '', '', '', '']
+  },
+  {
     animate: true,
     gender: RusGender.Masc,
     declensionZ: '1a',

@@ -1,4 +1,11 @@
   {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '0',
+    singular: ['', '', '', '', '', ''],
+    plural: ['', '', '', '', '', '']
+  },
+  {
     animate: true,
     gender: RusGender.Masc,
     declensionZ: '1a',

@@ -20,7 +20,9 @@ const rusNounSemCategory = {
   'школ': '[{ semCategory: SemCategory.Organization }]',
   'им': '[{ semCategory: SemCategory.Name }]',
   'назван': '[{ semCategory: SemCategory.Name }]',
-  'наименован': '[{ semCategory: SemCategory.Name }]'
+  'наименован': '[{ semCategory: SemCategory.Name }]',
+  'товар': '[{ semCategory: SemCategory.Good }]',
+  'тмц': '[{ semCategory: SemCategory.Good }]'
 };
 
 // здесь будем хранить топонимы
@@ -121,7 +123,9 @@ while (line = liner.next()) {
   })
 }
 
+/*
 fs.writeFileSync('./declension-all.txt', nouns.reduce( (p, l) => p + l.reduce( (s, i) => s + (i ? i : '') + ';', '') + '\n', ''));
+*/
 
 fs.writeFileSync('./rusnoun.txt', nouns.reduce(
     (p, l) => {
@@ -198,6 +202,7 @@ fs.writeFileSync('./rusdeclend.txt', nouns.reduce(
   )
 );
 
+/*
 fs.writeFileSync('./rusnounslist.txt', nouns.reduce(
   (p, n) => {
     return p + n[4] + ',';
@@ -205,3 +210,4 @@ fs.writeFileSync('./rusnounslist.txt', nouns.reduce(
   ''
 )
 );
+*/
