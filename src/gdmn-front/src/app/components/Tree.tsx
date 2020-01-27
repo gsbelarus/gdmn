@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, Icon, getTheme } from 'office-ui-fabric-react';
-import { RecordSet, TStatus, rsActions } from 'gdmn-recordset';
+import { RecordSet, TStatus } from 'gdmn-recordset';
 
 interface INode {
   id: string;
@@ -83,12 +83,10 @@ export const Tree = (props: ITreeProps) => {
 
   const count = props.rs.size;
   const childRoot = [] as string[];
-  const fdID = props.rs.params.fieldDefs.find(fd => fd.caption === 'ID');
-  const fdNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'NAME');
-  const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.caption === 'USR$NAME');
-  const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.caption === 'PARENT.ID');
-  const fdLB = props.rs.params.fieldDefs.find(fd => fd.caption === 'LB');
-  const fdRB = props.rs.params.fieldDefs.find(fd => fd.caption === 'RB');
+  const fdID = props.rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'ID');
+  const fdNAME = props.rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'NAME');
+  const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'USR$NAME');
+  const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.eqfa?.linkAlias === 'PARENT' && fd.eqfa?.attribute === 'ID');
   const selectedNode = fdID ? props.rs.getString(fdID.fieldName, props.rs.currentRow) : undefined;
 
   for(let i = 0; i < count; i++) {

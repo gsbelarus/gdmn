@@ -790,7 +790,9 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
                 rs={masterRs}
                 load={ () => dispatch(loadRSActions.loadMoreRsData({ name: masterRs.name, rowsCount: 500 })) }
                 selectNode={ currentRow => {
-                  dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }));
+                  currentRow >= 0
+                    ? dispatch(rsActions.setCurrentRow({ name: masterRs.name, currentRow }))
+                    : undefined
                 } }
               />
             </div>
