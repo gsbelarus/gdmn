@@ -1,7 +1,7 @@
 import { Object, Objects } from "./types";
 import { Label, TextField, Checkbox, ITextFieldStyles } from "office-ui-fabric-react";
 import React from "react";
-import { object2style, object2ITextFieldStyles, object2ILabelStyles, getFieldDefsByFieldName } from "./utils";
+import { object2style, object2ITextFieldStyles, object2ILabelStyles, getFieldDefByFieldName } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
 import { EntityAttribute, Entity, SetAttribute } from 'gdmn-orm';
 import { TFieldType, RecordSet } from 'gdmn-recordset';
@@ -21,10 +21,9 @@ export interface IInternalControlProps {
   onSelectObject: (object?: Object) => void;
 };
 
-const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string, rs?: RecordSet, entity?: Entity /*fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection*/ }): JSX.Element | null => {
-  const fd = props?.rs && getFieldDefsByFieldName(props.fieldName, props?.rs);
-  if(fd) {
-    const dataType = fd.dataType;
+const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string, rs?: RecordSet, entity?: Entity }): JSX.Element | null => {
+  const fd = props?.rs && getFieldDefByFieldName(props.fieldName, props.rs);
+  if (fd) {
     if (props.rs && fd.eqfa!.linkAlias !== props.rs.eq!.link.alias) {
       const fkFieldName = fd.eqfa!.linkAlias;
       const attr = props.entity!.attributes[fkFieldName] as EntityAttribute;
@@ -35,8 +34,8 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
               key={props.label}
               label={props.label}
               name={fkFieldName}
-              onLookup={(filter, limit) => {return Promise.resolve([])}}
-              onChanged={() => {}}
+              onLookup={ () => Promise.resolve([]) }
+              onChanged={ () => {} }
               styles={props.styles}
             />
           );
@@ -58,53 +57,56 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
       return null;
     }
 
-    if (dataType === TFieldType.Date) {
-      return (
-        <DatepickerJSX
-          key={props.label}
-          label={props.label}
-          fieldName={`${fd!.fieldName}`}
-          value=''
-          onChange={() => {}}
-          styles={props.styles}
-          styleIcon={undefined}
-        />
-      );
-    } else if (dataType === TFieldType.Boolean) {
-      const locked = props.rs ? props.rs.locked : false;
-      return (
-        <Checkbox
-          key={props.label}
-          label={props.label}
-          styles={{root: {margin: '8px 4px 8px 0'}}}
-          disabled={locked}
-          defaultChecked={props.rs!.getBoolean(fd!.fieldName)}
-        />
-      )
-    } else {console.log(props.label);
-      return (
-        <TextField
-          key={props.label}
-          label={props.label}
-          defaultValue={props.rs!.getString(fd!.fieldName)}
-          readOnly={true}
-          styles={props.styles}
-        />
-      )
+    switch (fd.dataType) {
+      case TFieldType.Date:
+        return (
+          <DatepickerJSX
+            key={props.label}
+            label={props.label}
+            fieldName={`${fd!.fieldName}`}
+            value=''
+            onChange={ () => {} }
+            styles={props.styles}
+            styleIcon={undefined}
+          />
+        );
+
+      case TFieldType.Boolean:
+        return (
+          <Checkbox
+            key={props.label}
+            label={props.label}
+            styles={{root: {margin: '8px 4px 8px 0'}}}
+            disabled={!!props?.rs?.locked}
+            defaultChecked={props.rs!.getBoolean(fd!.fieldName)}
+          />
+        );
+
+      default:
+        return (
+          <TextField
+            key={props.label}
+            label={props.label}
+            defaultValue={props.rs!.getString(fd!.fieldName)}
+            readOnly={true}
+            styles={props.styles}
+          />
+        );
     }
-  } else if (props.entity && props.entity.attributes[props.fieldName] instanceof SetAttribute) {
+  } else if (props?.entity?.attributes[props.fieldName] instanceof SetAttribute) {
     return (
       <SetLookupComboBox
         key={props.label}
         label={props.label}
         name={props.fieldName}
-        onLookup={(filter, limit) => {return Promise.resolve([])}}
-        onChanged={() => {}}
+        onLookup={ () => Promise.resolve([]) }
+        onChanged={ () => {} }
         styles={props.styles}
       />
     );
-  } else
-    return null;
+  }
+
+  return null;
 }
 
 const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewMode, selectedObject }: IInternalControlProps) => {
