@@ -65,14 +65,16 @@ export const getColor = (color: string | undefined): string | undefined => {
   return res;
 };
 
-export const object2style = (object: IObject, objects: Objects, enabled: boolean = true): React.CSSProperties => enabled ?
-  {
-    backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
-    color: getColor(inheritValue(object, 'color', objects)),
-    margin: '0 4px 4px 0'
-  }
+export const object2style = (object: IObject, objects: Objects, enabled: boolean = true): React.CSSProperties =>
+  enabled
+  ?
+    {
+      backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
+      color: getColor(inheritValue(object, 'color', objects)),
+      margin: '0 4px 4px 0'
+    }
   :
-  {};
+   {};
 
 export const object2IStyle = (object: IObject, objects: Objects): IStyle => ({
   backgroundColor: getColor(inheritValue(object, 'backgroundColor', objects)),
@@ -91,48 +93,62 @@ export const object2ILabelStyles = (object: IObject, objects: Objects): Partial<
   root: object2IStyle(object, objects)
 });
 
-export const getFields = (rs?: RecordSet, entity?: Entity): IField[] => {
-  return (
-    rs && entity
-      ? rs.fieldDefs.map(fd => {
-        const attr = fd.eqfa && ((fd.eqfa.linkAlias !== rs.eq!.link.alias )
-          ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
-          : entity.attributes[fd.eqfa.attribute]);
-        return ({
-          type: 'FIELD',
-          parent: 'Area1',
-          fieldName: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
-          label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
-          name: fd.caption
-        } as IField)
-      })
-      : []
-  )};
+export const getFields = (rs?: RecordSet, entity?: Entity): IField[] =>
+  rs && entity
+  ?
+    rs.fieldDefs.map(fd => {
+      const attr = fd.eqfa && ((fd.eqfa.linkAlias !== rs.eq!.link.alias )
+        ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
+        : entity.attributes[fd.eqfa.attribute]);
+      return ({
+        type: 'FIELD',
+        parent: 'Area1',
+        fieldName: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : fd.fieldName,
+        label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
+        name: fd.caption
+      } as IField)
+    })
+  :
+    [];
 
-  export const getSelectFields = (rs?: RecordSet, entity?: Entity): any[] => {
-    return (
-       rs?.fieldDefs && entity
-        ? rs.fieldDefs.map(fd => {
-          const attr = fd.eqfa && ((fd.eqfa.linkAlias !== rs.eq!.link.alias )
-          ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
-          : entity.attributes[fd.eqfa.attribute]);
-          return ({
-            key: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
-            name: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
-            label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
-            dataType: attr ? attr.inspectDataType() : 'S'
-          })
-        })
-        : []
-    )};
+export interface ISelectField {
+  key: string;
+  name: string;
+  label: string;
+  dataType: string;
+};
 
-  export const getFieldDefsByFieldName = (fieldName: string, rs: RecordSet) :IFieldDef | undefined => {
-    //Предполагается, что в настройках наименования полей будут сохраняться с alias (пример: root.QUANTITY, GROUPKEY.NAME)
-    const f = fieldName.split('.');
-    if (f.length === 1) {
-      //Для настроек, где для полей не указан alias
-      return rs.fieldDefs.find(fieldDef => fieldDef.eqfa?.linkAlias === rs.eq!.link.alias &&  fieldDef.eqfa?.attribute === f[0]);
-    } else {
-      return rs.fieldDefs.find(fieldDef => fieldDef.eqfa?.linkAlias === f[0] &&  fieldDef.eqfa?.attribute === f[1]);
-    }
+export const getSelectFields = (rs?: RecordSet, entity?: Entity): ISelectField[] =>
+  rs?.fieldDefs && entity
+  ?
+    rs.fieldDefs.map(fd => {
+      const attr = fd.eqfa && ((fd.eqfa.linkAlias !== rs.eq!.link.alias )
+        ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
+        : entity.attributes[fd.eqfa.attribute]);
+      return {
+        key: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
+        name: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
+        label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
+        dataType: attr ? attr.inspectDataType() : 'S'
+      } as ISelectField;
+    })
+  : [];
+
+/**
+ * В файле с настройками мы храним название поля ввиде строки
+ * формата АЛИАС_ИЗ_ENTITY_QUERY.ИМЯ_ПОЛЯ или ИМЯ_ПОЛЯ. В последнем
+ * случае считается, что поле принадлежит корневому алиасу.
+ * Данная функция позволяет сопоставить такое имя с определением
+ * поля из RecordSet. Возвращает undefined, если в RecordSet
+ * нет подходящего поля.
+ * @param fn Имя поля. Строка в формате АЛИАС_ИЗ_ENTITY_QUERY.ИМЯ_ПОЛЯ или ИМЯ_ПОЛЯ.
+ * @param rs RecordSet.
+ */
+export const getFieldDefByFieldName = (fn: string, rs: RecordSet): IFieldDef | undefined => {
+  const f = fn.split('.');
+  if (f.length === 1) {
+    return rs.fieldDefs.find( fd => fd.eqfa?.linkAlias === rs?.eq?.link.alias && fd.eqfa?.attribute === f[0] );
+  } else {
+    return rs.fieldDefs.find( fd => fd.eqfa?.linkAlias === f[0] && fd.eqfa?.attribute === f[1] );
   }
+}

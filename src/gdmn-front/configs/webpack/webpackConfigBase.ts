@@ -1,4 +1,4 @@
-import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader, Plugin } from 'webpack';
+import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 const pkg = require('../../package.json');
 const config = require('../config.json');

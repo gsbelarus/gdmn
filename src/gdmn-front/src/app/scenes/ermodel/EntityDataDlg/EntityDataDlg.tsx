@@ -25,7 +25,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
-import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields, getFieldDefsByFieldName } from '../../designer/utils';
+import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields, getFieldDefByFieldName } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
@@ -796,11 +796,12 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       )
     }
 
-    const fd = getFieldDefsByFieldName(fieldName, rs);
+    const fd = getFieldDefByFieldName(fieldName, rs);
 
-    if (!fd || !fd.eqfa) {
+    if (!fd?.eqfa) {
       return undefined;
     }
+
     //Перечисление
     const attrEnum = entity.attributes[fieldName] as EnumAttribute;
     if (attrEnum && attrEnum.type === 'Enum') {
@@ -849,7 +850,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     if (fd.eqfa.linkAlias !== rs.eq!.link.alias) {
       const fkFieldName = fd.eqfa.linkAlias;
       const refIdFieldAlias = fd.fieldName;
-      const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
+      const refNameFieldDef = rs.fieldDefs.find( fd2 => fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
       const refNameFieldAlias = refNameFieldDef ? refNameFieldDef.fieldName : '';
       const attr = entity.attributes[fkFieldName] as EntityAttribute;
       const linkEntity = attr.entities[0];
