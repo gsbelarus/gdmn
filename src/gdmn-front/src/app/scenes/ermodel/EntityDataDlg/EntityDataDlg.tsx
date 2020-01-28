@@ -52,6 +52,15 @@ interface IChangedFields {
   [fieldName: string]: boolean;
 };
 
+export const getFieldDefsByFieldName = (fieldName: string, rs: RecordSet) :any => {
+  const f = fieldName.split('.');
+  if (f.length === 1) {
+    return rs.fieldDefs.find(fieldDef => fieldDef.eqfa?.linkAlias === rs.eq!.link.alias &&  fieldDef.eqfa?.attribute === f[0]);
+  } else {
+    return rs.fieldDefs.find(fieldDef => fieldDef.eqfa?.linkAlias === f[0] &&  fieldDef.eqfa?.attribute === f[1]);
+  }
+}
+
 export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Element => {
   const {url, entityName, id, rs, entity, dispatch, history, srcRs, viewTab, newRecord} = props;
   const locked = rs ? rs.locked : false;
@@ -796,7 +805,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       )
     }
 
-    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === fieldName);
+    const fd = getFieldDefsByFieldName(fieldName, rs);
 
     if (!fd || !fd.eqfa) {
       return undefined;

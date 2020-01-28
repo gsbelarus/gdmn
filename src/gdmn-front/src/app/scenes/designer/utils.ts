@@ -97,13 +97,13 @@ export const getFields = (rs?: RecordSet, entity?: Entity): IField[] => {
       ? rs.fieldDefs.map(fd => {
         // Если поле-ссылка, то атрибут находим через alias
         // для остальных полей - по caption
-        const attr = (fd && fd.eqfa && fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID')
+        const attr = (fd?.eqfa?.linkAlias !== rs.eq!.link.alias && fd?.eqfa?.attribute === 'ID')
           ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
-          : entity.attributes[fd.caption ? fd.caption : fd.fieldName];
+          : entity.attributes[fd && fd.eqfa ? fd.eqfa.attribute : ''];
         return ({
           type: 'FIELD',
           parent: 'Area1',
-          fieldName: fd.caption,
+          fieldName: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
           label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
           name: fd.caption
         } as IField)

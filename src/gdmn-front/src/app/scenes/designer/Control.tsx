@@ -9,6 +9,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { FrameBox } from "./FrameBox";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
+import { getFieldDefsByFieldName } from "../ermodel/EntityDataDlg/EntityDataDlg";
 
 export interface IInternalControlProps {
   object: Object;
@@ -22,8 +23,7 @@ export interface IInternalControlProps {
 };
 
 const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldName: string, rs?: RecordSet, entity?: Entity /*fd: IFieldDef, field?: string, areaStyle?: IStyleFieldsAndAreas, aeraDirection?: TDirection*/ }): JSX.Element | null => {
-  const fd = props.rs!.fieldDefs.find(fieldDef => fieldDef.caption === props.fieldName);
-
+  const fd = props?.rs && getFieldDefsByFieldName(props.fieldName, props?.rs);
   if(fd) {
     const dataType = fd.dataType;
 
