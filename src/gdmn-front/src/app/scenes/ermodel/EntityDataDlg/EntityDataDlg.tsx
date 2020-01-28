@@ -25,7 +25,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
-import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields } from '../../designer/utils';
+import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields, getFieldDefsByFieldName } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
@@ -796,7 +796,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       )
     }
 
-    const fd = rs.fieldDefs.find(fieldDef => fieldDef.caption === fieldName);
+    const fd = getFieldDefsByFieldName(fieldName, rs);
 
     if (!fd || !fd.eqfa) {
       return undefined;
@@ -846,7 +846,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       )
     }
     //Ссылка
-    if (fd.eqfa.linkAlias !== rs.eq!.link.alias && fd.eqfa.attribute === 'ID') {
+    if (fd.eqfa.linkAlias !== rs.eq!.link.alias) {
       const fkFieldName = fd.eqfa.linkAlias;
       const refIdFieldAlias = fd.fieldName;
       const refNameFieldDef = rs.fieldDefs.find( fd2 => !!fd2.eqfa && fd2.eqfa.linkAlias === fd.eqfa!.linkAlias && fd2.eqfa.attribute !== 'ID');
@@ -854,101 +854,119 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       const attr = entity.attributes[fkFieldName] as EntityAttribute;
       const linkEntity = attr.entities[0];
       if (attr instanceof EntityAttribute) {
-        return (
-          <LookupComboBox
-            key={fkFieldName}
-            name={fkFieldName}
-            label={label}
-            preSelectedOption={ rs.isNull(refIdFieldAlias)
-              ? undefined
-              : {
-                key: rs.getString(refIdFieldAlias),
-                text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
-              }
-            }
-            getSessionData={
-              () => {
-                if (!controlsData.current) {
-                  controlsData.current = {};
+        if (fd.eqfa.attribute === 'ID') {
+          return (
+            <LookupComboBox
+              key={fkFieldName}
+              name={fkFieldName}
+              label={label}
+              preSelectedOption={ rs.isNull(refIdFieldAlias)
+                ? undefined
+                : {
+                  key: rs.getString(refIdFieldAlias),
+                  text: refNameFieldAlias ? rs.getString(refNameFieldAlias) : rs.getString(refIdFieldAlias)
                 }
-                return controlsData.current;
               }
-            }
-            onChanged={
-              (option: IComboBoxOption | undefined) => {
-                let changedRs = rs;
-                if (option) {
-                  changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                  if (refNameFieldAlias) {
-                    changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+              getSessionData={
+                () => {
+                  if (!controlsData.current) {
+                    controlsData.current = {};
                   }
-                } else {
-                  changedRs = changedRs.setNull(refIdFieldAlias);
-                  if (refNameFieldAlias) {
-                    changedRs = changedRs.setNull(refNameFieldAlias);
+                  return controlsData.current;
+                }
+              }
+              onChanged={
+                (option: IComboBoxOption | undefined) => {
+                  let changedRs = rs;
+                  if (option) {
+                    changedRs = changedRs.setValue(refIdFieldAlias, option.key);
+                    if (refNameFieldAlias) {
+                      changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+                    }
+                  } else {
+                    changedRs = changedRs.setNull(refIdFieldAlias);
+                    if (refNameFieldAlias) {
+                      changedRs = changedRs.setNull(refNameFieldAlias);
+                    }
+                  }
+                  dispatch(rsActions.setRecordSet(changedRs));
+                  setChanged(true);
+                  changedFields.current[refIdFieldAlias] = true;
+                }
+              }
+              onFocus={
+                () => {
+                  lastFocused.current = fd.fieldName;
+                  if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                    applyLastEdited();
                   }
                 }
-                dispatch(rsActions.setRecordSet(changedRs));
-                setChanged(true);
-                changedFields.current[refIdFieldAlias] = true;
               }
-            }
-            onFocus={
-              () => {
-                lastFocused.current = fd.fieldName;
-                if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
-                  applyLastEdited();
+              onLookup={
+                (filter: string, limit: number) => {
+                  const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
+                  const presentField = linkEntity.presentAttribute();
+                  if (presentField) {
+                    linkFields.push(new EntityLinkField(presentField));
+                  }
+                  const linkEq = new EntityQuery(
+                    new EntityLink(linkEntity, 'z', linkFields),
+                    new EntityQueryOptions(
+                      limit + 1,
+                      undefined,
+                      filter ?
+                        [{
+                          contains: [
+                            {
+                              alias: 'z',
+                              attribute: presentField!,
+                              value: filter!
+                            }
+                          ]
+                        }]
+                      : undefined
+                    )
+                  );
+                  return apiService.query({ query: linkEq.inspect() })
+                    .then( response => {
+                      const result = response.payload.result!;
+                      const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
+                      const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
+                        && (data.attribute === presentField!.name))![0];
+                      return result.data.map( (r): IComboBoxOption => ({
+                        key: r[idAlias],
+                        text: r[nameAlias]
+                      }));
+                    });
                 }
               }
-            }
-            onLookup={
-              (filter: string, limit: number) => {
-                const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
-                const presentField = linkEntity.presentAttribute();
-                if (presentField) {
-                  linkFields.push(new EntityLinkField(presentField));
-                }
-                const linkEq = new EntityQuery(
-                  new EntityLink(linkEntity, 'z', linkFields),
-                  new EntityQueryOptions(
-                    limit + 1,
-                    undefined,
-                    filter ?
-                      [{
-                        contains: [
-                          {
-                            alias: 'z',
-                            attribute: presentField!,
-                            value: filter!
-                          }
-                        ]
-                      }]
-                    : undefined
-                  )
-                );
-                return apiService.query({ query: linkEq.inspect() })
-                  .then( response => {
-                    const result = response.payload.result!;
-                    const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                    const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
-                      && (data.attribute === presentField!.name))![0];
-                    return result.data.map( (r): IComboBoxOption => ({
-                      key: r[idAlias],
-                      text: r[nameAlias]
-                    }));
-                  });
-              }
-            }
-            componentRef={
-              ref => {
-                if (ref && lastFocused.current === fd.fieldName) {
-                  needFocus.current = ref;
+              componentRef={
+                ref => {
+                  if (ref && lastFocused.current === fd.fieldName) {
+                    needFocus.current = ref;
+                  }
                 }
               }
-            }
-            styles={props.styles}
-          />
-        );
+              styles={props.styles}
+            />
+          );
+        } else {
+           //Текстовое
+          return (
+            <TextField
+              key={fd.fieldName}
+              disabled={locked}
+              readOnly={true}
+              label={label}
+              defaultValue={
+                lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'string'
+                ? lastEdited.current.value
+                : rs.getString(fd.fieldName)
+              }
+              styles={props.styles}
+            />
+          )
+        }
       }
     }
 

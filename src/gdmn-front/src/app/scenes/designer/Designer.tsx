@@ -792,6 +792,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
         selectFieldsMode && erModel &&
         <SelectFields
           entity={entity}
+          rs={rs}
           onCreate={ fields => {
             fields.forEach( ({ fieldName, label }) => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FIELD', newProps: { fieldName, label }, makeSelected: fields.length === 1 }) );
             designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' });

@@ -2,9 +2,12 @@ import React, { useReducer } from "react";
 import { Entity } from "gdmn-orm";
 import { Dialog, DialogType, ContextualMenu, DialogFooter, PrimaryButton, DefaultButton, MarqueeSelection, DetailsList, Selection, IColumn, SelectionMode, DetailsListLayoutMode, getTheme } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
+import { RecordSet } from "gdmn-recordset";
+import { getSelectFields } from "./utils";
 
 interface ISelectFieldsProps {
   entity: Entity;
+  rs?: RecordSet;
   onCancel: () => void;
   onCreate: (fields: { fieldName: string, label: string }[]) => void;
 };
@@ -27,7 +30,7 @@ function reducer(state: ISelectFieldsState, action: Action): ISelectFieldsState 
   return state;
 };
 
-export const SelectFields = ({ entity, onCancel, onCreate }: ISelectFieldsProps) => {
+export const SelectFields = ({ rs, entity, onCancel, onCreate }: ISelectFieldsProps) => {
 
   const [{ fieldsSelected, selection }, dispatch] = useReducer(reducer, {
     fieldsSelected: false,
@@ -68,14 +71,8 @@ export const SelectFields = ({ entity, onCancel, onCreate }: ISelectFieldsProps)
         {entity && <MarqueeSelection selection={selection}>
           <DetailsList
             items={
-              Object.entries(entity.attributes).map(
-                ([name, attr]) => ({
-                  key: name,
-                  name,
-                  label: getLName(attr.lName, ['by', 'ru', 'en']),
-                  dataType: attr.inspectDataType()
-                })
-              )
+              getSelectFields(rs, entity)
+
             }
             compact={true}
             columns={[
