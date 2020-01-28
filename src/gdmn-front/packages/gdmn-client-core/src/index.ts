@@ -3,7 +3,6 @@ export * from './components/form/withField';
 export * from './components/ErrorBoundary';
 export * from './components/ProtectedRoute';
 export * from './components/RefWrapper';
-export * from './components/TextSkeleton';
 export * from './components/withEmpty';
 export * from './components/LinkCommandBarButton';
 export * from './errors/FetchError';
