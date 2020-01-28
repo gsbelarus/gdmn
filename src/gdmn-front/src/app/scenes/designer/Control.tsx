@@ -1,7 +1,7 @@
 import { Object, Objects } from "./types";
 import { Label, TextField, Checkbox, ITextFieldStyles } from "office-ui-fabric-react";
 import React from "react";
-import { object2style, object2ITextFieldStyles, object2ILabelStyles } from "./utils";
+import { object2style, object2ITextFieldStyles, object2ILabelStyles, getFieldDefsByFieldName } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
 import { EntityAttribute, Entity, SetAttribute } from 'gdmn-orm';
 import { TFieldType, RecordSet } from 'gdmn-recordset';
@@ -9,7 +9,6 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { FrameBox } from "./FrameBox";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
-import { getFieldDefsByFieldName } from "../ermodel/EntityDataDlg/EntityDataDlg";
 
 export interface IInternalControlProps {
   object: Object;
@@ -26,22 +25,32 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
   const fd = props?.rs && getFieldDefsByFieldName(props.fieldName, props?.rs);
   if(fd) {
     const dataType = fd.dataType;
-
-    if (props.rs && fd.eqfa!.linkAlias !== props.rs.eq!.link.alias && fd.eqfa!.attribute === 'ID') {
+    if (props.rs && fd.eqfa!.linkAlias !== props.rs.eq!.link.alias) {
       const fkFieldName = fd.eqfa!.linkAlias;
       const attr = props.entity!.attributes[fkFieldName] as EntityAttribute;
-
       if (attr instanceof EntityAttribute) {
-        return (
-          <LookupComboBox
-            key={props.label}
-            label={props.label}
-            name={fkFieldName}
-            onLookup={(filter, limit) => {return Promise.resolve([])}}
-            onChanged={() => {}}
-            styles={props.styles}
-          />
-        );
+        if (fd.eqfa!.attribute === 'ID') {
+          return (
+            <LookupComboBox
+              key={props.label}
+              label={props.label}
+              name={fkFieldName}
+              onLookup={(filter, limit) => {return Promise.resolve([])}}
+              onChanged={() => {}}
+              styles={props.styles}
+            />
+          );
+        } else {
+          return (
+            <TextField
+              key={props.label}
+              label={props.label}
+              defaultValue={props.rs!.getString(fd!.fieldName)}
+              readOnly={true}
+              styles={props.styles}
+            />
+          )
+        }
       }
     }
 
@@ -72,7 +81,7 @@ const Field = (props: { styles: Partial<ITextFieldStyles>, label: string, fieldN
           defaultChecked={props.rs!.getBoolean(fd!.fieldName)}
         />
       )
-    } else {
+    } else {console.log(props.label);
       return (
         <TextField
           key={props.label}

@@ -2,7 +2,7 @@ import { IRectangle, IObject, Objects, IGrid, IField } from "./types";
 import { getTheme, IStyle, ITextFieldStyles, ILabelStyles } from "office-ui-fabric-react";
 import { EntityAttribute, Entity } from "gdmn-orm";
 import { getLName } from "gdmn-internals";
-import { RecordSet } from "gdmn-recordset";
+import { RecordSet, IFieldDef } from "gdmn-recordset";
 
 export const isSingleCell = (rect?: IRectangle) => rect && rect.left === rect.right && rect.top === rect.bottom;
 export const inRect = (rect: IRectangle | undefined, x: number, y: number) => rect && x >= rect.left && y >= rect.top && x <= rect.right && y <= rect.bottom;
@@ -95,11 +95,9 @@ export const getFields = (rs?: RecordSet, entity?: Entity): IField[] => {
   return (
     rs && entity
       ? rs.fieldDefs.map(fd => {
-        // Если поле-ссылка, то атрибут находим через alias
-        // для остальных полей - по caption
-        const attr = (fd?.eqfa?.linkAlias !== rs.eq!.link.alias && fd?.eqfa?.attribute === 'ID')
+        const attr = fd.eqfa && ((fd.eqfa.linkAlias !== rs.eq!.link.alias )
           ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
-          : entity.attributes[fd && fd.eqfa ? fd.eqfa.attribute : ''];
+          : entity.attributes[fd.eqfa.attribute]);
         return ({
           type: 'FIELD',
           parent: 'Area1',
@@ -110,3 +108,31 @@ export const getFields = (rs?: RecordSet, entity?: Entity): IField[] => {
       })
       : []
   )};
+
+  export const getSelectFields = (rs?: RecordSet, entity?: Entity): any[] => {
+    return (
+       rs?.fieldDefs && entity
+        ? rs.fieldDefs.map(fd => {
+          const attr = fd.eqfa && ((fd.eqfa.linkAlias !== rs.eq!.link.alias )
+          ? entity.attributes[fd.eqfa.linkAlias] as EntityAttribute
+          : entity.attributes[fd.eqfa.attribute]);
+          return ({
+            key: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
+            name: fd.eqfa ? `${fd.eqfa.linkAlias}.${fd.eqfa?.attribute}` : '',
+            label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd.caption,
+            dataType: attr ? attr.inspectDataType() : 'S'
+          })
+        })
+        : []
+    )};
+
+  export const getFieldDefsByFieldName = (fieldName: string, rs: RecordSet) :IFieldDef | undefined => {
+    //Предполагается, что в настройках наименования полей будут сохраняться с alias (пример: root.QUANTITY, GROUPKEY.NAME)
+    const f = fieldName.split('.');
+    if (f.length === 1) {
+      //Для настроек, где для полей не указан alias
+      return rs.fieldDefs.find(fieldDef => fieldDef.eqfa?.linkAlias === rs.eq!.link.alias &&  fieldDef.eqfa?.attribute === f[0]);
+    } else {
+      return rs.fieldDefs.find(fieldDef => fieldDef.eqfa?.linkAlias === f[0] &&  fieldDef.eqfa?.attribute === f[1]);
+    }
+  }
