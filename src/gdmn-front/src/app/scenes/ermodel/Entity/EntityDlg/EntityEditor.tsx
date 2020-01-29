@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { IEntityAttribute, ERModel } from "gdmn-orm";
-import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label } from "office-ui-fabric-react";
+import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label, ComboBox, IComboBoxOption} from "office-ui-fabric-react";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { IAttributeEditorProps } from "./EntityAttribute";
 import { getErrorMessage } from "./utils";
+import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 
 interface IEntityValueProps {
   entityName: string;
@@ -65,16 +66,24 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
               state
               ?
                 <>
-                  <Dropdown
+                  <LookupComboBox
                     label="Entity:"
-                    selectedKey={state.entityName ? state.entityName : undefined}
-                    onChange={ (_, option) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
-                    options={erModel ? Object.keys(erModel.entities).map( name => ({ key: name, text: name }) ) : []}
-                    styles={{
-                      dropdown: {
-                        width: 300
-                      }
-                    }}
+                    key={state.entityName ? state.entityName : undefined}
+                    name={state.entityName ? state.entityName : undefined}
+                    preSelectedOption={state.entityName ? 
+                      { 
+                        key: state.entityName,
+                        text: state.entityName
+                      } : undefined}
+                    onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
+                    onLookup={
+                      (filter: string) => 
+                        Promise.resolve( erModel ? 
+                          Object.keys(erModel.entities).filter(name => name.toLowerCase().indexOf(filter.toLowerCase()) > -1).map( name => ({
+                              key: name,
+                              text: name
+                            }) ) : [])
+                    }
                   />
                   <PrimaryButton
                     text="Save"

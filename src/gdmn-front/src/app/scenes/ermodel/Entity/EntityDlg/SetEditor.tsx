@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { ISetAttribute, ERModel } from "gdmn-orm";
-import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label, Checkbox } from "office-ui-fabric-react";
+import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label, Checkbox, IComboBoxOption } from "office-ui-fabric-react";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { IAttributeEditorProps } from "./EntityAttribute";
 import { NumberField } from "./NumberField";
 import { getErrorMessage } from "./utils";
+import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 
 interface ISetValueProps {
   entityName: string;
@@ -67,17 +68,25 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
               state
               ?
                 <>
-                  <Dropdown
+                  <LookupComboBox
                     label="Entity:"
-                    disabled={!userDefined}
-                    selectedKey={state.entityName ? state.entityName : undefined}
-                    onChange={ (_, option) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
-                    options={erModel ? Object.keys(erModel.entities).map( name => ({ key: name, text: name }) ) : []}
-                    styles={{
-                      dropdown: {
-                        width: 240
-                      }
-                    }}
+                    //disabled={!userDefined}
+                    key={state.entityName ? state.entityName : undefined}
+                    name={state.entityName ? state.entityName : undefined}
+                    preSelectedOption={state.entityName ? 
+                      { 
+                        key: state.entityName,
+                        text: state.entityName
+                      } : undefined}
+                    onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
+                    onLookup={
+                      (filter: string) => 
+                        Promise.resolve( erModel ? 
+                          Object.keys(erModel.entities).filter(name => name.toLowerCase().indexOf(filter.toLowerCase()) > -1 ).map( name => ({
+                              key: name,
+                              text: name
+                            }) ) : [])
+                    }
                   />
                   <Stack.Item styles = {{root : { margin: '12px', fontWeight: '600' }}}>
                     <Label
