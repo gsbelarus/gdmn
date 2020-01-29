@@ -737,7 +737,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             }
           }
           onLookup={
-            (filter: string, limit: number) => {
+            async (filter: string, limit: number) => {
               const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
               const presentField = linkEntity.presentAttribute();
               if (presentField) {
@@ -763,17 +763,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 )
               );
 
-              return apiService.query({ query: linkEq.inspect() })
-                .then( response => {
-                  const result = response.payload.result!;
-                  const idAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                  const nameAlias = Object.entries(result.aliases).find( ([fieldAlias, data]) => data.linkAlias === 'z'
-                    && (data.attribute === presentField!.name))![0];
-                  return result.data.map( (r): IComboBoxOption => ({
-                    key: r[idAlias],
-                    text: r[nameAlias]
-                  }));
-                });
+              const response = await apiService.query({ query: linkEq.inspect() });
+              const result = (response.payload.result!);
+              const idAlias = Object.entries(result.aliases).find(([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID')![0];
+              const nameAlias = Object.entries(result.aliases).find(([fieldAlias, data]) => data.linkAlias === 'z'
+                && (data.attribute === presentField!.name))![0];
+              return result.data.map((r): IComboBoxOption => ({
+                key: r[idAlias],
+                text: r[nameAlias]
+              }));
             }
           }
           componentRef={
@@ -809,6 +807,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       return (
         <ComboBox
           label={label}
+          key={fd.fieldName}
           options={attrEnum.values.map( (r): IComboBoxOption => ({
             key: r.value,
             text: r.lName ? getLName(r.lName, ['by', 'ru', 'en']) : r.value.toString()
@@ -858,8 +857,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         if (fd.eqfa.attribute === 'ID') {
           return (
             <LookupComboBox
-              key={fkFieldName}
-              name={fkFieldName}
+              key={fd.fieldName}
+              name={fd.fieldName}
               label={label}
               preSelectedOption={ rs.isNull(refIdFieldAlias)
                 ? undefined
@@ -878,21 +877,27 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               }
               onChanged={
                 (option: IComboBoxOption | undefined) => {
-                  let changedRs = rs;
-                  if (option) {
-                    changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                    if (refNameFieldAlias) {
-                      changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+                  if (!rs.isNull(refIdFieldAlias) || option) {
+                    let changedRs = rs;
+                    if (option) {
+                      changedRs = changedRs.setValue(refIdFieldAlias, option.key);
+                      if (refNameFieldAlias) {
+                        changedRs = changedRs.setValue(refNameFieldAlias, option.text);
+                      }
+                    } else {
+                      changedRs = changedRs.setNull(refIdFieldAlias);
+                      if (refNameFieldAlias) {
+                        changedRs = changedRs.setNull(refNameFieldAlias);
+                      }
                     }
-                  } else {
-                    changedRs = changedRs.setNull(refIdFieldAlias);
-                    if (refNameFieldAlias) {
-                      changedRs = changedRs.setNull(refNameFieldAlias);
-                    }
+                    dispatch(rsActions.setRecordSet(changedRs));
+                    lastEdited.current = {
+                      fieldName: fd.fieldName,
+                      value: option ? option.key.toString() : ''
+                    };
+                    setChanged(true);
+                    changedFields.current[refIdFieldAlias] = true;
                   }
-                  dispatch(rsActions.setRecordSet(changedRs));
-                  setChanged(true);
-                  changedFields.current[refIdFieldAlias] = true;
                 }
               }
               onFocus={
@@ -904,7 +909,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
               onLookup={
-                (filter: string, limit: number) => {
+                async (filter: string, limit: number) => {
                   const linkFields = linkEntity.pk.map( pk => new EntityLinkField(pk));
                   const presentField = linkEntity.presentAttribute();
                   if (presentField) {
@@ -928,17 +933,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                       : undefined
                     )
                   );
-                  return apiService.query({ query: linkEq.inspect() })
-                    .then( response => {
-                      const result = response.payload.result!;
-                      const idAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z' && data.attribute === 'ID' )![0];
-                      const nameAlias = Object.entries(result.aliases).find( ([, data]) => data.linkAlias === 'z'
-                        && (data.attribute === presentField!.name))![0];
-                      return result.data.map( (r): IComboBoxOption => ({
-                        key: r[idAlias],
-                        text: r[nameAlias]
-                      }));
-                    });
+                  const response = await apiService.query({ query: linkEq.inspect() });
+                  const result = (response.payload.result!);
+                  const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === 'z' && data.attribute === 'ID')![0];
+                  const nameAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === 'z'
+                    && (data.attribute === presentField!.name))![0];
+                  return result.data.map((r): IComboBoxOption => ({
+                    key: r[idAlias],
+                    text: r[nameAlias]
+                  }));
                 }
               }
               componentRef={
