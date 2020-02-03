@@ -33,3 +33,6 @@ export * from './syntax2/templates';
 export * from './syntax2/parser';
 export * from './semantics/categories';
 export * from './semantics/rusVerbSynonyms';
+export * from './syntax3/types';
+export * from './syntax3/templates';
+export * from './syntax3/parser';

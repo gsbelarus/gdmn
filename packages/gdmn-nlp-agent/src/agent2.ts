@@ -86,6 +86,10 @@ export class ERTranslatorRU2 {
     return !!this._params.command && !!this._params.text?.length;
   }
 
+  public hasCommand() {
+    return !!this._params.command;
+  }
+
   /**
    * Returns a function which returns a given by name
    * phrase from the sentence.

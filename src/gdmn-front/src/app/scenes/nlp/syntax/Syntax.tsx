@@ -192,7 +192,7 @@ export const Syntax = (props: ISyntaxProps): JSX.Element => {
       processUniform: true
     }
   );
-  const command = translator?.command;
+  const command = translator?.hasCommand() && translator.command;
 
   useTab(viewTab, url, 'Syntax', true, dispatch);
 

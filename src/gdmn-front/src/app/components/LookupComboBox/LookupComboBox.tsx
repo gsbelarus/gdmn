@@ -286,7 +286,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
           p.push(<span>{props.text.substring(start, start + i.length)}</span>);
           start += i.length;
           if (idx < (parts.length - 1)) {
-            p.push(<span style={{ color: 'red' }}>{lookupText}</span>);
+            p.push(<span key={idx} style={{ color: 'red' }}>{lookupText}</span>);
             start += lookupText.length;
           }
           return p;
