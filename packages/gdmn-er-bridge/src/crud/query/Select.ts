@@ -103,7 +103,7 @@ export class Select {
           items = items.concat(crossFields);
         }
 
-        if (!link.entity.isTree) {
+        if (!link.entity.isTree || link.entity.isIntervalTree) {
           for (const fLink of field.links) {
             items = items.concat(this._makeFields(fLink));
           }
@@ -123,7 +123,7 @@ export class Select {
     const mainRelation = AdapterUtils.getMainRelation(link.entity);
     const from = link.entity.adapter!.relation.map((rel) => {
       if (rel.relationName == mainRelation.relationName) {
-        if (!link.entity.isIntervalTree && link.entity.isTree && first) {
+        /* if (!link.entity.isIntervalTree && link.entity.isTree && first) {
 
           const virtualTree = this.query.link.fields
             .filter((field) => field.attribute.type === "Parent")
@@ -153,7 +153,7 @@ export class Select {
           if (virtualTree.length > 0) {
             return virtualTree;
           }
-        }
+        } */
         return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
       } else {
         return SQLTemplates.join(
@@ -261,7 +261,7 @@ export class Select {
             }
             case "Entity":
             default: {
-              if (!fLink.entity.isIntervalTree && fLink.entity.isTree
+            /*   if (!fLink.entity.isIntervalTree && fLink.entity.isTree
                 && fLink.fields.some((field) => field.attribute.type === "Parent")) {
                 const forTreeQuery = new EntityQuery(fLink);
 
@@ -291,7 +291,7 @@ export class Select {
                   }
                 });
                 break;
-              }
+              } */
               const attr = field.attribute as EntityAttribute;
               joins.push(
                 SQLTemplates.join(
