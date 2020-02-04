@@ -13,7 +13,6 @@ import {AdapterUtils} from "../../AdapterUtils";
 import {Constants} from "../../ddl/Constants";
 
 export class VirtualQueries {
-
   public static makeVirtualQuery(query: EntityQuery): EntityQuery {
     const virtualTree = VirtualQueries._makeVirtualTree(query.link);
 
@@ -33,7 +32,8 @@ export class VirtualQueries {
 
     if (withEquals) {
       const equals: IEntityQueryWhereValue[] = [];
-      equals.push({
+      //  equals.push({
+      equals.push({         
         alias: "parent",
         attribute: linkEntity.entity.attribute("PARENT"),
         value: "11111"
@@ -67,7 +67,7 @@ export class VirtualQueries {
   }
 
   private static _makeQueryToTree(): Entity {
-    let queryToTree = new Entity({
+    const queryToTree = new Entity({
       name: "TREE",
       lName: {},
       adapter: {relation: [{relationName: "TREE", pk: [Constants.DEFAULT_PARENT_KEY_NAME]}]}

@@ -18,6 +18,10 @@ export interface IEntityQueryWhereValueInspector extends IEntityQueryAliasInspec
   value: TValue | IEntityQueryAliasInspector;
 }
 
+export interface IEntityQueryWhereValueInspector extends IEntityQueryAliasInspector {
+  value: TValue | IEntityQueryAliasInspector;
+}
+
 export interface IEntityQueryWhereValueNumberInspector extends IEntityQueryAliasInspector {
   value: number;
 }
@@ -37,6 +41,7 @@ export interface IEntityQueryWhereInspector {
 
   isNull?: IEntityQueryAliasInspector[];
   equals?: IEntityQueryWhereValueInspector[];
+  isNotDistinctFrom?: IEntityQueryWhereValueInspector[];
   contains?: IEntityQueryWhereValueInspector[];
   greater?: IEntityQueryWhereValueNumberInspector[];
   less?: IEntityQueryWhereValueNumberInspector[];
@@ -94,6 +99,7 @@ export interface IEntityQueryWhere {
 
   readonly isNull?: Array<IEntityQueryAlias<ScalarAttribute>>;
   readonly equals?: IEntityQueryWhereValue[];
+  readonly isNotDistinctFrom?: IEntityQueryWhereValue[];  
   readonly contains?: IEntityQueryWhereValue[];
   readonly greater?: IEntityQueryWhereValueNumber[];
   readonly less?: IEntityQueryWhereValueNumber[];
@@ -195,6 +201,31 @@ export class EntityQueryOptions {
                   throw new Error(`Alias ${equals.value.alias} is not found`);
                 }
                 return {
+                alias: equals.alias,
+                attribute: findLink.entity.attribute(equals.attribute),
+                value: {alias: equals.value.alias, attribute: findLink2.entity.attribute(equals.value.attribute)}
+              };
+            }
+            return {
+              alias: equals.alias,
+              attribute: findLink.entity.attribute(equals.attribute),
+              value: equals.value
+            };
+          })
+          : undefined,
+        isNotDistinctFrom: item.isNotDistinctFrom
+          ? item.isNotDistinctFrom.map((equals) => {
+            const findLink = link.deepFindLink(equals.alias);
+            if (!findLink) {
+              throw new Error(`Alias ${equals.alias} is not found`);
+            }
+            if (!EntityQueryOptions._isValuePrimitiveInspector(equals.value)) {
+              const findLink2 = link.deepFindLink(equals.value.alias) ?
+                link.deepFindLink(equals.value.alias) : existlLink && existlLink.deepFindLink(equals.value.alias);
+              if (!findLink2) {
+                throw new Error(`Alias ${equals.value.alias} is not found`);
+              }
+              return {
                 alias: equals.alias,
                 attribute: findLink.entity.attribute(equals.attribute),
                 value: {alias: equals.value.alias, attribute: findLink2.entity.attribute(equals.value.attribute)}

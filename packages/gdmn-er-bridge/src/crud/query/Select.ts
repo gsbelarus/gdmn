@@ -103,11 +103,17 @@ export class Select {
           items = items.concat(crossFields);
         }
 
-        if (!link.entity.isTree || link.entity.isIntervalTree) {
+        // if (link.entity.isTree && !link.entity.isIntervalTree) {
+        //   // Если tree (не интервальное) то добавляем поле Parent как скалярное
+        //   const attribute = field.attribute as ScalarAttribute;
+        //   const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
+        //   const fieldAlias = withoutAlias ? "" : this._getFieldAlias(field);
+        //   items = items.concat(SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field));
+        // } else {  
           for (const fLink of field.links) {
             items = items.concat(this._makeFields(fLink));
-          }
-        }
+          }  
+        // }
 
         return items;
       }
@@ -123,8 +129,7 @@ export class Select {
     const mainRelation = AdapterUtils.getMainRelation(link.entity);
     const from = link.entity.adapter!.relation.map((rel) => {
       if (rel.relationName == mainRelation.relationName) {
-        /* if (!link.entity.isIntervalTree && link.entity.isTree && first) {
-
+        if (!link.entity.isIntervalTree && link.entity.isTree && first) {
           const virtualTree = this.query.link.fields
             .filter((field) => field.attribute.type === "Parent")
             .map((field) => {
@@ -146,14 +151,15 @@ export class Select {
                   return SQLTemplates.fromWithTree(rootTableAlias,
                     rel.relationName, leftTableWithRecursive, rightTableWithRecursive, tableWithRecursive);
                 }
-              });
+              }); 
               return from.join("\n");
+
             });
 
           if (virtualTree.length > 0) {
             return virtualTree;
           }
-        } */
+        }
         return SQLTemplates.from(this._getTableAlias(link, rel.relationName), rel.relationName);
       } else {
         return SQLTemplates.join(
@@ -261,7 +267,7 @@ export class Select {
             }
             case "Entity":
             default: {
-            /*   if (!fLink.entity.isIntervalTree && fLink.entity.isTree
+              if (!fLink.entity.isIntervalTree && fLink.entity.isTree
                 && fLink.fields.some((field) => field.attribute.type === "Parent")) {
                 const forTreeQuery = new EntityQuery(fLink);
 
@@ -291,7 +297,8 @@ export class Select {
                   }
                 });
                 break;
-              } */
+              }
+              
               const attr = field.attribute as EntityAttribute;
               joins.push(
                 SQLTemplates.join(

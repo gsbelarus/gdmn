@@ -152,6 +152,7 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
     case "String":
       dataType = TFieldType.String;
       break;
+    case "Parent":
     case "Sequence":
     case "Integer":
       dataType = TFieldType.Integer;
