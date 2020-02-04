@@ -1,8 +1,8 @@
-import { XPhraseElement, XRusWordTemplate, IXPhraseTemplate, IXPhrase, XWordOrToken, isIXPhraseTemplate } from "./types";
+import { XPhraseElement, XRusWordTemplate, IXPhraseTemplate, IXPhrase, XWordOrToken, isIXPhraseTemplate, isIXInheritedPhraseTemplate, XPhraseTemplate } from "./types";
 import { INLPToken, nlpCyrillicWord, AnyWord, RusNoun, RusPreposition, RusAdjective, RusVerb, nlpIDToken, nlpQuotedLiteral, nlpWhiteSpace, nlpLineBreak, RusConjunction, nlpPeriod } from "..";
 
 const match = (token: INLPToken, element: XPhraseElement): XWordOrToken | undefined => {
-  if (isIXPhraseTemplate(element)) {
+  if (isIXPhraseTemplate(element) || isIXInheritedPhraseTemplate(element)) {
     return undefined;
   }
 
@@ -67,13 +67,40 @@ const match = (token: INLPToken, element: XPhraseElement): XWordOrToken | undefi
   }
 };
 
-interface IXParseResult {
-  restTokens: INLPToken[];
-  phrase?: IXPhrase;
-  error?: string;
+interface IXParseError {
+  phraseTemplateId: string;
+  error: string;
 };
 
-export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXParseResult => {
+interface IXParseResultBase {
+  type: 'ERROR' | 'SUCCESS';
+}
+
+interface IXParseResultSuccess extends IXParseResultBase {
+  type: 'SUCCESS';
+  restTokens: INLPToken[];
+  phrase: IXPhrase;
+};
+
+interface IXParseResultError extends IXParseResultBase {
+  type: 'ERROR';
+  restTokens: INLPToken[];
+  errorStack: IXParseError[];
+};
+
+type XParseResult = IXParseResultSuccess | IXParseResultError;
+
+export const mergeTemplates = (template: XPhraseTemplate): IXPhraseTemplate => {
+  if (isIXPhraseTemplate(template)) {
+    return template;
+  } else {
+    return {...mergeTemplates(template.parent), ...template}
+  }
+};
+
+export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XParseResult => {
+
+  const template = mergeTemplates(inTemplate);
 
   let restTokens = inTokens;
   let phrase: Partial<IXPhrase> = {
@@ -82,14 +109,15 @@ export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXPar
 
   if (template.specifier) {
     const r = xParse(restTokens, template.specifier.template);
-    if (r.phrase) {
+    if (r.type === 'SUCCESS') {
       restTokens = r.restTokens;
       phrase.specifier = r.phrase;
     }
     else if (!template.specifier.optional) {
       return {
+        type: 'ERROR',
         restTokens,
-        error: 'No specifier found.'
+        errorStack: [{ phraseTemplateId: template.id, error: 'No specifier found.' }, ...r.errorStack]
       }
     }
   }
@@ -112,15 +140,16 @@ export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXPar
 
   if (!restTokens.length) {
     return {
+      type: 'ERROR',
       restTokens,
-      error: 'No head found'
+      errorStack: [{ phraseTemplateId: template.id, error: 'No head found' }]
     }
   }
 
   for (const element of template.head.template) {
     if (isIXPhraseTemplate(element)) {
       const r = xParse(restTokens, element);
-      if (r.phrase) {
+      if (r.type === 'SUCCESS') {
         restTokens = r.restTokens;
         phrase.head = r.phrase;
         break;
@@ -128,8 +157,9 @@ export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXPar
     } else {
       if (restTokens[0].tokenType !== nlpCyrillicWord && restTokens[0].tokenType !== nlpIDToken && restTokens[0].tokenType !== nlpQuotedLiteral) {
         return {
+          type: 'ERROR',
           restTokens,
-          error: `Invalid symbol "${restTokens[0].image}"`
+          errorStack: [{ phraseTemplateId: template.id, error: `Invalid symbol "${restTokens[0].image}"` }]
         }
       }
 
@@ -176,8 +206,9 @@ export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXPar
 
   if (!phrase.head && !phrase.headTokens) {
     return {
+      type: 'ERROR',
       restTokens,
-      error: 'Invalid phrase head'
+      errorStack: [{ phraseTemplateId: template.id, error: 'Invalid phrase head' }]
     }
   }
 
@@ -186,14 +217,15 @@ export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXPar
 
     for (const complement of template.complements) {
       const r = xParse(restTokens, complement.template);
-      if (r.phrase) {
+      if (r.type === 'SUCCESS') {
         restTokens = r.restTokens;
         phrase.complements.push(r.phrase);
       }
       else if (!complement.optional) {
         return {
+          type: 'ERROR',
           restTokens,
-          error: `Missed complement ${complement.template.id}.`
+          errorStack: [{ phraseTemplateId: template.id, error: `Missed complement ${complement.template.id}.` }, ...r.errorStack]
         }
       }
     }
@@ -204,6 +236,7 @@ export const xParse = (inTokens: INLPToken[], template: IXPhraseTemplate): IXPar
   }
 
   return {
+    type: 'SUCCESS',
     restTokens,
     phrase: phrase as IXPhrase
   }

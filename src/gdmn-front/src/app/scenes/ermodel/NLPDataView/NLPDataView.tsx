@@ -16,7 +16,7 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { Tree } from '@src/app/components/Tree';
 import { prepareDefaultEntityQuery, EntityAttribute, EntityQuery } from 'gdmn-orm';
 import Split from 'react-split';
-import { ERTranslatorRU2, command2Text } from 'gdmn-nlp-agent';
+import { ERTranslatorRU3, command2Text } from 'gdmn-nlp-agent';
 import { getLName } from 'gdmn-internals';
 
 /*
@@ -164,13 +164,13 @@ interface INLPDataViewState {
   showSQL?: boolean;
   queryState: QueryState;
   phrase?: string;
-  prevTranslator?: ERTranslatorRU2;
+  prevTranslator?: ERTranslatorRU3;
 };
 
 type Action = { type: 'SET_PHRASE_ERROR', phraseError: string }
   | { type: 'SET_SHOW_SQL', showSQL: boolean }
   | { type: 'SET_PHRASE', phrase?: string }
-  | { type: 'SET_QUERY_STATE', queryState: QueryState, prevTranslator?: ERTranslatorRU2, setPhrase?: boolean };
+  | { type: 'SET_QUERY_STATE', queryState: QueryState, prevTranslator?: ERTranslatorRU3, setPhrase?: boolean };
 
 function reducer(state: INLPDataViewState, action: Action): INLPDataViewState {
   switch (action.type) {
@@ -256,7 +256,7 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
   const applyPhrase = useCallback( (text?: string) => {
     if (erModel && text) {
       try {
-        let newTranslator = new ERTranslatorRU2({ erModel, processUniform: true }).processText(text);
+        let newTranslator = new ERTranslatorRU3({ erModel, processUniform: true }).processText(text);
 
         if (entityName && newTranslator.command.payload.link.entity.name !== entityName) {
           viewDispatch({ type: 'SET_PHRASE_ERROR', phraseError: "Can't change entity." });

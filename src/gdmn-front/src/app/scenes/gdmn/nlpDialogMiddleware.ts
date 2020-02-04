@@ -1,7 +1,7 @@
 import { getType, ActionType } from 'typesafe-actions';
 import { gdmnActions } from '@src/app/scenes/gdmn/actions';
 import { TThunkMiddleware } from '@src/app/store/middlewares';
-import { ERTranslatorRU2 } from 'gdmn-nlp-agent';
+import { ERTranslatorRU3 } from 'gdmn-nlp-agent';
 import { getLName } from 'gdmn-internals';
 
 /*
@@ -126,7 +126,7 @@ export const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) =>
 
     const tab = getViewTab();
     const prevTranslator = tab?.translator;
-    let translator = prevTranslator ?? new ERTranslatorRU2({erModel, processUniform: true});
+    let translator = prevTranslator ?? new ERTranslatorRU3({erModel, processUniform: true});
     try {
       translator = translator.processText(text);
 

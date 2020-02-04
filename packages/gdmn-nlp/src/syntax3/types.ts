@@ -49,10 +49,11 @@ export type XRusWordTemplate = IXRusNounTemplate
 export type XPhraseElement = IXIdentifierTemplate
   | IXQuotedLiteralTemplate
   | IXPhraseTemplate
+  | IXInheritedPhraseTemplate
   | XRusWordTemplate;
 
 export interface IXSpecifier {
-  template: IXPhraseTemplate;
+  template: XPhraseTemplate;
   optional?: boolean;
   noUniform?: boolean;
 };
@@ -65,18 +66,36 @@ export interface IXHead {
   noUniform?: boolean;
 };
 
-export interface IXPhraseTemplate {
+export interface IXPhraseTemplateBase {
   id: string;
   label?: string;
   examples?: string[];
   specifier?: IXSpecifier;
-  head: IXHead;
+  head?: IXHead;
   complements?: IXComplement[];
   adjunct?: IXAdjunct;
 };
 
+export interface IXPhraseTemplate extends IXPhraseTemplateBase {
+  head: IXHead;
+}
+
+export interface IXInheritedPhraseTemplate extends IXPhraseTemplateBase {
+  parent: XPhraseTemplate;
+}
+
+export type XPhraseTemplate = IXPhraseTemplate | IXInheritedPhraseTemplate;
+
 export function isIXPhraseTemplate(t: any): t is IXPhraseTemplate {
-  return t instanceof Object && typeof t.id === 'string' && t.head instanceof Object;
+  return t instanceof Object
+    && typeof t.id === 'string'
+    && t.head instanceof Object;
+};
+
+export function isIXInheritedPhraseTemplate(t: any): t is IXInheritedPhraseTemplate {
+  return t instanceof Object
+    && typeof t.id === 'string'
+    && t.parent instanceof Object;
 };
 
 interface IXWordBase {
@@ -95,6 +114,14 @@ export interface IXWord extends IXWordBase {
 export interface IXToken extends IXWordBase {
   type: 'TOKEN';
   token: INLPToken;
+};
+
+export function isIXWord(w: any): w is IXWord {
+  return w?.type === 'WORD';
+};
+
+export function isIXToken(w: any): w is IXWord {
+  return w?.type === 'TOKEN';
 };
 
 export type XWordOrToken = IXEmpty | IXToken | IXWord;

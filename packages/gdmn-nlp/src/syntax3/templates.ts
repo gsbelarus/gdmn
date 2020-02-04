@@ -1,4 +1,4 @@
-import { IXPhraseTemplate } from "./types";
+import { IXPhraseTemplate, IXInheritedPhraseTemplate } from "./types";
 import { RusCase } from "..";
 
 // Покажи все организации из Минска и Пинска
@@ -27,8 +27,39 @@ const nounGent: IXPhraseTemplate = {
   }
 };
 
+const nounDatv: IXPhraseTemplate = {
+  id: 'nounDatv',
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        case: RusCase.Datv,
+        number: 'SINGULAR'
+      },
+      {
+        type: 'ID'
+      },
+      {
+        type: 'QUOTED_LITERAL'
+      }
+    ]
+  }
+};
+
+/*
+const idTemplate: IXPhraseTemplate = {
+  id: 'idTemplate',
+  head: {
+    template: [{
+      type: 'ID'
+    }]
+  }
+};
+*/
+
 const ppFromPlace: IXPhraseTemplate = {
-  id: 'PPFromPlace',
+  id: 'ppFromPlace',
   head: {
     template: [{
       type: 'WORD',
@@ -41,9 +72,25 @@ const ppFromPlace: IXPhraseTemplate = {
   }]
 };
 
-const npAllObjectsFromPlace: IXPhraseTemplate = {
-  id: 'NPAllObjectsFromPlace',
-  label: 'Фраза с существительным вида "Все организации из Минска"',
+const ppBy: IXPhraseTemplate = {
+  id: 'ppBy',
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'PREP',
+      image: 'по'
+    }]
+  },
+  complements:[
+    {
+      template: nounDatv,
+    },
+  ]
+};
+
+const npAllObjects: IXPhraseTemplate = {
+  id: 'npAllObjects',
+  label: 'Фраза с существительным вида "Все организации"',
   examples: ['все организации', 'организации', 'все TgdcCompany'],
   specifier: {
     template: specifierAll,
@@ -63,14 +110,20 @@ const npAllObjectsFromPlace: IXPhraseTemplate = {
     ],
     noUniform: true
   },
+};
+
+const npAllObjectsFromPlace: IXInheritedPhraseTemplate = {
+  parent: npAllObjects,
+  id: 'npAllObjectsFromPlace',
+  label: 'Фраза с существительным вида "Все организации из Минска"',
+  examples: ['все организации из минска', 'организации из минска и пинска', 'все TgdcCompany из минска'],
   complements: [{
-    template: ppFromPlace,
-    optional: true
+    template: ppFromPlace
   }]
 };
 
 const vpShowByPlace: IXPhraseTemplate = {
-  id: 'VPShowByPlace',
+  id: 'vpShowByPlace',
   label: 'Глагольная фраза вида "Покажи все организации из Минска"',
   examples: ['Покажи все организации из Минска и Пинска'],
   head: {
@@ -86,6 +139,49 @@ const vpShowByPlace: IXPhraseTemplate = {
   }]
 };
 
+const vpShow: IXPhraseTemplate = {
+  id: 'vpShow',
+  label: 'Глагольная фраза вида "Покажи все организации"',
+  examples: ['Покажи все организации'],
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'VERB',
+      image: 'покажи',
+    }],
+    noUniform: true
+  },
+  complements: [{
+    template: npAllObjects
+  }]
+};
+
+const vpSortBy: IXPhraseTemplate = {
+  id: 'vpSortBy',
+  label: 'Глагольная фраза вида "Отсортируй по названию"',
+  examples: ['Отсортируй по названию'],
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'VERB',
+        image: 'сортируй',
+      },
+      {
+        type: 'WORD',
+        pos: 'VERB',
+        image: 'отсортируй',
+      }
+    ],
+    noUniform: true
+  },
+  complements: [{
+    template: ppBy
+  }]
+};
+
 export const xTemplates = {
-  vpShowByPlace
+  vpShow,
+  vpShowByPlace,
+  vpSortBy
 };
