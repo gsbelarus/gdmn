@@ -45,11 +45,13 @@ interface IXOrder {
   attrPath: string;
 };
 
+interface IXAttrValue {
+  attrBySem: SemCategory;
+  value: string;
+};
+
 interface IXWhere {
-  contains?: {
-    attrBySem: SemCategory;
-    value: string;
-  }
+  contains?: IXAttrValue;
 };
 
 interface IXEntity {

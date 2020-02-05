@@ -70,8 +70,13 @@ test('nlpParser3', () => {
   tokens = f('покажи все TgdcCompany из минска и пинска');
   expect(tokens.length).toEqual(1);
 
+  res = xParse(tokens[0], xTemplates.vpShow);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toBeGreaterThan(0);
+
   res = xParse(tokens[0], xTemplates.vpShowByPlace);
   expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
   expect(testWord(res.phrase?.headTokens?.[0], 'покажи')).toEqual(true);
   expect(testWord(res.phrase?.complements?.[0]?.specifier?.headTokens?.[0], 'все')).toEqual(true);
   expect(testToken(res.phrase?.complements?.[0]?.headTokens?.[0], 'TgdcCompany')).toEqual(true);

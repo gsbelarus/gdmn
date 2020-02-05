@@ -1,7 +1,7 @@
 import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {SemCategory} from "gdmn-nlp";
-import {ERModel} from "gdmn-orm";
+import {ERModel, EntityAttribute} from "gdmn-orm";
 import {loadDBDetails} from "./testConfig";
 import {ERTranslatorRU3} from "../src";
 
@@ -66,7 +66,6 @@ describe("agent3", () => {
     expect(translator.command.payload.link.entity).toEqual(company);
   });
 
-   /*
 
   it("phrase4", () => {
     const company = erModel.entities.TgdcCompany;
@@ -77,7 +76,7 @@ describe("agent3", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи организации из минска");
+    translator = translator.processText("покажи все организации из минска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -90,8 +89,11 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].contains![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].contains![0].value).toEqual("минск");
+
+    console.log(JSON.stringify(translator.command.payload.inspect(), undefined, 2));
   });
 
+  /*
   it("phrase5", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();

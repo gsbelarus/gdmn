@@ -5,7 +5,6 @@ import {
   xParse,
   xTemplates,
   IXPhrase,
-  XWordOrToken,
   isIXWord,
   IXWord,
   IXToken,
@@ -13,12 +12,14 @@ import {
   nlpIDToken,
   morphAnalyzer,
   isIXToken,
+  isIXPhrase,
   nlpQuotedLiteral,
-  phraseFind} from "gdmn-nlp";
-import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery} from "gdmn-orm";
+  phraseFind,
+  RusCase} from "gdmn-nlp";
+import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField} from "gdmn-orm";
 import {ICommand, Action} from "./command";
 import { xTranslators } from "./translators";
-import { ERTranslatorError } from "./types";
+import { ERTranslatorError, XPhrase2Command } from "./types";
 import { getLName } from "gdmn-internals";
 import { command2Text } from "./command2text";
 
@@ -152,99 +153,167 @@ export class ERTranslatorRU3 {
     }
   }
 
-  public process(phrase: IXPhrase, image?: string) {
-    const translator = xTranslators[phrase.phraseTemplateId];
+  private static processComplements(erTranslator: ERTranslatorRU3, phrase: IXPhrase) {
+    if (phrase.complements) {
+      for (const complement of phrase.complements) {
+        const translator = xTranslators[complement.phraseTemplateId];
+        if (translator && translator.context !== 'NEW') {
+          erTranslator = erTranslator.process(complement, translator);
+        }
+      }
+    }
 
-    if (translator) {
-      if (translator.context === 'NEW') {
-        let action: Action | undefined = undefined;
+    return erTranslator;
+  };
 
-        for (const selector of translator.actionSelector) {
-          if (selector.path) {
-            const v = phraseFind(phrase, selector.path);
-            if (isIXWord(v)) {
-              if (v.word.word === selector.testValue) {
-                action = selector.action;
-                break;
-              }
+  private static getNoun(phrase: IXPhrase, path: string) {
+    const valuePhrase = phraseFind(phrase, path);
+
+    if (isIXWord(valuePhrase) && valuePhrase.word instanceof RusNoun) {
+      return valuePhrase.word;
+    }
+
+    throw new Error(`No noun found at the location ${path} in phrase ${phrase.phraseTemplateId}`);
+  }
+
+  public process(phrase: IXPhrase, translator: XPhrase2Command, image?: string) {
+    if (translator.context === 'NEW') {
+      let action: Action | undefined = undefined;
+
+      for (const selector of translator.actionSelector) {
+        if (selector.path) {
+          const v = phraseFind(phrase, selector.path);
+          if (isIXWord(v)) {
+            if (v.word.word === selector.testValue) {
+              action = selector.action;
+              break;
             }
-          } else {
-            action = selector.action;
-            break;
+          }
+        } else {
+          action = selector.action;
+          break;
+        }
+      }
+
+      if (!action) {
+        throw new ERTranslatorError('UNKNOWN_ACTION');
+      }
+
+      let entity: Entity | undefined = undefined;
+      let upPhrase: IXPhrase | undefined = undefined;
+
+      if (translator.entityQuery.entity.entityClass) {
+        entity = this.erModel.entities[translator.entityQuery.entity.entityClass];
+      }
+      else if (translator.entityQuery.entity.path) {
+        const entityPhrase = phraseFind(phrase, translator.entityQuery.entity.path);
+
+        if (isIXWord(entityPhrase) || isIXToken(entityPhrase)) {
+          entity = this._findEntity(entityPhrase);
+
+          const path = translator.entityQuery.entity.path.split('/');
+
+          if (path[path.length - 1] === 'H') {
+            path.length = path.length - 1;
+            const temp = phraseFind(phrase, path.join('/'));
+            if (isIXPhrase(temp)) {
+              upPhrase = temp;
+            }
           }
         }
+      }
 
-        if (!action) {
-          throw new ERTranslatorError('UNKNOWN_ACTION');
-        }
+      if (!entity) {
+        throw new ERTranslatorError('UNKNOWN_ENTITY', `Can't find entity.`);
+      }
 
-        let entity: Entity | undefined = undefined;
+      const rootAlias = 'root';
+      const fields = prepareDefaultEntityLinkFields(entity);
+      const options = new EntityQueryOptions(undefined, undefined, undefined);
+      const entityLink = new EntityLink(entity, rootAlias, fields);
+      const res = new ERTranslatorRU3({
+        erModel: this.erModel,
+        command: {
+          action,
+          payload: new EntityQuery(entityLink, options)
+        },
+        text: image ? [image] : undefined
+      });
 
-        if (translator.entityQuery.entity.entityClass) {
-          entity = this.erModel.entities[translator.entityQuery.entity.entityClass];
-        }
-        else if (translator.entityQuery.entity.path) {
-          const entityPhrase = phraseFind(phrase, translator.entityQuery.entity.path);
+      if (upPhrase) {
+        return ERTranslatorRU3.processComplements(res, upPhrase);
+      }
 
-          if (isIXWord(entityPhrase) || isIXToken(entityPhrase)) {
-            entity = this._findEntity(entityPhrase);
-          }
-        }
+      return res;
+    } else {
+      this._checkContext();
 
-        if (!entity) {
-          throw new ERTranslatorError('UNKNOWN_ENTITY', `Can't find entity.`);
-        }
+      const eq = this.command.payload.duplicate(this.erModel);
+      const entity = eq.link.entity;
 
-        const rootAlias = 'root';
-        const fields = prepareDefaultEntityLinkFields(entity);
-        const options = new EntityQueryOptions(undefined, undefined, undefined);
-        const entityLink = new EntityLink(entity, rootAlias, fields);
+      if (translator.entityQuery.where?.length) {
+        if (translator.entityQuery.where[0].contains) {
+          const noun = ERTranslatorRU3.getNoun(phrase, translator.entityQuery.where[0].contains.value);
+          const value = noun.lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
+          const attr = entity.attributesBySemCategory(translator.entityQuery.where[0].contains.attrBySem)[0];
+          const fields = eq.link.fields;
 
-        return new ERTranslatorRU3({
-          erModel: this.erModel,
-          command: {
-            action,
-            payload: new EntityQuery(entityLink, options)
-          },
-          text: image ? [image] : undefined
-        });
-      } else {
-        this._checkContext();
+          if (attr instanceof EntityAttribute) {
+            const foundLinkField = fields.find( f => f.attribute === attr );
 
-        const entity = this.command.payload.link.entity;
+            if (foundLinkField && foundLinkField.links) {
+              eq.options!.addWhereCondition({
+                contains: [{
+                  alias: foundLinkField.links[0].alias,
+                  attribute: foundLinkField.links[0].entity.presentAttribute(),
+                  value
+                }]
+              });
+            } else {
+              const linkEntity = attr.entities[0];
+              const linkAlias = "alias2";
 
-        if (translator.entityQuery.order) {
-          const byFieldPhrase = phraseFind(phrase, translator.entityQuery.order.attrPath);
+              fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
 
-          if (isIXWord(byFieldPhrase) || isIXToken(byFieldPhrase)) {
-            const foundAttr = this._findAttr(entity, byFieldPhrase);
-
-            if (foundAttr) {
-              const eq = this.command.payload.duplicate(this.erModel);
-
-              eq.options!.addOrder({
-                alias: eq.link.alias,
-                attribute: foundAttr,
-                type: 'ASC'
-              }, true);
-
-              const command = {...this.command, payload: eq};
-
-              return new ERTranslatorRU3({
-                erModel: this.erModel,
-                command,
-                text: [command2Text(command)]
+              eq.options!.addWhereCondition({
+                contains: [{
+                  alias: linkAlias,
+                  attribute: linkEntity.presentAttribute(),
+                  value
+                }]
               });
             }
+          }
+        }
+      }
 
+      if (translator.entityQuery.order) {
+        const byFieldPhrase = phraseFind(phrase, translator.entityQuery.order.attrPath);
+
+        if (isIXWord(byFieldPhrase) || isIXToken(byFieldPhrase)) {
+          const foundAttr = this._findAttr(entity, byFieldPhrase);
+
+          if (foundAttr) {
+            eq.options!.addOrder({
+              alias: eq.link.alias,
+              attribute: foundAttr,
+              type: 'ASC'
+            }, true);
+          } else {
             throw new ERTranslatorError('UNKNOWN_ATTR');
           }
         }
-
-        throw new ERTranslatorError('UNKNOWN_PHRASE');
       }
-    } else {
-      throw new ERTranslatorError('UNKNOWN_PHRASE', `Unsupported phrase template id: ${phrase.phraseTemplateId}`);
+
+      const command = {...this.command, payload: eq};
+
+      return ERTranslatorRU3.processComplements(
+        new ERTranslatorRU3({
+          erModel: this.erModel,
+          command,
+          text: [command2Text(command)]
+        }),
+        phrase);
     }
   }
 
@@ -270,8 +339,14 @@ export class ERTranslatorRU3 {
 
         // TODO: обрабатываем только первый нашедшийся
         // вариант разбора предложения
-        if (parsed.type === 'SUCCESS') {
-          res = res.process(parsed.phrase, sentence.reduce( (p, t) => p += t.image, '' ));
+        if (parsed.type === 'SUCCESS' && !parsed.restTokens.length) {
+          const translator = xTranslators[parsed.phrase.phraseTemplateId];
+
+          if (!translator) {
+            throw new ERTranslatorError('UNKNOWN_PHRASE', `Unsupported phrase template id: ${parsed.phrase.phraseTemplateId}`);
+          }
+
+          res = res.process(parsed.phrase, translator, sentence.reduce( (p, t) => p += t.image, '' ));
           break;
         }
       }

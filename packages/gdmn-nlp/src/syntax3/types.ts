@@ -134,3 +134,7 @@ export interface IXPhrase {
   complements?: IXPhrase[];
   adjunct?: IXPhrase[];
 };
+
+export function isIXPhrase(p: any): p is IXPhrase {
+  return p?.phraseTemplateId && typeof p.phraseTemplateId === 'string';
+};

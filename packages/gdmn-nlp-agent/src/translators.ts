@@ -16,6 +16,16 @@ const vpShow2Command: IXPhrase2CommandNew = {
   }
 };
 
+const vpShowByPlace2Command: IXPhrase2CommandNew = {
+  ...vpShow2Command,
+  phraseTemplateId: 'vpShowByPlace',
+  entityQuery: {
+    entity: {
+      path: 'C/npAllObjectsFromPlace/H'
+    }
+  }
+};
+
 /**
  *
  * |verb   |entity           |fromPlace           |
@@ -40,7 +50,7 @@ const ppFromPlace2Command: IXPhrase2CommandEQ = {
       {
         contains: {
           attrBySem: SemCategory.ObjectLocation,
-          value: 'C/nounGent'
+          value: 'C/nounGent/H'
         }
       }
     ]
@@ -63,7 +73,7 @@ interface IXTranslators {
 
 export const xTranslators: IXTranslators = {
   vpShow: vpShow2Command,
-  vpShowByPlace: vpShow2Command,
+  vpShowByPlace: vpShowByPlace2Command,
   ppFromPlace: ppFromPlace2Command,
   vpSortBy: vpSortBy2Command
 };

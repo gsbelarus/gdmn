@@ -244,7 +244,9 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
 
 export const phraseFind = (inPhrase: IXPhrase, inPath: string): XWordOrToken | IXPhrase | undefined => {
   const path = inPath.split('/');
+
   let phrase = inPhrase;
+  let foundPhrase: IXPhrase | undefined = undefined;
   let i = 0;
 
   while (i < path.length) {
@@ -254,7 +256,7 @@ export const phraseFind = (inPhrase: IXPhrase, inPath: string): XWordOrToken | I
 
     if (path[i] === 'C') {
       const tId = path[i + 1];
-      const foundPhrase = phrase.complements?.find( c => c.phraseTemplateId === tId );
+      foundPhrase = phrase.complements?.find( c => c.phraseTemplateId === tId );
       if (foundPhrase) {
         phrase = foundPhrase;
         i += 2;
@@ -266,7 +268,7 @@ export const phraseFind = (inPhrase: IXPhrase, inPath: string): XWordOrToken | I
 
     if (path[i] === 'A') {
       const tId = path[i + 1];
-      const foundPhrase = phrase.adjunct?.find( a => a.phraseTemplateId === tId );
+      foundPhrase = phrase.adjunct?.find( a => a.phraseTemplateId === tId );
       if (foundPhrase) {
         phrase = foundPhrase;
         i += 2;
@@ -276,7 +278,12 @@ export const phraseFind = (inPhrase: IXPhrase, inPath: string): XWordOrToken | I
       }
     }
 
+
     throw new Error(`Invalid path ${inPath}.`);
+  }
+
+  if (foundPhrase) {
+    return foundPhrase;
   }
 
   throw new Error('Empty path.');
