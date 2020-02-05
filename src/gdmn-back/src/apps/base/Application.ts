@@ -538,10 +538,8 @@ export class Application extends ADatabase {
             callback: async ({erBuilder, eBuilder}) => {
               const entity = this.erModel.entity(entityData.name);
               const attribute = EntityUtils.createAttribute(attrData, this.erModel, undefined, entity);
-              const length = entity.adapter && entity.adapter.relation.length ? 
-                entity.adapter.relation.length : 0;
-              const tablename = entity.adapter && length ? 
-                entity.adapter.relation[length-1].relationName : entity.name;
+              const length = entity.adapter?.relation.length ?? 0;
+              const tablename =  entity.adapter?.relation[length-1]?.relationName ?? entity.name;
               const entryCountResult = await connection.executeReturning(connection.readTransaction, `
                 SELECT COUNT(*) FROM ${tablename}`);
               const entryCount = entryCountResult.getNumber(0);
