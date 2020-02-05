@@ -20,6 +20,7 @@ import { ParamsDialog } from './GridParams/ParamsDialog';
 import { applyUserSettings } from './applyUserSettings';
 import { numberFormats } from 'gdmn-internals';
 import { IGridColors, getClassNames, IGridCSSClassNames, IColumnsSettings } from './types';
+import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
 
 const MIN_GRID_COLUMN_WIDTH = 20;
 
@@ -117,6 +118,7 @@ export interface IGridState {
   columnsSettings?: IColumnsSettings;
   prevColumnsSettings?: IColumnsSettings;
   deltaWidth: number;
+  notificationMessage?: string;
 }
 
 export function visibleToIndex(columns: Columns, visibleIndex: number) {
@@ -378,7 +380,7 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
       columns,
       onSetColumnsSettings
     } = this.props;
-    const { displayColumns, rowHeight, overscanColumnCount, overscanRowCount, showDialogParams } = this.state;
+    const { displayColumns, rowHeight, overscanColumnCount, overscanRowCount, showDialogParams, notificationMessage } = this.state;
     const styles = this._styles;
 
     if (!rs) {
@@ -1033,6 +1035,20 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
     return (
       <div className={styles.GridBody}>
+        {
+          notificationMessage ?
+            <MessageBar
+              messageBarType={MessageBarType.warning}
+              isMultiline={false}
+              onDismiss={ () => this.setState({ notificationMessage: undefined }) }
+              dismissButtonAriaLabel="Close"
+              overflowButtonAriaLabel="See more"
+            >
+              {notificationMessage}
+            </MessageBar>
+          :
+            undefined
+        }
         <AutoSizer>
           {({ width, height }) => {
             let deltaWidthColumn =
@@ -1168,15 +1184,22 @@ export class GDMNGrid extends Component<IGridProps, IGridState> {
 
       let innerCell: JSX.Element;
 
-      const onSortColumnClick = () => {
-        if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
-          onSort({
-            ref: this,
-            rs,
-            sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
-          });
-        }
-      };
+      const onSortColumnClick = rs.status === TStatus.FULL
+        ?
+          () => {
+            if (!this._columnMovingDeltaX && !this._columnSizingDeltaX) {
+              onSort({
+                ref: this,
+                rs,
+                sortFields: [{ fieldName: columnField.fieldName, asc: sortOrder !== 'ASC' }]
+              });
+            }
+          }
+        :
+          () => {
+            this.setState({ notificationMessage: 'Для сортировки необходимо загрузить все данные с сервера.' });
+            setTimeout( () => this.setState( state => state.notificationMessage ? {...state, notificationMessage: undefined} : state ), 2000);
+          };
 
       if (selectRows && !adjustedColumnIndex) {
         const classNames = cn(

@@ -24,30 +24,8 @@ import {
   IEntityQueryWhere} from "gdmn-orm";
 import {ICommand} from "./command";
 import { getLName } from "gdmn-internals";
-
-export type ERTranslatorErrorCode = 'INVALID_PHRASE_STRUCTURE'
-  | 'UNKNOWN_PHRASE'
-  | 'UNKNOWN_ENTITY'
-  | 'UNKNOWN_ATTR'
-  | 'UNSUPPORTED_COMMAND_TYPE'
-  | 'NO_CONTEXT';
-
-export class ERTranslatorError extends Error {
-  constructor(readonly code: ERTranslatorErrorCode, ...params: any[]) {
-    super(...params)
-
-    // Maintains proper stack trace for where our error was thrown (only available on V8)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ERTranslatorError)
-    }
-
-    this.name = 'ERTranslatorError'
-
-    if (!this.message) {
-      this.message = code;
-    }
-  }
-};
+import { ERTranslatorError } from "./types";
+import { command2Text } from "./command2text";
 
 interface IERTranslatorRUParams {
   erModel: ERModel;
@@ -84,6 +62,10 @@ export class ERTranslatorRU2 {
 
   get valid() {
     return !!this._params.command && !!this._params.text?.length;
+  }
+
+  public hasCommand() {
+    return !!this._params.command;
   }
 
   /**
@@ -499,39 +481,4 @@ export class ERTranslatorRU2 {
 
     throw new ERTranslatorError('UNKNOWN_ATTR');
   }
-};
-
-export function command2Text(command: ICommand): string {
-  if (command.action !== 'QUERY') {
-    throw new ERTranslatorError('UNSUPPORTED_COMMAND_TYPE');
-  }
-
-  const eq = command.payload;
-  const entity = eq.link.entity;
-  const res = [`Покажи все ${entity.name}.`];
-
-  // TODO: не обрабатываются цепочки условий OR, AND
-  if (eq.options?.where?.length) {
-    for (const { contains } of eq.options.where) {
-      if (contains?.length) {
-        for (const { alias, attribute, value } of contains) {
-          if (alias === eq.link.alias) {
-            res.push(`Атрибут ${attribute.name} содержит "${value}".`);
-          } else {
-            const attrLink = entity.attributes[alias];
-            if (attrLink) {
-              res.push(`Атрибут ${attribute.name} атрибута ${attrLink.name} содержит "${value}".`);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (eq.options?.order?.length) {
-    const ordr = eq.options.order[0];
-    res.push(`Отсортируй по ${ordr.attribute.name}${ordr.type === 'DESC' ? ', по убыванию.' : '.'}`);
-  }
-
-  return res.join(' ');
 };
