@@ -1,4 +1,20 @@
-import { XPhrase2Command, IXPhrase2CommandNewContext, IXPhrase2CommandExistingContext } from "./types";
+import { SemCategory } from "gdmn-nlp";
+import { XPhrase2Command, IXPhrase2CommandEQ, IXPhrase2CommandNew } from "./types";
+
+const vpShow2Command: IXPhrase2CommandNew = {
+  phraseTemplateId: 'vpShow',
+  context: 'NEW',
+  actionSelector: [{
+    path: 'H',
+    testValue: 'покажи',
+    action: 'QUERY'
+  }],
+  entityQuery: {
+    entity: {
+      path: 'C/npAllObjects/H'
+    }
+  }
+};
 
 /**
  *
@@ -15,24 +31,25 @@ import { XPhrase2Command, IXPhrase2CommandNewContext, IXPhrase2CommandExistingCo
  *
  * Пример: "[все] организации"
  */
-const vpShow2Command: IXPhrase2CommandNewContext = {
-  phraseTemplateId: 'vpShow',
-  newContext: true,
-  actionSelector: [{
-    path: 'H',
-    testValue: 'покажи',
-    action: 'QUERY'
-  }],
+
+const ppFromPlace2Command: IXPhrase2CommandEQ = {
+  phraseTemplateId: 'ppFromPlace',
+  context: 'EQ',
   entityQuery: {
-    entity: {
-      path: 'C/npAllObjects/H'
-    }
+    where: [
+      {
+        contains: {
+          attrBySem: SemCategory.ObjectLocation,
+          value: 'C/nounGent'
+        }
+      }
+    ]
   }
 };
 
-const vpSortBy2Command: IXPhrase2CommandExistingContext = {
+const vpSortBy2Command: IXPhrase2CommandEQ = {
   phraseTemplateId: 'vpSortBy',
-  newContext: false,
+  context: 'EQ',
   entityQuery: {
     order: {
       attrPath: 'C/ppBy/C/nounDatv/H'
@@ -46,5 +63,7 @@ interface IXTranslators {
 
 export const xTranslators: IXTranslators = {
   vpShow: vpShow2Command,
+  vpShowByPlace: vpShow2Command,
+  ppFromPlace: ppFromPlace2Command,
   vpSortBy: vpSortBy2Command
 };

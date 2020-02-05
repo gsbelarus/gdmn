@@ -241,3 +241,43 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
     phrase: phrase as IXPhrase
   }
 };
+
+export const phraseFind = (inPhrase: IXPhrase, inPath: string): XWordOrToken | IXPhrase | undefined => {
+  const path = inPath.split('/');
+  let phrase = inPhrase;
+  let i = 0;
+
+  while (i < path.length) {
+    if (path[i] === 'H' && (path[i + 1] ?? '0') === '0') {
+      return phrase.headTokens?.[0] ?? phrase.head;
+    }
+
+    if (path[i] === 'C') {
+      const tId = path[i + 1];
+      const foundPhrase = phrase.complements?.find( c => c.phraseTemplateId === tId );
+      if (foundPhrase) {
+        phrase = foundPhrase;
+        i += 2;
+        continue;
+      } else {
+        return undefined;
+      }
+    }
+
+    if (path[i] === 'A') {
+      const tId = path[i + 1];
+      const foundPhrase = phrase.adjunct?.find( a => a.phraseTemplateId === tId );
+      if (foundPhrase) {
+        phrase = foundPhrase;
+        i += 2;
+        continue;
+      } else {
+        return undefined;
+      }
+    }
+
+    throw new Error(`Invalid path ${inPath}.`);
+  }
+
+  throw new Error('Empty path.');
+};

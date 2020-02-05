@@ -120,7 +120,7 @@ export function isIXWord(w: any): w is IXWord {
   return w?.type === 'WORD';
 };
 
-export function isIXToken(w: any): w is IXWord {
+export function isIXToken(w: any): w is IXToken {
   return w?.type === 'TOKEN';
 };
 

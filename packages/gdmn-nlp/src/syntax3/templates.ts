@@ -47,17 +47,9 @@ const nounDatv: IXPhraseTemplate = {
   }
 };
 
-/*
-const idTemplate: IXPhraseTemplate = {
-  id: 'idTemplate',
-  head: {
-    template: [{
-      type: 'ID'
-    }]
-  }
-};
-*/
-
+/**
+ * Из Минска.
+ */
 const ppFromPlace: IXPhraseTemplate = {
   id: 'ppFromPlace',
   head: {

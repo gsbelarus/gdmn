@@ -13,7 +13,8 @@ import {
   nlpIDToken,
   morphAnalyzer,
   isIXToken,
-  nlpQuotedLiteral} from "gdmn-nlp";
+  nlpQuotedLiteral,
+  phraseFind} from "gdmn-nlp";
 import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery} from "gdmn-orm";
 import {ICommand, Action} from "./command";
 import { xTranslators } from "./translators";
@@ -151,56 +152,16 @@ export class ERTranslatorRU3 {
     }
   }
 
-  public find(inPhrase: IXPhrase, inPath: string): XWordOrToken | IXPhrase | undefined {
-    const path = inPath.split('/');
-    let phrase = inPhrase;
-    let i = 0;
-
-    while (i < path.length) {
-      if (path[i] === 'H' && (path[i + 1] ?? '0') === '0') {
-        return phrase.headTokens?.[0] ?? phrase.head;
-      }
-
-      if (path[i] === 'C') {
-        const tId = path[i + 1];
-        const foundPhrase = phrase.complements?.find( c => c.phraseTemplateId === tId );
-        if (foundPhrase) {
-          phrase = foundPhrase;
-          i += 2;
-          continue;
-        } else {
-          return undefined;
-        }
-      }
-
-      if (path[i] === 'A') {
-        const tId = path[i + 1];
-        const foundPhrase = phrase.adjunct?.find( a => a.phraseTemplateId === tId );
-        if (foundPhrase) {
-          phrase = foundPhrase;
-          i += 2;
-          continue;
-        } else {
-          return undefined;
-        }
-      }
-
-      throw new Error(`Invalid path ${inPath}.`);
-    }
-
-    throw new Error('Empty path.');
-  }
-
   public process(phrase: IXPhrase, image?: string) {
     const translator = xTranslators[phrase.phraseTemplateId];
 
     if (translator) {
-      if (translator.newContext) {
+      if (translator.context === 'NEW') {
         let action: Action | undefined = undefined;
 
         for (const selector of translator.actionSelector) {
           if (selector.path) {
-            const v = this.find(phrase, selector.path);
+            const v = phraseFind(phrase, selector.path);
             if (isIXWord(v)) {
               if (v.word.word === selector.testValue) {
                 action = selector.action;
@@ -223,7 +184,7 @@ export class ERTranslatorRU3 {
           entity = this.erModel.entities[translator.entityQuery.entity.entityClass];
         }
         else if (translator.entityQuery.entity.path) {
-          const entityPhrase = this.find(phrase, translator.entityQuery.entity.path);
+          const entityPhrase = phraseFind(phrase, translator.entityQuery.entity.path);
 
           if (isIXWord(entityPhrase) || isIXToken(entityPhrase)) {
             entity = this._findEntity(entityPhrase);
@@ -253,7 +214,7 @@ export class ERTranslatorRU3 {
         const entity = this.command.payload.link.entity;
 
         if (translator.entityQuery.order) {
-          const byFieldPhrase = this.find(phrase, translator.entityQuery.order.attrPath);
+          const byFieldPhrase = phraseFind(phrase, translator.entityQuery.order.attrPath);
 
           if (isIXWord(byFieldPhrase) || isIXToken(byFieldPhrase)) {
             const foundAttr = this._findAttr(entity, byFieldPhrase);

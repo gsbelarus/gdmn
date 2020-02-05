@@ -1,4 +1,5 @@
 import { Action } from "./command";
+import { SemCategory } from "gdmn-nlp";
 
 export type ERTranslatorErrorCode = 'INVALID_PHRASE_STRUCTURE'
   | 'UNKNOWN_PHRASE'
@@ -40,36 +41,50 @@ export class ERTranslatorError extends Error {
 
 */
 
-export interface IXPhrase2CommandBase {
-  phraseTemplateId: string;
-  newContext: true | false;
+interface IXOrder {
+  attrPath: string;
 };
 
-export interface IXPhrase2CommandNewContext extends IXPhrase2CommandBase {
-  newContext: true;
+interface IXWhere {
+  contains?: {
+    attrBySem: SemCategory;
+    value: string;
+  }
+};
+
+interface IXEntity {
+  path?: string;
+  entityClass?: string;
+};
+
+type Context = 'NEW' | 'EQ';
+
+export interface IXPhrase2CommandBase {
+  phraseTemplateId: string;
+  context: Context;
+};
+
+export interface IXPhrase2CommandNew extends IXPhrase2CommandBase {
+  context: 'NEW';
   actionSelector: {
     path?: string;
     testValue?: string;
     action: Action;
   }[],
   entityQuery: {
-    entity: {
-      path?: string;
-      entityClass?: string;
-    },
-    order?: {
-      attrPath: string;
-    }
+    entity: IXEntity,
+    order?: IXOrder,
+    where?: IXWhere[]
   }
 };
 
-export interface IXPhrase2CommandExistingContext extends IXPhrase2CommandBase {
-  newContext: false;
+export interface IXPhrase2CommandEQ extends IXPhrase2CommandBase {
+  context: 'EQ';
   entityQuery: {
-    order?: {
-      attrPath: string;
-    }
+    entity?: IXEntity,
+    order?: IXOrder,
+    where?: IXWhere[]
   }
 };
 
-export type XPhrase2Command = IXPhrase2CommandNewContext | IXPhrase2CommandExistingContext;
+export type XPhrase2Command = IXPhrase2CommandNew | IXPhrase2CommandEQ;
