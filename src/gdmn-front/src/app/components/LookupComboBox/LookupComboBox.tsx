@@ -15,6 +15,7 @@ export interface ILookupComboBoxProps {
   componentRef?: (ref: IComboBox | null) => void;
   styles?: Partial<IComboBoxStyles>;
   caretDownButtonStyles?: IButtonStyles;
+  errorMessage?: string;
 };
 
 type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
@@ -140,7 +141,7 @@ function init(preSelectedOption: IComboBoxOption | undefined): ILookupComboboxSt
 
 export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef, styles, caretDownButtonStyles } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, onChanged, onFocus, componentRef, styles, caretDownButtonStyles, errorMessage } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOption, queryState, text, lookupText, limit, dropDown } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -357,6 +358,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       }
       onRenderLowerContent={onRenderLowerContent}
       onMenuOpen={onMenuOpen}
+      errorMessage={errorMessage}
     />
   );
 };

@@ -12,6 +12,7 @@ export interface IDatepickerProps {
   componentRef?: (ref: ITextField | null) => void;
   styles?: IStyleFunction<ITextFieldStyleProps, ITextFieldStyles> | Partial<ITextFieldStyles>;
   styleIcon?: IButtonStyles;
+  errorMessage?: string;
 }
 
 export interface IDatepickerState {
@@ -160,6 +161,7 @@ export class DatepickerJSX extends React.PureComponent<IDatepickerProps, IDatepi
               }
             }
             styles={this.props.styles!}
+            errorMessage={this.props.errorMessage}
           />
           <IconButton
             iconProps={{ iconName: 'Calendar' }}

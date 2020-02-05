@@ -14,6 +14,7 @@ export interface ISetLookupComboBoxProps {
   componentRef?: (ref: IComboBox | null) => void;
   onFocus?: () => void;
   styles?: Partial<IComboBoxStyles>;
+  errorMessage?: string;
 };
 
 type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
@@ -111,7 +112,7 @@ function init(preSelectedOption: IComboBoxOption[] | undefined): ISetLookupCombo
 
 export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
 
-  const { preSelectedOption, onLookup, name, label, getSessionData, componentRef, onChanged, styles, onFocus } = props;
+  const { preSelectedOption, onLookup, name, label, getSessionData, componentRef, onChanged, styles, onFocus, errorMessage } = props;
   const [state, dispatch] = useReducer(reducer, preSelectedOption, init);
   const { options, selectedOptions, queryState, text, limit } = state;
   const ref = useRef<IComboBox | null>(null);
@@ -279,6 +280,7 @@ export const SetLookupComboBox = (props: ISetLookupComboBoxProps) => {
       onPendingValueChanged={onPendingValueChanged}
       onRenderLowerContent={onRenderLowerContent}
       onMenuOpen={onMenuOpen}
+      errorMessage={errorMessage}
     />
   );
 };

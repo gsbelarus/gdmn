@@ -1,4 +1,4 @@
-import React, { useReducer, useMemo } from "react";
+import React, { useReducer, useMemo, useEffect } from "react";
 import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects,
@@ -98,7 +98,7 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet, setFields?: Objects): 
   };
 };
 
-const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?: Entity, setFields?: Objects): IDesignerState => {
+const getStateFromSetting = (setting?: IDesignerSetting): IDesignerState => {
   if (setting) {
     const selectedObject = setting.objects.find( object => isWindow(object) );
     return {
@@ -106,7 +106,7 @@ const getStateFromSetting = (setting?: IDesignerSetting, rs?:RecordSet, entity?:
       selectedObject
     };
   } else {
-    return getDefaultState(entity, rs, setFields);
+    throw new Error('No setting');
   }
 };
 
@@ -129,7 +129,8 @@ type Action = { type: 'TOGGLE_PREVIEW_MODE' }
   | { type: 'ADD_COLUMN' }
   | { type: 'ADD_ROW' }
   | { type: 'DELETE_COLUMN' }
-  | { type: 'DELETE_ROW' };
+  | { type: 'DELETE_ROW' }
+  | { type: 'SET_STATE', newState:IDesignerState };
 
 function reducer(state: IDesignerState, action: Action): IDesignerState {
 
@@ -523,16 +524,24 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
         selectedObject: objects.find( object => object === state.selectedObject ) // область могла удалиться в процессе удаления колонки
       }
     }
-  }
 
-  return state;
+    case "SET_STATE": {
+      const { newState } = action;
+      return newState;
+    }
+
+    default:
+      return state;
+  }
 };
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
   const { erModel, rs, entity, setting, onSaveSetting, setFields } = props;
-  const [state, designerDispatch] = useReducer(reducer, getStateFromSetting(setting, rs, entity, setFields));
+  const [state, designerDispatch] = useReducer(reducer, setting ? getStateFromSetting(setting) : getDefaultState(entity, rs, setFields));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
+
+  useEffect( () => setting && designerDispatch({ type: 'SET_STATE', newState:  getStateFromSetting(setting) }), [setting]);
 
   const windowStyle = useMemo( (): React.CSSProperties => ({
     display: 'grid',

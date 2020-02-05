@@ -18,7 +18,7 @@ import {
   IEntityQueryResponse,
   prepareDefaultEntityQuery,
   prepareDefaultEntityQuerySetAttr,
-  EnumAttribute,
+  EnumAttribute
 } from "gdmn-orm";
 import { ISessionData } from "../../gdmn/types";
 import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
@@ -32,12 +32,20 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { IDesignerSetting } from '../../designer/Designer.types';
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { Frame } from "../../gdmn/components/Frame";
-import { attr2fd } from "../utils";
+import { attr2fd, validateEntityDataValues, getEntityDataErrorMessage } from "../utils";
+import { NumberField } from "../Entity/EntityDlg/NumberField";
 
 interface ILastEdited {
   fieldName: string;
   value: string | boolean ;
 };
+
+interface IEntityDataError {
+  field: string;
+  message: string;
+};
+
+export type EntityDataErrors = IEntityDataError[];
 
 /**
  * Поскольку в RecordSet у нас не хранятся данные множеств мы должны
@@ -112,6 +120,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
+  const [valueErrors, setValueErrors] = useState<EntityDataErrors>([]);
+
   const addViewTab = (recordSet: RecordSet | undefined) => {
     let lName = entityName;
 
@@ -140,6 +150,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     if (rs && lastEdited.current) {
       const { fieldName, value } = lastEdited.current;
       const def = rs.getFieldDef(fieldName);
+      let tempRs = rs;
       // у нас контролы для редактирования полей сейчас
       // это либо текстовые поля, либо чекбоксы
       // поэтому здесь мы и храним в value или строку
@@ -148,38 +159,34 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       // как Date, но это пока не сделано
       if (typeof value === "string") {
         if (value === '' && def.dataType !== TFieldType.String && !def.required) {
-          dispatch(rsActions.setRecordSet(rs.setNull(fieldName)));
+          tempRs = tempRs.setNull(fieldName);
         } else {
-          dispatch(rsActions.setRecordSet(rs.setString(fieldName, value)));
+          tempRs = tempRs.setString(fieldName, value);
         }
       } else {
-        dispatch(rsActions.setRecordSet(rs.setBoolean(fieldName, value)));
+        tempRs = tempRs.setBoolean(fieldName, value);
       }
+      dispatch(rsActions.setRecordSet(tempRs));
       lastEdited.current = undefined;
     }
   };
 
   const postChanges = useCallback( (close: boolean) => {
     if (rs && changed && entity) {
-      let tempRs = rs;
 
-      if (lastEdited.current) {
-        const { fieldName, value } = lastEdited.current;
-        const def = tempRs.getFieldDef(fieldName);
-        if (typeof value === "string") {
-          if (value === '' && def.dataType !== TFieldType.String && !def.required) {
-            tempRs = tempRs.setNull(fieldName);
-          } else {
-            tempRs = tempRs.setString(fieldName, value);
-          }
-        } else {
-          tempRs = tempRs.setBoolean(fieldName, value);
-        }
-        lastEdited.current = undefined;
+      applyLastEdited();
+
+      //Если есть хотя бы одна ошибка, выходим из функции post без сохранения записи
+      const newErrors = validateEntityDataValues(rs, entity, setComboBoxData, valueErrors);
+      setValueErrors(newErrors);
+      if (newErrors.length) {
+        return;
       }
 
+      let tempRs = rs;
       const fields: IEntityUpdateFieldInspector[] = Object.keys(changedFields.current).map( fieldName => {
         const attr = entity.attributes[fieldName] as EntityAttribute;
+
         if (attr instanceof SetAttribute) {
           return {
             attribute: fieldName,
@@ -190,7 +197,6 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
         }
 
         const eqfa = tempRs.getFieldDef(fieldName).eqfa!;
-
         if (eqfa.linkAlias === rs.eq!.link.alias) {
           return {
             attribute: eqfa.attribute,
@@ -362,12 +368,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   }, []);
 
   useEffect( () => {
-
-    if (needFocus.current) {
-      needFocus.current.focus();
-      needFocus.current = undefined;
+   if (needFocus.current) {
+     needFocus.current.focus();
+     needFocus.current = undefined;
     }
-  }, [rs]);
+  }, [setting]);
 
   const mapData = (result: IEntityQueryResponse, fieldDefs: IFieldDef[]): IDataRow => Object.entries(result.aliases).reduce(
     (p, [resultAlias, eqrfa]) => {
@@ -382,6 +387,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   );
 
   useEffect( () => {
+
     if (!rs && entity) {
       const f = async () => {
         addViewTab(undefined);
@@ -462,17 +468,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 if (result) {
                   const attrSet = entity.attributes[attr.name] as EntityAttribute;
                   const linkEntity = attrSet.entities[0];
-                  /*const scalarAttrs = Object.values(linkEntity.attributes)
-                    .filter((attr) => attr instanceof ScalarAttribute && attr.type !== "Blob");
-
-                  const presentField = scalarAttrs.find((attr) => attr.name === "NAME")
-                    || scalarAttrs.find((attr) => attr.name === "USR$NAME")
-                    || scalarAttrs.find((attr) => attr.name === "ALIAS")
-                    || scalarAttrs.find((attr) => attr.type === "String")
-                    || scalarAttrs.find((attr) => attr.name === "ID")
-                    || scalarAttrs.find((attr) => attr.name === "INHERITEDKEY");*/
                   const presentField = linkEntity.presentAttribute();
-
                   const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name && data.attribute === "ID")![0];
                   const nameAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === attr.name
                     && (data.attribute === presentField!.name))![0];
@@ -733,7 +729,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 });
                 setChanged(true);
                 changedFields.current[fieldName] = true;
-              }
+              };
+              setValueErrors(valueErrors.filter(e => e.field !== fieldName));
             }
           }
           onLookup={
@@ -790,6 +787,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             }
           }
           styles={props.styles}
+          errorMessage={getEntityDataErrorMessage(fieldName, valueErrors)}
         />
       )
     }
@@ -801,8 +799,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     }
 
     //Перечисление
-    const attrEnum = entity.attributes[fieldName] as EnumAttribute;
-    if (attrEnum && attrEnum.type === 'Enum') {
+    const attrEnum = entity.attributes[fd.eqfa.attribute] as EnumAttribute;
+    if (attrEnum instanceof EnumAttribute) {
       const caption = attrEnum.values.find(e => e.value === rs.getString(fd.fieldName));
       return (
         <ComboBox
@@ -832,6 +830,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             changedFields.current[fd.fieldName] = true;
             setChanged(true);
             applyLastEdited();
+            setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
           }
         }
         onFocus={
@@ -842,6 +841,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             }
           }
         }
+        errorMessage={getEntityDataErrorMessage(fd.fieldName, valueErrors)}
         />
       )
     }
@@ -878,26 +878,15 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               onChanged={
                 (option: IComboBoxOption | undefined) => {
                   if (!rs.isNull(refIdFieldAlias) || option) {
-                    let changedRs = rs;
-                    if (option) {
-                      changedRs = changedRs.setValue(refIdFieldAlias, option.key);
-                      if (refNameFieldAlias) {
-                        changedRs = changedRs.setValue(refNameFieldAlias, option.text);
-                      }
-                    } else {
-                      changedRs = changedRs.setNull(refIdFieldAlias);
-                      if (refNameFieldAlias) {
-                        changedRs = changedRs.setNull(refNameFieldAlias);
-                      }
-                    }
-                    dispatch(rsActions.setRecordSet(changedRs));
+                    //При изменении поля-ссылки не меняется поле для отображения!
                     lastEdited.current = {
-                      fieldName: fd.fieldName,
+                      fieldName: refIdFieldAlias,
                       value: option ? option.key.toString() : ''
                     };
                     setChanged(true);
                     changedFields.current[refIdFieldAlias] = true;
-                  }
+                  };
+                  setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
                 }
               }
               onFocus={
@@ -952,6 +941,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 }
               }
               styles={props.styles}
+              errorMessage={getEntityDataErrorMessage(fd.fieldName, valueErrors)}
             />
           );
         } else {
@@ -994,7 +984,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 };
                 changedFields.current[fd.fieldName] = true;
                 setChanged(true);
-              }
+              };
+              setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
             }
           }
           onFocus={
@@ -1013,6 +1004,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             }
           }
           styles={props.styles}
+          errorMessage={getEntityDataErrorMessage(fd.fieldName, valueErrors)}
       />);
     } else if (fd.dataType === TFieldType.Boolean) {
       const subComponentStyle = {
@@ -1034,7 +1026,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               };
               changedFields.current[fd.fieldName] = true;
               setChanged(true);
-            }
+            };
           }}
           onFocus={
             () => {
@@ -1054,7 +1046,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           styles={subComponentStyle}
         />
       )
-    } else {
+    } else if (fd.dataType === TFieldType.String) {
       //Текстовое
       return (
         <TextField
@@ -1075,7 +1067,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 };
                 changedFields.current[fd.fieldName] = true;
                 setChanged(true);
-              }
+              };
+              setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
             }
           }
           onFocus={
@@ -1094,6 +1087,50 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             }
           }
           styles={props.styles}
+          errorMessage={getEntityDataErrorMessage(fd.fieldName, valueErrors)}
+        />
+      )
+    } else {
+      //Числовое
+      return (
+        <NumberField
+          key={fd.fieldName}
+          label={label}
+          onlyInteger={fd.dataType === TFieldType.Integer}
+          value={
+            lastEdited.current && lastEdited.current.fieldName === fd.fieldName && typeof lastEdited.current.value === 'number'
+            ? lastEdited.current.value
+            : rs.getValue(fd.fieldName) === null ? undefined : rs.getValue(fd.fieldName) as number
+         }
+          errorMessage={getEntityDataErrorMessage(fd.fieldName, valueErrors)}
+          styles={props.styles}
+          onChange={ newValue => {
+            if (newValue !== undefined) {
+              lastEdited.current = {
+                fieldName: fd.fieldName,
+                value: newValue.toString()
+              };
+              changedFields.current[fd.fieldName] = true;
+              setChanged(true);
+            };
+            setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
+          }}
+          onFocus={
+            () => {
+              lastFocused.current = fd.fieldName;
+              if (lastEdited.current && lastEdited.current.fieldName !== fd.fieldName) {
+                applyLastEdited();
+              }
+            }
+          }
+          componentRef={
+            ref => {
+              if (ref && lastFocused.current === fd.fieldName) {
+                needFocus.current = ref;
+              }
+            }
+          }
+          onInvalidValue={() => setValueErrors([...valueErrors.filter(e => e.field !== fd.fieldName), {field: fd.fieldName, message: 'Invalid value'}])}
         />
       )
     }

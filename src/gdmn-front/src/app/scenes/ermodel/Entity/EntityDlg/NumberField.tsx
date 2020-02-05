@@ -1,4 +1,4 @@
-import { TextField } from "office-ui-fabric-react";
+import { TextField, ITextFieldStyles, ITextField } from "office-ui-fabric-react";
 import React, { useState } from "react";
 
 interface INumberFieldProps {
@@ -12,10 +12,13 @@ interface INumberFieldProps {
   disabled?: boolean;
   onChange: (newValue: number | undefined) => void;
   onInvalidValue: () => void;
+  styles?: Partial<ITextFieldStyles>;
+  onFocus?: () => void;
+  componentRef?: (ref: ITextField | null) => void;
 };
 
 export const NumberField = ({ label, value, errorMessage, width,
-    onChange, onlyInteger, noNegative, onInvalidValue, readOnly, disabled }: INumberFieldProps) => {
+    onChange, onlyInteger, noNegative, onInvalidValue, readOnly, disabled, styles, onFocus, componentRef}: INumberFieldProps) => {
 
   const [text, setText] = useState( value === undefined ? '' : value.toString() );
 
@@ -26,7 +29,9 @@ export const NumberField = ({ label, value, errorMessage, width,
       readOnly={readOnly}
       disabled={disabled}
       errorMessage={errorMessage}
-      styles={ width ? { root: { width } } : undefined }
+      styles={ styles ? styles :  width ? { root: { width } } : undefined }
+      componentRef={componentRef}
+      onFocus={onFocus}
       onChange={
         (_, newValue) => {
           if (newValue !== undefined) {

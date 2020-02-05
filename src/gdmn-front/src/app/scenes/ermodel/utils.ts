@@ -1,12 +1,14 @@
 import { ThunkDispatch } from "redux-thunk";
 import { IState } from "@src/app/store/reducer";
-import { RSAction, rsActions, IFieldDef, TFieldType } from "gdmn-recordset";
+import { RSAction, rsActions, IFieldDef, TFieldType, RecordSet } from "gdmn-recordset";
 import { GridAction, cancelSortDialog, TApplySortDialogEvent, applySortDialog,
   TSelectRowEvent, TSelectAllRowsEvent,
   TSetCursorPosEvent, setCursorCol, TSortEvent, TToggleGroupEvent, TOnFilterEvent, TCancelSortDialogEvent } from "gdmn-grid";
 import {IComboBoxOption} from "office-ui-fabric-react";
-import { EntityQuery } from "gdmn-orm";
+import { EntityQuery, Entity, DateAttribute, StringAttribute, NumberAttribute, isNumericAttribute } from "gdmn-orm";
 import { getLName } from "gdmn-internals";
+import { EntityDataErrors } from "./EntityDataDlg/EntityDataDlg";
+import equal from "fast-deep-equal";
 
 export interface ILastEdited {
   fieldName: string;
@@ -183,3 +185,137 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
     eqfa: { linkAlias, attribute }
   };
 };
+
+/**
+   * Проверка всех полей из рекордсета на валидность
+   */
+  export const validateEntityDataValues = (rs: RecordSet, entity: Entity, setComboBoxData: ISetComboBoxData, prevError: EntityDataErrors): EntityDataErrors => {
+    if (rs && entity) {
+      const errors = rs.fieldDefs.reduce(
+        (p, fd) => {
+          if (fd?.eqfa) {
+            const attr = entity.attributes[fd.eqfa.linkAlias !== rs.eq!.link.alias ? fd.eqfa.attribute === 'ID' ? fd.eqfa.linkAlias : '' : fd.eqfa.attribute];
+            if (attr) {
+              const value = rs.getValue(fd.fieldName);
+              //Если поле не заполнено, но оно обязательно для заполнения
+              if (value === null && attr.required) {
+                console.log(attr);
+                p.push({
+                  field: fd.fieldName,
+                  message: `Value can't be empty`
+                });
+              }
+              //Если поле заполнено, проверим условия
+              if (value !== null) {
+                switch (attr.type) {
+                  case 'Date':
+                  case 'Time':
+                  case 'TimeStamp': {
+                    const s = attr as DateAttribute;
+                    const value = rs.getValue(fd.fieldName) as Date;
+                    if (s.minValue !== undefined && value < s.minValue) {
+                      p.push({
+                        field: fd.fieldName,
+                        message: `Value < min value`
+                      });
+                    } else if (s.maxValue && value > s.maxValue) {
+                      p.push({
+                        field: fd.fieldName,
+                        message: `Value > max value`
+                      });
+                    }
+                    break;
+                  }
+
+                  case 'String': {
+                    const s = attr as StringAttribute;
+                    const value = rs.getString(fd.fieldName);
+                    if (s.minLength !== undefined  && s.minLength > value.length) {
+                      p.push({
+                        field: fd.fieldName,
+                        message: `Length of value < minLength (${s.minLength})`
+                      });
+                    }
+                    if (s.maxLength !== undefined && s.maxLength < value.length) {
+                      p.push({
+                        field: fd.fieldName,
+                        message: `Length of value > maxLength (${s.maxLength})`
+                      });
+                    }
+                    break;
+                  }
+
+                  case 'Integer':
+                  case 'Float':
+                  case 'Numeric': {
+                    const s = attr as NumberAttribute<number>;
+                    const value = rs.getValue(fd.fieldName) as number;
+                    if (s.minValue !== undefined &&  value < s.minValue) {
+                      p.push({
+                        field: fd.fieldName,
+                        message: `Value < min value (${s.minValue})`
+                      });
+                    }
+
+                    if (s.maxValue !== undefined && value > s.maxValue) {
+                      p.push({
+                        field: fd.fieldName,
+                        message: `Value > max value (${s.maxValue})`
+                      });
+                    }
+
+                    if (isNumericAttribute(attr)) {
+                      const num = value.toString().split(".");
+                      const scale = num[1] ? num[1].length : 0;
+                      if (scale > attr.scale) {
+                        p.push({
+                          field: fd.fieldName,
+                          message: `Scale of value > ${attr.scale}`
+                        });
+                      }
+                      if (num[0].length + scale > attr.precision) {
+                        p.push({
+                          field: fd.fieldName,
+                          message: `Precision of value > ${attr.precision}`
+                        });
+                      }
+                    }
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          return p;
+        }, [] as EntityDataErrors
+    );
+    //Добавим ошибки по полям-множества
+    const allErrors = Object.keys(setComboBoxData).reduce(
+      (p, fd) => {
+        const attr = entity.attributes[fd];
+        if (attr) {
+          const value = setComboBoxData[fd];
+          //Если поле не заполнено, но оно обязательно для заполнения
+          if (!value.length && attr.required) {
+            p.push({
+              field: fd,
+              message: `Value can't be empty`
+            });
+          }
+        }
+
+        return p;
+      }, errors as EntityDataErrors)
+
+      return equal(allErrors, prevError) ? prevError : allErrors;
+    }
+    return prevError;
+  };
+
+  export const getEntityDataErrorMessage = (field: string, entityDataErrors?: EntityDataErrors) => {
+    if (entityDataErrors) {
+      const el = entityDataErrors.find( l => l.field === field );
+      return el && el.message;
+    }
+    return undefined;
+  };
