@@ -15,8 +15,9 @@ import {
   isIXPhrase,
   nlpQuotedLiteral,
   phraseFind,
-  RusCase} from "gdmn-nlp";
-import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField} from "gdmn-orm";
+  RusCase,
+  XWordOrToken} from "gdmn-nlp";
+import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField, IEntityQueryWhere} from "gdmn-orm";
 import {ICommand, Action} from "./command";
 import { xTranslators } from "./translators";
 import { ERTranslatorError, XPhrase2Command } from "./types";
@@ -253,35 +254,75 @@ export class ERTranslatorRU3 {
 
       if (translator.entityQuery.where?.length) {
         if (translator.entityQuery.where[0].contains) {
-          const noun = ERTranslatorRU3.getNoun(phrase, translator.entityQuery.where[0].contains.value);
-          const value = noun.lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
           const attr = entity.attributesBySemCategory(translator.entityQuery.where[0].contains.attrBySem)[0];
           const fields = eq.link.fields;
 
-          if (attr instanceof EntityAttribute) {
-            const foundLinkField = fields.find( f => f.attribute === attr );
+          const getCondition = (v: XWordOrToken): IEntityQueryWhere => {
+            let value: string;
 
-            if (foundLinkField && foundLinkField.links) {
-              eq.options!.addWhereCondition({
-                contains: [{
-                  alias: foundLinkField.links[0].alias,
-                  attribute: foundLinkField.links[0].entity.presentAttribute(),
-                  value
-                }]
-              });
+            if (isIXWord(v)) {
+              const noun = v.word as RusNoun;
+              value = noun.lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
             } else {
-              const linkEntity = attr.entities[0];
-              const linkAlias = "alias2";
+              value = v.token.image;
+            }
 
-              fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+            if (attr instanceof EntityAttribute) {
+              const foundLinkField = fields.find( f => f.attribute === attr );
 
-              eq.options!.addWhereCondition({
+              if (foundLinkField && foundLinkField.links) {
+                return {
+                  contains: [{
+                    alias: foundLinkField.links[0].alias,
+                    attribute: foundLinkField.links[0].entity.presentAttribute(),
+                    value
+                  }]
+                };
+              } else {
+                const linkEntity = attr.entities[0];
+                const linkAlias = "alias2";
+
+                fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
+
+                return {
+                  contains: [{
+                    alias: linkAlias,
+                    attribute: linkEntity.presentAttribute(),
+                    value
+                  }]
+                };
+              }
+            } else {
+              return {
                 contains: [{
-                  alias: linkAlias,
-                  attribute: linkEntity.presentAttribute(),
+                  alias: eq.link.alias,
+                  attribute: attr,
                   value
                 }]
-              });
+              };
+            }
+
+            throw new Error('Only links');
+          }
+
+          const value = phraseFind(phrase, translator.entityQuery.where[0].contains.value);
+
+          if ((isIXWord(value) && value.word instanceof RusNoun) || isIXToken(value)) {
+            const conditions: IEntityQueryWhere[] = [];
+            conditions.push(getCondition(value));
+
+            if (value.uniform) {
+              for (const u of value.uniform) {
+                if ((isIXWord(u) && u.word instanceof RusNoun) || (isIXToken(u) && u.token.image !== ',')) {
+                  conditions.push(getCondition(u));
+                }
+              }
+            }
+
+            if (conditions.length === 1) {
+              eq.options!.addWhereCondition(conditions[0]);
+            } else {
+              eq.options!.addWhereCondition({ or: conditions });
             }
           }
         }

@@ -168,17 +168,17 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
 
       if (m) {
         if (m.type === 'WORD' && token.uniformPOS && !template.head.noUniform) {
-          const words: XWordOrToken[] = [m];
+          m.uniform = [];
 
           token.uniformPOS.forEach( u => {
             if (u.words) {
               const matchedUniform = u.words.find( mu => mu.getSignature() === m.word.getSignature() );
 
               if (matchedUniform) {
-                words.push({ type: 'WORD', word: matchedUniform });
+                m.uniform!.push({ type: 'WORD', word: matchedUniform });
               }
               else if (u.words[0] instanceof RusConjunction) {
-                words.push({ type: 'WORD', word: u.words[0] });
+                m.uniform!.push({ type: 'WORD', word: u.words[0] });
               }
               else {
                 return {
@@ -188,15 +188,13 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
               }
             } else {
               if (u.tokenType !== nlpWhiteSpace && u.tokenType !== nlpLineBreak) {
-                words.push({ type: 'TOKEN', token: u });
+                m.uniform!.push({ type: 'TOKEN', token: u });
               }
             }
           });
-
-          phrase.headTokens = words;
-        } else {
-          phrase.headTokens = [m];
         }
+
+        phrase.headTokens = [m];
 
         restTokens = restTokens.slice(1);
         break;

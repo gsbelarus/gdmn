@@ -89,11 +89,8 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].contains![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].contains![0].value).toEqual("минск");
-
-    console.log(JSON.stringify(translator.command.payload.inspect(), undefined, 2));
   });
 
-  /*
   it("phrase5", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
@@ -125,6 +122,7 @@ describe("agent3", () => {
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].or![1].contains![0].value).toEqual("пинск");
   });
+  /*
 
   it("phrase6", () => {
     const company = erModel.entities.TgdcCompany;

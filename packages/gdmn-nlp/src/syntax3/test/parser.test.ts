@@ -67,7 +67,7 @@ test('nlpParser3', () => {
   expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'из')).toEqual(true);
   expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'минска')).toEqual(true);
 
-  tokens = f('покажи все TgdcCompany из минска и пинска');
+  tokens = f('покажи все TgdcCompany из минска или пинска');
   expect(tokens.length).toEqual(1);
 
   res = xParse(tokens[0], xTemplates.vpShow);
@@ -82,8 +82,26 @@ test('nlpParser3', () => {
   expect(testToken(res.phrase?.complements?.[0]?.headTokens?.[0], 'TgdcCompany')).toEqual(true);
   expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'из')).toEqual(true);
   expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'минска')).toEqual(true);
-  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[1], 'и')).toEqual(true);
-  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[2], 'пинска')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0], 'или')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'пинска')).toEqual(true);
+
+  tokens = f('покажи все TgdcCompany из минска, пинска');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpShow);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toBeGreaterThan(0);
+
+  res = xParse(tokens[0], xTemplates.vpShowByPlace);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'покажи')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.specifier?.headTokens?.[0], 'все')).toEqual(true);
+  expect(testToken(res.phrase?.complements?.[0]?.headTokens?.[0], 'TgdcCompany')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'из')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'минска')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0]?.token?.image).toEqual(',');
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'пинска')).toEqual(true);
 
   tokens = f('покажи все TgdcCompany из 2');
   expect(tokens.length).toEqual(1);
