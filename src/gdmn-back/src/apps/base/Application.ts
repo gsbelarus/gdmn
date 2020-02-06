@@ -538,8 +538,23 @@ export class Application extends ADatabase {
             callback: async ({erBuilder, eBuilder}) => {
               const entity = this.erModel.entity(entityData.name);
               const attribute = EntityUtils.createAttribute(attrData, this.erModel, undefined, entity);
+              const length = entity.adapter?.relation.length ?? 0;
+              const tablename =  entity.adapter?.relation[length-1]?.relationName ?? entity.name;
+              await AConnection.executeQueryResultSet({
+                connection,
+                transaction: connection.readTransaction,
+                sql: `
+                  SELECT FIRST 1 * FROM ${tablename}
+                `,
+                callback: async (resultSet) => {
+                  await resultSet.next();
+                  const result = resultSet.getAll()[0];
+                  if (result && attribute.required)
+                    throw new Error("Entity has null values for not null attributes");
+                  await erBuilder.eBuilder.createAttribute(entity, attribute);
+                }
+              }); 
               
-              await erBuilder.eBuilder.createAttribute(entity, attribute);
             }
           })
         }));
