@@ -296,6 +296,14 @@ describe("agent3", () => {
     expect(translator.command.payload).toBeDefined();
     expect(translator.command.payload.link.entity).toEqual(company);
     expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+
+    translator = translator.processText("по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
   });
 
   /*

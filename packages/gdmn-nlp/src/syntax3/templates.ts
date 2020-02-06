@@ -80,6 +80,40 @@ const ppBy: IXPhraseTemplate = {
   ]
 };
 
+const nounSortOrder: IXPhraseTemplate = {
+  id: 'nounSortOrder',
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        image: 'возрастанию'
+      },
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        image: 'убыванию'
+      },
+    ]
+  }
+};
+
+const ppSortOrder: IXPhraseTemplate = {
+  id: 'ppSortOrder',
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'PREP',
+      image: 'по'
+    }]
+  },
+  complements:[
+    {
+      template: nounSortOrder
+    }
+  ]
+};
+
 const npAllObjects: IXPhraseTemplate = {
   id: 'npAllObjects',
   label: 'Фраза с существительным вида "Все организации"',
@@ -175,5 +209,6 @@ const vpSortBy: IXPhraseTemplate = {
 export const xTemplates = {
   vpShow,
   vpShowByPlace,
-  vpSortBy
+  vpSortBy,
+  ppSortOrder
 };

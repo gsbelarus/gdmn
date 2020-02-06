@@ -172,7 +172,13 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
 
           token.uniformPOS.forEach( u => {
             if (u.words) {
-              const matchedUniform = u.words.find( mu => mu.getSignature() === m.word.getSignature() );
+              const matchedUniform = u.words.find( mu => {
+                if (m.word instanceof RusNoun && mu instanceof RusNoun) {
+                  return mu.grammCase === m.word.grammCase && mu.singular === m.word.singular;
+                } else {
+                  return mu.getSignature() === m.word.getSignature()
+                }
+               } );
 
               if (matchedUniform) {
                 m.uniform!.push({ type: 'WORD', word: matchedUniform });

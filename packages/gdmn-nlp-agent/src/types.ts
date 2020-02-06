@@ -42,7 +42,8 @@ export class ERTranslatorError extends Error {
 */
 
 interface IXOrder {
-  attrPath: string;
+  attrPath?: string;
+  orderValue?: string;
 };
 
 interface IXAttrValue {
@@ -59,7 +60,7 @@ interface IXEntity {
   entityClass?: string;
 };
 
-type Context = 'NEW' | 'EQ';
+type Context = 'NEW' | 'EQ' | 'EQ/ORDER';
 
 export interface IXPhrase2CommandBase {
   phraseTemplateId: string;
@@ -89,4 +90,11 @@ export interface IXPhrase2CommandEQ extends IXPhrase2CommandBase {
   }
 };
 
-export type XPhrase2Command = IXPhrase2CommandNew | IXPhrase2CommandEQ;
+export interface IXPhrase2CommandEQOrder extends IXPhrase2CommandBase {
+  context: 'EQ/ORDER';
+  entityQuery: {
+    order?: IXOrder
+  }
+};
+
+export type XPhrase2Command = IXPhrase2CommandNew | IXPhrase2CommandEQ | IXPhrase2CommandEQOrder;

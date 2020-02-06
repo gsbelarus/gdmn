@@ -252,7 +252,7 @@ export class ERTranslatorRU3 {
       const eq = this.command.payload.duplicate(this.erModel);
       const entity = eq.link.entity;
 
-      if (translator.entityQuery.where?.length) {
+      if (translator.context === 'EQ' && translator.entityQuery.where?.length) {
         if (translator.entityQuery.where[0].contains) {
           const attr = entity.attributesBySemCategory(translator.entityQuery.where[0].contains.attrBySem)[0];
           const fields = eq.link.fields;
@@ -329,20 +329,36 @@ export class ERTranslatorRU3 {
       }
 
       if (translator.entityQuery.order) {
-        const byFieldPhrase = phraseFind(phrase, translator.entityQuery.order.attrPath);
+        if (translator.entityQuery.order.attrPath) {
+          const byFieldPhrase = phraseFind(phrase, translator.entityQuery.order.attrPath);
 
-        if (isIXWord(byFieldPhrase) || isIXToken(byFieldPhrase)) {
-          const foundAttr = this._findAttr(entity, byFieldPhrase);
+          if (isIXWord(byFieldPhrase) || isIXToken(byFieldPhrase)) {
+            const foundAttr = this._findAttr(entity, byFieldPhrase);
 
-          if (foundAttr) {
-            eq.options!.addOrder({
-              alias: eq.link.alias,
-              attribute: foundAttr,
-              type: 'ASC'
-            }, true);
-          } else {
-            throw new ERTranslatorError('UNKNOWN_ATTR');
+            if (foundAttr) {
+              eq.options!.addOrder({
+                alias: eq.link.alias,
+                attribute: foundAttr,
+                type: 'ASC'
+              }, true);
+            } else {
+              throw new ERTranslatorError('UNKNOWN_ATTR');
+            }
           }
+        }
+        else if (translator.entityQuery.order.orderValue) {
+          const orderValuePhrase = phraseFind(phrase, translator.entityQuery.order.orderValue);
+
+          if (isIXWord(orderValuePhrase)) {
+            if (!eq.options!.order) {
+              throw new ERTranslatorError('NO_CONTEXT');
+            }
+
+            eq.options!.order = eq.options!.order.map( ordr => ({ ...ordr, type: orderValuePhrase.word.lexeme.stem === 'возрастан' ? 'ASC' : 'DESC' }) );
+          }
+        }
+        else {
+          throw new ERTranslatorError('UNSUPPORTED_COMMAND_TYPE');
         }
       }
 

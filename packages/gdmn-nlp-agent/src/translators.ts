@@ -1,5 +1,5 @@
 import { SemCategory } from "gdmn-nlp";
-import { XPhrase2Command, IXPhrase2CommandEQ, IXPhrase2CommandNew } from "./types";
+import { XPhrase2Command, IXPhrase2CommandEQ, IXPhrase2CommandNew, IXPhrase2CommandEQOrder } from "./types";
 
 const vpShow2Command: IXPhrase2CommandNew = {
   phraseTemplateId: 'vpShow',
@@ -67,6 +67,16 @@ const vpSortBy2Command: IXPhrase2CommandEQ = {
   }
 };
 
+const ppSortOrder2Command: IXPhrase2CommandEQOrder = {
+  phraseTemplateId: 'ppSortOrder',
+  context: 'EQ/ORDER',
+  entityQuery: {
+    order: {
+      orderValue: 'C/nounSortOrder/H'
+    }
+  }
+};
+
 interface IXTranslators {
   [phraseTemplateId: string]: XPhrase2Command;
 };
@@ -75,5 +85,6 @@ export const xTranslators: IXTranslators = {
   vpShow: vpShow2Command,
   vpShowByPlace: vpShowByPlace2Command,
   ppFromPlace: ppFromPlace2Command,
-  vpSortBy: vpSortBy2Command
+  vpSortBy: vpSortBy2Command,
+  ppSortOrder: ppSortOrder2Command
 };

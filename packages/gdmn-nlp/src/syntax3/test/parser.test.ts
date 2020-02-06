@@ -111,4 +111,18 @@ test('nlpParser3', () => {
   expect(res.errorStack.length).toEqual(4);
 
   t('сортируй по названию', xTemplates.vpSortBy, 'C/ppBy/C/nounDatv/H', 'названию');
+
+  tokens = f('сортируй по названию, адресу');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'сортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'названию')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0]?.token?.image).toEqual(',');
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'адресу')).toEqual(true);
+
+  t('по убыванию', xTemplates.ppSortOrder, 'C/nounSortOrder/H', 'убыванию');
 });
