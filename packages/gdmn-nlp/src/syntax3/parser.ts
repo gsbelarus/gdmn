@@ -1,5 +1,6 @@
 import { XPhraseElement, XRusWordTemplate, IXPhraseTemplate, IXPhrase, XWordOrToken, isIXPhraseTemplate, isIXInheritedPhraseTemplate, XPhraseTemplate } from "./types";
-import { INLPToken, nlpCyrillicWord, AnyWord, RusNoun, RusPreposition, RusAdjective, RusVerb, nlpIDToken, nlpQuotedLiteral, nlpWhiteSpace, nlpLineBreak, RusConjunction, nlpPeriod } from "..";
+import { INLPToken, nlpCyrillicWord, AnyWord, RusNoun, RusPreposition, RusAdjective, RusVerb, nlpIDToken, nlpQuotedLiteral, nlpWhiteSpace, nlpLineBreak, RusConjunction } from "..";
+import { nlpComma } from "../syntax2/tokenizer";
 
 const match = (token: INLPToken, element: XPhraseElement): XWordOrToken | undefined => {
   if (isIXPhraseTemplate(element) || isIXInheritedPhraseTemplate(element)) {
@@ -98,7 +99,7 @@ export const mergeTemplates = (template: XPhraseTemplate): IXPhraseTemplate => {
   }
 };
 
-export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XParseResult => {
+export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipComma?: boolean): XParseResult => {
 
   const template = mergeTemplates(inTemplate);
 
@@ -108,7 +109,7 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
   };
 
   if (template.specifier) {
-    const r = xParse(restTokens, template.specifier.template);
+    const r = xParse(restTokens, template.specifier.template, skipComma);
     if (r.type === 'SUCCESS') {
       restTokens = r.restTokens;
       phrase.specifier = r.phrase;
@@ -128,6 +129,9 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
     let token = restTokens[tokenIdx];
 
     if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
+      tokenIdx++;
+    }
+    else if (token.tokenType === nlpComma && skipComma) {
       tokenIdx++;
     } else {
       break;
@@ -167,37 +171,44 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
       const m = match(token, element);
 
       if (m) {
-        if (m.type === 'WORD' && token.uniformPOS && !template.head.noUniform) {
+        if (token.uniformPOS && !template.head.noUniform) {
           m.uniform = [];
+          if (m.type === 'WORD') {
+            token.uniformPOS.forEach( u => {
+              if (u.words) {
+                const matchedUniform = u.words.find( mu => {
+                  if (m.word instanceof RusNoun && mu instanceof RusNoun) {
+                    return mu.grammCase === m.word.grammCase && mu.singular === m.word.singular;
+                  } else {
+                    return mu.getSignature() === m.word.getSignature()
+                  }
+                } );
 
-          token.uniformPOS.forEach( u => {
-            if (u.words) {
-              const matchedUniform = u.words.find( mu => {
-                if (m.word instanceof RusNoun && mu instanceof RusNoun) {
-                  return mu.grammCase === m.word.grammCase && mu.singular === m.word.singular;
-                } else {
-                  return mu.getSignature() === m.word.getSignature()
+                if (matchedUniform) {
+                  m.uniform!.push({ type: 'WORD', word: matchedUniform });
                 }
-               } );
-
-              if (matchedUniform) {
-                m.uniform!.push({ type: 'WORD', word: matchedUniform });
+                else if (u.words[0] instanceof RusConjunction) {
+                  m.uniform!.push({ type: 'WORD', word: u.words[0] });
+                }
+                else {
+                  return {
+                    restTokens,
+                    error: `Invaid token ${u}`
+                  };
+                }
+              } else {
+                if (u.tokenType !== nlpWhiteSpace && u.tokenType !== nlpLineBreak) {
+                  m.uniform!.push({ type: 'TOKEN', token: u });
+                }
               }
-              else if (u.words[0] instanceof RusConjunction) {
-                m.uniform!.push({ type: 'WORD', word: u.words[0] });
-              }
-              else {
-                return {
-                  restTokens,
-                  error: `Invaid token ${u}`
-                };
-              }
-            } else {
+            });
+          } else {
+            token.uniformPOS.forEach( u => {
               if (u.tokenType !== nlpWhiteSpace && u.tokenType !== nlpLineBreak) {
                 m.uniform!.push({ type: 'TOKEN', token: u });
               }
-            }
-          });
+            });
+          }
         }
 
         phrase.headTokens = [m];
@@ -216,26 +227,41 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate): XPar
     }
   }
 
-  if (template.complements) {
+  if (template.complements?.length ) {
     phrase.complements = [];
 
-    for (const complement of template.complements) {
-      const r = xParse(restTokens, complement.template);
-      if (r.type === 'SUCCESS') {
-        restTokens = r.restTokens;
-        phrase.complements.push(r.phrase);
-      }
-      else if (!complement.optional) {
-        return {
-          type: 'ERROR',
-          restTokens,
-          errorStack: [{ phraseTemplateId: template.id, error: `Missed complement ${complement.template.id}.` }, ...r.errorStack]
+    while (restTokens.length) {
+      let complementFound = false;
+
+      for (const complement of template.complements) {
+        const r = xParse(restTokens, complement.template, !!complement.comma && !!phrase.complements.length);
+        if (r.type === 'SUCCESS') {
+          restTokens = r.restTokens;
+          phrase.complements.push(r.phrase);
+          complementFound = true;
         }
+        else if (!complement.optional) {
+          if (!phrase.complements.find( pc => pc.phraseTemplateId === complement.template.id )) {
+            return {
+              type: 'ERROR',
+              restTokens,
+              errorStack: [{ phraseTemplateId: template.id, error: `Missed complement ${complement.template.id}.` }, ...r.errorStack]
+            }
+          }
+        }
+      }
+
+      if (!complementFound) {
+        break;
       }
     }
 
     if (!phrase.complements.length) {
       phrase.complements = undefined;
+    } else {
+      for (let i = 1; i < phrase.complements.length; i++) {
+        phrase.complements[i].prevSibling = phrase.complements[i - 1];
+      }
     }
   }
 

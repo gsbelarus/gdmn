@@ -124,5 +124,99 @@ test('nlpParser3', () => {
   expect(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0]?.token?.image).toEqual(',');
   expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'адресу')).toEqual(true);
 
+  tokens = f('сортируй по названию по адресу');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'сортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'названию')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0], 'адресу')).toEqual(true);
+
+  tokens = f('сортируй по названию, по адресу');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'сортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'названию')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0], 'адресу')).toEqual(true);
+
+  tokens = f('сортируй по названию, по убыванию, по адресу, по возрастанию');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'сортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'названию')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0], 'убыванию')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[2]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[2]?.complements?.[0]?.headTokens?.[0], 'адресу')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[3]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[3]?.complements?.[0]?.headTokens?.[0], 'возрастанию')).toEqual(true);
+
+  tokens = f('сортируй по убыванию по названию, адресу');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'сортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'убыванию')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0], 'названию')).toEqual(true);
+  expect(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0]?.token?.image).toEqual(',');
+  expect(testWord(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'адресу')).toEqual(true);
+
+  tokens = f('сортируй по name, city');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'сортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testToken(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'name')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0]?.token?.image).toEqual(',');
+  expect(testToken(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'city')).toEqual(true);
+
+  tokens = f('отсортируй по name, city, по убыванию');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'отсортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testToken(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'name')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[0]?.token?.image).toEqual(',');
+  expect(testToken(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0]?.uniform?.[1], 'city')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0], 'убыванию')).toEqual(true);
+
+  tokens = f('отсортируй по name, по city, по убыванию');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.vpSortBy);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'отсортируй')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testToken(res.phrase?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'name')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[1]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testToken(res.phrase?.complements?.[1]?.complements?.[0]?.headTokens?.[0], 'city')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[2]?.headTokens?.[0], 'по')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[2]?.complements?.[0]?.headTokens?.[0], 'убыванию')).toEqual(true);
+
   t('по убыванию', xTemplates.ppSortOrder, 'C/nounSortOrder/H', 'убыванию');
 });

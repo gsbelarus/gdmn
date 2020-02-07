@@ -64,6 +64,9 @@ const ppFromPlace: IXPhraseTemplate = {
   }]
 };
 
+/**
+ * по названию, адресу
+ */
 const ppBy: IXPhraseTemplate = {
   id: 'ppBy',
   head: {
@@ -98,6 +101,9 @@ const nounSortOrder: IXPhraseTemplate = {
   }
 };
 
+/**
+ * по возрастанию, по убыванию
+ */
 const ppSortOrder: IXPhraseTemplate = {
   id: 'ppSortOrder',
   head: {
@@ -201,9 +207,20 @@ const vpSortBy: IXPhraseTemplate = {
     ],
     noUniform: true
   },
-  complements: [{
-    template: ppBy
-  }]
+  complements: [
+    // более частные комплементы, должны идти
+    // перед более общими
+    {
+      template: ppSortOrder,
+      optional: true,
+      comma: true
+    },
+    {
+      template: ppBy,
+      optional: false,
+      comma: true
+    },
+  ]
 };
 
 export const xTemplates = {

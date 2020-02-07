@@ -29,8 +29,13 @@ export function command2Text(command: ICommand): string {
   }
 
   if (eq.options?.order?.length) {
-    const ordr = eq.options.order[0];
-    res.push(`Отсортируй по ${ordr.attribute.name}${ordr.type === 'DESC' ? ', по убыванию.' : '.'}`);
+    const ordrArr: string[] = [];
+
+    for (const ordr of eq.options.order) {
+      ordrArr.push(`по ${ordr.attribute.name}${ordr.type === 'DESC' ? ' по убыванию' : ''}`);
+    }
+
+    res.push(`Отсортируй ${ordrArr.join(', ')}.`);
   }
 
   return res.join(' ');

@@ -16,11 +16,12 @@ import {
   nlpQuotedLiteral,
   phraseFind,
   RusCase,
-  XWordOrToken} from "gdmn-nlp";
+  XWordOrToken,
+  RusConjunction} from "gdmn-nlp";
 import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField, IEntityQueryWhere} from "gdmn-orm";
 import {ICommand, Action} from "./command";
 import { xTranslators } from "./translators";
-import { ERTranslatorError, XPhrase2Command } from "./types";
+import { ERTranslatorError, XPhrase2Command, IXTranslatorForward } from "./types";
 import { getLName } from "gdmn-internals";
 import { command2Text } from "./command2text";
 
@@ -29,6 +30,7 @@ interface IERTranslatorRU3Params {
   command?: ICommand;
   text?: string[];
   processUniform?: boolean;
+  forward?: IXTranslatorForward;
 };
 
 export class ERTranslatorRU3 {
@@ -66,7 +68,7 @@ export class ERTranslatorRU3 {
   }
 
   public clear() {
-    return new ERTranslatorRU3({ ...this._params, command: undefined, text: undefined });
+    return new ERTranslatorRU3({ ...this._params, command: undefined, text: undefined, forward: undefined });
   }
 
   private _checkContext() {
@@ -238,7 +240,8 @@ export class ERTranslatorRU3 {
           action,
           payload: new EntityQuery(entityLink, options)
         },
-        text: image ? [image] : undefined
+        text: image ? [image] : undefined,
+        forward: this._params.forward
       });
 
       if (upPhrase) {
@@ -301,8 +304,6 @@ export class ERTranslatorRU3 {
                 }]
               };
             }
-
-            throw new Error('Only links');
           }
 
           const value = phraseFind(phrase, translator.entityQuery.where[0].contains.value);
@@ -329,20 +330,36 @@ export class ERTranslatorRU3 {
       }
 
       if (translator.entityQuery.order) {
+        if (translator.entityQuery.order.clear) {
+          eq.options!.order = undefined;
+        }
+
         if (translator.entityQuery.order.attrPath) {
           const byFieldPhrase = phraseFind(phrase, translator.entityQuery.order.attrPath);
 
           if (isIXWord(byFieldPhrase) || isIXToken(byFieldPhrase)) {
-            const foundAttr = this._findAttr(entity, byFieldPhrase);
+            const addOrdr = (p: IXWord | IXToken) => {
+              const foundAttr = this._findAttr(entity, p);
 
-            if (foundAttr) {
-              eq.options!.addOrder({
-                alias: eq.link.alias,
-                attribute: foundAttr,
-                type: 'ASC'
-              }, true);
-            } else {
-              throw new ERTranslatorError('UNKNOWN_ATTR');
+              if (foundAttr) {
+                eq.options!.addOrder({
+                  alias: eq.link.alias,
+                  attribute: foundAttr,
+                  type: this._params?.forward?.sortOrder ?? 'ASC'
+                });
+              } else {
+                throw new ERTranslatorError('UNKNOWN_ATTR');
+              }
+            }
+
+            addOrdr(byFieldPhrase);
+
+            if (byFieldPhrase.uniform) {
+              for (const u of byFieldPhrase.uniform) {
+                if ((isIXWord(u) && !(u.word instanceof RusConjunction)) || (isIXToken(u) && u.token.image !== ',')) {
+                  addOrdr(u);
+                }
+              }
             }
           }
         }
@@ -350,15 +367,20 @@ export class ERTranslatorRU3 {
           const orderValuePhrase = phraseFind(phrase, translator.entityQuery.order.orderValue);
 
           if (isIXWord(orderValuePhrase)) {
-            if (!eq.options!.order) {
-              throw new ERTranslatorError('NO_CONTEXT');
-            }
+            const sortOrder = orderValuePhrase.word.lexeme.stem === 'возрастан' ? 'ASC' : 'DESC';
 
-            eq.options!.order = eq.options!.order.map( ordr => ({ ...ordr, type: orderValuePhrase.word.lexeme.stem === 'возрастан' ? 'ASC' : 'DESC' }) );
+            if (!eq.options!.order) {
+              this._params.forward = { ...this._params.forward, sortOrder };
+            } else {
+              const l = eq.options!.order.length;
+              if (phrase.prevSibling?.phraseTemplateId === 'ppBy' && l) {
+                const ordr = eq.options!.order[l - 1];
+                eq.options!.order = [...eq.options!.order.slice(0, l - 1), { ...ordr, type: orderValuePhrase.word.lexeme.stem === 'возрастан' ? 'ASC' : 'DESC' }];
+              } else {
+                eq.options!.order = eq.options!.order.map( ordr => ({ ...ordr, type: orderValuePhrase.word.lexeme.stem === 'возрастан' ? 'ASC' : 'DESC' }) );
+              }
+            }
           }
-        }
-        else {
-          throw new ERTranslatorError('UNSUPPORTED_COMMAND_TYPE');
         }
       }
 
@@ -368,7 +390,8 @@ export class ERTranslatorRU3 {
         new ERTranslatorRU3({
           erModel: this.erModel,
           command,
-          text: [command2Text(command)]
+          text: [command2Text(command)],
+          forward: this._params.forward
         }),
         phrase);
     }

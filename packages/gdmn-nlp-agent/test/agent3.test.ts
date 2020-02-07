@@ -306,6 +306,159 @@ describe("agent3", () => {
     expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
   });
 
+  it("phrase12-1", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по NAME, CITY");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+
+    translator = translator.processText("по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+  });
+
+  it("phrase12-2", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по NAME, по CITY, по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+  it("phrase12-3", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по NAME, CITY, по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+  it("phrase12-4", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по убыванию по NAME, CITY");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+  it("phrase12-5", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по названию, по убыванию, по адресу, по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+
   /*
   it("phrase13", () => {
     const company = erModel.entities.TgdcCompany;

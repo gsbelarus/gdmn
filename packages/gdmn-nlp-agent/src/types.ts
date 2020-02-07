@@ -42,6 +42,7 @@ export class ERTranslatorError extends Error {
 */
 
 interface IXOrder {
+  clear?: boolean;
   attrPath?: string;
   orderValue?: string;
 };
@@ -98,3 +99,7 @@ export interface IXPhrase2CommandEQOrder extends IXPhrase2CommandBase {
 };
 
 export type XPhrase2Command = IXPhrase2CommandNew | IXPhrase2CommandEQ | IXPhrase2CommandEQOrder;
+
+export interface IXTranslatorForward {
+  sortOrder?: 'ASC' | 'DESC';
+};

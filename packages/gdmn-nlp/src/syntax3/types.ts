@@ -56,6 +56,8 @@ export interface IXSpecifier {
   template: XPhraseTemplate;
   optional?: boolean;
   noUniform?: boolean;
+  singular?: boolean;
+  comma?: boolean;
 };
 
 export type IXComplement = IXSpecifier;
@@ -130,6 +132,7 @@ export interface IXPhrase {
   headTokens?: XWordOrToken[];
   complements?: IXPhrase[];
   adjunct?: IXPhrase[];
+  prevSibling?: IXPhrase;
 };
 
 export function isIXPhrase(p: any): p is IXPhrase {

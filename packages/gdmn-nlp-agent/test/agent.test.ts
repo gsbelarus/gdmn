@@ -8,7 +8,7 @@ import {loadDBDetails} from "./testConfig";
 
 jest.setTimeout(100 * 1000);
 
-describe("erModel", () => {
+describe.skip("erModel", () => {
 
   let erModel: ERModel;
   let translator: ERTranslatorRU;

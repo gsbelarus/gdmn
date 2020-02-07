@@ -62,7 +62,17 @@ const vpSortBy2Command: IXPhrase2CommandEQ = {
   context: 'EQ',
   entityQuery: {
     order: {
-      attrPath: 'C/ppBy/C/nounDatv/H'
+      clear: true
+    }
+  }
+};
+
+const ppBy2Command: IXPhrase2CommandEQOrder = {
+  phraseTemplateId: 'ppBy',
+  context: 'EQ/ORDER',
+  entityQuery: {
+    order: {
+      attrPath: 'C/nounDatv/H'
     }
   }
 };
@@ -86,5 +96,6 @@ export const xTranslators: IXTranslators = {
   vpShowByPlace: vpShowByPlace2Command,
   ppFromPlace: ppFromPlace2Command,
   vpSortBy: vpSortBy2Command,
+  ppBy: ppBy2Command,
   ppSortOrder: ppSortOrder2Command
 };
