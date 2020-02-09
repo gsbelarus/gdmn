@@ -47,6 +47,17 @@ const nounDatv: IXPhraseTemplate = {
   }
 };
 
+const quotedLiteral: IXPhraseTemplate = {
+  id: 'quotedLiteral',
+  head: {
+    template: [
+      {
+        type: 'QUOTED_LITERAL'
+      }
+    ]
+  }
+};
+
 /**
  * Из Минска.
  */
@@ -154,6 +165,45 @@ const npAllObjectsFromPlace: IXInheritedPhraseTemplate = {
   }]
 };
 
+const vpContains: IXPhraseTemplate = {
+  id: 'vpContains',
+  label: 'Глагольная фраза вида "Содержит "....." "',
+  examples: ['Содержит "ООО"'],
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'VERB',
+      image: 'содержит',
+    }],
+    noUniform: true
+  },
+  complements: [{
+    template: quotedLiteral,
+    singular: true,
+    noUniform: true
+  }]
+};
+
+const npContains: IXPhraseTemplate = {
+  id: 'npContains',
+  label: 'Фраза вида "Название содержит "....." "',
+  examples: ['Название содержит "ООО"'],
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'NOUN',
+      case: RusCase.Nomn,
+      number: 'SINGULAR'
+    }],
+    noUniform: true
+  },
+  complements: [{
+    template: vpContains,
+    singular: true,
+    noUniform: true
+  }]
+};
+
 const vpShowByPlace: IXPhraseTemplate = {
   id: 'vpShowByPlace',
   label: 'Глагольная фраза вида "Покажи все организации из Минска"',
@@ -227,5 +277,7 @@ export const xTemplates = {
   vpShow,
   vpShowByPlace,
   vpSortBy,
-  ppSortOrder
+  ppSortOrder,
+  vpContains,
+  npContains
 };

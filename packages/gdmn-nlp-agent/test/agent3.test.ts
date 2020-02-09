@@ -89,6 +89,8 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].contains![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].contains![0].value).toEqual("минск");
+
+    translator = translator.processText('название содержит "ООО"');
   });
 
   it("phrase5", () => {
@@ -121,6 +123,13 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].or![1].contains![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].or![1].contains![0].value).toEqual("пинск");
+
+    translator = translator.processText('название содержит "ООО"');
+    expect(translator.command.payload.options!.where![1].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![1].contains![0].alias).toEqual("root");
+    expect(translator.command.payload.options!.where![1].contains![0].attribute)
+      .toEqual(translator.command.payload.link.entity.attribute("NAME"));
+    expect(translator.command.payload.options!.where![1].contains![0].value).toEqual("ООО");
   });
   /*
 

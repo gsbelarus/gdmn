@@ -87,6 +87,21 @@ const ppSortOrder2Command: IXPhrase2CommandEQOrder = {
   }
 };
 
+const npContains2Command: IXPhrase2CommandEQ = {
+  phraseTemplateId: 'npContains',
+  context: 'EQ',
+  entityQuery: {
+    where: [
+      {
+        contains: {
+          attrPath: 'H',
+          value: 'C/vpContains/C/quotedLiteral/H'
+        }
+      }
+    ]
+  }
+};
+
 interface IXTranslators {
   [phraseTemplateId: string]: XPhrase2Command;
 };
@@ -97,5 +112,6 @@ export const xTranslators: IXTranslators = {
   ppFromPlace: ppFromPlace2Command,
   vpSortBy: vpSortBy2Command,
   ppBy: ppBy2Command,
-  ppSortOrder: ppSortOrder2Command
+  ppSortOrder: ppSortOrder2Command,
+  npContains: npContains2Command
 };

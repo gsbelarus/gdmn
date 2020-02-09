@@ -18,7 +18,7 @@ import {
   RusCase,
   XWordOrToken,
   RusConjunction} from "gdmn-nlp";
-import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField, IEntityQueryWhere} from "gdmn-orm";
+import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField, IEntityQueryWhere, Attribute} from "gdmn-orm";
 import {ICommand, Action} from "./command";
 import { xTranslators } from "./translators";
 import { ERTranslatorError, XPhrase2Command, IXTranslatorForward } from "./types";
@@ -257,7 +257,19 @@ export class ERTranslatorRU3 {
 
       if (translator.context === 'EQ' && translator.entityQuery.where?.length) {
         if (translator.entityQuery.where[0].contains) {
-          const attr = entity.attributesBySemCategory(translator.entityQuery.where[0].contains.attrBySem)[0];
+          let attr: Attribute<any> | undefined = undefined;
+
+          if (translator.entityQuery.where[0].contains.attrBySem !== undefined) {
+            attr = entity.attributesBySemCategory(translator.entityQuery.where[0].contains.attrBySem)[0];
+          }
+          else if (translator.entityQuery.where[0].contains.attrPath) {
+            const attrPhrase = phraseFind(phrase, translator.entityQuery.where[0].contains.attrPath);
+
+            if (isIXWord(attrPhrase) || isIXToken(attrPhrase)) {
+              attr = this._findAttr(entity, attrPhrase);
+            }
+          }
+
           const fields = eq.link.fields;
 
           const getCondition = (v: XWordOrToken): IEntityQueryWhere => {
@@ -267,7 +279,11 @@ export class ERTranslatorRU3 {
               const noun = v.word as RusNoun;
               value = noun.lexeme.getWordForm({c: RusCase.Nomn, singular: true}).word;
             } else {
-              value = v.token.image;
+              if (v.token.tokenType === nlpQuotedLiteral) {
+                value = v.token.image.slice(1, v.token.image.length - 1);
+              } else {
+                value = v.token.image;
+              }
             }
 
             if (attr instanceof EntityAttribute) {
@@ -296,6 +312,10 @@ export class ERTranslatorRU3 {
                 };
               }
             } else {
+              if (!attr) {
+                throw new ERTranslatorError('UNKNOWN_ATTR');
+              }
+
               return {
                 contains: [{
                   alias: eq.link.alias,

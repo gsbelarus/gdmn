@@ -48,7 +48,8 @@ interface IXOrder {
 };
 
 interface IXAttrValue {
-  attrBySem: SemCategory;
+  attrPath?: string;
+  attrBySem?: SemCategory;
   value: string;
 };
 

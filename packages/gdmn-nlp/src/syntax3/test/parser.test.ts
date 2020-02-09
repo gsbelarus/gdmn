@@ -219,4 +219,7 @@ test('nlpParser3', () => {
   expect(testWord(res.phrase?.complements?.[2]?.complements?.[0]?.headTokens?.[0], 'убыванию')).toEqual(true);
 
   t('по убыванию', xTemplates.ppSortOrder, 'C/nounSortOrder/H', 'убыванию');
+
+  tokens = f('название содержит "ххх"');
+  expect(tokens.length).toEqual(1);
 });
