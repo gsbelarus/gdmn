@@ -16,11 +16,11 @@ export function command2Text(command: ICommand): string {
       if (contains?.length) {
         for (const { alias, attribute, value } of contains) {
           if (alias === eq.link.alias) {
-            res.push(`Атрибут ${attribute.name} содержит "${value}".`);
+            res.push(`${attribute.name} содержит "${value}".`);
           } else {
             const attrLink = entity.attributes[alias];
             if (attrLink) {
-              res.push(`Атрибут ${attribute.name} атрибута ${attrLink.name} содержит "${value}".`);
+              res.push(`${attribute.name} атрибута ${attrLink.name} содержит "${value}".`);
             }
           }
         }

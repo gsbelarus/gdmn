@@ -7,25 +7,25 @@ test('nlpParser3', () => {
 
   const testWord = (t: XWordOrToken | undefined, w: string) => isIXWord(t) && t.word.word === w;
   const testToken = (t: XWordOrToken | undefined, i: string) => isIXToken(t) && t.token.image === i;
-  const test = (phrase: IXPhrase | undefined, path: string, w: string) => {
+  const getString = (phrase: IXPhrase | undefined, path: string) => {
     if (phrase) {
       const found = phraseFind(phrase, path);
 
       if (isIXWord(found)) {
-        return found.word.word === w;
+        return found.word.word;
       }
       else if (isIXToken(found)) {
-        return found.token.image === w;
+        return found.token.image;
       }
     }
 
-    return false;
+    return '';
   };
   const t = (s: string, templ: IXPhraseTemplate, path: string, w: string) => {
     const tokens = f(s);
     expect(tokens.length).toEqual(1);
     const res = xParse(tokens[0], templ) as any;
-    expect(test(res.phrase, path, w)).toEqual(true);
+    expect(getString(res.phrase, path)).toEqual(w);
   }
 
   let tokens = f('покажи организации');
@@ -33,7 +33,7 @@ test('nlpParser3', () => {
 
   let res = xParse(tokens[0], xTemplates.vpShow) as any;
   expect(res.phrase?.headTokens?.length).toEqual(1);
-  expect(test(res.phrase, 'H', 'покажи')).toEqual(true);
+  expect(getString(res.phrase, 'H')).toEqual('покажи');
   expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'организации')).toEqual(true);
 
   tokens = f('покажи все организации');
@@ -230,6 +230,16 @@ test('nlpParser3', () => {
   expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
   expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toBeFalsy();
 
+  tokens = f('NAME содержит "ххх"');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.npContains);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testToken(res.phrase?.headTokens?.[0], 'NAME')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toBeFalsy();
+
   tokens = f('название не содержит "ххх"');
   expect(tokens.length).toEqual(1);
 
@@ -239,4 +249,31 @@ test('nlpParser3', () => {
   expect(testWord(res.phrase?.headTokens?.[0], 'название')).toEqual(true);
   expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
   expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toEqual(true);
+
+  tokens = f('NAME атрибута PLACEKEY содержит "ххх"');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.npOfAttrContains);
+  //console.log(JSON.stringify(res, undefined, 2));
+  expect(res.phrase?.head).toBeDefined();
+  expect(res.restTokens.length).toEqual(0);
+  expect(testToken(res.phrase?.head?.headTokens?.[0], 'NAME')).toEqual(true);
+  expect(testToken(res.phrase?.head?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'PLACEKEY')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toBeFalsy();
+
+  t('NAME атрибута PLACEKEY содержит "ххх"', xTemplates.npOfAttrContains, 'H/npOfAttr/H', 'NAME');
+  t('NAME атрибута PLACEKEY содержит "ххх"', xTemplates.npOfAttrContains, 'C/vpContains/C/quotedLiteral/H', '"ххх"');
+  t('NAME атрибута PLACEKEY содержит "ххх"', xTemplates.npOfAttrContains, 'H/npOfAttr/C/npGentAttr/C/nounNomn/H', 'PLACEKEY');
+
+  tokens = f('Название атрибута PLACEKEY не содержит "ххх"');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.npOfAttrContains);
+  expect(res.phrase?.head).toBeDefined();
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.head?.headTokens?.[0], 'название')).toEqual(true);
+  expect(testToken(res.phrase?.head?.complements?.[0]?.complements?.[0]?.headTokens?.[0], 'PLACEKEY')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toBeTruthy();
 });

@@ -6,6 +6,7 @@ export type ERTranslatorErrorCode = 'INVALID_PHRASE_STRUCTURE'
   | 'UNKNOWN_ENTITY'
   | 'UNKNOWN_ATTR'
   | 'UNKNOWN_ACTION'
+  | 'ATTR_IS_NOT_ENTITY'
   | 'UNSUPPORTED_COMMAND_TYPE'
   | 'NO_CONTEXT';
 
@@ -47,15 +48,16 @@ interface IXOrder {
   orderValue?: string;
 };
 
-interface IXAttrValue {
+export interface IXAttrValue {
   attrPath?: string;
+  ofAttrPath?: string;
   attrBySem?: SemCategory;
   value: string;
 };
 
 interface IXWhere {
   contains?: IXAttrValue;
-  negativePath?: string;
+  negationPath?: string;
 };
 
 interface IXEntity {

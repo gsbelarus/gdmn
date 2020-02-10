@@ -301,8 +301,21 @@ export const phraseFind = (inPhrase: IXPhrase, inPath: string): XWordOrToken | I
   let i = 0;
 
   while (i < path.length) {
-    if (path[i] === 'H' && (path[i + 1] ?? '0') === '0') {
-      return phrase.headTokens?.[0] ?? phrase.head;
+
+    if (path[i] === 'H') {
+      if ((path[i + 1] ?? '0') === '0') {
+        return phrase.headTokens?.[0] ?? phrase.head;
+      }
+
+      const tId = path[i + 1];
+
+      if (phrase.head && phrase.head.phraseTemplateId === tId) {
+        phrase = phrase.head;
+        i += 2;
+        continue;
+      } else {
+        return undefined;
+      }
     }
 
     if (path[i] === 'C') {

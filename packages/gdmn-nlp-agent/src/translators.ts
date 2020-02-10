@@ -16,16 +16,6 @@ const vpShow2Command: IXPhrase2CommandNew = {
   }
 };
 
-const vpShowByPlace2Command: IXPhrase2CommandNew = {
-  ...vpShow2Command,
-  phraseTemplateId: 'vpShowByPlace',
-  entityQuery: {
-    entity: {
-      path: 'C/npAllObjectsFromPlace/H'
-    }
-  }
-};
-
 /**
  *
  * |verb   |entity           |fromPlace           |
@@ -41,6 +31,16 @@ const vpShowByPlace2Command: IXPhrase2CommandNew = {
  *
  * Пример: "[все] организации"
  */
+
+const vpShowByPlace2Command: IXPhrase2CommandNew = {
+  ...vpShow2Command,
+  phraseTemplateId: 'vpShowByPlace',
+  entityQuery: {
+    entity: {
+      path: 'C/npAllObjectsFromPlace/H'
+    }
+  }
+};
 
 const ppFromPlace2Command: IXPhrase2CommandEQ = {
   phraseTemplateId: 'ppFromPlace',
@@ -93,9 +93,26 @@ const npContains2Command: IXPhrase2CommandEQ = {
   entityQuery: {
     where: [
       {
-        negativePath: 'C/vpContains/H',
+        negationPath: 'C/vpContains/H',
         contains: {
           attrPath: 'H',
+          value: 'C/vpContains/C/quotedLiteral/H',
+        }
+      }
+    ]
+  }
+};
+
+const npOfAttrContains2Command: IXPhrase2CommandEQ = {
+  phraseTemplateId: 'npOfAttrContains',
+  context: 'EQ',
+  entityQuery: {
+    where: [
+      {
+        negationPath: 'C/vpContains/H',
+        contains: {
+          attrPath: 'H/npOfAttr/H',
+          ofAttrPath: 'H/npOfAttr/C/npGentAttr/C/nounNomn/H',
           value: 'C/vpContains/C/quotedLiteral/H',
         }
       }
@@ -114,5 +131,6 @@ export const xTranslators: IXTranslators = {
   vpSortBy: vpSortBy2Command,
   ppBy: ppBy2Command,
   ppSortOrder: ppSortOrder2Command,
-  npContains: npContains2Command
+  npContains: npContains2Command,
+  npOfAttrContains: npOfAttrContains2Command
 };

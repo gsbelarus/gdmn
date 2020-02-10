@@ -288,7 +288,7 @@ export function GdmnView (props: IGdmnViewProps) {
       >
         <ErrBoundary onLogError={ error => dispatch(rootActions.onError(error)) }>
           <Stack horizontal styles={{ root: { height: '100%' } }}>
-            <Stack.Item styles={{ root: { minWidth: '240px' } }}>
+            <Stack.Item styles={{ root: { width: '260px' } }}>
               <NLPDialogScroll nlpDialog={nlpDialog} addNLPMessage={ text => dispatch(gdmnActions.nlpProcess({ item: { who: 'me', text }, history })) }/>
             </Stack.Item>
             <Stack.Item grow={1} styles={{ root: { height: 'calc(100% - 36px)' } }}>

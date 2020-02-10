@@ -103,23 +103,32 @@ export const nlpDialogMiddleware: TThunkMiddleware = ({ getState, dispatch }) =>
       }
     }
 
+    // если введено просто слово -- открываем окно морфологии
+    if (/^[А-Яа-я]+$/.test(text)) {
+      history.push(`/spa/gdmn/morphology/${text}`);
+      dispatch(gdmnActions.nlpAdd([
+        { who: 'me', text }
+      ]));
+      return;
+    }
+
     // возможно ввели имя entity -- откроем окно на просмотр данных
     const { erModel } = getState().gdmnState;
+
+    if (!erModel?.notEmpty) {
+      dispatch(gdmnActions.nlpAdd([
+        { who: 'me', text },
+        { who: 'it', text: 'erModel еще не загружена...' }
+      ]));
+      return;
+    }
+
     const entity = erModel.entities[ text ];
     if (entity) {
       history.push(`/spa/gdmn/entity/${entity.name}`);
       dispatch(gdmnActions.nlpAdd([
         { who: 'me', text },
         { who: 'it', text: 'Открыта таблица с данными.' }
-      ]));
-      return;
-    }
-
-    // если введено просто слово -- открываем окно морфологии
-    if (/^[А-Яа-я]+$/.test(text)) {
-      history.push(`/spa/gdmn/morphology/${text}`);
-      dispatch(gdmnActions.nlpAdd([
-        { who: 'me', text }
       ]));
       return;
     }

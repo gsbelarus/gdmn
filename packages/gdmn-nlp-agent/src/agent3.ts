@@ -17,11 +17,12 @@ import {
   phraseFind,
   RusCase,
   XWordOrToken,
-  RusConjunction} from "gdmn-nlp";
+  RusConjunction,
+  SemCategory} from "gdmn-nlp";
 import {ERModel, Entity, prepareDefaultEntityLinkFields, EntityQueryOptions, EntityLink, EntityQuery, EntityAttribute, EntityLinkField, IEntityQueryWhere, Attribute} from "gdmn-orm";
 import {ICommand, Action} from "./command";
 import { xTranslators } from "./translators";
-import { ERTranslatorError, XPhrase2Command, IXTranslatorForward } from "./types";
+import { ERTranslatorError, XPhrase2Command, IXTranslatorForward, IXAttrValue } from "./types";
 import { getLName } from "gdmn-internals";
 import { command2Text } from "./command2text";
 
@@ -257,23 +258,38 @@ export class ERTranslatorRU3 {
 
       if (translator.context === 'EQ' && translator.entityQuery.where?.length) {
         if (translator.entityQuery.where[0].contains) {
+
+          const findAttr = (e: Entity, attrBySem?: SemCategory, attrPath?: string) => {
+            if (attrBySem !== undefined) {
+              return e.attributesBySemCategory(attrBySem)[0];
+            }
+            else if (attrPath) {
+              const attrPhrase = phraseFind(phrase, attrPath);
+
+              if (isIXWord(attrPhrase) || isIXToken(attrPhrase)) {
+                return this._findAttr(e, attrPhrase);
+              }
+            }
+            return undefined;
+          };
+
           let attr: Attribute<any> | undefined = undefined;
 
-          if (translator.entityQuery.where[0].contains.attrBySem !== undefined) {
-            attr = entity.attributesBySemCategory(translator.entityQuery.where[0].contains.attrBySem)[0];
-          }
-          else if (translator.entityQuery.where[0].contains.attrPath) {
-            const attrPhrase = phraseFind(phrase, translator.entityQuery.where[0].contains.attrPath);
+          if (translator.entityQuery.where[0].contains.ofAttrPath) {
+            const ofAttrPhrase = phraseFind(phrase, translator.entityQuery.where[0].contains.ofAttrPath);
 
-            if (isIXWord(attrPhrase) || isIXToken(attrPhrase)) {
-              attr = this._findAttr(entity, attrPhrase);
+            if (isIXWord(ofAttrPhrase) || isIXToken(ofAttrPhrase)) {
+              attr = this._findAttr(entity, ofAttrPhrase);
             }
+          } else {
+            attr = findAttr(entity, translator.entityQuery.where[0].contains.attrBySem,
+              translator.entityQuery.where[0].contains.attrPath);
           }
 
           let negative = false;
 
-          if (translator.entityQuery.where[0].negativePath) {
-            const negativePhrase = phraseFind(phrase, translator.entityQuery.where[0].negativePath);
+          if (translator.entityQuery.where[0].negationPath) {
+            const negativePhrase = phraseFind(phrase, translator.entityQuery.where[0].negationPath);
 
             if (isIXWord(negativePhrase)) {
               negative = !!negativePhrase.negative;
@@ -323,10 +339,17 @@ export class ERTranslatorRU3 {
 
                 fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
 
+                let attribute = findAttr(linkEntity, translator.entityQuery.where?.[0]?.contains?.attrBySem,
+                  translator.entityQuery.where?.[0].contains?.attrPath);
+
+                if (!attribute) {
+                  attribute = linkEntity.presentAttribute();
+                }
+
                 return applyNegative({
                   contains: [{
                     alias: linkAlias,
-                    attribute: linkEntity.presentAttribute(),
+                    attribute,
                     value
                   }]
                 });
