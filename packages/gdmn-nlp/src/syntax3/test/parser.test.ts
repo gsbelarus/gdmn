@@ -222,4 +222,21 @@ test('nlpParser3', () => {
 
   tokens = f('название содержит "ххх"');
   expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.npContains);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'название')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toBeFalsy();
+
+  tokens = f('название не содержит "ххх"');
+  expect(tokens.length).toEqual(1);
+
+  res = xParse(tokens[0], xTemplates.npContains);
+  expect(res.phrase?.headTokens?.length).toEqual(1);
+  expect(res.restTokens.length).toEqual(0);
+  expect(testWord(res.phrase?.headTokens?.[0], 'название')).toEqual(true);
+  expect(testWord(res.phrase?.complements?.[0]?.headTokens?.[0], 'содержит')).toEqual(true);
+  expect(res.phrase?.complements?.[0]?.headTokens?.[0]?.negative).toEqual(true);
 });

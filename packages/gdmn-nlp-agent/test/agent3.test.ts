@@ -130,8 +130,14 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![1].contains![0].attribute)
       .toEqual(translator.command.payload.link.entity.attribute("NAME"));
     expect(translator.command.payload.options!.where![1].contains![0].value).toEqual("ООО");
+
+    translator = translator.processText('название не содержит "ООО"');
+    expect(translator.command.payload.options!.where![2].not![0].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].alias).toEqual("root");
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].attribute)
+      .toEqual(translator.command.payload.link.entity.attribute("NAME"));
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].value).toEqual("ООО");
   });
-  /*
 
   it("phrase6", () => {
     const company = erModel.entities.TgdcCompany;
@@ -221,6 +227,7 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].or![1].contains![0].value).toEqual("пинск");
   });
 
+  /*
    it("phrase9", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();

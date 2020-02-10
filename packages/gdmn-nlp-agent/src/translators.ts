@@ -93,9 +93,10 @@ const npContains2Command: IXPhrase2CommandEQ = {
   entityQuery: {
     where: [
       {
+        negativePath: 'C/vpContains/H',
         contains: {
           attrPath: 'H',
-          value: 'C/vpContains/C/quotedLiteral/H'
+          value: 'C/vpContains/C/quotedLiteral/H',
         }
       }
     ]

@@ -77,10 +77,12 @@ const isUniformPOS = (w1: AnyWord, w2: AnyWord) => {
 };
 
 /**
- * Убираем частицы. Они переплетаются с союзами и путаются под ногами.
+ * Убираем частицы. Они переплетаются с союзами и путаются под ногами,
+ * создавая слишком много вариантов разбора предложения.
+ * Но! оставляем отрицательную частицу.
  */
-const transform = (tokens: INLPToken[]): INLPToken[] => {
-  return tokens.map( t => t.words ? {...t, words: t.words.filter( w => !(w instanceof RusParticle) )} : t);
+const removeParticles = (tokens: INLPToken[]): INLPToken[] => {
+  return tokens.map( t => t.words ? {...t, words: t.words.filter( w => !(w instanceof RusParticle) || w.getSignature() === 'PARTNegt' )} : t);
 }
 
 /**
@@ -491,7 +493,7 @@ export function nlpTokenize(tokens: INLPToken[], uniform = true): INLPToken[][] 
     }
   }
 
-  return separateByPOS(transform(tokens)).map( t => {
+  return separateByPOS(removeParticles(tokens)).map( t => {
     const processed = replaceNumerals(t);
     return uniform ? replaceConsequentTokens(replaceUniform(processed)) : processed;
    } );

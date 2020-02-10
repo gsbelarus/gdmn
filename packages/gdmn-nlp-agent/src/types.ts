@@ -55,6 +55,7 @@ interface IXAttrValue {
 
 interface IXWhere {
   contains?: IXAttrValue;
+  negativePath?: string;
 };
 
 interface IXEntity {

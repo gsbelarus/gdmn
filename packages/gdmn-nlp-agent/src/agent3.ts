@@ -270,7 +270,27 @@ export class ERTranslatorRU3 {
             }
           }
 
+          let negative = false;
+
+          if (translator.entityQuery.where[0].negativePath) {
+            const negativePhrase = phraseFind(phrase, translator.entityQuery.where[0].negativePath);
+
+            if (isIXWord(negativePhrase)) {
+              negative = !!negativePhrase.negative;
+            }
+          }
+
           const fields = eq.link.fields;
+
+          const applyNegative = (w: IEntityQueryWhere): IEntityQueryWhere => {
+            if (negative) {
+              return {
+                not: [w]
+              }
+            } else {
+              return w;
+            }
+          };
 
           const getCondition = (v: XWordOrToken): IEntityQueryWhere => {
             let value: string;
@@ -290,39 +310,39 @@ export class ERTranslatorRU3 {
               const foundLinkField = fields.find( f => f.attribute === attr );
 
               if (foundLinkField && foundLinkField.links) {
-                return {
+                return applyNegative({
                   contains: [{
                     alias: foundLinkField.links[0].alias,
                     attribute: foundLinkField.links[0].entity.presentAttribute(),
                     value
                   }]
-                };
+                });
               } else {
                 const linkEntity = attr.entities[0];
                 const linkAlias = "alias2";
 
                 fields.push(new EntityLinkField(attr, [new EntityLink(linkEntity, linkAlias, [])]));
 
-                return {
+                return applyNegative({
                   contains: [{
                     alias: linkAlias,
                     attribute: linkEntity.presentAttribute(),
                     value
                   }]
-                };
+                });
               }
             } else {
               if (!attr) {
                 throw new ERTranslatorError('UNKNOWN_ATTR');
               }
 
-              return {
+              return applyNegative({
                 contains: [{
                   alias: eq.link.alias,
                   attribute: attr,
                   value
                 }]
-              };
+              });
             }
           }
 

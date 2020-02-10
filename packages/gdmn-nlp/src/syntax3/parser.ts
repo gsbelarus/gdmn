@@ -2,7 +2,7 @@ import { XPhraseElement, XRusWordTemplate, IXPhraseTemplate, IXPhrase, XWordOrTo
 import { INLPToken, nlpCyrillicWord, AnyWord, RusNoun, RusPreposition, RusAdjective, RusVerb, nlpIDToken, nlpQuotedLiteral, nlpWhiteSpace, nlpLineBreak, RusConjunction } from "..";
 import { nlpComma } from "../syntax2/tokenizer";
 
-const match = (token: INLPToken, element: XPhraseElement): XWordOrToken | undefined => {
+const match = (token: INLPToken, negative: boolean, element: XPhraseElement): XWordOrToken | undefined => {
   if (isIXPhraseTemplate(element) || isIXInheritedPhraseTemplate(element)) {
     return undefined;
   }
@@ -50,7 +50,8 @@ const match = (token: INLPToken, element: XPhraseElement): XWordOrToken | undefi
         if (res) {
           return {
             type: 'WORD',
-            word: res
+            word: res,
+            negative
           };
         }
       }
@@ -99,6 +100,27 @@ export const mergeTemplates = (template: XPhraseTemplate): IXPhraseTemplate => {
   }
 };
 
+const skipWhiteSpaces = (tokens: INLPToken[], startIdx = 0, skipComma?: boolean) => {
+  while (startIdx < tokens.length) {
+    let token = tokens[startIdx];
+
+    if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
+      startIdx++;
+    }
+    else if (token.tokenType === nlpComma && skipComma) {
+      startIdx++;
+    } else {
+      break;
+    }
+  }
+
+  if (startIdx) {
+    return tokens.slice(startIdx);
+  } else {
+    return tokens;
+  }
+};
+
 export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipComma?: boolean): XParseResult => {
 
   const template = mergeTemplates(inTemplate);
@@ -123,24 +145,7 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipC
     }
   }
 
-  let tokenIdx = 0;
-
-  while (tokenIdx < restTokens.length) {
-    let token = restTokens[tokenIdx];
-
-    if (token.tokenType === nlpWhiteSpace || token.tokenType === nlpLineBreak) {
-      tokenIdx++;
-    }
-    else if (token.tokenType === nlpComma && skipComma) {
-      tokenIdx++;
-    } else {
-      break;
-    }
-  }
-
-  if (tokenIdx) {
-    restTokens = restTokens.slice(tokenIdx);
-  }
+  restTokens = skipWhiteSpaces(restTokens, 0, skipComma);
 
   if (!restTokens.length) {
     return {
@@ -167,8 +172,24 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipC
         }
       }
 
+      let negative = false;
+
+      if (restTokens[0].words?.[0]?.getSignature() === 'PARTNegt') {
+        restTokens = skipWhiteSpaces(restTokens, 1);
+
+        if (!restTokens.length) {
+          return {
+            type: 'ERROR',
+            restTokens,
+            errorStack: [{ phraseTemplateId: template.id, error: 'No head found' }]
+          }
+        }
+
+        negative = true;
+      }
+
       const token = restTokens[0];
-      const m = match(token, element);
+      const m = match(token, negative, element);
 
       if (m) {
         if (token.uniformPOS && !template.head.noUniform) {

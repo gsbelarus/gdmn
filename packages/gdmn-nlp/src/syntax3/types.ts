@@ -108,6 +108,7 @@ interface IXWordBase {
 export interface IXWord extends IXWordBase {
   type: 'WORD';
   word: AnyWord;
+  negative?: boolean;
 };
 
 export interface IXToken extends IXWordBase {
