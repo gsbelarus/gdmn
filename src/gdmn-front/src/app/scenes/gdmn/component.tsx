@@ -29,10 +29,10 @@ import { NLPDialogScroll } from './components/NLPDialogScroll';
 import { NLPDialog } from 'gdmn-nlp-agent';
 import { IMorphologyRouteProps } from '../nlp/morphology/Morphology.types';
 import { MorphologyContainer } from '../nlp/morphology/MorphologyContainer';
-import { ISyntaxRouteProps } from '../nlp/syntax/Syntax.types';
-import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
 import { ERModel } from 'gdmn-orm';
 import { NLPDataViewContainer } from '../ermodel/NLPDataView/NLPDataViewContainer';
+import { ISyntax3RouteProps } from '../nlp/syntax3/Syntax3.types';
+import { Syntax3Container } from '../nlp/syntax3/Syntax3Container';
 
 interface IErrBoundaryProps {
   onLogError: (error: Error) => void;
@@ -483,8 +483,8 @@ export function GdmnView (props: IGdmnViewProps) {
                   <Route
                     path={`${match.path}/syntax`}
                     exact={true}
-                    render={ (props: RouteComponentProps<ISyntaxRouteProps>) => (
-                      <SyntaxContainer
+                    render={ (props: RouteComponentProps<ISyntax3RouteProps>) => (
+                      <Syntax3Container
                         {...props}
                         url={props.match.url}
                         key={props.match.url}
