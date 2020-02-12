@@ -101,6 +101,7 @@ export function isIXInheritedPhraseTemplate(t: any): t is IXInheritedPhraseTempl
 };
 
 interface IXWordBase {
+  id: number;
   type: 'WORD' | 'TOKEN';
   uniform?: XWordOrToken[];
 };
@@ -127,6 +128,7 @@ export function isIXToken(w: any): w is IXToken {
 export type XWordOrToken = IXToken | IXWord;
 
 export interface IXPhrase {
+  id: number;
   phraseTemplateId: string;
   specifier?: IXPhrase;
   head?: IXPhrase;

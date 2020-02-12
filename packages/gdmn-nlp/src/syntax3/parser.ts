@@ -2,6 +2,8 @@ import { XPhraseElement, XRusWordTemplate, IXPhraseTemplate, IXPhrase, XWordOrTo
 import { INLPToken, nlpCyrillicWord, AnyWord, RusNoun, RusPreposition, RusAdjective, RusVerb, nlpIDToken, nlpQuotedLiteral, nlpWhiteSpace, nlpLineBreak, RusConjunction } from "..";
 import { nlpComma } from "../syntax2/tokenizer";
 
+let xid = 1;
+
 const match = (token: INLPToken, negative: boolean, element: XPhraseElement): XWordOrToken | undefined => {
   if (isIXPhraseTemplate(element) || isIXInheritedPhraseTemplate(element)) {
     return undefined;
@@ -49,6 +51,7 @@ const match = (token: INLPToken, negative: boolean, element: XPhraseElement): XW
 
         if (res) {
           return {
+            id: xid++,
             type: 'WORD',
             word: res,
             negative
@@ -60,11 +63,11 @@ const match = (token: INLPToken, negative: boolean, element: XPhraseElement): XW
     }
 
     case nlpIDToken: {
-      return element.type === 'ID' ? { type: 'TOKEN', token } : undefined;
+      return element.type === 'ID' ? { id: xid++, type: 'TOKEN', token } : undefined;
     }
 
     case nlpQuotedLiteral: {
-      return element.type === 'QUOTED_LITERAL' ? { type: 'TOKEN', token } : undefined;
+      return element.type === 'QUOTED_LITERAL' ? { id: xid++, type: 'TOKEN', token } : undefined;
     }
   }
 };
@@ -78,19 +81,19 @@ interface IXParseResultBase {
   type: 'ERROR' | 'SUCCESS';
 }
 
-interface IXParseResultSuccess extends IXParseResultBase {
+export interface IXParseResultSuccess extends IXParseResultBase {
   type: 'SUCCESS';
   restTokens: INLPToken[];
   phrase: IXPhrase;
 };
 
-interface IXParseResultError extends IXParseResultBase {
+export interface IXParseResultError extends IXParseResultBase {
   type: 'ERROR';
   restTokens: INLPToken[];
   errorStack: IXParseError[];
 };
 
-type XParseResult = IXParseResultSuccess | IXParseResultError;
+export type XParseResult = IXParseResultSuccess | IXParseResultError;
 
 export const mergeTemplates = (template: XPhraseTemplate): IXPhraseTemplate => {
   if (isIXPhraseTemplate(template)) {
@@ -127,6 +130,7 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipC
 
   let restTokens = inTokens;
   let phrase: Partial<IXPhrase> = {
+    id: xid++,
     phraseTemplateId: template.id
   };
 
@@ -206,10 +210,10 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipC
                 } );
 
                 if (matchedUniform) {
-                  m.uniform!.push({ type: 'WORD', word: matchedUniform });
+                  m.uniform!.push({ id: xid++, type: 'WORD', word: matchedUniform });
                 }
                 else if (u.words[0] instanceof RusConjunction) {
-                  m.uniform!.push({ type: 'WORD', word: u.words[0] });
+                  m.uniform!.push({ id: xid++, type: 'WORD', word: u.words[0] });
                 }
                 else {
                   return {
@@ -219,14 +223,14 @@ export const xParse = (inTokens: INLPToken[], inTemplate: XPhraseTemplate, skipC
                 }
               } else {
                 if (u.tokenType !== nlpWhiteSpace && u.tokenType !== nlpLineBreak) {
-                  m.uniform!.push({ type: 'TOKEN', token: u });
+                  m.uniform!.push({ id: xid++, type: 'TOKEN', token: u });
                 }
               }
             });
           } else {
             token.uniformPOS.forEach( u => {
               if (u.tokenType !== nlpWhiteSpace && u.tokenType !== nlpLineBreak) {
-                m.uniform!.push({ type: 'TOKEN', token: u });
+                m.uniform!.push({ id: xid++, type: 'TOKEN', token: u });
               }
             });
           }

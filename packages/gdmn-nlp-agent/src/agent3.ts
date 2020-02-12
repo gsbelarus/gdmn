@@ -64,6 +64,10 @@ export class ERTranslatorRU3 {
     return !!this._params.command && !!this._params.text?.length;
   }
 
+  get processUniform() {
+    return !!this._params.processUniform;
+  }
+
   public hasCommand() {
     return !!this._params.command;
   }
@@ -242,7 +246,8 @@ export class ERTranslatorRU3 {
           payload: new EntityQuery(entityLink, options)
         },
         text: image ? [image] : undefined,
-        forward: this._params.forward
+        forward: this._params.forward,
+        processUniform: this._params.processUniform
       });
 
       if (upPhrase) {
@@ -454,7 +459,8 @@ export class ERTranslatorRU3 {
           erModel: this.erModel,
           command,
           text: [command2Text(command)],
-          forward: this._params.forward
+          forward: this._params.forward,
+          processUniform: this._params.processUniform
         }),
         phrase);
     }
