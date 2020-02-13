@@ -30,7 +30,7 @@
     "chevrotain": "^6"
   },
   "devDependencies": {
-    "@types/jest": "^24",
+    "@types/jest": "^25",
     "@types/node": "^13",
     "jest": "^25",
     "jest-junit": "^10",
