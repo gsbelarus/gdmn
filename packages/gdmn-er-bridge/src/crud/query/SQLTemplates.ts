@@ -73,6 +73,10 @@ export abstract class SQLTemplates {
     return SQLTemplates.condition(alias, fieldName, "=", value);
   }
 
+  public static isNotDistinctFrom(alias: string, fieldName: string, value: string): string {
+    return SQLTemplates.condition(alias, fieldName, "IS NOT DISTINCT FROM", value);
+  }
+
   public static contains(alias: string, fieldName: string, value: string): string {
     return SQLTemplates.condition(alias, fieldName, "CONTAINING", value);
   }

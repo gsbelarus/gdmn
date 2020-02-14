@@ -31,14 +31,14 @@ export class VirtualQueries {
       .map(value => new EntityLinkField(value)));
 
     if (withEquals) {
-      const equals: IEntityQueryWhereValue[] = [];
+      const isNotDistinctFrom: IEntityQueryWhereValue[] = [];
       //  equals.push({
-      equals.push({         
+        isNotDistinctFrom.push({         
         alias: "parent",
         attribute: linkEntity.entity.attribute("PARENT"),
-        value: "11111"
+        value: null
       });
-      const options = new EntityQueryOptions(undefined, undefined, [{equals}]);
+      const options = new EntityQueryOptions(undefined, undefined, [{isNotDistinctFrom}]);
 
       return new EntityQuery(linkEntity, options);
     }

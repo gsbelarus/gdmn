@@ -214,27 +214,27 @@ export class EntityQueryOptions {
           })
           : undefined,
         isNotDistinctFrom: item.isNotDistinctFrom
-          ? item.isNotDistinctFrom.map((equals) => {
-            const findLink = link.deepFindLink(equals.alias);
+          ? item.isNotDistinctFrom.map((isNotDistinctFrom) => {
+            const findLink = link.deepFindLink(isNotDistinctFrom.alias);
             if (!findLink) {
-              throw new Error(`Alias ${equals.alias} is not found`);
+              throw new Error(`Alias ${isNotDistinctFrom.alias} is not found`);
             }
-            if (!EntityQueryOptions._isValuePrimitiveInspector(equals.value)) {
-              const findLink2 = link.deepFindLink(equals.value.alias) ?
-                link.deepFindLink(equals.value.alias) : existlLink && existlLink.deepFindLink(equals.value.alias);
+            if (!EntityQueryOptions._isValuePrimitiveInspector(isNotDistinctFrom.value)) {
+              const findLink2 = link.deepFindLink(isNotDistinctFrom.value.alias) ?
+                link.deepFindLink(isNotDistinctFrom.value.alias) : existlLink && existlLink.deepFindLink(isNotDistinctFrom.value.alias);
               if (!findLink2) {
-                throw new Error(`Alias ${equals.value.alias} is not found`);
+                throw new Error(`Alias ${isNotDistinctFrom.value.alias} is not found`);
               }
               return {
-                alias: equals.alias,
-                attribute: findLink.entity.attribute(equals.attribute),
-                value: {alias: equals.value.alias, attribute: findLink2.entity.attribute(equals.value.attribute)}
+                alias: isNotDistinctFrom.alias,
+                attribute: findLink.entity.attribute(isNotDistinctFrom.attribute),
+                value: {alias: isNotDistinctFrom.value.alias, attribute: findLink2.entity.attribute(isNotDistinctFrom.value.attribute)}
               };
             }
             return {
-              alias: equals.alias,
-              attribute: findLink.entity.attribute(equals.attribute),
-              value: equals.value
+              alias: isNotDistinctFrom.alias,
+              attribute: findLink.entity.attribute(isNotDistinctFrom.attribute),
+              value: isNotDistinctFrom.value
             };
           })
           : undefined,
@@ -422,6 +422,27 @@ export class EntityQueryOptions {
           };
         });
       }
+
+      if (item.isNotDistinctFrom) {
+        inspector.isNotDistinctFrom = item.isNotDistinctFrom.map((isNotDistinctFrom) => {
+          if (!EntityQueryOptions._isValuePrimitive(isNotDistinctFrom.value)) {
+            return {
+              alias: isNotDistinctFrom.alias,
+              attribute: isNotDistinctFrom.attribute.name,
+              value: {
+                  alias: isNotDistinctFrom.value.alias,
+                  attribute: isNotDistinctFrom.value.attribute.name
+                }
+            };
+          }
+          return {
+            alias: isNotDistinctFrom.alias,
+            attribute: isNotDistinctFrom.attribute.name,
+            value: isNotDistinctFrom.value
+          };
+        });
+      }
+     
       if (item.contains) {
         inspector.contains = item.contains.map((contains) => {
           if (!EntityQueryOptions._isValuePrimitive(contains.value)) {
@@ -441,6 +462,7 @@ export class EntityQueryOptions {
           };
         });
       }
+
       if (item.greater) {
         inspector.greater = item.greater.map((greater) => ({
           alias: greater.alias,

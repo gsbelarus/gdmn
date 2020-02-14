@@ -103,17 +103,17 @@ export class Select {
           items = items.concat(crossFields);
         }
 
-        // if (link.entity.isTree && !link.entity.isIntervalTree) {
-        //   // Если tree (не интервальное) то добавляем поле Parent как скалярное
-        //   const attribute = field.attribute as ScalarAttribute;
-        //   const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
-        //   const fieldAlias = withoutAlias ? "" : this._getFieldAlias(field);
-        //   items = items.concat(SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field));
-        // } else {  
+        if (link.entity.isTree && !link.entity.isIntervalTree) {
+          // Если tree (не интервальное) то добавляем поле Parent как скалярное
+          const attribute = field.attribute as ScalarAttribute;
+          const tableAlias = this._getTableAlias(link, attribute.adapter!.relation);
+          const fieldAlias = withoutAlias ? "" : this._getFieldAlias(field);
+          items = items.concat(SQLTemplates.field(tableAlias, fieldAlias, attribute.adapter!.field));
+        } else {  
           for (const fLink of field.links) {
             items = items.concat(this._makeFields(fLink));
           }  
-        // }
+        }
 
         return items;
       }
@@ -395,6 +395,28 @@ export class Select {
           } else {
             return SQLTemplates.equals(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
           }
+        });
+        const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+      if (item.isNotDistinctFrom) {
+        const filterItems = item.isNotDistinctFrom.map((equals) => {
+          const findLink = this._getLink(equals.alias, link);
+          const alias = this._getTableAlias(findLink, equals.attribute.adapter!.relation);
+          if (equals.value === Object(equals.value)) {
+            const value = (equals.value as IEntityQueryAlias<ScalarAttribute>);
+            const alias = this._getTableAlias(this._getLink(value.alias, link, existsLink),
+              value.attribute.adapter!.relation);
+            const field = `${alias && `${alias}.`}${value.attribute.name}`;
+
+            return SQLTemplates.isNotDistinctFrom(this._getTableAlias(this._getLink(equals.alias, link, existsLink),
+              value.attribute.adapter!.relation),
+              equals.attribute.adapter!.field,
+              field)
+          }
+          return SQLTemplates.isNotDistinctFrom(alias, equals.attribute.adapter!.field, this._addToParams(equals.value));
         });
         const filter = Select._arrayJoinWithBracket(filterItems, " AND ");
         if (filter) {
