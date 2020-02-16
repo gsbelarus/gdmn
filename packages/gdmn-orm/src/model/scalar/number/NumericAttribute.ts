@@ -9,8 +9,8 @@ export interface INumericAttributeOptions<Adapter> extends INumberAttributeOptio
   scale: number;
 }
 
-export function isNumericAttribute(attr: Attribute): attr is NumericAttribute {
-  return attr.type === 'Numeric' && typeof (attr as any).precision === 'number' && typeof (attr as any).scale === 'number';
+export function isNumericAttribute(attr: any): attr is NumericAttribute {
+  return attr.type === 'Numeric' && typeof attr.precision === 'number' && typeof attr.scale === 'number';
 }
 
 export class NumericAttribute extends NumberAttribute<number> {

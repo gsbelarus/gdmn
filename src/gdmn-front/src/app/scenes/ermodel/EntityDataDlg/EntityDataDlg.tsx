@@ -32,8 +32,9 @@ import { useSettings } from '@src/app/hooks/useSettings';
 import { IDesignerSetting } from '../../designer/Designer.types';
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { Frame } from "../../gdmn/components/Frame";
-import { attr2fd, validateEntityDataValues, getEntityDataErrorMessage } from "../utils";
+import { attr2fd, validateEntityDataValues, getEntityDataErrorMessage, clearEntityDataErrorMessage } from "../utils";
 import { NumberField } from "../Entity/EntityDlg/NumberField";
+import { DatePickerFabric } from "@src/app/components/Datepicker/DatePickerFabric";
 
 interface ILastEdited {
   fieldName: string;
@@ -116,11 +117,11 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const isDesigner = useRef(getSavedIsDesigner());
   const changesDesigner = useRef(getSavedChangesDesigner());
   const [designer, setDesigner] = useState(isDesigner.current);
-  const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
+  const needFocus = useRef<ITextField | IComboBox | ICheckbox | IDatePicker | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
-  const [valueErrors, setValueErrors] = useState<EntityDataErrors>([]);
+  const [valueErrors, setValueErrors] = useState<EntityDataErrors | undefined>([]);
 
   const addViewTab = (recordSet: RecordSet | undefined) => {
     let lName = entityName;
@@ -179,7 +180,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
       //Если есть хотя бы одна ошибка, выходим из функции post без сохранения записи
       const newErrors = validateEntityDataValues(rs, entity, setComboBoxData, valueErrors);
       setValueErrors(newErrors);
-      if (newErrors.length) {
+      if (newErrors?.length) {
         return;
       }
 
@@ -730,7 +731,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 setChanged(true);
                 changedFields.current[fieldName] = true;
               };
-              setValueErrors(valueErrors.filter(e => e.field !== fieldName));
+              setValueErrors(clearEntityDataErrorMessage(fieldName, valueErrors));
             }
           }
           onLookup={
@@ -830,7 +831,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
             changedFields.current[fd.fieldName] = true;
             setChanged(true);
             applyLastEdited();
-            setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
+            setValueErrors(clearEntityDataErrorMessage(fd.fieldName, valueErrors));
           }
         }
         onFocus={
@@ -886,7 +887,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                     setChanged(true);
                     changedFields.current[refIdFieldAlias] = true;
                   };
-                  setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
+                  setValueErrors(clearEntityDataErrorMessage(fd.fieldName, valueErrors));
                 }
               }
               onFocus={
@@ -985,7 +986,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 changedFields.current[fd.fieldName] = true;
                 setChanged(true);
               };
-              setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
+              setValueErrors(clearEntityDataErrorMessage(fd.fieldName, valueErrors));
             }
           }
           onFocus={
@@ -1005,7 +1006,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           }
           styles={props.styles}
           errorMessage={getEntityDataErrorMessage(fd.fieldName, valueErrors)}
-      />);
+        />
+      );
     } else if (fd.dataType === TFieldType.Boolean) {
       const subComponentStyle = {
         root: {marginTop: '10px'},
@@ -1068,7 +1070,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
                 changedFields.current[fd.fieldName] = true;
                 setChanged(true);
               };
-              setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
+              setValueErrors(clearEntityDataErrorMessage(fd.fieldName, valueErrors));
             }
           }
           onFocus={
@@ -1113,7 +1115,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               changedFields.current[fd.fieldName] = true;
               setChanged(true);
             };
-            setValueErrors(valueErrors.filter(e => e.field !== fd.fieldName));
+            setValueErrors(clearEntityDataErrorMessage(fd.fieldName, valueErrors));
           }}
           onFocus={
             () => {
@@ -1130,7 +1132,10 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               }
             }
           }
-          onInvalidValue={() => setValueErrors([...valueErrors.filter(e => e.field !== fd.fieldName), {field: fd.fieldName, message: 'Invalid value'}])}
+          onInvalidValue={() => {
+            const errs = clearEntityDataErrorMessage(fd.fieldName, valueErrors);
+            setValueErrors(errs ? [...errs, {field: fd.fieldName, message: 'Invalid value'}] : [{field: fd.fieldName, message: 'Invalid value'}])}
+          }
         />
       )
     }

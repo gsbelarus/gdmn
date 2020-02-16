@@ -189,7 +189,7 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
 /**
    * Проверка всех полей из рекордсета на валидность
    */
-  export const validateEntityDataValues = (rs: RecordSet, entity: Entity, setComboBoxData: ISetComboBoxData, prevError: EntityDataErrors): EntityDataErrors => {
+  export const validateEntityDataValues = (rs: RecordSet, entity: Entity, setComboBoxData: ISetComboBoxData, prevError?: EntityDataErrors): EntityDataErrors | undefined => {
     if (rs && entity) {
       const errors = rs.fieldDefs.reduce(
         (p, fd) => {
@@ -199,7 +199,6 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
               const value = rs.getValue(fd.fieldName);
               //Если поле не заполнено, но оно обязательно для заполнения
               if (value === null && attr.required) {
-                console.log(attr);
                 p.push({
                   field: fd.fieldName,
                   message: `Value can't be empty`
@@ -307,7 +306,7 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
         return p;
       }, errors as EntityDataErrors)
 
-      return equal(allErrors, prevError) ? prevError : allErrors;
+      return prevError && equal(allErrors, prevError) ? prevError : allErrors;
     }
     return prevError;
   };
@@ -319,3 +318,11 @@ export function attr2fd(query: EntityQuery, fieldAlias: string, linkAlias: strin
     }
     return undefined;
   };
+
+  export const clearEntityDataErrorMessage = (field: string, entityDataErrors?: EntityDataErrors) => {
+    if (entityDataErrors) {
+      return entityDataErrors.filter( l => l.field !== field );
+    }
+    return undefined;
+  };
+
