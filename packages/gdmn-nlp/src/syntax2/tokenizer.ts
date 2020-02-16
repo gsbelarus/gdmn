@@ -77,10 +77,12 @@ const isUniformPOS = (w1: AnyWord, w2: AnyWord) => {
 };
 
 /**
- * Убираем частицы. Они переплетаются с союзами и путаются под ногами.
+ * Убираем частицы. Они переплетаются с союзами и путаются под ногами,
+ * создавая слишком много вариантов разбора предложения.
+ * Но! оставляем отрицательную частицу.
  */
-const transform = (tokens: INLPToken[]): INLPToken[] => {
-  return tokens.map( t => t.words ? {...t, words: t.words.filter( w => !(w instanceof RusParticle) )} : t);
+const removeParticles = (tokens: INLPToken[]): INLPToken[] => {
+  return tokens.map( t => t.words ? {...t, words: t.words.filter( w => !(w instanceof RusParticle) || w.getSignature() === 'PARTNegt' )} : t);
 }
 
 /**
@@ -262,7 +264,7 @@ const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
 
     const startToken = tokens[startIdx];
 
-    if (!startToken.words || !startToken.words.length ||
+    if (!startToken.words?.length ||
       !(
         startToken.words[0] instanceof RusNoun ||
         startToken.words[0] instanceof RusVerb ||
@@ -286,9 +288,7 @@ const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
         tokens[endIdx].tokenType === nlpComma
         ||
         (
-          tokens[endIdx].words
-          &&
-          tokens[endIdx].words!.length
+          tokens[endIdx].words?.length
           &&
           (
             tokens[endIdx].words![0] instanceof RusConjunction
@@ -298,7 +298,7 @@ const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
         )
       )
     ) {
-      if (tokens[endIdx].words && tokens[endIdx].words!.length) {
+      if (tokens[endIdx].words?.length) {
         if (tokens[endIdx].words![0] instanceof RusConjunction) {
           if (wasConjunction) {
             break;
@@ -319,9 +319,80 @@ const replaceUniform = (inputTokens: INLPToken[]): INLPToken[] => {
         tokens[startIdx + cnt].tokenType === nlpLineBreak ||
         tokens[startIdx + cnt].tokenType === nlpComma ||
         (
-          tokens[startIdx + cnt].words
+          tokens[startIdx + cnt].words?.length
           &&
-          tokens[startIdx + cnt].words!.length
+          tokens[startIdx + cnt].words![0] instanceof RusConjunction
+        )
+      )
+    ) {
+      cnt--;
+    }
+
+    if (cnt) {
+      startToken.uniformPOS = tokens.splice(startIdx + 1, cnt);
+    }
+
+    startIdx++;
+  }
+
+  return tokens;
+};
+
+const replaceConsequentTokens = (inputTokens: INLPToken[]): INLPToken[] => {
+  const tokens = [...inputTokens];
+  let startIdx = 0;
+  while (startIdx < tokens.length) {
+
+    const startToken = tokens[startIdx];
+
+    if (startToken.tokenType !== nlpIDToken) {
+      startIdx++;
+      continue;
+    }
+
+    let endIdx = startIdx + 1;
+    let cnt = 0;
+    let wasConjunction = false;
+
+    while (endIdx < tokens.length &&
+      (
+        tokens[endIdx].tokenType === nlpWhiteSpace
+        ||
+        tokens[endIdx].tokenType === nlpLineBreak
+        ||
+        tokens[endIdx].tokenType === nlpComma
+        ||
+        tokens[endIdx].tokenType === nlpIDToken
+        ||
+        (
+          tokens[endIdx].words?.length
+          &&
+          tokens[endIdx].words![0] instanceof RusConjunction
+        )
+      )
+    ) {
+      if (tokens[endIdx].words?.length) {
+        if (tokens[endIdx].words![0] instanceof RusConjunction) {
+          if (wasConjunction) {
+            break;
+          }
+          wasConjunction = true;
+        } else {
+          wasConjunction = false;
+        }
+      }
+
+      endIdx++;
+      cnt++;
+    }
+
+    while (cnt &&
+      (
+        tokens[startIdx + cnt].tokenType === nlpWhiteSpace ||
+        tokens[startIdx + cnt].tokenType === nlpLineBreak ||
+        tokens[startIdx + cnt].tokenType === nlpComma ||
+        (
+          tokens[startIdx + cnt].words?.length
           &&
           tokens[startIdx + cnt].words![0] instanceof RusConjunction
         )
@@ -422,8 +493,8 @@ export function nlpTokenize(tokens: INLPToken[], uniform = true): INLPToken[][] 
     }
   }
 
-  return separateByPOS(transform(tokens)).map( t => {
+  return separateByPOS(removeParticles(tokens)).map( t => {
     const processed = replaceNumerals(t);
-    return uniform ? replaceUniform(processed) : processed;
+    return uniform ? replaceConsequentTokens(replaceUniform(processed)) : processed;
    } );
 };

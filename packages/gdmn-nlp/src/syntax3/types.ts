@@ -56,6 +56,8 @@ export interface IXSpecifier {
   template: XPhraseTemplate;
   optional?: boolean;
   noUniform?: boolean;
+  singular?: boolean;
+  comma?: boolean;
 };
 
 export type IXComplement = IXSpecifier;
@@ -99,16 +101,15 @@ export function isIXInheritedPhraseTemplate(t: any): t is IXInheritedPhraseTempl
 };
 
 interface IXWordBase {
-  type: 'EMPTY' | 'WORD' | 'TOKEN';
-};
-
-export interface IXEmpty extends IXWordBase {
-  type: 'EMPTY';
+  id: number;
+  type: 'WORD' | 'TOKEN';
+  uniform?: XWordOrToken[];
 };
 
 export interface IXWord extends IXWordBase {
   type: 'WORD';
   word: AnyWord;
+  negative?: boolean;
 };
 
 export interface IXToken extends IXWordBase {
@@ -120,17 +121,23 @@ export function isIXWord(w: any): w is IXWord {
   return w?.type === 'WORD';
 };
 
-export function isIXToken(w: any): w is IXWord {
+export function isIXToken(w: any): w is IXToken {
   return w?.type === 'TOKEN';
 };
 
-export type XWordOrToken = IXEmpty | IXToken | IXWord;
+export type XWordOrToken = IXToken | IXWord;
 
 export interface IXPhrase {
+  id: number;
   phraseTemplateId: string;
   specifier?: IXPhrase;
   head?: IXPhrase;
   headTokens?: XWordOrToken[];
   complements?: IXPhrase[];
   adjunct?: IXPhrase[];
+  prevSibling?: IXPhrase;
+};
+
+export function isIXPhrase(p: any): p is IXPhrase {
+  return p?.phraseTemplateId && typeof p.phraseTemplateId === 'string';
 };

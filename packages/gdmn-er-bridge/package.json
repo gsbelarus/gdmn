@@ -34,7 +34,7 @@
     "moment": "^2"
   },
   "devDependencies": {
-    "@types/jest": "^24",
+    "@types/jest": "^25",
     "@types/node": "^13",
     "@typescript-eslint/eslint-plugin": "^2.12.0",
     "@typescript-eslint/parser": "^2.12.0",

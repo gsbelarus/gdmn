@@ -1,10 +1,12 @@
 import { Action } from "./command";
+import { SemCategory } from "gdmn-nlp";
 
 export type ERTranslatorErrorCode = 'INVALID_PHRASE_STRUCTURE'
   | 'UNKNOWN_PHRASE'
   | 'UNKNOWN_ENTITY'
   | 'UNKNOWN_ATTR'
   | 'UNKNOWN_ACTION'
+  | 'ATTR_IS_NOT_ENTITY'
   | 'UNSUPPORTED_COMMAND_TYPE'
   | 'NO_CONTEXT';
 
@@ -40,36 +42,68 @@ export class ERTranslatorError extends Error {
 
 */
 
-export interface IXPhrase2CommandBase {
-  phraseTemplateId: string;
-  newContext: true | false;
+interface IXOrder {
+  clear?: boolean;
+  attrPath?: string;
+  orderValue?: string;
 };
 
-export interface IXPhrase2CommandNewContext extends IXPhrase2CommandBase {
-  newContext: true;
+export interface IXAttrValue {
+  attrPath?: string;
+  ofAttrPath?: string;
+  attrBySem?: SemCategory;
+  value: string;
+};
+
+interface IXWhere {
+  contains?: IXAttrValue;
+  negationPath?: string;
+};
+
+interface IXEntity {
+  path?: string;
+  entityClass?: string;
+};
+
+type Context = 'NEW' | 'EQ' | 'EQ/ORDER';
+
+export interface IXPhrase2CommandBase {
+  phraseTemplateId: string;
+  context: Context;
+};
+
+export interface IXPhrase2CommandNew extends IXPhrase2CommandBase {
+  context: 'NEW';
   actionSelector: {
     path?: string;
     testValue?: string;
     action: Action;
   }[],
   entityQuery: {
-    entity: {
-      path?: string;
-      entityClass?: string;
-    },
-    order?: {
-      attrPath: string;
-    }
+    entity: IXEntity,
+    order?: IXOrder,
+    where?: IXWhere[]
   }
 };
 
-export interface IXPhrase2CommandExistingContext extends IXPhrase2CommandBase {
-  newContext: false;
+export interface IXPhrase2CommandEQ extends IXPhrase2CommandBase {
+  context: 'EQ';
   entityQuery: {
-    order?: {
-      attrPath: string;
-    }
+    entity?: IXEntity,
+    order?: IXOrder,
+    where?: IXWhere[]
   }
 };
 
-export type XPhrase2Command = IXPhrase2CommandNewContext | IXPhrase2CommandExistingContext;
+export interface IXPhrase2CommandEQOrder extends IXPhrase2CommandBase {
+  context: 'EQ/ORDER';
+  entityQuery: {
+    order?: IXOrder
+  }
+};
+
+export type XPhrase2Command = IXPhrase2CommandNew | IXPhrase2CommandEQ | IXPhrase2CommandEQOrder;
+
+export interface IXTranslatorForward {
+  sortOrder?: 'ASC' | 'DESC';
+};

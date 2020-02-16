@@ -5,3 +5,4 @@ export * from './nlpDialog';
 export * from './command';
 export * from './types';
 export * from './command2text';
+export * from './translators';

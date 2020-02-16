@@ -139,6 +139,10 @@ export class EntityQueryOptions {
     return this._order;
   }
 
+  public set order(value) {
+    this._order = value;
+  }
+
   public static inspectorToObject(link: EntityLink,
                                   inspector: IEntityQueryOptionsInspector,
                                   erModel?: ERModel, existlLink?: EntityLink): EntityQueryOptions {

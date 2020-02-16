@@ -29,10 +29,10 @@ import { NLPDialogScroll } from './components/NLPDialogScroll';
 import { NLPDialog } from 'gdmn-nlp-agent';
 import { IMorphologyRouteProps } from '../nlp/morphology/Morphology.types';
 import { MorphologyContainer } from '../nlp/morphology/MorphologyContainer';
-import { ISyntaxRouteProps } from '../nlp/syntax/Syntax.types';
-import { SyntaxContainer } from '../nlp/syntax/SyntaxContainer';
 import { ERModel } from 'gdmn-orm';
 import { NLPDataViewContainer } from '../ermodel/NLPDataView/NLPDataViewContainer';
+import { ISyntax3RouteProps } from '../nlp/syntax3/Syntax3.types';
+import { Syntax3Container } from '../nlp/syntax3/Syntax3Container';
 
 interface IErrBoundaryProps {
   onLogError: (error: Error) => void;
@@ -288,7 +288,7 @@ export function GdmnView (props: IGdmnViewProps) {
       >
         <ErrBoundary onLogError={ error => dispatch(rootActions.onError(error)) }>
           <Stack horizontal styles={{ root: { height: '100%' } }}>
-            <Stack.Item styles={{ root: { minWidth: '240px' } }}>
+            <Stack.Item styles={{ root: { width: '260px' } }}>
               <NLPDialogScroll nlpDialog={nlpDialog} addNLPMessage={ text => dispatch(gdmnActions.nlpProcess({ item: { who: 'me', text }, history })) }/>
             </Stack.Item>
             <Stack.Item grow={1} styles={{ root: { height: 'calc(100% - 36px)' } }}>
@@ -483,8 +483,8 @@ export function GdmnView (props: IGdmnViewProps) {
                   <Route
                     path={`${match.path}/syntax`}
                     exact={true}
-                    render={ (props: RouteComponentProps<ISyntaxRouteProps>) => (
-                      <SyntaxContainer
+                    render={ (props: RouteComponentProps<ISyntax3RouteProps>) => (
+                      <Syntax3Container
                         {...props}
                         url={props.match.url}
                         key={props.match.url}

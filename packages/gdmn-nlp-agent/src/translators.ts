@@ -1,4 +1,20 @@
-import { XPhrase2Command, IXPhrase2CommandNewContext, IXPhrase2CommandExistingContext } from "./types";
+import { SemCategory } from "gdmn-nlp";
+import { XPhrase2Command, IXPhrase2CommandEQ, IXPhrase2CommandNew, IXPhrase2CommandEQOrder } from "./types";
+
+const vpShow2Command: IXPhrase2CommandNew = {
+  phraseTemplateId: 'vpShow',
+  context: 'NEW',
+  actionSelector: [{
+    path: 'H',
+    testValue: 'покажи',
+    action: 'QUERY'
+  }],
+  entityQuery: {
+    entity: {
+      path: 'C/npAllObjects/H'
+    }
+  }
+};
 
 /**
  *
@@ -15,28 +31,92 @@ import { XPhrase2Command, IXPhrase2CommandNewContext, IXPhrase2CommandExistingCo
  *
  * Пример: "[все] организации"
  */
-const vpShow2Command: IXPhrase2CommandNewContext = {
-  phraseTemplateId: 'vpShow',
-  newContext: true,
-  actionSelector: [{
-    path: 'H',
-    testValue: 'покажи',
-    action: 'QUERY'
-  }],
+
+const vpShowByPlace2Command: IXPhrase2CommandNew = {
+  ...vpShow2Command,
+  phraseTemplateId: 'vpShowByPlace',
   entityQuery: {
     entity: {
-      path: 'C/npAllObjects/H'
+      path: 'C/npAllObjectsFromPlace/H'
     }
   }
 };
 
-const vpSortBy2Command: IXPhrase2CommandExistingContext = {
+const ppFromPlace2Command: IXPhrase2CommandEQ = {
+  phraseTemplateId: 'ppFromPlace',
+  context: 'EQ',
+  entityQuery: {
+    where: [
+      {
+        contains: {
+          attrBySem: SemCategory.ObjectLocation,
+          value: 'C/nounGent/H'
+        }
+      }
+    ]
+  }
+};
+
+const vpSortBy2Command: IXPhrase2CommandEQ = {
   phraseTemplateId: 'vpSortBy',
-  newContext: false,
+  context: 'EQ',
   entityQuery: {
     order: {
-      attrPath: 'C/ppBy/C/nounDatv/H'
+      clear: true
     }
+  }
+};
+
+const ppBy2Command: IXPhrase2CommandEQOrder = {
+  phraseTemplateId: 'ppBy',
+  context: 'EQ/ORDER',
+  entityQuery: {
+    order: {
+      attrPath: 'C/nounDatv/H'
+    }
+  }
+};
+
+const ppSortOrder2Command: IXPhrase2CommandEQOrder = {
+  phraseTemplateId: 'ppSortOrder',
+  context: 'EQ/ORDER',
+  entityQuery: {
+    order: {
+      orderValue: 'C/nounSortOrder/H'
+    }
+  }
+};
+
+const npContains2Command: IXPhrase2CommandEQ = {
+  phraseTemplateId: 'npContains',
+  context: 'EQ',
+  entityQuery: {
+    where: [
+      {
+        negationPath: 'C/vpContains/H',
+        contains: {
+          attrPath: 'H',
+          value: 'C/vpContains/C/quotedLiteral/H',
+        }
+      }
+    ]
+  }
+};
+
+const npOfAttrContains2Command: IXPhrase2CommandEQ = {
+  phraseTemplateId: 'npOfAttrContains',
+  context: 'EQ',
+  entityQuery: {
+    where: [
+      {
+        negationPath: 'C/vpContains/H',
+        contains: {
+          attrPath: 'H/npOfAttr/H',
+          ofAttrPath: 'H/npOfAttr/C/npGentAttr/C/nounNomn/H',
+          value: 'C/vpContains/C/quotedLiteral/H',
+        }
+      }
+    ]
   }
 };
 
@@ -46,5 +126,11 @@ interface IXTranslators {
 
 export const xTranslators: IXTranslators = {
   vpShow: vpShow2Command,
-  vpSortBy: vpSortBy2Command
+  vpShowByPlace: vpShowByPlace2Command,
+  ppFromPlace: ppFromPlace2Command,
+  vpSortBy: vpSortBy2Command,
+  ppBy: ppBy2Command,
+  ppSortOrder: ppSortOrder2Command,
+  npContains: npContains2Command,
+  npOfAttrContains: npOfAttrContains2Command
 };

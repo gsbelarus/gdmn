@@ -1,7 +1,7 @@
 import {AConnection} from "gdmn-db";
 import {ERBridge} from "gdmn-er-bridge";
 import {SemCategory} from "gdmn-nlp";
-import {ERModel} from "gdmn-orm";
+import {ERModel, EntityAttribute} from "gdmn-orm";
 import {loadDBDetails} from "./testConfig";
 import {ERTranslatorRU3} from "../src";
 
@@ -66,7 +66,6 @@ describe("agent3", () => {
     expect(translator.command.payload.link.entity).toEqual(company);
   });
 
-   /*
 
   it("phrase4", () => {
     const company = erModel.entities.TgdcCompany;
@@ -77,7 +76,7 @@ describe("agent3", () => {
     expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
     expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
 
-    translator = translator.processText("покажи организации из минска");
+    translator = translator.processText("покажи все организации из минска");
 
     expect(translator.command.action).toEqual("QUERY");
     expect(translator.command.payload).toBeDefined();
@@ -90,6 +89,8 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].contains![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].contains![0].value).toEqual("минск");
+
+    translator = translator.processText('название содержит "ООО"');
   });
 
   it("phrase5", () => {
@@ -122,6 +123,71 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].or![1].contains![0].attribute)
       .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
     expect(translator.command.payload.options!.where![0].or![1].contains![0].value).toEqual("пинск");
+
+    translator = translator.processText('название содержит "ООО"');
+    expect(translator.command.payload.options!.where![1].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![1].contains![0].alias).toEqual("root");
+    expect(translator.command.payload.options!.where![1].contains![0].attribute)
+      .toEqual(translator.command.payload.link.entity.attribute("NAME"));
+    expect(translator.command.payload.options!.where![1].contains![0].value).toEqual("ООО");
+
+    translator = translator.processText('название не содержит "ООО"');
+    expect(translator.command.payload.options!.where![2].not![0].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].alias).toEqual("root");
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].attribute)
+      .toEqual(translator.command.payload.link.entity.attribute("NAME"));
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].value).toEqual("ООО");
+  });
+
+  it("phrase5-1", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
+    translator = translator.processText("покажи организации из минска, пинска");
+
+    translator = translator.processText('NAME содержит "ООО"');
+    expect(translator.command.payload.options!.where![1].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![1].contains![0].alias).toEqual("root");
+    expect(translator.command.payload.options!.where![1].contains![0].attribute)
+      .toEqual(translator.command.payload.link.entity.attribute("NAME"));
+    expect(translator.command.payload.options!.where![1].contains![0].value).toEqual("ООО");
+
+    translator = translator.processText('NAME не содержит "ООО"');
+    expect(translator.command.payload.options!.where![2].not![0].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].alias).toEqual("root");
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].attribute)
+      .toEqual(translator.command.payload.link.entity.attribute("NAME"));
+    expect(translator.command.payload.options!.where![2].not![0].contains![0].value).toEqual("ООО");
+  });
+
+  it("phrase5-2", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    const placeKey = company.attributes.PLACEKEY;
+    expect(placeKey).toBeDefined();
+    expect(placeKey.semCategories).toEqual([SemCategory.ObjectLocation]);
+    expect(company.attributesBySemCategory(SemCategory.ObjectLocation)).toEqual([placeKey]);
+
+    translator = translator.processText("покажи организации");
+    translator = translator.processText('NAME атрибута PLACEKEY содержит "минск"');
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options).toBeDefined();
+    expect(translator.command.payload.options!.where).toBeDefined();
+    expect(translator.command.payload.options!.where![0]).toBeDefined();
+    expect(translator.command.payload.options!.where![0].contains).toBeDefined();
+    expect(translator.command.payload.options!.where![0].contains![0].alias).toEqual("PLACEKEY");
+    expect(translator.command.payload.options!.where![0].contains![0].attribute)
+      .toEqual((placeKey as EntityAttribute).entities[0].attribute("NAME"));
+    expect(translator.command.payload.options!.where![0].contains![0].value).toEqual("минск");
   });
 
   it("phrase6", () => {
@@ -212,6 +278,7 @@ describe("agent3", () => {
     expect(translator.command.payload.options!.where![0].or![1].contains![0].value).toEqual("пинск");
   });
 
+  /*
    it("phrase9", () => {
     const company = erModel.entities.TgdcCompany;
     expect(company).toBeDefined();
@@ -296,7 +363,168 @@ describe("agent3", () => {
     expect(translator.command.payload).toBeDefined();
     expect(translator.command.payload.link.entity).toEqual(company);
     expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+
+    translator = translator.processText("по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
   });
+
+  it("phrase12-1", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по NAME, CITY");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+
+    translator = translator.processText("по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+  });
+
+  it("phrase12-2", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по NAME, по CITY, по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+  it("phrase12-3", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по NAME, CITY, по убыванию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+  it("phrase12-4", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по убыванию по NAME, CITY");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('DESC');
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
+  it("phrase12-5", () => {
+    const company = erModel.entities.TgdcCompany;
+    expect(company).toBeDefined();
+
+    translator = translator.processText("покажи все TgdcCompany");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+
+    translator = translator.processText("отсортируй по названию, по убыванию, по адресу, по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('DESC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+
+    translator = translator.processText("по возрастанию");
+
+    expect(translator.command.action).toEqual("QUERY");
+    expect(translator.command.payload).toBeDefined();
+    expect(translator.command.payload.link.entity).toEqual(company);
+    expect(translator.command.payload.options?.order?.[0]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[0]?.type).toEqual('ASC');
+    expect(translator.command.payload.options?.order?.[1]).toBeDefined();
+    expect(translator.command.payload.options?.order?.[1]?.type).toEqual('ASC');
+  });
+
 
   /*
   it("phrase13", () => {

@@ -46,6 +46,10 @@ export class ERModel {
     return this._entities;
   }
 
+  get notEmpty() {
+    return !!(this._entities && Object.keys(this._entities).length);
+  }
+
   get relation2Entity(): IRelation2Entity {
     return this._relation2Entity;
   }

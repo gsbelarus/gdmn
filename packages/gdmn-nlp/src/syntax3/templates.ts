@@ -15,6 +15,23 @@ const specifierAll: IXPhraseTemplate = {
   }
 };
 
+const nounNomn: IXPhraseTemplate = {
+  id: 'nounNomn',
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        case: RusCase.Nomn,
+        number: 'SINGULAR'
+      },
+      {
+        type: 'ID'
+      }
+    ]
+  }
+};
+
 const nounGent: IXPhraseTemplate = {
   id: 'nounGent',
   head: {
@@ -47,17 +64,20 @@ const nounDatv: IXPhraseTemplate = {
   }
 };
 
-/*
-const idTemplate: IXPhraseTemplate = {
-  id: 'idTemplate',
+const quotedLiteral: IXPhraseTemplate = {
+  id: 'quotedLiteral',
   head: {
-    template: [{
-      type: 'ID'
-    }]
+    template: [
+      {
+        type: 'QUOTED_LITERAL'
+      }
+    ]
   }
 };
-*/
 
+/**
+ * Из Минска.
+ */
 const ppFromPlace: IXPhraseTemplate = {
   id: 'ppFromPlace',
   head: {
@@ -72,6 +92,9 @@ const ppFromPlace: IXPhraseTemplate = {
   }]
 };
 
+/**
+ * по названию, адресу
+ */
 const ppBy: IXPhraseTemplate = {
   id: 'ppBy',
   head: {
@@ -85,6 +108,43 @@ const ppBy: IXPhraseTemplate = {
     {
       template: nounDatv,
     },
+  ]
+};
+
+const nounSortOrder: IXPhraseTemplate = {
+  id: 'nounSortOrder',
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        image: 'возрастанию'
+      },
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        image: 'убыванию'
+      },
+    ]
+  }
+};
+
+/**
+ * по возрастанию, по убыванию
+ */
+const ppSortOrder: IXPhraseTemplate = {
+  id: 'ppSortOrder',
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'PREP',
+      image: 'по'
+    }]
+  },
+  complements:[
+    {
+      template: nounSortOrder
+    }
   ]
 };
 
@@ -119,6 +179,120 @@ const npAllObjectsFromPlace: IXInheritedPhraseTemplate = {
   examples: ['все организации из минска', 'организации из минска и пинска', 'все TgdcCompany из минска'],
   complements: [{
     template: ppFromPlace
+  }]
+};
+
+const vpContains: IXPhraseTemplate = {
+  id: 'vpContains',
+  label: 'Глагольная фраза вида "Содержит "....." "',
+  examples: ['Содержит "ООО"'],
+  head: {
+    template: [{
+      type: 'WORD',
+      pos: 'VERB',
+      image: 'содержит',
+    }],
+    noUniform: true
+  },
+  complements: [{
+    template: quotedLiteral,
+    singular: true,
+    noUniform: true
+  }]
+};
+
+const npContains: IXPhraseTemplate = {
+  id: 'npContains',
+  label: 'Фраза вида "Название содержит "....." "',
+  examples: [
+    'Название содержит "ООО"',
+    'NAME содержит "ООО"',
+  ],
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        case: RusCase.Nomn,
+        number: 'SINGULAR'
+      },
+      {
+        type: 'ID'
+      }
+    ],
+    noUniform: true
+  },
+  complements: [{
+    template: vpContains,
+    singular: true,
+    noUniform: true
+  }]
+};
+
+const npGentAttr: IXPhraseTemplate = {
+  id: 'npGentAttr',
+  label: 'Фраза вида "атрибута PLACEKEY"',
+  examples: [
+    'атрибута PLACEKEY',
+  ],
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        image: 'атрибута'
+      }
+    ],
+    noUniform: true
+  },
+  complements: [{
+    template: nounNomn,
+    singular: true,
+    noUniform: true
+  }]
+};
+
+const npOfAttr: IXPhraseTemplate = {
+  id: 'npOfAttr',
+  label: 'Фраза вида "Название атрибута PLACEKEY"',
+  examples: [
+    'Название атрибута PLACEKEY',
+    'NAME атрибута PLACEKEY',
+  ],
+  head: {
+    template: [
+      {
+        type: 'WORD',
+        pos: 'NOUN',
+        case: RusCase.Nomn,
+        number: 'SINGULAR'
+      },
+      {
+        type: 'ID'
+      }
+    ],
+    noUniform: true
+  },
+  complements: [{
+    template: npGentAttr,
+    singular: true,
+    noUniform: true
+  }]
+};
+
+const npOfAttrContains: IXPhraseTemplate = {
+  id: 'npOfAttrContains',
+  label: 'Фраза вида "Название атрибута PLACEKEY содержит "....." "',
+  head: {
+    template: [
+      npOfAttr
+    ],
+    noUniform: true
+  },
+  complements: [{
+    template: vpContains,
+    singular: true,
+    noUniform: true
   }]
 };
 
@@ -175,13 +349,28 @@ const vpSortBy: IXPhraseTemplate = {
     ],
     noUniform: true
   },
-  complements: [{
-    template: ppBy
-  }]
+  complements: [
+    // более частные комплементы, должны идти
+    // перед более общими
+    {
+      template: ppSortOrder,
+      optional: true,
+      comma: true
+    },
+    {
+      template: ppBy,
+      optional: false,
+      comma: true
+    },
+  ]
 };
 
 export const xTemplates = {
   vpShow,
   vpShowByPlace,
-  vpSortBy
+  vpSortBy,
+  ppSortOrder,
+  vpContains,
+  npContains,
+  npOfAttrContains
 };

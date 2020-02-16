@@ -39,4 +39,10 @@ describe("ERModel", () => {
     const erModel2 = new ERModel(erModel);
     expect(erModel).toEqual(erModel2);
   });
+
+  it("notEmpty", async () => {
+    const erModel2 = new ERModel();
+    expect(erModel2.notEmpty).toEqual(false);
+    expect(erModel.notEmpty).toEqual(true);
+  });
 });
