@@ -34,7 +34,6 @@ import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBo
 import { Frame } from "../../gdmn/components/Frame";
 import { attr2fd, validateEntityDataValues, getEntityDataErrorMessage, clearEntityDataErrorMessage } from "../utils";
 import { NumberField } from "../Entity/EntityDlg/NumberField";
-import { DatePickerFabric } from "@src/app/components/Datepicker/DatePickerFabric";
 
 interface ILastEdited {
   fieldName: string;
@@ -117,7 +116,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
   const isDesigner = useRef(getSavedIsDesigner());
   const changesDesigner = useRef(getSavedChangesDesigner());
   const [designer, setDesigner] = useState(isDesigner.current);
-  const needFocus = useRef<ITextField | IComboBox | ICheckbox | IDatePicker | undefined>();
+  const needFocus = useRef<ITextField | IComboBox | ICheckbox | undefined>();
   const [changed, setChanged] = useState(!!((rs && rs.changed) || lastEdited.current || newRecord));
   const [setComboBoxData, setSetComboBoxData] = useState({} as ISetComboBoxData);
 
