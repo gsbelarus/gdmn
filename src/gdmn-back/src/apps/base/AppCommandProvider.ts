@@ -28,7 +28,8 @@ import {
   DeleteSettingCmd,
   SqlPrepareCmd,
   AddAttributeCmd,
-  UpdateAttributeCmd
+  UpdateAttributeCmd,
+  CheckEntityEmptyCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -232,6 +233,12 @@ export class AppCommandProvider {
       && isISettingData(command.payload.data);
   }
 
+  private static _verifyCheckEntityEmptyCmd(command: ICmd<AppAction, any>): command is CheckEntityEmptyCmd {
+    return typeof command.payload === "object"
+      && !!command.payload;
+    // TODO
+  }
+
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
     if (!command.payload) {
       (command.payload as any) = {};
@@ -402,6 +409,12 @@ export class AppCommandProvider {
       case "DELETE_SETTING": {
         if (AppCommandProvider._verifyDeleteSettingCmd(command)) {
           return this._application.pushDeleteSettingCmd(session, command);
+        }
+        throw new Error(`Incorrect ${command.action} command`);
+      }
+      case "CHECK_ENTITY_EMPTY": {
+        if (AppCommandProvider._verifyCheckEntityEmptyCmd(command)) {
+          return this._application.pushCheckEntityEmptyCmd(session,command);
         }
         throw new Error(`Incorrect ${command.action} command`);
       }

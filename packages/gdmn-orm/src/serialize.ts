@@ -76,6 +76,7 @@ export interface IBlobAttribute extends IAttribute {
 
 export interface IEntityAttribute extends IAttribute {
   references: string[];
+  defaultValue?: number;
 }
 
 export function isEntityAttribute(attr: IAttribute): attr is IEntityAttribute {
@@ -101,6 +102,7 @@ export interface IEntity {
   unique: string[][];
   attributes: IAttribute[];
   adapter?: any;
+  defaultValue?: number;
 }
 
 export function isIEntity(e: any): e is IEntity {
@@ -109,6 +111,7 @@ export function isIEntity(e: any): e is IEntity {
     && e.lName instanceof Object
     && typeof e.isAbstract === 'boolean'
     && typeof e.semCategories === 'string'
+    && typeof e.defaultValue === 'number'
     && Array.isArray(e.attributes);
 }
 
@@ -169,8 +172,9 @@ export const deserializeEntity = (erModel: ERModel, serializedEntity: IEntity, w
 
     case "Entity": {
       const attr = _attr as IEntityAttribute;
+      const defaultValue = attr.defaultValue;
       const entities = attr.references.map((e) => erModel.entity(e));
-      return new EntityAttribute({name, lName, required, entities, semCategories, adapter});
+      return new EntityAttribute({name, lName, required, entities, semCategories, adapter, defaultValue});
     }
 
     case "String": {
