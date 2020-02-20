@@ -14,7 +14,8 @@ import {
   ScalarAttribute,
   SetAttribute,
   StringAttribute,
-  BlobAttribute
+  BlobAttribute,
+  EntityAttribute
 } from "gdmn-orm";
 import moment from "moment";
 import { Constants } from "../Constants";
@@ -165,6 +166,10 @@ export class DomainResolver {
         return `${+value}`;
       case "Enum":
         return `'${value}'`;
+      case "Entity":
+        if (attr instanceof EntityAttribute) {
+          return `${value}`;
+        }
       default:
         if (attr instanceof NumberAttribute) {
           return `${value}`;

@@ -24,7 +24,9 @@ import {
   SequenceQuery,
   IEntity,
   IEntityInsertFieldInspector,
-  IAttribute
+  IAttribute,
+  ScalarAttribute,
+  EntityAttribute
 } from "gdmn-orm";
 import log4js from "log4js";
 import {Constants} from "../../Constants";
@@ -71,7 +73,8 @@ export type AppAction =
   | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
   | "SAVE_SETTING"
-  | "DELETE_SETTING";
+  | "DELETE_SETTING"
+  | "CHECK_ENTITY_EMPTY";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
 
@@ -104,6 +107,7 @@ export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntit
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
 export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
+export type CheckEntityEmptyCmd = AppCmd<"CHECK_ENTITY_EMPTY", IEntity>;
 
 export class Application extends ADatabase {
 
@@ -516,6 +520,51 @@ export class Application extends ADatabase {
     return task;
   }
 
+  /** Проверка сущности на наличие записей*/
+  public pushCheckEntityEmptyCmd(session: Session,
+                                    command: CheckEntityEmptyCmd
+  ): Task<CheckEntityEmptyCmd,  boolean >{
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const entityData = context.command.payload;
+        const result = await context.session.executeConnection((connection) => AConnection.executeTransaction({
+          connection,
+          callback: (transaction) => ERBridge.executeSelf({
+            connection,
+            transaction,
+            callback: async () => {
+              const entity = this.erModel.entity(entityData.name);
+              const length = entity.adapter?.relation.length ?? 0;
+              const tablename =  entity.adapter?.relation[length-1]?.relationName ?? entity.name;
+              return await AConnection.executeQueryResultSet({
+                connection,
+                transaction: connection.readTransaction,
+                sql: `
+                  SELECT FIRST 1 * FROM ${tablename}
+                `,
+                callback: async (resultSet) => {
+                  await resultSet.next();
+                  const result = resultSet.getAll()[0]; 
+                  return  result;
+                }
+              }); 
+            }
+          })
+        }));
+        return  result ? true : false;
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   /** Добавление атрибута в существующую сущность*/
   public pushAddAttributeCmd(session: Session,
                                 command: AddAttributeCmd
@@ -540,6 +589,8 @@ export class Application extends ADatabase {
               const attribute = EntityUtils.createAttribute(attrData, this.erModel, undefined, entity);
               const length = entity.adapter?.relation.length ?? 0;
               const tablename =  entity.adapter?.relation[length-1]?.relationName ?? entity.name;
+              const isScalar = attribute instanceof ScalarAttribute && attribute.type !== "Blob";
+              const isEntity = attribute instanceof EntityAttribute;
               await AConnection.executeQueryResultSet({
                 connection,
                 transaction: connection.readTransaction,
@@ -549,7 +600,7 @@ export class Application extends ADatabase {
                 callback: async (resultSet) => {
                   await resultSet.next();
                   const result = resultSet.getAll()[0];
-                  if (result && attribute.required)
+                  if (result && attribute.required && !isScalar && !isEntity)
                     throw new Error("Entity has null values for not null attributes");
                   await erBuilder.eBuilder.createAttribute(entity, attribute);
                 }

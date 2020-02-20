@@ -69,7 +69,9 @@ import {
   TDeleteSettingTaskCmdResult,
   TUpdateEntityTaskCmdResult,
   TAddAttributeTaskCmdResult,
-  TUpdateAttributeTaskCmdResult
+  TUpdateAttributeTaskCmdResult,
+  TCheckEntityEmptyTaskCmd,
+  TCheckEntityEmptyTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -430,6 +432,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.DELETE_ENTITY,
+        payload
+      }
+    });
+  }
+
+  public checkEntityEmpty(payload: TTaskActionPayloadTypes[TTaskActionNames.CHECK_ENTITY_EMPTY]): Promise<TCheckEntityEmptyTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.CHECK_ENTITY_EMPTY,
         payload
       }
     });

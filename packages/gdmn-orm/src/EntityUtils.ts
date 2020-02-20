@@ -64,8 +64,9 @@ export class EntityUtils {
 
       case "Entity": {
         const attr = _attr as IEntityAttribute;
+        const defaultValue = attr.defaultValue;
         const entities = attr.references.map((e) => erModel.entity(e));
-        return new EntityAttribute({name, lName, required, entities, semCategories, adapter});
+        return new EntityAttribute({name, lName, required, entities, semCategories, adapter, defaultValue});
       }
 
       case "String": {

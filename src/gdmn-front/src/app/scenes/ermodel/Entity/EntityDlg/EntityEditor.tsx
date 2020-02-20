@@ -5,6 +5,7 @@ import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { IAttributeEditorProps } from "./EntityAttribute";
 import { getErrorMessage } from "./utils";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { NumberField } from "./NumberField";
 
 interface IEntityValueProps {
   entityName: string;
@@ -53,7 +54,7 @@ interface IEntityEditorState {
   entityName: string;
 };
 
-export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, attrIdx }: IAttributeEditorProps<IEntityAttribute>) => {
+export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, attrIdx, onError, onClearError }: IAttributeEditorProps<IEntityAttribute>) => {
   const [state, setState] = useState<IEntityEditorState | undefined>();
   const errRef = getErrorMessage(attrIdx, 'references', errorLinks);
 
@@ -134,7 +135,7 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
             }
           </Stack>
         }
-      </Frame>
+      </Frame> 
       <Label styles={
           { root: {
             color: getTheme().semanticColors.errorText,
@@ -144,6 +145,17 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
         }>
         {errRef}
       </Label>
+      <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
+        <NumberField
+          label="Default value:"
+          onlyInteger={attr.type === 'Integer'}
+          value={attr.defaultValue} 
+          width="180px"
+          errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
+          onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
+          onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }
+        />
+      </Stack>
     </div>
   );
 };
