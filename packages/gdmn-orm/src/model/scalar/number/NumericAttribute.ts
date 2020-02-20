@@ -2,10 +2,15 @@ import {IAttributeAdapter} from "../../../rdbadapter";
 import {INumericAttribute} from "../../../serialize";
 import {AttributeTypes} from "../../../types";
 import {INumberAttributeOptions, NumberAttribute} from "./NumberAttribute";
+import { Attribute } from "../../Attribute";
 
 export interface INumericAttributeOptions<Adapter> extends INumberAttributeOptions<number, undefined, Adapter> {
   precision: number;
   scale: number;
+}
+
+export function isNumericAttribute(attr: any): attr is NumericAttribute {
+  return attr.type === 'Numeric' && typeof attr.precision === 'number' && typeof attr.scale === 'number';
 }
 
 export class NumericAttribute extends NumberAttribute<number> {
