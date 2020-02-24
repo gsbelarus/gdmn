@@ -30,8 +30,7 @@
     "react-virtualized": "9.21.0",
     "redux": "^4",
     "redux-thunk": "^2",
-    "typesafe-actions": "^4",
-    "typescript": "^3"
+    "typesafe-actions": "^4"
   },
   "devDependencies": {
     "@types/classnames": "^2",
@@ -52,6 +51,7 @@
     "webpack": "^4",
     "webpack-cli": "^3",
     "webpack-dev-middleware": "^3",
-    "webpack-hot-middleware": "^2"
+    "webpack-hot-middleware": "^2",
+    "typescript": "^3"
   }
 }
