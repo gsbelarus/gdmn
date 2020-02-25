@@ -72,8 +72,8 @@ export class Internals extends View<IInternalsProps, {}> {
                 <div>{vt.rs ? `Recordsets: [${vt.rs.join()}]` : 'No recordsets'}</div>
                 {vt.translator && <div>NLP command: {command2Text(vt.translator.command)}</div>}
                 {vt.sessionData &&
-                  <Frame border caption="Session data" marginTop canMinimize initialMinimized>
-                    {JSON.stringify(vt.sessionData, undefined, 2)}
+                  <Frame border caption="Session data" marginTop canMinimize>
+                    {JSON.stringify(Object.keys(vt.sessionData), undefined, 2)}
                   </Frame>
                 }
               </Frame>
