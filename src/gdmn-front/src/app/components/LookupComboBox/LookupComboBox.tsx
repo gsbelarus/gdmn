@@ -284,10 +284,10 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       let start = 0;
       const res = parts.reduce(
         (p, i, idx) => {
-          p.push(<span>{props.text.substring(start, start + i.length)}</span>);
+          p.push(<span key={start}>{props.text.substring(start, start + i.length)}</span>);
           start += i.length;
           if (idx < (parts.length - 1)) {
-            p.push(<span key={idx} style={{ color: 'red' }}>{lookupText}</span>);
+            p.push(<span key={start} style={{ color: 'red' }}>{lookupText}</span>);
             start += lookupText.length;
           }
           return p;
