@@ -279,28 +279,28 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
   }
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
-    if (props && lookupText) {
-      let pos = -1;
-      const parts = [];
-      while ((pos = props.text.toUpperCase().indexOf(lookupText.toUpperCase(), pos + 1)) != -1) {
-        parts.push(pos);
+    const text = props?.text;
+    if (text && lookupText) {
+      const res: JSX.Element[] = [];
+      const t = text.toLowerCase();
+      const l = lookupText.toLowerCase();
+      const len = l.length;
+      let s = 0;
+      let p = 0;
+      while ((p = t.indexOf(l, s)) !== -1) {
+        if (s < p) {
+          res.push(<span key={s}>{text.substring(s, p)}</span>);
+        }
+        res.push(<span key={p} style={{ color: 'red' }}>{text.substring(p, p + len)}</span>);
+        p += len;
+        s = p;
       }
-      let start = 0;
-      const res = parts.reduce(
-        (p, i, idx) => {
-          p.push(<span key={idx}>{props.text.substring(start, i)}</span>);
-          p.push(<span key={idx + 1000000} style={{ color: 'red' }}>{props.text.substring(i, i + lookupText.length)}</span>);
-          start = i + lookupText.length;
-          if (idx == parts.length - 1) {
-            p.push(<span key={idx + 200000}>{props.text.substring(start)}</span>);
-          }
-          return p;
-        },
-        [] as JSX.Element[]
-      );
+      if (s < text.length) {
+        res.push(<span key={s}>{text.substring(s)}</span>);
+      }
       return <>{res}</>;
     } else {
-      return <span>{props && props.text}</span>;
+      return <span>{text}</span>;
     }
   };
 
