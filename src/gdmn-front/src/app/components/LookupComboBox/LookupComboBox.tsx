@@ -280,15 +280,19 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
     if (props && lookupText) {
-      const parts = props.text.toUpperCase().split(lookupText.toUpperCase());
+      let pos = -1;
+      const parts = [];
+      while ((pos = props.text.toUpperCase().indexOf(lookupText.toUpperCase(), pos + 1)) != -1) {
+        parts.push(pos);
+      }
       let start = 0;
       const res = parts.reduce(
         (p, i, idx) => {
-          p.push(<span key={idx}>{props.text.substring(start, start + i.length)}</span>);
-          start += i.length;
-          if (idx < (parts.length - 1)) {
-            p.push(<span key={idx + 1000000} style={{ color: 'red' }}>{lookupText}</span>);
-            start += lookupText.length;
+          p.push(<span key={idx}>{props.text.substring(start, i)}</span>);
+          p.push(<span key={idx + 1000000} style={{ color: 'red' }}>{props.text.substring(i, i + lookupText.length)}</span>);
+          start = i + lookupText.length;
+          if (idx == parts.length - 1) {
+            p.push(<span key={idx + 200000}>{props.text.substring(start)}</span>);
           }
           return p;
         },
