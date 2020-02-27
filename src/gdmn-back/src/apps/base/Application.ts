@@ -69,14 +69,24 @@ export type AppAction =
   | "UPDATE_ENTITY"
   | "DELETE_ENTITY"
   | "ADD_ATTRIBUTE"
-  | "UPDATE_ATTRIBUTE"  
+  | "UPDATE_ATTRIBUTE"
   | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
   | "SAVE_SETTING"
   | "DELETE_SETTING"
-  | "CHECK_ENTITY_EMPTY";
+  | "CHECK_ENTITY_EMPTY"
+  | "GET_SERVER_PROCESS_INFO";
 
 export type AppCmd<A extends AppAction, P = undefined> = ICmd<A, P>;
+
+export interface IGetServerProcessInfoResponse {
+  memoryUsage: {
+    rss: number;
+    heapTotal: number;
+    heapUsed: number;
+    external: number;
+  }
+};
 
 export type DemoCmd = AppCmd<"DEMO", { withError: boolean }>;
 export type PingCmd = AppCmd<"PING", { steps: number; delay: number; testChildProcesses?: boolean }>;
@@ -108,6 +118,7 @@ export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] 
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
 export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
 export type CheckEntityEmptyCmd = AppCmd<"CHECK_ENTITY_EMPTY", IEntity>;
+export type GetServerProcessInfoCmd = AppCmd<"GET_SERVER_PROCESS_INFO", IGetServerProcessInfoResponse>;
 
 export class Application extends ADatabase {
 
@@ -310,6 +321,23 @@ export class Application extends ADatabase {
     return task;
   }
 
+  public pushGetServerProcessInfoCmd(session: Session, command: GetServerProcessInfoCmd): Task<GetServerProcessInfoCmd, IGetServerProcessInfoResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        return { memoryUsage: process.memoryUsage() };
+      }
+    });
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
   public pushSessionsInfoCmd(session: Session, command: GetSessionsInfoCmd): Task<GetSessionsInfoCmd, ISessionInfo[]> {
     const task = new Task({
       session,
@@ -468,7 +496,7 @@ export class Application extends ADatabase {
         if (!entity) {
           throw new Error("Entity is not found");
         }
-        
+
         await context.session.executeConnection((connection) => AConnection.executeTransaction({
           connection,
           callback: (transaction) => ERBridge.executeSelf({
@@ -550,10 +578,10 @@ export class Application extends ADatabase {
                 `,
                 callback: async (resultSet) => {
                   await resultSet.next();
-                  const result = resultSet.getAll()[0]; 
+                  const result = resultSet.getAll()[0];
                   return  result;
                 }
-              }); 
+              });
             }
           })
         }));
@@ -604,8 +632,8 @@ export class Application extends ADatabase {
                     throw new Error("Entity has null values for not null attributes");
                   await erBuilder.eBuilder.createAttribute(entity, attribute);
                 }
-              }); 
-              
+              });
+
             }
           })
         }));

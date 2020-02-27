@@ -29,7 +29,8 @@ import {
   SqlPrepareCmd,
   AddAttributeCmd,
   UpdateAttributeCmd,
-  CheckEntityEmptyCmd
+  CheckEntityEmptyCmd,
+  GetServerProcessInfoCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -201,7 +202,7 @@ export class AppCommandProvider {
       && typeof command.payload.entityName === "string";
     // TODO
   }
-  
+
   private static _verifyAddAttributeCmd(command: ICmd<AppAction, any>): command is AddAttributeCmd {
     return command.payload instanceof Object
       && instanceOfIEntity(command.payload.entityData);
@@ -237,6 +238,11 @@ export class AppCommandProvider {
     return typeof command.payload === "object"
       && !!command.payload;
     // TODO
+  }
+
+  private static _verifyGetServerProcessInfoCmd(command: ICmd<AppAction, any>): command is GetServerProcessInfoCmd {
+    // TODO
+    return true;
   }
 
   public receive(session: Session, command: ICmd<AppAction, unknown>): Task<any, any> {
@@ -415,6 +421,12 @@ export class AppCommandProvider {
       case "CHECK_ENTITY_EMPTY": {
         if (AppCommandProvider._verifyCheckEntityEmptyCmd(command)) {
           return this._application.pushCheckEntityEmptyCmd(session,command);
+        }
+        throw new Error(`Incorrect ${command.action} command`);
+      }
+      case "GET_SERVER_PROCESS_INFO": {
+        if (AppCommandProvider._verifyGetServerProcessInfoCmd(command)) {
+          return this._application.pushGetServerProcessInfoCmd(session, command);
         }
         throw new Error(`Incorrect ${command.action} command`);
       }

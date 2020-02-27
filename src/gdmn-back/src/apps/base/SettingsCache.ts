@@ -1,5 +1,5 @@
 import { ISettingEnvelope, isISettingData, ISettingParams } from 'gdmn-internals';
-import { promises } from "fs";
+import { promises as fsPromises } from "fs";
 import path from "path";
 
 interface ICachedFile {
@@ -29,8 +29,8 @@ export class SettingsCache {
       if (data.changed) {
         const fileName = this._getSettingFileName(type);
         try {
-          await promises.mkdir(path.dirname(fileName), { recursive: true });
-          await promises.writeFile(fileName, JSON.stringify(data.settings, undefined, 2), { encoding: 'utf8', flag: 'w' });
+          await fsPromises.mkdir(path.dirname(fileName), { recursive: true });
+          await fsPromises.writeFile(fileName, JSON.stringify(data.settings, undefined, 2), { encoding: 'utf8', flag: 'w' });
           data.changed = false;
         }
         catch (e) {
@@ -47,19 +47,25 @@ export class SettingsCache {
   private async _loadFromFile(type: string) {
     const fileName = this._getSettingFileName(type);
     try {
-      const json = await promises.readFile(fileName, { encoding: 'utf8', flag: 'r' });
+      const stat = await fsPromises.stat(fileName);
+
+      if(!stat.isFile()) {
+        return undefined;
+      }
+
+      const json = await fsPromises.readFile(fileName, { encoding: 'utf8', flag: 'r' });
       const arr = JSON.parse(json);
 
       if (Array.isArray(arr) && arr.length && isISettingData(arr[0])) {
-        console.log(`Read data from file ${fileName}`);
+        console.log(`${arr.length} objects from file ${fileName} has been read...`);
         return arr as ISettingEnvelope[];
       } else {
-        console.log(`Unknown data type in file ${fileName}`);
+        console.log(`Unknown data structure in file ${fileName}`);
         return undefined;
       }
     } catch (err) {
-        console.log(`Error reading file ${fileName} - ${err}`);
-        return undefined;
+      console.log(`Error reading file ${fileName}: ${err}`);
+      return undefined;
     }
   }
 

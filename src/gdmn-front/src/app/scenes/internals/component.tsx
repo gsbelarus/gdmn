@@ -8,6 +8,8 @@ import {IRsMetaState} from "@src/app/store/rsmeta";
 import {IconButton} from 'office-ui-fabric-react/lib/Button';
 import { Frame } from "../gdmn/components/Frame";
 import { command2Text } from "gdmn-nlp-agent";
+import { IGetServerProcessInfoResponse } from "@gdmn/server-api";
+import { apiService } from "@src/app/services/apiService";
 
 export interface IInternalsProps extends IViewProps<any> {
   erModel?: ERModel;
@@ -18,7 +20,13 @@ export interface IInternalsProps extends IViewProps<any> {
   getSessionInfo: () => void;
 };
 
+interface IInternalsState {
+  processInfo?: IGetServerProcessInfoResponse;
+};
+
 export class Internals extends View<IInternalsProps, {}> {
+
+  state: IInternalsState = {};
 
   public getViewHeaderHeight() {
     return 0;
@@ -28,13 +36,36 @@ export class Internals extends View<IInternalsProps, {}> {
     return "Internals";
   }
 
+  public componentDidMount() {
+    super.componentDidMount();
+    apiService.getServerProcessInfo({})
+      .then( res => {
+        if (!res.error) {
+          this.setState({ processInfo: res.payload.result });
+        }
+      });
+  }
+
   render() {
 
     const {erModel, recordSet, rsMeta, viewTabs, sessionInfo, getSessionInfo} = this.props;
+    const {processInfo} = this.state;
 
     return this.renderWide(
       undefined,
       <>
+        { processInfo &&
+          <Frame border marginTop marginLeft marginRight caption="Server Process">
+            <pre>
+              {
+`RSS: ${Math.floor(processInfo.memoryUsage.rss / 1024 / 1024)} MB
+Heap Total: ${Math.floor(processInfo.memoryUsage.heapTotal / 1024 / 1024)} MB
+Heap Used: ${Math.floor(processInfo.memoryUsage.heapUsed / 1024 / 1024)} MB
+External: ${Math.floor(processInfo.memoryUsage.external / 1024 / 1024)} MB`
+              }
+            </pre>
+          </Frame>
+        }
         <Frame border marginTop marginLeft marginRight caption="erModel">
           erModel: {erModel ? `${Object.entries(erModel.entities).length} entites` : 'not loaded'}
         </Frame>

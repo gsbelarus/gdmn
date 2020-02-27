@@ -71,7 +71,8 @@ import {
   TAddAttributeTaskCmdResult,
   TUpdateAttributeTaskCmdResult,
   TCheckEntityEmptyTaskCmd,
-  TCheckEntityEmptyTaskCmdResult
+  TCheckEntityEmptyTaskCmdResult,
+  TGetServerProcessInfoTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -441,6 +442,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.CHECK_ENTITY_EMPTY,
+        payload
+      }
+    });
+  }
+
+  public getServerProcessInfo(payload: TTaskActionPayloadTypes[TTaskActionNames.GET_SERVER_PROCESS_INFO]): Promise<TGetServerProcessInfoTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.GET_SERVER_PROCESS_INFO,
         payload
       }
     });
