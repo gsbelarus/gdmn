@@ -86,7 +86,7 @@ export interface IErrorLink {
 
 export type ErrorLinks = IErrorLink[];
 
-export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks) => {
+export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks, initialData?: IEntity) => {
   const errorLinks = entity.attributes.reduce(
    (p, attr, attrIdx) => {
       if (!stripUserPrefix(attr.name)) {
@@ -97,9 +97,11 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks)
           internal: false
         });
       } 
+      const isAdding = initialData?.attributes.find((a) => a.name == attr.name) || initialData === undefined;
+      
       switch (attr.type) {
         case 'Date':
-        case 'Time':
+        case 'Time': 
         case 'TimeStamp': {
           const s = attr as IDateAttribute;
           if (s.minValue !== undefined && s.maxValue !== undefined && s.minValue > s.maxValue) {
@@ -124,7 +126,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks)
               internal: false
             });
           }
-          if (s.required && !s.defaultValue) {
+          if (s.required && !s.defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
@@ -173,7 +175,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks)
             });
           }
 
-          if (s.required && !s.defaultValue) {
+          if (s.required && !s.defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
@@ -208,7 +210,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks)
               internal: false
             });
           }
-          if (attr.required && !(attr as IEntityAttribute).defaultValue ) {
+          if (attr.required && !(attr as IEntityAttribute).defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
@@ -257,7 +259,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks)
             }
           }
 
-          if (i.required && !i.defaultValue) { 
+          if (i.required && !i.defaultValue && !isAdding) { 
             p.push({
               attrIdx,
               field: 'defaultValue',
