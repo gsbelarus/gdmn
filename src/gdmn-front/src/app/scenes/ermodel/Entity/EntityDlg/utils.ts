@@ -97,7 +97,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
           internal: false
         });
       } 
-      const isAdd = initialData?.attributes.find((a) => a.name == attr.name) || initialData === undefined;
+      const isAdding = initialData?.attributes.find((a) => a.name == attr.name) || initialData === undefined;
       
       switch (attr.type) {
         case 'Date':
@@ -126,7 +126,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
               internal: false
             });
           }
-          if (s.required && !s.defaultValue && !isAdd) {
+          if (s.required && !s.defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
@@ -175,7 +175,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
             });
           }
 
-          if (s.required && !s.defaultValue && !isAdd) {
+          if (s.required && !s.defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
@@ -210,7 +210,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
               internal: false
             });
           }
-          if (attr.required && !(attr as IEntityAttribute).defaultValue && !isAdd) {
+          if (attr.required && !(attr as IEntityAttribute).defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
@@ -259,7 +259,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
             }
           }
 
-          if (i.required && !i.defaultValue && !isAdd) { 
+          if (i.required && !i.defaultValue && !isAdding) { 
             p.push({
               attrIdx,
               field: 'defaultValue',
