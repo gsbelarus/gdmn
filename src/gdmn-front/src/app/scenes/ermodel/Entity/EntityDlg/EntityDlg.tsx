@@ -288,7 +288,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     }
 
     case 'UPDATE_ATTR': {
-      const { entityData, selectedAttr } = state;
+      const { entityData, selectedAttr, initialData } = state;
 
       if (!entityData || selectedAttr === undefined) {
         return state;
@@ -301,12 +301,12 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
         ...state,
         entityData: newEntityData,
         changed: true,
-        errorLinks: validateAttributes(newEntityData, state.errorLinks)
+        errorLinks: validateAttributes(newEntityData, state.errorLinks, initialData)
       };
     }
 
     case 'ADD_ATTR': {
-      const { entityData, selectedAttr } = state;
+      const { entityData, selectedAttr, initialData } = state;
 
       if (!entityData) {
         return state;
@@ -324,7 +324,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
           newEntityData,
           state.errorLinks.map(
             l => l.internal && l.attrIdx !== undefined && l.attrIdx >= newIdx ? {...l, attrIdx: l.attrIdx + 1} : l
-          )
+          ), initialData
         )
       };
     }
