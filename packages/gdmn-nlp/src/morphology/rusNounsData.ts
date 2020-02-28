@@ -727,6 +727,15 @@ export const rusNouns: IRusNoun[] = [
     declensionZ: '3*b',
   },
   {
+    stem: 'звонок',
+    stem1: 'звонк',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Masc,
+    declension: 2,
+    declensionZ: '3*b',
+  },
+  {
     stem: 'кусок',
     stem1: 'куск',
     stem2: '',
@@ -1102,6 +1111,15 @@ export const rusNouns: IRusNoun[] = [
     animate: false,
     gender: RusGender.Femn,
     declension: 1,
+    declensionZ: '7a',
+  },
+  {
+    stem: 'сообщени',
+    stem1: '',
+    stem2: '',
+    animate: false,
+    gender: RusGender.Neut,
+    declension: 2,
     declensionZ: '7a',
   },
   {
