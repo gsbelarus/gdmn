@@ -111,7 +111,6 @@ export function isIEntity(e: any): e is IEntity {
     && e.lName instanceof Object
     && typeof e.isAbstract === 'boolean'
     && typeof e.semCategories === 'string'
-    && typeof e.defaultValue === 'number'
     && Array.isArray(e.attributes);
 }
 
