@@ -571,12 +571,12 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     },
     {
       key: 'load',
-      disabled: !gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL,
-      text: 'Load all',
+      disabled: !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL,
+      text: 'Load more',
       iconProps: {
         iconName: 'Download'
       },
-      onClick: () => gridRef.current && gridRef.current.loadFully(5000) as any
+      onClick: () => gridRef.current?.loadFully(5000)
     },
     {
       key: 'refresh',
