@@ -171,7 +171,12 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
   const createObject = (type: TObjectType, props?: Partial<Object>, makeSelected: boolean = true): IDesignerState => {
     const partialProps = props ? { type, ...props } : { type };
 
-    const { selectedObject } = state;
+    const { objects } = state;
+    let selectedObject = state.selectedObject;
+
+    while (selectedObject && !isFrameOrArea(selectedObject)) {
+      selectedObject = objects.find( obj => obj.name === selectedObject!.parent );
+    }
 
     if (!isFrameOrArea(selectedObject)) {
       return state;
@@ -627,7 +632,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertField',
-      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)) || !erModel,
+      disabled: previewMode || gridMode || !selectedObject || !erModel,
       text: 'Insert Field',
       iconOnly: true,
       iconProps: { iconName: 'TextField' },
@@ -635,7 +640,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertLabel',
-      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
+      disabled: previewMode || gridMode || !selectedObject,
       text: 'Insert Label',
       iconOnly: true,
       iconProps: { iconName: 'InsertTextBox' },
@@ -643,7 +648,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertPicture',
-      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
+      disabled: previewMode || gridMode || !selectedObject,
       text: 'Insert Picture',
       iconOnly: true,
       iconProps: { iconName: 'PictureCenter' },
@@ -651,7 +656,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
     },
     {
       key: 'insertFrame',
-      disabled: previewMode || gridMode || !selectedObject || (!isFrameOrArea(selectedObject)),
+      disabled: previewMode || gridMode || !selectedObject,
       text: 'Insert Frame',
       iconOnly: true,
       iconProps: { iconName: 'Picture' },
