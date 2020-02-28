@@ -1146,7 +1146,7 @@ export class Application extends ADatabase {
             DECLARE VARIABLE ATPID INTEGER;
           BEGIN
             ID = 0;
-            SELECT ID
+           /* SELECT ID
             FROM AT_PROCEDURES
             WHERE PROCEDURENAME = 'GD_P_GETNEXTID_EX'
             INTO ATPID;
@@ -1156,10 +1156,10 @@ export class Application extends ADatabase {
               RETURNING_VALUES :ID;
             END
             ELSE
-            BEGIN
+            BEGIN*/
               SELECT GEN_ID(gd_g_unique, 1) + GEN_ID(gd_g_offset, 0)
               FROM RDB$DATABASE INTO :ID;
-            END
+           /* END */
             SUSPEND;
           END
           `);
