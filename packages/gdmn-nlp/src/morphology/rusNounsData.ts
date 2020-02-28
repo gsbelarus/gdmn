@@ -1114,7 +1114,7 @@ export const rusNouns: IRusNoun[] = [
     declensionZ: '7a',
   },
   {
-    stem: 'сообщени',
+    stem: 'сообщен',
     stem1: '',
     stem2: '',
     animate: false,
