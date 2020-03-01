@@ -2,6 +2,7 @@ import { ICodeViewProps } from "./CodeView.types";
 import React, { useEffect } from "react";
 import { useTab } from "@src/app/hooks/useTab";
 import Blockly from 'blockly';
+import Editor from '@monaco-editor/react';
 
 export const CodeView = (props: ICodeViewProps): JSX.Element => {
 
@@ -32,13 +33,13 @@ export const CodeView = (props: ICodeViewProps): JSX.Element => {
         display: 'grid',
         width: '100%',
         height: '100%',
-        gridTemplateColumns: '1fr',
+        gridTemplateColumns: '1fr 600px',
         gridTemplateRows: 'auto 1fr'
       }}
     >
       <div
         style={{
-          gridColumn: '1 / 1',
+          gridColumn: '1 / 2',
           gridRow: '1 / 1'
         }}
       >
@@ -51,6 +52,18 @@ export const CodeView = (props: ICodeViewProps): JSX.Element => {
         }}
       >
         <div id="BlocklyDiv" style={{ width: '100%', height: '100%' }}></div>
+      </div>
+      <div
+        style={{
+          gridColumn: '2 / 2',
+          gridRow: '2 / 2'
+        }}
+      >
+        <Editor
+          height="100%"
+          language="javascript"
+          value={"// write your code here"}
+        />
       </div>
     </div>
   );
