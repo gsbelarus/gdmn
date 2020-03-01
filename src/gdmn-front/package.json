@@ -25,6 +25,7 @@
   "dependencies": {
     "@stomp/stompjs": "^5.4.2",
     "@uifabric/fluent-theme": "^7",
+    "blockly": "^3.20200123.1",
     "dagre": "^0.8.4",
     "es6-error": "^4",
     "fast-deep-equal": "^3",

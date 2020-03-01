@@ -4065,6 +4065,13 @@ bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
+blockly@^3.20200123.1:
+  version "3.20200123.1"
+  resolved "https://registry.yarnpkg.com/blockly/-/blockly-3.20200123.1.tgz#3c38c9e4ceae5bb275cabd2d5189bf26b497c07d"
+  integrity sha512-7GMGpILwTkWCUuttjKhFPQzp4P/A2MeT10JaV2q9xAR4EF6G72T8RvF3HUMq0Kkx0wUDyiFGT1F1BfINFgfMng==
+  dependencies:
+    jsdom "^15.1.1"
+
 bluebird@^3.1.1:
   version "3.5.4"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.4.tgz#d6cc661595de30d5b3af5fcedd3c0b3ef6ec5714"
