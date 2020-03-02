@@ -31,6 +31,13 @@ export const uiCommands: IUICommand[] = [
     link: `/sql`
   },
   {
+    command: 'code',
+    form: 'mainHeader',
+    group: 'code',
+    caption: 'Code',
+    link: `/code`
+  },
+  {
     command: 'internals',
     form: 'mainHeader',
     group: 'internals',

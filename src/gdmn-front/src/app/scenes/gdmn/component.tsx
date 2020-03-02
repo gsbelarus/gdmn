@@ -33,6 +33,7 @@ import { ERModel } from 'gdmn-orm';
 import { NLPDataViewContainer } from '../ermodel/NLPDataView/NLPDataViewContainer';
 import { ISyntax3RouteProps } from '../nlp/syntax3/Syntax3.types';
 import { Syntax3Container } from '../nlp/syntax3/Syntax3Container';
+import { CodeViewContainer } from '../code/CodeViewContainer';
 
 interface IErrBoundaryProps {
   onLogError: (error: Error) => void;
@@ -204,6 +205,7 @@ export function GdmnView (props: IGdmnViewProps) {
           {importantMenu(commandToLink('erModel2', match.url), !erModel || !Object.keys(erModel.entities).length)}
           {importantMenu(commandToLink('internals', match.url))}
           {importantMenu(commandToLink('sql', match.url))}
+          {importantMenu(commandToLink('code', match.url), !erModel || !Object.keys(erModel.entities).length)}
           <div className="RightSideHeaderPart">
             <div>
               <span className="BigLogo">
@@ -397,6 +399,16 @@ export function GdmnView (props: IGdmnViewProps) {
                     path={`${match.path}/themeEditor`}
                     render={props => (
                       <ThemeEditorContainer
+                        {...props}
+                        url={props.match.url}
+                      />
+                    )}
+                  />
+                  <Route
+                    exact={true}
+                    path={`${match.path}/code`}
+                    render={props => (
+                      <CodeViewContainer
                         {...props}
                         url={props.match.url}
                       />

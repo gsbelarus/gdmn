@@ -119,6 +119,10 @@ export class Entity {
    * Возвращает атрибут с названием объекта.
    */
   public presentAttribute(): Attribute {
+    if (this.parent) {
+      return this.parent.presentAttribute();
+    }
+
     const attr = this._attributes['NAME']
       || this._attributes['USR$NAME']
       || this._attributes['ALIAS']
@@ -189,7 +193,7 @@ export class Entity {
     if (!this.hasOwnAttribute(attribute.name)) {
       throw new Error(`Attribute ${attribute.name} of entity ${this.name} not found`);
     }
-    
+
     return this._attributes[attribute.name] = attribute;
   }
 

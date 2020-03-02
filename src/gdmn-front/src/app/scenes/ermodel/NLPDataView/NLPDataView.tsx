@@ -226,9 +226,20 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
   const [gridRef, getSavedState] = useSaveGridState(dispatch, url, viewTab);
   const [MessageBox, messageBox] = useMessageBox();
   const [userColumnsSettings, setColumnsSettings] = useSettings<IColumnsSettings | undefined>({ type: 'GRID.v1', objectID: ent ? `${ent.name}/viewForm` : undefined });
-  const [{ phraseError, showSQL, queryState, phrase, prevTranslator }, viewDispatch] = useReducer(reducer, {
-    queryState: 'INITIAL'
-  });
+  const initialState: INLPDataViewState = viewTab?.sessionData?.['state'] ?? { queryState: 'INITIAL' };
+  const [state, viewDispatch] = useReducer(reducer, initialState);
+  const { phraseError, showSQL, queryState, phrase, prevTranslator } = state;
+
+  useEffect( () =>
+    () => {
+      dispatch(gdmnActions.updateViewTab({
+        url,
+        viewTab: {
+          sessionData: { state }
+        }
+      }))
+    },
+  [state]);
 
   const applyTranslator = useCallback( (masterLink?: IMasterLink) => {
     if (erModel && translator) {
@@ -560,12 +571,12 @@ export const NLPDataView = CSSModules( (props: INLPDataViewProps): JSX.Element =
     },
     {
       key: 'load',
-      disabled: !gridRef.current || !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL,
-      text: 'Load all',
+      disabled: !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL,
+      text: 'Load more',
       iconProps: {
         iconName: 'Download'
       },
-      onClick: () => gridRef.current && gridRef.current.loadFully(5000) as any
+      onClick: () => gridRef.current?.loadFully(5000)
     },
     {
       key: 'refresh',

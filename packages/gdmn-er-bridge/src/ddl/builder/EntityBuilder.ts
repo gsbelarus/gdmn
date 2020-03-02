@@ -165,10 +165,11 @@ export class EntityBuilder extends Builder {
         }
         case "Entity": {
           const eAttr = attribute as EntityAttribute;
-          const fieldName = AdapterUtils.getFieldName(eAttr);
+          const fieldName = AdapterUtils.getFieldName(eAttr); 
           const domainName = Prefix.domain(await this.nextDDLUnique());
+          const domainProps = DomainResolver.resolve(eAttr);   
           await this.ddlHelper.addDomain(domainName, DomainResolver.resolve(eAttr));
-          await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName}]);
+          await this.ddlHelper.addColumns(tableName, [{name: fieldName, domain: domainName, default: domainProps.default, notNull: domainProps.notNull}]);
           await this._updateATAttr(eAttr, {relationName: tableName, fieldName, domainName});
           const fkConstName = Prefix.fkConstraint(await this.nextDDLUnique());
           await this.ddlHelper.addForeignKey(fkConstName, {

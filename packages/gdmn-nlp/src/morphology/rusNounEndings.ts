@@ -625,6 +625,13 @@ export const RusDeclensionZEndings: RusDeclensionZEnding[] = [
     plural: ['и', 'й', 'ям', 'и', 'ями', 'ях']
   },
   {
+    animate: false,
+    gender: RusGender.Neut,
+    declensionZ: '7a',
+    singular: ['ие', 'ия', 'ию', 'ие', 'ием', 'ии'],
+    plural: ['ия', 'ий', 'иям', 'ия', 'иями', 'иях']
+  },
+  {
     animate: true,
     gender: RusGender.Femn,
     declensionZ: '1b',
@@ -1106,13 +1113,6 @@ export const RusDeclensionZEndings: RusDeclensionZEnding[] = [
     declensionZ: '5a',
     singular: ['е', 'а', 'у', 'е', 'ем', 'е'],
     plural: ['а', '', 'ам', 'а', 'ами', 'ах']
-  },
-  {
-    animate: false,
-    gender: RusGender.Neut,
-    declensionZ: '7a',
-    singular: ['ие', 'ия', 'ию', 'ие', 'ием', 'ии'],
-    plural: ['ия', 'ий', 'иям', 'ия', 'иями', 'иях']
   },
   {
     animate: true,

@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
-import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, initializeComponentRef, ITextFieldStyles, IComboBoxStyles, IStyle, IButtonStyles } from 'office-ui-fabric-react';
+import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, IComboBoxStyles, IButtonStyles } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
 export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
@@ -279,24 +279,28 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
   }
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
-    if (props && lookupText) {
-      const parts = props.text.toUpperCase().split(lookupText.toUpperCase());
-      let start = 0;
-      const res = parts.reduce(
-        (p, i, idx) => {
-          p.push(<span>{props.text.substring(start, start + i.length)}</span>);
-          start += i.length;
-          if (idx < (parts.length - 1)) {
-            p.push(<span key={idx} style={{ color: 'red' }}>{lookupText}</span>);
-            start += lookupText.length;
-          }
-          return p;
-        },
-        [] as JSX.Element[]
-      );
+    const text = props?.text;
+    if (text && lookupText) {
+      const res: JSX.Element[] = [];
+      const t = text.toLowerCase();
+      const l = lookupText.toLowerCase();
+      const len = l.length;
+      let s = 0;
+      let p = 0;
+      while ((p = t.indexOf(l, s)) !== -1) {
+        if (s < p) {
+          res.push(<span key={s}>{text.substring(s, p)}</span>);
+        }
+        res.push(<span key={p} style={{ color: 'red' }}>{text.substring(p, p + len)}</span>);
+        p += len;
+        s = p;
+      }
+      if (s < text.length) {
+        res.push(<span key={s}>{text.substring(s)}</span>);
+      }
       return <>{res}</>;
     } else {
-      return <span>{props && props.text}</span>;
+      return <span>{text}</span>;
     }
   };
 

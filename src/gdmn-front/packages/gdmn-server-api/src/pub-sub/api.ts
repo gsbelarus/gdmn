@@ -73,7 +73,9 @@ export const enum TTaskActionNames {
   DELETE_ATTRIBUTE = 'DELETE_ATTRIBUTE',
   QUERY_SETTING = 'QUERY_SETTING',
   SAVE_SETTING = 'SAVE_SETTING',
-  DELETE_SETTING = 'DELETE_SETTING'
+  DELETE_SETTING = 'DELETE_SETTING',
+  CHECK_ENTITY_EMPTY = 'CHECK_ENTITY_EMPTY',
+  GET_SERVER_PROCESS_INFO = 'GET_SERVER_PROCESS_INFO'
 }
 
 // MESSAGES DATA
@@ -194,6 +196,10 @@ export interface TTaskActionPayloadTypes {
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
   [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope};
   [TTaskActionNames.DELETE_SETTING]: {data: ISettingParams};
+
+  [TTaskActionNames.CHECK_ENTITY_EMPTY]: IEntity;
+
+  [TTaskActionNames.GET_SERVER_PROCESS_INFO]: {};
 }
 
 // -- TASK-RESULT
@@ -241,6 +247,8 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
   [TTaskActionNames.SAVE_SETTING]: void;
   [TTaskActionNames.DELETE_SETTING]: void;
+  [TTaskActionNames.CHECK_ENTITY_EMPTY]: boolean;
+  [TTaskActionNames.GET_SERVER_PROCESS_INFO]: IGetServerProcessInfoResponse;
 }
 
 export interface ISqlQueryResponseDataItem {
@@ -265,6 +273,15 @@ export interface ITask {
   id: string;
   status: TTaskStatus;
   command?: ICmd<AppAction, any>;
+}
+
+export interface IGetServerProcessInfoResponse {
+  memoryUsage: {
+    rss: number;
+    heapTotal: number;
+    heapUsed: number;
+    external: number;
+  }
 }
 
 export interface ICmd<A, P = any> {
@@ -300,7 +317,9 @@ export type AppAction =
   | "DELETE_ENTITY"
   | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
-  | "SAVE_SETTING";
+  | "SAVE_SETTING"
+  | "CHECK_ENTITY_EMPTY"
+  | "GET_SERVER_PROCESS_INFO";
 
 export interface ISqlQueryResponse {
   data: ISqlQueryResponseDataItem[];

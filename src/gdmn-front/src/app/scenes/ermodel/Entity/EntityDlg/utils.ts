@@ -2,6 +2,8 @@ import { AttributeTypes, IStringAttribute, IAttribute, IEnumAttribute, IEntity,
   INumberAttribute, IBooleanAttribute, INumericAttribute, isINumericAttribute,
   IDateAttribute, IEntityAttribute, isUserDefined, getGedeminEntityType, ISetAttribute, isEntityAttribute, isSetAttribute } from "gdmn-orm";
 import equal from "fast-deep-equal";
+import { apiService } from "@src/app/services/apiService";
+
 
 export const isTempID = (id?: string) => id && id.substring(0, 5) === 'temp-';
 export const getTempID = () => 'temp-' + Math.random().toString();
@@ -84,9 +86,9 @@ export interface IErrorLink {
 
 export type ErrorLinks = IErrorLink[];
 
-export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) => {
+export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks, initialData?: IEntity) => {
   const errorLinks = entity.attributes.reduce(
-    (p, attr, attrIdx) => {
+   (p, attr, attrIdx) => {
       if (!stripUserPrefix(attr.name)) {
         p.push({
           attrIdx,
@@ -94,11 +96,12 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
           message: "Name can't be empty",
           internal: false
         });
-      }
-
+      } 
+      const isAdding = initialData?.attributes.find((a) => a.name == attr.name) || initialData === undefined;
+      
       switch (attr.type) {
         case 'Date':
-        case 'Time':
+        case 'Time': 
         case 'TimeStamp': {
           const s = attr as IDateAttribute;
           if (s.minValue !== undefined && s.maxValue !== undefined && s.minValue > s.maxValue) {
@@ -120,6 +123,14 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
               attrIdx,
               field: 'defaultValue',
               message: "Default value > max value",
+              internal: false
+            });
+          }
+          if (s.required && !s.defaultValue && !isAdding) {
+            p.push({
+              attrIdx,
+              field: 'defaultValue',
+              message: "Add default value for NOT NULL attribute",
               internal: false
             });
           }
@@ -163,12 +174,35 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
               internal: false
             });
           }
+
+          if (s.required && !s.defaultValue && !isAdding) {
+            p.push({
+              attrIdx,
+              field: 'defaultValue',
+              message: "Add default value for NOT NULL attribute",
+              internal: false
+            });
+          }
+          /* Проверка на наличие существующих записей в сущности 
+          (async () => {apiService.checkEntityEmpty(entity)
+            .then(res => { 
+              const result = (res.payload && res.payload.result && !res.error) ?
+                 res.payload.result : false;
+              if (s.required && !s.defaultValue && result) {
+                p.push({
+                  attrIdx,
+                  field: 'defaultValue',
+                  message: "Add default value for NOT NULL attribute",
+                  internal: false
+                });
+              }
+            })}) ();*/
+
           break;
         }
 
-        case 'Entity':
-        case 'Set':
-          if ((isEntityAttribute(attr) || isSetAttribute(attr)) && attr.references.length === 0) {
+        case 'Entity': {
+          if (isEntityAttribute(attr) && attr.references.length === 0) {
             p.push({
               attrIdx,
               field: 'references',
@@ -176,6 +210,29 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
               internal: false
             });
           }
+          if (attr.required && !(attr as IEntityAttribute).defaultValue && !isAdding) {
+            p.push({
+              attrIdx,
+              field: 'defaultValue',
+              message: "Add default value for NOT NULL attribute",
+              internal: false
+            });
+          }
+          break;
+        }
+        
+        case 'Set': {
+          if (isSetAttribute(attr) && attr.references.length === 0) {
+            p.push({
+              attrIdx,
+              field: 'references',
+              message: "References can't be empty",
+              internal: false
+            });
+          }
+
+          break;
+        }
 
         case 'Integer':
         case 'Float':
@@ -202,6 +259,14 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
             }
           }
 
+          if (i.required && !i.defaultValue && !isAdding) { 
+            p.push({
+              attrIdx,
+              field: 'defaultValue',
+              message: "Add default value for NOT NULL attribute",
+              internal: false
+            });
+          } 
           break;
         }
       }
@@ -254,6 +319,7 @@ export const validateAttributes = (entity: IEntity, prevErrorLinks: ErrorLinks) 
     }
   }
   */
+  
 
   return equal(errorLinks, prevErrorLinks) ? prevErrorLinks : errorLinks;
 };

@@ -20,24 +20,45 @@ Back готов к работе.
 *	При вызове задачи она регистрируется в TaskManager, который осуществляет три подписки: для данных, для прогресса и статусов. TaskManager уведомляет об изменениях  другие модули системы.
 *	Далее для выполнения задачи берется свободный Connection из пула, потом Application  возвращает задачу в стомп сессию,  там она запускается на выполнение возвращает либо результат выполнения, либо ошибку.
 
+#	Работа apiService на бэке
+
+Для добавления нового обработчика команды требуется произвести следующие шаги:
+
+* В тип `AppAction` добавить имя новой команды.
+* В `\gdmn-back\src\apps\base\Application.ts` добавить тип, например:
+```ts
+export type CheckEntityEmptyCmd = AppCmd<"CHECK_ENTITY_EMPTY", IEntity>;
+```
+* В `\gdmn-back\src\apps\base\Application.ts`, в класс `Application` добавить метод `push...Cmd`
+* В `\gdmn-back\src\apps\base\AppCommandProvider.ts`, в класс `AppCommandProvider` добавить обработчик команды. Например:
+```ts
+case "CHECK_ENTITY_EMPTY": {
+  if (AppCommandProvider._verifyCheckEntityEmptyCmd(command)) {
+    return this._application.pushCheckEntityEmptyCmd(session,command);
+  }
+  throw new Error(`Incorrect ${command.action} command`);
+}
+```
+
 #	Работа apiService на фронте
 
-Для добавления нового метода %METOD_NAME% в apiService требуется произвести следующие шаги:
+Для добавления нового метода %METHOD_NAME% в apiService требуется произвести следующие шаги:
 
 в gdmn-front/packages/gdmn-server-api/src/pub-sub/api.ts:
 
-*	`TTaskActionNames` -- добавить имя нового %NAME_ACTION%, так же добавить  имя нового %NAME_ACTION% в  AppAction.
-*	`TTaskActionPayloadTypes` добавляем новое свойство с названием нового Action (TTaskActionNames.%NAME_ACTION%) и значением -- объектом. В данном случае значение будет выступать обьект, который будем передавать на бэк часть. К примеру apiServise.метод(объект который будем передавать).
-*	`TTaskActionResultTypes` добавляем новое свойство с типом который будет возврашаться [TTaskActionNames.%NAME_ACTION%]: undefined;
+*	`TTaskActionNames` -- добавить имя нового %NAME_ACTION%
+* `AppAction` -- добавить имя нового %NAME_ACTION% 
+*	`TTaskActionPayloadTypes` -- добавляем свойство с названием нового Action (TTaskActionNames.%NAME_ACTION%) и значением -- объектом, который будем передавать на сервер. 
+*	`TTaskActionResultTypes` -- добавляем новое свойство с типом, который будет возвращаться с сервера.
 
-в gdmn-front - packages - gdmn-server-api - src - pub-sub - commands.ts нужно создать новые типы:
+в gdmn-front/packages/gdmn-server-api/src/pub-sub/commands.ts нужно создать новые типы:
 ```
 export type T%NAME_ACTION%TaskCmd = TTaskCmd<TTaskActionNames.%NAME_ACTION%>;
 export type T%NAME_ACTION%TaskCmdResult = TTaskCmdResult<TTaskActionNames%NAME_ACTION%>
 ```
 в gdmn-front/src/app/services/GdmnPubSubApi.ts нужно добавить публичный метод: 
 ```
-public %METOD_NAME% (payload: TTaskActionPayloadTypes[TTaskActionNames.%NAME_ACTION%]): Promise<T%NAME_ACTION%TaskCmdResult> {
+public %METHOD_NAME% (payload: TTaskActionPayloadTypes[TTaskActionNames.%NAME_ACTION%]): Promise<T%NAME_ACTION%TaskCmdResult> {
     		return this.runTaskRequestCmd({
       		payload: {
         		action: TTaskActionNames.%NAME_ACTION%,

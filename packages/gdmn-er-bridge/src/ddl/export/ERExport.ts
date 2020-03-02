@@ -619,6 +619,7 @@ export class ERExport {
           const refRelationName = this._dbSchema.relationByUqConstraint(fk.constNameUq).name;
           const cond = atField && atField.refCondition ? condition2Selectors(atField.refCondition) : undefined;
           const refEntities = this._findEntities(refRelationName, cond);
+          const defaultValue = default2Int(defaultValueSource);
 
           if (!refEntities.length) {
             console.warn(`${relation.name}.${relationField.name}: no entities for table ${refRelationName}${cond ? ", condition: " + JSON.stringify(cond) : ""}`);
@@ -636,7 +637,7 @@ export class ERExport {
               }
             });
           }
-          return new EntityAttribute({name, lName, required, entities: refEntities, semCategories, adapter});
+          return new EntityAttribute({name, lName, required, entities: refEntities, semCategories, adapter, defaultValue});
         } else {
           const {minValue, maxValue} = check2IntRange(fieldSource.validationSource, {
             min: MIN_32BIT_INT,

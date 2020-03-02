@@ -59,8 +59,9 @@ export const StringEditor = ({ attr, attrIdx, errorLinks, userDefined, onChange,
       <TextField
         label="Default value:"
         value={attr.defaultValue}
+        errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
         disabled={!userDefined}
-        onChange={ (_, defaultValue) => defaultValue !== undefined && onChange({ ...attr, defaultValue }) }
+        onChange={ (_, defaultValue) => { defaultValue !== undefined && onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue');} }
       />
     </Stack.Item>
   </Stack>

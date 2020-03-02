@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { IEntityAttribute, ERModel } from "gdmn-orm";
-import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Dropdown, Text, Label, ComboBox, IComboBoxOption} from "office-ui-fabric-react";
+import { IEntityAttribute } from "gdmn-orm";
+import { getTheme, Stack, Icon, DefaultButton, PrimaryButton, Text, Label, IComboBoxOption} from "office-ui-fabric-react";
 import { Frame } from "@src/app/scenes/gdmn/components/Frame";
 import { IAttributeEditorProps } from "./EntityAttribute";
 import { getErrorMessage } from "./utils";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { NumberField } from "./NumberField";
 
 interface IEntityValueProps {
   entityName: string;
@@ -53,7 +54,7 @@ interface IEntityEditorState {
   entityName: string;
 };
 
-export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, attrIdx }: IAttributeEditorProps<IEntityAttribute>) => {
+export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, attrIdx, onError, onClearError }: IAttributeEditorProps<IEntityAttribute>) => {
   const [state, setState] = useState<IEntityEditorState | undefined>();
   const errRef = getErrorMessage(attrIdx, 'references', errorLinks);
 
@@ -70,15 +71,15 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
                     label="Entity:"
                     key={state.entityName ? state.entityName : undefined}
                     name={state.entityName ? state.entityName : undefined}
-                    preSelectedOption={state.entityName ? 
-                      { 
+                    preSelectedOption={state.entityName ?
+                      {
                         key: state.entityName,
                         text: state.entityName
                       } : undefined}
                     onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
                     onLookup={
-                      (filter: string) => 
-                        Promise.resolve( erModel ? 
+                      (filter: string) =>
+                        Promise.resolve( erModel ?
                           Object.keys(erModel.entities).filter(name => name.toLowerCase().indexOf(filter.toLowerCase()) > -1).map( name => ({
                               key: name,
                               text: name
@@ -144,6 +145,17 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
         }>
         {errRef}
       </Label>
+      <Stack horizontal tokens={{ childrenGap: '0px 16px' }}>
+        <NumberField
+          label="Default value:"
+          onlyInteger={attr.type === 'Integer'}
+          value={attr.defaultValue}
+          width="180px"
+          errorMessage={getErrorMessage(attrIdx, 'defaultValue', errorLinks)}
+          onChange={ defaultValue => { onChange({ ...attr, defaultValue }); onClearError && onClearError('defaultValue'); } }
+          onInvalidValue={ () => onError && onError('defaultValue', 'Invalid value') }
+        />
+      </Stack>
     </div>
   );
 };

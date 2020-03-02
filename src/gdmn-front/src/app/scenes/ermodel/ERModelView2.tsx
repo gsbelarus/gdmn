@@ -51,8 +51,11 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
     };
   }, []);
 
+  // TODO: удаление перенести на уровень middleware
+  // дополнительно проверять:
+  // https://github.com/gsbelarus/gdmn/issues/296
   const deleteRecord = useCallback( () => {
-    if (entities && entities.size && erModel) {
+    if (entities?.size && erModel) {
       const entityName = entities.getString('name');
       const entity = erModel.entity(entityName);
 
@@ -89,7 +92,7 @@ export const ERModelView2 = CSSModules( (props: IERModelView2Props) => {
             dispatch(gdmnActions.setSchema(newERModel));
             dispatch(rsActions.setRecordSet(entities.delete(true)));
           } else {
-          throw new Error(result.error.message);
+            throw new Error(result.error.message);
           }
         });
       }

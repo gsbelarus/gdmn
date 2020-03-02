@@ -235,6 +235,18 @@ export type TUpdateEntityTaskCmd = TTaskCmd<TTaskActionNames.UPDATE_ENTITY>;
 
 export type TUpdateEntityTaskCmdResult = TTaskCmdResult<TTaskActionNames.UPDATE_ENTITY>;
 
+// entity: check empty
+
+export type TCheckEntityEmptyTaskCmd = TTaskCmd<TTaskActionNames.CHECK_ENTITY_EMPTY>;
+
+export type TCheckEntityEmptyTaskCmdResult = TTaskCmdResult<TTaskActionNames.CHECK_ENTITY_EMPTY>;
+
+// get server process info
+
+export type TGetServerProcessInfoTaskCmd = TTaskCmd<TTaskActionNames.GET_SERVER_PROCESS_INFO>;
+
+export type TGetServerProcessInfoTaskCmdResult = TTaskCmdResult<TTaskActionNames.GET_SERVER_PROCESS_INFO>;
+
 // attribute: add
 
 export type TAddAttributeTaskCmd = TTaskCmd<TTaskActionNames.ADD_ATTRIBUTE>;
