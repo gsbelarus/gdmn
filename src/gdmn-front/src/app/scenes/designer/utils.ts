@@ -3,6 +3,7 @@ import { getTheme, IStyle, ITextFieldStyles, ILabelStyles } from "office-ui-fabr
 import { EntityAttribute, Entity } from "gdmn-orm";
 import { getLName } from "gdmn-internals";
 import { RecordSet, IFieldDef } from "gdmn-recordset";
+import { ISetComboBoxData } from "../ermodel/utils";
 
 export const isSingleCell = (rect?: IRectangle) => rect && rect.left === rect.right && rect.top === rect.bottom;
 export const inRect = (rect: IRectangle | undefined, x: number, y: number) => rect && x >= rect.left && y >= rect.top && x <= rect.right && y <= rect.bottom;
@@ -111,6 +112,22 @@ export const getFields = (rs?: RecordSet, entity?: Entity): IField[] =>
   :
     [];
 
+export const getSetFields = (setComboBoxData?: ISetComboBoxData, entity?: Entity): IField[] =>
+  entity && setComboBoxData
+  ?
+    Object.keys(setComboBoxData).map(fd => {
+      const attr = entity.attributes[fd] as EntityAttribute;
+        return ({
+          type: 'FIELD',
+          parent: 'Area1',
+          fieldName: fd,
+          label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd,
+          name: fd
+        } as IField)
+      })
+  :
+    [];
+
 export interface ISelectField {
   key: string;
   name: string;
@@ -132,6 +149,20 @@ export const getSelectFields = (rs?: RecordSet, entity?: Entity): ISelectField[]
         dataType: attr ? attr.inspectDataType() : 'S'
       } as ISelectField;
     })
+  : [];
+
+export const getSetSelectFields = (setComboBoxData?: ISetComboBoxData, entity?: Entity): ISelectField[] =>
+  setComboBoxData && entity
+  ?
+    Object.keys(setComboBoxData).map(fd => {
+      const attr = entity.attributes[fd] as EntityAttribute;
+        return {
+          key: fd,
+          name: fd,
+          label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd,
+          dataType: attr ? attr.inspectDataType() : 'S'
+        } as ISelectField;
+      })
   : [];
 
 /**

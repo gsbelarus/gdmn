@@ -5,6 +5,7 @@ import { GdmnAction } from "../gdmn/actions";
 import { ERModel, Entity } from "gdmn-orm";
 import { RecordSet } from 'gdmn-recordset';
 import { IGrid, Objects } from './types';
+import { ISetComboBoxData } from "../ermodel/utils";
 
 /**
  * Объект, с настройками дизайнера, который будет хранится
@@ -32,7 +33,7 @@ export interface IDesignerProps extends IDesignerContainerProps, IDesignerStateP
   dispatch: ThunkDispatch<IState, never, GdmnAction>;
   entityName: string;
   setting?: IDesignerSetting;
-  setFields?: Objects;
+  setComboBoxData?: ISetComboBoxData;
   onSaveSetting: (setting: IDesignerSetting) => void;
   onDeleteSetting: () => void;
   onExit: () => void;

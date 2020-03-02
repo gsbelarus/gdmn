@@ -25,7 +25,7 @@ import { DatepickerJSX } from '@src/app/components/Datepicker/Datepicker';
 import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLookupComboBox";
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
-import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields, getFieldDefByFieldName } from '../../designer/utils';
+import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields, getFieldDefByFieldName, getSetFields } from '../../designer/utils';
 import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
@@ -1145,22 +1145,9 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
     rows: [{ unit: 'FR', value: 1 }],
   };
 
-  const fields: Objects = !setting
-    ? getFields(rs, entity)
-    : [];
+  const fields: Objects = getFields(rs, entity);
 
-  const setFields: Objects = !setting
-    ? Object.keys(setComboBoxData).map(fd => {
-      const attr = entity.attributes[fd] as EntityAttribute;
-        return ({
-          type: 'FIELD',
-          parent: 'Area1',
-          fieldName: fd,
-          label: attr ? getLName(attr.lName, ['by', 'ru', 'en']) : fd,
-          name: fd
-        } as IField)
-      })
-    : [];
+  const setFields: Objects = getSetFields(setComboBoxData, entity);
 
   const area1: IArea[] = !setting ? [{
     name: 'Area1',
@@ -1190,7 +1177,7 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
               url={url}
               entityName={entityName}
               setting={setting}
-              setFields={setFields}
+              setComboBoxData={setComboBoxData}
               onSaveSetting={ setting => setSetting(setting) }
               onDeleteSetting={ () => setSetting(undefined) }
               onExit={ () => setDesigner(false) }
