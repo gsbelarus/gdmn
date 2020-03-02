@@ -3,13 +3,14 @@ import { IDesignerProps, IDesignerSetting } from "./Designer.types";
 import { ICommandBarItemProps, CommandBar } from "office-ui-fabric-react";
 import { IRectangle, IGrid, ISize, Object, TObjectType, objectNamePrefixes, IArea, isArea, IWindow, isWindow, getAreas, Objects,
   deleteWithChildren, getWindow, IField, IFrame, isFrameOrArea } from "./types";
-import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid, getFields } from "./utils";
+import { rectIntersect, isValidRect, object2style, sameRect, outOfGrid, getFields, getSetFields } from "./utils";
 import { SelectFields } from "./SelectFields";
 import { WithObjectInspector } from "./WithObjectInspector";
 import { Area } from "./Area";
 import { GridCell } from "./GridCell";
 import { Entity } from 'gdmn-orm';
 import { RecordSet } from "gdmn-recordset";
+import { ISetComboBoxData } from "../ermodel/utils";
 
 /**
  *
@@ -68,7 +69,7 @@ export interface IDesignerState {
 const undo: IDesignerState[] = [];
 const redo: IDesignerState[] = [];
 
-const getDefaultState = (entity?: Entity, rs?: RecordSet, setFields?: Objects): IDesignerState => {
+const getDefaultState = (entity?: Entity, rs?: RecordSet, setComboBoxData?: ISetComboBoxData): IDesignerState => {
   const window: IWindow = {
     name: 'Window',
     type: 'WINDOW'
@@ -86,7 +87,9 @@ const getDefaultState = (entity?: Entity, rs?: RecordSet, setFields?: Objects): 
 
   const fields: IField[] = getFields(rs, entity);
 
-  const objects: Objects = [window, area, ...fields, ...(setFields ? setFields : [])];
+  const setFields: IField[] = getSetFields(setComboBoxData, entity);
+
+  const objects: Objects = [window, area, ...fields, ...setFields];
 
   return {
     grid: {
@@ -542,8 +545,8 @@ function reducer(state: IDesignerState, action: Action): IDesignerState {
 
 export const Designer = (props: IDesignerProps): JSX.Element => {
 
-  const { erModel, rs, entity, setting, onSaveSetting, setFields } = props;
-  const [state, designerDispatch] = useReducer(reducer, setting ? getStateFromSetting(setting) : getDefaultState(entity, rs, setFields));
+  const { erModel, rs, entity, setting, onSaveSetting, setComboBoxData} = props;
+  const [state, designerDispatch] = useReducer(reducer, setting ? getStateFromSetting(setting) : getDefaultState(entity, rs, setComboBoxData));
   const { grid, previewMode, gridMode, gridSelection, objects, selectedObject, selectFieldsMode } = state;
 
   useEffect( () => setting && designerDispatch({ type: 'SET_STATE', newState:  getStateFromSetting(setting) }), [setting]);
@@ -812,6 +815,7 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
             designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' });
           } }
           onCancel={ () => designerDispatch({ type: 'TOGGLE_SELECT_FIELDS' }) }
+          setComboBoxData={setComboBoxData}
         />
       }
       <WithObjectInspector

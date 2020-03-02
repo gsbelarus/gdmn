@@ -3,13 +3,16 @@ import { Entity } from "gdmn-orm";
 import { Dialog, DialogType, ContextualMenu, DialogFooter, PrimaryButton, DefaultButton, MarqueeSelection, DetailsList, Selection, IColumn, SelectionMode, DetailsListLayoutMode, getTheme } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { RecordSet } from "gdmn-recordset";
-import { getSelectFields } from "./utils";
+import { getSelectFields, getSetSelectFields } from "./utils";
+import { Objects } from "./types";
+import { ISetComboBoxData } from "../ermodel/utils";
 
 interface ISelectFieldsProps {
   entity: Entity;
   rs?: RecordSet;
   onCancel: () => void;
   onCreate: (fields: { fieldName: string, label: string }[]) => void;
+  setComboBoxData?: ISetComboBoxData;
 };
 
 interface ISelectFieldsState {
@@ -30,7 +33,7 @@ function reducer(state: ISelectFieldsState, action: Action): ISelectFieldsState 
   return state;
 };
 
-export const SelectFields = ({ rs, entity, onCancel, onCreate }: ISelectFieldsProps) => {
+export const SelectFields = ({ rs, entity, onCancel, onCreate, setComboBoxData }: ISelectFieldsProps) => {
 
   const [{ fieldsSelected, selection }, dispatch] = useReducer(reducer, {
     fieldsSelected: false,
@@ -71,7 +74,7 @@ export const SelectFields = ({ rs, entity, onCancel, onCreate }: ISelectFieldsPr
         {entity && <MarqueeSelection selection={selection}>
           <DetailsList
             items={
-              getSelectFields(rs, entity)
+              [...getSelectFields(rs, entity), ...getSetSelectFields(setComboBoxData, entity)]
 
             }
             compact={true}
