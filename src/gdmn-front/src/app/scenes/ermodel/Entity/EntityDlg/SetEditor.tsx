@@ -6,6 +6,7 @@ import { IAttributeEditorProps } from "./EntityAttribute";
 import { NumberField } from "./NumberField";
 import { getErrorMessage } from "./utils";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
+import { getLName } from "gdmn-internals";
 
 interface ISetValueProps {
   entityName: string;
@@ -53,6 +54,7 @@ const SetValue = ({ entityName, onDelete, disabled }: ISetValueProps) =>
 interface ISetEditorState {
   idx: number;
   entityName: string;
+  entityLName?: string;
 };
 
 export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorLinks, attrIdx, userDefined }: IAttributeEditorProps<ISetAttribute>) => {
@@ -76,16 +78,19 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                     preSelectedOption={state.entityName ? 
                       { 
                         key: state.entityName,
-                        text: state.entityName
+                        text: state.entityName,
+                        title: state.entityLName
                       } : undefined}
-                    onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
+                    onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text, entityLName: option.title }) }
                     onLookup={
                       (filter: string) => 
                         Promise.resolve( erModel ? 
-                          Object.keys(erModel.entities).filter(name => name.toLowerCase().indexOf(filter.toLowerCase()) > -1 ).map( name => ({
-                              key: name,
-                              text: name
-                            }) ) : [])
+                          Object.values(erModel.entities).filter(e => e.name.toLowerCase().indexOf(filter.toLowerCase()) > -1 ||
+                          getLName(e.lName,  ['by', 'ru', 'en']).toLowerCase().indexOf(filter.toLowerCase()) > -1).map(e => ({
+                            key: e.name,
+                            text: e.name,
+                            title: getLName(e.lName,  ['by', 'ru', 'en'])
+                          })) : [] ) 
                     }
                   />
                   <Stack.Item styles = {{root : { margin: '12px', fontWeight: '600' }}}>
@@ -158,7 +163,7 @@ export const SetEditor = ({ attr, createAttr, onChange, erModel, onError, errorL
                       <DefaultButton
                         text="Add set"
                         disabled={!userDefined}
-                        onClick={ () => { attr.isChar = true; attr.presLen = 1; setState({ idx: attr.references.length, entityName: ''}) } }
+                        onClick={ () => { attr.isChar = true; attr.presLen = 60; setState({ idx: attr.references.length, entityName: ''}) } }
                       />
                     :
                       null
