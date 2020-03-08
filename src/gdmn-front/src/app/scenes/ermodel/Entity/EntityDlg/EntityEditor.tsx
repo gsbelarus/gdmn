@@ -6,6 +6,7 @@ import { IAttributeEditorProps } from "./EntityAttribute";
 import { getErrorMessage } from "./utils";
 import { LookupComboBox } from "@src/app/components/LookupComboBox/LookupComboBox";
 import { NumberField } from "./NumberField";
+import { getLName } from "gdmn-internals";
 
 interface IEntityValueProps {
   entityName: string;
@@ -52,6 +53,7 @@ const EntityValue = ({ entityName, onDelete }: IEntityValueProps) =>
 interface IEntityEditorState {
   idx: number;
   entityName: string;
+  entityLName?: string;
 };
 
 export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, attrIdx, onError, onClearError }: IAttributeEditorProps<IEntityAttribute>) => {
@@ -74,18 +76,21 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
                     preSelectedOption={state.entityName ?
                       {
                         key: state.entityName,
-                        text: state.entityName
+                        text: state.entityName,
+                        title: state.entityLName
                       } : undefined}
-                    onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text }) }
+                    onChanged={ (option:IComboBoxOption | undefined) => option && typeof option.key === 'string' && setState({ ...state, entityName: option.text, entityLName: option.title }) }
                     onLookup={
                       (filter: string) =>
                         Promise.resolve( erModel ?
-                          Object.keys(erModel.entities).filter(name => name.toLowerCase().indexOf(filter.toLowerCase()) > -1).map( name => ({
-                              key: name,
-                              text: name
-                            }) ) : [])
+                          Object.values(erModel.entities).filter(e => e.name.toLowerCase().indexOf(filter.toLowerCase()) > -1 ||
+                          getLName(e.lName,  ['by', 'ru', 'en']).toLowerCase().indexOf(filter.toLowerCase()) > -1).map(e => ({
+                            key: e.name,
+                            text: e.name,
+                            title: getLName(e.lName,  ['by', 'ru', 'en'])
+                          })) : [] ) 
                     }
-                  />
+                  />  
                   <PrimaryButton
                     text="Save"
                     disabled={!state.entityName || !!attr.references.find( (entityName, idx) => idx !== state.idx && entityName === state.entityName )}
@@ -126,7 +131,7 @@ export const EntityEditor = ({ attr, createAttr, onChange, erModel, errorLinks, 
                     createAttr ?
                       <DefaultButton
                         text="Add entity"
-                        onClick={ () => setState({ idx: attr.references.length, entityName: '' }) }
+                        onClick={ () => setState({ idx: attr.references.length, entityName: '', entityLName: '' }) }
                       />
                     :
                       null

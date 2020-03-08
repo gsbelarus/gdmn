@@ -279,7 +279,8 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
   }
 
   const onRenderOption: IRenderFunction<ISelectableOption> = props => {
-    const text = props?.text;
+    const title = props?.title? `${props?.title}\n` : '';
+    const text = title.concat(props?.text??'');
     if (text && lookupText) {
       const res: JSX.Element[] = [];
       const t = text.toLowerCase();
@@ -298,9 +299,9 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
       if (s < text.length) {
         res.push(<span key={s}>{text.substring(s)}</span>);
       }
-      return <>{res}</>;
+      return <span style={{whiteSpace: "pre-wrap"}}>{res}</span>;
     } else {
-      return <span>{text}</span>;
+      return <span style={{whiteSpace: "pre-wrap"}}>{text}</span>;
     }
   };
 
