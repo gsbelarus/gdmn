@@ -75,7 +75,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
             errorMessage={getErrorMessage(attrIdx, 'name', errorLinks)}
             styles={{
               root: {
-                width: '240px'
+                width: '180px'
               },
               field: {
                 textTransform: 'uppercase'
@@ -137,22 +137,22 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
             label="Sem categories:"
             disabled={!userDefined}
             value={attr.semCategories}
-            styles={{
+            /*styles={{
               root: {
                 width: '240px'
               }
-            }}
+            }}*/
             onChange={ (_, semCategories) => semCategories !== undefined && onChange({...attr, semCategories }) }
           />
           <TextField
             label="Label:"
             disabled={!userDefined}
             value={getLName(attr.lName, ['ru'])}
-            styles={{
+            /*styles={{
               root: {
                 width: '240px'
               }
-            }}
+            }}*/
             onChange={ (_, name) => name !== undefined && attr.lName.ru && onChange({...attr, lName: { ru: { ...attr.lName.ru, name } } }) }
           />
           <Stack.Item grow>
