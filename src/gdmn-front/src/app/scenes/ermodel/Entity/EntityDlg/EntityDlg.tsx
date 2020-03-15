@@ -674,7 +674,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 }}
                 styles={{
                   root: {
-                    width: '240px'
+                    width: '180px'
                   }
                 }}
               />
@@ -693,7 +693,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'SET_ENTITY_TYPE', entityType: newValue.key as GedeminEntityType }) }
                 styles={{
                   root: {
-                    width: '240px'
+                    width: '100px'
                   }
                 }}
               />
@@ -708,7 +708,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 onChange={ (_, newValue) => newValue && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, parent: newValue.key as string} }) }
                 styles={{
                   root: {
-                    width: '240px'
+                    width: '200px'
                   }
                 }}
               />
@@ -719,11 +719,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 value={entityData.semCategories}
                 disabled={!isUserDefined(entityData.name)}
                 onChange={ (_, newValue) => newValue !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, semCategories: newValue } }) }
-                styles={{
+                /*styles={{
                   root: {
                     width: '240px'
                   }
-                }}
+                }}*/
               />
             </Stack.Item>
             <Stack.Item>
@@ -732,11 +732,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
                 disabled={!isUserDefined(entityData.name)}
                 value={getLName(entityData.lName, ['ru'])}
                 onChange={ (_, name) => name !== undefined && dlgDispatch({ type: 'UPDATE_ENTITY_DATA', entityData: { ...entityData, lName: { ru: { ...entityData.lName.ru, name } } } }) }
-                styles={{
+                /*styles={{
                   root: {
                     width: '240px'
                   }
-                }}
+                }}*/
               />
             </Stack.Item>
             <Stack.Item grow={1}>
