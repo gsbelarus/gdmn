@@ -68,7 +68,7 @@ export class PhraseSyntaxTree extends Component<IPhraseSyntaxTreeProps, {}> {
     }
 
     const makeRect = (n: string, idx: number) => {
-      const nd = g.node(n);
+      const nd = g.node(n) as any;
       if (!nd) return null;
 
       const x = nd.x - nd.width / 2;
