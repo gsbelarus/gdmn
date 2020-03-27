@@ -311,7 +311,7 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
       if (!entityData) {
         return state;
       }
-      const newIdx = selectedAttr === undefined ? entityData.attributes.length : (selectedAttr + 1);
+      const newIdx = selectedAttr === undefined ? entityData.attributes.length : selectedAttr;
       const newAttributes = [...entityData.attributes];
       newAttributes.splice(newIdx, 0, initAttr('String'));
       const newEntityData = {...entityData, attributes: newAttributes };
