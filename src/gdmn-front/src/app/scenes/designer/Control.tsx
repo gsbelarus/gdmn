@@ -1,5 +1,5 @@
 import { Object, Objects } from "./types";
-import { Label, TextField, Checkbox, ITextFieldStyles } from "office-ui-fabric-react";
+import { Label, TextField, Checkbox, ITextFieldStyles, DefaultButton } from "office-ui-fabric-react";
 import React from "react";
 import { object2style, object2ITextFieldStyles, object2ILabelStyles, getFieldDefByFieldName } from "./utils";
 import { WithSelectionFrame } from "./WithSelectionFrame";
@@ -157,6 +157,14 @@ const InternalControl = ({ object, objects, rs, entity, onSelectObject, previewM
           rs={rs}
           entity={entity}
           onSelectObject={onSelectObject}
+        />
+      )
+
+    case 'BUTTON':
+      return (
+        <DefaultButton
+          key={object.name}
+          text={object.caption}
         />
       )
 

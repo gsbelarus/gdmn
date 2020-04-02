@@ -666,6 +666,14 @@ export const Designer = (props: IDesignerProps): JSX.Element => {
       onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'FRAME' })
     },
     {
+      key: 'insertButton',
+      disabled: previewMode || gridMode || !selectedObject,
+      text: 'Insert Button',
+      iconOnly: true,
+      iconProps: { iconName: 'ButtonControl' },
+      onClick: () => designerDispatch({ type: 'CREATE_OBJECT', objectType: 'BUTTON', newProps: { caption: 'Button' } })
+    },
+    {
       key: 'split1',
       disabled: true,
       iconOnly: true,

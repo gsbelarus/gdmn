@@ -2,7 +2,7 @@ import { IEntityDataDlgProps } from "./EntityDataDlg.types";
 import React, { useEffect, useState, useCallback, useRef, FormEvent } from "react";
 import CSSModules from 'react-css-modules';
 import styles from './styles.css';
-import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label, ComboBox } from "office-ui-fabric-react";
+import { CommandBar, ICommandBarItemProps, TextField, ITextField, IComboBoxOption, IComboBox, MessageBar, MessageBarType, Checkbox, ICheckbox, getTheme, Stack, ITextFieldStyles, Label, ComboBox, DefaultButton } from "office-ui-fabric-react";
 import { gdmnActions } from "../../gdmn/actions";
 import { rsActions, RecordSet, IDataRow, TCommitResult, TRowState, IFieldDef, TFieldType } from "gdmn-recordset";
 import { apiService } from "@src/app/services/apiService";
@@ -26,7 +26,7 @@ import { SetLookupComboBox } from "@src/app/components/SetLookupComboBox/SetLook
 import { DesignerContainer } from '../../designer/DesignerContainer';
 import { IDesignerState } from '../../designer/Designer';
 import { object2style, object2ILabelStyles, object2ITextFieldStyles, getFields, getFieldDefByFieldName, getSetFields } from '../../designer/utils';
-import { getAreas, isWindow, IWindow, IField, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
+import { getAreas, isWindow, IWindow, IGrid, Object, Objects, IArea, isFrame } from '../../designer/types';
 import { getLName } from 'gdmn-internals';
 import { useSettings } from '@src/app/hooks/useSettings';
 import { IDesignerSetting } from '../../designer/Designer.types';
@@ -665,6 +665,14 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
           </div>
         )
 
+      case 'BUTTON':
+        return (
+          <DefaultButton
+            key={object.name}
+            text={object.caption}
+          />
+        )
+
       default:
         return undefined;
     }
@@ -762,8 +770,8 @@ export const EntityDataDlg = CSSModules((props: IEntityDataDlgProps): JSX.Elemen
 
               const response = await apiService.query({ query: linkEq.inspect() });
               const result = (response.payload.result!);
-              const idAlias = Object.entries(result.aliases).find(([fieldAlias, data]) => data.linkAlias === 'z' && data.attribute === 'ID')![0];
-              const nameAlias = Object.entries(result.aliases).find(([fieldAlias, data]) => data.linkAlias === 'z'
+              const idAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === 'z' && data.attribute === 'ID')![0];
+              const nameAlias = Object.entries(result.aliases).find(([, data]) => data.linkAlias === 'z'
                 && (data.attribute === presentField!.name))![0];
               return result.data.map((r): IComboBoxOption => ({
                 key: r[idAlias],

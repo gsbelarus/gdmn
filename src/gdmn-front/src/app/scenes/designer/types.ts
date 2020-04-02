@@ -17,7 +17,7 @@ export interface IRectangle {
   bottom: number;
 };
 
-export type TObjectType = 'WINDOW' | 'AREA' | 'LABEL' | 'IMAGE' | 'FIELD' | 'FRAME';
+export type TObjectType = 'WINDOW' | 'AREA' | 'LABEL' | 'IMAGE' | 'FIELD' | 'FRAME' | 'BUTTON';
 
 export const objectNamePrefixes = {
   'WINDOW': 'Window',
@@ -25,7 +25,8 @@ export const objectNamePrefixes = {
   'LABEL': 'Label',
   'IMAGE': 'Image',
   'FIELD': 'Field',
-  'FRAME': 'Frame'
+  'FRAME': 'Frame',
+  'BUTTON': 'Button'
 };
 
 export interface IObject {
@@ -75,6 +76,11 @@ export interface IFrame extends IObject {
   scroll?: boolean;
 };
 
+export interface IButton extends IObject {
+  type: 'BUTTON';
+  caption?: string;
+};
+
 export function isFrame(x: IObject | undefined): x is IFrame {
   return x instanceof Object && x.type === 'FRAME';
 };
@@ -104,7 +110,7 @@ export function isArea(x: IObject | undefined): x is IArea {
   return x instanceof Object && x.type === 'AREA';
 };
 
-export type Object = IWindow | IArea | ILabel | IImage | IField | IFrame;
+export type Object = IWindow | IArea | ILabel | IImage | IField | IFrame | IButton;
 
 export type Objects = Object[];
 
