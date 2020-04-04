@@ -89,3 +89,7 @@ export function isISettingEnvelope(data: any): data is ISettingEnvelope {
     typeof (data as any)._accessed === 'number'
   )
 };
+
+export interface IListSettingQueryResponse {
+  ids: string[];
+};

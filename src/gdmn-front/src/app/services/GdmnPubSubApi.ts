@@ -72,7 +72,8 @@ import {
   TUpdateAttributeTaskCmdResult,
   TCheckEntityEmptyTaskCmd,
   TCheckEntityEmptyTaskCmdResult,
-  TGetServerProcessInfoTaskCmdResult
+  TGetServerProcessInfoTaskCmdResult,
+  TListSettingTaskCmdResult
 } from "@gdmn/server-api";
 import { debugFnType, Versions } from '@stomp/stompjs'; // todo
 import ExtendableError from 'es6-error';
@@ -487,6 +488,15 @@ export class GdmnPubSubApi {
     return this.runTaskRequestCmd({
       payload: {
         action: TTaskActionNames.QUERY_SETTING,
+        payload
+      }
+    });
+  }
+
+  public listSetting(payload: TTaskActionPayloadTypes[TTaskActionNames.LIST_SETTING]): Promise<TListSettingTaskCmdResult> {
+    return this.runTaskRequestCmd({
+      payload: {
+        action: TTaskActionNames.LIST_SETTING,
         payload
       }
     });

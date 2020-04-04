@@ -36,7 +36,7 @@ import {SessionManager} from "./session/SessionManager";
 import {ICmd, Level, Task, TaskStatus} from "./task/Task";
 import {ApplicationProcess} from "./worker/ApplicationProcess";
 import {ApplicationProcessPool} from "./worker/ApplicationProcessPool";
-import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse, detectAndParseDate} from "gdmn-internals";
+import {ISettingParams, ISettingEnvelope, ISqlPrepareResponse, detectAndParseDate, IListSettingQueryResponse} from "gdmn-internals";
 import {str2SemCategories} from "gdmn-nlp";
 import path from "path";
 import { SettingsCache } from "./SettingsCache";
@@ -72,6 +72,7 @@ export type AppAction =
   | "UPDATE_ATTRIBUTE"
   | "DELETE_ATTRIBUTE"
   | "QUERY_SETTING"
+  | "LIST_SETTING"
   | "SAVE_SETTING"
   | "DELETE_SETTING"
   | "CHECK_ENTITY_EMPTY"
@@ -115,6 +116,7 @@ export type AddAttributeCmd = AppCmd<"ADD_ATTRIBUTE", { entityData: IEntity, att
 export type UpdateAttributeCmd = AppCmd<"UPDATE_ATTRIBUTE", { entityData: IEntity, attrData: IAttribute }>;
 export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: string }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
+export type ListSettingCmd = AppCmd<"LIST_SETTING", { query: Partial<ISettingParams> }>;
 export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
 export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
 export type CheckEntityEmptyCmd = AppCmd<"CHECK_ENTITY_EMPTY", IEntity>;
@@ -1186,6 +1188,32 @@ export class Application extends ADatabase {
         this.checkSession(context.session);
         const payload = context.command.payload;
         const data = await this.settingsCache.querySetting(payload.query[0].type, payload.query[0].objectID);
+        await context.checkStatus();
+        return data;
+      }
+    });
+
+    session.taskManager.add(task);
+    this.sessionManager.syncTasks();
+    return task;
+  }
+
+  public pushListSettingCmd(session: Session, command: ListSettingCmd): Task<ListSettingCmd, IListSettingQueryResponse> {
+    const task = new Task({
+      session,
+      command,
+      level: Level.SESSION,
+      logger: this.taskLogger,
+      worker: async (context) => {
+        await this.waitUnlock();
+        this.checkSession(context.session);
+        const query = context.command.payload.query;
+
+        if (query.type === undefined) {
+          throw new Error('Incorrect list setting query');
+        }
+
+        const data = await this.settingsCache.listSetting(query.type);
         await context.checkStatus();
         return data;
       }

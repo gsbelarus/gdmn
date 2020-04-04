@@ -52,12 +52,12 @@ case "CHECK_ENTITY_EMPTY": {
 *	`TTaskActionResultTypes` -- добавляем новое свойство с типом, который будет возвращаться с сервера.
 
 в gdmn-front/packages/gdmn-server-api/src/pub-sub/commands.ts нужно создать новые типы:
-```
+```ts
 export type T%NAME_ACTION%TaskCmd = TTaskCmd<TTaskActionNames.%NAME_ACTION%>;
 export type T%NAME_ACTION%TaskCmdResult = TTaskCmdResult<TTaskActionNames%NAME_ACTION%>
 ```
 в gdmn-front/src/app/services/GdmnPubSubApi.ts нужно добавить публичный метод: 
-```
+```ts
 public %METHOD_NAME% (payload: TTaskActionPayloadTypes[TTaskActionNames.%NAME_ACTION%]): Promise<T%NAME_ACTION%TaskCmdResult> {
     		return this.runTaskRequestCmd({
       		payload: {

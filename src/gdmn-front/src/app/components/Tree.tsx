@@ -76,31 +76,32 @@ const Node = (props: INodeProps) => {
 
 export const Tree = (props: ITreeProps) => {
 
-  const loadedAll = !props.rs || props.rs.status === TStatus.LOADING || props.rs.status === TStatus.FULL
+  const { rs, selectNode, load } = props;
+  const loadedAll = !rs || rs.status === TStatus.LOADING || rs.status === TStatus.FULL
 
-  const root = {id: props.rs.name, value: props.rs.name, row: -1, rollUp: true, children: []}
+  const root = {id: rs.name, value: rs.name, row: -1, rollUp: true, children: []}
   const nodes: INode[] = [root];
 
-  const count = props.rs.size;
+  const count = rs.size;
   const childRoot = [] as string[];
-  const fdID = props.rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'ID');
-  const fdNAME = props.rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'NAME');
-  const fdUSRNAME = props.rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'USR$NAME');
-  const fdPARENT = props.rs.params.fieldDefs.find(fd => fd.eqfa?.linkAlias === 'PARENT' && fd.eqfa?.attribute === 'ID');
-  const selectedNode = fdID ? props.rs.getString(fdID.fieldName, props.rs.currentRow) : undefined;
+  const fdID = rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'ID');
+  const fdNAME = rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'NAME');
+  const fdUSRNAME = rs.params.fieldDefs.find(fd => fd.eqfa?.attribute === 'USR$NAME');
+  const fdPARENT = rs.params.fieldDefs.find(fd => fd.eqfa?.linkAlias === 'PARENT' && fd.eqfa?.attribute === 'ID');
+  const selectedNode = fdID ? rs.getString(fdID.fieldName, rs.currentRow) : undefined;
 
   for(let i = 0; i < count; i++) {
-    const parent = fdPARENT ? props.rs.getString(fdPARENT.fieldName, i) : undefined;
-    const findIDParent = fdID ? props.rs.getString(fdID.fieldName, i) : undefined;
+    const parent = fdPARENT ? rs.getString(fdPARENT.fieldName, i) : undefined;
+    const findIDParent = fdID ? rs.getString(fdID.fieldName, i) : undefined;
     if(!parent && findIDParent) {
       childRoot.push(findIDParent)
     }
     if(findIDParent && (fdNAME || fdUSRNAME)) {
       nodes.push({
           id: findIDParent,
-          value: fdNAME ? props.rs.getString(fdNAME.fieldName, i) : props.rs.getString(fdUSRNAME!.fieldName, i),
+          value: fdNAME ? rs.getString(fdNAME.fieldName, i) : rs.getString(fdUSRNAME!.fieldName, i),
           row: i,
-          parent: parent ? parent : props.rs.name
+          parent: parent ? parent : rs.name
         } as INode)
     }
   }
@@ -118,7 +119,7 @@ export const Tree = (props: ITreeProps) => {
             return (
               <Node
                 key={`node-${node.id}`}
-                onClick={props.selectNode}
+                onClick={selectNode}
                 node={node}
                 level={level}
                 isLast={node.children.length === 0}
@@ -131,7 +132,7 @@ export const Tree = (props: ITreeProps) => {
             const iconLoad = !loadedAll
               ? <Icon
                 iconName="More"
-                onClick={props.load}
+                onClick={load}
                 style={{
                   fontSize: '10px'
                 }}
@@ -140,7 +141,7 @@ export const Tree = (props: ITreeProps) => {
             return (
               <Node
                 key={`node-${node.id}`}
-                onClick={props.selectNode}
+                onClick={selectNode}
                 node={node}
                 level={level}
                 isLast={node.children.length === 0}
@@ -167,7 +168,7 @@ export const Tree = (props: ITreeProps) => {
       ? undefined
       : <Icon
           iconName="More"
-          onClick={ () => {props.load()}}
+          onClick={load}
           style={{
             fontSize: '10px',
             cursor: 'pointer'
@@ -176,7 +177,7 @@ export const Tree = (props: ITreeProps) => {
     }
     <Node
       key={`root-node-${root.value}`}
-      onClick={props.selectNode}
+      onClick={selectNode}
       node={root}
       level={level}
       isLast={false}

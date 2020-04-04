@@ -14,7 +14,7 @@ import {
 } from 'gdmn-orm';
 
 import { IReceivedErrorMeta, TPublishMessageMeta, TReceivedMessageMeta } from './protocol';
-import { ISqlQueryResponseAliases, ISettingParams, ISettingEnvelope, ISqlPrepareResponse } from 'gdmn-internals';
+import { ISqlQueryResponseAliases, ISettingParams, ISettingEnvelope, ISqlPrepareResponse, IListSettingQueryResponse } from 'gdmn-internals';
 
 export enum TGdmnTopic {
   TASK = '/task',
@@ -72,6 +72,7 @@ export const enum TTaskActionNames {
   UPDATE_ATTRIBUTE = 'UPDATE_ATTRIBUTE',
   DELETE_ATTRIBUTE = 'DELETE_ATTRIBUTE',
   QUERY_SETTING = 'QUERY_SETTING',
+  LIST_SETTING = 'LIST_SETTING',
   SAVE_SETTING = 'SAVE_SETTING',
   DELETE_SETTING = 'DELETE_SETTING',
   CHECK_ENTITY_EMPTY = 'CHECK_ENTITY_EMPTY',
@@ -194,6 +195,7 @@ export interface TTaskActionPayloadTypes {
     attrName: string;
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
+  [TTaskActionNames.LIST_SETTING]: {query: Partial<ISettingParams>};
   [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope};
   [TTaskActionNames.DELETE_SETTING]: {data: ISettingParams};
 
@@ -245,6 +247,7 @@ export interface TTaskActionResultTypes {
   [TTaskActionNames.UPDATE_ATTRIBUTE]: IAttribute;
   [TTaskActionNames.DELETE_ATTRIBUTE]: void;
   [TTaskActionNames.QUERY_SETTING]: ISettingEnvelope[];
+  [TTaskActionNames.LIST_SETTING]: IListSettingQueryResponse;
   [TTaskActionNames.SAVE_SETTING]: void;
   [TTaskActionNames.DELETE_SETTING]: void;
   [TTaskActionNames.CHECK_ENTITY_EMPTY]: boolean;

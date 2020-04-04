@@ -269,6 +269,10 @@ export type TDeleteAttributeTaskCmdResult = TTaskCmdResult<TTaskActionNames.DELE
 
 export type TQuerySettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.QUERY_SETTING>;
 
+// setting: list
+
+export type TListSettingTaskCmdResult = TTaskCmdResult<TTaskActionNames.LIST_SETTING>;
+
 //setting: save
 
 export type TSaveSettingTaskCmd = TTaskCmd<TTaskActionNames.SAVE_SETTING>;

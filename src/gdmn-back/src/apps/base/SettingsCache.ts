@@ -1,4 +1,4 @@
-import { ISettingEnvelope, isISettingData, ISettingParams } from 'gdmn-internals';
+import { ISettingEnvelope, isISettingData, ISettingParams, IListSettingQueryResponse } from 'gdmn-internals';
 import { promises as fsPromises } from "fs";
 import path from "path";
 
@@ -69,7 +69,7 @@ export class SettingsCache {
     }
   }
 
-  public async querySetting(type: string, objectID: string) {
+  private async _settingsByType(type: string) {
     let data = this._cachedData[type];
 
     if (!data) {
@@ -81,7 +81,17 @@ export class SettingsCache {
       this._cachedData[type] = data;
     }
 
-    return data.settings.filter( s => isISettingData(s) && s.type === type && s.objectID === objectID);
+    return data.settings.filter( s => isISettingData(s) );
+  }
+
+  public async querySetting(type: string, objectID: string) {
+    const list = await this._settingsByType(type);
+    return list.filter( s => s.objectID === objectID );
+  }
+
+  public async listSetting(type: string) {
+    const list = await this._settingsByType(type);
+    return { ids: list.map( s => s.objectID ) } as IListSettingQueryResponse;
   }
 
   public async writeSetting(setting: ISettingEnvelope) {

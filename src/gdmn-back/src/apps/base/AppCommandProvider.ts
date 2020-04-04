@@ -30,7 +30,8 @@ import {
   AddAttributeCmd,
   UpdateAttributeCmd,
   CheckEntityEmptyCmd,
-  GetServerProcessInfoCmd
+  GetServerProcessInfoCmd,
+  ListSettingCmd
 } from "./Application";
 import {Session} from "./session/Session";
 import {ICmd, Task} from "./task/Task";
@@ -223,6 +224,10 @@ export class AppCommandProvider {
       && command.payload.query.length && isISettingData(command.payload.query[0]);
   }
 
+  private static _verifyListSettingCmd(command: ICmd<AppAction, any>): command is ListSettingCmd {
+    return command.payload instanceof Object && typeof command.payload.query.type === 'string';
+  }
+
   private static _verifySaveSettingCmd(command: ICmd<AppAction, any>): command is SaveSettingCmd {
     return command.payload instanceof Object && command.payload.newData instanceof Object
       && isISettingEnvelope(command.payload.newData);
@@ -403,6 +408,12 @@ export class AppCommandProvider {
       case "QUERY_SETTING": {
         if (AppCommandProvider._verifyQuerySettingCmd(command)) {
           return this._application.pushQuerySettingCmd(session, command);
+        }
+        throw new Error(`Incorrect ${command.action} command`);
+      }
+      case "LIST_SETTING": {
+        if (AppCommandProvider._verifyListSettingCmd(command)) {
+          return this._application.pushListSettingCmd(session, command);
         }
         throw new Error(`Incorrect ${command.action} command`);
       }
