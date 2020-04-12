@@ -7,7 +7,7 @@ export const CodeViewContainer = connect(
   (state: IState, ownProps: ICodeViewContainerProps): ICodeViewStateProps => {
     return {
       viewTab: state.gdmnState.viewTabs.find( vt => vt.url === ownProps.url ),
-      script: state.script
+      scriptState: state.script
     }
   }
 )(CodeView);

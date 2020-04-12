@@ -6,12 +6,14 @@ import { GdmnPubSubApi } from '@src/app/services/GdmnPubSubApi';
 import { getGdmnMiddlewares } from '@src/app/scenes/gdmn/middlewares';
 import { IState } from '@src/app/store/reducer';
 import { loadRsMiddleware } from './loadRSMiddleware';
+import { scriptMiddleware } from '../script/middleware';
 
 export const getMiddlewares = (apiService: GdmnPubSubApi): Middleware[] => [
   thunk.withExtraArgument({ apiService }),
   ...rootMiddlewares,
   ...getGdmnMiddlewares(apiService),
-  loadRsMiddleware(apiService)
+  loadRsMiddleware(apiService),
+  scriptMiddleware(apiService)
 ];
 
 export type TThunkMiddleware = ThunkMiddleware<IState, AnyAction, { apiService: GdmnPubSubApi }>;
