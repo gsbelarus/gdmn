@@ -196,7 +196,8 @@ export interface TTaskActionPayloadTypes {
   };
   [TTaskActionNames.QUERY_SETTING]: {query: ISettingParams[]};
   [TTaskActionNames.LIST_SETTING]: {query: Partial<ISettingParams>};
-  [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope};
+  [TTaskActionNames.SAVE_SETTING]: {newData: ISettingEnvelope, flush?: boolean};
+  // TODO: data is somewhat confusing regarding data member in setting envelope
   [TTaskActionNames.DELETE_SETTING]: {data: ISettingParams};
 
   [TTaskActionNames.CHECK_ENTITY_EMPTY]: IEntity;

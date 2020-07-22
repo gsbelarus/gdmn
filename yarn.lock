@@ -2945,9 +2945,9 @@
     "@types/webpack" "*"
 
 "@types/uuid@^3":
-  version "3.4.8"
-  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.8.tgz#4ba887fcef88bd9a7515ca2de336d691e3e18318"
-  integrity sha512-zHWce3allXWSmRx6/AGXKCtSOA7JjeWd2L3t4aHfysNk8mouQnWCocveaT7a4IEIlPVHp81jzlnknqTgCjCLXA==
+  version "3.4.9"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.9.tgz#fcf01997bbc9f7c09ae5f91383af076d466594e1"
+  integrity sha512-XDwyIlt/47l2kWLTzw/mtrpLdB+GPSskR2n/PIcPn+VYhVO77rGhRncIR5GPU0KRzXuqkDO+J5qqrG0Y8P6jzQ==
 
 "@types/webpack-bundle-analyzer@^2":
   version "2.13.3"
@@ -3131,15 +3131,15 @@
     tsutils "^3.17.1"
 
 "@uifabric/fluent-theme@^7":
-  version "7.1.60"
-  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-7.1.60.tgz#ccefa9d5be12172760c9a4d8d76703e855b0be31"
-  integrity sha512-mSr0govQliAGoBZ4mmbftTcpULBNTUndCwnjZDp81EG4jDWUPi6P4Kk+6XdFIU03t9N+KRLLFJh7zJ5HcH3suA==
+  version "7.1.61"
+  resolved "https://registry.yarnpkg.com/@uifabric/fluent-theme/-/fluent-theme-7.1.61.tgz#93ff9ee3cf6d850c0d3127cf0bb2e76139aaf647"
+  integrity sha512-MA7C4hvMUaFzLcCHfcYGPhVHLxflahypPHaYT650K9gCeHm/aZwotlwIRmZbxAV++t9uIplMEBR/O875nRtCag==
   dependencies:
     "@uifabric/merge-styles" "^7.11.1"
     "@uifabric/set-version" "^7.0.11"
     "@uifabric/styling" "^7.11.8"
-    "@uifabric/variants" "^7.1.49"
-    office-ui-fabric-react "^7.107.4"
+    "@uifabric/variants" "^7.1.50"
+    office-ui-fabric-react "^7.107.5"
     tslib "^1.10.0"
 
 "@uifabric/foundation@^7.7.5":
@@ -3207,13 +3207,13 @@
     prop-types "^15.7.2"
     tslib "^1.10.0"
 
-"@uifabric/variants@^7.1.49":
-  version "7.1.49"
-  resolved "https://registry.yarnpkg.com/@uifabric/variants/-/variants-7.1.49.tgz#7e5a2c42eb8d77e445e44fba0d2b1dde063cd81c"
-  integrity sha512-HEQtx7llhbSDLKXKgLHKeJ4KDLm71mBwJh/Wxmd6BGBY4i79nyalRKtk4qv3YsPrVs4TFFWEMbpgXX6ChwUvpg==
+"@uifabric/variants@^7.1.50":
+  version "7.1.50"
+  resolved "https://registry.yarnpkg.com/@uifabric/variants/-/variants-7.1.50.tgz#c289695a25aee54e4a94d375079a62857e796986"
+  integrity sha512-qv0RuOwK7Hv1mkMqF6e35EsS+CgIZBvTtzyiS4KbmppggEsjyXSah7m2KoSSD0vehX6il0OqSqWcmN1E8QRoHg==
   dependencies:
     "@uifabric/set-version" "^7.0.11"
-    office-ui-fabric-react "^7.107.4"
+    office-ui-fabric-react "^7.107.5"
     tslib "^1.10.0"
 
 "@webassemblyjs/ast@1.8.5":
@@ -3650,7 +3650,7 @@ ajv-keywords@^3.1.0, ajv-keywords@^3.4.1:
   resolved "https://registry.yarnpkg.com/ajv-keywords/-/ajv-keywords-3.4.1.tgz#ef916e271c64ac12171fd8384eaae6b2345854da"
   integrity sha512-RO1ibKvd27e6FEShVFfPALuHI3WjSVNeK5FIsmme/LYRNxjKuNj+Dt7bucLa6NdSv3JcVTyMlm9kGR84z1XpaQ==
 
-ajv@^6.1.0, ajv@^6.10.2, ajv@^6.5.5:
+ajv@^6.1.0, ajv@^6.10.2, ajv@^6.12.0, ajv@^6.5.5:
   version "6.12.2"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.2.tgz#c629c5eced17baf314437918d2da88c99d5958cd"
   integrity sha512-k+V+hzjm5q/Mr8ef/1Y9goCmlsK4I6Sm74teeyGvFk1XrOsbsKLjEdrvny42CZ+a8sXbk8KWpY/bDwS+FLL2UQ==
@@ -3660,7 +3660,7 @@ ajv@^6.1.0, ajv@^6.10.2, ajv@^6.5.5:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^6.10.0, ajv@^6.12.0:
+ajv@^6.10.0:
   version "6.12.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.0.tgz#06d60b96d87b8454a5adaba86e7854da629db4b7"
   integrity sha512-D6gFiFA0RRLyUbvijN74DWAjXSFxWKaWP7mldxkVhyhAV3+SWA9HEJPHQ2c9soIeTFJqcSdFDGFgdqs1iUU2Hw==
@@ -5831,9 +5831,9 @@ css-loader@3.4.2:
     schema-utils "^2.6.0"
 
 css-loader@^3:
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/css-loader/-/css-loader-3.5.2.tgz#6483ae56f48a7f901fbe07dde2fc96b01eafab3c"
-  integrity sha512-hDL0DPopg6zQQSRlZm0hyeaqIRnL0wbWjay9BZxoiJBpbfOW4WHfbaYQhwnDmEa0kZUc1CJ3IFo15ot1yULMIQ==
+  version "3.5.3"
+  resolved "https://registry.yarnpkg.com/css-loader/-/css-loader-3.5.3.tgz#95ac16468e1adcd95c844729e0bb167639eb0bcf"
+  integrity sha512-UEr9NH5Lmi7+dguAm+/JSPovNjYbm2k3TK58EiwQHzOHH5Jfq1Y+XoP2bQO6TMn7PptMd0opxxedAWcaSTRKHw==
   dependencies:
     camelcase "^5.3.1"
     cssesc "^3.0.0"
@@ -5846,7 +5846,7 @@ css-loader@^3:
     postcss-modules-scope "^2.2.0"
     postcss-modules-values "^3.0.0"
     postcss-value-parser "^4.0.3"
-    schema-utils "^2.6.5"
+    schema-utils "^2.6.6"
     semver "^6.3.0"
 
 css-prefers-color-scheme@^3.1.1:
@@ -12240,10 +12240,10 @@ octokit-pagination-methods@^1.1.0:
   resolved "https://registry.yarnpkg.com/octokit-pagination-methods/-/octokit-pagination-methods-1.1.0.tgz#cf472edc9d551055f9ef73f6e42b4dbb4c80bea4"
   integrity sha512-fZ4qZdQ2nxJvtcasX7Ghl+WlWS/d9IgnBIwFZXVNNZUmzpno91SX5bc5vuxiuKoCtK78XxGGNuSCrDC7xYB3OQ==
 
-office-ui-fabric-react@^7, office-ui-fabric-react@^7.107.4:
-  version "7.107.4"
-  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.107.4.tgz#47d81de50f0394a6eb925a7ccd3e808e27deb4d0"
-  integrity sha512-SIjA/8nfxsI7s3ez4gFyqwl15WpxcWcieMT/5OGJKCfOQE7mKnbwUEwO8WyDWt8tivYAqc1pDAZSnpdakjWXHw==
+office-ui-fabric-react@^7, office-ui-fabric-react@^7.107.5:
+  version "7.107.5"
+  resolved "https://registry.yarnpkg.com/office-ui-fabric-react/-/office-ui-fabric-react-7.107.5.tgz#7958e7f76c7fefc17e59039dde169fb72e337424"
+  integrity sha512-XzBkNZf2vNy30ARIikiUSaqzNYly/R/5HZJM979n8v0g71iwpCziRqjDB6BNgUJ57iwCbyt0hMUGnLFKJ1mVsA==
   dependencies:
     "@fluentui/react-focus" "^7.5.0"
     "@fluentui/react-icons" "^0.1.6"
@@ -15057,10 +15057,18 @@ schema-utils@^1.0.0:
     ajv-errors "^1.0.0"
     ajv-keywords "^3.1.0"
 
-schema-utils@^2.5.0, schema-utils@^2.6.0, schema-utils@^2.6.1, schema-utils@^2.6.4, schema-utils@^2.6.5:
+schema-utils@^2.5.0, schema-utils@^2.6.0, schema-utils@^2.6.1, schema-utils@^2.6.4:
   version "2.6.5"
   resolved "https://registry.yarnpkg.com/schema-utils/-/schema-utils-2.6.5.tgz#c758f0a7e624263073d396e29cd40aa101152d8a"
   integrity sha512-5KXuwKziQrTVHh8j/Uxz+QUbxkaLW9X/86NBlx/gnKgtsZA2GIVMUn17qWhRFwF8jdYb3Dig5hRO/W5mZqy6SQ==
+  dependencies:
+    ajv "^6.12.0"
+    ajv-keywords "^3.4.1"
+
+schema-utils@^2.6.5, schema-utils@^2.6.6:
+  version "2.6.6"
+  resolved "https://registry.yarnpkg.com/schema-utils/-/schema-utils-2.6.6.tgz#299fe6bd4a3365dc23d99fd446caff8f1d6c330c"
+  integrity sha512-wHutF/WPSbIi9x6ctjGGk2Hvl0VOz5l3EKEuKbjPlB30mKZUzb9A5k9yEXRX3pwyqVLPvpfZZEllaFq/M718hA==
   dependencies:
     ajv "^6.12.0"
     ajv-keywords "^3.4.1"
@@ -15941,12 +15949,12 @@ style-loader@0.23.1:
     schema-utils "^1.0.0"
 
 style-loader@^1:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/style-loader/-/style-loader-1.1.4.tgz#1ad81283cefe51096756fd62697258edad933230"
-  integrity sha512-SbBHRD8fwK3pX+4UDF4ETxUF0+rCvk29LWTTI7Rt0cgsDjAj3SWM76ByTe6u2+4IlJ/WwluB7wuslWETCoPQdg==
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/style-loader/-/style-loader-1.2.0.tgz#f78e4d49caf5018f7c03ae1886e1270124feeb0a"
+  integrity sha512-HC8WcGnjwNrKji7HSBqFOhGNUSt7UDU/jHxT6bA83Gk+JWJBmgitWlGihc0V1w6ZvwlzcX5LJOsofZzSP7b1tQ==
   dependencies:
     loader-utils "^2.0.0"
-    schema-utils "^2.6.5"
+    schema-utils "^2.6.6"
 
 stylehacks@^4.0.0:
   version "4.0.3"

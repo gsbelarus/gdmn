@@ -33,6 +33,7 @@ export interface IObject {
   name: string;
   parent?: string;
   type: TObjectType;
+  onClick?: string;
 };
 
 export interface IWindow extends IObject {

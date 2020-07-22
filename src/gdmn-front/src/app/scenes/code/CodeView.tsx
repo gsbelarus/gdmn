@@ -89,7 +89,11 @@ export const CodeView = (props: ICodeViewProps): JSX.Element => {
       iconProps: {
         iconName: 'Save'
       },
-      onClick: () => { }
+      onClick: () => {
+        if (selectedId !== undefined) {
+          dispatch(scriptActions.save({ id: selectedId, source: getEditorValue.current() }));
+        }
+      }
     }
   ];
 

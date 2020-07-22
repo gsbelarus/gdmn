@@ -25,7 +25,7 @@ export class SettingsCache {
   }
 
   public async flush(clear?: boolean) {
-    Object.entries(this._cachedData).forEach( async ([type, data]) => {
+    for (const [type, data] of Object.entries(this._cachedData)) {
       if (data.changed) {
         const fileName = this._getSettingFileName(type);
         try {
@@ -37,7 +37,7 @@ export class SettingsCache {
           console.log(`Error writing data to file ${fileName} - ${e}`);
         }
       }
-    });
+    }
 
     if (clear) {
       this._cachedData = {};
@@ -94,7 +94,8 @@ export class SettingsCache {
     return { ids: list.map( s => s.objectID ) } as IListSettingQueryResponse;
   }
 
-  public async writeSetting(setting: ISettingEnvelope) {
+  // TODO: method called writeSetting but appropriate server command is called saveSetting
+  public async writeSetting(setting: ISettingEnvelope, flush?: boolean) {
     const { type, objectID } = setting;
 
     // посмотрим, есть ли данные в кэше
@@ -128,8 +129,12 @@ export class SettingsCache {
       }
     } else {
       // в кэше есть данные, но объекта с нужным нам ИД нет
-      data.settings = [...data.settings, setting];
+      data.settings.push(setting);
       data.changed = true;
+    }
+
+    if (flush) {
+      this.flush();
     }
   }
 
@@ -154,8 +159,11 @@ export class SettingsCache {
 
     // удалить что-то можно только если оно существует
     if (data && query.length) {
-      data.settings = data.settings.filter( s => s.type !== type || s.objectID !== objectID );
-      data.changed = true;
+      const idx = data.settings.findIndex( s => s.type === type && s.objectID === objectID );
+      if (idx >= 0) {
+        data.settings.splice(idx, 1);
+        data.changed = true;
+      }
     }
   }
 }

@@ -117,7 +117,8 @@ export type UpdateAttributeCmd = AppCmd<"UPDATE_ATTRIBUTE", { entityData: IEntit
 export type DeleteAttributeCmd = AppCmd<"DELETE_ATTRIBUTE", { entityData: IEntity, attrName: string }>;
 export type QuerySettingCmd = AppCmd<"QUERY_SETTING", { query: ISettingParams[] }>;
 export type ListSettingCmd = AppCmd<"LIST_SETTING", { query: Partial<ISettingParams> }>;
-export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope }>;
+// TODO: should we better name flush forceWrite?
+export type SaveSettingCmd = AppCmd<"SAVE_SETTING", { newData: ISettingEnvelope, flush?: boolean }>;
 export type DeleteSettingCmd = AppCmd<"DELETE_SETTING", { data: ISettingParams }>;
 export type CheckEntityEmptyCmd = AppCmd<"CHECK_ENTITY_EMPTY", IEntity>;
 export type GetServerProcessInfoCmd = AppCmd<"GET_SERVER_PROCESS_INFO", IGetServerProcessInfoResponse>;
@@ -1234,8 +1235,8 @@ export class Application extends ADatabase {
       worker: async (context) => {
         await this.waitUnlock();
         this.checkSession(context.session);
-        const { newData } = context.command.payload;
-        this.settingsCache.writeSetting(newData);
+        const { newData, flush } = context.command.payload;
+        this.settingsCache.writeSetting(newData, flush);
         await context.checkStatus();
       }
     });

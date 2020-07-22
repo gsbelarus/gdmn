@@ -28,6 +28,8 @@ export const scriptMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
           }
         });
       }
+
+      break;
     }
 
     case getType(scriptActions.list): {
@@ -40,6 +42,35 @@ export const scriptMiddleware = (apiService: GdmnPubSubApi): TThunkMiddleware =>
           dispatch(scriptActions.assign({ scripts: response.payload.result.ids.map( id => ({ id }) ), listLoaded: true }));
         }
       });
+
+      break;
+    }
+
+    case getType(scriptActions.save): {
+      const { id, source } = action.payload;
+      const d = new Date().getTime();
+
+      apiService
+        .saveSetting({
+          newData: {
+            type: 'SCRIPT',
+            objectID: id,
+            data: { source },
+            _changed: d,
+            _accessed: d
+          },
+          flush: true
+        })
+        .then( response => {
+          if (response.error) {
+            rootActions.showMessage(response.error.message);
+          }
+          else {
+            dispatch(scriptActions.assign({ scripts: [{ id, source }] }));
+          }
+        });
+
+      break;
     }
   }
 

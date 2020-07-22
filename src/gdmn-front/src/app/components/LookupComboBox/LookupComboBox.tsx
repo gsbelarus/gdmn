@@ -2,28 +2,28 @@ import React, { useEffect, useReducer, useRef, FormEvent } from 'react';
 import { ComboBox, IComboBoxOption, IComboBox, ISelectableOption, IRenderFunction, ActionButton, IComboBoxStyles, IButtonStyles } from 'office-ui-fabric-react';
 import { ISessionData } from '@src/app/scenes/gdmn/types';
 
-export type TOnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
+export type OnLookup = (filter: string, limit: number) => Promise<IComboBoxOption[]>;
 
 export interface ILookupComboBoxProps {
   name?: string;
   preSelectedOption?: IComboBoxOption;
   label?: string;
-  onLookup: TOnLookup;
   getSessionData?: () => ISessionData;
-  onChanged: (option: IComboBoxOption | undefined) => void;
-  onFocus?: () => void;
   componentRef?: (ref: IComboBox | null) => void;
   styles?: Partial<IComboBoxStyles>;
-  caretDownButtonStyles?: IButtonStyles;
+  caretDownButtonStyles?: Partial<IButtonStyles>;
   errorMessage?: string;
+  onLookup: OnLookup;
+  onChanged: (option: IComboBoxOption | undefined) => void;
+  onFocus?: () => void;
 };
 
-type TQueryState = 'IDLE' | 'START' | 'INPROGRESS';
+type QueryState = 'IDLE' | 'START' | 'INPROGRESS';
 
 interface ILookupComboboxState {
   selectedOption?: IComboBoxOption;
   options: IComboBoxOption[];
-  queryState: TQueryState;
+  queryState: QueryState;
   text: string;
   lookupText: string;
   limit: number;
@@ -341,7 +341,7 @@ export const LookupComboBox = (props: ILookupComboBoxProps) => {
         }
         : undefined
       }
-      caretDownButtonStyles={ caretDownButtonStyles ? caretDownButtonStyles : undefined }
+      caretDownButtonStyles={ caretDownButtonStyles }
       onChange={onChange}
       onPendingValueChanged={onPendingValueChanged}
       onKeyDown={onKeyDown}

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { GridInspector, OnUpdateGrid } from "./GridInspector";
-import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage, getAreas, isWindow, isFrame, IFrame, isFrameOrArea } from "./types";
+import { IGrid, isArea, IObject, OnUpdateSelectedObject, Object, Objects, isLabel, isImage, isField, ILabel, IField, IArea, IImage, isWindow, isFrame, IFrame, isFrameOrArea, IButton } from "./types";
 import { Dropdown, TextField, ChoiceGroup, Stack, Checkbox } from "office-ui-fabric-react";
 
 interface IWithObjectInspectorProps {
@@ -29,10 +29,8 @@ export const WithObjectInspector = (props: IWithObjectInspectorProps) => {
       return res;
     }
 
-    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField | keyof IFrame, required?: boolean) => (_e: any, newValue?: string | boolean) => {
-
-
-    if (!required || newValue !== undefined) {
+    const getOnChange = (prop: keyof IObject | keyof ILabel | keyof IImage | keyof IArea | keyof IField | keyof IFrame | keyof IButton, required?: boolean) => (_e: any, newValue?: string | boolean) => {
+      if (!required || newValue !== undefined) {
         onUpdateSelectedObject({ [prop]: newValue })
       }
     };
