@@ -1,4 +1,4 @@
-import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions, IServiceOptions} from "../src";
+import {Factory, IConnectionOptions} from "../src";
 import path from "path";
 import {existsSync, unlinkSync} from "fs";
 
@@ -19,7 +19,7 @@ export const dbOptionsFail: IConnectionOptions = {
 jest.setTimeout(600 * 1000);
 
 describe("Firebird driver tests", () => {
-  
+
   const connection = driver.newConnection();
 
   beforeAll(async () => {

@@ -1,6 +1,6 @@
 import {existsSync, unlinkSync} from "fs";
 import path from "path";
-import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions, IServiceOptions} from "../src";
+import {AConnection, CommonParamsAnalyzer, Factory, IConnectionOptions} from "../src";
 import {Statement} from "../src/fb/Statement";
 import {connectionTest} from "./common/AConnection";
 import {connectionPoolTest} from "./common/AConnectionPool";
@@ -10,19 +10,22 @@ import {transactionTest} from "./common/ATransaction";
 
 const driver = Factory.getDriver("firebird");
 
+const testFBServer = require('../../../testFBServer.json');
+
 export const dbOptions: IConnectionOptions = {
-    username: "SYSDBA",
-    password: "masterkey",
-    path: path.resolve("./GDMN_DB_FB.FDB"),
-    readTransaction: true
+  ...testFBServer,
+  path: path.resolve("./GDMN_DB_FB.FDB"),
+  readTransaction: true
 };
 
+/*
 const serviceOptions: IServiceOptions = {
     host: "localhost",
     port: 3050,
     username: "SYSDBA",
     password: "masterkey"
 };
+*/
 
 jest.setTimeout(100 * 1000);
 
