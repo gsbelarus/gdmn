@@ -4,13 +4,17 @@ import {existsSync, unlinkSync} from "fs";
 
 const driver = Factory.getDriver("firebird");
 
+const testFBServer = require('../../../testFBServer.json');
+
 export const dbOptions: IConnectionOptions = {
+  ...testFBServer,
   username: "SYSDBA",
   password: "masterkey",
   path: path.resolve("./GDMN_DB_FB2.FDB")
 };
 
 export const dbOptionsFail: IConnectionOptions = {
+  //...testFBServer,
   username: "2",
   password: "2",
   path: path.resolve("./GDMN_DB_FB2.FDB")
@@ -41,9 +45,7 @@ describe("Firebird driver tests", () => {
       try {
         await connection.connect(dbOptionsFail);
       } catch (error) {
-       // console.log(error);
         if (connection.connected) {
-        //  console.log(connection.connected);
           await connection.disconnect();
         }
       }
