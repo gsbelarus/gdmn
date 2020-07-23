@@ -8,16 +8,13 @@ const testFBServer = require('../../../testFBServer.json');
 
 export const dbOptions: IConnectionOptions = {
   ...testFBServer,
-  username: "SYSDBA",
-  password: "masterkey",
   path: path.resolve("./GDMN_DB_FB2.FDB")
 };
 
 export const dbOptionsFail: IConnectionOptions = {
-  //...testFBServer,
-  username: "2",
-  password: "2",
-  path: path.resolve("./GDMN_DB_FB2.FDB")
+  ...dbOptions,
+  username: "some_unexisting_user",
+  password: "and_his_password"
 };
 
 jest.setTimeout(600 * 1000);
@@ -40,13 +37,21 @@ describe("Firebird driver tests", () => {
     await connection.dropDatabase();
   });
 
-  it("100 connections", async () => {
+  it("100 successful connections", async () => {
     for (let i = 0; i < 100; i++) {
+      await connection.connect(dbOptions);
+      await connection.disconnect();
+    }
+  });
+
+  it("10 unsuccessful connections", async () => {
+    for (let i = 0; i < 10; i++) {
       try {
         await connection.connect(dbOptionsFail);
+        await connection.disconnect();
       } catch (error) {
         if (connection.connected) {
-          await connection.disconnect();
+          throw new Error('couldn\'t be here');
         }
       }
     }

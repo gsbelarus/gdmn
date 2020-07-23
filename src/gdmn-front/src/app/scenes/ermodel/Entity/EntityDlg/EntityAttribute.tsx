@@ -165,6 +165,7 @@ export const EntityAttribute = ({ attr, attrIdx, createAttr, userDefined, select
           </Stack.Item>
         </Stack>
         <AttrEditor
+          // @ts-ignore
           attr={attr as any}
           attrIdx={attrIdx}
           createAttr={createAttr}
