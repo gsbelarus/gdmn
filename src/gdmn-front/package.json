@@ -25,11 +25,11 @@
   "dependencies": {
     "@monaco-editor/react": "^3.1.1",
     "@stomp/stompjs": "^5.4.2",
-    "@uifabric/fluent-theme": "^7",
+    "@uifabric/fluent-theme": "^7.1.117",
     "blockly": "^3.20200123.1",
     "dagre": "^0.8.4",
     "es6-error": "^4",
-    "fast-deep-equal": "^3",
+    "fast-deep-equal": "^3.1.3",
     "gdmn-grid": "1.0.0",
     "gdmn-internals": "1.0.0",
     "gdmn-nlp": "1.0.0",
@@ -40,7 +40,7 @@
     "jwt-decode": "^2",
     "monaco-editor": "^0.20.0",
     "mxgraph": "^4.0.4",
-    "office-ui-fabric-react": "^7",
+    "office-ui-fabric-react": "^7.123.10",
     "react": "^16",
     "react-color": "^2.17.3",
     "react-css-modules": "^4",
@@ -52,7 +52,7 @@
     "redux": "^4",
     "redux-persist": "^6",
     "redux-thunk": "^2",
-    "rxjs": "^6",
+    "rxjs": "^6.6.0",
     "typesafe-actions": "^4"
   },
   "devDependencies": {

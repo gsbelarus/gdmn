@@ -22,7 +22,7 @@
     "gdmn-grid": "^1",
     "gdmn-recordset": "^1",
     "immutable": "^3",
-    "office-ui-fabric-react": "^7",
+    "office-ui-fabric-react": "^7.123.10",
     "react": "^16",
     "react-dom": "^16",
     "react-draggable": "^4",

@@ -35,12 +35,12 @@
     "gdmn-er-bridge": "^1",
     "global": "^4.4.0",
     "jsonwebtoken": "^8",
-    "koa": "^2",
-    "koa-body": "^4",
+    "koa": "^2.13.0",
+    "koa-body": "^4.2.0",
     "koa-error": "^3",
     "koa-logger": "^3",
     "koa-router": "^8",
-    "koa-send": "^5",
+    "koa-send": "^5.0.1",
     "koa-static": "^5",
     "koa2-cors": "^2",
     "log4js": "^6",
@@ -48,7 +48,7 @@
     "stomp-protocol": "^0.4.6",
     "strict-event-emitter-types": "^2",
     "uuid": "^7",
-    "ws": "^7"
+    "ws": "^7.3.1"
   },
   "devDependencies": {
     "@types/config": "^0",

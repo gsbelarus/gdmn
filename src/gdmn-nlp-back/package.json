@@ -29,7 +29,7 @@
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "dependencies": {
     "gdmn-er-bridge": "^1",
-    "koa": "^2",
+    "koa": "^2.13.0",
     "koa-bodyparser": "^4",
     "koa-router": "^8",
     "koa2-cors": "^2"

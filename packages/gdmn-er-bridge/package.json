@@ -31,20 +31,20 @@
     "gdmn-db": "^1",
     "gdmn-internals": "^1",
     "gdmn-orm": "^1",
-    "moment": "^2"
+    "moment": "^2.27.0"
   },
   "devDependencies": {
-    "@types/jest": "^25",
-    "@types/node": "^13",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.26",
     "@typescript-eslint/eslint-plugin": "^2.12.0",
     "@typescript-eslint/parser": "^2.12.0",
     "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-prettier": "^3.1.2",
-    "jest": "^25",
-    "jest-junit": "^10",
-    "prettier": "^1.19.1",
+    "jest": "^26.1.0",
+    "jest-junit": "^11.1.0",
+    "prettier": "^2.0.5",
     "shx": "^0",
-    "ts-jest": "^25",
+    "ts-jest": "^26.1.4",
     "typescript": "^3"
   }
 }
