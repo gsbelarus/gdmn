@@ -30,14 +30,14 @@
     "chevrotain": "^6"
   },
   "devDependencies": {
-    "@types/jest": "^25",
-    "@types/node": "^13",
-    "jest": "^25",
-    "jest-junit": "^10",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.26",
+    "jest": "^26.1.0",
+    "jest-junit": "^11.1.0",
     "line-by-line": "^0",
     "n-readlines": "^1",
     "shx": "^0",
-    "ts-jest": "^25",
+    "ts-jest": "^26.1.4",
     "ts-node": "^8",
     "typescript": "^3"
   }

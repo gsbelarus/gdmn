@@ -39,7 +39,7 @@
     "koa-body": "^4",
     "koa-error": "^3",
     "koa-logger": "^3",
-    "koa-router": "^8",
+    "koa-router": "^9.1.0",
     "koa-send": "^5",
     "koa-static": "^5",
     "koa2-cors": "^2",
@@ -47,7 +47,7 @@
     "ms": "^2",
     "stomp-protocol": "^0.4.6",
     "strict-event-emitter-types": "^2",
-    "uuid": "^7",
+    "uuid": "^8.3.0",
     "ws": "^7"
   },
   "devDependencies": {
@@ -60,8 +60,8 @@
     "@types/koa-static": "^4",
     "@types/koa2-cors": "^2",
     "@types/ms": "^0",
-    "@types/node": "^13",
-    "@types/uuid": "^3",
+    "@types/node": "^14.0.26",
+    "@types/uuid": "^8.0.0",
     "@types/ws": "^7",
     "nodemon": "^2",
     "shx": "^0",

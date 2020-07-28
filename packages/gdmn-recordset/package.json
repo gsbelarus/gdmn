@@ -31,12 +31,12 @@
     "typesafe-actions": "^4"
   },
   "devDependencies": {
-    "@types/jest": "^25",
-    "@types/node": "^13",
-    "jest": "^25",
-    "jest-junit": "^10",
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.26",
+    "jest": "^26.1.0",
+    "jest-junit": "^11.1.0",
     "shx": "^0",
-    "ts-jest": "^25",
+    "ts-jest": "^26.1.4",
     "ts-node": "^8",
     "tslint": "^6",
     "typescript": "^3"
