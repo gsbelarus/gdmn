@@ -31,13 +31,13 @@
     "gdmn-er-bridge": "^1",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4",
-    "koa-router": "^8",
+    "koa-router": "^9.1.0",
     "koa2-cors": "^2"
   },
   "devDependencies": {
     "@types/koa": "^2",
     "@types/koa-bodyparser": "^4",
-    "@types/koa-router": "^7",
+    "@types/koa-router": "^7.4.1",
     "@types/koa2-cors": "^2",
     "@types/node": "^14.0.27",
     "nodemon": "^2",
