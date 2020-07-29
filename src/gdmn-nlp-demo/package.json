@@ -13,7 +13,7 @@
     "react": "^16",
     "react-dom": "^16",
     "react-redux": "^7",
-    "react-router-dom": "^5",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "^3",
     "redux": "^4",
     "redux-devtools-extension": "^2",
@@ -22,9 +22,9 @@
   },
   "devDependencies": {
     "@types/dagre": "^0",
-    "@types/node": "^13",
-    "@types/react": "^16",
-    "@types/react-dom": "^16",
+    "@types/node": "^14.0.27",
+    "@types/react": "^16.9.43",
+    "@types/react-dom": "^16.9.8",
     "typescript": "^3"
   },
   "scripts": {
