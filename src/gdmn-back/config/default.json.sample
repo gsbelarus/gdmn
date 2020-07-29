@@ -48,7 +48,7 @@
     "driver": "firebird",
     "server": {
       "host": "localhost",
-      "port": 3054
+      "port": 3050
     },
     "user": "SYSDBA",
     "password": "masterkey",
