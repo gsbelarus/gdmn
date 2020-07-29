@@ -14,10 +14,6 @@
 <% if (htmlWebpackPlugin.options.mobile) { %>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <% } %>
-    <!-- Styles -->
-<% for (var css in htmlWebpackPlugin.files.css) { %>
-    <link href="<%= htmlWebpackPlugin.files.css[css] %>" rel="stylesheet">
-<% } %>
 </head>
 <body>
   <noscript>Javascript is disabled. You must enable Javascript to use this site.</noscript>
@@ -26,13 +22,5 @@
 
   <!-- App -->
   <div id="<%= htmlWebpackPlugin.options.appMountNodeId || 'app' %>"></div>
-
-  <!-- Scripts -->
-<% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-  <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>"></script>
-<% } %>
-<% if (htmlWebpackPlugin.options.envFile) { %>
-  <script src="<%= htmlWebpackPlugin.options.envFile %>"></script>
-<% } %>
 </body>
 </html>

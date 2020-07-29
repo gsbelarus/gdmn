@@ -1,4 +1,4 @@
-import { Configuration, NoEmitOnErrorsPlugin, RuleSetLoader } from 'webpack';
+import { Configuration, RuleSetLoader } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 const pkg = require('../../package.json');
 const config = require('../config.json');
@@ -26,16 +26,14 @@ function getWebpackConfigBase(outputFilename: string, outputChunkFilename: strin
     plugins: [
       new HtmlWebpackPlugin({
         favicon: getRootRelativePath('src/assets/favicon.ico'),
-        inject: false,
-        minify: { collapseWhitespace: true, removeComments: true },
         template: getRootRelativePath('src/index.ejs'),
         title: 'GDMN',
         /* template params */
         appMountNodeId: config.webpack.appMountNodeId,
         description: pkg.description,
         mobile: true
-      }) as any,
-      new NoEmitOnErrorsPlugin() // fixme deprecated
+      }),
+      //new NoEmitOnErrorsPlugin() // fixme deprecated
     ],
     resolve: {
       alias: {
