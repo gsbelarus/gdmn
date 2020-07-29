@@ -1,6 +1,6 @@
 import path from 'path';
 import { EnvironmentPlugin, HotModuleReplacementPlugin, NamedModulesPlugin } from 'webpack';
-import merge from 'webpack-merge';
+import { merge } from 'webpack-merge';
 import { CheckerPlugin } from 'awesome-typescript-loader';
 // @ts-ignore
 import ErrorOverlayPlugin from 'error-overlay-webpack-plugin';

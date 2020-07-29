@@ -1,6 +1,5 @@
 import path from 'path';
 import { EnvironmentPlugin } from 'webpack';
-import merge from 'webpack-merge';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 // @ts-ignore
 import CompressionPlugin from 'compression-webpack-plugin';
@@ -10,6 +9,7 @@ import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
 import { getWebpackConfigBase, cssLoader, cssModulesLoader } from './webpackConfigBase';
 import { getRootRelativePath } from './utils';
+import { merge } from 'webpack-merge';
 
 const OUTPUT_FILENAME = 'scripts/[name].[hash].bundle.js';
 const OUTPUT_CHUNK_FILENAME = 'scripts/[name].[chunkhash].chunk.js';
