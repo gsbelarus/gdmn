@@ -46,7 +46,7 @@
     "@types/react": "^16.9.43",
     "@types/react-dom": "^16.9.8",
     "@types/react-redux": "^7",
-    "@types/react-virtualized": "^9",
+    "@types/react-virtualized": "^9.21.10",
     "jest": "^26.1.0",
     "jest-junit": "^11.1.0",
     "shx": "^0",
