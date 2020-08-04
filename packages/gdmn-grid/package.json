@@ -11,7 +11,6 @@
     "rebuild": "yarn clean && yarn build",
     "watch": "tsc -w",
     "tslint": "tslint --project .",
-    "test": "jest",
     "static": "shx mkdir -p ./dist/src && shx cp -r ./src/*.css ./dist/src && shx cp -r ./src/GridParams/*.css ./dist/src/GridParams"
   },
   "repository": {
@@ -29,7 +28,7 @@
     "classnames": "^2",
     "gdmn-recordset": "^1",
     "immutable": "^3",
-    "office-ui-fabric-react": "^7.124.0",
+    "office-ui-fabric-react": "^7.124.3",
     "react": "^16",
     "react-dom": "^16",
     "react-draggable": "^4",
@@ -47,12 +46,12 @@
     "@types/react-dom": "^16.9.8",
     "@types/react-redux": "^7",
     "@types/react-virtualized": "^9.21.10",
-    "jest": "^26.2.1",
+    "jest": "^26.2.2",
     "jest-junit": "^11.1.0",
     "shx": "^0",
     "ts-jest": "^26.1.4",
     "ts-node": "^8",
-    "tslint": "^6",
+    "tslint": "^6.1.3",
     "typescript": "^3"
   }
 }
