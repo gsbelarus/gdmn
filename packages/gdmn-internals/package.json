@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/gsbelarus/gdmn#readme",
   "devDependencies": {
-    "@types/jest": "^26.0.8",
+    "@types/jest": "^26.0.9",
     "@types/node": "^14.0.26",
     "jest": "^26.2.2",
     "jest-junit": "^11.1.0",

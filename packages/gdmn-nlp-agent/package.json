@@ -32,7 +32,7 @@
     "immutable": "^3"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.8",
+    "@types/jest": "^26.0.9",
     "@types/node": "^14.0.26",
     "gdmn-er-bridge": "^1",
     "jest": "^26.2.2",
