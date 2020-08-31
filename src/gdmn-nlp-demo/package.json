@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@uifabric/fluent-theme": "^7.1.124",
+    "@uifabric/fluent-theme": "^7.2.4",
     "dagre": "^0",
     "gdmn-grid": "^1",
     "gdmn-internals": "^1",
     "gdmn-nlp-agent": "^1",
     "gdmn-recordset": "^1",
-    "office-ui-fabric-react": "^7.126.1",
+    "office-ui-fabric-react": "^7.132.0",
     "react": "^16",
     "react-dom": "^16",
     "react-redux": "^7",
@@ -22,11 +22,11 @@
   },
   "devDependencies": {
     "@types/dagre": "^0",
-    "@types/node": "^14.0.27",
+    "@types/node": "^14.6.1",
     "@types/react": "^16.9.43",
     "@types/react-dom": "^16.9.8",
     "@types/react-router-dom": "^5.1.5",
-    "typescript": "^3"
+    "typescript": "^4.0.2"
   },
   "scripts": {
     "start": "react-scripts start",
