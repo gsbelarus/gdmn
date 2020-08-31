@@ -155,8 +155,8 @@ export function hasField(em: IEntityAdapter, rn: string, fn: string): boolean {
   return !r.fields || !!r.fields.find((f) => f === fn);
 }
 
-export function isUserDefined(name: string): boolean {
-  return name.substring(0, 4) === "USR$";
+export function isUserDefined(name: string | undefined): boolean {
+  return name ? name.substring(0, 4) === "USR$" : false;
 }
 
 export function condition2Selectors(cond: string): IEntitySelector[] {

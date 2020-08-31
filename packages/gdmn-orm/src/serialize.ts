@@ -100,7 +100,7 @@ export interface IEntity {
   isAbstract: boolean;
   semCategories: string;
   unique: string[][];
-  attributes: IAttribute[];
+  attributes?: IAttribute[];
   adapter?: any;
   defaultValue?: number;
 }
@@ -252,7 +252,7 @@ export const deserializeEntity = (erModel: ERModel, serializedEntity: IEntity, w
 
 export const deserializeAttributes = (erModel: ERModel, e: IEntity, withAdapter: boolean): void => {
   const entity = erModel.entity(e.name);
-  e.attributes.forEach((_attr) => entity.add(deserializeAttribute(erModel, _attr, withAdapter)));
+  e.attributes?.forEach((_attr) => entity.add(deserializeAttribute(erModel, _attr, withAdapter)));
 };
 
 export const deserializeUnique = (erModel: ERModel, e: IEntity): void => {

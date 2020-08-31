@@ -7,7 +7,6 @@ import {Constants} from "../../../Constants";
 import {ICmd, Task, TaskStatus} from "../task/Task";
 import {TaskManager} from "../task/TaskManager";
 import {AppAction} from "../Application";
-import {v1String} from "uuid/interfaces";
 
 export interface IOptions {
   readonly id: string;

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer } from "react";
 import { IEntityDlgProps } from "./EntityDlg.types";
 import { gdmnActions, gdmnActionsAsync } from "@src/app/scenes/gdmn/actions";
-import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, ISequenceAttribute, IEntityAttribute } from "gdmn-orm";
+import { IEntity, IAttribute, GedeminEntityType, getGedeminEntityType, isUserDefined, ISequenceAttribute, IEntityAttribute, isEntityAttribute } from "gdmn-orm";
 import { Stack, TextField, Dropdown, CommandBar, ICommandBarItemProps } from "office-ui-fabric-react";
 import { getLName } from "gdmn-internals";
 import { EntityAttribute } from "./EntityAttribute";
@@ -179,13 +179,13 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     case 'SET_ENTITY_DATA': {
       const entityData = {
         ...action.entityData,
-        attributes: action.entityData.attributes.map(
+        attributes: action.entityData.attributes?.map(
           attr => attr.id ? attr : { ...attr, id: getTempID() }
         )
       };
 
-      entityData.attributes.forEach(
-        (attr1, idx1) => entityData.attributes.forEach(
+      entityData.attributes?.forEach(
+        (attr1, idx1) => entityData.attributes?.forEach(
           (attr2, idx2) => console.assert(idx1 === idx2 || (idx1 !== idx2 && attr1.id !== attr2.id), `Duplicate attr ID: ${attr1.id}`)
         )
       );
@@ -225,14 +225,27 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     // вызывается при реактировании entity
     case 'UPDATE_ENTITY_DATA': {
       const { initialData, errorLinks } = state;
-      const Attributes = [...action.entityData.attributes];
-      Attributes.map(attr => attr.name === 'INHERITEDKEY' ? 
-        (attr as IEntityAttribute).references = action.entityData.parent ? [action.entityData.parent] : [] : attr);
-      return {
-        ...state,
-        entityData: action.entityData,
-        changed: initialData === undefined || JSON.stringify(initialData) !== JSON.stringify(action.entityData),
-        errorLinks: validateAttributes(action.entityData, errorLinks)
+
+      const attributes = action.entityData.attributes && action.entityData.attributes.map(
+        attr => isEntityAttribute(attr) && attr.name === 'INHERITEDKEY'
+          ? { ...attr, references: action.entityData.parent ? [action.entityData.parent] : [] }
+          : attr
+      );
+
+      const entityData = { ...action.entityData, attributes };
+
+      if (JSON.stringify(initialData) === JSON.stringify(entityData)) {
+        return {
+          ...state,
+          changed: false
+        };
+      } else {
+        return {
+          ...state,
+          entityData,
+          changed: true,
+          errorLinks: validateAttributes(entityData, errorLinks)
+        }
       }
     }
 
@@ -290,13 +303,13 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     case 'UPDATE_ATTR': {
       const { entityData, selectedAttr, initialData } = state;
 
-      if (!entityData || selectedAttr === undefined) {
+      if (!entityData?.attributes || selectedAttr === undefined) {
         return state;
       }
 
-      const newAttributes = [...entityData.attributes];
-      newAttributes[selectedAttr] = action.newAttr;
-      const newEntityData = {...entityData, attributes: newAttributes };
+      const attributes = [...entityData.attributes];
+      attributes[selectedAttr] = action.newAttr;
+      const newEntityData = {...entityData, attributes };
       return {
         ...state,
         entityData: newEntityData,
@@ -308,9 +321,10 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     case 'ADD_ATTR': {
       const { entityData, selectedAttr, initialData } = state;
 
-      if (!entityData) {
+      if (!entityData?.attributes) {
         return state;
       }
+
       const newIdx = selectedAttr === undefined ? entityData.attributes.length : selectedAttr;
       const newAttributes = [...entityData.attributes];
       newAttributes.splice(newIdx, 0, initAttr('String'));
@@ -332,14 +346,14 @@ function reducer(state: IEntityDlgState, action: Action): IEntityDlgState {
     case 'DELETE_ATTR': {
       const { entityData, selectedAttr, initialData, attrDeleteList } = state;
 
-      if (!entityData || selectedAttr === undefined) {
+      if (!entityData?.attributes || selectedAttr === undefined) {
         return state;
       }
 
       const newAttributes = [...entityData.attributes];
       const deletedAttr = newAttributes.splice(selectedAttr, 1)[0];
 
-      const newAttrDeleteList = initialData?.attributes.find(i => i.name === deletedAttr.name)
+      const newAttrDeleteList = initialData?.attributes?.find(i => i.name === deletedAttr.name)
         ? [...attrDeleteList || [], deletedAttr.name]
         : [...attrDeleteList || []];
 
@@ -407,9 +421,11 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     if (createEntity) {
       const result = await apiService.addEntity({
         ...entityData,
-        attributes: entityData.attributes
-          .map(attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr)
-          .map(attr => isTempID(attr.id) ? {...attr, id: undefined } : attr)
+        attributes: entityData.attributes?.map(
+          attr => attr.name === 'PARENT' ? {...attr, references: [entityData.name]}: attr
+        ).map(
+          attr => isTempID(attr.id) ? {...attr, id: undefined } : attr
+        )
       });
 
       if (result.error) {
@@ -467,71 +483,69 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
   const addAtributes = useCallback(async () => {
     if (!entityData || !erModel || !initialData) return;
 
-    const attrList = entityData.attributes.filter((attr) => !initialData.attributes.filter(i => !attrDeleteList?.includes(i.name)).find(prevAttr => prevAttr.name === attr.name));
+    const attrList = entityData.attributes?.filter((attr) => !initialData.attributes?.filter(i => !attrDeleteList?.includes(i.name)).find(prevAttr => prevAttr.name === attr.name));
 
-    for (const attr of attrList) {
-      const result = await apiService.addAttribute({
-        entityData,
-        attrData: attr
-      });
+    if (attrList) {
+      for (const attr of attrList) {
+        const result = await apiService.addAttribute({
+          entityData,
+          attrData: attr
+        });
 
-      if (result.error) {
-        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        throw new Error(result.error.message);
+        if (result.error) {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+          throw new Error(result.error.message);
+        }
+
+        dispatch(gdmnActionsAsync.apiGetSchema());
       }
-
-      dispatch(gdmnActionsAsync.apiGetSchema());
     }
   }, [entityData, erModel, initialData]);
 
   const deleteAtributes = useCallback(async () => {
     if (!entityData || !erModel || !initialData || !attrDeleteList) return;
 
-  // const attrList = initialData.attributes.filter(attr =>
-    //   !entityData.attributes.find(prevAttr => prevAttr.name === attr.name)
-    // );
-
-    const attrList = initialData.attributes.filter(attr =>
+    const attrList = initialData.attributes?.filter(attr =>
       attrDeleteList.find(prevAttr => prevAttr === attr.name)
     );
 
-    for (const attr of attrList) {
-      const result = await apiService.deleteAttribute({
-        entityData,
-        attrName: attr.name
-      });
+    if (attrList) {
+      for (const attr of attrList) {
+        const result = await apiService.deleteAttribute({
+          entityData,
+          attrName: attr.name
+        });
 
-      if (result.error) {
-        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        throw new Error(result.error.message);
+        if (result.error) {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+          throw new Error(result.error.message);
+        }
+
+        dispatch(gdmnActionsAsync.apiGetSchema());
       }
-
-      // const newInitialData = {...initialData, attributes: initialData.attributes.filter(attr => attrDeleteList.includes(attr.name))};
-
-      // dlgDispatch({type: 'SET_INITIAL_DATA', newInitialData});
-
-      dispatch(gdmnActionsAsync.apiGetSchema());
     }
   }, [entityData, erModel, initialData]);
 
   const updateAtributes = useCallback(async () => {
     if (!entityData || !erModel || !initialData) return;
 
-    const attrList = entityData.attributes.filter(attr => initialData.attributes.find(prevAttr => prevAttr.name === attr.name))
-      .filter(attr => JSON.stringify(initialData.attributes.filter(i => !attrDeleteList?.includes(i.name)).find(a => a.name === attr.name)) !== JSON.stringify(attr));
+    const attrList = entityData.attributes?.filter(attr => initialData.attributes?.find(prevAttr => prevAttr.name === attr.name))
+      .filter(attr => JSON.stringify(initialData.attributes?.filter(i => !attrDeleteList?.includes(i.name)).find(a => a.name === attr.name)) !== JSON.stringify(attr));
 
-    for (const attr of attrList) {
-      const result = await apiService.updateAttribute({
-        entityData,
-        attrData: attr
-      });
+    if (attrList) {
+      for (const attr of attrList) {
+        const result = await apiService.updateAttribute({
+          entityData,
+          attrData: attr
+        });
 
-      if (result.error) {
-        dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
-        throw new Error(result.error.message);
+        if (result.error) {
+          dispatch(gdmnActions.updateViewTab({ url, viewTab: { error: result.error.message } }));
+          throw new Error(result.error.message);
+        }
+
+        dispatch(gdmnActionsAsync.apiGetSchema());
       }
-
-      dispatch(gdmnActionsAsync.apiGetSchema());
     }
   }, [entityData, erModel, initialData]);
 
@@ -626,7 +640,7 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
     },
     {
       key: 'deleteAttr',
-      disabled: selectedAttr === undefined || !isUserDefined(entityData.attributes[selectedAttr].name),
+      disabled: selectedAttr === undefined || !isUserDefined(entityData?.attributes?.[selectedAttr].name),
       text: 'Удалить атрибут',
       iconProps: {
         iconName: 'Delete'
@@ -752,8 +766,8 @@ export function EntityDlg(props: IEntityDlgProps): JSX.Element {
         <Frame marginTop marginLeft marginRight>
           <Stack>
             {
-              entityData.attributes.map( (attr, attrIdx) => {
-                const createAttr = !initialData || !initialData.attributes.filter(i => !attrDeleteList?.includes(i.name)).find( prevAttr => prevAttr.name === attr.name );
+              entityData.attributes?.map( (attr, attrIdx) => {
+                const createAttr = !initialData || !initialData.attributes?.filter(i => !attrDeleteList?.includes(i.name)).find( prevAttr => prevAttr.name === attr.name );
                 return (
                   <EntityAttribute
                     key={attr.id}

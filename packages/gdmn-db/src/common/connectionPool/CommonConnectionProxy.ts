@@ -20,11 +20,11 @@ export class CommonConnectionProxy extends AConnection {
         this._connectionCreator = connectionCreator;
     }
 
-    get driver(): ADriver {
-        if (!this._connection) {
-            throw new Error("Need database connection");
-        }
-        return this._connection.driver;
+    protected getDriver(): ADriver {
+      if (!this._connection) {
+          throw new Error("Need database connection");
+      }
+      return super.getDriver();
     }
 
     set driver(driver: ADriver) {

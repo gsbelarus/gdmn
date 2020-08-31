@@ -47,7 +47,7 @@ export interface IExecuteQueryResultSetOptions<R> extends IBaseExecuteOptions<AR
 
 export abstract class AConnection {
 
-    public readonly driver: ADriver;
+    private _driver: ADriver;
 
     protected _connected = false;
     protected _readTransaction?: ATransaction;
@@ -55,7 +55,15 @@ export abstract class AConnection {
     private readonly _lock = new Semaphore();
 
     protected constructor(driver: ADriver) {
-        this.driver = driver;
+        this._driver = driver;
+    }
+
+    protected getDriver() {
+      return this._driver;
+    }
+
+    get driver(): ADriver {
+      return this.getDriver();
     }
 
     get readTransaction(): ATransaction {

@@ -87,7 +87,7 @@ export interface IErrorLink {
 export type ErrorLinks = IErrorLink[];
 
 export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks, initialData?: IEntity) => {
-  const errorLinks = entity.attributes.reduce(
+  const errorLinks = entity.attributes?.reduce(
    (p, attr, attrIdx) => {
       if (!stripUserPrefix(attr.name)) {
         p.push({
@@ -96,12 +96,12 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
           message: "Name can't be empty",
           internal: false
         });
-      } 
-      const isAdding = initialData?.attributes.find((a) => a.name == attr.name) || initialData === undefined;
-      
+      }
+      const isAdding = initialData?.attributes?.find((a) => a.name == attr.name) || initialData === undefined;
+
       switch (attr.type) {
         case 'Date':
-        case 'Time': 
+        case 'Time':
         case 'TimeStamp': {
           const s = attr as IDateAttribute;
           if (s.minValue !== undefined && s.maxValue !== undefined && s.minValue > s.maxValue) {
@@ -183,20 +183,6 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
               internal: false
             });
           }
-          /* Проверка на наличие существующих записей в сущности 
-          (async () => {apiService.checkEntityEmpty(entity)
-            .then(res => { 
-              const result = (res.payload && res.payload.result && !res.error) ?
-                 res.payload.result : false;
-              if (s.required && !s.defaultValue && result) {
-                p.push({
-                  attrIdx,
-                  field: 'defaultValue',
-                  message: "Add default value for NOT NULL attribute",
-                  internal: false
-                });
-              }
-            })}) ();*/
 
           break;
         }
@@ -220,7 +206,7 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
           }
           break;
         }
-        
+
         case 'Set': {
           if (isSetAttribute(attr) && attr.references.length === 0) {
             p.push({
@@ -259,20 +245,20 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
             }
           }
 
-          if (i.required && !i.defaultValue && !isAdding) { 
+          if (i.required && !i.defaultValue && !isAdding) {
             p.push({
               attrIdx,
               field: 'defaultValue',
               message: "Add default value for NOT NULL attribute",
               internal: false
             });
-          } 
+          }
           break;
         }
       }
       return p;
     }, [...prevErrorLinks.filter( l => l.internal )]
-  );
+  ) ?? [];
 
   if (!stripUserPrefix(entity.name)) {
     errorLinks.push({
@@ -291,11 +277,11 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
   }
 
   // check for duplicate names
-  entity.attributes.forEach(
-    (attr1, idx1) => entity.attributes.forEach(
+  entity.attributes?.forEach(
+    (attr1, idx1) => entity.attributes?.forEach(
       (attr2, idx2) => {
         if (idx1 < idx2 && attr1.name === attr2.name && stripUserPrefix(attr1.name) && stripUserPrefix(attr2.name)) {
-          errorLinks.push({
+          errorLinks?.push({
             attrIdx: idx1,
             field: 'name',
             message: 'Duplicate attribute name',
@@ -305,21 +291,6 @@ export const validateAttributes =  (entity: IEntity, prevErrorLinks: ErrorLinks,
       }
     )
   );
-
-  /*
-  const entityName = erModel ? Object.keys(erModel.entities) : undefined;
-
-  if(entityName) {
-    if(entityName.find(item => item === entity.name)) {
-      errorLinks.push({
-        field: 'entityName',
-        message: 'Duplicated entity name',
-        internal: false
-      });
-    }
-  }
-  */
-  
 
   return equal(errorLinks, prevErrorLinks) ? prevErrorLinks : errorLinks;
 };

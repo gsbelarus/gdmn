@@ -29,7 +29,7 @@ async function getData(query: EntityQuery): Promise<IEntityQueryResponse> {
   }
 }
 
-async function getErModelResp(ctx: Koa.Context): Promise<void> {
+async function getErModelResp(ctx: any): Promise<void> {
   try {
     if (ctx.state.ERModel) {
       ctx.body = ctx.state.ERModel.serialize(true);
@@ -42,7 +42,7 @@ async function getErModelResp(ctx: Koa.Context): Promise<void> {
   }
 }
 
-async function getDataResp(ctx: Koa.Context): Promise<void> {
+async function getDataResp(ctx: any): Promise<void> {
   try {
     const query = ctx.request.query.query;
     try {
