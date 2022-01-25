@@ -14,7 +14,7 @@
     "react-dom": "^16",
     "react-redux": "^7",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.3",
+    "react-scripts": "^4",
     "redux": "^4",
     "redux-devtools-extension": "^2",
     "redux-thunk": "^2",
