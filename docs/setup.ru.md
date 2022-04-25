@@ -96,6 +96,7 @@ $ cd gdmn
         "connectionOptions": {
           "server": {
             "host": "localhost",
+            // укажите другой порт, если вы изменяли его при инстоляции сервера
             "port": 3050
           },
           "username": "SYSDBA",
