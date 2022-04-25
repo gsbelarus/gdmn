@@ -2,19 +2,17 @@
 
 ## Устанавливаем Node 64-bit
 
-Необходима версия [Node 12](https://nodejs.org/en/download/) или новее.
-
-Мы не рекомендуем устанавливать `npm` так как проект `gdmn` использует менеджер пакетов `yarn`:
+Необходима версия [Node 16](https://nodejs.org/en/download/) или новее.
 
 ![](setup.ru.node1.jpg)
 
-Для компиляции нативного драйвера Firebird в Node необходимо установить `Windows Studio Build Tools`:
+Для компиляции нативного драйвера Firebird в Node необходимо установить `MS Visual Studio` или `Windows Studio Build Tools`. Должен быть установлен пакет `C++ Workload`:
 
 ![](setup.ru.node2.jpg)
 
 ## Устанавливаем Yarn
 
-Инстолятор [Yarn](https://yarnpkg.com/en/docs/install) на официальном сайте.
+Инстолятор [Yarn v.1 он же Yarn Classic](https://yarnpkg.com/en/docs/install) на официальном сайте.
 
 ## Устанавливаем и запускаем службу Firebird 3 64-bit
 
