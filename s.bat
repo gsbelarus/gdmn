@@ -1,3 +1,5 @@
+set NODE_OPTIONS=--openssl-legacy-provider
+
 cd src\gdmn-back
 start yarn start
 
