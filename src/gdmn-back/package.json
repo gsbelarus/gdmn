@@ -34,7 +34,7 @@
     "config": "^3",
     "gdmn-er-bridge": "^1",
     "global": "^4.4.0",
-    "jsonwebtoken": "^8",
+    "jsonwebtoken": "^9",
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
     "koa-error": "^3",
